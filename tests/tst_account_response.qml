@@ -7,7 +7,7 @@ import "../contents/ui/SafeText.js" as SafeText
 TestCase {
     name: "AccountResponse"
     function parse(payload) {
-        return AccountResponse.response(JSON.stringify(payload), "", "codex", 1000);
+        return AccountResponse.response(JSON.stringify(payload), "", "codex", 1000, 0);
     }
     function test_failuresRetainNoReplacementOptions_data() {
         return [
@@ -39,7 +39,7 @@ TestCase {
         ];
     }
     function test_failuresRetainNoReplacementOptions(data) {
-        var result = AccountResponse.response(data.text, "synthetic error", "codex", 1000);
+        var result = AccountResponse.response(data.text, "synthetic error", "codex", 1000, 0);
         compare(result.outcome, data.outcome);
         compare(result.options, undefined);
         verify(result.message.length <= SafeText.maximumCliMessageLength);
@@ -109,7 +109,7 @@ TestCase {
     }
     function test_failuresAreRedactedAtThePublicBoundary() {
         var secret = "sk-synthetic123456789";
-        var stderrResult = AccountResponse.response("", "Authorization: Bearer " + secret, "codex", 1000);
+        var stderrResult = AccountResponse.response("", "Authorization: Bearer " + secret, "codex", 1000, 0);
         var recordResult = parse({
             error: {
                 message: "api_key=" + secret

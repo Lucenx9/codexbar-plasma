@@ -2,18 +2,7 @@
 .import "Guards.js" as Guards
 .import "ProviderNormalizer.js" as Normalizer
 .import "ProviderSnapshot.js" as ProviderSnapshot
-.import "SafeText.js" as SafeText
-
-function envelope(stdoutValue, stderrValue) {
-    var text = SafeText.cliJsonText(stdoutValue);
-    if (text === null) return {outcome: "tooLarge", message: ""};
-    if (text.trim().length === 0) return {outcome: "empty", message: ProviderSnapshot.message(stderrValue)};
-    try {
-        return {outcome: "success", payload: JSON.parse(text), message: ""};
-    } catch (error) {
-        return {outcome: "invalidJson", message: ProviderSnapshot.message(error.message)};
-    }
-}
+.import "CliResponse.js" as CliResponse
 
 // Provider-scoped commands may only replace their requested provider. An
 // aggregate response instead needs a valid identity on every accepted record.
@@ -44,8 +33,9 @@ function records(payload, providerID, receivedAtMs) {
     return {outcome: "success", items: snapshots, message: ""};
 }
 
-function response(stdoutValue, stderrValue, providerID, receivedAtMs) {
-    var parsed = envelope(stdoutValue, stderrValue);
+function response(stdoutValue, stderrValue, providerID, receivedAtMs, exitCode) {
+    var parsed = CliResponse.decode(stdoutValue, stderrValue, exitCode,
+        providerID ? Normalizer.maximumAccountSnapshots : Normalizer.maximumProviderSnapshots);
     if (parsed.outcome !== "success") return parsed;
     var result = records(parsed.payload, providerID, receivedAtMs);
     if (result.outcome === "noProviders" && !providerID)
@@ -53,8 +43,8 @@ function response(stdoutValue, stderrValue, providerID, receivedAtMs) {
     return result;
 }
 
-function roster(stdoutValue, stderrValue) {
-    var parsed = envelope(stdoutValue, stderrValue);
+function roster(stdoutValue, stderrValue, exitCode) {
+    var parsed = CliResponse.decode(stdoutValue, stderrValue, exitCode, 0);
     if (parsed.outcome !== "success") return parsed;
     var entries = Normalizer.normalizeProviderConfigEntries(parsed.payload);
     return entries === null ? {outcome: "noProviders", message: ""}

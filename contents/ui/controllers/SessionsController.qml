@@ -143,19 +143,22 @@ Item {
             }
         }
 
-        function acceptReply(sourceName, stdoutText, stderrText) {
+        function acceptReply(sourceName, stdoutText, stderrText, exitCode) {
             if (!CommandLedger.find(commands, sourceName)) {
                 return;
             }
             finishRequest(sourceName);
             lastFinishedAtMs = Date.now();
-            var result = SessionResponse.response(stdoutText, stderrText);
+            var result = SessionResponse.response(stdoutText, stderrText, exitCode);
             switch (result.outcome) {
             case "success":
                 snapshot = result.sessions;
                 errorText = "";
                 lastCompletedAtMs = Date.now();
                 loadedCommandSource = commandSource;
+                break;
+            case "commandFailed":
+                errorText = result.message || i18n("codexbar command failed.");
                 break;
             case "tooLarge":
                 errorText = i18n("codexbar response exceeded the supported size.");
@@ -180,7 +183,7 @@ Item {
         engine: "executable"
         interval: 0
         onNewData: function (sourceName, data) {
-            lifecycle.acceptReply(sourceName, data && data["exit code"] === 0 ? data["stdout"] : "", data ? data["stderr"] : "");
+            lifecycle.acceptReply(sourceName, data ? data["stdout"] : "", data ? data["stderr"] : "", data ? data["exit code"] : null);
         }
     }
 

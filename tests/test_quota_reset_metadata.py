@@ -49,7 +49,7 @@ TestCase {
             SOURCE_FUNCTIONS
 
             function parseOutput(stdout, stderr) {
-                var result = UsageResponse.response(stdout, stderr, "", panelClockMs);
+                var result = UsageResponse.response(stdout, stderr, "", panelClockMs, 0);
                 compare(result.outcome, "success");
                 commitUsageSnapshot(result.items.map(function(item) { return root.presentProviderSnapshot(item); }));
                 loading = false;

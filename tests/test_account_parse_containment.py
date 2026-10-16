@@ -69,7 +69,7 @@ TestCase {
     }
 
     function deliver(applet, payload) {
-        var result = AccountResponse.response(JSON.stringify(payload), "", "codex", applet.testNowMs);
+        var result = AccountResponse.response(JSON.stringify(payload), "", "codex", applet.testNowMs, 0);
         compare(result.outcome, "success");
         applet.accountOptions = {codex: result.options.map(function(item) { return applet.presentProviderSnapshot(item); })};
     }

@@ -72,7 +72,8 @@ TestCase {
         compare(subject.errorForProvider("codex"), "");
     }
     function test_failuresKeepListsAndReleaseLoading_data() {
-        return [{tag: "stderr", script: "failure"}, {tag: "malformed", script: "malformed"},
+        return [{tag: "stderr", script: "failure"}, {tag: "exit-one-success", script: "failed-valid"},
+                {tag: "timeout-success", script: "failed-timeout"}, {tag: "failed-empty", script: "failed-empty"}, {tag: "malformed", script: "malformed"},
                 {tag: "unsupported", script: "unsupported"}, {tag: "structured", script: "structured"}];
     }
     function test_failuresKeepListsAndReleaseLoading(data) {
@@ -194,14 +195,17 @@ if name == "slow": time.sleep(1)
 if name == "late" and run == 2: time.sleep(62)
 if name == "late" and run == 4: time.sleep(3)
 if run > 1 and provider == "codex":
+    if name in ("failed-valid", "failed-timeout", "failed-empty"):
+        print(json.dumps([] if name == "failed-empty" else [{"provider": "codex", "account": "Wrong", "totals": {"totalCost": 99}}]))
+        sys.exit(124 if name == "failed-timeout" else 1)
     if name == "failure": raise SystemExit("synthetic account failure")
     if name in ("malformed", "unsupported"):
         print("{" if name == "malformed" else "null")
         sys.exit(0)
     if name in ("empty", "missing-token", "structured"):
-        print(json.dumps([] if name == "empty" else {"error": {"message":
+        print(json.dumps([] if name == "empty" else {"provider": "codex", "error": {"kind": "provider", "code": 1, "message":
             "No token accounts configured for codex." if name == "missing-token" else {"toString": None}}}))
-        sys.exit(0)
+        sys.exit(0 if name == "empty" else 1)
 record = {"provider": "deliberately-wrong", "account": name + " " + str(run),
     "usage": {"primary": {"usedPercent": 0}},
     "pace": {"primary": {"expectedUsedPercent": 30, "willLastToReset": False, "etaSeconds": 1800}}}
@@ -217,7 +221,7 @@ class AccountsControllerTests(unittest.TestCase):
     def test_production_lifecycle_with_synthetic_cli(self):
         with tempfile.TemporaryDirectory(prefix="codexbar accounts 'test-") as temporary:
             directory = Path(temporary)
-            for name in ("normal", "flags", "slow", "late", "failure", "malformed", "unsupported", "structured", "empty", "missing-token", "duplicate"):
+            for name in ("failed-valid", "failed-timeout", "failed-empty", "normal", "flags", "slow", "late", "failure", "malformed", "unsupported", "structured", "empty", "missing-token", "duplicate"):
                 script = directory / name
                 script.write_text(CLI)
                 script.chmod(0o700)

@@ -147,6 +147,27 @@ TestCase {
         completed(o, 1);
         compare(o.subject.errorText, "");
     }
+    function test_failedValidJsonCannotPublishOrCache_data() {
+        return [{tag: "aggregate", script: "failed-valid", options: {sourceMode: "cli"}},
+            {tag: "roster", script: "failed-roster", options: {}},
+            {tag: "timeout", script: "failed-timeout", options: {sourceMode: "cli"}}];
+    }
+    function test_failedValidJsonCannotPublishOrCache(data) {
+        var o = create(data.script, data.options);
+        tryVerify(function() { return o.failures.length === 1 && !o.subject.loading; });
+        compare(o.snapshots, []);
+        compare(o.subject.lastCompletedAtMs, -1);
+        verify(o.subject.errorText.length > 0);
+        o.subject.refresh(false);
+        completed(o, 1);
+    }
+    function test_failedScopedJsonBecomesAnErrorSnapshot() {
+        var o = create("failed-valid", {provider: "codex", selectedAccounts: {codex: "Work"}});
+        completed(o, 1);
+        verify(latest(o)[0].commandFailed);
+        compare(latest(o)[0].rows, []);
+        compare(o.subject.lastCompletedAtMs, -1);
+    }
     function test_emptyRosterIsDistinctFromBrokenDiscovery() {
         var empty = create("empty-roster");
         var broken = create("broken-roster");
@@ -321,7 +342,7 @@ if args[0] == "config":
     ids = ["synthetic" + str(i) for i in range(11)] if name == "queue" else ["codex", "claude"]
     print(json.dumps([] if name == "empty-roster" else [
         {"provider": key, "displayName": "Synthetic Codex" if key == "codex" else key, "enabled": True} for key in ids]))
-    sys.exit(0)
+    sys.exit(1 if name == "failed-roster" and run == 1 else 0)
 provider = args[args.index("--provider") + 1] if "--provider" in args else "codex"
 account = args[args.index("--account") + 1] if "--account" in args else "run " + str(run)
 if name == "mapped": assert provider == "groqcloud"
@@ -356,6 +377,7 @@ else:
 print(json.dumps({"provider": provider, "account": account, "version": version,
     "usage": {"primary": {"usedPercent": 0}, "updatedAt": "2000-01-01T00:00:00Z" if name == "ancient" else ""},
     "pace": {"primary": {"willLastToReset": False, "etaSeconds": 1800}}}))
+if run == 1 and name in ("failed-valid", "failed-timeout"): sys.exit(124 if name == "failed-timeout" else 1)
 '''
 
 
@@ -363,7 +385,7 @@ class UsageControllerTests(unittest.TestCase):
     def test_production_lifecycle_with_synthetic_cli(self):
         with tempfile.TemporaryDirectory(prefix="codexbar usage 'test-") as temporary:
             directory = Path(temporary)
-            for name in ("ancient", "normal", "slow-roster", "flags", "mapped", "slow-first", "queue", "malformed", "empty",
+            for name in ("failed-valid", "failed-timeout", "failed-roster", "ancient", "normal", "slow-roster", "flags", "mapped", "slow-first", "queue", "malformed", "empty",
                          "no-records", "too-large", "empty-roster", "broken-roster", "timeout-aggregate",
                          "timeout-roster", "timeout-scoped"):
                 script = directory / name

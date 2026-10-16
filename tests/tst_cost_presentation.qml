@@ -1604,7 +1604,7 @@ TestCase {
             updatedAt: new Date(2026, 8, 23, 22).toISOString(),
             sessionCostUSD: 1.25, sessionTokens: 1200,
             totals: {totalCost: 9, totalTokens: 9000}, daily: []}];
-        var cost = CostResponse.response(JSON.stringify(payload), "", 30).costs.codex;
+        var cost = CostResponse.response(JSON.stringify(payload), "", 30, 0).costs.codex;
         compare(cost.scanDay, "2026-09-23");
 
         var sameDay = CostPresentation.todayAmounts(cost, new Date(2026, 8, 23, 23, 30).getTime());
@@ -1628,7 +1628,7 @@ TestCase {
 
         // Without a scan date or a usable clock there is nothing to compare.
         payload[0].updatedAt = "not a date";
-        var undated = CostResponse.response(JSON.stringify(payload), "", 30).costs.codex;
+        var undated = CostResponse.response(JSON.stringify(payload), "", 30, 0).costs.codex;
         compare(undated.scanDay, "");
         compare(CostPresentation.todayAmounts(undated, new Date(2026, 8, 24, 0, 30).getTime()).cost, 1.25);
         compare(CostPresentation.todayAmounts(cost, NaN).cost, 1.25);

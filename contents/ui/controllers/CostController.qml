@@ -129,13 +129,13 @@ Item {
             }
         }
 
-        function acceptReply(sourceName, stdoutText, stderrText) {
+        function acceptReply(sourceName, stdoutText, stderrText, exitCode) {
             var descriptor = CommandLedger.find(commands, sourceName);
             if (!descriptor) {
                 return;
             }
             finishRequest(sourceName);
-            var result = CostResponse.response(stdoutText, stderrText, descriptor.historyDays);
+            var result = CostResponse.response(stdoutText, stderrText, descriptor.historyDays, exitCode);
             switch (result.outcome) {
             case "success":
             case "partial":
@@ -143,6 +143,9 @@ Item {
                 snapshot = Normalizer.mergeCostSnapshotsAfterPartialFailure(previous, result.costs, result.failedProviders);
                 snapshotContext = descriptor.context;
                 errorText = result.outcome === "success" ? "" : (result.message.length > 0 ? result.message : i18n("Some cost data could not be refreshed."));
+                break;
+            case "commandFailed":
+                errorText = result.message || i18n("codexbar command failed.");
                 if (result.argumentsRejected && descriptor.historyPeriod.length > 0) {
                     errorText = i18n("Month to date and All history need codexbar 0.67.0 or later.");
                 }
@@ -168,7 +171,7 @@ Item {
         engine: "executable"
         interval: 0
         onNewData: function (sourceName, data) {
-            lifecycle.acceptReply(sourceName, data ? data["stdout"] : "", data ? data["stderr"] : "");
+            lifecycle.acceptReply(sourceName, data ? data["stdout"] : "", data ? data["stderr"] : "", data ? data["exit code"] : null);
         }
     }
 

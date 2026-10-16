@@ -363,7 +363,7 @@ class CostSectionTests(unittest.TestCase):
             updatedAt: new Date(2026, 8, 23, 22).toISOString(),
             sessionCostUSD: 1.25, sessionTokens: 1200,
             totals: { totalCost: 9, totalTokens: 9000 }, daily: [] }];
-        var tokenCost = Object.assign({}, CostResponse.response(JSON.stringify(payload), "", 30).costs.codex,
+        var tokenCost = Object.assign({}, CostResponse.response(JSON.stringify(payload), "", 30, 0).costs.codex,
             { windowLabel: "30d", hintLine: "" });
         fakeApplet.panelClockMs = new Date(2026, 8, 23, 23, 30).getTime();
         testCase.providerData = { provider: "codex", tokenCost: tokenCost };
@@ -401,7 +401,7 @@ class CostSectionTests(unittest.TestCase):
                 { date: "2026-09-12", totalCost: 2, totalTokens: 20,
                     modelBreakdowns: [{ modelName: "Complete", cost: 2, totalTokens: 20 }] }
             ] }];
-        var tokenCost = Object.assign({}, CostResponse.response(JSON.stringify(payload), "", 30).costs.codex,
+        var tokenCost = Object.assign({}, CostResponse.response(JSON.stringify(payload), "", 30, 0).costs.codex,
             { windowLabel: "30d", hintLine: "" });
         testCase.providerData = { provider: "codex", tokenCost: tokenCost };
         var subject = createTemporaryObject(providerFactory, testCase);

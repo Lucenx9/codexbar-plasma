@@ -9,7 +9,7 @@ TestCase {
     name: "CostResponse"
 
     function parse(payload, days) {
-        return CostResponse.response(JSON.stringify(payload), "", days === undefined ? 30 : days);
+        return CostResponse.response(JSON.stringify(payload), "", days === undefined ? 30 : days, 0);
     }
     function test_structuredHistoryDatesPreserveHealthyProviders_data() {
         var cases = [];
@@ -96,7 +96,7 @@ TestCase {
         ];
     }
     function test_failuresNeverSupplyReplacementData(data) {
-        var result = CostResponse.response(data.text, "synthetic failure", 7);
+        var result = CostResponse.response(data.text, "synthetic failure", 7, 0);
         compare(result.outcome, data.outcome);
         compare(result.costs, undefined);
         verify(result.message.length <= SafeText.maximumCliMessageLength);
@@ -460,7 +460,8 @@ TestCase {
         // CLI 0.66.0 rejects `--period` with an args error record.
         var rejected = parse([{ provider: "cli", source: "cli",
             error: { kind: "args", code: 1, message: "Unknown option --period" } }]);
-        compare(rejected.outcome, "partial");
+        compare(rejected.outcome, "commandFailed");
+        compare(rejected.costs, undefined);
         compare(rejected.argumentsRejected, true);
         var failed = parse([{ provider: "codex", error: { kind: "provider", message: "failed" } }]);
         compare(failed.argumentsRejected, false);

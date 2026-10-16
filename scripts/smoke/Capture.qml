@@ -1461,7 +1461,7 @@ Item {
                 }
             }
             applet.commitUsageSnapshot(previous);
-            usageLifecycle.parseOutput("{", "Synthetic malformed response");
+            usageLifecycle.parseOutput("{", "Synthetic malformed response", 0);
             verifyScenario(applet.providers.length === 2 && applet.providers[0].rows.length === 2,
                 "a malformed refresh erased the last valid quotas");
             verifyScenario(applet.providers[0].usageStale && applet.providers[0].lastGoodAtMs === measuredAt,
@@ -1494,7 +1494,7 @@ Item {
             verifyScenario(applet.providers[0].rows.length === 0 && applet.providers[0].statusKnown
                 && applet.providers[0].status === "Operational", "quota expiry erased fresh service status");
             applet.commitUsageSnapshot(previous);
-            usageLifecycle.parseOutput("null", "");
+            usageLifecycle.parseOutput("null", "", 0);
             verifyScenario(applet.providers[0].rows.length === 2, "invalid envelope erased quotas");
             verifyScenario(applet.notificationObservations().every(function(item) { return item.pending; }),
                 "retained service status was promoted to a fresh observation");

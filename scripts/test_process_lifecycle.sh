@@ -453,7 +453,7 @@ require_ordered(
         "ProviderRosterCache.responseContextsMatch(",
         "scheduleUsageRefresh()",
         "return",
-        "var result = UsageResponse.roster(stdoutText, stderrText)",
+        "var result = UsageResponse.roster(",
         'if (result.outcome !== "success")',
         "return",
         "ProviderRosterCache.remember(",
@@ -550,7 +550,7 @@ require_ordered(
 require_ordered(
     controller_function(cost_text, "acceptReply"),
     ("CommandLedger.find(commands, sourceName)", "if (!descriptor)", "return;",
-     "finishRequest(sourceName)", "CostResponse.response(stdoutText, stderrText, descriptor.historyDays)",
+     "finishRequest(sourceName)", "CostResponse.response(stdoutText, stderrText, descriptor.historyDays, exitCode)",
      "snapshotContext === descriptor.context", "Normalizer.mergeCostSnapshotsAfterPartialFailure("),
     "only live cost replies may commit or retain snapshots from the captured context",
 )

@@ -63,6 +63,27 @@ TestCase {
         compare(subject.errorText, "Month to date and All history need codexbar 0.67.0 or later.");
         compare(subject.costs, {});
     }
+    function test_argumentFailureRetainsSameContextData() {
+        var subject = create("rejected-same");
+        completed(subject, "rejected-same 1");
+        var previous = subject.costs;
+        verify(subject.refresh(true));
+        tryVerify(function() { return !subject.loading && subject.errorText.length > 0; });
+        compare(subject.costs, previous);
+        compare(subject.errorText, "Unknown option --period");
+    }
+    function test_argumentFailurePreservesSnapshotForContextRoundTrip() {
+        var subject = create("rejected-period");
+        completed(subject, "rejected-period 1");
+        var previous = subject.costs;
+        subject.historyPeriod = "all";
+        tryVerify(function() { return !subject.loading && subject.errorText.length > 0; });
+        compare(subject.costs, {});
+        compare(subject.errorText, "Month to date and All history need codexbar 0.67.0 or later.");
+        subject.historyPeriod = "";
+        compare(subject.costs, previous);
+        completed(subject, "rejected-period 3");
+    }
     function test_disabledOrMissingCommandDoesNotStart_data() {
         return [{tag: "disabled", options: {costUsageEnabled: false}},
                 {tag: "missing", options: {commandPath: ""}}];
@@ -128,7 +149,8 @@ TestCase {
         verify(subject.errorText.length > 0);
     }
     function test_transientFailuresRetainDataAndThrottleAutomaticRetries_data() {
-        return [{tag: "stderr", script: "failure"}, {tag: "malformed", script: "malformed"},
+        return [{tag: "stderr", script: "failure"}, {tag: "exit-one-success", script: "failed-valid"},
+                {tag: "timeout-success", script: "failed-timeout"}, {tag: "failed-empty", script: "failed-empty"}, {tag: "malformed", script: "malformed"},
                 {tag: "unsupported", script: "unsupported"}, {tag: "empty", script: "missing"}];
     }
     function test_transientFailuresRetainDataAndThrottleAutomaticRetries(data) {
@@ -219,7 +241,7 @@ import time
 args = sys.argv[1:]
 name = Path(sys.argv[0]).name
 expected_provider = ["--provider", "example'; quoted provider"] if name == "batched" else ["--provider", "codex"]
-if name in ("period", "oldperiod"):
+if name in ("period", "oldperiod") or (name == "rejected-period" and "--period" in args):
     valid = (args[:5] == ["cost", "--format", "json", "--json-only", "--period"]
              and args[5] in ("month-to-date", "all") and args[6:] in ([], expected_provider))
 else:
@@ -246,6 +268,13 @@ if name == "late" and run == 2:
 if name == "late" and run == 3:
     time.sleep(3)
 if run > 1:
+    if name == "rejected-same" or (name == "rejected-period" and "--period" in args):
+        print(json.dumps([{"provider": "cli", "source": "cli",
+                           "error": {"kind": "args", "code": 1, "message": "Unknown option --period"}}]))
+        sys.exit(1)
+    if name in ("failed-valid", "failed-timeout", "failed-empty"):
+        print(json.dumps([] if name == "failed-empty" else [{"provider": "codex", "account": "Wrong", "totals": {"totalCost": 99}}]))
+        sys.exit(124 if name == "failed-timeout" else 1)
     if name == "failure":
         print("synthetic cost failure", file=sys.stderr)
         sys.exit(1)
@@ -257,10 +286,11 @@ if run > 1:
 result = [{"provider": "codex", "historyLabel": name + " " + str(run),
            "totals": {"totalCost": run}}]
 if name == "partial":
-    result.append({"provider": "claude", **({"totals": {"totalCost": 9}} if run == 1 else {"error": {"message": {"toString": None}}})})
+    result.append({"provider": "claude", **({"totals": {"totalCost": 9}} if run == 1 else {"error": {"kind": "provider", "code": 1, "message": {"toString": None}}})})
     if run == 1:
         result.append({"provider": "gemini", "totals": {"totalCost": 8}})
 print(json.dumps(result))
+if name == "partial" and run > 1: sys.exit(1)
 '''
 
 
@@ -268,7 +298,7 @@ class CostContextTests(unittest.TestCase):
     def test_production_lifecycle_with_synthetic_cli(self):
         with tempfile.TemporaryDirectory(prefix="codexbar cost 'test-") as temporary:
             directory = Path(temporary)
-            for name in ("normal", "batched", "partial", "slow", "late", "failure",
+            for name in ("rejected-same", "rejected-period", "failed-valid", "failed-timeout", "failed-empty", "normal", "batched", "partial", "slow", "late", "failure",
                          "malformed", "unsupported", "missing", "empty", "period", "oldperiod"):
                 script = directory / name
                 script.write_text(CLI)

@@ -36,7 +36,7 @@ class SessionsTest(unittest.TestCase):
     def test_sessions_lifecycle(self):
         for session_contract_fragment in (
             '"sessions", "--json-v2"',
-            "SessionResponse.response(stdoutText, stderrText)",
+            "SessionResponse.response(stdoutText, stderrText, exitCode)",
             "maximumSessions = 128",
             "function normalizeSession(item)",
         ):

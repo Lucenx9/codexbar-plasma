@@ -34,7 +34,7 @@ TestCase {
             currencyCode: "USD", updatedAt: "2026-10-15T08:52:08Z",
             historyCoverageIsEstablished: true, coverage: coverage,
             provenance: data.priced ? "listPriceEstimate" : "unknown", totals: totals, daily: [day]}
-        var normalized = CostResponse.response(JSON.stringify([item]), "", 7).costs.codex
+        var normalized = CostResponse.response(JSON.stringify([item]), "", 7, 0).costs.codex
         compare(normalized.totals.tokens, totalTokens)
         compare(normalized.totals.cost, data.priced ? 0.000225 : null)
         compare(normalized.trust.coverage.unpriced, 1)
@@ -62,7 +62,7 @@ TestCase {
             totals: {totalTokens: 330, totalCost: 0.00045, coverage: coverage},
             daily: [{date: "2026-10-15", totalTokens: 330, totalCost: 0.00045,
                 modelBreakdowns: [{modelName: "gpt-5", totalTokens: 330, cost: 0.00045}]}]}
-        var normalized = CostResponse.response(JSON.stringify([item]), "", 7).costs.codex
+        var normalized = CostResponse.response(JSON.stringify([item]), "", 7, 0).costs.codex
         compare(normalized.valueMode, "partial")
         compare(normalized.models[0].tokens, 330)
         compare(normalized.models[0].cost, 0.00045)
@@ -178,7 +178,7 @@ TestCase {
         models.push({modelName: "unknown tokens", cost: 100})
         var response = CostResponse.response(JSON.stringify([{provider: "codex", historyDays: 30,
             totals: {totalCost: 136, totalTokens: 936},
-            daily: [{date: "2026-09-22", modelBreakdowns: models}]}]), "", 30)
+            daily: [{date: "2026-09-22", modelBreakdowns: models}]}]), "", 30, 0)
         var cost = response.costs.codex
         compare(cost.models.length, 6)
         compare(cost.models[0].label, "unknown tokens")
@@ -209,7 +209,7 @@ TestCase {
         function normalizedCost(rows) {
             var response = CostResponse.response(JSON.stringify([{provider: "codex", historyDays: 30,
                 totals: {totalCost: rows.length, totalTokens: rows.length * 10},
-                daily: [{date: "2026-09-22", modelBreakdowns: rows}]}]), "", 30)
+                daily: [{date: "2026-09-22", modelBreakdowns: rows}]}]), "", 30, 0)
             return response.costs.codex
         }
         var complete = normalizedCost(models)
