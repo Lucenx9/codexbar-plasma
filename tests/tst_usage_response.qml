@@ -70,7 +70,7 @@ TestCase {
     }
 
     function test_boundedEnvelopes(data) {
-        compare(UsageResponse.response(data.value, "", "", 1).outcome, data.outcome);
+        compare(UsageResponse.response(data.value, "", "", 1, 0).outcome, data.outcome);
     }
 
     function test_limitsApplyBeforeReadingRecords() {
@@ -85,17 +85,17 @@ TestCase {
     }
 
     function test_rosterDistinguishesEmptyFromInvalid() {
-        compare(UsageResponse.roster("[]", "").outcome, "success");
-        compare(UsageResponse.roster("null", "").outcome, "noProviders");
+        compare(UsageResponse.roster("[]", "", 0).outcome, "success");
+        compare(UsageResponse.roster("null", "", 0).outcome, "noProviders");
         var result = UsageResponse.roster(JSON.stringify([
             {provider: "codex", displayName: "Synthetic Codex", enabled: true},
-            {provider: "claude", enabled: false}]), "");
+            {provider: "claude", enabled: false}]), "", 0);
         compare(result.providerIDs, ["codex"]);
         compare(result.displayNames.codex, "Synthetic Codex");
     }
 
     function test_errorsAreRedactedAndBounded() {
-        var result = UsageResponse.response("", "Authorization: Bearer synthetic-secret-abcdef " + "x".repeat(5000), "", 1);
+        var result = UsageResponse.response("", "Authorization: Bearer synthetic-secret-abcdef " + "x".repeat(5000), "", 1, 0);
         verify(result.message.indexOf("synthetic-secret-abcdef") < 0);
         verify(result.message.length <= SafeText.maximumCliMessageLength);
     }

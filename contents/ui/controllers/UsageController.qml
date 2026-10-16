@@ -368,7 +368,7 @@ Item {
                 failUsageRefresh(i18n("Loading provider configuration timed out. Try again."));
                 return;
             case "providerFallback":
-                parseProviderFallbackOutput(sourceName, descriptor.providerID, "", i18n("Loading usage timed out. Try again."));
+                parseProviderFallbackOutput(sourceName, descriptor.providerID, "", i18n("Loading usage timed out. Try again."), 124);
                 return;
             default:
                 finishUsageCommandSource(sourceName);
@@ -411,6 +411,8 @@ Item {
 
         function responseMessage(result, roster) {
             switch (result.outcome) {
+            case "commandFailed":
+                return result.message || i18n("codexbar command failed.");
             case "tooLarge":
                 return i18n("codexbar response exceeded the supported size.");
             case "invalidJson":
@@ -422,8 +424,8 @@ Item {
             }
         }
 
-        function parseOutput(stdoutText, stderrText) {
-            var result = UsageResponse.response(stdoutText, stderrText, "", Date.now());
+        function parseOutput(stdoutText, stderrText, exitCode) {
+            var result = UsageResponse.response(stdoutText, stderrText, "", Date.now(), exitCode);
             if (result.outcome !== "success") {
                 if (result.outcome === "empty" && canUseProviderFallback()) {
                     startProviderFallback();
@@ -435,12 +437,12 @@ Item {
             finishProviderFallback(result.items);
         }
 
-        function parseProviderConfigOutput(descriptor, stdoutText, stderrText) {
+        function parseProviderConfigOutput(descriptor, stdoutText, stderrText, exitCode) {
             if (!descriptor || !ProviderRosterCache.responseContextsMatch(descriptor.providerRosterContext, providerRosterContext())) {
                 scheduleUsageRefresh();
                 return;
             }
-            var result = UsageResponse.roster(stdoutText, stderrText);
+            var result = UsageResponse.roster(stdoutText, stderrText, exitCode);
             if (result.outcome !== "success") {
                 failUsageRefresh(responseMessage(result, true));
                 return;
@@ -450,9 +452,9 @@ Item {
             startProviderFallbackForProviders(result.providerIDs);
         }
 
-        function parseProviderFallbackOutput(sourceName, providerID, stdoutText, stderrText) {
+        function parseProviderFallbackOutput(sourceName, providerID, stdoutText, stderrText, exitCode) {
             finishUsageCommandSource(sourceName);
-            var result = UsageResponse.response(stdoutText, stderrText, providerID, Date.now());
+            var result = UsageResponse.response(stdoutText, stderrText, providerID, Date.now(), exitCode);
             var item = result.outcome === "success" ? result.items[0] : ProviderSnapshot.normalize({
                 provider: providerID,
                 source: controller.sourceMode || "auto",
@@ -493,6 +495,7 @@ Item {
                 return;
             }
 
+            var exitCode = data ? data["exit code"] : null;
             var stdoutText = data ? data["stdout"] : "";
             var stderrText = data ? data["stderr"] : "";
             // A shell that cannot run the configured executable reports it the
@@ -503,14 +506,14 @@ Item {
             switch (descriptor.kind) {
             case "providerConfig":
                 lifecycle.finishUsageCommandSource(sourceName);
-                lifecycle.parseProviderConfigOutput(descriptor, stdoutText, stderrText);
+                lifecycle.parseProviderConfigOutput(descriptor, stdoutText, stderrText, exitCode);
                 return;
             case "providerFallback":
-                lifecycle.parseProviderFallbackOutput(sourceName, descriptor.providerID, stdoutText, stderrText);
+                lifecycle.parseProviderFallbackOutput(sourceName, descriptor.providerID, stdoutText, stderrText, exitCode);
                 return;
             case "usage":
                 lifecycle.finishUsageCommandSource(sourceName);
-                lifecycle.parseOutput(stdoutText, stderrText);
+                lifecycle.parseOutput(stdoutText, stderrText, exitCode);
                 return;
             default:
                 lifecycle.finishUsageCommandSource(sourceName);

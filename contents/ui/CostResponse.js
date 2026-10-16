@@ -1,11 +1,7 @@
 .pragma library
 .import "ProviderNormalizer.js" as Normalizer
 .import "CostPresentation.js" as CostPresentation
-.import "SafeText.js" as SafeText
-
-function boundedMessage(value) {
-    return SafeText.cliMessage(SafeText.stripLoaderDiagnostics(value), SafeText.maximumCliMessageLength);
-}
+.import "CliResponse.js" as CliResponse
 
 // `--period all` reports the days since year 1. Size its window from the
 // oldest recorded day to the scan day instead; dates after a known scan day
@@ -93,20 +89,10 @@ function normalizeSnapshot(item, requestedHistoryDays) {
 
 // Only success and partial results contain replacement data. Other outcomes
 // leave the controller's last completed snapshot untouched.
-function response(stdoutValue, stderrValue, requestedHistoryDays) {
-    var text = SafeText.cliJsonText(stdoutValue);
-    if (text === null) {
-        return {outcome: "tooLarge", message: ""};
-    }
-    if (text.trim().length === 0) {
-        return {outcome: "empty", message: boundedMessage(stderrValue)};
-    }
-    var payload;
-    try {
-        payload = JSON.parse(text);
-    } catch (error) {
-        return {outcome: "invalidJson", message: boundedMessage(error.message)};
-    }
+function response(stdoutValue, stderrValue, requestedHistoryDays, exitCode) {
+    var parsed = CliResponse.decode(stdoutValue, stderrValue, exitCode, Normalizer.maximumCostSnapshots);
+    if (parsed.outcome !== "success") return parsed;
+    var payload = parsed.payload;
     var items = Normalizer.normalizeCostEnvelope(payload);
     if (items === null) {
         return {outcome: "unsupported", message: ""};
@@ -123,7 +109,7 @@ function response(stdoutValue, stderrValue, requestedHistoryDays) {
             argumentsRejected = argumentsRejected || (Normalizer.isCliRecord(item.error) && item.error.kind === "args");
             failedProviders.push(item.provider);
             if (message.length === 0 && item.error && item.error.message) {
-                message = boundedMessage(Normalizer.safeScalarText(item.error.message));
+                message = CliResponse.message(Normalizer.safeScalarText(item.error.message));
             }
         } else {
             var cost = normalizeSnapshot(item, requestedHistoryDays);

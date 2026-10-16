@@ -9,7 +9,7 @@ TestCase {
     name: "CostResponse"
 
     function parse(payload, days) {
-        return CostResponse.response(JSON.stringify(payload), "", days === undefined ? 30 : days);
+        return CostResponse.response(JSON.stringify(payload), "", days === undefined ? 30 : days, 0);
     }
     function test_structuredHistoryDatesPreserveHealthyProviders_data() {
         var cases = [];
@@ -96,7 +96,7 @@ TestCase {
         ];
     }
     function test_failuresNeverSupplyReplacementData(data) {
-        var result = CostResponse.response(data.text, "synthetic failure", 7);
+        var result = CostResponse.response(data.text, "synthetic failure", 7, 0);
         compare(result.outcome, data.outcome);
         compare(result.costs, undefined);
         verify(result.message.length <= SafeText.maximumCliMessageLength);

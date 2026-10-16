@@ -104,7 +104,7 @@ Item {
                 finishRequest(sources[i]);
         }
 
-        function acceptReply(sourceName, stdoutText, stderrText) {
+        function acceptReply(sourceName, stdoutText, stderrText, exitCode) {
             var descriptor = CommandLedger.find(commands, sourceName);
             var decision = AccountRequests.completion(commands, sourceName, descriptor ? command(descriptor.providerID) : "");
             if (!decision)
@@ -112,7 +112,7 @@ Item {
             finishRequest(sourceName);
             if (!decision.acceptsPayload)
                 return;
-            var result = AccountResponse.response(stdoutText, stderrText, decision.providerID, Date.now());
+            var result = AccountResponse.response(stdoutText, stderrText, decision.providerID, Date.now(), exitCode);
             var message = "";
             switch (result.outcome) {
             case "success":
@@ -153,7 +153,7 @@ Item {
         engine: "executable"
         interval: 0
         onNewData: function (sourceName, data) {
-            lifecycle.acceptReply(sourceName, data ? data["stdout"] : "", data ? data["stderr"] : "");
+            lifecycle.acceptReply(sourceName, data ? data["stdout"] : "", data ? data["stderr"] : "", data ? data["exit code"] : null);
         }
     }
 

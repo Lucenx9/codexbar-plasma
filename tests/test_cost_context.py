@@ -128,7 +128,8 @@ TestCase {
         verify(subject.errorText.length > 0);
     }
     function test_transientFailuresRetainDataAndThrottleAutomaticRetries_data() {
-        return [{tag: "stderr", script: "failure"}, {tag: "malformed", script: "malformed"},
+        return [{tag: "stderr", script: "failure"}, {tag: "exit-one-success", script: "failed-valid"},
+                {tag: "timeout-success", script: "failed-timeout"}, {tag: "failed-empty", script: "failed-empty"}, {tag: "malformed", script: "malformed"},
                 {tag: "unsupported", script: "unsupported"}, {tag: "empty", script: "missing"}];
     }
     function test_transientFailuresRetainDataAndThrottleAutomaticRetries(data) {
@@ -246,6 +247,9 @@ if name == "late" and run == 2:
 if name == "late" and run == 3:
     time.sleep(3)
 if run > 1:
+    if name in ("failed-valid", "failed-timeout", "failed-empty"):
+        print(json.dumps([] if name == "failed-empty" else [{"provider": "codex", "account": "Wrong", "totals": {"totalCost": 99}}]))
+        sys.exit(124 if name == "failed-timeout" else 1)
     if name == "failure":
         print("synthetic cost failure", file=sys.stderr)
         sys.exit(1)
@@ -257,10 +261,11 @@ if run > 1:
 result = [{"provider": "codex", "historyLabel": name + " " + str(run),
            "totals": {"totalCost": run}}]
 if name == "partial":
-    result.append({"provider": "claude", **({"totals": {"totalCost": 9}} if run == 1 else {"error": {"message": {"toString": None}}})})
+    result.append({"provider": "claude", **({"totals": {"totalCost": 9}} if run == 1 else {"error": {"kind": "provider", "code": 1, "message": {"toString": None}}})})
     if run == 1:
         result.append({"provider": "gemini", "totals": {"totalCost": 8}})
 print(json.dumps(result))
+if name == "partial" and run > 1: sys.exit(1)
 '''
 
 
@@ -268,7 +273,7 @@ class CostContextTests(unittest.TestCase):
     def test_production_lifecycle_with_synthetic_cli(self):
         with tempfile.TemporaryDirectory(prefix="codexbar cost 'test-") as temporary:
             directory = Path(temporary)
-            for name in ("normal", "batched", "partial", "slow", "late", "failure",
+            for name in ("failed-valid", "failed-timeout", "failed-empty", "normal", "batched", "partial", "slow", "late", "failure",
                          "malformed", "unsupported", "missing", "empty", "period", "oldperiod"):
                 script = directory / name
                 script.write_text(CLI)

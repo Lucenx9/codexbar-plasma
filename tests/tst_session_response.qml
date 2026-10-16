@@ -20,7 +20,7 @@ TestCase {
     }
 
     function test_confirmedEmptySnapshot(data) {
-        var result = SessionResponse.response(data.text, "ignored diagnostic");
+        var result = SessionResponse.response(data.text, "ignored diagnostic", 0);
         compare(result.outcome, "success");
         compare(result.sessions, []);
         compare(result.message, "");
@@ -67,19 +67,19 @@ TestCase {
     }
 
     function test_failureHasNoReplacementSnapshot(data) {
-        var result = SessionResponse.response(data.text, "scan failed");
+        var result = SessionResponse.response(data.text, "scan failed", 0);
         compare(result.outcome, data.outcome);
         verify(result.sessions === undefined);
         verify(result.message.length <= SafeText.maximumCliMessageLength);
     }
 
     function test_diagnosticsAreBoundedAndRedacted() {
-        var result = SessionResponse.response("", "Authorization: Bearer synthetic-session-secret\n" + "x".repeat(800));
+        var result = SessionResponse.response("", "Authorization: Bearer synthetic-session-secret\n" + "x".repeat(800), 0);
         compare(result.outcome, "empty");
         verify(result.message.length > 0);
         verify(result.message.length <= SafeText.maximumCliMessageLength);
         verify(result.message.indexOf("synthetic-session-secret") === -1);
-        var malformed = SessionResponse.response('Bearer synthetic-session-secret {', "");
+        var malformed = SessionResponse.response('Bearer synthetic-session-secret {', "", 0);
         compare(malformed.outcome, "invalidJson");
         verify(malformed.message.indexOf("synthetic-session-secret") === -1);
     }
@@ -99,7 +99,7 @@ TestCase {
         }
         var result = SessionResponse.response(JSON.stringify({
             sessions: items
-        }), "");
+        }), "", 0);
         compare(result.outcome, "success");
         compare(result.sessions.length, 128);
         var serialized = JSON.stringify(result.sessions);

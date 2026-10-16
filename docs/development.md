@@ -273,7 +273,7 @@ synchronized.
   inputs and adapts the outputs for the existing view and privacy presentation.
   `SessionRefreshPolicy.js` owns pure scheduling decisions; `SessionResponse.js`
   bounds and classifies CLI output through the existing session normalizer.
-  The DataSource adapter admits session stdout only after a zero exit code;
+  The shared response decoder admits session stdout only after a zero exit code;
   failed scans retain the previous successful snapshot and timestamp.
 - `contents/ui/controllers/ProviderConfigWatcher.qml` owns the read-only config
   checksum command, minute polling, connection changes, and retired replies.
@@ -1364,6 +1364,48 @@ Use `plasmawindowed app.codexbar.plasma` for an installed-widget check.
 Restarting/replacing `plasmashell` is a final runtime check, not the edit loop.
 Use `qmlprofiler` only after reproducing a performance problem, and keep traces
 in ignored `dist/review/` or the OS temp directory.
+
+## CLI response validation
+
+`CliResponse.js` owns bounded JSON decoding, redacted diagnostics and exit-code
+acceptance for `UsageResponse`, `AccountResponse`, `CostResponse`, and
+`SessionResponse`. The response modules retain their domain normalization; QML
+owners pass the actual executable-engine exit code and retain process lifecycles,
+localization, cache writes and stale-reply handling. Missing or nonnumeric exit
+codes fail closed. Fixtures must pass an explicit status too.
+
+Sessions and usage's provider-roster discovery require exit 0. Usage, account
+usage and cost also accept exit 1 when the consumed record window contains an
+identified provider/CLI error with numeric `error.code: 1` and `error.kind` of
+`provider` or `args`. This preserves healthy siblings, named failed accounts,
+missing-token-account empty lists and older-CLI argument diagnostics. An
+unexplained success/empty JSON payload at exit 1 cannot replace data. Other
+nonzero exits, including timeout and shell launch failures, carry no replacement
+payload. Empty stdout remains a failure; the existing usage fallback may recover
+it. `IdentifiedTokens.js` has its separate ledger contract and is not migrated.
+
+Verified on 2026-10-16 with the official Linux 0.76.0 archive, SHA-256
+`44be9901769d6d4d111cacae8b679aa5c585b26f77afa4f6436b0928206091fd`,
+matching the [pinned release evidence](research/2026-10-15-macos-parity-0.76.0.md#probe-method).
+The installed executable independently reported 0.76.0. Release probes used
+`bwrap --unshare-all --clearenv`, masked host homes/runtime/temp directories,
+isolated home/config/cache and a 25-second deadline, without host credentials
+or network. Only supported CLI config commands enabled the synthetic Pi case.
+
+| Command / isolated condition | Exit | Observed response |
+| --- | --- | --- |
+| `usage --provider codex --source oauth --format json --json-only`, no credentials | 1 | Provider error record; no stderr |
+| `usage --provider claude --all-accounts --format json --json-only`, no accounts | 1 | Missing-token-accounts provider error |
+| `usage --format json --json-only`, default Codex plus enabled Pi | 1 | Codex error and healthy local Pi usage in the same array |
+| `cost --provider codex --format json --json-only`, empty history | 0 | Zero-valued cost snapshot |
+| `cost --provider cursor --format json --json-only` / unsupported option | 1 | `args` error under provider `cli` |
+| `sessions --json-v2` / unsupported option | 0 / 1 | Empty array / empty stdout and diagnostic stderr |
+| `config providers --format json --json-only` | 0 | Provider records |
+
+Direct `tst_cli_response.qml` tests cover the exit policies, consumed-record
+bounds, mixed results, redaction and payload limits. The production controller
+fixtures cover failed valid JSON, retention and loading release, roster rejection,
+scoped usage failures, and the pre-existing nonce/timeout/stale-result behavior.
 
 ## CLI probes and packaging
 

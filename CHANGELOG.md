@@ -16,6 +16,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   spacing as Cost summaries, and reveal truncated summary labels and values on hover.
   Match the identified Codex subtotal heading to other sections and emphasize
   its loaded total.
+- Reject usage, cost, account and provider-list JSON from failed CLI processes
+  without discarding the CLI's supported structured errors or healthy partial
+  results. Failed refreshes preserve existing data under their retention rules.
 - Align provider icons across Popup settings lists, follow the theme's text
   color, and give stacked restore actions consistent spacing.
 - Keep popup tabs at a stable width when selected. Use consistent small

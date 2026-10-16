@@ -2,20 +2,14 @@
 .import "Guards.js" as Guards
 .import "ProviderNormalizer.js" as Normalizer
 .import "ProviderSnapshot.js" as ProviderSnapshot
-.import "SafeText.js" as SafeText
+.import "CliResponse.js" as CliResponse
 
 // An empty named-account list is a successful result. Failed refreshes carry
 // no options so the controller can retain the last successful list.
-function response(stdoutValue, stderrValue, providerID, receivedAtMs) {
-    var text = SafeText.cliJsonText(stdoutValue);
-    if (text === null) return {outcome: "tooLarge", message: ""};
-    if (text.trim().length === 0) return {outcome: "empty", message: ProviderSnapshot.message(stderrValue)};
-    var payload;
-    try {
-        payload = JSON.parse(text);
-    } catch (error) {
-        return {outcome: "invalidJson", message: ProviderSnapshot.message(error.message)};
-    }
+function response(stdoutValue, stderrValue, providerID, receivedAtMs, exitCode) {
+    var parsed = CliResponse.decode(stdoutValue, stderrValue, exitCode, Normalizer.maximumAccountSnapshots);
+    if (parsed.outcome !== "success") return parsed;
+    var payload = parsed.payload;
     return records(payload, providerID, receivedAtMs);
 }
 
