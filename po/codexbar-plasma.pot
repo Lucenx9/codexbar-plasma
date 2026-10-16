@@ -3322,10 +3322,6 @@ msgid "Could not check CLI releases. Try again later."
 msgstr ""
 
 #: contents/ui/controllers/CostController.qml
-msgid "Loading cost data timed out. Try again."
-msgstr ""
-
-#: contents/ui/controllers/CostController.qml
 msgid "Some cost data could not be refreshed."
 msgstr ""
 
@@ -3343,6 +3339,10 @@ msgstr ""
 
 #: contents/ui/controllers/CostController.qml
 msgid "codexbar cost returned an unsupported JSON payload."
+msgstr ""
+
+#: contents/ui/controllers/CostController.qml
+msgid "Loading cost data timed out. Try again."
 msgstr ""
 
 #: contents/ui/controllers/ManagedCliController.qml
@@ -3395,10 +3395,6 @@ msgid ""
 msgstr ""
 
 #: contents/ui/controllers/SessionsController.qml
-msgid "Loading sessions timed out. Try again."
-msgstr ""
-
-#: contents/ui/controllers/SessionsController.qml
 msgid "codexbar sessions did not return JSON."
 msgstr ""
 
@@ -3408,6 +3404,10 @@ msgstr ""
 
 #: contents/ui/controllers/SessionsController.qml
 msgid "codexbar sessions returned an unsupported JSON payload."
+msgstr ""
+
+#: contents/ui/controllers/SessionsController.qml
+msgid "Loading sessions timed out. Try again."
 msgstr ""
 
 #: contents/ui/controllers/UpdateNotificationsController.qml

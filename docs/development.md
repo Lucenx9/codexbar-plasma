@@ -261,9 +261,10 @@ synchronized.
   Success intents also require a zero process exit code before changing the
   available version, recording a successful check or emitting notifications.
   Structured updater errors remain readable when the process exits nonzero.
-- `contents/ui/controllers/SessionsController.qml` owns the Sessions executable
-  source, request ledger, timeout, refresh timer, snapshot, and attempt/success
-  timestamps. Its inputs are the CLI path, refresh interval, and whether the
+- `contents/ui/controllers/SessionsController.qml` owns Sessions command construction,
+  refresh scheduling, snapshots, and attempt/success timestamps. Its
+  `CliProcess` child owns executable requests and deadlines. Its inputs are the
+  CLI path, refresh interval, and whether the
   Sessions tab is open; `SessionRefreshPolicy.staleAfterMs` caps the visible
   rescan cadence at 30 seconds, matching the macOS local session monitor. `refresh()` requests a manual scan; read-only outputs
   expose normalized sessions, loading, error text, and the last successful
@@ -440,8 +441,9 @@ external effects, and cheapest behavioral test. Read the existing implementation
 and tests. Preserve compatibility and unexpected behavior until evidence or the
 request shows it should change.
 
-`controllers/CostController.qml` owns cost commands, nonces, deadlines, cached
-context, and the independent hourly/day-aware refresh policy. Source changes
+`controllers/CostController.qml` owns cost command construction, cached
+context, and the independent hourly/day-aware refresh policy. Its `CliProcess`
+child owns executable requests and deadlines. Source changes
 retire obsolete commands synchronously and coalesce settings through
 `Qt.callLater`. Only snapshots for the current command context reach `main.qml`,
 which supplies them to `CostText` for localization and attaches them to fresh
@@ -451,6 +453,21 @@ localization. `tests/test_cost_context.py` exercises the production controller
 with isolated CLI processes; `tests/tst_cost_response.qml` covers adversarial
 response normalization. Together they cover batched settings, partial failures,
 late replies, disabled costs, timeout retention, and forced manual refreshes.
+
+`controllers/CliProcess.qml` owns one active executable request per instance.
+`start(command, context, timeoutMs)` supersedes existing work; `cancel()` silently
+retires it. Read-only `busy` reflects active work. Completion forwards the captured
+context and raw stdout, stderr and exit status; timeout forwards the context.
+Callers construct commands and treat context as immutable. The component uses
+`CommandLedger.js` for unique sources and deadlines, retires before callbacks,
+and rejects late or duplicate replies. Cancellation and destruction disconnect
+sources; they do not promise to terminate an underlying subprocess. Reentrant
+callbacks cannot publish retired results over newer work. Domain normalization,
+cache retention, localization and retry policies remain in the controllers.
+`tests/test_cli_process.py` exercises the production component with a fake
+executable transport, including immediate replies, supersession, deadlines,
+reentrancy and destruction. Controller tests retain real executable-engine
+coverage, including source isolation between instances.
 
 When multiple pages consume one CLI envelope, share the bounded record/envelope
 contract and keep page-specific projections separate. Avoid both duplicate raw
