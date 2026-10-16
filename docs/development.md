@@ -327,7 +327,15 @@ synchronized.
   such as `applet` or `configPage`.
 - `contents/ui/configProviders.qml` owns provider setup processes, prompts,
   configuration writes, and effects. Its pure protocol and command-planning
-  modules live in `contents/ui/config/`.
+  modules live in `contents/ui/config/`. `ProviderOperations.js` owns immutable
+  pending-operation state: provider locks and optimistic enablement, field/action
+  locks, diagnostic loading, and deferred reload decisions. Reloads wait for all
+  source writes; when released they preserve the current write error through the
+  roster refresh. QML supplies ledger activity and localized messages, executes
+  the reload intent, and resets this ephemeral state when retiring commands.
+  `tst_provider_operations.qml` directly exercises these transitions; the source
+  write harness still executes page handlers for timeouts, late results and
+  deferred-refresh error retention.
   `ProviderConfigProtocol.response` reads bounded stdout and classifies replies
   from explicit command profiles. Full lists and diagnostics return normalized
   display data; writes return their accepted payload. The `setApiKey` profile

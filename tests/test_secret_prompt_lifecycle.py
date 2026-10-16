@@ -215,6 +215,7 @@ QML_WIRING = '''import QtQuick
 import QtTest
 import "SOURCE_URL/Guards.js" as Guards
 import "SOURCE_URL/ProviderIdentity.js" as ProviderIdentity
+import "SOURCE_URL/config/ProviderOperations.js" as ProviderOperations
 import "SOURCE_URL/SafeText.js" as SafeText
 import "SOURCE_URL/CommandLedger.js" as CommandLedger
 import "SOURCE_URL/config/ProviderDescriptor.js" as ProviderDescriptor
@@ -225,7 +226,6 @@ TestCase {
     property string errorText: ""
     property string statusText: ""
     property bool loading: false
-    property bool reloadDeferredBySourceWrite: false
     property var providers: []
     property var providerDiagnostics: ({})
     property var providerDiagnosticErrors: ({})
@@ -234,9 +234,7 @@ TestCase {
     property bool fireworksSingleKeySetupSupported: false
     property bool commandCodeFalApiKeySetupSupported: false
     property bool providerSourceSetupSupported: false
-    property var pending: ({})
-    property var providerFieldPending: ({})
-    property var providerDiagnosticLoading: ({})
+    property var operationState: ProviderOperations.initialState()
     property var commands: ({})
     property int cfg_providerConfigRevision: 0
     property var configSource
@@ -347,21 +345,9 @@ TestCase {
     function test_providerMapKeyNormalizesAliases() {
         compare(providerMapKey("11labs"), "elevenlabs");
         compare(providerMapKey("codex"), "codex");
-        compare(descriptorPendingKey("__proto__", "apiKey"), "");
+        verify(!isFieldPending("__proto__", "apiKey"));
     }
-    // Field keys are JSON-quoted so a crafted id cannot collide with another
-    // entry, and overlong ids are refused instead of keying unbounded state.
-    function test_descriptorPendingKeysQuoteAndBoundLengths() {
-        compare(descriptorPendingKey("codex", "apiKey"), 'codex::"apiKey"');
-        compare(descriptorPendingKey("codex", "  apiKey  "), 'codex::"apiKey"');
-        compare(descriptorPendingFieldKey(""), "");
-        compare(descriptorPendingKey("codex", ""), "");
-        var longID = new Array(130).join("x");
-        compare(descriptorPendingFieldKey(longID), "");
-        compare(descriptorPendingKey("codex", longID), "");
-    }
-    // The icon file name is built from a provider-controlled key: unusable
-    // keys fall back to the generic icon instead of reaching a URL.
+
     function test_providerIconSourceFallsBackForUnusableKeys() {
         compare(String(providerIconSource("../../etc/passwd")), "view-statistics");
         compare(String(providerIconSource("<b>evil</b>")), "view-statistics");
@@ -515,7 +501,7 @@ TestCase {
     function test_diagnoseResultStoresNormalizedDiagnostic() {
         providerDiagnostics = ({});
         providerDiagnosticErrors = ({});
-        providerDiagnosticLoading = JSON.parse('{"codex": true}');
+        setProviderDiagnosticLoading("codex", true);
         handleDiagnoseResult({provider: "codex"},
             '{"provider": "codex", "source": "config.toml", "auth": {"configured": true, "modes": ["api-key"]}, "settings": {"model": {}}}', "", 0);
         var diagnostic = providerDiagnosticFor("codex");
@@ -531,7 +517,7 @@ TestCase {
     function test_diagnoseResultSurfacesEnvelopeError() {
         providerDiagnostics = ({});
         providerDiagnosticErrors = ({});
-        providerDiagnosticLoading = JSON.parse('{"codex": true}');
+        setProviderDiagnosticLoading("codex", true);
         handleDiagnoseResult({provider: "codex"}, '{"error": {"message": "boom"}}', "", 0);
         verify(providerDiagnosticFor("codex") === null);
         verify(providerDiagnosticErrorFor("codex").length > 0);
@@ -541,7 +527,7 @@ TestCase {
     // reloads preserving messages; the reload keeps status text visible.
     function test_fieldResultSuccessReloadsPreservingMessages() {
         configSource = freshSource();
-        providerFieldPending = ({});
+        operationState = ProviderOperations.initialState();
         page = freshPage();
         errorText = "";
         statusText = "";
@@ -578,7 +564,7 @@ TestCase {
         configSource = freshSource();
         commandRunSerial = 0;
         commands = ({});
-        providerDiagnosticLoading = ({});
+        setProviderDiagnosticLoading("codex", false);
         errorText = "";
         loadProviderSettings("codex");
         compare(configSource.connected.length, 1);
@@ -587,13 +573,13 @@ TestCase {
         verify(command.indexOf("--format json --redact") !== -1);
         verify(command.indexOf("codex") !== -1);
         compare(providerDiagnosticLoadingFor("codex"), true);
-        providerDiagnosticLoading = ({});
+        setProviderDiagnosticLoading("codex", false);
     }
     // A missing write/action command stays silent: the guard returns before
     // the planner could report an unsupported command for a no-op row.
     function test_emptyWriteCommandsStaySilent() {
         configSource = freshSource();
-        providerFieldPending = ({});
+        operationState = ProviderOperations.initialState();
         errorText = "stale";
         writeDescriptorField("codex", {id: "name", kind: "text"}, "abc");
         promptDescriptorSecret("codex", {id: "apiKey", kind: "secret"});
@@ -608,7 +594,7 @@ TestCase {
         configSource = freshSource();
         commandRunSerial = 0;
         commands = ({});
-        providerFieldPending = ({});
+        operationState = ProviderOperations.initialState();
         errorText = "";
         writeDescriptorField("codex", {id: "name", kind: "text", title: "Name",
             writeCommand: ["codexbar", "config", "set", "--provider", "codex", "{value}"]}, "abc");
@@ -616,7 +602,7 @@ TestCase {
         var entry = CommandLedger.find(commands, configSource.connected[0]);
         verify(entry !== null);
         compare(entry.kind, "descriptorField");
-        providerFieldPending = ({});
+        operationState = ProviderOperations.initialState();
     }
     // Descriptor actions register under the descriptorAction kind for the
     // same routing reason as field writes.
@@ -624,7 +610,7 @@ TestCase {
         configSource = freshSource();
         commandRunSerial = 0;
         commands = ({});
-        providerFieldPending = ({});
+        operationState = ProviderOperations.initialState();
         errorText = "";
         runDescriptorAction("codex", {id: "openDocs",
             command: ["codexbar", "config", "action", "open-docs"]});
@@ -632,7 +618,7 @@ TestCase {
         var entry = CommandLedger.find(commands, configSource.connected[0]);
         verify(entry !== null);
         compare(entry.kind, "descriptorAction");
-        providerFieldPending = ({});
+        operationState = ProviderOperations.initialState();
     }
     // Descriptor rows read straight off the selected item: no descriptor or
     // no list of that shape means no rows, so a missing descriptor cannot
@@ -768,7 +754,7 @@ TestCase {
         compare(supportsApiKeySetup("fal"), false);
     }
     function test_apiKeyActionWaitsForReloadAndVersionProbe() {
-        pending = ({});
+        operationState = ProviderOperations.initialState();
         commands = ({});
         loading = false;
         var item = {provider: "openai", enabled: true, displayName: "OpenAI"};
@@ -789,8 +775,7 @@ TestCase {
     // Action rows offer set-api-key for key providers and a dashboard link
     // only when no descriptor action already opens the dashboard.
     function test_actionRowsGuardDashboardAndOfferApiKey() {
-        pending = ({});
-        providerFieldPending = ({});
+        operationState = ProviderOperations.initialState();
         var dashboard = {provider: "codex", enabled: true, displayName: "Codex",
             descriptor: {actions: [{id: "openDashboard", title: "Dashboard"}]}};
         var guarded = providerActionRows(dashboard);
@@ -825,7 +810,7 @@ TestCase {
     // A failed field write unlocks the field and reports the failure without
     // reloading, so the rejected value stays on screen.
     function test_fieldResultErrorReportsWithoutReload() {
-        providerFieldPending = ({});
+        operationState = ProviderOperations.initialState();
         page = freshPage();
         markFieldPending("codex", "name", true);
         handleDescriptorFieldResult({provider: "codex", fieldID: "name"},
@@ -843,8 +828,7 @@ WIRING_FUNCTIONS = (
     "reload", "runProviderListCommand",
     "runCliVersionCommand", "loadProviderSettings",
     "providerConfigRevisionValue", "bumpProviderConfigRevision",
-    "copyObject", "hasOwnKey", "providerKey", "providerMapKey", "descriptorPendingKey",
-    "descriptorPendingFieldKey", "providerIconSource", "shellQuote", "writeDescriptorField",
+    "copyObject", "hasOwnKey", "providerKey", "providerMapKey", "providerIconSource", "shellQuote", "writeDescriptorField",
     "promptDescriptorSecret", "runDescriptorAction", "handleDescriptorActionResult",
     "retireProviderDiagnostic", "invalidateProviderDiagnostic",
     "handleDescriptorFieldResult", "handleListResult", "handleDiagnoseResult", "handleData",

@@ -14,6 +14,7 @@ from qml_surfaces import Surface
 QML = r'''import QtQuick
 import QtTest
 import "SOURCE_URL/config/ProviderSource.js" as ProviderSource
+import "SOURCE_URL/config/ProviderOperations.js" as ProviderOperations
 import "SOURCE_URL/config/ProviderConfigProtocol.js" as ProviderConfigProtocol
 import "SOURCE_URL/CommandLedger.js" as CommandLedger
 import "SOURCE_URL/Guards.js" as Guards
@@ -36,12 +37,8 @@ TestCase {
             property real configSecretCommandKillAfterSeconds: 1
             property int commandRunSerial: 0
             property var commands: ({})
-            property var pending: ({})
-            property var pendingDesired: ({})
-            property var providerFieldPending: ({})
-            property var providerDiagnosticLoading: ({})
+            property var operationState: ProviderOperations.initialState()
             property bool loading: false
-            property bool reloadDeferredBySourceWrite: false
             property bool providerDescriptorsUnavailable: false
             property var providers: [{provider: "codex", enabled: false}, {provider: "future", enabled: true}]
             property string selectedProviderID: "codex"
@@ -82,8 +79,8 @@ TestCase {
         for (var mode of ["api", "auto"]) {
             var page = createTemporaryObject(harness, this);
             var source = start(page, mode);
-            verify(page.pending.codex);
-            compare(page.pendingDesired.codex, false);
+            verify(page.isPending("codex"));
+            compare(page.visualEnabled("codex", true), false);
             page.setProviderSource("codex", "web");
             compare(Object.keys(page.commands).length, 1);
             page.handleData(source, JSON.stringify({provider: "codex", enabled: false, source: mode}), "noise", 0);
@@ -92,7 +89,7 @@ TestCase {
             compare(page.diagnosticsCleared, 1);
             compare(page.cfg_source, "web");
             compare(page.providerSourceBox.currentIndex, -1);
-            verify(!page.pending.codex);
+            verify(!page.isPending("codex"));
             page.handleData(source, JSON.stringify({provider: "codex", enabled: true, source: "web"}), "", 0);
             compare(page.revisions, 1);
         }
@@ -112,7 +109,7 @@ TestCase {
         var page = createTemporaryObject(harness, this);
         var source = start(page, "api");
         page.handleData(source, data.stdout, "", data.code);
-        verify(!page.pending.codex);
+        verify(!page.isPending("codex"));
         compare(page.revisions, 0);
         compare(page.writes, 0);
         compare(page.statusText, "");
@@ -171,18 +168,18 @@ TestCase {
         var page = createTemporaryObject(harness, this);
         var source = start(page, "api");
         page.expireConfigCommands(Date.now() + 61000);
-        verify(!page.pending.codex);
+        verify(!page.isPending("codex"));
         verify(page.errorText.indexOf("timed out") >= 0);
         var newer = start(page, "auto");
         var result = JSON.stringify({provider: "codex", enabled: false, source: "api"});
         page.handleData(source, result, "", 0);
-        verify(page.pending.codex);
+        verify(page.isPending("codex"));
         compare(page.revisions, 0);
         page.retireAllConfigCommands();
         page.commandPath = "other-cli";
         page.handleData(newer, result, "", 0);
         compare(page.revisions, 0);
-        verify(!page.pending.codex);
+        verify(!page.isPending("codex"));
     }
     function test_selectionChangeDoesNotResetAnotherProvidersChoice() {
         var page = createTemporaryObject(harness, this);
@@ -200,18 +197,19 @@ TestCase {
         start(page, "api");
         verify(page.commands["old-diagnostic"] === undefined);
         page.handleData("old-diagnostic", "{}", "", 0);
-        verify(page.pending.codex);
+        verify(page.isPending("codex"));
         compare(page.revisions, 0);
     }
     function test_descriptorPendingBlocksOnlyItsProvidersSource() {
         var page = createTemporaryObject(harness, this);
-        page.providerFieldPending = {'codex::"key"': true, 'future::"action"': true};
+        page.markFieldPending("codex", "key", true);
+        page.markFieldPending("future", "action", true);
         page.setProviderSource("codex", "api");
         compare(Object.keys(page.commands).length, 0);
-        verify(!page.pending.codex);
-        page.providerFieldPending = {'future::"action"': true};
+        verify(!page.isPending("codex"));
+        page.markFieldPending("codex", "key", false);
         start(page, "api");
-        verify(page.pending.codex);
+        verify(page.isPending("codex"));
     }
     function test_reloadAndSourceWritesCannotOverlap() {
         var page = createTemporaryObject(harness, this);
@@ -223,7 +221,7 @@ TestCase {
         verify(page.providerSourceSetupSupported);
         page.setProviderSource("codex", "web");
         compare(Object.keys(page.commands).length, 2);
-        verify(!page.pending.codex);
+        verify(!page.isPending("codex"));
         page.retireAllConfigCommands();
         var source = start(page, "web");
         page.reload();
@@ -251,7 +249,7 @@ TestCase {
         compare(CommandLedger.sourcesOfKind(page.commands, "version").length, 1);
         verify(page.loading);
         compare(page.statusText, "codex setting saved");
-        verify(!page.reloadDeferredBySourceWrite);
+        verify(!page.operationState.reloadDeferred);
     }
     function rosterResult() {
         return JSON.stringify([{provider: "codex", enabled: false}, {provider: "future", enabled: true}]);
@@ -314,7 +312,8 @@ TestCase {
             writeCommand: ["codexbar", "config", "set-api-key", "--provider", "codex", "--stdin"]});
         page.runDescriptorAction("codex", {id: "login", command: ["codexbar", "config", "action", "login"]});
         compare(Object.keys(page.commands).length, 1);
-        compare(Object.keys(page.providerFieldPending).length, 0);
+        verify(!page.hasPendingFields("codex"));
+        verify(!page.hasPendingFields("future"));
         page.writeDescriptorField("future", textField("future"), "abc");
         compare(Object.keys(page.commands).length, 2);
         verify(page.isFieldPending("future", "name"));
@@ -335,7 +334,7 @@ class ProviderSourceTests(unittest.TestCase):
                  "retireAllConfigCommands", "reload", "disconnectCommandsByKind",
                  "runProviderListCommand", "runCliVersionCommand", "writeDescriptorField",
                  "promptDescriptorSecret", "runDescriptorAction", "isFieldPending",
-                 "markFieldPending", "descriptorPendingKey", "descriptorPendingFieldKey",
+                 "markFieldPending", "hasPendingFields",
                  "handleListResult", "shouldRetryProviderListWithoutDescriptors",
                  "descriptorListUnsupportedMessage", "firstSelectableProvider")
         functions = []
