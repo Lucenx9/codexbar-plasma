@@ -12,6 +12,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Align provider icons across Popup settings lists, follow the theme's text
+  color, and give stacked restore actions consistent spacing.
 - Keep popup tabs at a stable width when selected. Use consistent small
   header metadata, section headings and provider-row padding, and align
   provider actions more closely with the content.

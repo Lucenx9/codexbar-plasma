@@ -296,7 +296,7 @@ KCM.SimpleKCM {
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            spacing: Kirigami.Units.smallSpacing / 2
+            spacing: Kirigami.Units.smallSpacing
 
             Components.PlainControlsLabel {
                 Layout.fillWidth: true
@@ -313,6 +313,16 @@ KCM.SimpleKCM {
                 delegate: RowLayout {
                     required property var modelData
                     Layout.fillWidth: true
+                    spacing: Kirigami.Units.smallSpacing
+
+                    Kirigami.Icon {
+                        source: page.providerIconSource(modelData)
+                        fallback: "view-statistics"
+                        isMask: true
+                        color: Kirigami.Theme.textColor
+                        Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                        Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                    }
 
                     Components.PlainControlsLabel {
                         text: page.hiddenRowProviderTitle(modelData)
@@ -340,7 +350,7 @@ KCM.SimpleKCM {
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            spacing: Kirigami.Units.smallSpacing / 2
+            spacing: Kirigami.Units.smallSpacing
 
             Components.PlainControlsLabel {
                 Layout.fillWidth: true
@@ -367,6 +377,7 @@ KCM.SimpleKCM {
                         source: page.providerIconSource(modelData.provider)
                         fallback: "view-statistics"
                         isMask: true
+                        color: Kirigami.Theme.textColor
                         Layout.preferredWidth: Kirigami.Units.iconSizes.small
                         Layout.preferredHeight: Kirigami.Units.iconSizes.small
                     }
@@ -448,6 +459,7 @@ KCM.SimpleKCM {
                         source: page.providerIconSource(modelData.provider)
                         fallback: "view-statistics"
                         isMask: true
+                        color: Kirigami.Theme.textColor
                         Layout.preferredWidth: Kirigami.Units.iconSizes.small
                         Layout.preferredHeight: Kirigami.Units.iconSizes.small
                     }

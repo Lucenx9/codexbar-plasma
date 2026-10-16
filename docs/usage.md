@@ -741,6 +741,8 @@ fields; track proposed extensions in the issue tracker.
   **Popup** and **Notifications** keep their text and controls still while the
   page opens, including while the Popup provider list arrives.
 - **Popup** helper notes use smaller secondary text beneath the controls.
+  Hidden-section, hidden-row and provider-order lists share aligned, themed
+  provider icons; stacked restore actions use the normal settings spacing.
   The reorder buttons in **Panel** and **Popup**, and the reload button in
   **Providers**, reveal their labels on keyboard focus as well as hover.
   Truncated names and IDs in the **Providers** list reveal their full text on
