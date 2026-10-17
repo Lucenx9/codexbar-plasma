@@ -334,6 +334,12 @@ synchronized.
   persists quotas, and coordinates accounts and notifications. `UsageResponse.js`
   contains bounded response classification and per-record normalization; the
   controller supplies the receipt time and localizes failure outcomes.
+  Selected Codex usage uses `--all-accounts`; `UsageResponse.js` reuses the
+  account normalizer to match the exact selected key before deduplicating by
+  provider. Missing or failed selections cannot use a healthy sibling's quotas.
+  Other providers keep `--account`; clearing a selection restores the ordinary
+  default-account command. Changed inputs still retire previous requests before
+  starting their replacement, even when two Codex selections share a command.
 - `contents/ui/controllers/AccountsController.qml` owns account discovery's
   executable source, request ledger, nonce, deadlines, per-provider loading and
   errors, and last successful lists. Inputs are the CLI path, source, and status
@@ -941,7 +947,10 @@ image carries this verified binary, so PR runtime jobs need no download.
 `tests/test_account_refresh.py` runs production account-selection functions
 against the real usage controller and an isolated CLI in Qt's event loop. It
 counts refresh starts for cached/uncached accounts in single-provider and
-aggregate modes. `tests/test_account_parse_containment.py` checks account
+aggregate modes. Its CLI fixture reproduces the Codex token-account rejection
+and covers selected usage, repeat refresh, missing accounts, clearing the
+selection, exact spacing, and late replies when account choices share a command.
+`tests/test_account_parse_containment.py` checks account
 snapshot presentation and selection freshness.
 
 `tests/test_provider_config_watcher.py` instantiates the watcher with real
@@ -1475,6 +1484,19 @@ fixtures cover failed valid JSON, retention and loading release, roster rejectio
 scoped usage failures, and the pre-existing nonce/timeout/stale-result behavior.
 
 ## CLI probes and packaging
+
+Codex account selection was rechecked on 2026-10-18 with Linux CLI 0.76.0
+(the installed executable matched the official binary used above). With host
+homes, runtime, credentials, and network isolated by `bwrap`,
+`usage --provider codex --source oauth --account synthetic-account --format json
+--json-only` exits 1 with an `args` error, "codex does not support token accounts".
+Replacing `--account synthetic-account` with `--all-accounts` reaches the
+provider fetch and returns the expected missing-credentials error instead.
+The released [selection validation](https://github.com/steipete/CodexBar/blob/v0.76.0/Sources/CodexBarCLI/TokenAccountCLI.swift)
+and [usage collector](https://github.com/steipete/CodexBar/blob/v0.76.0/Sources/CodexBarCLI/CLIUsageCommand.swift)
+explain that distinction. Synthetic controller tests cover multiple returned
+account records; this probe does not establish authenticated multi-account
+availability or add a Linux login-switching action.
 
 `config/ProviderSource.js` plans allowlisted source-mode writes and validates
 matching provider/source result records. The Providers page owns the CLI 0.73.0

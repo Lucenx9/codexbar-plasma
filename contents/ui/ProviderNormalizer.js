@@ -390,9 +390,9 @@ function accountLabel(item) {
     return ""
 }
 
-// The `--account` identity: validated, never rewritten. Display text may
+// The account selection identity: validated, never rewritten. Display text may
 // collapse whitespace, redact, and truncate, but none of that may feed back
-// into selection or the `--account` argument, where two names that differ only
+// into result matching or the `--account` argument, where two names that differ only
 // by collapsed characters still address different accounts. A normalized
 // snapshot already carries its validated key; recomputing it from the
 // collapsed display fields would lose the original spacing, so a carried key

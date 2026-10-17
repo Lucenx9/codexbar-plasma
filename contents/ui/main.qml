@@ -792,9 +792,9 @@ PlasmoidItem {
         return Normalizer.accountLabel(item)
     }
 
-    // The stable `--account` identity. Display labels may collapse spacing
+    // The stable account selection identity. Display labels may collapse spacing
     // that still distinguishes two accounts, so selection, matching, and the
-    // CLI argument compare keys, never labels.
+    // CLI argument or enumerated Codex result compare keys, never labels.
     function accountKey(item) {
         return Normalizer.accountKey(item)
     }

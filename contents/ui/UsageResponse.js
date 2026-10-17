@@ -3,6 +3,7 @@
 .import "ProviderNormalizer.js" as Normalizer
 .import "ProviderSnapshot.js" as ProviderSnapshot
 .import "CliResponse.js" as CliResponse
+.import "AccountResponse.js" as AccountResponse
 
 // Provider-scoped commands may only replace their requested provider. An
 // aggregate response instead needs a valid identity on every accepted record.
@@ -33,10 +34,21 @@ function records(payload, providerID, receivedAtMs) {
     return {outcome: "success", items: snapshots, message: ""};
 }
 
-function response(stdoutValue, stderrValue, providerID, receivedAtMs, exitCode) {
+function response(stdoutValue, stderrValue, providerID, receivedAtMs, exitCode, selectedAccount) {
     var parsed = CliResponse.decode(stdoutValue, stderrValue, exitCode,
         providerID ? Normalizer.maximumAccountSnapshots : Normalizer.maximumProviderSnapshots);
     if (parsed.outcome !== "success") return parsed;
+    // Codex exposes visible accounts through --all-accounts, not --account.
+    // Match before provider deduplication can discard the selected record.
+    if (providerID === "codex" && typeof selectedAccount === "string" && selectedAccount.length > 0) {
+        var accounts = AccountResponse.records(parsed.payload, providerID, receivedAtMs);
+        if (accounts.outcome !== "success") return accounts;
+        var selected = accounts.options.filter(function(item) {
+            return Normalizer.accountKey(item) === selectedAccount;
+        });
+        return selected.length > 0 ? {outcome: "success", items: selected, message: ""}
+            : {outcome: "noProviders", message: ""};
+    }
     var result = records(parsed.payload, providerID, receivedAtMs);
     if (result.outcome === "noProviders" && !providerID)
         result.message = ProviderSnapshot.message(stderrValue);

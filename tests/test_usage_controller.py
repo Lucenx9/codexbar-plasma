@@ -75,11 +75,11 @@ TestCase {
         compare(latest(o)[0].account, "run 5");
     }
     function test_scopedArgumentsKeepExactAccountAndSource() {
-        var o = create("flags", {provider: "codex", sourceMode: "source'; literal",
-            includeStatus: true, selectedAccounts: {codex: "Work  Team'; literal"}});
+        var o = create("flags", {provider: "claude", sourceMode: "source'; literal",
+            includeStatus: true, selectedAccounts: {claude: "Work  Team'; literal"}});
         completed(o, 1);
         compare(latest(o)[0].accountKey, "Work  Team'; literal");
-        compare(latest(o)[0].provider, "codex");
+        compare(latest(o)[0].provider, "claude");
         compare(latest(o)[0].rows[0].usedPercent, 0);
         verify(latest(o)[0].rows[0].paceObservedAtMs > 0);
     }
@@ -91,28 +91,28 @@ TestCase {
     }
     function test_batchedInputsStartOneReplacementAndRejectOldReply_data() {
         return [{tag: "aggregate", provider: "", sourceMode: "cli"},
-            {tag: "scoped", provider: "codex", sourceMode: ""}];
+            {tag: "scoped", provider: "claude", sourceMode: ""}];
     }
     function test_batchedInputsStartOneReplacementAndRejectOldReply(data) {
         var o = create("slow-first", {provider: data.provider, sourceMode: data.sourceMode});
         tryCompare(o.subject, "loading", true);
         wait(50);
-        o.subject.selectedAccounts = {codex: "new account"};
+        o.subject.selectedAccounts = {claude: "new account"};
         o.subject.sourceMode = "cli";
         o.subject.includeStatus = true;
         verify(!o.subject.loading);
         completed(o, 1);
-        compare(latest(o)[0].accountKey, "new account");
+        compare(latest(o).filter(function(item) { return item.provider === "claude"; })[0].accountKey, "new account");
         var snapshot = o.snapshots;
         wait(1300);
         compare(o.snapshots, snapshot);
         compare(o.failures, []);
     }
     function test_refreshCoalescesExplicitSchedulingWithAccountChanges() {
-        var o = create("normal", {provider: "codex"});
+        var o = create("normal", {provider: "claude"});
         completed(o, 1);
         o.subject.reset();
-        o.subject.selectedAccounts = {codex: "target"};
+        o.subject.selectedAccounts = {claude: "target"};
         o.subject.scheduleRefresh();
         o.subject.scheduleRefresh();
         completed(o, 2);
@@ -162,7 +162,7 @@ TestCase {
         completed(o, 1);
     }
     function test_failedScopedJsonBecomesAnErrorSnapshot() {
-        var o = create("failed-valid", {provider: "codex", selectedAccounts: {codex: "Work"}});
+        var o = create("failed-valid", {provider: "claude", selectedAccounts: {claude: "Work"}});
         completed(o, 1);
         verify(latest(o)[0].commandFailed);
         compare(latest(o)[0].rows, []);

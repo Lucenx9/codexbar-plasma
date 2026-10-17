@@ -37,6 +37,7 @@ TestCase {
             property var accountOptions: ({})
             readonly property bool usageRefreshScheduled: usageController.refreshScheduled
             property QtObject usageController: Controllers.UsageController {
+                function i18n(text, first) { return text.replace("%1", first === undefined ? "%1" : first); }
                 commandPath: root.commandPath
                 provider: root.provider
                 sourceMode: root.source
@@ -52,6 +53,11 @@ TestCase {
             property var invalidations: []
             property bool pending: false
             property var cachedSnapshot: null
+            property var published: []
+            property Connections usageConnections: Connections {
+                target: root.usageController
+                function onSnapshotReceived(items) { root.published = root.published.concat([items]); }
+            }
 
             SOURCE_BINDINGS
             SOURCE_FUNCTIONS
@@ -79,7 +85,7 @@ TestCase {
 
     function test_accountSelectionKeepsOriginalIdentifierSpacing() {
         // "Work  Team" and "Work Team" collapse to one display label, but the
-        // stored selection and the --account argument must keep the original.
+        // stored selection must keep the original when matching --all-accounts.
         var identity = "Work  Team";
         var snapshot = {provider: "codex", account: "Work Team", accountKey: identity};
         var applet = createTemporaryObject(harness, this, {
@@ -97,7 +103,10 @@ TestCase {
         wait(0);
         compare(applet.refreshes.length, 1);
         compare(applet.refreshes[0].account, identity);
-        verify(applet.refreshes[0].command.indexOf("--account 'Work  Team'") !== -1);
+        verify(applet.refreshes[0].command.indexOf("--all-accounts") !== -1);
+        tryCompare(applet.usageController, "loading", false);
+        compare(applet.published[applet.published.length - 1][0].accountKey, identity);
+        compare(applet.published[applet.published.length - 1][0].rows[0].usedPercent, 90);
     }
 
     function test_oneRefreshAfterAccountSelection(data) {
@@ -116,15 +125,93 @@ TestCase {
         compare(applet.refreshes.length, 0);
         compare(applet.invalidations, ["initial"]);
         compare(applet.cachedSnapshot, data.cached ? snapshot : null);
-        compare(applet.commandSource !== before, data.provider.length > 0);
+        // Codex selections share a command; the changed request context must
+        // still schedule exactly one refresh and retire the previous reply.
+        compare(applet.commandSource, before);
         tryVerify(function() { return applet.refreshes.length > 0; });
         wait(0);
         compare(applet.refreshes.length, 1);
         compare(applet.refreshes[0].account, "target");
         compare(applet.refreshes[0].command, applet.commandSource);
         verify(applet.refreshes[0].pending);
+        tryCompare(applet.usageController, "loading", false);
+    }
+
+    function test_codexClickRefreshAndDefault_data() {
+        return [
+            {tag: "scoped-auto", provider: "codex", source: ""},
+            {tag: "scoped-oauth", provider: "codex", source: "oauth"},
+            {tag: "aggregate-auto", provider: "", source: ""},
+            {tag: "aggregate-oauth", provider: "", source: "oauth"}
+        ];
+    }
+
+    function test_codexClickRefreshAndDefault(data) {
+        var applet = createTemporaryObject(harness, this, {
+            provider: data.provider, source: data.source, selectedAccounts: ({}),
+            accountOptions: {codex: [{provider: "codex", account: "target"}]}
+        });
+        function latest() { return applet.published[applet.published.length - 1][0]; }
+        function completed(count) {
+            tryVerify(function() { return applet.published.length === count && !applet.usageController.loading; });
+        }
+        completed(1);
+        compare(latest().rows[0].usedPercent, 15);
+        applet.selectAccount("codex", "target");
+        completed(2);
+        compare(latest().commandFailed, false, latest().error);
+        compare(latest().accountKey, "target");
+        compare(latest().rows[0].usedPercent, 83);
+        applet.usageController.refresh(false);
+        completed(3);
+        compare(latest().accountKey, "target");
+        compare(latest().rows[0].usedPercent, 83);
+        applet.selectAccount("codex", "missing");
+        completed(4);
+        verify(latest().commandFailed);
+        compare(latest().rows, []);
+        applet.selectAccount("codex", "");
+        completed(5);
+        compare(latest().commandFailed, false);
+        compare(latest().accountKey, "Default");
+        compare(latest().rows[0].usedPercent, 15);
+    }
+
+    function test_codexSelectionRetiresReplyWithTheSameCommand() {
+        var applet = createTemporaryObject(harness, this, {
+            commandPath: "SLOW_FIXTURE_PATH", selectedAccounts: {codex: "target"}
+        });
+        tryCompare(applet.usageController, "loading", true);
+        wait(50);
+        var previousCommand = applet.commandSource;
+        applet.selectAccount("codex", "Work  Team");
+        compare(applet.commandSource, previousCommand);
+        tryVerify(function() { return applet.published.length === 1 && !applet.usageController.loading; });
+        compare(applet.published[0][0].accountKey, "Work  Team");
+        compare(applet.published[0][0].rows[0].usedPercent, 90);
+        wait(600);
+        compare(applet.published.length, 1);
     }
 }
+'''
+
+CLI = '''#!/usr/bin/env python3
+import json, os, sys, time
+args = sys.argv[1:]
+if sys.argv[0].endswith('slow-cli') and os.environ['CODEXBAR_PLASMA_RUN'] == '1':
+    time.sleep(0.4)
+if args[0] == 'config':
+    print(json.dumps([{'provider': 'codex', 'enabled': True}]))
+elif '--account' in args:
+    print(json.dumps([{'provider': 'cli', 'source': 'cli', 'error': {
+        'kind': 'args', 'code': 1, 'message': 'Error: codex does not support token accounts.'}}]))
+    sys.exit(1)
+else:
+    accounts = [('Default', 15), ('target', 83), ('Work Team', 10), ('Work  Team', 90)]
+    if '--all-accounts' not in args:
+        accounts = accounts[:1]
+    print(json.dumps([{'provider': 'codex', 'account': account,
+        'usage': {'primary': {'usedPercent': used}}} for account, used in accounts]))
 '''
 
 
@@ -147,9 +234,12 @@ class AccountRefreshTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="codexbar-account-refresh-") as temporary:
             fixture = Path(temporary) / "tst_account_refresh.qml"
             script = Path(temporary) / "codexbar-fixture"
-            script.write_text("#!/usr/bin/env python3\nimport json, sys\nprint(json.dumps([{'provider': 'codex', 'enabled': True}]))\n")
+            script.write_text(CLI)
             script.chmod(0o700)
-            fixture.write_text(qml.replace("FIXTURE_PATH", str(script)))
+            slow_script = Path(temporary) / "slow-cli"
+            slow_script.write_text(CLI)
+            slow_script.chmod(0o700)
+            fixture.write_text(qml.replace("SLOW_FIXTURE_PATH", str(slow_script)).replace("FIXTURE_PATH", str(script)))
             result = subprocess.run(
                 [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],
                 env={**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software"},
