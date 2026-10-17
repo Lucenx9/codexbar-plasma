@@ -131,8 +131,9 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   writers exist. Linux 0.75.0 stores the FLORA key but requires
   `FLORA_WORKSPACE_ID` at runtime; `--workspace-id` remains z.ai-only. Linux
   0.77.0 stores Future AGI's `FI_API_KEY`, then refuses to fetch until the
-  environment-only `FI_SECRET_KEY` is set; Plasma must not offer a half setup. Parallel refuses API-key/API source and
-  needs the generic cookie action below. Done when released descriptors/writers
+  environment-only `FI_SECRET_KEY` is set; Plasma must not offer a half
+  setup. Parallel refuses API-key/API source and needs the generic cookie
+  action below. Done when released descriptors/writers
   enable safe setup without QML config editing.
   [Evidence](docs/research/2026-10-15-macos-parity-0.75.0.md#linux-cli-contract-changes);
   [Future AGI](docs/research/2026-10-17-macos-parity-0.77.0.md#linux-cli-contract-changes).
@@ -239,10 +240,9 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   Auto as web for every provider that lists a web source, although Gemini Auto
   resolves only the OAuth strategy. The explicit API source still works, so
   affected users can save API in Plasma's Source mode control. Plasma must not
-  rewrite the saved source silently. Done when an official release lets Linux
-  Gemini Auto reach the OAuth strategy again, verified in the isolated probe,
-  or when Plasma's guides document the API-source workaround for the affected
-  CLI versions.
+  rewrite the saved source silently. The API-source workaround is documented in
+  docs/usage.md. Done when an official release lets Linux Gemini Auto reach
+  the OAuth strategy again, verified in the isolated probe.
   [Evidence](docs/research/2026-10-17-macos-parity-0.77.0.md#linux-cli-contract-changes).
 
 ### Cursor cost
@@ -483,7 +483,13 @@ These are unresolved Linux candidates, not confirmed missing features.
   weekly, or monthly window (#3349). macOS 0.77.0 ranks Auto windows and the
   highest-usage icon by exhausted windows, then the shortest projected
   depletion before reset, then usage (#4491); Plasma's automatic provider
-  ranks by highest used percentage only, although it already receives CLI
+  ranks by highest used percentage: `ProviderAutoSelect.bestIndex` skips
+  error-only entries (`OverviewProviders.isErrorOnly`) and breaks equal-usage
+  ties by incident severity (`NotificationMemo.severityRank`). The panel lane
+  order in `PanelDisplay.candidateRows` is primary, secondary, tertiary, with
+  exceptions: Factory puts secondary before primary; Perplexity with an
+  exhausted primary goes secondary, tertiary, primary; Cursor with an
+  exhausted primary prepends the providerCost row. Plasma already receives CLI
   `paceOnTop`/`paceEtaSeconds`. Compare that rule using only CLI pace, never
   a local projection. Accept a change only
   after reproducing a useful difference with existing Linux fields.

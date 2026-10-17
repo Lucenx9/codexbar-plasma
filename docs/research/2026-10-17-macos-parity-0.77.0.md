@@ -84,9 +84,14 @@ installed or replaced.
 - Auto quota ranking (#4491): the macOS app now ranks Auto windows and the
   highest-usage icon by exhausted windows first, then the shortest projected
   depletion before reset, then highest usage. Plasma's `ProviderAutoSelect`
-  ranks providers by their highest used percentage only, and the automatic lane
-  keeps primary-first order. Plasma already consumes CLI pace records
-  (`paceOnTop`, `paceEtaSeconds`), verified in official Linux output by the
+  ranks providers by their highest used percentage: `bestIndex` skips
+  error-only entries (`OverviewProviders.isErrorOnly`) and breaks equal-usage
+  ties by incident severity (`NotificationMemo.severityRank`). The panel lane
+  order in `PanelDisplay.candidateRows` is primary, secondary, tertiary, with
+  exceptions: Factory puts secondary before primary; Perplexity with an
+  exhausted primary goes secondary, tertiary, primary; Cursor with an
+  exhausted primary prepends the providerCost row. Plasma already consumes CLI pace
+  records (`paceOnTop`, `paceEtaSeconds`), verified in official Linux output by the
   [Claude detail contract](2026-10-15-claude-details-0.76.0.md). This extends
   the existing automatic-selection candidate in TODO; it is not a new CLI
   contract.
