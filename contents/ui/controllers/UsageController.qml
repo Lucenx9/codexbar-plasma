@@ -106,8 +106,12 @@ Item {
                 parts.push(Guards.shellQuote(ProviderIdentity.providerCliArgument(controller.provider)));
                 var selectedAccount = selectedAccountForProvider(controller.provider);
                 if (selectedAccount.length > 0) {
-                    parts.push("--account");
-                    parts.push(Guards.shellQuote(selectedAccount));
+                    if (Normalizer.providerSnapshotKey(controller.provider) === "codex") {
+                        parts.push("--all-accounts");
+                    } else {
+                        parts.push("--account");
+                        parts.push(Guards.shellQuote(selectedAccount));
+                    }
                 }
             }
 
@@ -141,8 +145,12 @@ Item {
 
             var selectedAccount = selectedAccountForProvider(providerID);
             if (selectedAccount.length > 0) {
-                parts.push("--account");
-                parts.push(Guards.shellQuote(selectedAccount));
+                if (Normalizer.providerSnapshotKey(providerID) === "codex") {
+                    parts.push("--all-accounts");
+                } else {
+                    parts.push("--account");
+                    parts.push(Guards.shellQuote(selectedAccount));
+                }
             }
 
             if (controller.includeStatus) {
@@ -454,7 +462,8 @@ Item {
 
         function parseProviderFallbackOutput(sourceName, providerID, stdoutText, stderrText, exitCode) {
             finishUsageCommandSource(sourceName);
-            var result = UsageResponse.response(stdoutText, stderrText, providerID, Date.now(), exitCode);
+            var result = UsageResponse.response(stdoutText, stderrText, providerID, Date.now(), exitCode,
+                selectedAccountForProvider(providerID));
             var item = result.outcome === "success" ? result.items[0] : ProviderSnapshot.normalize({
                 provider: providerID,
                 source: controller.sourceMode || "auto",

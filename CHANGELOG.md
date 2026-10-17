@@ -12,6 +12,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Refresh selected Codex accounts through the supported account enumeration,
+  avoiding the CLI's "codex does not support token accounts" error after an
+  account click. Missing or failed selections never borrow another account's quotas.
 - Keep quota warning and limit-reset notifications attached to each named usage
   window's CLI ID, so reordering windows with the same label cannot invent a
   quota crossing or report a reset for the wrong window.

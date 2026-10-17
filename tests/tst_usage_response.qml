@@ -99,4 +99,48 @@ TestCase {
         verify(result.message.indexOf("synthetic-secret-abcdef") < 0);
         verify(result.message.length <= SafeText.maximumCliMessageLength);
     }
+
+    function test_selectedAccountIsMatchedBeforeProviderDeduplication() {
+        var other = healthy("codex", 15);
+        var target = healthy("codex", 72);
+        target.account = "Work  Team";
+        other.account = "Work Team";
+        var result = UsageResponse.response(JSON.stringify([other, target]), "", "codex", 123, 0, target.account);
+        compare(result.outcome, "success");
+        compare(result.items.length, 1);
+        compare(result.items[0].accountKey, "Work  Team");
+        compare(result.items[0].rows[0].usedPercent, 72);
+        compare(result.items[0].usageReceivedAtMs, 123);
+    }
+
+    function test_missingSelectedAccountCannotUseAnotherAccountsQuotas() {
+        var result = UsageResponse.response(JSON.stringify([healthy("codex", 15)]), "", "codex", 123, 0, "Missing");
+        compare(result.outcome, "noProviders");
+        verify(!result.items);
+    }
+
+    function test_selectedAccountFailureCannotUseHealthySibling() {
+        var failed = {provider: "codex", account: "Target", error: {kind: "provider", code: 1, message: "Synthetic failure"}};
+        var result = UsageResponse.response(JSON.stringify([healthy("codex", 15), failed]), "", "codex", 123, 1, "Target");
+        compare(result.outcome, "success");
+        compare(result.items[0].accountKey, "Target");
+        verify(result.items[0].commandFailed);
+        compare(result.items[0].rows, []);
+        // The same account can recover later in a repeated record.
+        var recovered = healthy("codex", 72);
+        recovered.account = "Target";
+        result = UsageResponse.response(JSON.stringify([failed, recovered]), "", "codex", 123, 1, "Target");
+        compare(result.items[0].rows[0].usedPercent, 72);
+    }
+
+    function test_selectedAccountKeepsGlobalFailureAndBounds() {
+        var failed = {provider: "cli", error: {kind: "args", code: 1, message: "Synthetic CLI error"}};
+        var result = UsageResponse.response(JSON.stringify([failed]), "", "codex", 123, 1, "Target");
+        compare(result.outcome, "commandFailed");
+        compare(result.message, "Synthetic CLI error");
+        var payload = Array(Normalizer.maximumAccountSnapshots).fill(null);
+        payload.push(healthy("codex", 72));
+        result = UsageResponse.response(JSON.stringify(payload), "", "codex", 123, 0, "Synthetic account");
+        verify(result.outcome !== "success");
+    }
 }

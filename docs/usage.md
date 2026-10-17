@@ -424,6 +424,12 @@ Provider-specific editable settings depend on the official CLI contract.
   the prompt can be reopened. Submitting near that limit still allows the full
   one-minute save timeout, followed by up to five seconds to stop the command.
 - Account discovery and selection through `codexbar usage --all-accounts`.
+  Codex selections refresh that list and display the matching account; Codex
+  does not accept the token-account `--account` option. This selects the
+  widget's displayed usage, without changing the Codex CLI login. If the
+  selected account disappears, use **Use default account** next to the account
+  reload button to return to the CLI's default usage. Other providers retain
+  their supported token-account selection.
   Repeated records for the same account keep the first successful read, so an
   earlier failed record cannot hide valid quotas. Accounts retain their original
   list order and distinct selection keys, including differences in spacing.
