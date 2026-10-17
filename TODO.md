@@ -8,9 +8,15 @@ Issues linked below preserve discussion; this file owns parity status.
 
 ## Review baseline
 
-- Last release reviewed: [CodexBar 0.76.0](https://github.com/steipete/CodexBar/releases/tag/v0.76.0),
-  commit `2d8b1409a1649dce60f3610ebe4eab52b92545de`, checked 2026-10-15.
-- Coverage: the [0.76.0 review](docs/research/2026-10-15-macos-parity-0.76.0.md)
+- Last release reviewed: [CodexBar 0.77.0](https://github.com/steipete/CodexBar/releases/tag/v0.77.0),
+  commit `d235901d4fc51f9421f43838e8a60f567bd6038e`, checked 2026-10-17.
+- Coverage: the [0.77.0 review](docs/research/2026-10-17-macos-parity-0.77.0.md)
+  against Plasma `232e688` verifies the 106-provider registry, Munito's
+  reachable API-key setup, Future AGI's environment-only secret, the Gemini
+  Auto regression on Linux, the disabled `shareUsageWithCLI` fallback, managed
+  installer compatibility, and unchanged carried blockers. Authenticated
+  Munito, Future AGI, Gemini, and claude-swap/tcr output remain unverified.
+- Previous coverage: the [0.76.0 review](docs/research/2026-10-15-macos-parity-0.76.0.md)
   against Plasma `8554f93` verifies the 104-provider registry, Claude Platform's
   blocked Linux cookie setup, stable concurrent usage order, fast-probe output,
   the new notice archive member, and unchanged carried blockers. The managed
@@ -104,6 +110,16 @@ Issues linked below preserve discussion; this file owns parity status.
   Later probes verify only their named cases. Older blockers below retain their
   last verified version; source inspection is not authenticated output evidence.
 
+## Implementable on Linux
+
+- [ ] Add static metadata for Future AGI and Munito from the 0.77.0
+  106-provider registry, preserving generic fallbacks. Add supported stdin
+  API-key setup for Munito, gated on CLI 0.77.0 or later: the writer and API
+  runtime entry are verified, but Plasma excludes Munito from its setup
+  allowlist. Future AGI setup stays blocked below. Done when mappings and the
+  setup action have regression coverage and updated usage docs.
+  [Evidence](docs/research/2026-10-17-macos-parity-0.77.0.md#linux-cli-contract-changes).
+
 ## Blocked on official Linux CLI contracts
 
 These are useful Linux features once the named contract exists. Do not fill
@@ -111,16 +127,20 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 
 ### Provider settings
 
-- [ ] Support FLORA workspace ID setup once an official writer exists.
-  Linux 0.75.0 stores its key but requires `FLORA_WORKSPACE_ID` at runtime;
-  `--workspace-id` remains z.ai-only. Parallel refuses API-key/API source and
-  needs the generic cookie action below. Done when released descriptors/writers
+- [ ] Support FLORA workspace ID and Future AGI secret key setup once official
+  writers exist. Linux 0.75.0 stores the FLORA key but requires
+  `FLORA_WORKSPACE_ID` at runtime; `--workspace-id` remains z.ai-only. Linux
+  0.77.0 stores Future AGI's `FI_API_KEY`, then refuses to fetch until the
+  environment-only `FI_SECRET_KEY` is set; Plasma must not offer a half
+  setup. Parallel refuses API-key/API source and needs the generic cookie
+  action below. Done when released descriptors/writers
   enable safe setup without QML config editing.
-  [Evidence](docs/research/2026-10-15-macos-parity-0.75.0.md#linux-cli-contract-changes).
+  [Evidence](docs/research/2026-10-15-macos-parity-0.75.0.md#linux-cli-contract-changes);
+  [Future AGI](docs/research/2026-10-17-macos-parity-0.77.0.md#linux-cli-contract-changes).
 
 - [ ] Enable generic settings and token-account editing through official
-  descriptors and writes. Linux 0.76.0 still rejects `config providers
-  --descriptors` (104 records, same four keys); its provider records have no
+  descriptors and writes. Linux 0.77.0 still rejects `config providers
+  --descriptors` (106 records, same four keys); its provider records have no
   descriptor. Helmcode and TypeSafe make this concrete: both are cookie-only,
   both refuse `--source api`, and their documented `cookieSource`/`cookieHeader`
   config path has no supported writer, so they stay metadata-only on Linux.
@@ -148,6 +168,11 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   its descriptor accepts a manual `Cookie` header containing `sessionKey`, but
   Auto/Web usage is macOS-only through supported configuration, API-key setup
   is refused, and no writer exists for the cookie fields.
+  0.77.0 adds a Gemini app web source with the same boundary: Linux runs it
+  only with a manual cookie, which has no writer. Its five-hour and weekly
+  windows also need window-based labels instead of Plasma's static Gemini
+  Pro/Flash/Flash Lite lanes before it is exposed. Token accounts gain a
+  `claudeConfigDirectory` for Claude local cost with no writer either.
   0.74.0 adds Exa's API key ID (`EXA_API_KEY_ID`) and Cosmic AI's project ID
   (`COSMIC_PROJECT_ID`): both providers store a key, then refuse to fetch
   until that environment-only field is set, and `--workspace-id` is refused.
@@ -172,7 +197,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Provider onboarding
 
 - [ ] Add CLI-described browser-cookie import, local-file setup, OAuth/device
-  flow, CLI-auth setup, and token-account actions. Linux 0.76.0 still has no
+  flow, CLI-auth setup, and token-account actions. Linux 0.77.0 still has no
   generic `config action` command (`set-api-key` and `set-source` are field
   writers; the `usage_updated` hook event is CLI automation surface, not a setup
   action). Done when supported actions expose validated
@@ -201,13 +226,29 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   session-equivalent forecasts when official history/forecast fields supply units
   and missing-data semantics. Last verified at 0.56.2. Done when supported histories have bounded
   normalization and views; retain any remaining types here. Never reconstruct
-  history or session conversion rates from a current snapshot.
+  history or session conversion rates from a current snapshot. The macOS
+  0.77.0 five- and six-day work weeks change weekly pace in the app; Linux
+  usage JSON has no work-day pace option, and the CLI text dashboard reads a
+  macOS preference, so Plasma's CLI-sourced pace cannot follow them yet.
   [Prior discussion #170](https://github.com/Lucenx9/codexbar-plasma/issues/170).
+
+### Gemini automatic source
+
+- [ ] Restore Gemini usage under the default Auto source on Linux. Linux 0.77.0
+  rejects Gemini Auto as a macOS-only web source before any strategy runs,
+  where 0.76.0 reached the Gemini CLI OAuth strategy; the Linux web gate treats
+  Auto as web for every provider that lists a web source, although Gemini Auto
+  resolves only the OAuth strategy. The explicit API source still works, so
+  affected users can save API in Plasma's Source mode control. Plasma must not
+  rewrite the saved source silently. The API-source workaround is documented in
+  docs/usage.md. Done when an official release lets Linux Gemini Auto reach
+  the OAuth strategy again, verified in the isolated probe.
+  [Evidence](docs/research/2026-10-17-macos-parity-0.77.0.md#linux-cli-contract-changes).
 
 ### Cursor cost
 
 - [ ] Show Cursor cost history through the generic Linux `cost` path. Linux
-  0.76.0 still rejects Cursor and lists Antigravity, Claude, Codex, Muse
+  0.77.0 still rejects Cursor and lists Antigravity, Claude, Codex, Muse
   Code, and Pi as supported; the 0.74.0 `cursor-agent` login (#4397) changes
   usage authentication only;
   the descriptor gate keeps the new cookie-source availability errors unreachable.
@@ -264,7 +305,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 - [ ] Offer display-currency selection and conversion through an official Linux
   contract. The 0.56.2 audit records no display-currency setter or descriptor;
   the scoped 0.57.0, 0.58.0, 0.60.4, 0.67.0, 0.69.0, 0.72.0, 0.73.0,
-  0.74.0, 0.74.1, 0.75.0, and 0.76.0 config probes expose neither,
+  0.74.0, 0.74.1, 0.75.0, 0.76.0, and 0.77.0 config probes expose neither,
   although macOS 0.67.0 adds twelve spend-estimate currencies. Plasma currently
   displays the CLI-emitted currency. Done when released settings and converted
   amounts define currency, rate provenance, and unavailable-conversion behavior,
@@ -439,7 +480,18 @@ These are unresolved Linux candidates, not confirmed missing features.
   0.56.6 cases. Automatic panel capsules already show primary and secondary.
   Keep direct lane choices and independent quota pools. Include OpenCode Go,
   whose macOS 0.74.0 automatic text picks the most constrained five-hour,
-  weekly, or monthly window (#3349). Accept a change only
+  weekly, or monthly window (#3349). macOS 0.77.0 ranks Auto windows and the
+  highest-usage icon by exhausted windows, then the shortest projected
+  depletion before reset, then usage (#4491); Plasma's automatic provider
+  ranks by highest used percentage: `ProviderAutoSelect.bestIndex` skips
+  error-only entries (`OverviewProviders.isErrorOnly`) and breaks equal-usage
+  ties by incident severity (`NotificationMemo.severityRank`). The panel lane
+  order in `PanelDisplay.candidateRows` is primary, secondary, tertiary, with
+  exceptions: Factory puts secondary before primary; Perplexity with an
+  exhausted primary goes secondary, tertiary, primary; Cursor with an
+  exhausted primary prepends the providerCost row. Plasma already receives CLI
+  `paceOnTop`/`paceEtaSeconds`. Compare that rule using only CLI pace, never
+  a local projection. Accept a change only
   after reproducing a useful difference with existing Linux fields.
   [Comparison](docs/research/2026-09-09-macos-parity-0.57.0.md#review-automatic-exhausted-quota-selection).
 - [ ] Verify account identity and stale-data behavior against the 0.56.3–0.57.0
@@ -456,6 +508,18 @@ These are unresolved Linux candidates, not confirmed missing features.
   observed. Verify the emitted shape and multi-account behavior before closing
   this candidate.
   [Release coverage](docs/research/2026-09-09-macos-parity-0.57.0.md#release-coverage).
+- [ ] Evaluate a panel Spend item for providers that report a spend budget.
+  macOS 0.77.0 adds Spend layout items and conditional rules (#4530). Plasma's
+  panel has identity, status, text, and meter elements and no spend item,
+  although the popup already derives an allowance from `providerCost` used and
+  limit. Accept only a bounded design that keeps currencies separate, hides
+  the item without a budget, and never treats a balance as an allowance.
+  [Comparison](docs/research/2026-10-17-macos-parity-0.77.0.md#plasma-comparison).
+- [ ] Verify the 0.77.0 claude-swap and tcr account pools, per-account Claude
+  local cost directories, and Munito/Future AGI windows and spend rows in
+  official Linux output. None was observable without accounts. Done when
+  emitted output shows whether Plasma's generic account, details, and cost
+  paths suffice. [Review](docs/research/2026-10-17-macos-parity-0.77.0.md#unverified-in-this-review).
 - [ ] Evaluate the weekly reserve indicator against a pinned macOS behavior and
   an official Linux field. Record accept/reject and, if accepted, a concrete
   display contract. Existing quota lanes and run-out forecasts are implemented.

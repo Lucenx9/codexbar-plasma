@@ -441,7 +441,7 @@ Provider-specific editable settings depend on the official CLI contract.
   docs/dashboard/login links.
 - The widget also has a renderer for the proposed
   [provider settings descriptor](cli-provider-settings-descriptor.md).
-  Scoped checks through CLI 0.76.0 still find no descriptors, so cookie, base
+  Scoped checks through CLI 0.77.0 still find no descriptors, so cookie, base
   URL, workspace/project, region, and other descriptor-backed editors remain
   unavailable. CLI 0.73.0 separately supports persistent source writes through
   `codexbar config set-source --provider <id> --source <mode>`; `auto` clears
@@ -456,6 +456,12 @@ Provider-specific editable settings depend on the official CLI contract.
   usage through the existing provider-config revision. The source override in Diagnostics
   still takes precedence globally for widget requests. Older or unrecognized
   CLI versions omit the editor.
+- Gemini under the default Automatic source: CLI 0.77.0 on Linux rejects Auto
+  for Gemini as a macOS-only web source, so signed-in Gemini users see an error
+  where 0.76.0 worked. As a workaround, open **Providers → Settings and
+  diagnostics** for Gemini, choose **API** as the **Source mode**, and select
+  **Save**. Plasma never rewrites the saved source for you; switch back to
+  Automatic once an official CLI release fixes this.
 - Single API-key setup for Tavily, Linkup, Aerostack, Sail Research, and Sofya
   uses the official Linux CLI writer verified at 0.74.0. Exa and Cosmic AI have
   metadata and dashboard links, but their additional key/project IDs have no
