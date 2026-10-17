@@ -138,6 +138,11 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
   104-provider registry and Claude Platform's blocked Linux cookie setup,
   stable concurrent usage order, notice-archive compatibility, fast-probe
   verification, and carried blockers rechecked with the isolated official CLI.
+- [0.77.0 release review](research/2026-10-17-macos-parity-0.77.0.md): the
+  106-provider registry, Munito API-key reachability, Future AGI's
+  environment-only secret, the Linux Gemini Auto regression, the disabled
+  app-cache fallback, installer compatibility, and carried blockers rechecked
+  with the isolated official CLI.
 - [0.75.0 Codex contract verification](research/2026-10-15-codex-contracts-0.75.0.md):
   synthetic native partial-priced cost output, identified-request local/remote
   merge and failure semantics, authoritative reset-credit inventory, and the
