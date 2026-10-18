@@ -813,12 +813,20 @@ TestCase {
     // A session card offers one copy action, for its title, placed beside the
     // title text. Session state reads the same for every provider: a live one
     // uses the theme's positive color, never the provider accent.
-    function test_sessionCardCopiesTheTitleAndColorsStateByMeaning() {
+    function test_sessionCardCopiesTheTitleAndColorsStateByMeaning_data() {
+        return [
+            {tag: "active", state: "active", label: "Active"},
+            {tag: "running", state: "running", label: "Running"},
+            {tag: "working", state: "working", label: "Working"}
+        ];
+    }
+
+    function test_sessionCardCopiesTheTitleAndColorsStateByMeaning(data) {
         applet.sessionsErrorText = "";
         applet.sessionsLoading = false;
         applet.sessions = [
             {provider: "claude", projectName: "CodexBar Plasma", sessionName: "", host: "",
-             state: "active", source: "cli", activityMs: 1},
+             state: data.state, source: "cli", activityMs: 1},
             {provider: "codex", projectName: "docs", sessionName: "", host: "",
              state: "idle", source: "cli", activityMs: 1}
         ];
@@ -849,7 +857,7 @@ TestCase {
 
         var theme = Qt.createQmlObject('import QtQuick; import org.kde.kirigami as Kirigami; Item { readonly property color positive: Kirigami.Theme.positiveTextColor }', view);
         var active = findItem(view, function (item) {
-            return item.visible && item.text === "Active";
+            return item.visible && item.text === data.label;
         });
         var idle = findItem(view, function (item) {
             return item.visible && item.text === "Idle";
@@ -882,6 +890,14 @@ TestCase {
             return item.visible && item.elide !== undefined && item.text === "CodexBar Plasma";
         });
         verify(titleBefore !== null);
+        var copyButton = findItem(view, function (item) {
+            return item.visible && item.icon !== undefined && item.icon.name === "edit-copy";
+        });
+        verify(copyButton !== null);
+        copyButton.forceActiveFocus(Qt.TabFocusReason);
+        verify(copyButton.activeFocus);
+        mouseMove(copyButton, copyButton.width / 2, copyButton.height / 2);
+        tryCompare(copyButton, "hovered", true);
         view.sessionClockMs = 1;
 
         var rescannedAtMs = Date.now();
@@ -894,6 +910,8 @@ TestCase {
             return item.visible && item.elide !== undefined && item.text === "CodexBar Plasma";
         });
         verify(titleAfter === titleBefore, "a same-size rescan rebuilt the session card");
+        verify(copyButton.activeFocus, "a same-size rescan lost copy keyboard focus");
+        compare(copyButton.hovered, true);
         verify(findItem(view, function (item) {
             return item.visible && item.text === "Idle";
         }) !== null, "the kept card did not show the rescanned state");
@@ -917,6 +935,8 @@ TestCase {
         }, titles);
         compare(titles.length, 1);
         compare(titles[0].text, "CodexBar Plasma");
+        mouseMove(testCase, testCase.width - 1, testCase.height - 1);
+        testCase.forceActiveFocus();
     }
 
     // CopyableValue labels its copy action through tooltips anchored to the

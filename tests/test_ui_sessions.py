@@ -138,21 +138,6 @@ class SessionsTest(unittest.TestCase):
             raise AssertionError(
                 "session details are secondary metadata; only the session title offers a copy action"
             )
-        if not code_contains(sessions_view_text, "? Kirigami.Theme.positiveTextColor"):
-            raise AssertionError(
-                "session state must use the theme's meaning color, not the provider accent, "
-                "so the same state reads the same for every provider"
-            )
-        for active_session_state in (
-            'session.state === "active"',
-            'session.state === "running"',
-            'session.state === "working"',
-        ):
-            if not code_contains(sessions_view_text, active_session_state):
-                raise AssertionError(
-                    "SessionsView must highlight every live state spelling accepted from the CLI; "
-                    f"missing {active_session_state!r}"
-                )
         for optional_session_details_fragment in (
             "readonly property string subtitle: sessionLabels.sessionSubtitle( session, view.applet.sessionHostsVary)",
             "visible: sessionCard.subtitle.length > 0",
