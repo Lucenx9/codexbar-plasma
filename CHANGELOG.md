@@ -14,7 +14,6 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 - Clarify that local Codex cost estimates do not follow the account selected
   in the widget; account selection changes the displayed quotas.
-
 - Refresh selected Codex accounts through the supported account enumeration,
   avoiding the CLI's "codex does not support token accounts" error after an
   account click. Missing or failed selections never borrow another account's quotas.
