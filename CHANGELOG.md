@@ -10,6 +10,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Added
+
+- Add Future AGI and Munito provider names, icons, colors and links. Offer secure
+  Munito API-key setup with CLI 0.77.0 or later; Future AGI setup remains blocked
+  on an official Linux secret-key writer.
+
 ### Changed
 
 - Keep AI Insights concise in Overview and open its full summary and highlights

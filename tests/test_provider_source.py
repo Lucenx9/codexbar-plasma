@@ -28,6 +28,7 @@ TestCase {
             property string commandPath: "codexbar"
             property bool providerSourceSetupSupported: true
             property bool fireworksSingleKeySetupSupported: false
+            property bool munitoApiKeySetupSupported: false
             property bool commandCodeFalApiKeySetupSupported: false
             property int configCommandTimeoutMs: 60000
             property int configSecretPromptTimeoutMs: 60000
@@ -116,6 +117,23 @@ TestCase {
         compare(page.providerSourceBox.currentIndex, 1);
         compare(page.cfg_source, "web");
         compare(page.errorText.length > 0, data.tag !== "cancelled");
+    }
+    function test_munitoVersionGateAndReset() {
+        var page = createTemporaryObject(harness, this);
+        for (var version of ["CodexBar 0.76.0", "CodexBar 0.77.0-rc1", "unknown"]) {
+            page.handleCliVersionResult(version, 0);
+            verify(!page.munitoApiKeySetupSupported);
+        }
+        page.handleCliVersionResult("CodexBar 0.77.0", 0);
+        verify(page.munitoApiKeySetupSupported);
+        page.reload();
+        verify(page.munitoApiKeySetupSupported);
+        page.handleConfigCommandTimeout({kind: "version"});
+        verify(!page.munitoApiKeySetupSupported);
+        page.handleCliVersionResult("CodexBar 0.77.0", 1);
+        verify(!page.munitoApiKeySetupSupported);
+        page.handleCliVersionResult("CodexBar 1.0.0", 0);
+        verify(page.munitoApiKeySetupSupported);
     }
     function test_reloadRetainsCapabilitiesUntilVersionResult() {
         var page = createTemporaryObject(harness, this);

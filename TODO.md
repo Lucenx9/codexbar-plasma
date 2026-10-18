@@ -110,16 +110,6 @@ Issues linked below preserve discussion; this file owns parity status.
   Later probes verify only their named cases. Older blockers below retain their
   last verified version; source inspection is not authenticated output evidence.
 
-## Implementable on Linux
-
-- [ ] Add static metadata for Future AGI and Munito from the 0.77.0
-  106-provider registry, preserving generic fallbacks. Add supported stdin
-  API-key setup for Munito, gated on CLI 0.77.0 or later: the writer and API
-  runtime entry are verified, but Plasma excludes Munito from its setup
-  allowlist. Future AGI setup stays blocked below. Done when mappings and the
-  setup action have regression coverage and updated usage docs.
-  [Evidence](docs/research/2026-10-17-macos-parity-0.77.0.md#linux-cli-contract-changes).
-
 ## Blocked on official Linux CLI contracts
 
 These are useful Linux features once the named contract exists. Do not fill

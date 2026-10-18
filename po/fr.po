@@ -3965,3 +3965,11 @@ msgstr "Retour à %1"
 #: contents/ui/components/AiInsightsView.qml
 msgid "About this insight"
 msgstr "À propos de cette analyse"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Future AGI"
+msgstr "Future AGI"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Munito"
+msgstr "Munito"

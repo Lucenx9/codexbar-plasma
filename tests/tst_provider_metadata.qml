@@ -4,6 +4,31 @@ import "../contents/ui/ProviderIdentity.js" as ProviderIdentity
 
 TestCase {
     name: "ProviderMetadata"
+    function test_official077ProviderMetadata_data() {
+        return [
+            {tag: "munito", provider: "munito", color: [112 / 255, 44 / 255, 246 / 255],
+                dashboard: "https://console.munito.ai", login: "https://console.munito.ai/keys"},
+            {tag: "MUNITO", provider: "MUNITO", color: [112 / 255, 44 / 255, 246 / 255],
+                dashboard: "https://console.munito.ai", login: "https://console.munito.ai/keys"},
+            {tag: "futureagi", provider: "futureagi", color: [120 / 255, 87 / 255, 252 / 255],
+                dashboard: "https://app.futureagi.com/dashboard/settings/usage-summary", login: ""},
+            {tag: "FUTUREAGI", provider: "FUTUREAGI", color: [120 / 255, 87 / 255, 252 / 255],
+                dashboard: "https://app.futureagi.com/dashboard/settings/usage-summary", login: ""}
+        ];
+    }
+    function test_official077ProviderMetadata(data) {
+        var key = data.provider.toLowerCase();
+        compare(ProviderIdentity.resolveProviderKey(data.provider), key);
+        compare(ProviderIdentity.providerCliArgument(data.provider), key);
+        compare(ProviderIdentity.providerBrandColorChannels(data.provider), data.color);
+        compare(ProviderIdentity.providerDashboardUrl(data.provider), data.dashboard);
+        compare(ProviderIdentity.providerLoginUrl(data.provider), data.login);
+        compare(ProviderIdentity.providerStatusUrl(data.provider), "");
+        compare(ProviderIdentity.providerDocsUrl(data.provider),
+            "https://github.com/steipete/CodexBar/blob/main/docs/" + key + ".md");
+        compare(ProviderIdentity.providerIconFileName(data.provider), key + ".svg");
+    }
+
     function test_official076ClaudePlatformMetadata_data() {
         return [
             {tag: "canonical", provider: "claudeplatform"},

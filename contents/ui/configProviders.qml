@@ -63,6 +63,7 @@ KCM.SimpleKCM {
     property string statusText: ""
     property bool providerDescriptorsUnavailable: false
     property bool fireworksSingleKeySetupSupported: false
+    property bool munitoApiKeySetupSupported: false
     property bool commandCodeFalApiKeySetupSupported: false
     property bool providerSourceSetupSupported: false
     property var operationState: ProviderOperations.initialState()
@@ -117,6 +118,7 @@ KCM.SimpleKCM {
         selectedProviderID = ""
         providerDescriptorsUnavailable = false
         fireworksSingleKeySetupSupported = false
+        munitoApiKeySetupSupported = false
         commandCodeFalApiKeySetupSupported = false
         providerSourceSetupSupported = false
         Qt.callLater(reload)
@@ -397,6 +399,7 @@ KCM.SimpleKCM {
             errorText = i18n("Loading providers timed out. Try again.")
         } else if (descriptor.kind === "version") {
             fireworksSingleKeySetupSupported = false
+            munitoApiKeySetupSupported = false
             commandCodeFalApiKeySetupSupported = false
             providerSourceSetupSupported = false
         } else if (descriptor.kind === "diagnose") {
@@ -450,6 +453,8 @@ KCM.SimpleKCM {
     function handleCliVersionResult(stdoutText, exitCode) {
         fireworksSingleKeySetupSupported = Number(exitCode) === 0
             && ProviderConfigProtocol.cliVersionAtLeast(stdoutText, 0, 54, 0)
+        munitoApiKeySetupSupported = Number(exitCode) === 0
+            && ProviderConfigProtocol.cliVersionAtLeast(stdoutText, 0, 77, 0)
         commandCodeFalApiKeySetupSupported = Number(exitCode) === 0
             && ProviderConfigProtocol.cliVersionAtLeast(stdoutText, 0, 75, 0)
         providerSourceSetupSupported = Number(exitCode) === 0
@@ -1040,6 +1045,8 @@ KCM.SimpleKCM {
 
     function supportsApiKeySetup(providerID) {
         switch (providerKey(providerID)) {
+        case "munito":
+            return munitoApiKeySetupSupported
         case "fireworks":
             return fireworksSingleKeySetupSupported
         case "commandcode":

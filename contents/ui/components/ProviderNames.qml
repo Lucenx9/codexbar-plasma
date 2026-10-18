@@ -53,6 +53,8 @@ QtObject {
             "fal": i18n("fal"),
             "fireworks": i18n("Fireworks"),
             "flora": i18n("FLORA"),
+            "futureagi": i18n("Future AGI"),
+            "munito": i18n("Munito"),
             "gemini": i18n("Gemini"),
             "gitkraken": i18n("GitKraken AI"),
             "grok": i18n("Grok"),
