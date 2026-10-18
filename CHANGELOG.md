@@ -10,6 +10,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+## 0.2.50 - 2026-10-18
+
 ### Added
 
 - Add Future AGI and Munito provider names, icons, colors and links. Offer secure
@@ -70,11 +72,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   is cancelled.
 - Keep empty cost records from displacing real days in the model cost history,
   reject impossible calendar dates such as February 30 as a cost scan day
-  instead of rolling them into the next month, and never split an emoji or
-  other paired character when shortening display text.
+  instead of rolling them into the next month.
 - Never split an emoji or other paired character when truncating notification
-  titles and bodies, AI Insights summaries, cost labels, or support-report
-  text (leftover sites after the shared SafeText display truncate).
+  titles and bodies, AI Insights summaries, cost labels, support reports, or
+  other display text.
 - Simplify terminal quick installation to `curl ... | bash` with a small
   bootstrap that downloads the full installer before execution, preserves
   interactive prompts, and supports other calling shells and headless setup.
@@ -117,6 +118,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Keep known provider setup controls visible while reloading the same CLI,
   preserve a provider's enablement while its API key prompt is open, and report
   missing write replies as command failures.
+
+[Full diff](https://github.com/Lucenx9/codexbar-plasma/compare/v0.2.49...v0.2.50)
 
 ## 0.2.49 - 2026-10-15
 
