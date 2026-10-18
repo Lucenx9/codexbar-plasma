@@ -1302,6 +1302,13 @@ state before using Qt's
 QML errors, recursive layout warnings, missing captures, early exits, and timeouts
 fail the command. Nested-layout QtTests also use `failOnWarning` and exercise
 provider details and project rows at narrow and normal popup widths.
+`tests/fixtures/ProviderUiStress.js` supplies realistic long identifiers, Unicode,
+markup-like text, missing optional values, extreme budgets, and demo/empty/one/
+1,000-row states. `tst_visual_layout.qml` renders these detail fixtures at 240,
+320, 540, and 900 pixels, checks literal text and bounded meters, and confirms
+that the existing normalizer caps 1,000 incoming rows at 24. Its hover tests
+check full-text tooltips for quota titles, reset descriptions and chart headings,
+including escaping and suppression when the text fits.
 Screenshots still need visual review: this is not a pixel-comparison test and
 does not exercise panel placement, key-event dispatch, or the real CLI.
 Panel scenarios verify capsule count and clipping at small sizes, including

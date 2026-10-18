@@ -5,6 +5,7 @@ import "../contents/ui/CostPresentation.js" as CostPresentation
 import "../contents/ui/SafeText.js" as SafeText
 import "../contents/ui/ThemeContrast.js" as ThemeContrast
 import "../contents/ui/UsageDetails.js" as UsageDetails
+import "fixtures/ProviderUiStress.js" as ProviderUiStress
 
 TestCase {
     id: testCase
@@ -1488,15 +1489,22 @@ TestCase {
             {tag: "title", field: "title"},
             {tag: "label", field: "label"},
             {tag: "value", field: "value"},
-            {tag: "secondary", field: "secondaryValue"}
+            {tag: "secondary", field: "secondaryValue"},
+            {tag: "chart-title", field: "chartTitle"},
+            {tag: "chart-unit", field: "chartUnit"}
         ];
     }
 
     function test_providerDetailRevealsTruncatedText(data) {
-        var longText = "Long <model> & account name ".repeat(4).trim();
-        var raw = {title: "Details", rows: [{label: "Model", value: "42", secondaryValue: "Included"}]};
+        var longText = "Platform infrastructure <model> & enterprise workspace allowance";
+        var raw = {title: "Details", rows: [{label: "Model", value: "42", secondaryValue: "Included"}],
+            chart: {kind: "line", title: "Daily usage", unit: "tokens", points: []}};
         if (data.field === "title")
             raw.title = longText;
+        else if (data.field === "chartTitle")
+            raw.chart.title = longText;
+        else if (data.field === "chartUnit")
+            raw.chart.unit = longText;
         else
             raw.rows[0][data.field] = longText;
         var view = createControl("ProviderDetailSection", {
@@ -1519,9 +1527,11 @@ TestCase {
         tryCompare(tip, "visible", false);
         // Values which fit should not acquire an unnecessary tooltip.
         view.modelData = UsageDetails.normalizeSections([{
-            title: "Details", rows: [{label: "Model", value: "42", secondaryValue: "Included"}]
+            title: "Details", rows: [{label: "Model", value: "42", secondaryValue: "Included"}],
+            chart: {kind: "line", title: "Usage", unit: "tok", points: []}
         }])[0];
         var shortText = data.field === "title" ? "Details"
+            : data.field === "chartTitle" ? "Usage" : data.field === "chartUnit" ? "tok"
             : data.field === "label" ? "Model" : data.field === "value" ? "42" : "Included";
         label = findItem(view, item => item.text === shortText);
         verify(label !== null);
@@ -1533,6 +1543,48 @@ TestCase {
         mouseMove(label, label.width / 2, label.height / 2);
         wait(tip.delay + 100);
         verify(!tip.visible);
+    }
+
+    function test_providerDetailWorstCases_data() {
+        var cases = [];
+        for (var width of [240, 320, 540, 900]) {
+            for (var mode of ["demo", "worst", "empty", "one", "huge"])
+                cases.push({tag: mode + "-" + width, mode: mode, width: width});
+        }
+        return cases;
+    }
+
+    function test_providerDetailWorstCases(data) {
+        failOnWarning(/Qt Quick Layouts: Detected recursive rearrange|Binding loop detected/);
+        var normalized = UsageDetails.normalizeSections([ProviderUiStress.section(data.mode)])[0];
+        compare(normalized.rows.length, data.mode === "huge" ? 24
+            : data.mode === "worst" ? 8 : data.mode === "empty" ? 0 : 1);
+        var view = createControl("ProviderDetailSection", {
+            applet: applet, providerData: {provider: "codex"}, modelData: normalized, width: data.width
+        });
+        if (!view)
+            return;
+        wait(30);
+        for (var text of [normalized.title, normalized.chart.title, normalized.chart.unit]) {
+            var label = findItem(view, item => item.text === text);
+            verify(label !== null);
+            verify(label.width > 0);
+            verify(label.mapToItem(view, 0, 0).x >= -1);
+            verify(label.mapToItem(view, label.width, 0).x <= view.width + 1);
+        }
+        var labels = [];
+        findAllItems(view, item => item.textFormat !== undefined && item.truncated !== undefined, labels);
+        for (var label of labels) {
+            if (!label.visible || !label.text)
+                continue;
+            compare(label.textFormat, Text.PlainText);
+            verify(label.mapToItem(view, 0, 0).x >= -1);
+            verify(label.mapToItem(view, label.width, 0).x <= view.width + 1);
+        }
+        var meters = [];
+        findAllItems(view, item => item.objectName === "detailProgressFill", meters);
+        for (var meter of meters)
+            verify(meter.width >= 0 && meter.width <= meter.parent.width + 1);
     }
 
     function test_providerDetailNestedLayoutDoesNotRearrangeRecursively() {
@@ -1674,6 +1726,46 @@ TestCase {
             reset: "Resets 12:00",
             warningMarkers: [{ percent: 80, severity: "major" }]
         };
+    }
+
+    function test_providerUsageRevealsTruncatedText_data() {
+        return [
+            {tag: "window-title", field: "label"},
+            {tag: "reset-description", field: "reset"}
+        ];
+    }
+
+    function test_providerUsageRevealsTruncatedText(data) {
+        var longText = data.field === "label"
+            ? "Platform infrastructure <model> & enterprise workspace allowance"
+            : "Resets after the next enterprise workspace billing cycle <UTC> & maintenance";
+        var model = ProviderUiStress.quota("demo");
+        model[data.field] = longText;
+        var row = createControl("ProviderUsageRow", {
+            applet: applet, providerData: {provider: "codex"}, modelData: model, width: 240
+        });
+        if (!row)
+            return;
+        var percent = findItem(row, item => item.objectName === "usagePercentLabel");
+        compare(percent.text, "57% left");
+        var label = findItem(row, item => item.text === longText);
+        verify(label !== null);
+        tryCompare(label, "truncated", true);
+        var tips = [];
+        findAllItems(label, item => item.plainText === longText && item.delay !== undefined, tips);
+        compare(tips.length, 1, "Truncated quota text needs its full-value tooltip");
+        var tip = tips[0];
+        mouseMove(label, label.width / 2, label.height / 2);
+        tryCompare(tip, "visible", true, tip.delay + 1000);
+        verify(tip.text.indexOf("&lt;") >= 0);
+        verify(tip.text.indexOf("&amp;") >= 0);
+        mouseMove(testCase, testCase.width - 1, testCase.height - 1);
+        tryCompare(tip, "visible", false);
+        row.modelData = ProviderUiStress.quota("demo");
+        tryCompare(label, "truncated", false);
+        mouseMove(label, label.width / 2, label.height / 2);
+        wait(tip.delay + 100);
+        verify(!tip.visible);
     }
 
     function test_providerUsageRowResetTextComesFromRowData() {
