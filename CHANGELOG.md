@@ -12,6 +12,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep the selected Usage & Spend chart day attached to its date across
+  refreshes. Clear the selection when that day disappears or the history range
+  or metric changes.
 - Keep Sessions cards in place across 30-second rescans with an unchanged
   session count, preserving hover and keyboard focus on the copy action.
   Session ages now follow the latest scan, and a

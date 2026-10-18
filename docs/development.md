@@ -1351,7 +1351,10 @@ opens the full list. Recovery actions and the final account remain reachable,
 and a global error stays first in each view's scroll area.
 `tst_global_view_errors.qml` covers long
 Spend/Sessions errors with retained data and empty/loading states, keyboard
-refresh, privacy, and pinned headers. The monthly credit regression in
+refresh, privacy, and pinned headers. It also exercises the production Spend
+chart's selected date through inserted, expired, and missing days, and clears
+selection on range and metric changes without starting a scan.
+The monthly credit regression in
 `test_provider_cost_presentation.py` checks that the production adapter and
 usage-row component keep amounts visible independently of popup pace.
 

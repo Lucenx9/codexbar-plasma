@@ -32,7 +32,8 @@ TestCase {
         property int costHistoryDays: 30
         property string costHistoryPeriod: ""
         property string costHistoryMetric: "cost"
-        property bool costHistoryShowsTokens: false
+        readonly property bool costHistoryShowsTokens: costHistoryMetric === "tokens"
+        property var dailyPoints: []
         property var costs: []
         property var sessions: []
         readonly property var presentedSessions: sessions
@@ -43,7 +44,7 @@ TestCase {
         property int refreshes: 0
 
         function spendDailyPoints() {
-            return [];
+            return dailyPoints;
         }
         function spendProviderCosts() {
             return costs;
@@ -83,6 +84,9 @@ TestCase {
         }
         function withAlpha(color, alpha) {
             return Qt.rgba(color.r, color.g, color.b, alpha);
+        }
+        function canvasColor(color) {
+            return String(color);
         }
         function refreshCost() {
             refreshes++;
@@ -128,6 +132,10 @@ TestCase {
     }
 
     function cleanup() {
+        applet.dailyPoints = [];
+        applet.costHistoryDays = 30;
+        applet.costHistoryPeriod = "";
+        applet.costHistoryMetric = "cost";
         applet.costs = [];
         applet.sessions = [];
         applet.costErrorText = "";
@@ -346,6 +354,72 @@ TestCase {
         });
         verify(value !== null);
         verify(value.mapToItem(scroll, 0, 0).y < scroll.availableHeight / 2, "Short provider totals must stay near the top of the body");
+    }
+
+    function spendChart(points) {
+        applet.dailyPoints = points;
+        var view = createView("SpendView");
+        if (!view)
+            return null;
+        var chart = findItem(view, function (item) {
+            return item.selectedIndex !== undefined && item.plotHeight !== undefined;
+        });
+        verify(chart !== null);
+        return chart;
+    }
+
+    function day(label, value) {
+        return { label: label, value: value, displayValue: "$" + value };
+    }
+
+    function test_spendSelectionFollowsDateAfterRefresh_data() {
+        return [
+            { tag: "same-days", points: [day("2026-10-16", 2), day("2026-10-17", 9)] },
+            { tag: "older-day-arrives", points: [day("2026-10-15", 1), day("2026-10-16", 2), day("2026-10-17", 9)] },
+            { tag: "older-day-expires", points: [day("2026-10-17", 9)] },
+            { tag: "selected-day-disappears", points: [day("2026-10-16", 2), day("2026-10-18", 4)], missing: true },
+            { tag: "empty-history", points: [], missing: true }
+        ];
+    }
+
+    function test_spendSelectionFollowsDateAfterRefresh(data) {
+        var chart = spendChart([day("2026-10-16", 2), day("2026-10-17", 3)]);
+        if (!chart)
+            return;
+        chart.selectedIndex = 1;
+        chart.hoveredIndex = 0;
+        applet.dailyPoints = data.points;
+        if (data.missing) {
+            compare(chart.selectedIndex, -1);
+        } else {
+            verify(chart.selectedIndex >= 0);
+            compare(chart.points[chart.selectedIndex].label, "2026-10-17");
+            compare(chart.pointDisplayValue(chart.points[chart.selectedIndex]), "$9");
+        }
+        compare(chart.hoveredIndex, -1);
+        compare(applet.refreshes, 0);
+    }
+
+    function test_spendContextChangeClearsSelection_data() {
+        return [
+            { tag: "metric", property: "costHistoryMetric", value: "tokens" },
+            { tag: "days", property: "costHistoryDays", value: 7 },
+            { tag: "period", property: "costHistoryPeriod", value: "month-to-date" }
+        ];
+    }
+
+    function test_spendContextChangeClearsSelection(data) {
+        var chart = spendChart([day("2026-10-16", 2), day("2026-10-17", 3)]);
+        if (!chart)
+            return;
+        chart.selectedIndex = 1;
+        chart.hoveredIndex = 0;
+        applet[data.property] = data.value;
+        compare(chart.selectedIndex, -1);
+        compare(chart.hoveredIndex, -1);
+        applet.dailyPoints = [day("2026-10-16", 2), day("2026-10-17", 9)];
+        compare(chart.selectedIndex, -1);
+        compare(applet.refreshes, 0);
     }
 
     function test_shortErrorStartsAtTop_data() {
