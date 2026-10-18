@@ -250,14 +250,11 @@ Rectangle {
 
             // A disclosure, like the cost details: flat, so it never
             // outweighs the summary it expands.
-            PlainButton {
+            DisclosureButton {
                 objectName: "aiInsightsDetailsToggle"
-                flat: true
                 visible: card.highlightCount > 0
+                expanded: card.detailsExpanded
                 plainText: card.detailsExpanded ? i18n("Hide details") : i18n("Show details")
-                icon.name: card.detailsExpanded ? "arrow-up" : "arrow-down"
-                Accessible.checkable: true
-                Accessible.checked: card.detailsExpanded
                 onClicked: card.detailsExpanded = !card.detailsExpanded
             }
 
