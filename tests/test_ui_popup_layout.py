@@ -107,8 +107,11 @@ class PopupLayoutTest(unittest.TestCase):
                     f"missing {interaction_fragment!r}"
                 )
 
-        if not code_contains(overview_provider_row_text, "applet.usageResetText(usageRow)"):
-            raise AssertionError("Overview reset labels must use render-time formatting")
+        # tst_panel_display covers the meter selection; the applet must feed it the
+        # popup candidates, not the panel's lane choice.
+        if not code_contains(function_body(main_text, "overviewMeterRows"),
+                             "PanelDisplay.overviewMeterRows(switcherCandidateRows(item))"):
+            raise AssertionError("Overview meters must ignore the panel's quota lane choice")
 
         if not code_contains(main_text, "readonly property var overviewProviderItems: overviewProviders()"):
             raise AssertionError("overview provider rows must be cached in a QML property binding")
@@ -519,13 +522,9 @@ class PopupLayoutTest(unittest.TestCase):
         if not code_contains(provider_status_body, "applet.statusBadgeColor(applet.presentedProviderData.statusSeverity)"):
             raise AssertionError("incident pills must reflect the provider status severity")
 
-        for placeholder_id in (
-            "overviewPlaceholderMessage",
-            "providerPlaceholderMessage",
-        ):
-            placeholder_body = id_block(main_text, placeholder_id)
-            if not code_contains(placeholder_body, "Kirigami.PlaceholderMessage.Type.Informational"):
-                raise AssertionError(f"{placeholder_id} must use the native informational empty state")
+        placeholder_body = id_block(main_text, "providerPlaceholderMessage")
+        if not code_contains(placeholder_body, "Kirigami.PlaceholderMessage.Type.Informational"):
+            raise AssertionError("providerPlaceholderMessage must use the native informational empty state")
 
         empty_providers_body = id_block(main_text, "emptyProvidersMessage")
         for fragment in ("Kirigami.PlaceholderMessage.Type.Actionable", "helpfulAction: configureProvidersAction",

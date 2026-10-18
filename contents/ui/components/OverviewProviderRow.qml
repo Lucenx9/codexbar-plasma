@@ -14,10 +14,9 @@ Rectangle {
     readonly property color accent: applet.providerReadableColor(
         providerData.provider,
         Kirigami.Theme.backgroundColor)
-    readonly property var usageRow: applet.switcherMetricRow(providerData)
-    readonly property bool hasUsage: usageRow && usageRow.hasPercent
-    readonly property real shownPercent: hasUsage ? applet.displayPercent(usageRow) : -1
-    readonly property string resetText: usageRow ? applet.resetLabel(applet.usageResetText(usageRow)) : ""
+    // Each named quota window gets its own labelled meter, so a low session
+    // value cannot hide an exhausted weekly window behind one bare percentage.
+    readonly property var meterRows: applet.overviewMeterRows(providerData)
     readonly property string detail: {
         var primary = OverviewProviders.detailText(providerData)
         if (providerData.usageStale !== true) {
@@ -30,18 +29,36 @@ Rectangle {
             .filter(function(part) { return part.length > 0 })
             .join(" \u00b7 ")
     }
-    readonly property string percentText: hasUsage
-        ? applet.usagePercentText(usageRow)
-        : ""
-    // Screen readers get what the row shows beside its title: the quota the
-    // meter draws, the account or status detail, and the reset.
-    readonly property string accessibleDescription: [percentText, detail, resetText]
+    // Screen readers get what the row shows beside its title, in drawn order:
+    // the account or status detail, then each named quota with its reset.
+    readonly property string accessibleDescription: [detail]
+        .concat(meterRows.map(function(row) { return overviewRow.applet.quotaDescription(row) }))
         .filter(function(part) { return part.length > 0 })
         .join(". ")
     readonly property bool keyboardFocusVisible: overviewRowFocus.visualFocus
-    // A narrow popup elides long provider names and account details.
+    // A narrow popup elides long provider names, account details, and quota
+    // captions.
     readonly property bool textTruncated: overviewRowTitle.truncated
         || (overviewRowDetail.visible && overviewRowDetail.truncated)
+        || meterCaptionTruncated
+    readonly property bool meterCaptionTruncated: anyCaptionTruncated(overviewMeters, overviewMeters.count)
+
+    // Passing count re-evaluates the binding when meters are created or removed.
+    function anyCaptionTruncated(meters, count) {
+        for (var i = 0; i < count; i++) {
+            var meter = meters.itemAt(i)
+            if (meter && meter.captionTruncated) {
+                return true
+            }
+        }
+        return false
+    }
+
+    function meterCaption(row) {
+        return [row.label || "", applet.resetTextForRow(row)]
+            .filter(function(part) { return part.length > 0 })
+            .join(" \u00b7 ")
+    }
 
     signal selected(var providerData)
 
@@ -108,26 +125,13 @@ Rectangle {
             Layout.fillWidth: true
             spacing: Kirigami.Units.smallSpacing
 
-            RowLayout {
+            PlainPlasmaLabel {
+                id: overviewRowTitle
+
+                text: overviewRow.providerData.title
+                font.weight: Font.DemiBold
                 Layout.fillWidth: true
-                spacing: Kirigami.Units.smallSpacing
-
-                PlainPlasmaLabel {
-                    id: overviewRowTitle
-
-                    text: overviewRow.providerData.title
-                    font.weight: Font.DemiBold
-                    Layout.fillWidth: true
-                    elide: Text.ElideRight
-                }
-
-                PlainPlasmaLabel {
-                    visible: overviewRow.hasUsage
-                    text: overviewRow.percentText
-                    font.weight: Font.DemiBold
-                    horizontalAlignment: Text.AlignRight
-                    elide: Text.ElideRight
-                }
+                elide: Text.ElideRight
             }
 
             PlainPlasmaLabel {
@@ -141,45 +145,76 @@ Rectangle {
                 elide: Text.ElideMiddle
             }
 
-            Rectangle {
-                visible: overviewRow.hasUsage
-                Layout.fillWidth: true
-                Layout.preferredHeight: overviewRow.applet.compactMeterTrackHeight
-                radius: height / 2
-                color: overviewRow.applet.withAlpha(Kirigami.Theme.textColor, 0.1)
-                clip: true
+            Repeater {
+                id: overviewMeters
 
-                Rectangle {
-                    width: overviewRow.shownPercent <= 0
-                        ? 0
-                        : Math.max(parent.height, parent.width * overviewRow.shownPercent / 100)
-                    height: parent.height
-                    radius: parent.radius
-                    color: overviewRow.applet.quotaMeterColor(
-                        overviewRow.usageRow, overviewRow.accent)
+                model: overviewRow.meterRows
 
-                    Behavior on color {
-                        ColorAnimation {
-                            duration: Kirigami.Units.longDuration
+                delegate: ColumnLayout {
+                    id: overviewMeter
+
+                    required property var modelData
+                    readonly property bool captionTruncated: overviewMeterCaption.truncated
+
+                    Layout.fillWidth: true
+                    Layout.topMargin: Kirigami.Units.smallSpacing / 2
+                    spacing: Kirigami.Units.smallSpacing / 2
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: Kirigami.Units.smallSpacing
+
+                        PlainPlasmaLabel {
+                            id: overviewMeterCaption
+
+                            text: overviewRow.meterCaption(overviewMeter.modelData)
+                            font: Kirigami.Theme.smallFont
+                            opacity: overviewRow.applet.secondaryTextOpacity
+                            Layout.fillWidth: true
+                            elide: Text.ElideRight
+                        }
+
+                        PlainPlasmaLabel {
+                            text: overviewRow.applet.usagePercentText(overviewMeter.modelData)
+                            font.pointSize: Kirigami.Theme.smallFont.pointSize
+                            font.weight: Font.DemiBold
+                            horizontalAlignment: Text.AlignRight
                         }
                     }
 
-                    Behavior on width {
-                        NumberAnimation {
-                            duration: Kirigami.Units.longDuration
-                            easing.type: Easing.OutCubic
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: overviewRow.applet.compactMeterTrackHeight
+                        radius: height / 2
+                        color: overviewRow.applet.withAlpha(Kirigami.Theme.textColor, 0.1)
+                        clip: true
+
+                        Rectangle {
+                            readonly property real shownPercent: overviewRow.applet.displayPercent(overviewMeter.modelData)
+
+                            width: shownPercent <= 0
+                                ? 0
+                                : Math.max(parent.height, parent.width * shownPercent / 100)
+                            height: parent.height
+                            radius: parent.radius
+                            color: overviewRow.applet.quotaMeterColor(
+                                overviewMeter.modelData, overviewRow.accent)
+
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: Kirigami.Units.longDuration
+                                }
+                            }
+
+                            Behavior on width {
+                                NumberAnimation {
+                                    duration: Kirigami.Units.longDuration
+                                    easing.type: Easing.OutCubic
+                                }
+                            }
                         }
                     }
                 }
-            }
-
-            PlainPlasmaLabel {
-                visible: overviewRow.resetText.length > 0
-                text: overviewRow.resetText
-                font: Kirigami.Theme.smallFont
-                opacity: overviewRow.applet.secondaryTextOpacity
-                Layout.fillWidth: true
-                elide: Text.ElideRight
             }
         }
 
@@ -243,9 +278,11 @@ Rectangle {
         id: overviewRowToolTip
 
         parent: overviewRowMouse
-        visible: overviewRow.textTruncated && overviewRowMouse.containsMouse
-        plainText: overviewRow.detail.length > 0
-            ? overviewRow.providerData.title + "\n" + overviewRow.detail
-            : overviewRow.providerData.title
+        visible: overviewRow.textTruncated
+            && (overviewRowMouse.containsMouse || overviewRow.keyboardFocusVisible)
+        plainText: [overviewRow.providerData.title, overviewRow.detail]
+            .concat(overviewRow.meterRows.map(function(row) { return overviewRow.meterCaption(row) }))
+            .filter(function(part) { return part.length > 0 })
+            .join("\n")
     }
 }

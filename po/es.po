@@ -367,10 +367,6 @@ msgid "Refresh"
 msgstr "Actualizar"
 
 #: contents/ui/components/FullRepresentation.qml
-msgid "No overview data available"
-msgstr "No hay datos disponibles para el resumen"
-
-#: contents/ui/components/FullRepresentation.qml
 msgid "Hidden usage rows"
 msgstr "Filas de uso ocultas"
 

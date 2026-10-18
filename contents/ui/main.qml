@@ -1634,9 +1634,7 @@ PlasmoidItem {
 
     function panelMeterDescription(item) {
         var description = panelMeterRows(item).map(function(row) {
-            var text = i18n("%1: %2", row.label, usagePercentText(row))
-            var reset = resetTextForRow(row)
-            return reset.length > 0 ? i18n("%1 - %2", text, reset) : text
+            return root.quotaDescription(row)
         }).join(". ")
         if (!item || item.usageStale !== true) {
             return description
@@ -1655,6 +1653,18 @@ PlasmoidItem {
         return row ? displayPercent(row) : -1
     }
 
+    // Overview rows draw a labelled meter per quota lane, independent of the
+    // panel's lane choice.
+    function overviewMeterRows(item) {
+        return PanelDisplay.overviewMeterRows(switcherCandidateRows(item))
+    }
+
+    function quotaDescription(row) {
+        var text = i18n("%1: %2", row.label, usagePercentText(row))
+        var reset = resetTextForRow(row)
+        return reset.length > 0 ? i18n("%1 - %2", text, reset) : text
+    }
+
     // A popup tab shows its quota only as an underline and its failure only
     // by dimming, so screen readers get both as text.
     function switcherDescription(item) {
@@ -1664,9 +1674,7 @@ PlasmoidItem {
         var parts = []
         var row = switcherMetricRow(item)
         if (row && row.hasPercent) {
-            var text = i18n("%1: %2", row.label, usagePercentText(row))
-            var reset = resetTextForRow(row)
-            parts.push(reset.length > 0 ? i18n("%1 - %2", text, reset) : text)
+            parts.push(quotaDescription(row))
         }
         if (item.usageStale === true) {
             parts.push(lastGoodUsageText(item))

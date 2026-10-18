@@ -12,6 +12,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Name each quota window in Overview: every provider row now shows labelled
+  primary and secondary meters, such as Session and Weekly, with their resets,
+  instead of one unlabelled percentage that could hide an exhausted weekly
+  window. Keyboard focus also reveals a truncated row's full text.
 - Explain account discovery results without named accounts instead of showing
   nothing after **Accounts…**: the popup says the provider's default account is
   used, or that CodexBar cannot switch accounts for that provider, in which case

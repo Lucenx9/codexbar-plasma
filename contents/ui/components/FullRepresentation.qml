@@ -826,17 +826,6 @@ Item {
                         Layout.fillWidth: true
                     }
 
-                    PlainPlaceholderMessage {
-                        id: overviewPlaceholderMessage
-
-                        visible: applet.overviewProviderItems.length === 0
-                        plainText: i18n("No overview data available")
-                        icon.name: "view-grid-symbolic"
-                        type: Kirigami.PlaceholderMessage.Type.Informational
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: Kirigami.Units.gridUnit * 8
-                    }
-
                     Repeater {
                         model: applet.presentedOverviewProviders
 

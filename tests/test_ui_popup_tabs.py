@@ -9,7 +9,6 @@ from ui_regression_support import (
     function_body,
     global_tab_qml,
     id_block,
-    overview_provider_row_qml,
     root,
 )
 
@@ -20,7 +19,6 @@ applet = Surface("applet", root)
 main_text = applet.text
 popup_surface = Surface("popup", root)
 config_text = config_xml.read_text(encoding="utf-8")
-overview_provider_row_text = overview_provider_row_qml.read_text(encoding="utf-8")
 global_tab_text = global_tab_qml.read_text(encoding="utf-8")
 
 
@@ -214,8 +212,6 @@ class PopupTabsTest(unittest.TestCase):
                     "the provider tab description must cover quota, stale usage, and errors; "
                     f"missing {switcher_description_fragment!r}"
                 )
-        if not code_contains(overview_provider_row_text, "visible: overviewRow.textTruncated && overviewRowMouse.containsMouse"):
-            raise AssertionError("a truncated Overview row must reveal its full title and detail on hover")
         if not code_contains(main_text, "providerTabsFlickable.ensureVisible(providerTab)"):
             raise AssertionError("focusing a provider tab must pull it back into view")
         provider_tabs_flickable_body = id_block(main_text, "providerTabsFlickable")

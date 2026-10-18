@@ -2280,7 +2280,7 @@ Item {
                 } else if (capture.readmeScenario) {
                     popup.Window.window.width = 640;
                     popup.Window.window.height = capture.scenario === "readme-overview"
-                        || capture.scenario === "readme-sessions" ? 400 : 660;
+                        || capture.scenario === "readme-sessions" ? 480 : 660;
                     if (capture.scenario === "readme-codex")
                         capture.applet.openProviderFromPanel("codex");
                     else
