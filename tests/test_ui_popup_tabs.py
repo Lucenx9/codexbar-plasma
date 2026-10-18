@@ -193,7 +193,9 @@ class PopupTabsTest(unittest.TestCase):
         for overview_tab_fragment in (
             "tabStrip: providerTabsFlickable",
             "selected: applet.overviewSelected",
-            'onActivated: applet.selectGlobalView("overview")',
+            'applet.selectGlobalView("overview")',
+            # The Overview tab also leaves an open AI Insights analysis page.
+            "fullRoot.closeAiInsights(false, false)",
         ):
             if not code_contains(overview_tab_body, overview_tab_fragment):
                 raise AssertionError(f"the Overview tab must join the tab strip; missing {overview_tab_fragment!r}")

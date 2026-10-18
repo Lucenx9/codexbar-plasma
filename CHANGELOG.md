@@ -10,6 +10,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Changed
+
+- Keep AI Insights concise in Overview and open its full summary and highlights
+  in a dedicated analysis view inside the popup. Returning restores the original
+  view and scroll position; navigation never starts generation or a cost scan.
+
 ### Fixed
 
 - State in settings that CodexBar saves provider changes immediately, and tell

@@ -985,10 +985,14 @@ The card appears at the end of **Overview**. Without an Overview tab (one provid
 fixed provider in Diagnostics), it appears in the provider view instead. The
 card's **Generate insight** button creates the first insight; afterwards the
 wand button in its header refreshes it. The Overview refresh button still
-refreshes usage only. The card shows the summary with the provider, model, and
-the insight's age. Hover over that line when it is truncated to read its full
-text; **Show details** expands the highlights. The enable switch's helper note
-in settings aligns with its label, matching the other settings pages.
+refreshes usage only. The card shows up to three lines of the summary with the
+provider, model, and the insight's age. Hover over that line when it is truncated
+to read its full text; **Open analysis** opens a dedicated view inside the popup with the full
+summary and highlights. The back arrow names the previous view and returns
+to its saved scroll position. Opening or leaving the analysis does not
+generate an insight or scan cost history. The analysis uses the same saved
+answer as the card; a new usage refresh does not rewrite it. The enable switch's
+helper note in settings aligns with its label, matching the other settings pages.
 
 - **Ollama** runs models on your computer. The default address is
   `http://localhost:11434` and needs no API key. Install a model first, for

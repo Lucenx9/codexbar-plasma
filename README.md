@@ -192,7 +192,8 @@ themes.
   displayed or opened.
 - Refresh on popup opening, plus optional privacy mode and automatic widget updates.
 - Optional, off-by-default beta [AI Insights](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/usage.md#ai-insights):
-  a short summary in Overview from a local Ollama model, OpenRouter, or OpenAI,
+  a short summary in Overview with an in-popup analysis view, from a local
+  Ollama model, OpenRouter, or OpenAI,
   written in the widget's interface language from aggregated statistics only.
 - English plus Italian, French, German, Spanish, and Brazilian Portuguese,
   selected through your Plasma language preferences.

@@ -265,6 +265,10 @@ synchronized.
   processes; `components/AiInsightsMessages.qml` localizes helper reasons for
   both surfaces. See the [AI Insights reference](ai-insights.md) for the
   boundary decision and contracts; keep it current with any change.
+  `components/FullRepresentation.qml` owns navigation from the compact
+  `AiInsightsCard.qml` to `AiInsightsView.qml` and restores the origin's scroll
+  position and keyboard focus on return. The detail view reuses the card's
+  saved-answer presentation; opening it never starts a process or a cost scan.
 - `contents/ui/controllers/WidgetUpdateController.qml` owns the widget updater's
   executable source, per-request nonce, captured install mode, timeout, queued
   install request, and retry/interval timers. It receives update settings, the
@@ -1108,6 +1112,11 @@ The smoke runner stages `scripts/smoke/fixture_ai_insights.py` as the package's
 `scripts/ai-insights.py` for every scenario, so previews can never reach a real
 service; the `ai-insights*` and `settings-ai-insights*` scenarios exercise the
 card, language mismatch, failure, single-provider placement, and settings page.
+`tst_ai_insights_view.qml` exercises the compact card, full answer, explicit
+generation, keyboard activation, Back/Escape, and saved-answer context. The
+successful insight smoke scenarios capture both `*-overview.png` and the
+analysis page, and verify nonzero scroll restoration, tab changes, disabling
+the feature, and navigation without generation.
 
 `tests/test_widget_update_controller.py` instantiates the production updater
 module and runs temporary executable fixtures through Plasma's real DataSource.

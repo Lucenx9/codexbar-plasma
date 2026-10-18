@@ -43,6 +43,7 @@ msgid "Choose an AI provider and model in the AI Insights settings."
 msgstr ""
 
 #: contents/ui/components/AiInsightsCard.qml
+#: contents/ui/components/AiInsightsView.qml
 msgid "Not enough current usage data for an insight yet."
 msgstr ""
 
@@ -89,13 +90,7 @@ msgid "Generating insight…"
 msgstr ""
 
 #: contents/ui/components/AiInsightsCard.qml
-#: contents/ui/components/ProviderCostSection.qml
-msgid "Hide details"
-msgstr ""
-
-#: contents/ui/components/AiInsightsCard.qml
-#: contents/ui/components/ProviderCostSection.qml
-msgid "Show details"
+msgid "Open analysis"
 msgstr ""
 
 #: contents/ui/components/AiInsightsMessages.qml
@@ -174,6 +169,34 @@ msgstr ""
 
 #: contents/ui/components/AiInsightsMessages.qml
 msgid "%1 is temporarily unavailable."
+msgstr ""
+
+#: contents/ui/components/AiInsightsView.qml
+msgid "Generated %1"
+msgstr ""
+
+#: contents/ui/components/AiInsightsView.qml
+msgid "A new insight is generated automatically at most every %1 hour."
+msgid_plural "A new insight is generated automatically at most every %1 hours."
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/components/AiInsightsView.qml
+msgid "A new insight is generated only when you ask for one."
+msgstr ""
+
+#: contents/ui/components/AiInsightsView.qml
+msgid ""
+"Uses only quota, pace, incident, and 7-day spend and token data. Account "
+"names, projects, and paths are never sent."
+msgstr ""
+
+#: contents/ui/components/AiInsightsView.qml
+msgid "Back to %1"
+msgstr ""
+
+#: contents/ui/components/AiInsightsView.qml
+msgid "About this insight"
 msgstr ""
 
 #: contents/ui/components/CompactRepresentation.qml
@@ -1031,6 +1054,14 @@ msgstr ""
 #: contents/ui/components/ProviderCostSection.qml
 #: contents/ui/components/SpendView.qml
 msgid "Daily token history"
+msgstr ""
+
+#: contents/ui/components/ProviderCostSection.qml
+msgid "Hide details"
+msgstr ""
+
+#: contents/ui/components/ProviderCostSection.qml
+msgid "Show details"
 msgstr ""
 
 #: contents/ui/components/ProviderCostSection.qml
