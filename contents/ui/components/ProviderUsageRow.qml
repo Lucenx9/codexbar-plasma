@@ -44,10 +44,19 @@ ColumnLayout {
         spacing: Kirigami.Units.smallSpacing
 
         PlainPlasmaLabel {
+            id: usageTitleLabel
+
             text: usageRow.rowData.label
             font.weight: Font.DemiBold
             Layout.fillWidth: true
             elide: Text.ElideRight
+
+            HoverHandler { id: usageTitleHover }
+
+            PlainToolTip {
+                visible: usageTitleLabel.truncated && usageTitleHover.hovered
+                plainText: usageTitleLabel.text
+            }
         }
 
         // Revealed on row hover; keyboard focus keeps it visible and reachable.
@@ -194,6 +203,13 @@ ColumnLayout {
             elide: Text.ElideRight
             Layout.alignment: Qt.AlignBaseline
             Layout.maximumWidth: Kirigami.Units.gridUnit * 14
+
+            HoverHandler { id: usageResetHover }
+
+            PlainToolTip {
+                visible: usageResetLabel.truncated && usageResetHover.hovered
+                plainText: usageResetLabel.text
+            }
         }
     }
 
