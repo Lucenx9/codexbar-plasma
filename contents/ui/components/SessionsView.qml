@@ -183,8 +183,8 @@ ColumnLayout {
                 }
             }
 
-            // Every rescan delivers a new array, so a count model keeps each
-            // card, with its hover and keyboard focus, and rebinds its data.
+            // A count model rebinds cards without losing hover or keyboard
+            // focus when a rescan returns the same number of sessions.
             Repeater {
                 model: view.applet.presentedSessions.length
 

@@ -861,8 +861,8 @@ TestCase {
     }
 
     // An open Sessions tab rescans every 30 seconds and each scan delivers a
-    // new array. Cards must update in place so hover and keyboard focus
-    // survive, and relative ages must use the scan's clock.
+    // new array. Same-size rescans must update cards in place so hover and
+    // keyboard focus survive, and relative ages must use the scan's clock.
     function test_sessionRescanKeepsCardsAndResyncsAges() {
         applet.sessionsErrorText = "";
         applet.sessionsLoading = false;
@@ -899,8 +899,8 @@ TestCase {
         }) !== null, "the kept card did not show the rescanned state");
         verify(view.sessionClockMs >= rescannedAtMs, "the age clock lagged the rescanned data");
 
-        // A rescan that drops a session removes only its card, without
-        // evaluating the departing card against a missing entry.
+        // Count changes recreate the cards without evaluating a departing
+        // card against a missing entry.
         failOnWarning(/TypeError|undefined/);
         applet.sessions = [
             {provider: "codex", projectName: "docs", sessionName: "", host: "",

@@ -12,9 +12,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
-- Keep Sessions cards in place across the 30-second rescans instead of
-  rebuilding them, so a hovered card no longer flickers and keyboard focus on
-  its copy action survives. Session ages now follow the latest scan, and a
+- Keep Sessions cards in place across 30-second rescans with an unchanged
+  session count, preserving hover and keyboard focus on the copy action.
+  Session ages now follow the latest scan, and a
   `working` session is highlighted like other live states.
 - Name each quota window in Overview: every provider row now shows labelled
   primary and secondary meters, such as Session and Weekly, with their resets,
