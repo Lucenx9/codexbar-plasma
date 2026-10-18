@@ -42,9 +42,12 @@ Rectangle {
     readonly property bool textTruncated: overviewRowTitle.truncated
         || (overviewRowDetail.visible && overviewRowDetail.truncated)
         || meterCaptionTruncated
-    readonly property bool meterCaptionTruncated: {
-        for (var i = 0; i < overviewMeters.count; i++) {
-            var meter = overviewMeters.itemAt(i)
+    readonly property bool meterCaptionTruncated: anyCaptionTruncated(overviewMeters, overviewMeters.count)
+
+    // Passing count re-evaluates the binding when meters are created or removed.
+    function anyCaptionTruncated(meters, count) {
+        for (var i = 0; i < count; i++) {
+            var meter = meters.itemAt(i)
             if (meter && meter.captionTruncated) {
                 return true
             }

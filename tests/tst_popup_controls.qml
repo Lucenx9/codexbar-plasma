@@ -327,6 +327,26 @@ TestCase {
         verify(!tip.visible);
     }
 
+    // A quota caption cut short by a narrow popup joins the tooltip text.
+    function test_overviewRevealsTruncatedQuotaCaption() {
+        var row = createControl("OverviewProviderRow", {
+            applet: applet,
+            modelData: Object.assign({}, provider, {
+                account: "",
+                testRows: [{label: "Weekly", hasPercent: true, leftPercent: 10,
+                            reset: "on Saturday 18 October 2026 at 23:59"}]
+            }),
+            width: 600
+        });
+        if (!row)
+            return;
+        tryVerify(function () { return !row.textTruncated; });
+        row.width = 200;
+        tryVerify(function () { return row.textTruncated; });
+        compare(findToolTip(row).plainText,
+            "Codex\nWeekly \u00b7 Resets on Saturday 18 October 2026 at 23:59");
+    }
+
     // Keyboard users reach the same full text as pointer users, as tabs do.
     function test_overviewRevealsTruncatedTextOnKeyboardFocus() {
         var row = createControl("OverviewProviderRow", {
