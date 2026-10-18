@@ -927,6 +927,17 @@ msgstr ""
 msgid "Reload accounts"
 msgstr ""
 
+#: contents/ui/components/ProviderAccountsPanel.qml
+msgid ""
+"CodexBar cannot switch accounts for this provider. Its default account is "
+"used."
+msgstr ""
+
+#: contents/ui/components/ProviderAccountsPanel.qml
+msgid ""
+"No named accounts are configured. The provider's default account is used."
+msgstr ""
+
 #: contents/ui/components/ProviderConfigRow.qml
 msgid "%1 - CodexBar default"
 msgstr ""
