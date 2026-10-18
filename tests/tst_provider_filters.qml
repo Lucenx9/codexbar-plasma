@@ -312,7 +312,7 @@ TestCase {
         verify(inspect[0].visible);
         var immediate = all.filter(function(item) {
             return item.plainText !== undefined
-                && String(item.plainText).indexOf("Provider changes are saved by CodexBar immediately") === 0;
+                && String(item.plainText).indexOf("CodexBar saves provider changes immediately") === 0;
         });
         verify(immediate.length >= 1);
         var cli = all.filter(function(item) {

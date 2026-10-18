@@ -798,7 +798,7 @@ KCM.SimpleKCM {
         }
 
         Components.PlainControlsLabel {
-            text: i18n("Checks GitHub for official releases. External installations are updated through their original installation method.")
+            text: i18n("Checks GitHub for official releases. Update external installations through their original installation method.")
             font: Kirigami.Theme.smallFont
             opacity: 0.7
             Layout.fillWidth: true

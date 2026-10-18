@@ -1345,7 +1345,7 @@ KCM.SimpleKCM {
             Layout.rightMargin: Kirigami.Units.smallSpacing
             type: Kirigami.MessageType.Information
             visible: page.providers.length > 0
-            plainText: i18n("Provider changes are saved by CodexBar immediately. Apply and Cancel affect widget settings only.")
+            plainText: i18n("CodexBar saves provider changes immediately. Apply and Cancel affect widget settings only.")
         }
 
         // The selected provider reads as one borderless surface, like the

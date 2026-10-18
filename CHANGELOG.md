@@ -18,6 +18,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- State in settings that CodexBar saves provider changes immediately, and tell
+  users to update external CLI installations through their original method.
 - Reveal truncated quota-window titles, reset descriptions, and provider-chart
   titles and units on hover, keeping CLI text literal in their tooltips.
 - Show Claude percentage-only quotas without repeated "limited detail" labels

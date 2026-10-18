@@ -139,7 +139,7 @@ for its limits.
   the bundled release updater. CLI release checks and managed installs also use `python3` and GNU `timeout`. GNU `timeout`
   also bounds CLI writes after a secret prompt.
 
-Distribution package names vary. Source builds additionally need `make`, Python
+Distribution package names vary. Source builds also need `make`, Python
 3, and GNU gettext; see [Development](#development).
 
 ## Features
