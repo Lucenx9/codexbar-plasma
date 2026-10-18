@@ -429,7 +429,8 @@ Provider-specific editable settings depend on the official CLI contract.
   widget's displayed usage, without changing the Codex CLI login. If the
   selected account disappears, use **Use default account** next to the account
   reload button to return to the CLI's default usage. Other providers retain
-  their supported token-account selection.
+  their supported token-account selection. Local cost history is independent of
+  this selection; changing accounts does not filter the local cost scan.
   Repeated records for the same account keep the first successful read, so an
   earlier failed record cannot hide valid quotas. Accounts retain their original
   list order and distinct selection keys, including differences in spacing.

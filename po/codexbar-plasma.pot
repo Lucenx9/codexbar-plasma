@@ -420,7 +420,9 @@ msgid ""
 msgstr ""
 
 #: contents/ui/components/CostText.qml
-msgid "Estimated from local Codex logs for the selected account."
+msgid ""
+"Estimated from local Codex logs, independently of the account selected in "
+"the widget."
 msgstr ""
 
 #: contents/ui/components/CostText.qml

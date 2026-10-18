@@ -3609,9 +3609,9 @@ msgstr ""
 "La cronologia locale di Antigravity include i totali dei token. I costi in "
 "dollari non sono disponibili."
 
-#: contents/ui/main.qml
-msgid "Estimated from local Codex logs for the selected account."
-msgstr "Stimato dai registri locali di Codex per l'account selezionato."
+#: contents/ui/components/CostText.qml
+msgid "Estimated from local Codex logs, independently of the account selected in the widget."
+msgstr "Stima dai registri locali di Codex, indipendente dall'account selezionato nel widget."
 
 #: contents/ui/main.qml
 msgid "Estimated from local Claude logs."

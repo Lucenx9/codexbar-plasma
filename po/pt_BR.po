@@ -3591,10 +3591,9 @@ msgstr ""
 "O histórico local do Antigravity inclui os totais de tokens. Os custos em "
 "dólares estão indisponíveis."
 
-#: contents/ui/main.qml
-msgid "Estimated from local Codex logs for the selected account."
-msgstr ""
-"Estimado a partir dos registros locais do Codex para a conta selecionada."
+#: contents/ui/components/CostText.qml
+msgid "Estimated from local Codex logs, independently of the account selected in the widget."
+msgstr "Estimativa a partir dos registros locais do Codex, independentemente da conta selecionada no widget."
 
 #: contents/ui/main.qml
 msgid "Estimated from local Claude logs."
