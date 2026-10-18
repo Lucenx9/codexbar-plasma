@@ -482,6 +482,12 @@ function isMissingTokenAccountsError(errorMessage) {
     return String(errorMessage || "").toLowerCase().indexOf("no token accounts configured") !== -1
 }
 
+function isUnsupportedTokenAccountsError(errorMessage) {
+    // codexbar --all-accounts rejects providers without token-account support
+    // with "<provider> does not support token accounts." (Linux 0.76.0/0.77.0).
+    return String(errorMessage || "").toLowerCase().indexOf("does not support token accounts") !== -1
+}
+
 function normalizeSession(item) {
     if (!isCliRecord(item)) {
         return null

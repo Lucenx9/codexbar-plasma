@@ -429,8 +429,13 @@ Provider-specific editable settings depend on the official CLI contract.
   widget's displayed usage, without changing the Codex CLI login. If the
   selected account disappears, use **Use default account** next to the account
   reload button to return to the CLI's default usage. Other providers retain
-  their supported token-account selection. Local cost history is independent of
-  this selection; changing accounts does not filter the local cost scan.
+  their supported token-account selection. When discovery finds no named
+  accounts and none is selected, the account area says that the provider's
+  default account is used. For a provider without token-account support it says
+  that CodexBar cannot switch its accounts and disables its **Accounts…** entry;
+  the reload button can retry. Changing the CLI path, provider, source or
+  CodexBar configuration, or installing a managed CLI, enables the entry again.
+  Local cost history is independent of this selection; changing accounts does not filter the local cost scan.
   Repeated records for the same account keep the first successful read, so an
   earlier failed record cannot hide valid quotas. Accounts retain their original
   list order and distinct selection keys, including differences in spacing.

@@ -298,7 +298,7 @@ class UsageRecoveryTests(unittest.TestCase):
         for name in ("actionRows", "providerAccountAction", "providerDocsUrl",
                      "providerLoginUrl", "providerStatusUrl", "safeStatusUrl",
                      "providerKey", "providerMapKey", "accountLoadingForProvider",
-                     "performAction"):
+                     "accountAvailabilityForProvider", "performAction"):
             signature = re.search(r"function " + name + r"\([^)]*\)", source).group(0)
             functions.append(signature + " {" + surface.function_body(name) + "}")
         qml = MENU_QML.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
@@ -328,7 +328,9 @@ TestCase {
         property var selectedProviderData: null
         property var openedUrls: []
         property var accountsController: QtObject {
+            property var availability: ({})
             function loadingForProvider(key) { return false; }
+            function availabilityForProvider(key) { return availability[key] || ""; }
         }
         SOURCE_FUNCTIONS
         function i18n(text) { return text; }
@@ -348,6 +350,15 @@ TestCase {
         verify(docs[0].url.indexOf("https://") === 0);
         verify(root.providerDocsUrl("codex").indexOf("https://") === 0);
         compare(root.providerLoginUrl("codex"), "https://chatgpt.com");
+    }
+    // Discovery that confirmed a provider has no token-account support disables
+    // only that provider's entry; unknown and default-sign-in results stay usable.
+    function test_unsupportedAccountDiscoveryDisablesOnlyThatEntry() {
+        root.accountsController.availability = {gemini: "unsupported", claude: "none"};
+        compare(root.actionRows(menuItem("gemini"))[0].enabled, false);
+        compare(root.actionRows(menuItem("claude"))[0].enabled, true);
+        compare(root.actionRows(menuItem("codex"))[0].enabled, true);
+        root.accountsController.availability = {};
     }
     // Unknown providers get no docs entry instead of a guessed URL.
     function test_unknownProviderHasNoDocsRow() {

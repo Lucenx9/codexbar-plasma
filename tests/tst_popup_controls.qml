@@ -97,8 +97,12 @@ TestCase {
         property var accountOptions: []
         property string accountsError: ""
         property string selectedAccountKey: ""
+        property string accountAvailability: ""
         function accountLoadingForProvider() {
             return accountsLoading;
+        }
+        function accountAvailabilityForProvider() {
+            return accountAvailability;
         }
         function accountOptionsForProvider() {
             return accountOptions;
@@ -159,6 +163,7 @@ TestCase {
         applet.accountOptions = [];
         applet.accountsError = "";
         applet.selectedAccountKey = "";
+        applet.accountAvailability = "";
     }
 
     function cleanupTestCase() {
@@ -757,6 +762,40 @@ TestCase {
         compare(toggle.visible, false);
         applet.accountOptions = new Array(20).fill(applet.accountOptions[0]);
         compare(choices.visible, false);
+    }
+
+    // A finished discovery without named accounts explains the result instead
+    // of leaving the requested panel hidden.
+    function test_emptyAccountDiscoveryExplainsTheResult() {
+        var panel = createControl("ProviderAccountsPanel", {
+            applet: applet, providerData: {provider: "claude"}, width: 400
+        });
+        if (!panel)
+            return;
+        var message = findByObjectName(panel, "accountsAvailabilityMessage");
+        var reload = findByObjectName(panel, "reloadAccountsButton");
+        compare(panel.visible, false);
+        applet.accountAvailability = "none";
+        tryCompare(panel, "visible", true);
+        compare(message.visible, true);
+        verify(message.text.indexOf("No named accounts") === 0);
+        compare(reload.enabled, true);
+        // A still-selected account is not the default account.
+        applet.selectedAccountKey = "work";
+        compare(message.visible, false);
+        applet.selectedAccountKey = "";
+        // A newer failure replaces the explanation instead of contradicting it.
+        applet.accountsError = "Synthetic account discovery error";
+        compare(message.visible, false);
+        applet.accountsError = "";
+        applet.accountAvailability = "unsupported";
+        compare(message.visible, true);
+        verify(message.text.indexOf("cannot switch accounts") > 0);
+        // Retrying stays possible, for example after an in-place CLI upgrade.
+        compare(reload.enabled, true);
+        applet.accountOptions = [{key: "work", label: "Work", provider: "claude"}];
+        applet.accountAvailability = "named";
+        compare(message.visible, false);
     }
 
     function test_accountActionsExplainKeyboardFocus() {

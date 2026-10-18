@@ -31,12 +31,19 @@ Item {
         return key.length > 0 && Guards.hasOwnKey(lifecycle.errors, key) ? lifecycle.errors[key] : "";
     }
 
+    // "named", "none" or "unsupported" after a successful discovery; "" before.
+    function availabilityForProvider(providerID) {
+        var key = Normalizer.normalizedProviderID(providerID);
+        return key.length > 0 && Guards.hasOwnKey(lifecycle.availability, key) ? lifecycle.availability[key] : "";
+    }
+
     // The owning applet calls this when its CLI/configuration identity changes.
     // Ordinary usage refreshes and account selection preserve these lists.
     function reset() {
         lifecycle.retireRequests();
         lifecycle.options = ({});
         lifecycle.errors = ({});
+        lifecycle.availability = ({});
     }
 
     Component.onDestruction: lifecycle.retireRequests()
@@ -47,6 +54,7 @@ Item {
         property var commands: ({})
         property var options: ({})
         property var errors: ({})
+        property var availability: ({})
         property int runSerial: 0
         readonly property int accountCommandTimeoutMs: 60000
         readonly property string commandContext: JSON.stringify([controller.commandPath, controller.sourceMode, controller.includeStatus])
@@ -119,6 +127,9 @@ Item {
                 var next = Guards.copyObject(options);
                 next[decision.providerID] = result.options;
                 options = next;
+                var nextAvailability = Guards.copyObject(availability);
+                nextAvailability[decision.providerID] = result.availability;
+                availability = nextAvailability;
                 break;
             case "tooLarge":
                 message = i18n("codexbar response exceeded the supported size.");

@@ -5,7 +5,8 @@
 .import "CliResponse.js" as CliResponse
 
 // An empty named-account list is a successful result. Failed refreshes carry
-// no options so the controller can retain the last successful list.
+// no options so the controller can retain the last successful list. Successes
+// report availability: "named", "none" (default sign-in only) or "unsupported".
 function response(stdoutValue, stderrValue, providerID, receivedAtMs, exitCode) {
     var parsed = CliResponse.decode(stdoutValue, stderrValue, exitCode, Normalizer.maximumAccountSnapshots);
     if (parsed.outcome !== "success") return parsed;
@@ -20,6 +21,7 @@ function records(payload, providerID, receivedAtMs) {
     var options = [];
     var failure = null;
     var sawMissingTokenAccounts = false;
+    var sawUnsupportedTokenAccounts = false;
     for (var i = 0; i < Math.min(items.length, Normalizer.maximumAccountSnapshots); i++) {
         if (!Normalizer.isCliRecord(items[i])) continue;
         var snapshot;
@@ -34,6 +36,8 @@ function records(payload, providerID, receivedAtMs) {
         if (snapshot.commandFailed && Normalizer.accountLabel(snapshot).length === 0) {
             if (Normalizer.isMissingTokenAccountsError(snapshot.error)) {
                 sawMissingTokenAccounts = true;
+            } else if (Normalizer.isUnsupportedTokenAccountsError(snapshot.error)) {
+                sawUnsupportedTokenAccounts = true;
             } else {
                 failure = {outcome: "commandFailed", message: snapshot.error};
             }
@@ -44,7 +48,8 @@ function records(payload, providerID, receivedAtMs) {
     options = Normalizer.dedupeAccountOptions(options);
     if (options.length === 0) {
         if (failure) return failure;
+        if (sawUnsupportedTokenAccounts) return {outcome: "success", options: [], availability: "unsupported", message: ""};
         if (items.length > 0 && !sawMissingTokenAccounts) return {outcome: "empty", message: ""};
     }
-    return {outcome: "success", options: options, message: ""};
+    return {outcome: "success", options: options, availability: options.length > 0 ? "named" : "none", message: ""};
 }

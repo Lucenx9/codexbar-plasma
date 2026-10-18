@@ -14,6 +14,14 @@ ColumnLayout {
     readonly property var accountOptions: providerID.length > 0
         ? applet.accountOptionsForProvider(providerID) : []
     readonly property bool largeAccountList: accountOptions.length > 3
+    // "none" or "unsupported" explains an empty discovery result while the
+    // default account is really in use and no newer failure is shown.
+    readonly property string availability: providerID.length > 0
+        ? applet.accountAvailabilityForProvider(providerID) : ""
+    readonly property bool availabilityExplained: accountOptions.length === 0
+        && (availability === "none" || availability === "unsupported")
+        && applet.selectedAccountForProvider(providerID).length === 0
+        && applet.accountErrorForProvider(providerID).length === 0
     property bool accountsExpanded: false
 
     onProviderIDChanged: accountsExpanded = false
@@ -25,6 +33,7 @@ ColumnLayout {
     visible: providerID.length > 0
         && (applet.accountLoadingForProvider(providerID)
             || accountOptions.length > 0
+            || availabilityExplained
             || applet.accountErrorForProvider(providerID).length > 0
             || applet.selectedAccountForProvider(providerID).length > 0)
     Layout.fillWidth: true
@@ -172,6 +181,16 @@ ColumnLayout {
                 }
             }
         }
+    }
+
+    PlainPlasmaLabel {
+        objectName: "accountsAvailabilityMessage"
+        visible: accountsPanel.availabilityExplained
+        text: accountsPanel.availability === "unsupported"
+            ? i18n("CodexBar cannot switch accounts for this provider. Its default account is used.")
+            : i18n("No named accounts are configured. The provider's default account is used.")
+        Layout.fillWidth: true
+        wrapMode: Text.WordWrap
     }
 
     PlainPlasmaLabel {
