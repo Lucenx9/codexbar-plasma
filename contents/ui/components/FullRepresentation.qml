@@ -45,6 +45,56 @@ Item {
         && !fullRoot.commandPathMissing
         && (!applet.selectedProviderData || applet.selectedProviderData.error !== applet.errorText)
 
+    // The AI Insights analysis is a page inside the popup, not a tab: the
+    // card of the Overview, or of the provider view without one, opens it,
+    // and Back returns to that view at its previous scroll position. A change
+    // of view, account, or a disabled feature closes it.
+    readonly property string aiInsightsViewKey: !applet.aiInsightsEnabled ? ""
+        : applet.overviewSelected ? "overview"
+        : (!applet.overviewAvailable && applet.presentedProviderData !== null
+            ? "provider:" + providerScroll.selectionKey : "")
+    property string aiInsightsOrigin: ""
+    property real aiInsightsReturnY: 0
+    readonly property bool aiInsightsOpen: aiInsightsOrigin.length > 0
+
+    onAiInsightsViewKeyChanged: {
+        if (aiInsightsOpen && aiInsightsViewKey !== aiInsightsOrigin) {
+            aiInsightsOrigin = ""
+        }
+    }
+
+    function aiInsightsOriginScroll() {
+        return aiInsightsViewKey === "overview" ? overviewScroll : providerScroll
+    }
+
+    function openAiInsights(keyboard) {
+        if (aiInsightsViewKey.length === 0) {
+            return
+        }
+        var flickable = aiInsightsOriginScroll().contentItem as Flickable
+        aiInsightsReturnY = flickable ? flickable.contentY : 0
+        aiInsightsOrigin = aiInsightsViewKey
+        aiInsightsView.scrollToTop()
+        aiInsightsView.focusBack(keyboard)
+    }
+
+    // A tab click keeps focus on the tab; Back returns it to Open analysis.
+    function closeAiInsights(restoreFocus, keyboard) {
+        if (!aiInsightsOpen) {
+            return
+        }
+        var flickable = aiInsightsOriginScroll().contentItem as Flickable
+        aiInsightsOrigin = ""
+        if (flickable) {
+            flickable.cancelFlick()
+            flickable.contentY = Math.max(0, Math.min(aiInsightsReturnY,
+                flickable.contentHeight - flickable.height))
+        }
+        if (restoreFocus) {
+            (aiInsightsViewKey === "overview" ? overviewAiInsightsCard : providerAiInsightsCard).focusOpenButton(keyboard)
+        }
+    }
+
     Controls.Action {
         id: retryUsageAction
 
@@ -296,6 +346,7 @@ Item {
 
                     Components.GlobalTab {
                         id: overviewTab
+                        objectName: "overviewTab"
 
                         visible: applet.overviewAvailable
                         applet: fullRoot.applet
@@ -305,7 +356,10 @@ Item {
                         iconName: "view-grid-symbolic"
                         tabHeight: providerTabsFlickable.height
                         selected: applet.overviewSelected
-                        onActivated: applet.selectGlobalView("overview")
+                        onActivated: {
+                            fullRoot.closeAiInsights(false, false)
+                            applet.selectGlobalView("overview")
+                        }
                     }
 
                     Components.GlobalTab {
@@ -364,6 +418,7 @@ Item {
                                 : applet.withAlpha(Kirigami.Theme.textColor, 0.72)
 
                             function activate() {
+                                fullRoot.closeAiInsights(false, false)
                                 applet.selectedProviderID = modelData.provider
                                 applet.selectionInitialized = true
                             }
@@ -750,8 +805,18 @@ Item {
             applet: fullRoot.applet
         }
 
+        Components.AiInsightsView {
+            id: aiInsightsView
+
+            visible: fullRoot.aiInsightsOpen
+            applet: fullRoot.applet
+            backText: fullRoot.aiInsightsOrigin === "overview" ? i18n("Overview")
+                : (applet.presentedProviderData ? applet.presentedProviderData.title : "")
+            onBackRequested: function(keyboard) { fullRoot.closeAiInsights(true, keyboard) }
+        }
+
         ColumnLayout {
-            visible: applet.overviewSelected
+            visible: applet.overviewSelected && !fullRoot.aiInsightsOpen
             Layout.fillWidth: true
             Layout.fillHeight: true
             spacing: Kirigami.Units.largeSpacing
@@ -842,15 +907,18 @@ Item {
                     }
 
                     Components.AiInsightsCard {
+                        id: overviewAiInsightsCard
+
                         visible: applet.aiInsightsEnabled
                         applet: fullRoot.applet
+                        onOpenRequested: function(keyboard) { fullRoot.openAiInsights(keyboard) }
                     }
                 }
             }
         }
 
         ColumnLayout {
-            visible: applet.presentedProviderData !== null
+            visible: applet.presentedProviderData !== null && !fullRoot.aiInsightsOpen
             Layout.fillWidth: true
             Layout.fillHeight: true
             spacing: Kirigami.Units.largeSpacing
@@ -1447,8 +1515,11 @@ Item {
                     // Without an Overview tab (one provider, or a fixed provider),
                     // the same card appears here instead, never in both places.
                     Components.AiInsightsCard {
+                        id: providerAiInsightsCard
+
                         visible: applet.aiInsightsEnabled && !applet.overviewAvailable
                         applet: fullRoot.applet
+                        onOpenRequested: function(keyboard) { fullRoot.openAiInsights(keyboard) }
                     }
 
                     ColumnLayout {

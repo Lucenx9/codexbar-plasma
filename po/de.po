@@ -50,6 +50,7 @@ msgstr ""
 "Modell."
 
 #: contents/ui/components/AiInsightsCard.qml
+#: contents/ui/components/AiInsightsView.qml
 msgid "Not enough current usage data for an insight yet."
 msgstr "Noch nicht genug aktuelle Nutzungsdaten für einen Einblick."
 
@@ -97,12 +98,10 @@ msgstr "Einblick neu erzeugen"
 msgid "Generating insight…"
 msgstr "Einblick wird erzeugt…"
 
-#: contents/ui/components/AiInsightsCard.qml
 #: contents/ui/components/ProviderCostSection.qml
 msgid "Hide details"
 msgstr "Details ausblenden"
 
-#: contents/ui/components/AiInsightsCard.qml
 #: contents/ui/components/ProviderCostSection.qml
 msgid "Show details"
 msgstr "Details anzeigen"
@@ -3957,3 +3956,35 @@ msgstr "Die Quelle liefert Nutzungsprozentsätze; einige Details sind möglicher
 #: contents/ui/main.qml scripts/smoke/Capture.qml
 msgid "Reset unavailable"
 msgstr "Zurücksetzzeit nicht verfügbar"
+
+#: contents/ui/components/AiInsightsCard.qml
+msgid "Open analysis"
+msgstr "Analyse öffnen"
+
+#: contents/ui/components/AiInsightsView.qml
+msgid "Generated %1"
+msgstr "Erstellt am %1"
+
+#: contents/ui/components/AiInsightsView.qml
+msgid "A new insight is generated automatically at most every %1 hour."
+msgid_plural "A new insight is generated automatically at most every %1 hours."
+msgstr[0] "Eine neue Analyse wird automatisch höchstens alle %1 Stunde erstellt."
+msgstr[1] "Eine neue Analyse wird automatisch höchstens alle %1 Stunden erstellt."
+
+#: contents/ui/components/AiInsightsView.qml
+msgid "A new insight is generated only when you ask for one."
+msgstr "Eine neue Analyse wird nur auf Anfrage erstellt."
+
+#: contents/ui/components/AiInsightsView.qml
+msgid ""
+"Uses only quota, pace, incident, and 7-day spend and token data. Account "
+"names, projects, and paths are never sent."
+msgstr "Verwendet nur Daten zu Kontingenten, Verbrauchstempo, Störungen sowie Ausgaben und Tokens über 7 Tage. Kontonamen, Projekte und Pfade werden nie gesendet."
+
+#: contents/ui/components/AiInsightsView.qml
+msgid "Back to %1"
+msgstr "Zurück zu %1"
+
+#: contents/ui/components/AiInsightsView.qml
+msgid "About this insight"
+msgstr "Über diese Analyse"

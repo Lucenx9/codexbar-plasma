@@ -48,6 +48,7 @@ msgid "Choose an AI provider and model in the AI Insights settings."
 msgstr "Scegli un provider IA e un modello nelle impostazioni di Analisi IA."
 
 #: contents/ui/components/AiInsightsCard.qml
+#: contents/ui/components/AiInsightsView.qml
 msgid "Not enough current usage data for an insight yet."
 msgstr ""
 "Non ci sono ancora abbastanza dati di utilizzo aggiornati per un'analisi."
@@ -96,12 +97,10 @@ msgstr "Rigenera analisi"
 msgid "Generating insight…"
 msgstr "Generazione dell'analisi…"
 
-#: contents/ui/components/AiInsightsCard.qml
 #: contents/ui/components/ProviderCostSection.qml
 msgid "Hide details"
 msgstr "Nascondi dettagli"
 
-#: contents/ui/components/AiInsightsCard.qml
 #: contents/ui/components/ProviderCostSection.qml
 msgid "Show details"
 msgstr "Mostra dettagli"
@@ -3927,3 +3926,35 @@ msgstr "La fonte fornisce le percentuali di utilizzo; alcuni dettagli potrebbero
 #: contents/ui/main.qml scripts/smoke/Capture.qml
 msgid "Reset unavailable"
 msgstr "Reset non disponibile"
+
+#: contents/ui/components/AiInsightsCard.qml
+msgid "Open analysis"
+msgstr "Apri analisi"
+
+#: contents/ui/components/AiInsightsView.qml
+msgid "Generated %1"
+msgstr "Generata il %1"
+
+#: contents/ui/components/AiInsightsView.qml
+msgid "A new insight is generated automatically at most every %1 hour."
+msgid_plural "A new insight is generated automatically at most every %1 hours."
+msgstr[0] "Una nuova analisi viene generata automaticamente al massimo ogni %1 ora."
+msgstr[1] "Una nuova analisi viene generata automaticamente al massimo ogni %1 ore."
+
+#: contents/ui/components/AiInsightsView.qml
+msgid "A new insight is generated only when you ask for one."
+msgstr "Una nuova analisi viene generata solo su richiesta."
+
+#: contents/ui/components/AiInsightsView.qml
+msgid ""
+"Uses only quota, pace, incident, and 7-day spend and token data. Account "
+"names, projects, and paths are never sent."
+msgstr "Usa solo dati su quote, ritmo di consumo, disservizi, spesa e token su 7 giorni. Nomi degli account, progetti e percorsi non vengono mai inviati."
+
+#: contents/ui/components/AiInsightsView.qml
+msgid "Back to %1"
+msgstr "Torna a %1"
+
+#: contents/ui/components/AiInsightsView.qml
+msgid "About this insight"
+msgstr "Informazioni sull'analisi"

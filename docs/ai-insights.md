@@ -1,10 +1,24 @@
 # AI Insights
 
-AI Insights is an optional, disabled-by-default Overview card that asks a
-language model to explain a small, validated snapshot of the usage the widget
-already shows. This document records its boundary decision, data contract,
+AI Insights is an optional, disabled-by-default Overview card and in-popup
+analysis view. A language model explains a small, validated snapshot of the
+usage the widget already shows. This document records its boundary decision, data contract,
 request contract, and verification. The [usage guide](usage.md#ai-insights)
 describes setup and behavior for users.
+
+## Presentation
+
+The Overview card keeps the summary visible and opens the full answer and
+highlights in an analysis page. Without Overview, the provider view has the
+same card.
+Returning preserves the originating view and scroll position. Navigation is
+local presentation state: it never generates an answer or scans cost history.
+The card and page show the same saved insight, generation time, service, model,
+and freshness. Both show an error if generation fails.
+
+The saved cache contains a snapshot identifier, not the source measurements.
+The page must not cite live usage as evidence for an older answer. Coverage guidance describes the existing snapshot rules without
+inventing new forecasts or claiming that absent historical data was analyzed.
 
 ## Boundary decision
 
@@ -32,7 +46,8 @@ network requests and returns semantic JSON records.
 | Language, context, cache, schedule, command, and reply validation | `contents/ui/AiInsights.js` |
 | Process, nonce, deadline, stale replies, interval timer | `contents/ui/controllers/AiInsightsController.qml` |
 | Persistence and localized error text | `main.qml` and `components/AiInsightsMessages.qml` |
-| Card presentation | `components/AiInsightsCard.qml` |
+| Compact and full saved-answer presentation | `components/AiInsightsCard.qml` |
+| Analysis page and return navigation | `components/AiInsightsView.qml` and `components/FullRepresentation.qml` |
 | Secret Service, HTTP, provider differences, output validation | `scripts/lib/ai_insights.py` via `scripts/ai-insights.py` |
 | Settings, key prompt, model discovery | `configAiInsights.qml` |
 
@@ -306,7 +321,12 @@ table, honoring the response's `Retry-After`, and a choice that finished with
   also edits a tested model and disables the feature during a connection test,
   proving that the old verdict and late replies are discarded. The
   card scenarios start generation through the first-use **Generate insight**
-  button and check that highlights stay collapsed until **Show details**. The
-  `normal` scenario asserts that the card stays hidden and idle by default.
+  button and check that **Open analysis** reveals the highlights in the
+  dedicated view. They capture the compact card and analysis page, check return
+  to a nonzero scroll position, tab changes, feature disabling, and no generation
+  on navigation. `tst_ai_insights_view.qml` exercises the production card and
+  page's keyboard activation, Back/Escape, full text, explicit generation, and
+  context without treating live data as saved evidence. The `normal` scenario
+  asserts that the card stays hidden and idle by default.
 
 No test contacts a real AI service, wallet, or credential.
