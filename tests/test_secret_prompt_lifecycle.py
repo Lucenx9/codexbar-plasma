@@ -597,7 +597,7 @@ TestCase {
         verify(command.indexOf("--format json --redact") !== -1);
         verify(command.indexOf("codex") !== -1);
         // The shell kills a hung diagnose before the QML deadline retires it.
-        verify(/timeout --foreground --kill-after=\S*5s\S* \S*50s\S* \S*codexbar\S* diagnose/.test(command), command);
+        verify(/timeout --foreground --kill-after=\\S*5s\\S* \\S*50s\\S* \\S*codexbar\\S* diagnose/.test(command), command);
         compare(providerDiagnosticLoadingFor("codex"), true);
         setProviderDiagnosticLoading("codex", false);
     }

@@ -77,7 +77,7 @@ check-workflows:
 # anything, so it adds no style churn to the check suite.
 check-python-lint:
 	@if python3 -c 'import pyflakes' >/dev/null 2>&1; then \
-		set -x; python3 -m pyflakes scripts tests; \
+		set -x; PYTHONWARNINGS='error::SyntaxWarning' python3 -m pyflakes scripts tests; \
 	else \
 		echo "pyflakes not found; skipping Python lint"; \
 	fi
