@@ -71,7 +71,7 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   after it, and clear an earlier AI Insights verdict when the API key prompt
   is cancelled.
 - Keep empty cost records from displacing real days in the model cost history,
-  reject impossible calendar dates such as February 30 as a cost scan day
+  and reject impossible calendar dates such as February 30 as a cost scan day
   instead of rolling them into the next month.
 - Never split an emoji or other paired character when truncating notification
   titles and bodies, AI Insights summaries, cost labels, support reports, or
