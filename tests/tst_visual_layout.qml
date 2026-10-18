@@ -860,6 +860,65 @@ TestCase {
         compare(idle.opacity, applet.secondaryTextOpacity);
     }
 
+    // An open Sessions tab rescans every 30 seconds and each scan delivers a
+    // new array. Cards must update in place so hover and keyboard focus
+    // survive, and relative ages must use the scan's clock.
+    function test_sessionRescanKeepsCardsAndResyncsAges() {
+        applet.sessionsErrorText = "";
+        applet.sessionsLoading = false;
+        applet.sessions = [
+            {provider: "claude", projectName: "CodexBar Plasma", sessionName: "", host: "",
+             state: "active", source: "cli", activityMs: Date.now()}
+        ];
+        var view = createControl("SessionsView", {
+            applet: applet,
+            width: 540,
+            height: 300
+        });
+        if (!view)
+            return;
+        wait(0);
+        var titleBefore = findItem(view, function (item) {
+            return item.visible && item.elide !== undefined && item.text === "CodexBar Plasma";
+        });
+        verify(titleBefore !== null);
+        view.sessionClockMs = 1;
+
+        var rescannedAtMs = Date.now();
+        applet.sessions = [
+            {provider: "claude", projectName: "CodexBar Plasma", sessionName: "", host: "",
+             state: "idle", source: "cli", activityMs: rescannedAtMs}
+        ];
+        wait(0);
+        var titleAfter = findItem(view, function (item) {
+            return item.visible && item.elide !== undefined && item.text === "CodexBar Plasma";
+        });
+        verify(titleAfter === titleBefore, "a same-size rescan rebuilt the session card");
+        verify(findItem(view, function (item) {
+            return item.visible && item.text === "Idle";
+        }) !== null, "the kept card did not show the rescanned state");
+        verify(view.sessionClockMs >= rescannedAtMs, "the age clock lagged the rescanned data");
+
+        // A rescan that drops a session removes only its card, without
+        // evaluating the departing card against a missing entry.
+        failOnWarning(/TypeError|undefined/);
+        applet.sessions = [
+            {provider: "codex", projectName: "docs", sessionName: "", host: "",
+             state: "idle", source: "cli", activityMs: rescannedAtMs},
+            applet.sessions[0]
+        ];
+        wait(0);
+        applet.sessions = [applet.sessions[1]];
+        wait(0);
+        var titles = [];
+        findAllItems(view, function (item) {
+            return item.visible && item.elide !== undefined
+                && (item.text === "CodexBar Plasma" || item.text === "docs");
+        }, titles);
+        compare(titles.length, 1);
+        compare(titles[0].text, "CodexBar Plasma");
+    }
+
     // CopyableValue labels its copy action through tooltips anchored to the
     // copy button, so a hostile accessible name must arrive escaped there
     // and the transient confirmation must keep its own immediate tooltip.

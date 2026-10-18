@@ -58,6 +58,8 @@ ColumnLayout {
 
         function onSessionsChanged() {
             view.copiedValueKey = ""
+            // Ages are relative to the scan that produced them.
+            view.sessionClockMs = Date.now()
         }
     }
 
@@ -181,22 +183,27 @@ ColumnLayout {
                 }
             }
 
+            // Every rescan delivers a new array, so a count model keeps each
+            // card, with its hover and keyboard focus, and rebinds its data.
             Repeater {
-                model: view.applet.presentedSessions
+                model: view.applet.presentedSessions.length
 
                 delegate: Rectangle {
                     id: sessionCard
 
                     required property int index
+                    // A count model's modelData is the card's index.
                     required property var modelData
+                    readonly property var session: view.applet.presentedSessions[modelData]
 
-                    readonly property bool activeSession: modelData.state === "active"
-                        || modelData.state === "running"
+                    readonly property bool activeSession: session.state === "active"
+                        || session.state === "running" || session.state === "working"
+                    readonly property string title: sessionLabels.sessionTitle(session, index)
                     readonly property string subtitle: sessionLabels.sessionSubtitle(
-                        modelData, view.applet.sessionHostsVary)
+                        session, view.applet.sessionHostsVary)
                     readonly property string titleCopyKey: "title:" + index
                     readonly property color accent: view.applet.providerReadableColor(
-                        modelData.provider,
+                        session.provider,
                         Kirigami.Theme.backgroundColor)
 
                     Layout.fillWidth: true
@@ -214,7 +221,7 @@ ColumnLayout {
                     }
 
                     Accessible.role: Accessible.ListItem
-                    Accessible.name: sessionLabels.sessionTitle(modelData, index)
+                    Accessible.name: title
                     Accessible.description: subtitle
 
                     HoverHandler {
@@ -229,9 +236,9 @@ ColumnLayout {
                         spacing: Kirigami.Units.smallSpacing
 
                         Kirigami.Icon {
-                            source: view.applet.providerIconSource(modelData.provider)
+                            source: view.applet.providerIconSource(sessionCard.session.provider)
                             fallback: "system-run-symbolic"
-                            isMask: view.applet.providerIconIsMask(modelData.provider)
+                            isMask: view.applet.providerIconIsMask(sessionCard.session.provider)
                             color: sessionCard.accent
                             Layout.preferredWidth: Kirigami.Units.iconSizes.smallMedium
                             Layout.preferredHeight: Kirigami.Units.iconSizes.smallMedium
@@ -245,7 +252,7 @@ ColumnLayout {
                             Components.CopyableValue {
                                 id: sessionTitleValue
 
-                                text: sessionLabels.sessionTitle(modelData, index)
+                                text: sessionCard.title
                                 fontWeight: Font.DemiBold
                                 copyAccessibleName: i18n("Copy session name")
                                 copyEnabled: !view.applet.privacyMode
@@ -257,9 +264,9 @@ ColumnLayout {
                             }
 
                             Components.PlainPlasmaLabel {
-                                visible: modelData.sessionName.length > 0
-                                    && modelData.sessionName !== sessionLabels.sessionTitle(modelData, index)
-                                text: modelData.sessionName
+                                visible: sessionCard.session.sessionName.length > 0
+                                    && sessionCard.session.sessionName !== sessionCard.title
+                                text: sessionCard.session.sessionName
                                 opacity: view.applet.valueTextOpacity
                                 Layout.fillWidth: true
                                 elide: Text.ElideRight
@@ -282,7 +289,7 @@ ColumnLayout {
                             // State reads the same for every provider, so it
                             // uses the theme's meaning colors, not the accent.
                             Components.PlainPlasmaLabel {
-                                text: sessionLabels.sessionStateText(modelData.state)
+                                text: sessionLabels.sessionStateText(sessionCard.session.state)
                                 color: sessionCard.activeSession
                                     ? Kirigami.Theme.positiveTextColor
                                     : Kirigami.Theme.textColor
@@ -297,7 +304,7 @@ ColumnLayout {
                             }
 
                             Components.PlainPlasmaLabel {
-                                text: sessionLabels.sessionActivityText(modelData, view.sessionClockMs)
+                                text: sessionLabels.sessionActivityText(sessionCard.session, view.sessionClockMs)
                                 opacity: view.applet.secondaryTextOpacity
                                 font.pixelSize: Kirigami.Theme.smallFont.pixelSize
                                 horizontalAlignment: Text.AlignRight

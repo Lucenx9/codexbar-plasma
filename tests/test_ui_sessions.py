@@ -25,13 +25,13 @@ copyable_value_text = copyable_value_qml.read_text(encoding="utf-8")
 
 class SessionsTest(unittest.TestCase):
     def test_session_labels_are_localized(self):
-        applet.require("text: sessionLabels.sessionStateText(modelData.state)", "session states must use localized labels")
+        applet.require("text: sessionLabels.sessionStateText(sessionCard.session.state)", "session states must use localized labels")
         applet.require("details.push(root.sessionSourceText(item.source))", "session sources must use localized labels")
 
         applet.require_definition_where_used("sessionStateText")
         applet.require_definition_where_used("sessionSourceText")
 
-        applet.reject("view.applet.capitalize(modelData.state)", "session states must not bypass translations")
+        applet.reject("view.applet.capitalize(sessionCard.session.state)", "session states must not bypass translations")
 
     def test_sessions_lifecycle(self):
         for session_contract_fragment in (
@@ -101,7 +101,7 @@ class SessionsTest(unittest.TestCase):
         if not re.search(
             r"Connections\s*\{.*?target:\s*view\.applet.*?"
             r"function\s+onSessionsChanged\(\)\s*\{\s*"
-            r'view\.copiedValueKey\s*=\s*"";?\s*\}',
+            r'view\.copiedValueKey\s*=\s*""',
             sessions_view_text,
             re.S,
         ):
@@ -144,16 +144,17 @@ class SessionsTest(unittest.TestCase):
                 "so the same state reads the same for every provider"
             )
         for active_session_state in (
-            'modelData.state === "active"',
-            'modelData.state === "running"',
+            'session.state === "active"',
+            'session.state === "running"',
+            'session.state === "working"',
         ):
             if not code_contains(sessions_view_text, active_session_state):
                 raise AssertionError(
-                    "SessionsView must highlight both live state spellings accepted from the CLI; "
+                    "SessionsView must highlight every live state spelling accepted from the CLI; "
                     f"missing {active_session_state!r}"
                 )
         for optional_session_details_fragment in (
-            "readonly property string subtitle: sessionLabels.sessionSubtitle( modelData, view.applet.sessionHostsVary)",
+            "readonly property string subtitle: sessionLabels.sessionSubtitle( session, view.applet.sessionHostsVary)",
             "visible: sessionCard.subtitle.length > 0",
             "text: sessionCard.subtitle",
         ):
@@ -183,7 +184,7 @@ class SessionsTest(unittest.TestCase):
         for session_clock_fragment in (
             "property double sessionClockMs: Date.now()",
             "id: sessionAgeTimer",
-            "sessionActivityText(modelData, view.sessionClockMs)",
+            "sessionActivityText(sessionCard.session, view.sessionClockMs)",
         ):
             if not code_contains(sessions_view_text, session_clock_fragment):
                 raise AssertionError(

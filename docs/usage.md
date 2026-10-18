@@ -221,7 +221,8 @@ work and upstream contract requirements.
   the theme's positive color while active, the provider (or `OMP` for an OMP
   Pi-family session), and the source. The host name appears only when sessions
   come from more than one host. Hovering a card reveals a copy action beside
-  its title.
+  its title. A rescan updates the cards in place, so hover and keyboard focus
+  survive it, and ages are measured from the latest scan.
 - Overview providers can be limited to a chosen set of up to 3 providers, or
   left automatic (the first 3 eligible providers). The checkboxes recognize
   provider aliases and mixed-case IDs, like the panel provider selection.

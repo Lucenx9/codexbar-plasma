@@ -602,7 +602,9 @@ clipboard interoperability with every Wayland application or portal backend.
   recovery or consume an armed reset.
 - Sessions normalize display fields only. Discard `cwd`, `transcriptPath`, IDs,
   and PIDs; never render, open, or follow them. Remote/SSH host focus is a
-  macOS-only non-goal.
+  macOS-only non-goal. Without IDs, session cards are positional: the
+  Repeater counts sessions so each rescan rebinds existing cards in place,
+  keeping hover and keyboard focus, and relative ages restart from the scan.
 - `PanelRules.js` evaluates displayed quotas without effects. Automatic capsules
   use `PanelDisplay.meterRows` in primary/secondary order, and either displayed
   quota can satisfy the provider meter condition. Direct missing quotas stay omitted; `runOut` depends on `paceWarningActive`. Panel visibility,
