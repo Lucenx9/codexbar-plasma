@@ -2022,8 +2022,8 @@ msgid ""
 "Checks GitHub for official releases. Update external installations through "
 "their original installation method."
 msgstr ""
-"Prüft offizielle Versionen auf GitHub. Externe Installationen über ihre "
-"ursprüngliche Installationsmethode aktualisieren."
+"Prüft offizielle Versionen auf GitHub. Aktualisieren Sie externe "
+"Installationen über ihre ursprüngliche Installationsmethode."
 
 #: contents/ui/configGeneral.qml
 msgid "Check CLI releases now"
