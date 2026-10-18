@@ -232,6 +232,7 @@ TestCase {
     property string selectedProviderID: ""
     property bool providerDescriptorsUnavailable: false
     property bool fireworksSingleKeySetupSupported: false
+    property bool munitoApiKeySetupSupported: false
     property bool commandCodeFalApiKeySetupSupported: false
     property bool providerSourceSetupSupported: false
     property var operationState: ProviderOperations.initialState()
@@ -776,6 +777,14 @@ TestCase {
         compare(supportsApiKeySetup("fireworks"), true);
         fireworksSingleKeySetupSupported = false;
         compare(supportsApiKeySetup("fal"), false);
+        compare(supportsApiKeySetup("munito"), false);
+        compare(supportsApiKeySetup("futureagi"), false);
+        munitoApiKeySetupSupported = true;
+        compare(supportsApiKeySetup("munito"), true);
+        compare(supportsApiKeySetup("MUNITO"), true);
+        compare(supportsApiKeySetup("futureagi"), false);
+        munitoApiKeySetupSupported = false;
+        compare(supportsApiKeySetup("munito"), false);
         compare(supportsApiKeySetup("flora"), false);
         compare(supportsApiKeySetup("parallel"), false);
         commandCodeFalApiKeySetupSupported = true;

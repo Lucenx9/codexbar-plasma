@@ -131,6 +131,41 @@ TestCase {
         }
     }
 
+    function test_official077MunitoSetupFollowsCliVersionLifecycle() {
+        var page = createProvidersPage();
+        if (!page) return;
+        function keyActions(provider) {
+            return page.providerActionRows({provider: provider, enabled: false}).filter(
+                function(action) { return action.action === "set-api-key"; }).length;
+        }
+        function expectSetup(expected) {
+            compare(keyActions("munito"), expected ? 1 : 0);
+            compare(keyActions("MUNITO"), expected ? 1 : 0);
+            compare(keyActions("futureagi"), 0);
+            compare(keyActions("future-provider"), 0);
+            var hint = page.providerCliCommandText({provider: "munito", enabled: false});
+            compare(hint.indexOf("set-api-key") >= 0, expected);
+            if (expected) verify(hint.indexOf("--stdin") >= 0);
+        }
+        expectSetup(false);
+        for (var banner of ["CodexBar 0.76.0", "CodexBar 0.77.0-rc1", "unknown"]) {
+            page.handleCliVersionResult(banner, 0);
+            expectSetup(false);
+        }
+        for (var version of ["CodexBar 0.77.0", "CodexBar 0.78.0", "CodexBar 1.0.0"]) {
+            page.handleCliVersionResult(version, 0);
+            expectSetup(true);
+        }
+        page.handleCliVersionResult("CodexBar 0.77.0", 1);
+        expectSetup(false);
+        page.handleCliVersionResult("CodexBar 0.77.0", 0);
+        page.handleConfigCommandTimeout({kind: "version"});
+        expectSetup(false);
+        page.handleCliVersionResult("CodexBar 0.77.0", 0);
+        page.handleCommandPathChanged();
+        expectSetup(false);
+    }
+
     function test_official075ApiKeySetupFollowsCliVersionLifecycle() {
         var page = createProvidersPage();
         if (!page)

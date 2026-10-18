@@ -1271,6 +1271,14 @@ msgid "FLORA"
 msgstr ""
 
 #: contents/ui/components/ProviderNames.qml
+msgid "Future AGI"
+msgstr ""
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Munito"
+msgstr ""
+
+#: contents/ui/components/ProviderNames.qml
 msgid "Gemini"
 msgstr ""
 

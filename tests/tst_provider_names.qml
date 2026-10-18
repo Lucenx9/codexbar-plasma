@@ -21,6 +21,8 @@ TestCase {
 
     function test_lateAddedProvidersHaveBundledFallbackTitles_data() {
         return [
+            { tag: "futureagi", key: "futureagi", title: "Future AGI" },
+            { tag: "munito", key: "munito", title: "Munito" },
             { tag: "claudeplatform", key: "claudeplatform", title: "Claude Platform" },
             { tag: "fal", key: "fal", title: "fal" },
             { tag: "flora", key: "flora", title: "FLORA" },
