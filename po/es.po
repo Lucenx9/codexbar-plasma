@@ -3926,4 +3926,4 @@ msgstr "La fuente proporciona los porcentajes de uso; algunos detalles pueden no
 
 #: contents/ui/main.qml scripts/smoke/Capture.qml
 msgid "Reset unavailable"
-msgstr "Reinicio no disponible"
+msgstr "Hora de restablecimiento no disponible"
