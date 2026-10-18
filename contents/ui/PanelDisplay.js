@@ -163,6 +163,17 @@ function meterRows(rows, laneValue) {
     return result;
 }
 
+// Overview rows draw every lane meter. candidateRows leads with Cursor's
+// included plan only after its total quota is exhausted, so keep that figure too.
+function overviewMeterRows(candidates) {
+    var rows = meterRows(candidates, "auto");
+    var first = Array.isArray(candidates) ? candidates[0] : null;
+    if (first && first.lane === "providerCost" && rows.indexOf(first) === -1) {
+        rows.unshift(first);
+    }
+    return rows;
+}
+
 // Forecast ETA is a duration observed with one usage snapshot, not an absolute
 // timestamp. Advance it from that observation without triggering another CLI run.
 function remainingSeconds(durationSeconds, observedAtMs, nowMs) {

@@ -272,6 +272,21 @@ TestCase {
         compare(rows, [tertiary, secondary, primary]);
     }
 
+    // Overview names every lane meter, and keeps Cursor's included plan once
+    // its exhausted total quota makes that the usable figure.
+    function test_overviewMeterRowsKeepLanesAndTheIncludedPlan() {
+        var primary = usageRow({lane: "primary", hasPercent: true, usedPercent: 100, leftPercent: 0});
+        var secondary = usageRow({lane: "secondary", hasPercent: true, usedPercent: 40, leftPercent: 60});
+        var plain = PanelDisplay.candidateRows([secondary, primary], "codex", null, "Plan");
+        compare(PanelDisplay.overviewMeterRows(plain), [primary, secondary]);
+        var cursor = PanelDisplay.candidateRows([primary, secondary], "cursor", {percentUsed: 30}, "Plan");
+        var plan = cursor[0];
+        compare(plan.lane, "providerCost");
+        compare(PanelDisplay.overviewMeterRows(cursor), [plan, primary, secondary]);
+        compare(PanelDisplay.overviewMeterRows([plan]), [plan]);
+        compare(PanelDisplay.overviewMeterRows(null), []);
+    }
+
     function test_meterRowsDoNotInventMissingQuotasOrDuplicateLanes() {
         var zero = usageRow({lane: "secondary", hasPercent: true, usedPercent: 0, leftPercent: 100});
         var invalid = usageRow({lane: "primary", hasPercent: true, usedPercent: NaN, leftPercent: 50});

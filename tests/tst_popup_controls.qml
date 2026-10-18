@@ -254,7 +254,7 @@ TestCase {
     }
 
     // The meters and resets are only visual; the row's accessible description
-    // must carry each named window beside the detail line, and drop what is absent.
+    // must follow the drawn order: detail line, then each named window.
     function test_overviewDescribesItsQuotaToAssistiveTools() {
         var measured = Object.assign({}, provider, {
             testRows: [
@@ -270,7 +270,7 @@ TestCase {
         var focus = row.nextItemInFocusChain(true);
         compare(focus.Accessible.name, "Codex");
         compare(focus.Accessible.description,
-            "Session: 42% left - Resets in 2h. Weekly: 80% left. demo@example.com");
+            "demo@example.com. Session: 42% left - Resets in 2h. Weekly: 80% left");
         row.modelData = {provider: "claude", title: "Claude", account: ""};
         compare(focus.Accessible.description, "");
         row.modelData = provider;

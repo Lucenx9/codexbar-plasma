@@ -489,7 +489,8 @@ These are unresolved Linux candidates, not confirmed missing features.
   is live-only and never encoded.
   [Source evidence](docs/research/2026-09-18-macos-parity-0.61.0.md#linux-cli-contract-changes-since-0605).
 - [ ] Compare exhausted automatic text/popup quota selection with the exact
-  0.56.6 cases. Automatic panel capsules already show primary and secondary.
+  0.56.6 cases. Automatic panel capsules and Overview rows already show primary
+  and secondary.
   Keep direct lane choices and independent quota pools. Include OpenCode Go,
   whose macOS 0.74.0 automatic text picks the most constrained five-hour,
   weekly, or monthly window (#3349). macOS 0.77.0 ranks Auto windows and the

@@ -158,18 +158,19 @@ work and upstream contract requirements.
   draws a compact meter for the primary and secondary quota windows, such as
   **Session** and **Weekly**, each captioned with its title, reset and
   percentage, so a low session value never hides an exhausted weekly window.
-  The panel's quota lane choice does not change these meters. Each row's
+  Cursor also keeps its **Included plan** meter once its total quota is
+  exhausted. The panel's quota lane choice does not change these meters. Each row's
   detail line shows the account identity when the CLI provides one, and an
   active service incident otherwise; an operational status or the provider's
   own source name is never presented as identity.
-- Screen readers hear what the popup draws. Overview rows describe each named
-  quota with its reset, then the detail line; provider tabs describe the quota their
-  underline draws, a last-known-usage note, and a refresh error that only
-  dims the tab visually.
+- Screen readers hear what the popup draws. Overview rows describe their
+  detail line, then each named quota with its reset; provider tabs describe
+  the quota their underline draws, a last-known-usage note, and a refresh
+  error that only dims the tab visually.
 - Hovering or keyboard-focusing an Overview row whose title, detail line or
   quota caption is cut short in a narrow popup shows the full text in a
-  tooltip. Hovering a global or provider tab whose name is cut short, an account button
-  whose label is cut short, or a provider header title, account, or plan
+  tooltip. Hovering a global or provider tab whose name is cut short, an
+  account button whose label is cut short, or a provider header title, account, or plan
   that is cut short, or a provider detail section title, row label or value
   that is cut short, shows the full displayed text in
   a tooltip. Keyboard focus also reveals the name of a truncated or icon-only

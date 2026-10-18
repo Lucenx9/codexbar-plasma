@@ -29,11 +29,10 @@ Rectangle {
             .filter(function(part) { return part.length > 0 })
             .join(" \u00b7 ")
     }
-    // Screen readers get what the row shows beside its title: each named
-    // quota with its reset, then the account or status detail.
-    readonly property string accessibleDescription: meterRows
-        .map(function(row) { return overviewRow.applet.quotaDescription(row) })
-        .concat([detail])
+    // Screen readers get what the row shows beside its title, in drawn order:
+    // the account or status detail, then each named quota with its reset.
+    readonly property string accessibleDescription: [detail]
+        .concat(meterRows.map(function(row) { return overviewRow.applet.quotaDescription(row) }))
         .filter(function(part) { return part.length > 0 })
         .join(". ")
     readonly property bool keyboardFocusVisible: overviewRowFocus.visualFocus
