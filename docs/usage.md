@@ -81,9 +81,12 @@ work and upstream contract requirements.
   provider detail explains that these values are not measured account quotas.
   Unknown confidence, including an explicitly empty CLI/cache value, has a `?`
   badge and an unverified-quota label.
-  CLI `dataConfidence: "percentOnly"` instead says "limited detail", with a `…`
-  panel badge and a note that usage percentages are available but quota details
-  are limited. This value was verified in official Linux CLI 0.74.1 output from
+  CLI `dataConfidence: "percentOnly"` shows plain percentages without a panel
+  badge or repeated confidence notes. The provider's panel tooltip explains
+  once that the source supplies percentages and some details may be unavailable.
+  Usage rows, Overview, and panel tooltips say "Reset unavailable" when no
+  reset can be shown. This includes text-only resets hidden by privacy mode.
+  This value was verified in official Linux CLI 0.74.1 output from
   `codexbar usage --provider claude --format json --json-only`, with
   `source: "claude"`, numeric primary/secondary percentages, a null primary
   reset and a secondary reset timestamp. It is preserved as a distinct state.
@@ -106,7 +109,7 @@ work and upstream contract requirements.
   An announced pace warning also survives incomplete readings of the same
   window, so returning complete data does not repeat it. A measured recovery
   or a new reset window can establish a new warning.
-  Confidence, including limited detail, survives privacy mode, failed-refresh
+  Confidence, including percentage-only readings, survives privacy mode, failed-refresh
   retention, and newly saved quota caches. Older CLI payloads and caches without the field keep their
   existing behavior; OpenCode Go estimates already saved by an older widget
   gain their qualifier on the next successful refresh.

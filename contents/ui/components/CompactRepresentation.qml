@@ -557,9 +557,7 @@ Item {
 
                             PlainPlasmaLabel {
                                 objectName: "panelConfidenceMarker"
-                                visible: compactMeter.quotaRows.some(function(row) {
-                                    return !Normalizer.authoritativeQuota(row)
-                                })
+                                visible: text.length > 0
                                 anchors.bottom: parent.bottom
                                 anchors.right: parent.right
                                 text: {
@@ -567,7 +565,7 @@ Item {
                                         return Normalizer.usageConfidence(row.dataConfidence)
                                     })
                                     return confidence.indexOf("unknown") >= 0 ? "?"
-                                        : confidence.indexOf("estimated") >= 0 ? "~" : "…"
+                                        : confidence.indexOf("estimated") >= 0 ? "~" : ""
                                 }
                                 font.pointSize: Kirigami.Theme.smallFont.pointSize
                                 font.bold: true

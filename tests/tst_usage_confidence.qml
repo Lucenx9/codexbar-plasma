@@ -82,7 +82,7 @@ TestCase {
         compare(text.percentText(null, true), "");
     }
 
-    function test_claudePercentOnlyShowsLimitedDetail() {
+    function test_claudePercentOnlyKeepsPercentagesPlain() {
         var input = {provider: "claude", source: "claude", usage: {
             dataConfidence: "percentOnly",
             primary: {usedPercent: 0, windowMinutes: 300, resetsAt: null},
@@ -90,10 +90,23 @@ TestCase {
         }};
         var item = Snapshot.normalize(input, nowMs);
         compare(item.dataConfidence, "percentOnly");
-        compare(text.percentText(item.rows[0], false), "100% left (limited detail)");
-        compare(text.percentText(item.rows[1], false), "0% left (limited detail)");
-        compare(text.confidenceText(item.rows[0]), "Usage percentages are available; quota details are limited.");
-        compare(panelText.displayText(item.rows[1], "percent", "", ""), "100% used (limited detail)");
+        compare(text.percentText(item.rows[0], false), "100% left");
+        compare(text.percentText(item.rows[1], false), "0% left");
+        compare(text.confidenceText(item.rows[0]), "");
+        compare(text.confidenceText(item.rows[1]), "");
+        item.title = "Claude";
+        var note = "The source provides usage percentages; some details may be unavailable.";
+        compare(panelText.providerToolTipText(item, "Session: 100% left. Weekly: 0% left"),
+            "Claude: Session: 100% left. Weekly: 0% left. " + note);
+        panelText.showCredits = true;
+        item.credits = 10;
+        compare(panelText.providerToolTipText(item, "Quota"), "Claude: Quota. 10cr. " + note);
+        panelText.showCredits = false;
+        for (var confidence of ["exact", "estimated", "unknown", ""]) {
+            item.dataConfidence = confidence;
+            verify(panelText.providerToolTipText(item, "Quota").indexOf(note) < 0);
+        }
+        compare(panelText.displayText(item.rows[1], "percent", "", ""), "100% used");
         for (var row of item.rows) {
             compare(row.dataConfidence, "percentOnly");
             verify(!row.paceKnown);

@@ -69,6 +69,7 @@ class ResetPresentationTests(unittest.TestCase):
                                   {"offset": 172800000, "expected": plural("%1d", 2)},
                                   {"offset": 90000000, "expected": text("%1d %2h", 1, 1)}],
                               "hour": plural("%1h", 1), "minutes": plural("%1 min", 59),
+                              "unavailable": text("Reset unavailable"),
                               "label": text("Resets %1", "2h 30m")})
             qml = '''import QtQuick
 import QtTest
@@ -147,6 +148,22 @@ TestCase {
         compare(observedReset, data.minutes);
         privacyMode = true;
         compare(observedReset, data.minutes);
+        row = {dataConfidence: "percentOnly", hasPercent: true, usedPercent: 0, leftPercent: 100};
+        compare(observedReset, data.unavailable);
+        compare(resetLabel(observedReset), data.unavailable);
+        privacyMode = false;
+        compare(observedReset, data.unavailable);
+        compare(resetLabel(observedReset), data.unavailable);
+        row = {dataConfidence: "percentOnly", hasPercent: true, usedPercent: 0, leftPercent: 100, resetDescription: "Synthetic fallback"};
+        compare(observedReset, "Synthetic fallback");
+        row = {dataConfidence: "percentOnly", hasPercent: true, usedPercent: 0, leftPercent: 100, reset: "Legacy reset"};
+        compare(observedReset, "Legacy reset");
+        for (var confidence of ["exact", "estimated", "unknown", "", undefined]) {
+            row = {dataConfidence: confidence, hasPercent: true, usedPercent: 0, leftPercent: 100};
+            compare(observedReset, "");
+        }
+        row = {dataConfidence: "percentOnly", hasPercent: false};
+        compare(observedReset, "");
         for (var confidence of ["estimated", "unknown", "future-value"]) {
             row = {dataConfidence: confidence, resetsAt: "2026-09-13T13:00:00Z"};
             compare(observedReset, "");

@@ -878,6 +878,10 @@ msgstr ""
 msgid "Loading"
 msgstr ""
 
+#: contents/ui/components/PanelText.qml scripts/smoke/Capture.qml
+msgid "The source provides usage percentages; some details may be unavailable."
+msgstr ""
+
 #: contents/ui/components/PanelText.qml
 msgid "Refreshing usage…"
 msgstr ""
@@ -1932,19 +1936,11 @@ msgid "%1 %2, %3"
 msgstr ""
 
 #: contents/ui/components/UsageWindowText.qml scripts/smoke/Capture.qml
-msgid "%1 (limited detail)"
-msgstr ""
-
-#: contents/ui/components/UsageWindowText.qml
 msgid "%1 (confidence unknown)"
 msgstr ""
 
 #: contents/ui/components/UsageWindowText.qml scripts/smoke/Capture.qml
 msgid "Estimated usage; not a measured account quota."
-msgstr ""
-
-#: contents/ui/components/UsageWindowText.qml scripts/smoke/Capture.qml
-msgid "Usage percentages are available; quota details are limited."
 msgstr ""
 
 #: contents/ui/components/UsageWindowText.qml
@@ -3672,6 +3668,10 @@ msgstr ""
 
 #: contents/ui/main.qml
 msgid "Extra"
+msgstr ""
+
+#: contents/ui/main.qml scripts/smoke/Capture.qml
+msgid "Reset unavailable"
 msgstr ""
 
 #: contents/ui/main.qml
