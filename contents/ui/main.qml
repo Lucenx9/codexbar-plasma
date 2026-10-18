@@ -664,6 +664,11 @@ PlasmoidItem {
         return key.length > 0 && accountsController.loadingForProvider(key)
     }
 
+    function accountAvailabilityForProvider(providerID) {
+        var key = providerMapKey(providerID)
+        return key.length > 0 ? accountsController.availabilityForProvider(key) : ""
+    }
+
     function privateErrorText(text) {
         return PrivacyPresentation.errorText(text, privacyMode,
             i18n("Details hidden by privacy mode."))
@@ -1438,6 +1443,7 @@ PlasmoidItem {
             icon: "user-identity",
             action: "accounts",
             enabled: !accountLoadingForProvider(item.provider)
+                && accountAvailabilityForProvider(item.provider) !== "unsupported"
         })
 
         var accountAction = providerAccountAction(item)
@@ -2131,7 +2137,11 @@ PlasmoidItem {
     Controllers.ManagedCliController {
         commandPath: root.commandPath
         automaticUpdates: Plasmoid.configuration.cliAutomaticUpdates === true
-        onChanged: root.refreshNow(true)
+        onChanged: {
+            // A new CLI version can change which providers support accounts.
+            accountsController.reset()
+            root.refreshNow(true)
+        }
     }
 
     Controllers.CliUpdateController {

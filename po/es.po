@@ -621,6 +621,14 @@ msgstr "Usar cuenta predeterminada"
 msgid "Reload accounts"
 msgstr "Recargar cuentas"
 
+#: contents/ui/components/ProviderAccountsPanel.qml
+msgid "CodexBar cannot switch accounts for this provider. Its default account is used."
+msgstr "CodexBar no puede cambiar de cuenta para este proveedor. Se usa su cuenta predeterminada."
+
+#: contents/ui/components/ProviderAccountsPanel.qml
+msgid "No named accounts are configured. The provider's default account is used."
+msgstr "No hay cuentas con nombre configuradas. Se usa la cuenta predeterminada del proveedor."
+
 #: contents/ui/components/ProviderConfigRow.qml
 msgid "%1 - CodexBar default"
 msgstr "%1 - predeterminada de CodexBar"

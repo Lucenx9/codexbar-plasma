@@ -346,7 +346,14 @@ synchronized.
   setting; `load(providerID)` starts discovery and `reset()` retires requests and
   clears results. Input changes synchronously retire obsolete requests. Failed
   refreshes retain successful lists; a confirmed empty list clears only its
-  provider. `main.qml` owns account selection and cache invalidation, localizes
+  provider. `availabilityForProvider()` reports the last success as `named`,
+  `none` (missing token accounts or an empty list) or `unsupported` (the CLI's
+  "does not support token accounts" argument error). Without a selection or a
+  newer error, the accounts panel explains the last two; `unsupported` disables
+  that provider's menu entry, while the panel's reload can retry. `reset()` runs
+  on usage identity, CodexBar config and managed CLI changes, and on an empty
+  roster; an in-place package upgrade needs a reload or a Plasma restart.
+  `main.qml` owns account selection and cache invalidation, localizes
   snapshots, and applies privacy presentation. `AccountResponse.js` bounds and
   classifies replies; `ProviderSnapshot.js` shares pure quota normalization with
   usage refreshes. Cached account quotas and forecasts keep their receipt time
@@ -1026,9 +1033,9 @@ Surface checks protect process ownership and registration/retirement ordering.
 `tests/test_accounts_controller.py` instantiates the production controller with
 isolated CLI processes and real Plasma DataSource/timers. It covers concurrent
 providers, duplicate suppression, quoted arguments, retained lists, successful
-empty results, context changes, reset, original measurement timestamps, and
-recovery after the production 60-second timeout. It adds about 90 seconds to
-`make check`; optional KDE modules may skip locally, while
+empty results, account availability, context changes, reset, original
+measurement timestamps, and recovery after the production 60-second timeout.
+It adds about 90 seconds to `make check`; optional KDE modules may skip locally, while
 `QML_TEST_REQUIRE_NO_SKIPS=1` rejects skips in CI. Direct tests in
 `tests/tst_account_response.qml` cover malformed records, bounded replies,
 redacted failures, and identity deduplication. `tests/tst_provider_snapshot.qml`
@@ -1452,7 +1459,8 @@ The CLI exits with its last failed fetch's code. A provider record explains the
 exit with `error.kind` `provider`, `runtime` (for example, `--source web` on
 Linux) or no kind (cost); the `cli` record explains it only with `args`. This
 preserves healthy siblings, named failed accounts,
-missing-token-account empty lists and older-CLI argument diagnostics. Cost
+missing-token-account empty lists, unsupported-provider account results and
+older-CLI argument diagnostics. Cost
 argument errors fail the entire scan without replacing its snapshot or context;
 returning to a previously successful range can still show its retained data. An
 unexplained success/empty JSON payload at those exits cannot replace data. Other
@@ -1492,6 +1500,9 @@ homes, runtime, credentials, and network isolated by `bwrap`,
 --json-only` exits 1 with an `args` error, "codex does not support token accounts".
 Replacing `--account synthetic-account` with `--all-accounts` reaches the
 provider fetch and returns the expected missing-credentials error instead.
+The same isolation with `usage --provider gemini --all-accounts --format json
+--json-only` exits 1 with an `args` error under provider `cli`, "gemini does
+not support token accounts."; `AccountResponse.js` reports it as `unsupported`.
 The released [selection validation](https://github.com/steipete/CodexBar/blob/v0.76.0/Sources/CodexBarCLI/TokenAccountCLI.swift)
 and [usage collector](https://github.com/steipete/CodexBar/blob/v0.76.0/Sources/CodexBarCLI/CLIUsageCommand.swift)
 explain that distinction. Synthetic controller tests cover multiple returned

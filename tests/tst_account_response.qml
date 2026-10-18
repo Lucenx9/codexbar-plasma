@@ -55,6 +55,53 @@ TestCase {
         compare(missing.outcome, "success");
         compare(missing.options, []);
     }
+    function test_successReportsNamedAccountAvailability() {
+        compare(parse([]).availability, "none");
+        compare(parse({
+            provider: "codex",
+            error: {
+                message: "No token accounts configured for codex."
+            }
+        }).availability, "none");
+        compare(parse([{
+            provider: "codex",
+            account: "Work",
+            usage: {
+                primary: {
+                    usedPercent: 0
+                }
+            }
+        }]).availability, "named");
+    }
+    function test_unsupportedProviderIsAnEmptySuccessNotAnError() {
+        // Linux 0.76.0/0.77.0: `usage --provider gemini --all-accounts` exits 1
+        // with an `args` record under provider `cli`.
+        var result = AccountResponse.response(JSON.stringify([{
+            provider: "cli",
+            source: "cli",
+            error: {
+                kind: "args",
+                code: 1,
+                message: "Error: gemini does not support token accounts."
+            }
+        }]), "", "gemini", 1000, 1);
+        compare(result.outcome, "success");
+        compare(result.options, []);
+        compare(result.availability, "unsupported");
+        compare(result.message, "");
+    }
+    function test_unsupportedTextInsideANamedFailureStaysANamedOption() {
+        var result = parse([{
+            provider: "codex",
+            account: "Work",
+            error: {
+                message: "Upstream does not support token accounts."
+            }
+        }]);
+        compare(result.outcome, "success");
+        compare(result.availability, "named");
+        compare(result.options.length, 1);
+    }
     function test_validSiblingsAndNamedErrorsRemainUsable() {
         var result = parse([
             {

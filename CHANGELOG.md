@@ -16,6 +16,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   primary and secondary meters, such as Session and Weekly, with their resets,
   instead of one unlabelled percentage that could hide an exhausted weekly
   window. Keyboard focus also reveals a truncated row's full text.
+- Explain account discovery results without named accounts instead of showing
+  nothing after **Accounts…**: the popup says the provider's default account is
+  used, or that CodexBar cannot switch accounts for that provider, in which case
+  its **Accounts…** entry is disabled.
 - Clarify that local Codex cost estimates do not follow the account selected
   in the widget; account selection changes the displayed quotas.
 - Refresh selected Codex accounts through the supported account enumeration,

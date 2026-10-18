@@ -623,6 +623,14 @@ msgstr "Utiliser le compte par défaut"
 msgid "Reload accounts"
 msgstr "Recharger les comptes"
 
+#: contents/ui/components/ProviderAccountsPanel.qml
+msgid "CodexBar cannot switch accounts for this provider. Its default account is used."
+msgstr "CodexBar ne peut pas changer de compte pour ce fournisseur. Son compte par défaut est utilisé."
+
+#: contents/ui/components/ProviderAccountsPanel.qml
+msgid "No named accounts are configured. The provider's default account is used."
+msgstr "Aucun compte nommé n'est configuré. Le compte par défaut du fournisseur est utilisé."
+
 #: contents/ui/components/ProviderConfigRow.qml
 msgid "%1 - CodexBar default"
 msgstr "%1 - compte par défaut de CodexBar"

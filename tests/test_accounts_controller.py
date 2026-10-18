@@ -104,6 +104,21 @@ TestCase {
         compare(subject.options.codex, []);
         compare(subject.options.claude[0].accountKey, data.script + " 2");
         compare(subject.errorForProvider("codex"), "");
+        compare(subject.availabilityForProvider("codex"), "none");
+        compare(subject.availabilityForProvider("claude"), "named");
+    }
+    function test_unsupportedProviderIsReportedWithoutAnError() {
+        var subject = create("no-support");
+        compare(subject.availabilityForProvider("codex"), "");
+        verify(subject.load("codex"));
+        completed(subject, "codex", "no-support 1");
+        verify(subject.load("codex"));
+        tryVerify(function() { return !subject.loadingForProvider("codex"); });
+        compare(subject.options.codex, []);
+        compare(subject.errorForProvider("codex"), "");
+        compare(subject.availabilityForProvider("codex"), "unsupported");
+        subject.reset();
+        compare(subject.availabilityForProvider("codex"), "");
     }
     function test_changedInputsRetireRequestsBeforeNewLoads_data() {
         return [{tag: "path", field: "commandPath", value: "FIXTURE_PATH/normal"},
@@ -202,6 +217,10 @@ if run > 1 and provider == "codex":
     if name in ("malformed", "unsupported"):
         print("{" if name == "malformed" else "null")
         sys.exit(0)
+    if name == "no-support":
+        print(json.dumps([{"provider": "cli", "source": "cli", "error": {"kind": "args", "code": 1,
+            "message": "Error: codex does not support token accounts."}}]))
+        sys.exit(1)
     if name in ("empty", "missing-token", "structured"):
         print(json.dumps([] if name == "empty" else {"provider": "codex", "error": {"kind": "provider", "code": 1, "message":
             "No token accounts configured for codex." if name == "missing-token" else {"toString": None}}}))
@@ -221,7 +240,7 @@ class AccountsControllerTests(unittest.TestCase):
     def test_production_lifecycle_with_synthetic_cli(self):
         with tempfile.TemporaryDirectory(prefix="codexbar accounts 'test-") as temporary:
             directory = Path(temporary)
-            for name in ("failed-valid", "failed-timeout", "failed-empty", "normal", "flags", "slow", "late", "failure", "malformed", "unsupported", "structured", "empty", "missing-token", "duplicate"):
+            for name in ("failed-valid", "failed-timeout", "failed-empty", "normal", "flags", "slow", "late", "failure", "malformed", "unsupported", "structured", "empty", "missing-token", "no-support", "duplicate"):
                 script = directory / name
                 script.write_text(CLI)
                 script.chmod(0o700)
