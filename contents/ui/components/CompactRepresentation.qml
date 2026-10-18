@@ -463,15 +463,12 @@ Item {
 
                 delegate: Item {
                     id: compactMeter
+                    objectName: "panelProviderMeter"
 
                     required property var modelData
                     readonly property bool showsPrimaryText: compactRoot.inlinePrimaryText
                         && modelData.provider === compactRoot.selectedProvider.provider
                     readonly property var quotaRows: compactRoot.applet.panelMeterRows(modelData)
-                    readonly property string incidentText: modelData.hasIncident === true
-                        && modelData.statusKnown !== false
-                        && modelData.status
-                        ? modelData.status : ""
                     readonly property color accent: compactRoot.minimalStyle ? Kirigami.Theme.textColor
                         : compactRoot.applet.providerReadableColor(modelData.provider, Kirigami.Theme.backgroundColor)
                     // Capsules carry no text, so a brand hue close to the warning or
@@ -500,8 +497,7 @@ Item {
 
                     Accessible.role: compactRoot.interactive ? Accessible.Button : Accessible.Graphic
                     Accessible.name: compactRoot.interactive ? i18n("Open %1", modelData.title) : modelData.title
-                    Accessible.description: compactRoot.applet.panelMeterDescription(modelData)
-                        + (compactMeter.incidentText.length > 0 ? ". " + compactMeter.incidentText : "")
+                    Accessible.description: compactRoot.applet.panelProviderToolTipText(modelData)
                         + (showsPrimaryText ? ". " + compactRoot.fullText : "")
                     Accessible.ignored: !compactRoot.interactive
                     Accessible.onPressAction: compactMeter.activate()
@@ -557,9 +553,7 @@ Item {
 
                             PlainPlasmaLabel {
                                 objectName: "panelConfidenceMarker"
-                                visible: compactMeter.quotaRows.some(function(row) {
-                                    return !Normalizer.authoritativeQuota(row)
-                                })
+                                visible: text.length > 0
                                 anchors.bottom: parent.bottom
                                 anchors.right: parent.right
                                 text: {
@@ -567,7 +561,7 @@ Item {
                                         return Normalizer.usageConfidence(row.dataConfidence)
                                     })
                                     return confidence.indexOf("unknown") >= 0 ? "?"
-                                        : confidence.indexOf("estimated") >= 0 ? "~" : "…"
+                                        : confidence.indexOf("estimated") >= 0 ? "~" : ""
                                 }
                                 font.pointSize: Kirigami.Theme.smallFont.pointSize
                                 font.bold: true

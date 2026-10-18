@@ -88,6 +88,9 @@ QtObject {
         if (parts.credits !== null) {
             details.push(i18n("%1cr", CostPresentation.formatCount(root.numberFormat, parts.credits)))
         }
+        if (Normalizer.usageConfidence(item.dataConfidence) === "percentOnly") {
+            details.push(i18n("The source provides usage percentages; some details may be unavailable."))
+        }
         if (details.length > 0) {
             const line = i18n("%1: %2", parts.title, details.join(". "))
             return parts.incident.length > 0 ? i18n("%1 - %2", line, parts.incident) : line

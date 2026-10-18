@@ -697,7 +697,9 @@ clipboard interoperability with every Wayland application or portal backend.
   snapshot, popup, panel modes and pace marker. This keeps supplied details
   visible while quota automation, warning colors, conditional visibility and
   automatic selection retain the conservative `authoritativeQuota` gate.
-  `percentOnly` retains its limited-detail qualifier and `…` panel badge.
+  `percentOnly` uses plain percentages without a panel badge. A provider-level
+  panel tooltip note explains the source limitation, and missing resets have
+  an explicit unavailable label in usage rows.
   Privacy retains at most six bounded semantic pace parts, dropping prose
   fallbacks and unknown fields. The root relocalizes those parts for the popup;
   the observation clock continues to advance the private run-out forecast.
@@ -710,11 +712,13 @@ clipboard interoperability with every Wayland application or portal backend.
   resets. Only authoritative observations can establish recovery or escalation;
   a new reset timestamp still gives a forecast its own notification identity.
   `tst_usage_confidence.qml` exercises display, retention, ranking, visibility,
-  notifications, and AI Insights at public interfaces. The `estimated-usage` and `estimated-panel` smoke scenarios verify
-  the root adapters, rendered qualifier, and panel badge with synthetic data.
+  notifications, and AI Insights at public interfaces. The `estimated-usage`,
+  `estimated-panel`, and `unknown-panel` smoke scenarios verify the root
+  adapters, rendered qualifier, and panel badges with synthetic data.
   `percent-only-usage` and `percent-only-panel` exercise the Claude primary and
-  secondary windows, limited-detail note, root/notification adapters, quota
-  guards and panel badge. The usage scenario also supports `--language it`.
+  secondary windows, missing-reset label, root/notification adapters, quota
+  guards, the accessible source note, and absence of a panel badge. The usage
+  scenario also supports `--language it`.
   `percent-only-pace` verifies reported weekly resets, expected usage, the live
   run-out summary and its marker with the official 0.76.0 synthetic CLI shape.
   The exhausted scenario checks that no missing session reset or forecast is

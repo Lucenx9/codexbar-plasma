@@ -971,7 +971,10 @@ PlasmoidItem {
                 resetDescription: row.resetDescription || ""
             }, resetTimesShowAbsolute)
         }
-        return String(row.reset || "")
+        var fallback = String(row.reset || "")
+        return fallback.length === 0 && row.hasPercent
+            && Normalizer.usageConfidence(row.dataConfidence) === "percentOnly"
+            ? i18n("Reset unavailable") : fallback
     }
 
     function statusText(status) {

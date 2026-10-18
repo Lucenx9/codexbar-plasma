@@ -98,10 +98,10 @@ class LocalizedCliLabelTests(unittest.TestCase):
                               "confidence": {
                                   "estimated": translated("%1 (estimated)", translated("%1% %2", 95, translated("used"))),
                                   "unknown": translated("%1 (confidence unknown)", translated("%1% %2", 95, translated("used"))),
-                                  "percentOnly": translated("%1 (limited detail)", translated("%1% %2", 95, translated("used"))),
+                                  "percentOnly": translated("%1% %2", 95, translated("used")),
                                   "note": translated("Estimated usage; not a measured account quota."),
                                   "unknownNote": translated("Usage confidence is unknown; account quota is unverified."),
-                                  "limitedNote": translated("Usage percentages are available; quota details are limited."),
+                                  "limitedNote": "",
                               },
                               "periods": {
                                   "month": translated("Month to date"),

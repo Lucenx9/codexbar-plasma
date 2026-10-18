@@ -3938,14 +3938,6 @@ msgid ""
 "and trusted host keys beforehand; no SSH prompts are shown."
 msgstr "SSH wird nur über die separate Schaltfläche lokal + SSH ausgeführt. Richten Sie Authentifizierung und vertrauenswürdige Hostschlüssel vorher ein; SSH zeigt keine Eingabeaufforderungen an."
 
-#: contents/ui/components/UsageWindowText.qml scripts/smoke/Capture.qml
-msgid "%1 (limited detail)"
-msgstr "%1 (eingeschränkte Details)"
-
-#: contents/ui/components/UsageWindowText.qml scripts/smoke/Capture.qml
-msgid "Usage percentages are available; quota details are limited."
-msgstr "Nutzungsprozentsätze sind verfügbar; Quotendetails sind eingeschränkt."
-
 #: contents/ui/config/ProviderDescriptorField.qml
 msgid "Set %1"
 msgstr "%1 festlegen"
@@ -3957,3 +3949,11 @@ msgstr "%1 speichern"
 #: contents/ui/configDiagnostics.qml
 msgid "Diagnostic output"
 msgstr "Diagnoseausgabe"
+
+#: contents/ui/components/PanelText.qml scripts/smoke/Capture.qml
+msgid "The source provides usage percentages; some details may be unavailable."
+msgstr "Die Quelle liefert Nutzungsprozentsätze; einige Details sind möglicherweise nicht verfügbar."
+
+#: contents/ui/main.qml scripts/smoke/Capture.qml
+msgid "Reset unavailable"
+msgstr "Zurücksetzzeit nicht verfügbar"

@@ -49,10 +49,10 @@ Item {
     readonly property bool readmePanelScenario: scenario.indexOf("readme-panel-") === 0
     readonly property bool verticalPanelScenario: scenario.indexOf("panel-vertical") === 0
     readonly property bool capsulePanelScenario: verticalPanelScenario || scenario === "panel-small" || scenario === "panel-dual-edge"
-    readonly property bool standardPanelScenario: scenario === "estimated-panel" || scenario === "percent-only-panel" || scenario === "panel-standard" || scenario === "readme-panel-standard"
+    readonly property bool standardPanelScenario: scenario === "estimated-panel" || scenario === "unknown-panel" || scenario === "percent-only-panel" || scenario === "panel-standard" || scenario === "readme-panel-standard"
         || scenario === "panel-vertical" || scenario === "panel-small" || scenario === "panel-dual-edge"
         || scenario === "panel-information" || scenario === "panel-information-single"
-    readonly property bool panelAppearanceScenario: scenario === "estimated-panel" || scenario === "percent-only-panel" || scenario === "panel-standard" || scenario === "panel-minimal"
+    readonly property bool panelAppearanceScenario: scenario === "estimated-panel" || scenario === "unknown-panel" || scenario === "percent-only-panel" || scenario === "panel-standard" || scenario === "panel-minimal"
         || scenario === "panel-minimal-single" || readmePanelScenario || capsulePanelScenario || panelInformationScenario
     readonly property bool readmeScenario: scenario.indexOf("readme-") === 0
     readonly property int expectedProviderCount: scenario === "empty-providers" || scenario === "usage-error" || scenario === "cli-missing" ? 0
@@ -1944,21 +1944,30 @@ Item {
         if (!codex || codex.rows.length !== 2 || codex.error.length > 0)
             return false;
         if (panelAppearanceScenario) {
-            if (scenario === "estimated-panel") {
+            if (scenario === "estimated-panel" || scenario === "unknown-panel") {
                 if (!compactPanelItem) return false;
                 var confidenceMarkers = namedItems(compactPanelItem, "panelConfidenceMarker").filter(function(item) { return item.visible; });
-                verifyScenario(confidenceMarkers.length === 1 && confidenceMarkers[0].text === "~",
-                    "estimated meter lost its visible confidence marker");
-                verifyScenario(applet.panelMeterDescription(codex).indexOf(i18n("%1 (estimated)", i18n("%1% %2", 95, i18n("used")))) >= 0,
-                    "estimated panel tooltip is unqualified");
+                verifyScenario(confidenceMarkers.length === 1 && confidenceMarkers[0].text === (scenario === "unknown-panel" ? "?" : "~"),
+                    "non-exact meter lost its visible confidence marker");
+                var percent = i18n("%1% %2", 95, i18n("used"));
+                var qualified = scenario === "unknown-panel"
+                    ? i18n("%1 (confidence unknown)", percent) : i18n("%1 (estimated)", percent);
+                verifyScenario(applet.panelMeterDescription(codex).indexOf(qualified) >= 0,
+                    "non-exact panel tooltip is unqualified");
             }
             if (scenario === "percent-only-panel") {
                 if (!compactPanelItem) return false;
                 var limitedMarkers = namedItems(compactPanelItem, "panelConfidenceMarker").filter(function(item) { return item.visible; });
-                verifyScenario(limitedMarkers.length === 1 && limitedMarkers[0].text === "…",
-                    "limited-detail meter lost its visible confidence marker");
-                verifyScenario(applet.panelMeterDescription(claude).indexOf(i18n("%1 (limited detail)", i18n("%1% %2", 0, i18n("used")))) >= 0,
-                    "limited-detail panel tooltip is unqualified");
+                verifyScenario(limitedMarkers.length === 0,
+                    "percent-only meter unexpectedly shows a confidence marker");
+                var note = i18n("The source provides usage percentages; some details may be unavailable.");
+                verifyScenario(applet.panelProviderToolTipText(claude).split(note).length === 2,
+                    "percent-only provider tooltip must explain missing details exactly once");
+                var claudeMeters = namedItems(compactPanelItem, "panelProviderMeter").filter(function(item) {
+                    return item.visible && item.modelData.provider === "claude";
+                });
+                verifyScenario(claudeMeters.length === 1 && claudeMeters[0].Accessible.description.split(note).length === 2,
+                    "percent-only accessible description must explain missing details exactly once");
             }
             var expectedClaudeRows = scenario === "panel-dual-edge" ? 1 : 2;
             if (expectedProviderCount >= 2 && (!claude || claude.error.length > 0 || claude.rows.length !== expectedClaudeRows))
@@ -2016,8 +2025,8 @@ Item {
                 "limited-detail quota gained warning colours or threshold markers");
             verifyScenario(applet.notificationObservationRows(claude)[0].dataConfidence === "percentOnly",
                 "notification adapter discarded limited confidence");
-            verifyScenario(applet.usageResetText(claude.rows[0]) === "" && applet.usageResetText(claude.rows[1]).length > 0,
-                "reported weekly reset disappeared or missing session reset was invented");
+            verifyScenario(applet.usageResetText(claude.rows[0]) === i18n("Reset unavailable") && applet.usageResetText(claude.rows[1]).length > 0,
+                "reported weekly reset disappeared or missing session reset was not explained");
             if (scenario === "percent-only-pace") {
                 verifyScenario(applet.paceMarkerPercent(claude.rows[1]) === 43,
                     "reported pace marker disappeared");
@@ -2039,9 +2048,10 @@ Item {
                 verifyScenario(applet.usagePaceText(claude.rows[1]) === "", "missing forecast was invented");
             }
             return applet.selectedProviderID === "claude"
-                && hasVisibleText(applet.fullRepresentationItem, i18n("%1 (limited detail)", i18n("%1% %2", 0, i18n("used"))))
-                && hasVisibleText(applet.fullRepresentationItem, i18n("%1 (limited detail)", i18n("%1% %2", scenario === "percent-only-pace" ? 80 : 100, i18n("used"))))
-                && hasVisibleText(applet.fullRepresentationItem, i18n("Usage percentages are available; quota details are limited."));
+                && hasVisibleText(applet.fullRepresentationItem, i18n("%1% %2", 0, i18n("used")))
+                && hasVisibleText(applet.fullRepresentationItem, i18n("%1% %2", scenario === "percent-only-pace" ? 80 : 100, i18n("used")))
+                && hasVisibleText(applet.fullRepresentationItem, i18n("Reset unavailable"))
+                && namedItems(applet.fullRepresentationItem, "usageConfidenceLabel").every(function(item) { return !item.visible; });
         }
         if (scenario === "popup-content")
             return verifyPopupContent();

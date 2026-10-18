@@ -163,6 +163,9 @@ ColumnLayout {
                     preview.usageBarsShowUsed ? i18n("used") : i18n("left"));
             }).join(". ");
         }
+        function panelProviderToolTipText(provider) {
+            return panelMeterDescription(provider);
+        }
         function compactTextSegments() {
             if (!preview.previewModel.textVisible) {
                 return [];

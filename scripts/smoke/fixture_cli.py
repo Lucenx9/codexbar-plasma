@@ -29,7 +29,7 @@ SCENARIOS += ("popup-scroll", "popup-scroll-large")
 SCENARIOS += ("popup-content", "popup-hidden-rows", "popup-hidden-sections", "refresh-on-open", "privacy-provider", "privacy-spend", "privacy-sessions")
 SCENARIOS += ("privacy-cost-details",)
 SCENARIOS += ("usage-retention", "usage-cache-restart")
-SCENARIOS += ("estimated-usage", "estimated-panel")
+SCENARIOS += ("estimated-usage", "estimated-panel", "unknown-panel")
 SCENARIOS += ("percent-only-usage", "percent-only-panel")
 SCENARIOS += ("percent-only-pace",)
 SCENARIOS += ("subscription-dates",)
@@ -70,9 +70,9 @@ def usage(provider, scenario, now):
     if scenario.startswith("ai-insights") and provider == "codex":
         snapshot["pace"] = {"primary": {"stage": "ahead", "deltaPercent": 13,
             "expectedUsedPercent": 30, "willLastToReset": False, "etaSeconds": 3600}}
-    if scenario in ("estimated-usage", "estimated-panel") and provider == "codex":
+    if scenario in ("estimated-usage", "estimated-panel", "unknown-panel") and provider == "codex":
         snapshot["source"] = "local"
-        snapshot["usage"]["dataConfidence"] = "estimated"
+        snapshot["usage"]["dataConfidence"] = "unknown" if scenario == "unknown-panel" else "estimated"
         snapshot["usage"]["primary"]["usedPercent"] = 95
         snapshot["pace"] = {"primary": {"expectedUsedPercent": 30,
             "willLastToReset": False, "etaSeconds": 3600}}
