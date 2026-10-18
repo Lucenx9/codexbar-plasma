@@ -36,6 +36,13 @@ function lastActivityAtMs(current) {
     return baseline
 }
 
+function maximumAgeMs(current) {
+    return typeof current.staleAfterMs === "number"
+        && isFinite(current.staleAfterMs) && current.staleAfterMs > 0
+        ? Math.floor(current.staleAfterMs)
+        : defaultStaleAfterMs
+}
+
 function refreshAction(observation) {
     var current = observation && typeof observation === "object"
         && !Array.isArray(observation) ? observation : ({})
@@ -64,11 +71,7 @@ function refreshAction(observation) {
     if (typeof nowMs !== "number" || !isFinite(nowMs) || nowMs < activityAtMs) {
         return startAction
     }
-    var maximumAgeMs = typeof current.staleAfterMs === "number"
-        && isFinite(current.staleAfterMs) && current.staleAfterMs > 0
-        ? Math.floor(current.staleAfterMs)
-        : defaultStaleAfterMs
-    return nowMs - activityAtMs >= maximumAgeMs ? startAction : keepAction
+    return nowMs - activityAtMs >= maximumAgeMs(current) ? startAction : keepAction
 }
 
 function nextCheckDelay(observation) {
@@ -81,13 +84,9 @@ function nextCheckDelay(observation) {
         return 0
     }
 
-    var maximumAgeMs = typeof current.staleAfterMs === "number"
-        && isFinite(current.staleAfterMs) && current.staleAfterMs > 0
-        ? Math.floor(current.staleAfterMs)
-        : defaultStaleAfterMs
     if (refreshAction(current) !== keepAction) {
-        return maximumAgeMs
+        return maximumAgeMs(current)
     }
     var ageMs = current.nowMs - lastActivityAtMs(current)
-    return Math.max(1, maximumAgeMs - ageMs)
+    return Math.max(1, maximumAgeMs(current) - ageMs)
 }
