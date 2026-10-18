@@ -201,6 +201,13 @@ ColumnLayout {
             width: Math.max(0, parent.width - chartUnit.width
                 - (chartUnit.visible ? Kirigami.Units.smallSpacing : 0))
             elide: Text.ElideRight
+
+            HoverHandler { id: chartTitleHover }
+
+            PlainToolTip {
+                visible: chartTitle.truncated && chartTitleHover.hovered
+                plainText: chartTitle.text
+            }
         }
 
         PlainPlasmaLabel {
@@ -215,6 +222,13 @@ ColumnLayout {
             anchors.verticalCenter: parent.verticalCenter
             width: Math.min(implicitWidth, chartHeading.width / 2)
             elide: Text.ElideRight
+
+            HoverHandler { id: chartUnitHover }
+
+            PlainToolTip {
+                visible: chartUnit.truncated && chartUnitHover.hovered
+                plainText: chartUnit.text
+            }
         }
     }
 

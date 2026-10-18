@@ -177,8 +177,9 @@ work and upstream contract requirements.
   account button whose label is cut short, or a provider header title, account, or plan
   that is cut short, or a provider detail section title, row label or value
   that is cut short, shows the full displayed text in
-  a tooltip. Keyboard focus also reveals the name of a truncated or icon-only
-  tab. Text that fits gets no tooltip.
+  a tooltip. Quota-window titles, reset descriptions, and provider-chart titles
+  and units also reveal their full displayed text on hover when truncated.
+  Keyboard focus also reveals the name of a truncated or icon-only tab. Text that fits gets no tooltip.
 - Refresh, copy, share, hide and tab-scroll icon buttons show their action
   labels on keyboard focus as well as hover. The copy confirmation takes
   precedence over its action label.

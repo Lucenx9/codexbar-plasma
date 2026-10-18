@@ -18,6 +18,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Reveal truncated quota-window titles, reset descriptions, and provider-chart
+  titles and units on hover, keeping CLI text literal in their tooltips.
 - Show Claude percentage-only quotas without repeated "limited detail" labels
   or a panel icon badge. Explain unavailable details once in the panel tooltip
   and accessible description. Name missing resets while preserving supplied
