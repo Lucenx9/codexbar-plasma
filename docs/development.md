@@ -878,7 +878,8 @@ another one fails.
 
 `make check-workflows` runs [actionlint](https://github.com/rhysd/actionlint)
 over `.github/workflows`, and `make check-python-lint` runs `pyflakes` over
-`scripts` and `tests` for undefined names and unused imports. Neither
+`scripts` and `tests` for undefined names, unused imports, and invalid Python
+escape sequences. Neither
 reformats anything, so neither introduces style churn. `qmlformat` stays out of
 the suite, but no longer because the checks pin formatting: the membership
 assertions in `tests/test_ui_*.py` compare through `code_contains`, which
