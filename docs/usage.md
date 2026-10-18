@@ -82,8 +82,9 @@ work and upstream contract requirements.
   Unknown confidence, including an explicitly empty CLI/cache value, has a `?`
   badge and an unverified-quota label.
   CLI `dataConfidence: "percentOnly"` shows plain percentages without a panel
-  badge or repeated confidence notes. The provider's panel tooltip explains
-  once that the source supplies percentages and some details may be unavailable.
+  badge or repeated confidence notes. The provider's panel tooltip and
+  accessible description explain once that the source supplies percentages
+  and some details may be unavailable.
   Usage rows, Overview, and panel tooltips say "Reset unavailable" when no
   reset can be shown. This includes text-only resets hidden by privacy mode.
   This value was verified in official Linux CLI 0.74.1 output from

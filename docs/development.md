@@ -717,7 +717,8 @@ clipboard interoperability with every Wayland application or portal backend.
   adapters, rendered qualifier, and panel badges with synthetic data.
   `percent-only-usage` and `percent-only-panel` exercise the Claude primary and
   secondary windows, missing-reset label, root/notification adapters, quota
-  guards and absence of a panel badge. The usage scenario also supports `--language it`.
+  guards, the accessible source note, and absence of a panel badge. The usage
+  scenario also supports `--language it`.
   `percent-only-pace` verifies reported weekly resets, expected usage, the live
   run-out summary and its marker with the official 0.76.0 synthetic CLI shape.
   The exhausted scenario checks that no missing session reset or forecast is

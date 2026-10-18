@@ -14,7 +14,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 - Show Claude percentage-only quotas without repeated "limited detail" labels
   or a panel icon badge. Explain unavailable details once in the panel tooltip
-  and name missing resets, while preserving supplied resets and forecasts.
+  and accessible description. Name missing resets while preserving supplied
+  resets and forecasts.
 - Keep the selected Usage & Spend chart day attached to its date across
   refreshes. Clear the selection when that day disappears or the history range
   or metric changes.

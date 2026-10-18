@@ -1963,6 +1963,11 @@ Item {
                 var note = i18n("The source provides usage percentages; some details may be unavailable.");
                 verifyScenario(applet.panelProviderToolTipText(claude).split(note).length === 2,
                     "percent-only provider tooltip must explain missing details exactly once");
+                var claudeMeters = namedItems(compactPanelItem, "panelProviderMeter").filter(function(item) {
+                    return item.visible && item.modelData.provider === "claude";
+                });
+                verifyScenario(claudeMeters.length === 1 && claudeMeters[0].Accessible.description.split(note).length === 2,
+                    "percent-only accessible description must explain missing details exactly once");
             }
             var expectedClaudeRows = scenario === "panel-dual-edge" ? 1 : 2;
             if (expectedProviderCount >= 2 && (!claude || claude.error.length > 0 || claude.rows.length !== expectedClaudeRows))
