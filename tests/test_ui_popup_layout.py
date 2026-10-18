@@ -543,6 +543,25 @@ class PopupLayoutTest(unittest.TestCase):
             self.assertIn("visible: applet." + ("spendSelected" if view == "SpendView" else "sessionsSelected")
                           + " && !fullRoot.commandPathMissing", full_representation_text)
 
+    def test_ai_insights_analysis_navigation(self):
+        # The analysis is a page inside the popup, never a tab or a generation.
+        for fragment in (
+            'visible: applet.overviewSelected && !fullRoot.aiInsightsOpen',
+            'visible: applet.presentedProviderData !== null && !fullRoot.aiInsightsOpen',
+            'visible: fullRoot.aiInsightsOpen',
+            'onAiInsightsViewKeyChanged',
+        ):
+            if fragment not in full_representation_text:
+                raise AssertionError("the analysis page must replace its origin view: " + fragment)
+        if full_representation_text.count("onOpenRequested: function(keyboard) { fullRoot.openAiInsights(keyboard) }") != 2:
+            raise AssertionError("both AI Insights cards must open the analysis page")
+        if full_representation_text.count("fullRoot.closeAiInsights(false, false)") != 2:
+            raise AssertionError("the Overview and provider tabs must leave the analysis page")
+        for name in ("openAiInsights", "closeAiInsights"):
+            body = function_body(full_representation_text, name)
+            if "generate" in body.lower() or "contentY" not in body:
+                raise AssertionError(name + " must only navigate and keep the origin scroll position")
+
     def test_provider_actions(self):
         action_rows_body = function_body(main_text, "actionRows")
         if not code_contains(action_rows_body, 'action: "refresh", enabled: true, separatorBefore: true'):

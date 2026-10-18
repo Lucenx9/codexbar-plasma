@@ -12,6 +12,17 @@ Rectangle {
     objectName: "aiInsightsCard"
 
     required property var applet
+    // The card in the Overview or provider view stays a compact summary; the
+    // analysis page shows the same card in full.
+    property bool detailed: false
+
+    // Navigation only: opening the analysis never starts a generation.
+    // `keyboard` tells the page whether to show its focus ring.
+    signal openRequested(bool keyboard)
+
+    function focusOpenButton(keyboard) {
+        openButton.forceActiveFocus(keyboard ? Qt.TabFocusReason : Qt.OtherFocusReason)
+    }
 
     readonly property var cache: applet.aiInsightsCache
     readonly property string cacheState: applet.aiInsightsCacheState
@@ -45,9 +56,6 @@ Rectangle {
             .filter(function(part) { return part.length > 0 })
             .join(" \u00b7 ")
     }
-    readonly property int highlightCount: showsInsight ? cache.highlights.length : 0
-    // Highlights stay one click away, so the card reads in a glance.
-    property bool detailsExpanded: false
 
     Layout.fillWidth: true
     implicitHeight: content.implicitHeight + Kirigami.Units.largeSpacing * 2
@@ -240,29 +248,31 @@ Rectangle {
                 }
             }
 
+            // Limit the compact summary to three lines. The analysis page
+            // shows the full text and highlights.
             PlainPlasmaLabel {
                 objectName: "aiInsightsSummary"
                 text: card.showsInsight ? card.cache.summary : ""
                 opacity: card.stale ? applet.valueTextOpacity : 1
                 Layout.fillWidth: true
                 wrapMode: Text.Wrap
+                maximumLineCount: card.detailed ? 2147483647 : 3
+                elide: Text.ElideRight
             }
 
-            // A disclosure, like the cost details: flat, so it never
-            // outweighs the summary it expands.
+            // Match the other flat navigation buttons in the popup.
             PlainButton {
-                objectName: "aiInsightsDetailsToggle"
+                id: openButton
+                objectName: "aiInsightsOpenButton"
                 flat: true
-                visible: card.highlightCount > 0
-                plainText: card.detailsExpanded ? i18n("Hide details") : i18n("Show details")
-                icon.name: card.detailsExpanded ? "arrow-up" : "arrow-down"
-                Accessible.checkable: true
-                Accessible.checked: card.detailsExpanded
-                onClicked: card.detailsExpanded = !card.detailsExpanded
+                visible: !card.detailed
+                plainText: i18n("Open analysis")
+                icon.name: "go-next-symbolic"
+                onClicked: card.openRequested(visualFocus)
             }
 
             Repeater {
-                model: card.showsInsight && card.detailsExpanded ? card.cache.highlights : []
+                model: card.showsInsight && card.detailed ? card.cache.highlights : []
 
                 // A separate bullet keeps wrapped lines aligned with the text.
                 delegate: RowLayout {

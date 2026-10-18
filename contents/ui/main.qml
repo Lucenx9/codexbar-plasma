@@ -76,6 +76,7 @@ PlasmoidItem {
     readonly property bool aiInsightsConfigured: aiInsightsController.configured
     readonly property bool aiInsightsBusy: aiInsightsController.busy
     readonly property string aiInsightsErrorReason: aiInsightsController.errorReason
+    readonly property int aiInsightsIntervalHours: aiInsightsController.intervalHours
     readonly property var presentedProviders: providerPresentations(providers)
     readonly property var presentedOverviewProviders: providerPresentations(overviewProviderItems)
     readonly property var presentedSessions: sessions.map(function(item) {
@@ -1502,6 +1503,10 @@ PlasmoidItem {
 
     function generateAiInsight() {
         aiInsightsController.generate()
+    }
+
+    function monthDayTimeText(timestampMs) {
+        return timeLabels.monthDayTime(timestampMs)
     }
 
     function aiInsightsProviderName(provider) {

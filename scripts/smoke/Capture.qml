@@ -40,6 +40,11 @@ Item {
     property var settingsCostSnapshot
     property var settingsProviderSnapshot
     property int missingCliStep: 0
+    property int aiInsightsStep: 0
+    property bool aiInsightsOverviewCaptured: false
+    property double aiInsightsReadyAtMs: 0
+    property real aiInsightsReturnY: 0
+    property string aiInsightsAttempt: ""
     property int recoveryStep: 0
     property var recoveryUsageSnapshot
     property var recoveryCostSnapshot
@@ -1170,7 +1175,7 @@ Item {
         if (scenario === "ai-insights-error") {
             if (applet.aiInsightsErrorReason !== "network")
                 return false;
-            var error = findItem(applet.fullRepresentationItem, "aiInsightsError");
+            var error = findItem(visibleAiInsightsCards()[0], "aiInsightsError");
             verifyScenario(error !== null && error.visible && error.plainText.indexOf("Ollama") >= 0,
                 "the AI Insights failure must be visible and actionable");
             verifyScenario(applet.providers.length === 2 && applet.providers[0].rows.length === 2,
@@ -1197,21 +1202,102 @@ Item {
             verifyScenario(!applet.overviewAvailable && applet.selectedProviderID === "codex",
                 "single-provider navigation changed");
         }
-        // Highlights start collapsed behind the details toggle.
+        var originScroll = findItem(popup, applet.overviewAvailable ? "overviewScroll" : "providerScroll");
+        var page = findItem(popup, "aiInsightsView");
         var card = visibleAiInsightsCards()[0];
-        var toggle = card ? findItem(card, "aiInsightsDetailsToggle") : null;
-        verifyScenario(toggle !== null && toggle.visible, "the insight must offer a details toggle");
-        if (!card.detailsExpanded) {
+        // Let the generation dimming settle before the summary capture.
+        if (aiInsightsReadyAtMs === 0)
+            aiInsightsReadyAtMs = Date.now();
+        if (aiInsightsStep === 0 && Date.now() - aiInsightsReadyAtMs < 600)
+            return false;
+        if (aiInsightsStep === 0) {
+            // The compact card leaves the highlights to the analysis page.
+            var open = card ? findItem(card, "aiInsightsOpenButton") : null;
+            verifyScenario(open !== null && open.visible && !page.visible, "the insight card must offer Open analysis");
             verifyScenario(!hasVisibleText(card, applet.aiInsightsCache.highlights[0]),
-                "highlights must start collapsed");
-            toggle.clicked();
+                "the compact card must not list highlights");
+            verifyScenario(card.metaText.split(" \u00b7 ").length === 3 && card.metaText.indexOf(" - ") < 0,
+                "the insight source line must join provider, model and age like the other headers");
+            aiInsightsAttempt = applet.Plasmoid.configuration.aiInsightsLastAttempt;
+            popup.grabToImage(function(result) {
+                capture.verifyScenario(result.saveToFile(capture.imagePath.replace(/\.png$/, "-overview.png")),
+                    "AI Insights summary capture failed");
+                capture.aiInsightsOverviewCaptured = true;
+            });
+            aiInsightsStep++;
             return false;
         }
-        verifyScenario(hasVisibleText(card, applet.aiInsightsCache.highlights[0]),
-            "the details toggle must reveal the highlights");
-        verifyScenario(card.metaText.split(" \u00b7 ").length === 3 && card.metaText.indexOf(" - ") < 0,
-            "the insight source line must join provider, model and age like the other headers");
-        return aiInsightsCardVisible() === 1;
+        if (!aiInsightsOverviewCaptured)
+            return false;
+        var flickable = originScroll.contentItem;
+        var config = applet.Plasmoid.configuration;
+        if (aiInsightsStep === 1) {
+            // A short popup makes the origin view scroll, so Back has a real
+            // position to restore.
+            popup.Window.window.height = 420;
+            aiInsightsStep++;
+            return false;
+        }
+        if (aiInsightsStep === 2) {
+            if (flickable.contentHeight <= flickable.height + 40)
+                return false;
+            flickable.contentY = flickable.contentHeight - flickable.height;
+            aiInsightsReturnY = flickable.contentY;
+            findItem(card, "aiInsightsOpenButton").clicked();
+            aiInsightsStep++;
+            return false;
+        }
+        verifyScenario(!applet.aiInsightsBusy && config.aiInsightsLastAttempt === aiInsightsAttempt,
+            "opening or leaving the analysis must not generate an insight");
+        function openAnalysis() {
+            findItem(visibleAiInsightsCards()[0], "aiInsightsOpenButton").clicked();
+            verifyScenario(page.visible && !originScroll.visible && aiInsightsCardVisible() === 1,
+                "Open analysis must replace the origin view with the analysis page");
+        }
+        if (aiInsightsStep === 3) {
+            verifyScenario(aiInsightsReturnY > 0, "the origin view did not scroll");
+            verifyScenario(page.visible && !originScroll.visible && aiInsightsCardVisible() === 1,
+                "Open analysis must replace the origin view with the analysis page");
+            verifyScenario(hasVisibleText(page, applet.aiInsightsCache.highlights[0]),
+                "the analysis page must list the highlights");
+            var back = findItem(page, "aiInsightsBackButton");
+            verifyScenario(back.activeFocus, "the analysis page must focus Back");
+            back.clicked();
+            verifyScenario(!page.visible && originScroll.visible && flickable.contentY === aiInsightsReturnY,
+                "Back must return to the origin view at its scroll position");
+            verifyScenario(findItem(visibleAiInsightsCards()[0], "aiInsightsOpenButton").activeFocus,
+                "Back must return focus to Open analysis");
+            if (applet.overviewAvailable) {
+                // The Overview tab returns as Back does; another view closes the page.
+                openAnalysis();
+                findItem(popup, "overviewTab").activated();
+                verifyScenario(!page.visible && applet.overviewSelected && flickable.contentY === aiInsightsReturnY,
+                    "the Overview tab must leave the analysis page");
+                openAnalysis();
+                applet.selectGlobalView("spend");
+                verifyScenario(!page.visible && applet.spendSelected, "another tab must leave the analysis page");
+                applet.selectGlobalView("overview");
+                verifyScenario(!page.visible, "returning to Overview reopened the analysis page");
+            }
+            // Disabling the feature closes the page; enabling it again does not reopen it.
+            openAnalysis();
+            config.aiInsightsEnabled = false;
+            verifyScenario(!page.visible && aiInsightsCardVisible() === 0 && originScroll.visible,
+                "disabling AI Insights must close the analysis page");
+            config.aiInsightsEnabled = true;
+            verifyScenario(!page.visible && aiInsightsCardVisible() === 1 && !applet.aiInsightsBusy,
+                "enabling AI Insights reopened the page or generated an insight");
+            popup.Window.window.height = 760;
+            aiInsightsStep++;
+            return false;
+        }
+        if (aiInsightsStep === 4) {
+            openAnalysis();
+            aiInsightsStep++;
+            return false;
+        }
+        // The final capture is the analysis page.
+        return page.visible && aiInsightsCardVisible() === 1;
     }
 
     function verifySubscriptionDates() {
