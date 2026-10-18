@@ -64,6 +64,17 @@ TestCase {
         function switcherMetricRow(item) {
             return item.testRow || null;
         }
+        function overviewMeterRows(item) {
+            return item.testRows || [];
+        }
+        function resetTextForRow(row) {
+            return row.reset ? resetLabel(row.reset) : "";
+        }
+        function quotaDescription(row) {
+            var reset = resetTextForRow(row);
+            var text = row.label + ": " + usagePercentText(row);
+            return reset.length > 0 ? text + " - " + reset : text;
+        }
         function displayPercent(row) {
             return row.leftPercent;
         }
@@ -222,11 +233,34 @@ TestCase {
         tryCompare(row, "keyboardFocusVisible", false);
     }
 
-    // The meter and reset are only visual; the row's accessible description
-    // must carry them beside the detail line, and drop what is absent.
+    // Each quota window is named beside its own meter, so a short session
+    // window can never stand in for an exhausted weekly one.
+    function test_overviewNamesEveryQuotaWindow() {
+        var measured = Object.assign({}, provider, {
+            testRows: [
+                {label: "Session", hasPercent: true, leftPercent: 57, reset: "in 2h"},
+                {label: "Weekly", hasPercent: true, leftPercent: 0}
+            ]
+        });
+        var row = createControl("OverviewProviderRow", {
+            applet: applet, modelData: measured, width: 540
+        });
+        if (!row)
+            return;
+        verify(findText(row, "Session · Resets in 2h") !== null);
+        verify(findText(row, "57% left") !== null);
+        verify(findText(row, "Weekly") !== null);
+        verify(findText(row, "0% left") !== null);
+    }
+
+    // The meters and resets are only visual; the row's accessible description
+    // must carry each named window beside the detail line, and drop what is absent.
     function test_overviewDescribesItsQuotaToAssistiveTools() {
         var measured = Object.assign({}, provider, {
-            testRow: {hasPercent: true, leftPercent: 42.4, reset: "in 2h"}
+            testRows: [
+                {label: "Session", hasPercent: true, leftPercent: 42.4, reset: "in 2h"},
+                {label: "Weekly", hasPercent: true, leftPercent: 80}
+            ]
         });
         var row = createControl("OverviewProviderRow", {
             applet: applet, modelData: measured, width: 540
@@ -235,9 +269,8 @@ TestCase {
             return;
         var focus = row.nextItemInFocusChain(true);
         compare(focus.Accessible.name, "Codex");
-        verify(row.percentText.length > 0);
         compare(focus.Accessible.description,
-            row.percentText + ". demo@example.com. Resets in 2h");
+            "Session: 42% left - Resets in 2h. Weekly: 80% left. demo@example.com");
         row.modelData = {provider: "claude", title: "Claude", account: ""};
         compare(focus.Accessible.description, "");
         row.modelData = provider;
@@ -292,6 +325,25 @@ TestCase {
         mouseMove(row, row.width / 2, row.height / 2);
         wait(tip.delay + 100);
         verify(!tip.visible);
+    }
+
+    // Keyboard users reach the same full text as pointer users, as tabs do.
+    function test_overviewRevealsTruncatedTextOnKeyboardFocus() {
+        var row = createControl("OverviewProviderRow", {
+            applet: applet,
+            modelData: Object.assign({}, provider, {
+                account: "a-very-long-account-name-that-cannot-fit@example.com"
+            }),
+            width: 180
+        });
+        if (!row)
+            return;
+        var tip = findToolTip(row);
+        tryVerify(function () { return row.textTruncated; });
+        row.nextItemInFocusChain(true).forceActiveFocus(Qt.TabFocusReason);
+        tryCompare(tip, "visible", true);
+        row.nextItemInFocusChain(true).focus = false;
+        tryCompare(tip, "visible", false);
     }
 
     function test_refreshSupportsKeyboardActivation() {

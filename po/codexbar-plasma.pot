@@ -558,10 +558,6 @@ msgid "Refresh"
 msgstr ""
 
 #: contents/ui/components/FullRepresentation.qml
-msgid "No overview data available"
-msgstr ""
-
-#: contents/ui/components/FullRepresentation.qml
 msgid "Hidden usage rows"
 msgstr ""
 

@@ -214,8 +214,11 @@ class PopupTabsTest(unittest.TestCase):
                     "the provider tab description must cover quota, stale usage, and errors; "
                     f"missing {switcher_description_fragment!r}"
                 )
-        if not code_contains(overview_provider_row_text, "visible: overviewRow.textTruncated && overviewRowMouse.containsMouse"):
-            raise AssertionError("a truncated Overview row must reveal its full title and detail on hover")
+        if not code_contains(
+            overview_provider_row_text,
+            "visible: overviewRow.textTruncated && (overviewRowMouse.containsMouse || overviewRow.keyboardFocusVisible)",
+        ):
+            raise AssertionError("a truncated Overview row must reveal its full text on hover and keyboard focus")
         if not code_contains(main_text, "providerTabsFlickable.ensureVisible(providerTab)"):
             raise AssertionError("focusing a provider tab must pull it back into view")
         provider_tabs_flickable_body = id_block(main_text, "providerTabsFlickable")

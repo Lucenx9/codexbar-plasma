@@ -154,16 +154,21 @@ work and upstream contract requirements.
   restore automatic selection. Disabled providers retain their saved selection
   but do not occupy one of the four available slots. If more than four selected
   providers become enabled again, the first four in provider order appear.
-- Overview tab with per-provider usage summary and quick switching. Each row's
+- Overview tab with per-provider usage summary and quick switching. Each row
+  draws a compact meter for the primary and secondary quota windows, such as
+  **Session** and **Weekly**, each captioned with its title, reset and
+  percentage, so a low session value never hides an exhausted weekly window.
+  The panel's quota lane choice does not change these meters. Each row's
   detail line shows the account identity when the CLI provides one, and an
   active service incident otherwise; an operational status or the provider's
   own source name is never presented as identity.
-- Screen readers hear what the popup draws. Overview rows describe their
-  quota, detail line, and reset; provider tabs describe the quota their
+- Screen readers hear what the popup draws. Overview rows describe each named
+  quota with its reset, then the detail line; provider tabs describe the quota their
   underline draws, a last-known-usage note, and a refresh error that only
   dims the tab visually.
-- Hovering a global or provider tab whose name is cut short, an Overview row whose
-  title or detail line is cut short in a narrow popup, an account button
+- Hovering or keyboard-focusing an Overview row whose title, detail line or
+  quota caption is cut short in a narrow popup shows the full text in a
+  tooltip. Hovering a global or provider tab whose name is cut short, an account button
   whose label is cut short, or a provider header title, account, or plan
   that is cut short, or a provider detail section title, row label or value
   that is cut short, shows the full displayed text in

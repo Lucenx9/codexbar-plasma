@@ -366,10 +366,6 @@ msgid "Refresh"
 msgstr "Atualizar"
 
 #: contents/ui/components/FullRepresentation.qml
-msgid "No overview data available"
-msgstr "Não há dados disponíveis para a visão geral"
-
-#: contents/ui/components/FullRepresentation.qml
 msgid "Hidden usage rows"
 msgstr "Linhas de uso ocultas"
 

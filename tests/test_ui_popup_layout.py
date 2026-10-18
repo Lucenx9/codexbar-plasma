@@ -107,8 +107,19 @@ class PopupLayoutTest(unittest.TestCase):
                     f"missing {interaction_fragment!r}"
                 )
 
-        if not code_contains(overview_provider_row_text, "applet.usageResetText(usageRow)"):
-            raise AssertionError("Overview reset labels must use render-time formatting")
+        # One labelled meter per quota window, independent of the panel lane.
+        for overview_meter_fragment in (
+            "readonly property var meterRows: applet.overviewMeterRows(providerData)",
+            "applet.resetTextForRow(row)",
+        ):
+            if not code_contains(overview_provider_row_text, overview_meter_fragment):
+                raise AssertionError(
+                    "Overview rows must name each quota window and format resets at render time; "
+                    f"missing {overview_meter_fragment!r}"
+                )
+        if not code_contains(function_body(main_text, "overviewMeterRows"),
+                             'PanelDisplay.meterRows(switcherCandidateRows(item), "auto")'):
+            raise AssertionError("Overview meters must ignore the panel's quota lane choice")
 
         if not code_contains(main_text, "readonly property var overviewProviderItems: overviewProviders()"):
             raise AssertionError("overview provider rows must be cached in a QML property binding")
@@ -519,13 +530,12 @@ class PopupLayoutTest(unittest.TestCase):
         if not code_contains(provider_status_body, "applet.statusBadgeColor(applet.presentedProviderData.statusSeverity)"):
             raise AssertionError("incident pills must reflect the provider status severity")
 
-        for placeholder_id in (
-            "overviewPlaceholderMessage",
-            "providerPlaceholderMessage",
-        ):
-            placeholder_body = id_block(main_text, placeholder_id)
-            if not code_contains(placeholder_body, "Kirigami.PlaceholderMessage.Type.Informational"):
-                raise AssertionError(f"{placeholder_id} must use the native informational empty state")
+        placeholder_body = id_block(main_text, "providerPlaceholderMessage")
+        if not code_contains(placeholder_body, "Kirigami.PlaceholderMessage.Type.Informational"):
+            raise AssertionError("providerPlaceholderMessage must use the native informational empty state")
+        # The Overview tab exists only while it has rows, so an empty state there is unreachable.
+        if "No overview data available" in full_representation_text:
+            raise AssertionError("the Overview tab must not carry an unreachable empty state")
 
         empty_providers_body = id_block(main_text, "emptyProvidersMessage")
         for fragment in ("Kirigami.PlaceholderMessage.Type.Actionable", "helpfulAction: configureProvidersAction",

@@ -12,6 +12,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Name each quota window in Overview: every provider row now shows labelled
+  primary and secondary meters, such as Session and Weekly, with their resets,
+  instead of one unlabelled percentage that could hide an exhausted weekly
+  window. Keyboard focus also reveals a truncated row's full text.
 - Clarify that local Codex cost estimates do not follow the account selected
   in the widget; account selection changes the displayed quotas.
 - Refresh selected Codex accounts through the supported account enumeration,
