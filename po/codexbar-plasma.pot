@@ -2527,8 +2527,8 @@ msgstr ""
 
 #: contents/ui/configGeneral.qml
 msgid ""
-"Checks GitHub for official releases. External installations are updated "
-"through their original installation method."
+"Checks GitHub for official releases. Update external installations through "
+"their original installation method."
 msgstr ""
 
 #: contents/ui/configGeneral.qml
@@ -3174,8 +3174,8 @@ msgstr ""
 
 #: contents/ui/configProviders.qml
 msgid ""
-"Provider changes are saved by CodexBar immediately. Apply and Cancel affect "
-"widget settings only."
+"CodexBar saves provider changes immediately. Apply and Cancel affect widget "
+"settings only."
 msgstr ""
 
 #: contents/ui/configProviders.qml

@@ -2019,11 +2019,11 @@ msgstr "Über neue CLI-Versionen benachrichtigen"
 
 #: contents/ui/configGeneral.qml
 msgid ""
-"Checks GitHub for official releases. External installations are updated "
-"through their original installation method."
+"Checks GitHub for official releases. Update external installations through "
+"their original installation method."
 msgstr ""
-"Prüft offizielle Versionen auf GitHub. Externe Installationen werden über "
-"ihre ursprüngliche Installationsmethode aktualisiert."
+"Prüft offizielle Versionen auf GitHub. Externe Installationen über ihre "
+"ursprüngliche Installationsmethode aktualisieren."
 
 #: contents/ui/configGeneral.qml
 msgid "Check CLI releases now"
@@ -2721,8 +2721,8 @@ msgstr "Alle Anbieter"
 
 #: contents/ui/configProviders.qml
 msgid ""
-"Provider changes are saved by CodexBar immediately. Apply and Cancel affect "
-"widget settings only."
+"CodexBar saves provider changes immediately. Apply and Cancel affect widget "
+"settings only."
 msgstr ""
 "CodexBar speichert Anbieteränderungen sofort. Anwenden und Abbrechen gelten "
 "nur für die Einstellungen des Miniprogramms."

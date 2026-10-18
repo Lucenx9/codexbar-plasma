@@ -2001,11 +2001,11 @@ msgstr "Notificar quando houver uma versão do CLI disponível"
 
 #: contents/ui/configGeneral.qml
 msgid ""
-"Checks GitHub for official releases. External installations are updated "
-"through their original installation method."
+"Checks GitHub for official releases. Update external installations through "
+"their original installation method."
 msgstr ""
-"Verifica versões oficiais no GitHub. Instalações externas são atualizadas "
-"pelo método de instalação original."
+"Verifica versões oficiais no GitHub. Atualize instalações externas pelo "
+"método de instalação original."
 
 #: contents/ui/configGeneral.qml
 msgid "Check CLI releases now"
@@ -2697,11 +2697,11 @@ msgstr "Todos os provedores"
 
 #: contents/ui/configProviders.qml
 msgid ""
-"Provider changes are saved by CodexBar immediately. Apply and Cancel affect "
-"widget settings only."
+"CodexBar saves provider changes immediately. Apply and Cancel affect widget "
+"settings only."
 msgstr ""
-"As alterações nos provedores são salvas imediatamente pelo CodexBar. Aplicar "
-"e Cancelar afetam apenas as configurações do widget."
+"O CodexBar salva imediatamente as alterações nos provedores. Aplicar e "
+"Cancelar afetam apenas as configurações do widget."
 
 #: contents/ui/configProviders.qml
 msgid "%1 - disabled"

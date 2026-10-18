@@ -50,7 +50,7 @@ work and upstream contract requirements.
   credit balance while panel credits are enabled, and the popup keeps every
   detail. A single remaining item is elided only as a last resort.
 
-  ![Optional usage text beside its provider’s quota capsules](codexbar-plasma-panel-information.png)
+  ![Optional usage text beside its provider's quota capsules](codexbar-plasma-panel-information.png)
 
 - **Use monochrome icons and meters only** in **Additional information** selects
   Minimal and enables provider meters, including with a single
