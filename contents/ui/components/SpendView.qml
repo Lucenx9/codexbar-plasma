@@ -11,6 +11,9 @@ ColumnLayout {
 
     required property var applet
     readonly property var dailyPoints: applet.spendDailyPoints()
+    property var daySelectionMemo: ({ points: [], index: -1 })
+    readonly property string selectionScope: JSON.stringify([
+        applet.costHistoryDays, applet.costHistoryPeriod, applet.costHistoryMetric])
     readonly property var providerCosts: applet.spendProviderCosts()
     readonly property var presentedProviderCosts: applet.presentedSpendProviderCosts(providerCosts)
     readonly property var costTrustSummary: CostPresentation.costTrustSummary(providerCosts)
@@ -27,6 +30,14 @@ ColumnLayout {
     Layout.fillWidth: true
     Layout.fillHeight: true
     spacing: Kirigami.Units.largeSpacing
+
+    onSelectionScopeChanged: {
+        if (!historyChart)
+            return
+        daySelectionMemo = { points: historyChart.points, index: -1 }
+        historyChart.selectedIndex = -1
+        historyChart.hoveredIndex = -1
+    }
 
     function chartMaximum(points) {
         var maximum = 0
@@ -303,6 +314,18 @@ ColumnLayout {
             InteractiveChart {
                 id: historyChart
 
+                onPointsChanged: {
+                    var index = CostPresentation.costDayIndexAfterRefresh(
+                        view.daySelectionMemo.points, view.daySelectionMemo.index, points)
+                    view.daySelectionMemo = { points: points, index: index }
+                    selectedIndex = index
+                    hoveredIndex = -1
+                }
+                onSelectedIndexChanged: {
+                    // Ignore the chart's index clamp until new points are reconciled.
+                    if (view.daySelectionMemo.points === points)
+                        view.daySelectionMemo = { points: points, index: selectedIndex }
+                }
                 visible: view.dailyPoints.length > 0
                 applet: view.applet
                 points: view.dailyPoints

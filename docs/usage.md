@@ -635,6 +635,9 @@ and clipboard content remain under your control after closing the window.
   Switching the Cost/Tokens metric or inspecting a day reuses the loaded data and
   starts no scan. Cost settings applied together start a single scan using the
   final executable, provider, and history range; disabling costs starts none.
+  A selected day in the **Usage & Spend** chart stays on that date through a
+  refresh. Removing the day or changing the history range or metric clears the
+  selection.
 - **Month to date** and **All history** ask CLI 0.67.0 or later for that
   calendar period (`cost --period`); an older CLI shows a message naming the
   required release, and the day ranges keep working. Choosing a day range in

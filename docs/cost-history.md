@@ -81,6 +81,11 @@ drill-down heading name it, so the latest-day summary under the chart is hidden.
 its chart position changes; a missing or ambiguous date clears the pin.
 `sourceIndex` cannot identify a day across different snapshots.
 
+The global Usage & Spend chart also retains its selected date across refreshes,
+including when earlier days arrive or leave the window. A missing or ambiguous
+date clears its selection. Changing the global history range or metric clears
+both selected and hovered points, without inspecting a replacement day.
+
 Provider, account, and history range changes clear the pin and expanded details,
 including when cached data is reused. Account identity follows the account
 picker's canonical label, including organization-only identities. Metric changes
