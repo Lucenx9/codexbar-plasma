@@ -70,6 +70,11 @@ These rules are implemented in
 
 ## Selection rules
 
+The account picker selects usage quotas. Local cost history comes from the
+CLI scan for the provider and history range, independently of the account
+selected in the widget. Changing accounts does not filter this scan or establish
+that its totals belong to that account. The Codex cost hint states this scope.
+
 Hover previews stay inside the chart. Pointer or keyboard selection pins a day
 without fetching data. While a day is pinned, the chart readout and the
 drill-down heading name it, so the latest-day summary under the chart is hidden. A background refresh retains the pinned date even when
@@ -177,6 +182,16 @@ shortens only the GNU deadlines for stubborn CLI/child processes and verifies
 that both stop, including after settings changes or controller destruction.
 
 ## Pinned CLI evidence
+
+A scoped check on 2026-10-18 used official Linux CodexBar 0.76.0 (source commit
+`2d8b1409a1649dce60f3610ebe4eab52b92545de`), with home directories hidden,
+an empty environment, and networking disabled. The installed binary matched
+the checksum-verified release used in the [0.76.0 review](research/2026-10-15-macos-parity-0.76.0.md).
+`cost --provider codex --account synthetic-account --format json --json-only`
+exited 1 with an `args` error, `Unknown option --account`. This is not a
+supported cost filter. The widget must not infer account attribution from a
+usage label or parse provider logs itself. Account-scoped local costs remain
+[blocked on a CLI contract](../TODO.md#account-scoped-local-costs).
 
 The focused [0.75.0 verification](research/2026-10-15-codex-contracts-0.75.0.md)
 confirms that native mixed priced/unpriced history retains its priced USD

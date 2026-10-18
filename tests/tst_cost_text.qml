@@ -102,7 +102,7 @@ TestCase {
         compare(presented.codex.sessionLine, "Today: $1.00 \u00b7 2 tokens");
         compare(presented.codex.monthLine, "Month to date: $3.00 (estimated) \u00b7 4 tokens");
         compare(presented.codex.windowValueLine, "$3.00 (estimated) \u00b7 4 tokens");
-        compare(presented.codex.hintLine, "Estimated from local Codex logs for the selected account.");
+        compare(presented.codex.hintLine, "Estimated from local Codex logs, independently of the account selected in the widget.");
 
         var labelled = snapshot({
             period: "month-to-date",
@@ -342,7 +342,7 @@ TestCase {
 
     function test_tokenCostHintsResolveProviderIdentity() {
         var antigravity = "Local Antigravity history includes token totals. Dollar costs are unavailable.";
-        var codex = "Estimated from local Codex logs for the selected account.";
+        var codex = "Estimated from local Codex logs, independently of the account selected in the widget.";
         compare(subject.tokenCostHint("antigravity"), antigravity);
         compare(subject.tokenCostHint("agy"), antigravity);
         compare(subject.tokenCostHint("CODEX"), codex);

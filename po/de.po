@@ -3639,9 +3639,9 @@ msgstr ""
 "Der lokale Antigravity-Verlauf enthält Tokenzahlen. Dollarkosten sind nicht "
 "verfügbar."
 
-#: contents/ui/main.qml
-msgid "Estimated from local Codex logs for the selected account."
-msgstr "Geschätzt anhand lokaler Codex-Protokolle für das gewählte Konto."
+#: contents/ui/components/CostText.qml
+msgid "Estimated from local Codex logs, independently of the account selected in the widget."
+msgstr "Schätzung anhand lokaler Codex-Protokolle, unabhängig vom im Widget ausgewählten Konto."
 
 #: contents/ui/main.qml
 msgid "Estimated from local Claude logs."

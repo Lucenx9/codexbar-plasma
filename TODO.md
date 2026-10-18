@@ -258,6 +258,18 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   cover its amounts, currencies, and trust metadata.
   [Prior discussion #171](https://github.com/Lucenx9/codexbar-plasma/issues/171).
 
+### Account-scoped local costs
+
+- [ ] Filter local cost history by the account selected in the widget only
+  through a released official Linux CLI contract. An isolated 0.76.0 probe
+  rejects `cost --provider codex --account synthetic-account --format json --json-only`
+  with `Unknown option --account` (exit 1). The widget currently selects usage
+  quotas independently of the provider's local history and explicitly labels
+  Codex costs accordingly. Done when a supported selector and emitted identity
+  establish attribution, with regressions for account changes and late cost
+  replies. Do not infer identity from usage labels or scan provider logs in QML.
+  [Evidence](docs/cost-history.md#pinned-cli-evidence).
+
 ### Service-tier totals
 
 - [ ] Show Standard/Fast totals from explicit official tier fields. The scoped
@@ -506,7 +518,14 @@ These are unresolved Linux candidates, not confirmed missing features.
   release says Claude OAuth accounts now include email, and Plasma already
   consumes `usage.identity.accountEmail`, but no authenticated Linux record was
   observed. Verify the emitted shape and multi-account behavior before closing
-  this candidate.
+  this candidate. A scoped 0.76.0 source check shows Codex usage records use
+  `CodexVisibleAccount.menuDisplayName`, which includes workspace labels and
+  adds stable discriminators for collisions. A synthetic email-only record
+  without that top-level account label is insufficient evidence for changing
+  Plasma's selection keys. Authenticated Linux same-email workspace output
+  remains unverified.
+  [Projection source](https://github.com/steipete/CodexBar/blob/2d8b1409a1649dce60f3610ebe4eab52b92545de/Sources/CodexBarCore/Providers/Codex/CodexVisibleAccountProjection.swift);
+  [usage source](https://github.com/steipete/CodexBar/blob/2d8b1409a1649dce60f3610ebe4eab52b92545de/Sources/CodexBarCLI/CLIUsageCommand.swift).
   [Release coverage](docs/research/2026-09-09-macos-parity-0.57.0.md#release-coverage).
 - [ ] Evaluate a panel Spend item for providers that report a spend budget.
   macOS 0.77.0 adds Spend layout items and conditional rules (#4530). Plasma's

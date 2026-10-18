@@ -196,7 +196,7 @@ QtObject {
         case "antigravity":
             return i18n("Local Antigravity history includes token totals. Dollar costs are unavailable.")
         case "codex":
-            return i18n("Estimated from local Codex logs for the selected account.")
+            return i18n("Estimated from local Codex logs, independently of the account selected in the widget.")
         case "claude":
             return i18n("Estimated from local Claude logs.")
         default:
