@@ -111,6 +111,33 @@ class ManagedCliTests(unittest.TestCase):
         self.assertEqual(result["version"], "0.62.0")
         remote.assert_not_called()
 
+    def test_install_rejects_unusable_existing_copy_without_fetching(self):
+        self.operation("install")
+        binary = self.root / "current/CodexBarCLI"
+        for failure in ("not executable", "corrupt executable", "wrong version", "failed probe"):
+            with self.subTest(failure=failure):
+                binary.write_text('#!/bin/sh\nprintf "CodexBar 0.62.0\\n"\n')
+                binary.chmod(0o700)
+                if failure == "not executable":
+                    binary.chmod(0o600)
+                elif failure == "corrupt executable":
+                    binary.write_bytes(b"not an executable")
+                elif failure == "wrong version":
+                    binary.write_text('#!/bin/sh\nprintf "CodexBar 0.61.0\\n"\n')
+                else:
+                    binary.write_text('#!/bin/sh\nprintf "synthetic-private-diagnostic\\n"\nexit 1\n')
+                with patch.object(cli.cli_release, "latest_release") as remote:
+                    self.assertEqual(cli.run("install", self.command), {"status": "unusable"})
+                remote.assert_not_called()
+                self.assertTrue(binary.exists())
+
+    def test_existing_copy_probe_is_bounded_and_does_not_expose_its_output(self):
+        self.operation("install")
+        with patch.object(cli.cli_release, "bounded_command", side_effect=ValueError("command_timeout")), \
+                patch.object(cli.cli_release, "latest_release") as remote:
+            self.assertEqual(cli.run("install", self.command), {"status": "unusable"})
+        remote.assert_not_called()
+
     def test_external_actions_do_not_create_storage_or_fetch(self):
         for action in ("automatic", "update", "rollback"):
             with self.subTest(action=action), patch.object(cli.cli_release, "latest_release") as remote:
