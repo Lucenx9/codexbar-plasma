@@ -27,8 +27,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 - Verify an existing managed CLI before reusing it during preparation. Report
   unusable copies without selecting them or repeating a failed usage refresh.
-- Align provider identity tile borders in the Overview tab with Provider Header
-  and Usage & Spend views.
+- Give the Overview provider identity tile the same subtle border as the
+  provider header tile.
 - Keep provider titles literal in the AI Insights Back button, including markup
   and ampersands.
 - Correct translated provider-default labels, settings references, and grammar.
