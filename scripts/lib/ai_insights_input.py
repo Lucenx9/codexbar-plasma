@@ -1,5 +1,4 @@
 """One-use private files for the QML-to-helper AI usage snapshot handoff."""
-import base64
 import configparser
 import os
 from pathlib import Path
@@ -10,7 +9,7 @@ import time
 import uuid
 
 MAX_BYTES = 16 * 1024
-MAX_FILE_BYTES = 24 * 1024
+MAX_FILE_BYTES = MAX_BYTES * 2 + 128
 MAX_AGE = 300
 
 
@@ -88,7 +87,9 @@ def consume(request):
             encoded = config.get("General", "snapshot", raw=True)
         except configparser.Error:
             raise ValueError("invalid_input_file") from None
-        snapshot = base64.b64decode(encoded + "=" * (-len(encoded) % 4), validate=True)
+        if not re.fullmatch(r"(?:[0-9a-f]{2})+", encoded):
+            raise ValueError("invalid_input_file")
+        snapshot = bytes.fromhex(encoded)
         if not snapshot or len(snapshot) > MAX_BYTES:
             raise ValueError("input_size")
         return snapshot.decode("utf-8")

@@ -245,6 +245,14 @@ TestCase {
         }
     }
 
+    function test_snapshotEncodingIsBoundedAsciiWithoutQtVersionSpecificApis() {
+        compare(AiInsights.encodedSnapshot('{"providers":[]}'), "7b2270726f766964657273223a5b5d7d")
+        compare(AiInsights.encodedSnapshot("x".repeat(16384)).length, 32768)
+        for (var input of ["", null, 7, "x".repeat(16385), "\u00e8", "\uD83D\uDE00"]) {
+            compare(AiInsights.encodedSnapshot(input), "")
+        }
+    }
+
     function test_generationReplyValidation_data() {
         return [
             {tag: "ok", text: JSON.stringify({status: "ok", summary: "<b>Uso</b>\n alto", highlights: ["a", 1, "<img src=x>"]}),

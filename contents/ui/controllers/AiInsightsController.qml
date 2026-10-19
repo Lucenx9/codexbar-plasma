@@ -73,7 +73,7 @@ Item {
         property string activeSnapshotId: ""
         property string activePhase: ""
         property string activeRequest: ""
-        property string capturedSnapshot: ""
+        property string capturedInput: ""
         property var activeOptions: null
         property int serial: 0
         property string errorReason: ""
@@ -99,7 +99,7 @@ Item {
             activeSource = ""
             activeRequest = ""
             activePhase = ""
-            capturedSnapshot = ""
+            capturedInput = ""
             activeOptions = null
             deadline.stop()
             if (source.length > 0) {
@@ -164,7 +164,8 @@ Item {
                 request: "00000000000000000000000000000000"
             }
             var command = AiInsights.command(controller.scriptUrl, "generate", options)
-            if (command.length === 0 || controller.snapshotText.length > AiInsights.maximumSnapshotLength) {
+            var input = AiInsights.encodedSnapshot(controller.snapshotText)
+            if (command.length === 0 || input.length === 0) {
                 // An unbuildable command (for example an oversized Ollama
                 // endpoint) is invalid input, not a silent skip: the card
                 // shows it, and automatic generation waits out the interval.
@@ -175,7 +176,7 @@ Item {
             serial += 1
             activeContextKey = controller.contextKey
             activeSnapshotId = controller.snapshotId
-            capturedSnapshot = controller.snapshotText
+            capturedInput = input
             activeOptions = options
             activePhase = "prepare"
             activeSource = CommandLedger.withRunNonce(AiInsights.command(controller.scriptUrl, "prepare", {}),
@@ -252,12 +253,12 @@ Item {
                 fail("unavailable", 0)
                 return
             }
-            // Base64 without padding is an unquoted INI scalar. No payload
+            // Hexadecimal text is an unquoted INI scalar. No payload
             // property is declared, so destruction cannot write it again.
-            settings.setValue("snapshot", Qt.btoa(capturedSnapshot).replace(/=+$/, ""))
+            settings.setValue("snapshot", capturedInput)
             settings.sync()
             settings.destroy()
-            capturedSnapshot = ""
+            capturedInput = ""
             var options = Object.assign({}, activeOptions, {request: input.request})
             activePhase = "generate"
             serial += 1

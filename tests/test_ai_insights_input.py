@@ -1,5 +1,4 @@
 """Exercise one-use snapshot files without wallets, providers or personal data."""
-import base64
 import os
 from pathlib import Path
 import stat
@@ -25,7 +24,7 @@ class InputTests(unittest.TestCase):
     def prepare(self, text='{"providers":[{"id":"codex","spend":123.45}]}'):
         prepared = inputs.prepare()
         path = Path(prepared["path"])
-        encoded = base64.b64encode(text.encode()).decode().rstrip("=")
+        encoded = text.encode().hex()
         path.write_text("[General]\nsnapshot=" + encoded + "\n")
         return prepared, path
 
@@ -41,7 +40,7 @@ class InputTests(unittest.TestCase):
 
     def test_empty_malformed_and_oversized_data_fail_closed_and_are_removed(self):
         for raw in (b"", b"[General]\nsnapshot=%%%\n", b"not ini", b"x" * (inputs.MAX_FILE_BYTES + 1),
-                    b"[General]\nsnapshot=\xff", b"[General]\nsnapshot=" + base64.b64encode(b"x" * (inputs.MAX_BYTES + 1))):
+                    b"[General]\nsnapshot=\xff", b"[General]\nsnapshot=" + b"78" * (inputs.MAX_BYTES + 1)):
             with self.subTest(raw=raw[:40]):
                 prepared = inputs.prepare()
                 path = Path(prepared["path"])

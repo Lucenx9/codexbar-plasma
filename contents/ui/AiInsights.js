@@ -347,6 +347,19 @@ function validInputRequest(value) {
     return typeof value === "string" && /^[a-f0-9]{32}$/.test(value)
 }
 
+function encodedSnapshot(text) {
+    if (typeof text !== "string" || text.length === 0 || text.length > maximumSnapshotLength) {
+        return ""
+    }
+    var bytes = []
+    for (var i = 0; i < text.length; i++) {
+        var code = text.charCodeAt(i)
+        if (code > 127) return ""
+        bytes.push(("0" + code.toString(16)).slice(-2))
+    }
+    return bytes.join("")
+}
+
 function preparedInput(text, exitCode, exitStatus) {
     var value = successfulExit(exitCode, exitStatus) ? parseReply(text) : null
     if (!value || value.status !== "ready" || !validInputRequest(value.request)

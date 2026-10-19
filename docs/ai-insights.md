@@ -218,11 +218,11 @@ table, honoring the response's `Retry-After`, and a choice that finished with
   creates a random request directory with mode `0700` and `payload.ini` with
   mode `0600` beneath the OS temporary directory's
   `codexbar-plasma-ai-<uid>` root. The controller captures the snapshot and
-  request context before preparation, writes unpadded base64 with
+  request context before preparation, writes the ASCII snapshot as hexadecimal with
   `QtCore.Settings.setValue` and `sync`, and destroys the Settings object.
   The generation command carries only `--request <random-id>`.
   `scripts/lib/ai_insights_input.py` validates the directory, file ownership,
-  permissions, regular-file type, link count, age, size, INI and base64 before
+  permissions, regular-file type, link count, age, size, INI and hexadecimal before
   returning UTF-8 data. It removes the file and directory before wallet access
   or any AI request. Cancellation runs an idempotent `discard` action. A killed
   preparation or crash can leave a private request behind; a later preparation
