@@ -12,9 +12,6 @@ target = Path(os.environ["XDG_DATA_HOME"]) / "codexbar-plasma/cli/current/codexb
 action = sys.argv[sys.argv.index("--action") + 1]
 if action == "install":
     time.sleep(0.3)
-    if os.environ.get("CODEXBAR_SMOKE_SCENARIO") == "cli-setup-unusable":
-        print(json.dumps(dict(status="unusable")))
-        sys.exit(0)
     target.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(Path(__file__).with_name("fixture-cli"), target)
     target.chmod(0o700)

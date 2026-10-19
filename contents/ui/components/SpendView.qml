@@ -580,8 +580,6 @@ ColumnLayout {
                                 color: view.applet.withAlpha(view.applet.providerReadableColor(
                                     spendProviderCard.modelData.provider,
                                     Kirigami.Theme.backgroundColor), 0.12)
-                                border.width: 1
-                                border.color: view.applet.withAlpha(Kirigami.Theme.textColor, 0.1)
 
                                 Kirigami.Icon {
                                     anchors.centerIn: parent

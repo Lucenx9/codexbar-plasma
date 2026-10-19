@@ -11,7 +11,6 @@ import platform
 import re
 import shutil
 import stat
-import subprocess
 import tarfile
 import tempfile
 import time
@@ -293,16 +292,6 @@ def unpack(archive, destination):
     (destination / "codexbar").symlink_to("CodexBarCLI")
 
 
-def probe_version(command, version, home):
-    try:
-        code, banner = cli_release.bounded_command([str(command), "--version"], seconds=10,
-                                                 environment={"HOME": str(home), "PATH": "/usr/bin:/bin", "LC_ALL": "C",
-                                                              "XDG_CONFIG_HOME": str(home), "XDG_CACHE_HOME": str(home)})
-        return code == 0 and banner == "CodexBar " + version
-    except (OSError, ValueError, subprocess.SubprocessError):
-        return False
-
-
 def install(root, automatic=False):
     current = installed(root)
     state = state_record(root)
@@ -343,7 +332,10 @@ def install(root, automatic=False):
             raise ValueError("version_file")
         home = stage / "probe-home"
         home.mkdir()
-        if not probe_version(extracted / "codexbar", version, home):
+        code, banner = cli_release.bounded_command([str(extracted / "codexbar"), "--version"], seconds=10,
+                                                   environment={"HOME": str(home), "PATH": "/usr/bin:/bin", "LC_ALL": "C",
+                                                                "XDG_CONFIG_HOME": str(home), "XDG_CACHE_HOME": str(home)})
+        if code != 0 or banner != "CodexBar " + version:
             raise ValueError("version_probe")
         (extracted / "receipt.json").write_text(json.dumps(dict(version=version, sha256=expected)))
         target = "releases/v" + version + "-" + expected[:16]
@@ -397,15 +389,9 @@ def failure_status(error):
 
 def run(action, command=""):
     root = root_path()
-    if action == "status":
+    if action == "status" or (action == "install" and installed(root)):
+        # Selecting an existing private copy is local; only Update now needs GitHub.
         return status(root)
-    if action == "install":
-        current = installed(root)
-        if current:
-            with tempfile.TemporaryDirectory(prefix="codexbar-cli-probe-") as home:
-                if not probe_version(root / current["target"] / "codexbar", current["version"], home):
-                    return {"status": "unusable"}
-            return status(root)
     if action in ("update", "automatic", "rollback") and not owns_command(command):
         return {"status": "external"}
     private_directory(root)

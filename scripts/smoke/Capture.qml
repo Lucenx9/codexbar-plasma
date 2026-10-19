@@ -60,8 +60,7 @@ Item {
     readonly property bool panelAppearanceScenario: scenario === "estimated-panel" || scenario === "unknown-panel" || scenario === "percent-only-panel" || scenario === "panel-standard" || scenario === "panel-minimal"
         || scenario === "panel-minimal-single" || readmePanelScenario || capsulePanelScenario || panelInformationScenario
     readonly property bool readmeScenario: scenario.indexOf("readme-") === 0
-    readonly property int expectedProviderCount: scenario === "empty-providers" || scenario === "usage-error"
-        || scenario === "cli-missing" || scenario === "cli-setup-unusable" ? 0
+    readonly property int expectedProviderCount: scenario === "empty-providers" || scenario === "usage-error" || scenario === "cli-missing" ? 0
         : scenario === "panel-information-single" || scenario === "panel-minimal-single" || scenario === "panel-default-single"
             || scenario === "ai-insights-single"
         ? 1 : (readmeScenario ? 3 : 2)
@@ -1417,7 +1416,7 @@ Item {
             return applet.shareUsageWindow && applet.shareUsageWindow.visible
                 && applet.shareUsageWindow.snapshot.providers.length > 0;
 
-        if (scenario === "cli-setup" || scenario === "cli-setup-unusable") {
+        if (scenario === "cli-setup") {
             if (missingCliStep === 0) {
                 if (applet.loading || !applet.commandPathFailed) return false;
                 var setup = findItem(applet.fullRepresentationItem, "missingCommandPlaceholder");
@@ -1428,13 +1427,6 @@ Item {
                     "preparation must show progress and prevent duplicate activation");
                 missingCliStep++;
                 return false;
-            }
-            if (scenario === "cli-setup-unusable") {
-                var rejected = findItem(applet, "popupManagedCliController");
-                return !applet.cliSetupBusy && !applet.loading && applet.commandPathFailed
-                    && rejected.result.status === "unusable" && applet.providers.length === 0
-                    && applet.commandPath.indexOf("/codexbar-not-installed") > 0
-                    && findItem(applet.fullRepresentationItem, "popupCliSetupStatus").visible;
             }
             return !applet.cliSetupBusy && !applet.loading && !applet.commandPathFailed
                 && applet.commandPath.indexOf("/codexbar-plasma/cli/current/codexbar") > 0
@@ -2373,7 +2365,7 @@ Item {
             if (!capture.prepared) {
                 capture.applet.expanded = true;
                 // Provider settings scenarios exercise only the page's own roster.
-                if (capture.scenario !== "loading" && capture.scenario.indexOf("cli-setup") !== 0
+                if (capture.scenario !== "loading" && capture.scenario !== "cli-setup"
                         && capture.scenario.indexOf("settings-providers") !== 0
                         && !(capture.scenario === "usage-cache-restart" && capture.cacheRestart)
                         && (capture.applet.loading || capture.applet.providers.length !== capture.expectedProviderCount))

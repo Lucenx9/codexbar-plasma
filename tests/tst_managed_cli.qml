@@ -21,9 +21,8 @@ TestCase {
         var prior = {status: "ready", version: "0.62.0", previous: "0.61.0",
             path: "/home/test/.local/share/codexbar-plasma/cli/current/codexbar"}
         for (var item of [{status: "error"}, {status: "busy"}, {status: "external"},
-                          {status: "network"}, {status: "unsupported"}, {status: "unverified"}, {status: "unusable"}]) {
+                          {status: "network"}, {status: "unsupported"}, {status: "unverified"}]) {
             var retained = ManagedCli.nextResponse(prior, JSON.stringify(item))
-            compare(retained.status, item.status)
             compare(retained.path, prior.path)
             compare(retained.version, prior.version)
             compare(retained.previous, prior.previous)

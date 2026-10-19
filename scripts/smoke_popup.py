@@ -120,7 +120,7 @@ def stage_applet(work, scenario, image_path, theme=None):
     defaults = {"commandPath": str(fixture_cli), "refreshInterval": "0",
                 "enableNotifications": "false", "updateChecksEnabled": "false",
                 "autoUpdateEnabled": "false", "updateNotificationsEnabled": "false"}
-    if scenario in ("cli-missing", "cli-setup", "cli-setup-unusable"):
+    if scenario in ("cli-missing", "cli-setup"):
         defaults["commandPath"] = str(work / "codexbar-not-installed")
     if scenario.startswith("identified-"):
         defaults.update(identifiedTokensEnabled="true", identifiedTokensSshHost="build@host",

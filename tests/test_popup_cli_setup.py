@@ -77,7 +77,7 @@ TestCase {
         verify(!subject.cliSetupBusy);
     }
     function test_failuresPreserveSelectionAndAllowRetry_data() {
-        return [{tag: "network", command: "network"}, {tag: "unusable copy", command: "unusable"}, {tag: "malformed", command: "malformed"},
+        return [{tag: "network", command: "network"}, {tag: "malformed", command: "malformed"},
                 {tag: "nonzero exit", command: "failed-exit"}];
     }
     function test_failuresPreserveSelectionAndAllowRetry(data) {
@@ -88,8 +88,6 @@ TestCase {
         compare(subject.refreshes, 0);
         compare(subject.accountsController.resets, 0);
         verify(subject.cliSetupStatus.length > 0);
-        if (data.command === "unusable")
-            compare(subject.cliSetupStatus, "The existing managed CLI could not be verified. Choose another CLI in Settings > Diagnostics.");
         subject.prepareCli();
         verify(subject.cliSetupBusy);
         subject.controller.retire();
@@ -155,7 +153,7 @@ time.sleep(0.2)
 command = sys.argv[sys.argv.index("--command") + 1]
 reply = dict(status="ready" if command == "reuse" else "installed", version="0.77.0",
              path="/home/test/.local/share/codexbar-plasma/cli/current/codexbar")
-print("invalid" if command == "malformed" else json.dumps(dict(status=command) if command in ("network", "unusable") else reply))
+print("invalid" if command == "malformed" else json.dumps(dict(status="network") if command == "network" else reply))
 sys.exit(1 if command == "failed-exit" else 0)
 ''')
             fixture = path / "tst_setup.qml"
