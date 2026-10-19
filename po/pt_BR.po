@@ -1545,15 +1545,15 @@ msgid ""
 "Connection works, but %1 is not in the list of models usable for AI "
 "Insights. Choose a listed model."
 msgstr ""
-"A conexão funciona, mas %1 não está na lista de modelos utilizáveis para AI "
-"Insights. Escolha um modelo da lista."
+"A conexão funciona, mas %1 não está na lista de modelos utilizáveis para"
+" Insights de IA. Escolha um modelo da lista."
 
 #: contents/ui/configAiInsights.qml
 msgid ""
 "Connection works, and %1 is in the list of models usable for AI Insights."
 msgstr ""
-"A conexão funciona e %1 está na lista de modelos utilizáveis para AI "
-"Insights."
+"A conexão funciona e %1 está na lista de modelos utilizáveis para "
+"Insights de IA."
 
 #: contents/ui/configAiInsights.qml
 msgid ""
@@ -1805,7 +1805,7 @@ msgstr "%1 (%2)"
 #: contents/ui/configDiagnostics.qml
 #: contents/ui/controllers/CliUpdateController.qml
 msgid "Could not identify the installed CLI version."
-msgstr "Não foi possível identificar a versão instalada do CLI."
+msgstr "Não foi possível identificar a versão instalada da CLI."
 
 #: contents/ui/configDiagnostics.qml
 msgid "Check versions"
@@ -1816,12 +1816,12 @@ msgid ""
 "This checks installed versions only. Check upstream CLI releases in "
 "General / CLI updates."
 msgstr ""
-"Verifica apenas as versões instaladas. Consulte as versões do CLI em Geral / "
-"Atualizações do CLI."
+"Verifica apenas as versões instaladas. Consulte as versões da CLI em "
+"Geral / Atualizações da CLI."
 
 #: contents/ui/configDiagnostics.qml
 msgid "Advanced provider override"
-msgstr "Substituição avançada do provedor"
+msgstr "Seleção avançada do provedor"
 
 #: contents/ui/configDiagnostics.qml
 msgid ""
@@ -1988,15 +1988,15 @@ msgstr "Status da última atualização: %1"
 
 #: contents/ui/configGeneral.qml
 msgid "CLI updates"
-msgstr "Atualizações do CLI"
+msgstr "Atualizações da CLI"
 
 #: contents/ui/configGeneral.qml
 msgid "Check upstream CLI releases daily"
-msgstr "Verificar versões oficiais do CLI diariamente"
+msgstr "Verificar versões oficiais da CLI diariamente"
 
 #: contents/ui/configGeneral.qml
 msgid "Notify when a CLI release is available"
-msgstr "Notificar quando houver uma versão do CLI disponível"
+msgstr "Notificar quando houver uma versão da CLI disponível"
 
 #: contents/ui/configGeneral.qml
 msgid ""
@@ -2008,7 +2008,7 @@ msgstr ""
 
 #: contents/ui/configGeneral.qml
 msgid "Check CLI releases now"
-msgstr "Verificar versões do CLI agora"
+msgstr "Verificar versões da CLI agora"
 
 #: contents/ui/configGeneral.qml contents/ui/main.qml
 msgid "Open release page"
@@ -2841,25 +2841,26 @@ msgstr "Instalação externa. Atualize usando o método de instalação original
 
 #: contents/ui/controllers/CliUpdateController.qml
 msgid "Upstream CLI %1 is available. Installed: %2."
-msgstr "A versão oficial %1 do CLI está disponível. Instalada: %2."
+msgstr "A versão oficial %1 da CLI está disponível. Instalada: %2."
 
 #: contents/ui/controllers/CliUpdateController.qml
 msgid "CLI %1 is current or newer than the latest stable release."
 msgstr ""
-"O CLI %1 está atualizado ou é mais recente que a última versão estável."
+"A CLI %1 está atualizada ou é mais recente que a última versão estável."
 
 #: contents/ui/controllers/CliUpdateController.qml
 msgid ""
 "Latest stable CLI: %1. The installed version cannot be compared "
 "automatically."
 msgstr ""
-"Última versão estável do CLI: %1. A versão instalada não pode ser comparada "
-"automaticamente."
+"Última versão estável da CLI: %1. A versão instalada não pode ser "
+"comparada automaticamente."
 
 #: contents/ui/controllers/CliUpdateController.qml
 msgid "Could not check CLI releases. Try again later."
 msgstr ""
-"Não foi possível verificar as versões do CLI. Tente novamente mais tarde."
+"Não foi possível verificar as versões da CLI. Tente novamente mais "
+"tarde."
 
 #: contents/ui/controllers/CostController.qml
 msgid "Loading cost data timed out. Try again."
@@ -3622,13 +3623,13 @@ msgstr "Atualizando o uso…"
 
 #: contents/ui/main.qml
 msgid "CodexBar CLI release available"
-msgstr "Versão do CLI CodexBar disponível"
+msgstr "Versão da CLI CodexBar disponível"
 
 #: contents/ui/main.qml
 msgid "Upstream CLI %1 is available. Update using your installation method."
 msgstr ""
-"A versão oficial %1 do CLI está disponível. Atualize usando seu método de "
-"instalação."
+"A versão oficial %1 da CLI está disponível. Atualize usando seu método "
+"de instalação."
 
 #~ msgid "Copy session details"
 #~ msgstr "Copiar detalhes da sessão"
@@ -3696,7 +3697,7 @@ msgid ""
 "Choose a source to save. CodexBar validates support for this provider; "
 "Automatic clears its saved override. The source override in Diagnostics "
 "takes precedence in the widget."
-msgstr "Escolha uma fonte para salvar. O CodexBar verifica o suporte deste provedor; Automático remove sua fonte forçada salva. A fonte forçada em Diagnóstico tem prioridade no widget."
+msgstr "Escolha uma fonte para salvar. O CodexBar verifica o suporte deste provedor; Automática remove sua fonte forçada salva. A fonte forçada em Diagnóstico tem prioridade no widget."
 
 #: contents/ui/components/UsageWindowText.qml
 #, kde-format

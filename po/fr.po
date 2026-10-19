@@ -632,7 +632,7 @@ msgstr "Aucun compte nommé n'est configuré. Le compte par défaut du fournisse
 
 #: contents/ui/components/ProviderConfigRow.qml
 msgid "%1 - CodexBar default"
-msgstr "%1 - compte par défaut de CodexBar"
+msgstr "%1 - activé par défaut dans CodexBar"
 
 #: contents/ui/components/ProviderConfigRow.qml
 msgid "Enable %1"
@@ -1352,7 +1352,7 @@ msgstr "Coût d’utilisation estimé"
 
 #: contents/ui/components/ShareUsageWindow.qml
 msgid "Top models by tokens"
-msgstr "Principaux modèles par tokens"
+msgstr "Principaux modèles par jetons"
 
 #: contents/ui/components/ShareUsageWindow.qml
 #: contents/ui/components/SpendView.qml
@@ -1405,7 +1405,7 @@ msgstr "Image PNG (*.png)"
 
 #: contents/ui/components/ShareUsageWindow.qml
 msgid "Tracked tokens"
-msgstr "Tokens suivis"
+msgstr "Jetons suivis"
 
 #: contents/ui/components/ShareUsageWindow.qml
 msgid "Copy image"
@@ -1549,15 +1549,15 @@ msgid ""
 "Connection works, but %1 is not in the list of models usable for AI "
 "Insights. Choose a listed model."
 msgstr ""
-"La connexion fonctionne, mais %1 ne figure pas dans la liste des modèles "
-"utilisables pour AI Insights. Choisissez un modèle de la liste."
+"La connexion fonctionne, mais %1 ne figure pas dans la liste des modèles"
+" utilisables pour Analyses IA. Choisissez un modèle de la liste."
 
 #: contents/ui/configAiInsights.qml
 msgid ""
 "Connection works, and %1 is in the list of models usable for AI Insights."
 msgstr ""
-"La connexion fonctionne et %1 figure dans la liste des modèles utilisables "
-"pour AI Insights."
+"La connexion fonctionne et %1 figure dans la liste des modèles "
+"utilisables pour Analyses IA."
 
 #: contents/ui/configAiInsights.qml
 msgid ""
@@ -1667,10 +1667,10 @@ msgid ""
 "forecasts, and weekly spending and tokens per provider. Never account names, "
 "emails, projects, file paths, or prompts."
 msgstr ""
-"Seules des statistiques d'utilisation agrégées sont envoyées à %1 : quotas, "
-"heures de réinitialisation, prévisions de rythme, dépenses et tokens "
-"hebdomadaires par provider. Jamais de noms de compte, e-mails, projets, "
-"chemins de fichiers ni prompts."
+"Seules des statistiques d'utilisation agrégées sont envoyées à %1 : "
+"quotas, heures de réinitialisation, prévisions de rythme, dépenses et "
+"jetons hebdomadaires par fournisseur. Jamais de noms de compte, e-mails,"
+" projets, chemins de fichiers ni prompts."
 
 #: contents/ui/configAiInsights.qml
 msgid ""
@@ -1813,7 +1813,7 @@ msgstr "%1 (%2)"
 #: contents/ui/configDiagnostics.qml
 #: contents/ui/controllers/CliUpdateController.qml
 msgid "Could not identify the installed CLI version."
-msgstr "Impossible d’identifier la version installée du CLI."
+msgstr "Impossible d’identifier la version installée de la CLI."
 
 #: contents/ui/configDiagnostics.qml
 msgid "Check versions"
@@ -1824,8 +1824,8 @@ msgid ""
 "This checks installed versions only. Check upstream CLI releases in "
 "General / CLI updates."
 msgstr ""
-"Cette vérification porte uniquement sur les versions installées. Consultez "
-"les versions du CLI dans Général / Mises à jour du CLI."
+"Cette vérification porte uniquement sur les versions installées. "
+"Consultez les versions de la CLI dans Général / Mises à jour de la CLI."
 
 #: contents/ui/configDiagnostics.qml
 msgid "Advanced provider override"
@@ -1997,15 +1997,15 @@ msgstr "Dernier état de mise à jour : %1"
 
 #: contents/ui/configGeneral.qml
 msgid "CLI updates"
-msgstr "Mises à jour du CLI"
+msgstr "Mises à jour de la CLI"
 
 #: contents/ui/configGeneral.qml
 msgid "Check upstream CLI releases daily"
-msgstr "Vérifier chaque jour les versions officielles du CLI"
+msgstr "Vérifier chaque jour les versions officielles de la CLI"
 
 #: contents/ui/configGeneral.qml
 msgid "Notify when a CLI release is available"
-msgstr "Notifier la disponibilité d’une version du CLI"
+msgstr "Notifier la disponibilité d’une version de la CLI"
 
 #: contents/ui/configGeneral.qml
 msgid ""
@@ -2017,7 +2017,7 @@ msgstr ""
 
 #: contents/ui/configGeneral.qml
 msgid "Check CLI releases now"
-msgstr "Vérifier les versions du CLI maintenant"
+msgstr "Vérifier les versions de la CLI maintenant"
 
 #: contents/ui/configGeneral.qml contents/ui/main.qml
 msgid "Open release page"
@@ -2863,23 +2863,24 @@ msgstr ""
 #: contents/ui/controllers/CliUpdateController.qml
 msgid "Upstream CLI %1 is available. Installed: %2."
 msgstr ""
-"La version officielle %1 du CLI est disponible. Version installée : %2."
+"La version officielle %1 de la CLI est disponible. Version installée : "
+"%2."
 
 #: contents/ui/controllers/CliUpdateController.qml
 msgid "CLI %1 is current or newer than the latest stable release."
-msgstr "Le CLI %1 est à jour ou plus récent que la dernière version stable."
+msgstr "La CLI %1 est à jour ou plus récente que la dernière version stable."
 
 #: contents/ui/controllers/CliUpdateController.qml
 msgid ""
 "Latest stable CLI: %1. The installed version cannot be compared "
 "automatically."
 msgstr ""
-"Dernière version stable du CLI : %1. La version installée ne peut pas être "
-"comparée automatiquement."
+"Dernière version stable de la CLI : %1. La version installée ne peut pas"
+" être comparée automatiquement."
 
 #: contents/ui/controllers/CliUpdateController.qml
 msgid "Could not check CLI releases. Try again later."
-msgstr "Impossible de vérifier les versions du CLI. Réessayez plus tard."
+msgstr "Impossible de vérifier les versions de la CLI. Réessayez plus tard."
 
 #: contents/ui/controllers/CostController.qml
 msgid "Loading cost data timed out. Try again."
@@ -2946,11 +2947,11 @@ msgstr "Impossible de joindre le serveur de versions. Réessayez plus tard."
 
 #: contents/ui/controllers/ManagedCliController.qml
 msgid "No official CLI build is available for this system."
-msgstr "Aucune version officielle du CLI n'est disponible pour ce système."
+msgstr "Aucune version officielle de la CLI n'est disponible pour ce système."
 
 #: contents/ui/controllers/ManagedCliController.qml
 msgid "The downloaded CLI failed verification and was discarded."
-msgstr "Le CLI téléchargé n'a pas passé la vérification et a été écarté."
+msgstr "La CLI téléchargée n'a pas passé la vérification et a été écartée."
 
 #: contents/ui/controllers/ManagedCliController.qml
 msgid ""
@@ -3647,13 +3648,13 @@ msgstr "Actualisation de l'utilisation…"
 
 #: contents/ui/main.qml
 msgid "CodexBar CLI release available"
-msgstr "Version du CLI CodexBar disponible"
+msgstr "Version de la CLI CodexBar disponible"
 
 #: contents/ui/main.qml
 msgid "Upstream CLI %1 is available. Update using your installation method."
 msgstr ""
-"La version officielle %1 du CLI est disponible. Mettez à jour avec votre "
-"méthode d’installation."
+"La version officielle %1 de la CLI est disponible. Mettez à jour avec "
+"votre méthode d’installation."
 
 #~ msgid "Copy session details"
 #~ msgstr "Copier les détails de la session"
@@ -3721,7 +3722,7 @@ msgid ""
 "Choose a source to save. CodexBar validates support for this provider; "
 "Automatic clears its saved override. The source override in Diagnostics "
 "takes precedence in the widget."
-msgstr "Choisissez une source à enregistrer. CodexBar vérifie sa prise en charge par ce fournisseur ; Automatique efface sa source imposée enregistrée. La source imposée dans Diagnostics est prioritaire dans le widget."
+msgstr "Choisissez une source à enregistrer. CodexBar vérifie sa prise en charge par ce fournisseur ; Automatique efface sa source imposée enregistrée. La source imposée dans Diagnostic est prioritaire dans le widget."
 
 #: contents/ui/components/UsageWindowText.qml
 #, kde-format
@@ -3800,11 +3801,11 @@ msgstr "Parallel"
 
 #: contents/ui/components/IdentifiedTokensSection.qml
 msgid "Loading identified tokens timed out. Try again."
-msgstr "Le chargement des tokens identifiés a expiré. Réessayez."
+msgstr "Le chargement des jetons identifiés a expiré. Réessayez."
 
 #: contents/ui/components/IdentifiedTokensSection.qml
 msgid "Could not start identified-token collection. Check codexbar and GNU timeout."
-msgstr "Impossible de démarrer la collecte des tokens identifiés. Vérifiez codexbar et GNU timeout."
+msgstr "Impossible de démarrer la collecte des jetons identifiés. Vérifiez codexbar et GNU timeout."
 
 #: contents/ui/components/IdentifiedTokensSection.qml
 msgid ""
@@ -3820,7 +3821,7 @@ msgstr "Impossible de charger les données Codex identifiées. Utilisez codexbar
 
 #: contents/ui/components/IdentifiedTokensSection.qml
 msgid "Identified Codex tokens"
-msgstr "Tokens Codex identifiés"
+msgstr "Jetons Codex identifiés"
 
 #: contents/ui/components/IdentifiedTokensSection.qml scripts/smoke/Capture.qml
 msgid ""
@@ -3843,8 +3844,8 @@ msgstr "Période UTC : du %1 au %2"
 #: contents/ui/components/IdentifiedTokensSection.qml
 msgid "Last %1 UTC day"
 msgid_plural "Last %1 UTC days"
-msgstr[0] "Dernier %1 jour UTC"
-msgstr[1] "Derniers %1 jours UTC"
+msgstr[0] "%1 dernier jour UTC"
+msgstr[1] "%1 derniers jours UTC"
 
 #: contents/ui/components/IdentifiedTokensSection.qml
 msgid "Source requested: this computer"
@@ -3884,7 +3885,7 @@ msgstr "Charger le sous-total local + SSH"
 
 #: contents/ui/configGeneral.qml
 msgid "Show identified Codex token subtotal"
-msgstr "Afficher le sous-total des tokens Codex identifiés"
+msgstr "Afficher le sous-total des jetons Codex identifiés"
 
 #: contents/ui/configGeneral.qml
 msgid ""
@@ -3945,8 +3946,8 @@ msgstr "Générée le %1"
 #: contents/ui/components/AiInsightsView.qml
 msgid "A new insight is generated automatically at most every %1 hour."
 msgid_plural "A new insight is generated automatically at most every %1 hours."
-msgstr[0] "Une nouvelle analyse est générée automatiquement au plus une fois toutes les %1 heure."
-msgstr[1] "Une nouvelle analyse est générée automatiquement au plus une fois toutes les %1 heures."
+msgstr[0] "Une nouvelle analyse est générée automatiquement au maximum une fois par période de %1 heure."
+msgstr[1] "Une nouvelle analyse est générée automatiquement au maximum une fois par période de %1 heures."
 
 #: contents/ui/components/AiInsightsView.qml
 msgid "A new insight is generated only when you ask for one."

@@ -1549,15 +1549,15 @@ msgid ""
 "Connection works, but %1 is not in the list of models usable for AI "
 "Insights. Choose a listed model."
 msgstr ""
-"La connessione funziona, ma %1 non è nell'elenco dei modelli utilizzabili "
-"per AI Insights. Scegli un modello dell'elenco."
+"La connessione funziona, ma %1 non è nell'elenco dei modelli "
+"utilizzabili per Analisi IA. Scegli un modello dell'elenco."
 
 #: contents/ui/configAiInsights.qml
 msgid ""
 "Connection works, and %1 is in the list of models usable for AI Insights."
 msgstr ""
-"La connessione funziona e %1 è nell'elenco dei modelli utilizzabili per AI "
-"Insights."
+"La connessione funziona e %1 è nell'elenco dei modelli utilizzabili per "
+"Analisi IA."
 
 #: contents/ui/configAiInsights.qml
 msgid ""
@@ -1824,7 +1824,7 @@ msgid ""
 "General / CLI updates."
 msgstr ""
 "Verifica solo le versioni installate. Controlla le release della CLI in "
-"Generale / Aggiornamenti CLI."
+"Generali / Aggiornamenti CLI."
 
 #: contents/ui/configDiagnostics.qml
 msgid "Advanced provider override"
@@ -3714,7 +3714,7 @@ msgid ""
 "Choose a source to save. CodexBar validates support for this provider; "
 "Automatic clears its saved override. The source override in Diagnostics "
 "takes precedence in the widget."
-msgstr "Scegli una sorgente da salvare. CodexBar verifica il supporto per questo provider; Automatico cancella la sorgente forzata salvata. La sorgente forzata in Diagnostica ha la precedenza nel widget."
+msgstr "Scegli una sorgente da salvare. CodexBar verifica il supporto per questo provider; Automatica cancella la sorgente forzata salvata. La sorgente forzata in Diagnostica ha la precedenza nel widget."
 
 #: contents/ui/components/UsageWindowText.qml
 #, kde-format

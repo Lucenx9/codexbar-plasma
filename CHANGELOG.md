@@ -10,6 +10,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Fixed
+
+- Correct translated provider-default labels, settings references, and grammar.
+  Use consistent localized names for AI Insights, tokens, providers, and the CLI
+  across the five shipped catalogs.
+
 ## 0.2.50 - 2026-10-18
 
 ### Added
