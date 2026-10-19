@@ -1831,8 +1831,10 @@ Item {
                 verifyScenario(preview.page.supportFacts.valid, "support report did not accept the synthetic offline facts");
                 verifyScenario(preview.page.supportReport.indexOf("0.73.0") >= 0
                     && preview.page.supportReport.indexOf("codex, claude") >= 0
-                    && preview.page.supportReport.indexOf("/home/demo") < 0,
-                    "support report must include allowlisted facts and redact the home username");
+                    && preview.page.supportReport.indexOf("/home/demo") < 0
+                    && preview.page.supportReport.indexOf("synthetic-private-home") < 0
+                    && preview.page.supportReport.indexOf("/usr/bin/codexbar") < 0,
+                    "support report must include allowlisted facts and omit filesystem paths");
                 var copyReport = findItem(preview.page, "copySupportReportButton");
                 verifyScenario(copyReport !== null && copyReport.enabled, "support report has no ready copy action");
                 var reportViewport = findItem(preview.page, "supportReportScrollView");

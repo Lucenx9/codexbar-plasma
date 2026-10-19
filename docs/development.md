@@ -1170,8 +1170,16 @@ The same QtTest checks Diagnostics report collection/copy, explicit partial
 results after timeouts, command-path reset and stale-source rejection, alongside
 the accessible name of its command-path field. `SupportReport.js` accepts
 explicit facts and produces a bounded English technical Markdown report; QML
-owns module probes, localization, processes, clipboard and feedback. The offline
-`collect-support-report.py` helper reuses CLI version/ownership probes. Its only
+owns module probes, localization, processes, clipboard and feedback. The
+report omits resolved paths, retains only the selected/PATH CLI location
+comparison, and removes paths embedded in error text through the end of that
+line. This covers custom directory layouts and paths containing spaces without
+guessing path boundaries. Local probe facts and the Diagnostics version display
+retain their paths. JSON slash escapes are normalized before filtering, and
+common executable startup failures retain only a fixed reason, never the
+personal path or library filename. `tests/tst_support_report.qml` exercises
+that separation.
+The offline `collect-support-report.py` helper reuses CLI version/ownership probes. Its only
 CLI commands are `--version` and `config providers --format json --json-only`
 (verified on official Linux CLI 0.67.0 and 0.73.0); the provider list discards
 every field except enabled provider IDs.

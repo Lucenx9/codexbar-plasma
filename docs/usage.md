@@ -767,14 +767,20 @@ fields; track proposed extensions in the issue tracker.
   **Support report → Collect support report** gathers an offline Markdown
   report, ready to paste into an issue with **Copy report**. Expand **Report
   preview** to review it first. It includes the installed widget and
-  Plasma/KDE Frameworks/Qt versions, selected and PATH CLI version/path/manager,
+  Plasma/KDE Frameworks/Qt versions, selected and PATH CLI version/manager,
   enabled provider IDs, the current Diagnostics form overrides, the latest
   error observed in this Diagnostics session, and QML module/supporting-tool
   availability.
   The report uses English technical labels for support across languages.
   It does not run provider diagnostics, fetch usage, check upstream releases,
   or include diagnostic output, account labels, credentials or config dumps.
-  Home-directory usernames and recognized credentials/identifiers are redacted.
+  Resolved filesystem paths are omitted, while the report states whether the
+  selected and PATH CLI resolve to the same location. Paths inside error text
+  and the remainder of that line are also omitted, including custom home
+  directories and paths containing spaces. Common permission, missing-file,
+  executable-format and shared-library startup reasons remain as fixed text.
+  Recognized credentials/identifiers
+  are redacted. The local **Check versions** display still shows the full path.
   Versions come from offline `kinfo`, installed Debian package metadata when
   available, `kf6-config`, and Qt 6 `qtpaths`; unavailable versions remain unknown.
   Module checks use this QML engine; PlasmaCore remains explicitly **not

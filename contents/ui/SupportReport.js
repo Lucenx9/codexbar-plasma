@@ -42,13 +42,26 @@ function version(value) {
 function sharedText(value, limit) {
     if (typeof value !== "string") return ""
     return SafeText.truncatedText(SafeText.cliDiagnostic(value, SafeText.maximumDiagnosticLength)
-        .replace(/\/(?:home|Users)\/[^\/\s]+/g, "/home/[user]")
+        .replace(/\\u002f|\\\//gi, "/")
         .replace(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, "[email]")
         .replace(/\b(?:account|org|organization|workspace|project)[-_ ]?id["']?\s*[:=]\s*(?:"(?:[^"\\\r\n]|\\.)*"?|'(?:[^'\\\r\n]|\\.)*'?|[^\s,;]+)/gi, "identifier=[redacted]")
         .replace(/\b(?:acct|org|proj|workspace)_[A-Za-z0-9_-]+\b/g, "[identifier]")
         .replace(/\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/g, "[token]")
         .replace(/\b(?:https?|wss?):\/\/[^\s"'<>]+/gi, "[url]")
+        // A path may contain spaces, quotes and arbitrary directory names.
+        // Drop the rest of its line rather than guessing where it ends.
+        .replace(/(?:file:\/\/)?\/[^\r\n]*/gi, redactedPath)
         .replace(/[\x00-\x1f\x7f\u0060<>]/g, " "), limit || 1024)
+}
+
+function redactedPath(value) {
+    // Keep common startup failures as fixed text, without retaining a path's
+    // arbitrary suffix or a loader's potentially personal library filename.
+    if (/: error while loading shared libraries:/.test(value)) {
+        return "[path]: error while loading shared libraries"
+    }
+    var reason = /: (Permission denied|No such file or directory|Exec format error)\s*$/.exec(value)
+    return "[path]" + (reason ? ": " + reason[1] : "")
 }
 
 function response(text) {
@@ -95,7 +108,6 @@ function cliRecord(value) {
 function cliLines(title, value) {
     return ["### " + title, "- Version: " + (value.version || "unknown"),
         "- Probe status: " + (value.status || "not checked"),
-        "- Resolved path: " + (sharedText(value.path, 1024) || "unavailable"),
         "- Installation: " + (value.path ? value.manager : "unknown")]
 }
 
@@ -132,7 +144,7 @@ function markdown(input) {
         var present = facts.tools[tools[t]]
         lines.push("- " + tools[t] + ": " + (present === true ? "available" : present === false ? "not found" : "not checked"))
     }
-    lines.push("", "Configuration dumps, provider diagnostic output and account lists are excluded; recognized sensitive text is redacted.",
+    lines.push("", "Configuration dumps, provider diagnostic output and account lists are excluded; filesystem paths and recognized sensitive text are redacted.",
         "Unknown/unavailable facts are partial results, not successful checks.")
     return lines.join("\n").slice(0, 24000)
 }

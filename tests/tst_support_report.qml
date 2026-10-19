@@ -30,7 +30,7 @@ TestCase {
         verify(text.indexOf("timeout: not found") >= 0)
         for (var secret of ["private-host", "do-not-copy", "acct_private", "user@example.com", "token-secret", "/home/private"])
             verify(text.indexOf(secret) === -1, secret)
-        verify(text.indexOf("/home/[user]") >= 0)
+        verify(text.indexOf("[path]") >= 0)
     }
 
     function test_malformedAndOversizedResults() {
@@ -42,6 +42,56 @@ TestCase {
         value.providers.enabled = ["codex"]
         value.environment.plasma = "<img src=leak>"
         compare(SupportReport.response(JSON.stringify(value)).environment.plasma, "unknown")
+    }
+
+    function test_customFilesystemLayoutsNeverReachTheSharedReport() {
+        for (var path of ["/srv/alice/bin/codexbar", "/data/private project/tool", "/var/home/alice/tool",
+                          "/mnt/private-volume/cli", "/root/.local/bin/codexbar", "/Users/alice/tool"]) {
+            var value = payload()
+            value.selected.path = path
+            value.system.path = "/usr/bin/codexbar"
+            var facts = SupportReport.response(JSON.stringify(value))
+            var report = SupportReport.markdown({facts: facts, lastError: "Could not read " + path + " (permission denied)"})
+            verify(report.indexOf(path) < 0, report)
+            for (var personal of ["alice", "private project", "private-volume", "/usr/bin", "/root"])
+                verify(report.indexOf(personal) < 0, report)
+            verify(report.indexOf("Resolved path:") < 0, report)
+            verify(report.indexOf("Same resolved path as selected: no") >= 0)
+            verify(report.indexOf("managed") >= 0 && report.indexOf("0.73.0") >= 0)
+            compare(facts.selected.path, path, "sharing must not rewrite local probe facts")
+            value.system.path = path
+            verify(SupportReport.markdown({facts: SupportReport.response(JSON.stringify(value))})
+                .indexOf("Same resolved path as selected: yes") >= 0)
+        }
+    }
+
+    function test_diagnosticPathsWithSpacesQuotesAndFileUrlsAreOmitted() {
+        for (var text of ['Could not open "/srv/private alice/tool" after failure',
+                          "Could not open '/data/private alice/tool' after failure",
+                          "Could not open file:///mnt/private%20alice/tool",
+                          'Could not open {"file":"\\/srv\\/private alice\\/tool"}',
+                          'Could not open {"file":"\\u002fsrv\\u002fprivate-alice\\u002ftool"}',
+                          'Could not open {"file":"\\u002Fsrv\\u002Fprivate-alice\\u002Ftool"}',
+                          "Could not open /data/private alice/tool after failure"]) {
+            var shared = SupportReport.sharedText(text, 1024)
+            verify(shared.indexOf("alice") < 0 && shared.indexOf("private") < 0, shared)
+            verify(shared.indexOf("Could not open") >= 0, shared)
+            verify(shared.indexOf("[path]") >= 0, shared)
+        }
+        var multiline = SupportReport.sharedText("Failed /srv/private alice/tool\nExit code 2", 1024)
+        verify(multiline.indexOf("alice") < 0)
+        verify(multiline.indexOf("Exit code 2") >= 0, multiline)
+    }
+
+    function test_executablePrefixedFailuresKeepTheirNonPersonalReason() {
+        compare(SupportReport.sharedText("/srv/alice/codexbar: Permission denied"), "[path]: Permission denied")
+        compare(SupportReport.sharedText("bash: line 1: /srv/alice/codexbar: No such file or directory"),
+            "bash: line 1: [path]: No such file or directory")
+        compare(SupportReport.sharedText("/srv/alice/codexbar: Exec format error"), "[path]: Exec format error")
+        var loader = SupportReport.sharedText("/srv/alice/codexbar: error while loading shared libraries: "
+            + "/data/private-alice/libcustom.so: cannot open shared object file: No such file or directory")
+        compare(loader, "[path]: error while loading shared libraries")
+        verify(loader.indexOf("alice") < 0)
     }
 
     function test_redactionBeforeBoundsAndMarkdownEscape() {
