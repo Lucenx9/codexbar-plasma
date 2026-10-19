@@ -3663,8 +3663,8 @@ msgid "Support report"
 msgstr "Relatório de suporte"
 
 #: contents/ui/configDiagnostics.qml
-msgid "Collect an offline report to paste into an issue. Includes versions, CLI paths, enabled provider IDs, the latest Diagnostics error and module checks. Home usernames and credentials are redacted; review the preview before sharing."
-msgstr "Colete um relatório offline para colar em uma issue. Inclui versões, caminhos CLI, IDs dos provedores ativados, o último erro de Diagnóstico e verificações dos módulos. Nomes de usuário nos caminhos pessoais e credenciais são ocultados; revise a prévia antes de compartilhar."
+msgid "Collect an offline report to paste into an issue. Includes versions, CLI installation details, enabled provider IDs, the latest Diagnostics error and module checks. Filesystem paths and recognized credentials are omitted; review the preview before sharing."
+msgstr "Colete um relatório offline para colar em uma issue. Inclui versões, detalhes da instalação da CLI, IDs dos provedores ativados, o último erro de Diagnóstico e verificações dos módulos. Caminhos do sistema de arquivos e credenciais reconhecidas são omitidos; revise a prévia antes de compartilhar."
 
 #: contents/ui/configDiagnostics.qml
 msgid "Collect support report"

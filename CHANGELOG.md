@@ -14,6 +14,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 - Keep AI Insights usage snapshots out of process arguments. Pass them through
   private one-use files, removed before wallet access or AI requests.
+- Omit filesystem paths from shared support reports, including custom home
+  directories and absolute, relative or tilde-qualified paths in Diagnostics errors.
 
 ### Fixed
 
