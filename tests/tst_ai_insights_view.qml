@@ -1,5 +1,6 @@
 import QtQuick
 import QtTest
+import org.kde.kirigami as Kirigami
 import "../contents/ui/components" as Components
 
 TestCase {
@@ -89,6 +90,12 @@ TestCase {
                 applet: mockApplet
             }
         }
+    }
+
+    Component {
+        id: plainLabelComponent
+
+        Text { visible: false; textFormat: Text.PlainText }
     }
 
     Component {
@@ -251,6 +258,65 @@ TestCase {
         find(view, "aiInsightsGenerateButton").children[0].forceActiveFocus(Qt.TabFocusReason);
         keyClick(Qt.Key_Escape);
         compare(holder.backs, 3, "Escape inside the page must return to the origin view");
+        compare(mockApplet.generateCalls, 0);
+    }
+
+    function buttonLabel(item) {
+        if (!item)
+            return null;
+        if (item.textFormat !== undefined && item.text !== undefined)
+            return item;
+        for (var i = 0; i < item.children.length; i++) {
+            var label = buttonLabel(item.children[i]);
+            if (label)
+                return label;
+        }
+        return null;
+    }
+
+    function test_backLabelStaysLiteral_data() {
+        return [
+            {tag: "overview", title: "Overview", hidden: false},
+            {tag: "private-provider", title: "Codex", hidden: false},
+            {tag: "markup", title: "<b>Provider</b>", hidden: false},
+            {tag: "entities-and-mnemonics", title: "A & B && C &lt;b&gt;", hidden: false},
+            {tag: "image", title: '<img src="data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\'/%3E">', hidden: false},
+            {tag: "hidden-markup", title: "<b>Provider</b>", hidden: true},
+            {tag: "hidden-image", title: '<img src="data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\'/%3E">', hidden: true},
+            {tag: "empty", title: "", hidden: false}
+        ];
+    }
+
+    function test_backLabelStaysLiteral(data) {
+        var holder = create(viewComponent);
+        holder.view.visible = !data.hidden;
+        mockApplet.aiInsightsEnabled = !data.hidden;
+        holder.view.backText = data.title;
+        var back = find(holder.view, "aiInsightsBackButton");
+        var label = buttonLabel(back.contentItem);
+        verify(label !== null, "inspect the real Plasma ToolButton label");
+        compare(label.textFormat, Text.PlainText);
+        compare(label.text, data.title, "the label must retain literal tags, entities and ampersands");
+        var plain = createTemporaryObject(plainLabelComponent, testCase, {text: data.title, font: label.font});
+        compare(label.implicitWidth, plain.implicitWidth, "markup must have the same width as plain text");
+        compare(back.Accessible.name, "Back to " + data.title);
+        compare(back.icon.name, "go-previous-symbolic");
+        if (!data.hidden) {
+            waitForRendering(back);
+            mouseClick(back);
+            compare(holder.backs, 1);
+            holder.view.focusBack(true);
+            verify(back.activeFocus);
+            keyPress(Qt.Key_Alt);
+            back.Kirigami.MnemonicData.active = true;
+            verify(back.Kirigami.MnemonicData.active);
+            var mnemonicText = label.text;
+            keyRelease(Qt.Key_Alt);
+            back.Kirigami.MnemonicData.active = false;
+            compare(mnemonicText, data.title, "mnemonic activation must keep the title literal");
+            keyClick(Qt.Key_Space);
+            compare(holder.backs, 2);
+        }
         compare(mockApplet.generateCalls, 0);
     }
 }

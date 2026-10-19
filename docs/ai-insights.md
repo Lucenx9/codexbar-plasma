@@ -13,6 +13,10 @@ highlights in an analysis page. Without Overview, the provider view has the
 same card.
 Returning preserves the originating view and scroll position. Navigation is
 local presentation state: it never generates an answer or scans cost history.
+The Back button displays provider titles literally, including markup and
+ampersands, even while the analysis page is hidden. Its content item uses
+`PlainPlasmaLabel` so Plasma's rich-text mnemonic processing cannot reinterpret
+the title. The accessible name retains the original title.
 The card and page show the same saved insight, generation time, service, model,
 and freshness. Both show an error if generation fails.
 
@@ -51,9 +55,10 @@ network requests and returns semantic JSON records.
 | Secret Service, HTTP, provider differences, output validation | `scripts/lib/ai_insights.py` via `scripts/ai-insights.py` |
 | Settings, key prompt, model discovery | `configAiInsights.qml` |
 
-Nothing in this table runs while `aiInsightsEnabled` is false: the snapshot is
-not built, the controller has no scheduled or active process, and the card is
-hidden. Model discovery and wallet lookups run only from the settings page when
+While `aiInsightsEnabled` is false, the snapshot is not built, the controller
+has no scheduled or active process, and the card and analysis page are hidden.
+The page remains instantiated, so its plain-text rendering also applies while hidden.
+Model discovery and wallet lookups run only from the settings page when
 the user enables the feature or presses a button.
 
 ## Language
@@ -286,6 +291,10 @@ table, honoring the response's `Retry-After`, and a choice that finished with
 
 ## Verification
 
+- `tests/tst_ai_insights_view.qml`: the actual Plasma Back label preserves tags,
+  images, entities, and ampersands as literal text in visible and hidden views,
+  with ordinary Overview/provider titles, accessibility, mouse and keyboard
+  navigation, and no generation on return.
 - `tests/tst_ai_insights.qml`: language tags, context keys, cache validation and
   invalidation, schedule and restart rules, retry delays, command quoting, and
   reply validation, including markup that must stay literal and success JSON
