@@ -400,6 +400,8 @@ class AiInsightsControllerTests(unittest.TestCase):
     def test_production_lifecycle_with_synthetic_helper(self):
         with tempfile.TemporaryDirectory(prefix="codexbar ai 'test-") as temporary:
             directory = Path(temporary)
+            runtime = directory / "runtime"
+            runtime.mkdir(mode=0o700)
             log = directory / "calls.jsonl"
             helper = directory / "ai-insights.py"
             helper.write_text("import sys\nsys.path.insert(0, " + json.dumps(str(ROOT / "scripts"))
@@ -414,6 +416,7 @@ class AiInsightsControllerTests(unittest.TestCase):
                 [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],
                 env={**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software",
                      "QML_XHR_ALLOW_FILE_READ": "1",
+                     "XDG_RUNTIME_DIR": str(runtime),
                      "PATH": os.path.dirname(sys.executable) + ":" + os.environ.get("PATH", "")},
                 capture_output=True, text=True, timeout=120)
             output = result.stdout + result.stderr

@@ -216,8 +216,13 @@ table, honoring the response's `Retry-After`, and a choice that finished with
 
 - Usage snapshots never appear in process arguments. A `prepare` helper action
   creates a random request directory with mode `0700` and `payload.ini` with
-  mode `0600` beneath the OS temporary directory's
-  `codexbar-plasma-ai-<uid>` root. The controller captures the snapshot and
+  mode `0600` beneath a `codexbar-plasma-ai-<uid>` root. The root prefers
+  `XDG_RUNTIME_DIR` only when it is an existing absolute, non-symlink directory
+  owned by the current user with no group or other permissions. Otherwise it
+  uses the OS temporary directory. That fallback still fails closed if another
+  user has occupied the predictable root, preventing generation without exposing
+  data; it does not eliminate that availability risk. The helper never repairs
+  or deletes an unsafe existing root. The controller captures the snapshot and
   request context before preparation, writes the ASCII snapshot as hexadecimal with
   `QtCore.Settings.setValue` and `sync`, and destroys the Settings object.
   The generation command carries only `--request <random-id>`.
@@ -339,7 +344,8 @@ table, honoring the response's `Retry-After`, and a choice that finished with
   command lines for snapshot bytes.
 - `tests/test_ai_insights_input.py`: private permissions, one-use consumption,
   malformed and oversized input, traversal, symlinks, hardlinks, expiration,
-  cancellation cleanup and crash-leftover pruning.
+  cancellation cleanup, crash-leftover pruning, runtime-directory validation and
+  shared-temporary-root collisions.
 - Smoke scenarios `ai-insights`, `ai-insights-it`, `ai-insights-mismatch`,
   `ai-insights-error`, `ai-insights-single`, `settings-ai-insights`, and
   `settings-ai-insights-narrow` run the real applet with a synthetic helper. The

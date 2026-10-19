@@ -14,6 +14,15 @@ MAX_AGE = 300
 
 
 def input_root():
+    runtime = os.environ.get("XDG_RUNTIME_DIR", "")
+    if runtime.startswith("/"):
+        base = Path(runtime)
+        try:
+            info = base.lstat()
+            if stat.S_ISDIR(info.st_mode) and info.st_uid == os.getuid() and not info.st_mode & 0o077:
+                return base / f"codexbar-plasma-ai-{os.getuid()}"
+        except OSError:
+            pass
     return Path(tempfile.gettempdir()) / f"codexbar-plasma-ai-{os.getuid()}"
 
 

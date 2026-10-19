@@ -76,13 +76,17 @@ class SmokePopupTests(unittest.TestCase):
             image = work / 'capture "quoted".png'
             smoke.stage_applet(work, "normal", image)
             helper = work / "data/plasma/plasmoids" / smoke.APPLET_ID / "scripts/ai-insights.py"
+            runtime = work / "runtime"
+            runtime.mkdir(mode=0o700)
+            helper_env = {**os.environ, "TMPDIR": str(work), "XDG_RUNTIME_DIR": str(runtime)}
             prepared = subprocess.run([sys.executable, str(helper), "--action", "prepare"],
                                       capture_output=True, text=True, check=True, timeout=10,
-                                      env={**os.environ, "TMPDIR": str(work)})
+                                      env=helper_env)
             request = json.loads(prepared.stdout)
             self.assertEqual(request["status"], "ready")
+            self.assertTrue(Path(request["path"]).is_relative_to(runtime))
             subprocess.run([sys.executable, str(helper), "--action", "discard", "--request", request["request"]],
-                           check=True, capture_output=True, timeout=10, env={**os.environ, "TMPDIR": str(work)})
+                           check=True, capture_output=True, timeout=10, env=helper_env)
             package = work / "data/plasma/plasmoids" / smoke.APPLET_ID
             self.assertEqual(json.loads((package / "metadata.json").read_text())["KPlugin"]["Id"], smoke.APPLET_ID)
             for language in smoke.LOCALES:

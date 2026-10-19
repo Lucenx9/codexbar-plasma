@@ -12,6 +12,53 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from lib import ai_insights_input as inputs
 
 
+class InputRootTests(unittest.TestCase):
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory(prefix="codexbar runtime test-")
+        self.addCleanup(self.temporary.cleanup)
+        self.base = Path(self.temporary.name)
+        self.runtime = self.base / "runtime"
+        self.runtime.mkdir(mode=0o700)
+        self.name = f"codexbar-plasma-ai-{os.getuid()}"
+
+    def test_private_runtime_avoids_a_shared_temporary_root_collision(self):
+        occupied = self.base / self.name
+        occupied.mkdir(mode=0o777)
+        occupied.chmod(0o777)
+        with patch.object(inputs.tempfile, "gettempdir", return_value=str(self.base)):
+            with patch.dict(os.environ, {"XDG_RUNTIME_DIR": ""}):
+                with self.assertRaisesRegex(ValueError, "unsafe_input_directory"):
+                    inputs.prepare()
+            with patch.dict(os.environ, {"XDG_RUNTIME_DIR": str(self.runtime)}):
+                prepared = inputs.prepare()
+                self.assertEqual(Path(prepared["path"]).parent.parent, self.runtime / self.name)
+                inputs.discard(prepared["request"])
+        self.assertEqual(stat.S_IMODE(occupied.stat().st_mode), 0o777)
+
+    def test_unsafe_runtime_candidates_fall_back_without_changing_them(self):
+        regular = self.base / "file"
+        regular.write_text("unchanged")
+        symlink = self.base / "link"
+        symlink.symlink_to(self.runtime, target_is_directory=True)
+        candidates = ["", "relative/runtime", str(self.base / "missing"), str(regular), str(symlink)]
+        with patch.object(inputs.tempfile, "gettempdir", return_value=str(self.base)):
+            for candidate in candidates:
+                with self.subTest(candidate=candidate), patch.dict(os.environ, {"XDG_RUNTIME_DIR": candidate}):
+                    self.assertEqual(inputs.input_root(), self.base / self.name)
+            for mode in (0o710, 0o701, 0o770, 0o777):
+                self.runtime.chmod(mode)
+                with self.subTest(mode=mode), patch.dict(os.environ, {"XDG_RUNTIME_DIR": str(self.runtime)}):
+                    self.assertEqual(inputs.input_root(), self.base / self.name)
+                    self.assertEqual(stat.S_IMODE(self.runtime.stat().st_mode), mode)
+            self.runtime.chmod(0o700)
+            with patch.dict(os.environ, {"XDG_RUNTIME_DIR": str(self.runtime)}), \
+                    patch.object(inputs.os, "getuid", return_value=os.getuid() + 1):
+                self.assertEqual(inputs.input_root(), self.base / f"codexbar-plasma-ai-{os.getuid()}")
+        self.assertEqual(regular.read_text(), "unchanged")
+        self.assertTrue(symlink.is_symlink())
+        self.assertFalse((self.base / "missing").exists())
+
+
 class InputTests(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory(prefix="codexbar input 'test-")
