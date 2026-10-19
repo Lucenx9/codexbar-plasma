@@ -359,7 +359,7 @@ KCM.SimpleKCM {
             Kirigami.FormData.isSection: true
         }
         Components.PlainControlsLabel {
-            text: i18n("Collect an offline report to paste into an issue. Includes versions, CLI paths, enabled provider IDs, the latest Diagnostics error and module checks. Home usernames and credentials are redacted; review the preview before sharing.")
+            text: i18n("Collect an offline report to paste into an issue. Includes versions, CLI installation details, enabled provider IDs, the latest Diagnostics error and module checks. Filesystem paths and recognized credentials are omitted; review the preview before sharing.")
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24

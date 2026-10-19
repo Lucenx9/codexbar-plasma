@@ -227,11 +227,15 @@ TestCase {
         compare(pasted.text, page.supportReport);
         var timestamp = page.supportTimestamp;
         page.diagnosticError = "New Diagnostics failure Bearer another-private-secret";
-        verify(page.supportReport.indexOf("New Diagnostics failure") >= 0);
+        verify(page.supportReport.indexOf("### Latest Diagnostics error\n[redacted]") >= 0);
+        verify(page.supportReport.indexOf("New Diagnostics failure") === -1);
         verify(page.supportReport.indexOf("another-private-secret") === -1);
         verify(page.supportReport.indexOf("Error Bearer") === -1);
+        compare(page.diagnosticError, "New Diagnostics failure Bearer another-private-secret");
         compare(page.supportTimestamp, timestamp);
         verify(!page.supportCopied);
+        page.diagnosticError = "Connection timed out. Retry later.";
+        verify(page.supportReport.indexOf("Connection timed out. Retry later.") >= 0);
         page.copySupportReport();
         pasted.text = "";
         pasted.paste();

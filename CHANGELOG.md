@@ -10,6 +10,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Security
+
+- Omit filesystem paths from shared support reports, including custom home
+  directories and absolute, relative or tilde-qualified paths in Diagnostics errors.
+
 ### Fixed
 
 - Keep provider titles literal in the AI Insights Back button, including markup
