@@ -293,6 +293,8 @@ configured command at all. Click **Install and use CLI** to install or reuse a
 private official CLI and start fetching usage immediately. Progress and failures
 appear in the popup, where you can retry preparation or open **Settings**.
 This leaves provider configuration and automatic-update preferences unchanged.
+Existing private copies must pass an offline version check before reuse; a
+damaged or incompatible copy shows an error instead of being selected again.
 To use an existing external CLI, set its absolute path as described below.
 **Diagnostics → Check versions** reports the widget and CLI
 versions and the absolute command the shell resolved.

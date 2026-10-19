@@ -3963,3 +3963,7 @@ msgstr "Future AGI"
 #: contents/ui/components/ProviderNames.qml
 msgid "Munito"
 msgstr "Munito"
+
+#: contents/ui/controllers/ManagedCliController.qml
+msgid "The existing managed CLI could not be verified. Choose another CLI in Settings > Diagnostics."
+msgstr "No se pudo verificar la CLI gestionada existente. Seleccione otra CLI en Ajustes > Diagnóstico."
