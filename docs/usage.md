@@ -923,6 +923,12 @@ available for an external CLI path. Changing the configured command retires a
 pending preparation so its late reply cannot replace that choice. Successful
 preparation refreshes usage and provider discovery; provider configuration and
 automatic-update preferences are unchanged.
+Reusing an existing private copy first runs a bounded offline version check
+against its installation receipt, with isolated configuration and no release
+request. A non-executable, damaged, incompatible, or mismatched copy is not
+selected, and usage is not refreshed. The popup explains that verification
+failed and points to **Settings → Diagnostics** to choose another CLI.
+Preparation does not repair a damaged existing copy automatically.
 
 **General → Managed CLI → Install and select managed CLI** installs the latest
 stable official Linux release under `$XDG_DATA_HOME/codexbar-plasma/cli`, falling

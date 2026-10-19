@@ -1275,8 +1275,13 @@ The missing-CLI state also offers direct preparation through the applet-owned
 managed CLI controller. `tests/test_popup_cli_setup.py` exercises immediate
 selection and refresh after installation or offline reuse, failures and retry,
 timeout, late replies, command changes, and exclusion while usable data exists.
+`tests/test_managed_cli.py` verifies that offline reuse rejects non-executable,
+corrupt, version-mismatched, failed, or timed-out binaries without a release
+request; the popup owner test checks that rejection never selects or refreshes.
 The `cli-setup` smoke scenario activates the real popup button and waits for
 provider data after the synthetic managed helper prepares a private fixture CLI.
+`cli-setup-unusable` captures the rejected-copy message and checks that command
+selection stays unchanged with no provider data.
 
 Run the popup smoke test from a graphical Plasma 6 session:
 
