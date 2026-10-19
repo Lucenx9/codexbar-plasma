@@ -259,6 +259,12 @@ synchronized.
   validation, schedule, retry delays, rate-limit record, model-list match,
   helper command, and reply validation; `AiInsightsSnapshot.js` builds
   the allowlisted snapshot and deterministic signals. `scripts/ai-insights.py`
+  prepares a private one-use INI file for the controller's `QtCore.Settings`
+  write; `scripts/lib/ai_insights_input.py` validates and removes it before
+  generation, so process arguments carry only a random request ID. The
+  controller captures the snapshot before preparation, retires both phases on
+  context changes, and requests cleanup on cancellation. The helper prunes
+  expired crash leftovers during a later preparation. The entry point
   calls `scripts/lib/ai_insights.py`, which alone reads Secret Service keys,
   prompts for them with `kdialog`, and performs the HTTPS or local Ollama
   request. `configAiInsights.qml` owns the key-status, key, and model-discovery

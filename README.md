@@ -129,7 +129,8 @@ for its limits.
 - `notify-send` for Plasma notifications.
 - Offline Diagnostics support-report collection: `python3` and GNU `timeout`.
   Other Diagnostics controls remain available without this report helper.
-- Optional AI Insights only: `python3` and GNU `timeout`; for OpenRouter or
+- Optional AI Insights only: `python3`, GNU `timeout`, and the `QtCore` QML
+  module for its private snapshot handoff; for OpenRouter or
   OpenAI keys also `kdialog`, `secret-tool`, and a Secret Service provider such
   as KWallet. Nothing is required while the feature is off.
 - Optional identified Codex token subtotals: `codexbar` 0.75.0 or later and GNU `timeout`.

@@ -306,7 +306,7 @@ function scriptPath(scriptUrl) {
 // The helper reads API keys itself; no secret is ever part of this command.
 function command(scriptUrl, action, options) {
     var script = scriptPath(scriptUrl)
-    if (!script || ["key-status", "set-key", "clear-key", "models", "generate"].indexOf(action) < 0) {
+    if (!script || ["key-status", "set-key", "clear-key", "models", "generate", "prepare", "discard"].indexOf(action) < 0) {
         return ""
     }
     var value = options || ({})
@@ -322,21 +322,54 @@ function command(scriptUrl, action, options) {
         parts.push("--endpoint", Guards.shellQuote(endpointText(value.endpoint)))
     }
     if (action === "generate") {
-        if (!validModel(provider, value.model) || typeof value.snapshot !== "string"
-                || value.snapshot.length === 0 || value.snapshot.length > maximumSnapshotLength) {
+        if (!validModel(provider, value.model)) {
             return ""
         }
-        parts.push("--model", Guards.shellQuote(value.model), "--language", languageTag(value.language),
-            "--snapshot", Guards.shellQuote(value.snapshot))
+        parts.push("--model", Guards.shellQuote(value.model), "--language", languageTag(value.language))
         if (provider === "openrouter" && value.zdr === false) {
             parts.push("--no-zdr")
         }
+    }
+    if (action === "generate" || action === "discard") {
+        if (!validInputRequest(value.request)) {
+            return ""
+        }
+        parts.push("--request", value.request)
     }
     if (action === "set-key") {
         parts.push("--prompt", Guards.shellQuote(plainText(value.prompt, 200)))
     }
     parts.push("--supervised")
     return parts.join(" ")
+}
+
+function validInputRequest(value) {
+    return typeof value === "string" && /^[a-f0-9]{32}$/.test(value)
+}
+
+function encodedSnapshot(text) {
+    if (typeof text !== "string" || text.length === 0 || text.length > maximumSnapshotLength) {
+        return ""
+    }
+    var bytes = []
+    for (var i = 0; i < text.length; i++) {
+        var code = text.charCodeAt(i)
+        if (code > 127) return ""
+        bytes.push(("0" + code.toString(16)).slice(-2))
+    }
+    return bytes.join("")
+}
+
+function preparedInput(text, exitCode, exitStatus) {
+    var value = successfulExit(exitCode, exitStatus) ? parseReply(text) : null
+    if (!value || value.status !== "ready" || !validInputRequest(value.request)
+            || typeof value.path !== "string" || value.path.length > 4096
+            || value.path.charAt(0) !== "/" || /[\x00-\x1f\x7f]/.test(value.path)
+            || !value.path.endsWith("/" + value.request + "/payload.ini")) {
+        return null
+    }
+    return {request: value.request,
+        location: "file://" + value.path.split("/").map(encodeURIComponent).join("/")}
 }
 
 function safeReason(value) {

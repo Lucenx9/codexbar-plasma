@@ -201,17 +201,19 @@ TestCase {
     function test_generateCommandCarriesLanguageAndNoSecrets() {
         var command = AiInsights.command("file:///opt/pkg/scripts/ai-insights.py", "generate", {
             provider: "openrouter", model: "vendor/model", language: "it", zdr: true,
-            snapshot: '{"providers":[{"id":"codex\'s"}]}'})
+            request: "0123456789abcdef0123456789abcdef", snapshot: '{"providers":[{"id":"codex\'s"}]}'})
         verify(command.indexOf("exec timeout --kill-after=2s 180s python3 '/opt/pkg/scripts/ai-insights.py'") === 0, command)
         verify(command.endsWith("--supervised"), command)
         verify(command.indexOf("--language it ") >= 0, command)
         verify(command.indexOf("--model 'vendor/model'") >= 0, command)
-        verify(command.indexOf("'{\"providers\":[{\"id\":\"codex'\\''s\"}]}'") >= 0, command)
+        verify(command.indexOf("--request 0123456789abcdef0123456789abcdef") >= 0, command)
+        verify(command.indexOf("--snapshot") < 0 && command.indexOf("providers") < 0, command)
         verify(command.indexOf("--no-zdr") < 0)
         verify(command.indexOf("--endpoint") < 0)
         verify(!/key|token|bearer|authorization/i.test(command.replace("ai-insights", "")), command)
         var english = AiInsights.command("file:///opt/pkg/scripts/ai-insights.py", "generate", {
-            provider: "openrouter", model: "vendor/model", language: "english", zdr: false, snapshot: "{}"})
+            provider: "openrouter", model: "vendor/model", language: "english", zdr: false,
+            request: "0123456789abcdef0123456789abcdef"})
         verify(english.indexOf("--language en ") >= 0 && english.indexOf("--no-zdr") > 0, english)
     }
 
@@ -219,7 +221,7 @@ TestCase {
         var script = "file:///opt/pkg/scripts/ai-insights.py"
         compare(AiInsights.command(script, "generate", {provider: "openrouter", model: "openrouter/auto", snapshot: "{}"}), "")
         compare(AiInsights.command(script, "generate", {provider: "openai", model: "$(id)", snapshot: "{}"}), "")
-        compare(AiInsights.command(script, "generate", {provider: "openai", model: "gpt-x", snapshot: ""}), "")
+        compare(AiInsights.command(script, "generate", {provider: "openai", model: "gpt-x", request: "../private"}), "")
         compare(AiInsights.command(script, "generate", {provider: "openai", model: "gpt-x",
             snapshot: new Array(AiInsights.maximumSnapshotLength + 2).join("x")}), "")
         compare(AiInsights.command(script, "shell", {provider: "openai"}), "")
@@ -228,6 +230,27 @@ TestCase {
         verify(ollama.indexOf("--endpoint 'http://x'\\''; id; '\\'''") > 0, ollama)
         compare(AiInsights.command(script, "generate", {provider: "ollama", model: "llama3",
             endpoint: new Array(AiInsights.maximumEndpointLength + 2).join("x"), snapshot: "{}"}), "")
+    }
+
+    function test_preparedInputRequiresSuccessfulBoundedLocalDescriptor() {
+        var request = "0123456789abcdef0123456789abcdef"
+        var descriptor = JSON.stringify({status: "ready", request: request,
+            path: "/tmp/test 'dir/" + request + "/payload.ini"})
+        compare(AiInsights.preparedInput(descriptor, 0, 0).location,
+            "file:///tmp/test%20'dir/" + request + "/payload.ini")
+        compare(AiInsights.preparedInput(descriptor, 1, 0), null)
+        compare(AiInsights.preparedInput(descriptor, 0, 1), null)
+        for (var path of ["https://host/" + request + "/payload.ini", "/tmp/other.ini", "/tmp/\n/" + request + "/payload.ini"]) {
+            compare(AiInsights.preparedInput(JSON.stringify({status: "ready", request: request, path: path}), 0, 0), null)
+        }
+    }
+
+    function test_snapshotEncodingIsBoundedAsciiWithoutQtVersionSpecificApis() {
+        compare(AiInsights.encodedSnapshot('{"providers":[]}'), "7b2270726f766964657273223a5b5d7d")
+        compare(AiInsights.encodedSnapshot("x".repeat(16384)).length, 32768)
+        for (var input of ["", null, 7, "x".repeat(16385), "\u00e8", "\uD83D\uDE00"]) {
+            compare(AiInsights.encodedSnapshot(input), "")
+        }
     }
 
     function test_generationReplyValidation_data() {

@@ -1,4 +1,5 @@
 import QtQuick
+import QtCore as Core
 import org.kde.plasma.plasma5support as Plasma5Support
 import "../AiInsights.js" as AiInsights
 import "../CommandLedger.js" as CommandLedger
@@ -70,6 +71,10 @@ Item {
         property string activeSource: ""
         property string activeContextKey: ""
         property string activeSnapshotId: ""
+        property string activePhase: ""
+        property string activeRequest: ""
+        property string capturedInput: ""
+        property var activeOptions: null
         property int serial: 0
         property string errorReason: ""
         property double retryAtMs: 0
@@ -90,11 +95,24 @@ Item {
 
         function retire() {
             var source = activeSource
+            var request = activeRequest
             activeSource = ""
+            activeRequest = ""
+            activePhase = ""
+            capturedInput = ""
+            activeOptions = null
             deadline.stop()
             if (source.length > 0) {
                 processSource.disconnectSource(source)
             }
+            discardInput(request)
+        }
+
+        function discardInput(request) {
+            if (!AiInsights.validInputRequest(request)) return
+            serial += 1
+            var command = AiInsights.command(controller.scriptUrl, "discard", {request: request})
+            processSource.connectSource(CommandLedger.withRunNonce(command, serial, Date.now() + "-" + Math.random()))
         }
 
         function checkIfDue() {
@@ -137,15 +155,17 @@ Item {
             if (!manual && nowMs < retryAtMs) {
                 return false
             }
-            var command = AiInsights.command(controller.scriptUrl, "generate", {
+            var options = {
                 provider: controller.requestContext.provider,
                 model: controller.requestContext.model,
                 endpoint: controller.requestContext.endpoint,
                 zdr: controller.requestContext.zdr,
                 language: controller.requestContext.language,
-                snapshot: controller.snapshotText
-            })
-            if (command.length === 0) {
+                request: "00000000000000000000000000000000"
+            }
+            var command = AiInsights.command(controller.scriptUrl, "generate", options)
+            var input = AiInsights.encodedSnapshot(controller.snapshotText)
+            if (command.length === 0 || input.length === 0) {
                 // An unbuildable command (for example an oversized Ollama
                 // endpoint) is invalid input, not a silent skip: the card
                 // shows it, and automatic generation waits out the interval.
@@ -156,7 +176,11 @@ Item {
             serial += 1
             activeContextKey = controller.contextKey
             activeSnapshotId = controller.snapshotId
-            activeSource = CommandLedger.withRunNonce(command, serial, Date.now() + "-" + Math.random())
+            capturedInput = input
+            activeOptions = options
+            activePhase = "prepare"
+            activeSource = CommandLedger.withRunNonce(AiInsights.command(controller.scriptUrl, "prepare", {}),
+                serial, Date.now() + "-" + Math.random())
             // Persisted before the request, so a restart cannot repeat it at once.
             controller.attemptStarted(new Date().toISOString())
             deadline.restart()
@@ -174,7 +198,15 @@ Item {
         }
 
         function accept(sourceName, data) {
+            processSource.disconnectSource(sourceName)
             if (sourceName !== activeSource) {
+                var abandoned = AiInsights.preparedInput(data ? data["stdout"] : "",
+                    data ? Number(data["exit code"]) : NaN, data ? Number(data["exit status"]) : NaN)
+                if (abandoned) discardInput(abandoned.request)
+                return
+            }
+            if (activePhase === "prepare") {
+                acceptPreparedInput(data)
                 return
             }
             var context = activeContextKey
@@ -205,6 +237,40 @@ Item {
                 snapshotId: snapshot
             }))
         }
+
+        function acceptPreparedInput(data) {
+            var input = AiInsights.preparedInput(data ? data["stdout"] : "",
+                data ? Number(data["exit code"]) : NaN, data ? Number(data["exit status"]) : NaN)
+            if (!input) {
+                retire()
+                fail("invalid_input", 0)
+                return
+            }
+            activeRequest = input.request
+            var settings = inputSettings.createObject(lifecycle, {location: input.location}) as Core.Settings
+            if (!settings) {
+                retire()
+                fail("unavailable", 0)
+                return
+            }
+            // Hexadecimal text is an unquoted INI scalar. No payload
+            // property is declared, so destruction cannot write it again.
+            settings.setValue("snapshot", capturedInput)
+            settings.sync()
+            settings.destroy()
+            capturedInput = ""
+            var options = Object.assign({}, activeOptions, {request: input.request})
+            activePhase = "generate"
+            serial += 1
+            activeSource = CommandLedger.withRunNonce(AiInsights.command(controller.scriptUrl, "generate", options),
+                serial, Date.now() + "-" + Math.random())
+            processSource.connectSource(activeSource)
+        }
+    }
+
+    Component {
+        id: inputSettings
+        Core.Settings {}
     }
 
     Plasma5Support.DataSource {

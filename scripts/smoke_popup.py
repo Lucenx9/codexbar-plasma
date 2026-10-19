@@ -100,6 +100,8 @@ def stage_applet(work, scenario, image_path, theme=None):
     # real AI service or the desktop wallet even if the feature is enabled.
     (package / "scripts").mkdir()
     shutil.copyfile(ROOT / "scripts/smoke/fixture_ai_insights.py", package / "scripts/ai-insights.py")
+    (package / "scripts/lib").mkdir(exist_ok=True)
+    shutil.copyfile(ROOT / "scripts/lib/ai_insights_input.py", package / "scripts/lib/ai_insights_input.py")
 
     shutil.copyfile(ROOT / "scripts/smoke/fixture_support_report.py", package / "scripts/collect-support-report.py")
 
