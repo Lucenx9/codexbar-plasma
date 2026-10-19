@@ -51,6 +51,10 @@ PlasmoidItem {
     ]
 
     property string commandPath: (Plasmoid.configuration.commandPath || "codexbar").trim()
+    property bool cliSetupRequested: false
+    readonly property bool cliSetupBusy: cliSetupRequested && managedCli.busy
+    readonly property string cliSetupStatus: cliSetupRequested ? managedCli.statusText : ""
+    onCommandPathChanged: cliSetupRequested = false
     property string provider: (Plasmoid.configuration.provider || "").trim()
     property string source: (Plasmoid.configuration.source || "").trim()
     property int refreshIntervalSec: isFinite(Number(Plasmoid.configuration.refreshInterval)) ? Math.max(0, Number(Plasmoid.configuration.refreshInterval)) : 300
@@ -310,6 +314,14 @@ PlasmoidItem {
         if (!loading) {
             root.refreshNow(true)
         }
+    }
+
+    function prepareCli() {
+        if (!commandPathFailed || providers.length > 0 || loading || managedCli.busy) {
+            return
+        }
+        cliSetupRequested = true
+        managedCli.run("install")
     }
 
     function markUsageSnapshotReceived(nowMs) {
@@ -2143,9 +2155,18 @@ PlasmoidItem {
     }
 
     Controllers.ManagedCliController {
+        id: managedCli
+        objectName: "popupManagedCliController"
         commandPath: root.commandPath
         automaticUpdates: Plasmoid.configuration.cliAutomaticUpdates === true
+        onInstalled: function(path) {
+            if (!root.cliSetupRequested) return
+            Plasmoid.configuration.commandPath = path
+            accountsController.reset()
+            root.refreshNow(true)
+        }
         onChanged: {
+            if (activeAction === "install") return
             // A new CLI version can change which providers support accounts.
             accountsController.reset()
             root.refreshNow(true)

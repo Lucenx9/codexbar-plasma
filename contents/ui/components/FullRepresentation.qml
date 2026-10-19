@@ -113,6 +113,15 @@ Item {
     }
 
     Controls.Action {
+        id: prepareCliAction
+
+        text: i18n("Install and use CLI")
+        icon.name: "download"
+        enabled: fullRoot.commandPathMissing && !applet.cliSetupBusy
+        onTriggered: applet.prepareCli()
+    }
+
+    Controls.Action {
         id: configureProvidersAction
 
         text: i18n("Configure providers…")
@@ -746,24 +755,51 @@ Item {
         Item {
             id: missingCommandMessage
 
-            implicitHeight: missingCommandPlaceholder.implicitHeight
+            implicitHeight: missingCommandContent.implicitHeight
             visible: fullRoot.commandPathMissing
             Layout.fillWidth: true
             Layout.fillHeight: true
 
-            PlainPlaceholderMessage {
-                id: missingCommandPlaceholder
-                objectName: "missingCommandPlaceholder"
-
+            ColumnLayout {
+                id: missingCommandContent
                 anchors.centerIn: parent
                 width: parent.width
-                plainText: i18n("CodexBar CLI not found")
-                // The configured value is named because it is what the user has
-                // to correct, and a bare "codexbar" hides a PATH problem.
-                plainExplanation: i18n("Plasma could not run '%1'. In widget settings, open General > Managed CLI to install and select the CodexBar CLI, then Apply. If it is already installed, find it with 'command -v codexbar' in a terminal and paste the absolute path into Diagnostics.", applet.commandPath)
-                icon.name: "dialog-error-symbolic"
-                type: Kirigami.PlaceholderMessage.Type.Actionable
-                helpfulAction: usageSettingsAction
+                spacing: Kirigami.Units.smallSpacing
+
+                PlainPlaceholderMessage {
+                    id: missingCommandPlaceholder
+                    objectName: "missingCommandPlaceholder"
+
+                    Layout.fillWidth: true
+                    plainText: i18n("CodexBar CLI not found")
+                    plainExplanation: i18n("Plasma could not run '%1'. Install or reuse a private official CLI for this widget and use it immediately. If your CLI is installed elsewhere, set its path in Settings > Diagnostics.", applet.commandPath)
+                    icon.name: "download"
+                    type: Kirigami.PlaceholderMessage.Type.Actionable
+                    helpfulAction: prepareCliAction
+                }
+
+                Controls.BusyIndicator {
+                    Layout.alignment: Qt.AlignHCenter
+                    Layout.preferredWidth: Kirigami.Units.iconSizes.medium
+                    Layout.preferredHeight: Kirigami.Units.iconSizes.medium
+                    running: applet.cliSetupBusy
+                    visible: running
+                }
+
+                PlainControlsLabel {
+                    objectName: "popupCliSetupStatus"
+                    Layout.fillWidth: true
+                    text: applet.cliSetupStatus
+                    visible: text.length > 0
+                    horizontalAlignment: Text.AlignHCenter
+                    wrapMode: Text.WordWrap
+                }
+
+                Controls.Button {
+                    objectName: "popupCliSetupSettings"
+                    Layout.alignment: Qt.AlignHCenter
+                    action: usageSettingsAction
+                }
             }
         }
 

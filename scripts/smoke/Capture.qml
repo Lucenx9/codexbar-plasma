@@ -1416,6 +1416,22 @@ Item {
             return applet.shareUsageWindow && applet.shareUsageWindow.visible
                 && applet.shareUsageWindow.snapshot.providers.length > 0;
 
+        if (scenario === "cli-setup") {
+            if (missingCliStep === 0) {
+                if (applet.loading || !applet.commandPathFailed) return false;
+                var setup = findItem(applet.fullRepresentationItem, "missingCommandPlaceholder");
+                verifyScenario(setup && setup.visible && setup.helpfulAction.enabled,
+                    "missing CLI must offer direct preparation");
+                setup.helpfulAction.trigger();
+                verifyScenario(applet.cliSetupBusy && !setup.helpfulAction.enabled,
+                    "preparation must show progress and prevent duplicate activation");
+                missingCliStep++;
+                return false;
+            }
+            return !applet.cliSetupBusy && !applet.loading && !applet.commandPathFailed
+                && applet.commandPath.indexOf("/codexbar-plasma/cli/current/codexbar") > 0
+                && applet.providers.length === 2;
+        }
         if (scenario === "cli-missing") {
             if (applet.loading || !applet.commandPathFailed)
                 return false;
@@ -1424,8 +1440,8 @@ Item {
                 && missing.helpfulAction && missing.helpfulAction.enabled,
                 "missing CLI guidance must remain actionable on every tab");
             verifyScenario(missing.plainExplanation.indexOf(applet.commandPath) >= 0
-                && missing.plainExplanation.indexOf("command -v codexbar") >= 0
-                && missing.plainExplanation.indexOf(i18n("Managed CLI")) >= 0,
+                && findItem(applet.fullRepresentationItem, "popupCliSetupSettings").visible
+                && missing.helpfulAction.text === i18n("Install and use CLI"),
                 "missing CLI guidance must identify the command and existing-install recovery");
             verifyScenario(!findItem(applet.fullRepresentationItem, "popupSpendView").visible
                 && !findItem(applet.fullRepresentationItem, "sessionsView").visible,
@@ -2349,7 +2365,8 @@ Item {
             if (!capture.prepared) {
                 capture.applet.expanded = true;
                 // Provider settings scenarios exercise only the page's own roster.
-                if (capture.scenario !== "loading" && capture.scenario.indexOf("settings-providers") !== 0
+                if (capture.scenario !== "loading" && capture.scenario !== "cli-setup"
+                        && capture.scenario.indexOf("settings-providers") !== 0
                         && !(capture.scenario === "usage-cache-restart" && capture.cacheRestart)
                         && (capture.applet.loading || capture.applet.providers.length !== capture.expectedProviderCount))
                     return;

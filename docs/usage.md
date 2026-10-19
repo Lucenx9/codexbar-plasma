@@ -309,14 +309,14 @@ area.
 
 A command Plasma cannot run at all takes a separate state. When the shell
 reports that the configured command was not found or is not executable, the
-empty popup says **CodexBar CLI not found**, names the configured value, and
-sends you to **Diagnostics** to set an absolute path. It offers no **Retry**,
-because repeating a command that cannot start cannot succeed, and it does not
-claim that no provider is set up. Any other failure keeps the existing error
-and setup states. Retained providers, a refresh in flight, and the global
-views keep precedence over this state. Both settings actions open Plasma's standard widget settings
-window; select the named page there. They do not change configuration or run
-diagnostics automatically.
+empty popup says **CodexBar CLI not found** and names the configured value.
+**Install and use CLI** prepares and selects a private official copy immediately;
+it can be tried again if preparation fails. **Settings** opens Plasma's standard
+widget settings window, where **Diagnostics** accepts an external CLI path.
+Opening settings does not change configuration or run diagnostics automatically.
+The setup state stays visible across Usage & Spend and Sessions. Retained
+providers and a refresh in flight take precedence over it. Any other failure
+keeps the existing error and provider setup states.
 
 **Retry** starts the existing manual quota refresh, including a fresh provider
 list, and is disabled while a usage refresh is running. It does not scan local
@@ -914,6 +914,15 @@ install or reuse the same private copy before you add the widget. It leaves
 widget settings unchanged: select **Use managed CLI** here, then **Apply**.
 The installer preserves any CLI on PATH unless you explicitly pass `--with-cli`,
 which creates or reuses the separate private copy without replacing that CLI.
+
+If the popup reports **CodexBar CLI not found**, its **Install and use CLI**
+button installs or reuses the same private official copy and saves its selection
+immediately, without Apply. It shows progress and failures, prevents duplicate
+requests, and allows another attempt after a failure. **Settings** remains
+available for an external CLI path. Changing the configured command retires a
+pending preparation so its late reply cannot replace that choice. Successful
+preparation refreshes usage and provider discovery; provider configuration and
+automatic-update preferences are unchanged.
 
 **General → Managed CLI → Install and select managed CLI** installs the latest
 stable official Linux release under `$XDG_DATA_HOME/codexbar-plasma/cli`, falling

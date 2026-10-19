@@ -10,6 +10,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Added
+
+- Install or reuse and immediately select the private official CLI directly
+  from the missing-CLI popup, with preparation progress, retryable failures,
+  and a Settings action for existing external installations.
+
 ### Security
 
 - Keep AI Insights usage snapshots out of process arguments. Pass them through

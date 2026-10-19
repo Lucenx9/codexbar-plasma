@@ -27,7 +27,7 @@ TestCase {
     height: 550
     visible: true
     Kirigami.Theme.colorSet: Kirigami.Theme.Window
-    function i18n(text) { return text; }
+    function i18n(text, first) { return text.replace("%1", first === undefined ? "%1" : first); }
 
     Component {
         id: harness
@@ -61,6 +61,18 @@ TestCase {
             }
             QtObject {
                 id: root
+                property bool cliSetupBusy: false
+                property string cliSetupStatus: ""
+                property bool cliSetupRequested: false
+                property var managedCli: QtObject {
+                    property bool busy: root.cliSetupBusy
+                    property int installs: 0
+                    function run(action) {
+                        if (action !== "install") throw new Error("Unexpected managed CLI action");
+                        installs++;
+                        root.cliSetupBusy = true;
+                    }
+                }
                 property bool loading: false
                 property int refreshes: 0
                 property bool bypassRoster: false
@@ -175,10 +187,21 @@ TestCase {
         verify(subject.missingMessage.visible);
         verify(!subject.globalMessage.visible);
         verify(subject.missingPlaceholder.plainExplanation.indexOf("codexbar") !== -1);
-        // Its action opens settings rather than repeating a command that cannot run.
+        // Preparation is direct and excludes duplicate requests; settings remain reachable.
         subject.missingPlaceholder.helpfulAction.trigger();
+        compare(subject.applet.managedCli.installs, 1);
+        verify(!subject.missingPlaceholder.helpfulAction.enabled);
+        subject.missingPlaceholder.helpfulAction.trigger();
+        compare(subject.applet.managedCli.installs, 1);
+        var settings = findChild(subject, "popupCliSetupSettings");
+        settings.action.trigger();
         compare(subject.settingsOpened, 1);
         compare(subject.applet.refreshes, 0);
+        subject.applet.cliSetupStatus = "Could not reach the release server. Try again later.";
+        subject.applet.cliSetupBusy = false;
+        compare(findChild(subject, "popupCliSetupStatus").text,
+            "Could not reach the release server. Try again later.");
+        verify(subject.missingPlaceholder.helpfulAction.enabled);
 
         // A reachable command hands the view back to the ordinary states.
         subject.applet.commandPathFailed = false;
@@ -242,7 +265,7 @@ class UsageRecoveryTests(unittest.TestCase):
         surface = Surface("applet", ROOT)
         source = (ROOT / "contents/ui/main.qml").read_text()
         functions = []
-        for name in ("retryUsage", "performAction"):
+        for name in ("retryUsage", "performAction", "prepareCli"):
             signature = re.search(r"function " + name + r"\([^)]*\)", source).group(0)
             functions.append(signature + " {" + surface.function_body(name) + "}")
         # Only the native configuration action and refresh effect are observed.
@@ -251,7 +274,7 @@ class UsageRecoveryTests(unittest.TestCase):
         qml = qml.replace("SOURCE_FUNCTIONS", functions)
         qml = qml.replace("SOURCE_ACTIONS", "\n".join(
             "Controls.Action {" + surface.id_block(name) + "}"
-            for name in ("retryUsageAction", "usageSettingsAction", "configureProvidersAction")))
+            for name in ("retryUsageAction", "usageSettingsAction", "configureProvidersAction", "prepareCliAction")))
         for placeholder, name in (("GLOBAL_MESSAGE", "globalErrorMessage"),
                                   ("PROVIDER_MESSAGE", "providerErrorMessage"),
                                   ("EMPTY_MESSAGE", "emptyProvidersPlaceholder"),
@@ -260,7 +283,8 @@ class UsageRecoveryTests(unittest.TestCase):
             # The harness imports the shared components under a namespace, while
             # production resolves them from the same directory.
             qml = qml.replace(placeholder, surface.id_block(name).replace(
-                "PlainPlaceholderMessage {", "Components.PlainPlaceholderMessage {"))
+                "PlainPlaceholderMessage {", "Components.PlainPlaceholderMessage {").replace(
+                "PlainControlsLabel {", "Components.PlainControlsLabel {"))
         qml = qml.replace("LOADING_ROW", surface.id_block("providerUsageLoadingRow").replace(
             "PlainPlasmaLabel {", "Components.PlainPlasmaLabel {"))
         # The production condition itself, so the test cannot drift from it.

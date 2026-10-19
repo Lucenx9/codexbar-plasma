@@ -109,6 +109,8 @@ def stage_applet(work, scenario, image_path, theme=None):
     fixture_source = (ROOT / "scripts/smoke/fixture_cli.py").read_text()
     fixture_cli.write_text("#!" + sys.executable + "\n" + fixture_source.split("\n", 1)[1])
     fixture_cli.chmod(0o700)
+    shutil.copyfile(ROOT / "scripts/smoke/fixture_managed_cli.py", package / "scripts/manage-cli.py")
+    shutil.copyfile(fixture_cli, package / "scripts/fixture-cli")
     # Change defaults before the QML engine creates bindings or runs startup
     # handlers. Disabling effects after Component.onCompleted would be too late.
     config_path = package / "contents/config/main.xml"
@@ -118,7 +120,7 @@ def stage_applet(work, scenario, image_path, theme=None):
     defaults = {"commandPath": str(fixture_cli), "refreshInterval": "0",
                 "enableNotifications": "false", "updateChecksEnabled": "false",
                 "autoUpdateEnabled": "false", "updateNotificationsEnabled": "false"}
-    if scenario == "cli-missing":
+    if scenario in ("cli-missing", "cli-setup"):
         defaults["commandPath"] = str(work / "codexbar-not-installed")
     if scenario.startswith("identified-"):
         defaults.update(identifiedTokensEnabled="true", identifiedTokensSshHost="build@host",
