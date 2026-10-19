@@ -977,6 +977,12 @@ widget builds no AI data, starts no AI process, contacts no AI service, and
 shows no card. The [AI Insights reference](ai-insights.md) documents the data
 and request contracts.
 
+Usage snapshots reach the AI helper through private one-use temporary files,
+not process arguments. The helper removes each snapshot before accessing the
+wallet or contacting the selected AI service. Turning the feature off cancels
+the handoff and requests cleanup. Crash leftovers remain private and are removed
+on a later generation after five minutes.
+
 Enable it in **AI Insights** settings, choose a provider and a model, and use
 **Test connection** to check the service and list available models. It sends
 no generation request, so it also says whether the chosen model is in that list

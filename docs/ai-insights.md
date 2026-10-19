@@ -214,6 +214,20 @@ table, honoring the response's `Retry-After`, and a choice that finished with
 
 ## Credentials and destinations
 
+- Usage snapshots never appear in process arguments. A `prepare` helper action
+  creates a random request directory with mode `0700` and `payload.ini` with
+  mode `0600` beneath the OS temporary directory's
+  `codexbar-plasma-ai-<uid>` root. The controller captures the snapshot and
+  request context before preparation, writes unpadded base64 with
+  `QtCore.Settings.setValue` and `sync`, and destroys the Settings object.
+  The generation command carries only `--request <random-id>`.
+  `scripts/lib/ai_insights_input.py` validates the directory, file ownership,
+  permissions, regular-file type, link count, age, size, INI and base64 before
+  returning UTF-8 data. It removes the file and directory before wallet access
+  or any AI request. Cancellation runs an idempotent `discard` action. A killed
+  preparation or crash can leave a private request behind; a later preparation
+  prunes requests older than five minutes. The internal helper rejects the old
+  `--snapshot` argument. No API key enters this file or QML.
 - API keys are stored in the Secret Service (KWallet on Plasma 6) with
   `secret-tool`, under the attributes `application app.codexbar.plasma`,
   `service ai-insights`, and `provider <id>`. There is no plaintext fallback and
@@ -320,7 +334,12 @@ table, honoring the response's `Retry-After`, and a choice that finished with
   manual, duplicate, automatic, restart, language/model/disable changes during a
   request, failures (including success JSON followed by exit 1), invalid commands,
   failed attempts and rate limits across
-  restarts, and destruction.
+  restarts, and destruction. Its recording helper consumes the production
+  private-file contract and checks its own and its timeout parent's `/proc`
+  command lines for snapshot bytes.
+- `tests/test_ai_insights_input.py`: private permissions, one-use consumption,
+  malformed and oversized input, traversal, symlinks, hardlinks, expiration,
+  cancellation cleanup and crash-leftover pruning.
 - Smoke scenarios `ai-insights`, `ai-insights-it`, `ai-insights-mismatch`,
   `ai-insights-error`, `ai-insights-single`, `settings-ai-insights`, and
   `settings-ai-insights-narrow` run the real applet with a synthetic helper. The

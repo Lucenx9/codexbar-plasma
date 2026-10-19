@@ -115,6 +115,18 @@ Issues linked below preserve discussion; this file owns parity status.
 These are useful Linux features once the named contract exists. Do not fill
 these gaps with provider scraping, auth flows, or config parsing in QML.
 
+### Private account selection
+
+- [ ] Avoid passing account labels, which may be email addresses, in usage
+  process arguments. Official Linux CLI 0.77.0 advertises `--account` and
+  `--account-index`, but rejects `usage --account-stdin --format json --json-only`
+  with `Unknown option --account-stdin` (isolated empty configuration,
+  2026-10-19, exit 1). A private-input selector would close this exposure.
+  Before choosing an index workaround, verify a supported mapping from the
+  discovered account identities to CLI indexes across refreshes and config
+  changes; the frontend currently deduplicates account options by identity.
+  Do not infer that mapping from the rendered list order or edit CLI config.
+
 ### Provider settings
 
 - [ ] Support FLORA workspace ID and Future AGI secret key setup once official

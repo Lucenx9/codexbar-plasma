@@ -5,18 +5,26 @@ import argparse
 import json
 import os
 import time
+from lib.ai_insights_input import consume, discard, prepare
 
 PRIVATE = ("demo@example.com", "Example team", "business", "cli")
 
 
 def main():
     parser = argparse.ArgumentParser()
-    for name in ("--action", "--provider", "--model", "--endpoint", "--language", "--prompt", "--snapshot"):
+    for name in ("--action", "--provider", "--model", "--endpoint", "--language", "--prompt", "--request"):
         parser.add_argument(name, default="")
     parser.add_argument("--no-zdr", action="store_true")
     parser.add_argument("--supervised", action="store_true")
     args = parser.parse_args()
     scenario = os.environ.get("CODEXBAR_SMOKE_SCENARIO", "")
+    if args.action == "prepare":
+        print(json.dumps(prepare()))
+        return
+    if args.action == "discard":
+        discard(args.request)
+        return
+    snapshot_text = consume(args.request) if args.action == "generate" else ""
     if args.action == "key-status":
         result = {"status": "present" if scenario == "settings-ai-insights" else "absent"}
     elif args.action == "models":
@@ -29,8 +37,8 @@ def main():
         time.sleep(0.3)
         result = {"status": "error", "reason": "network"}
     else:
-        snapshot = json.loads(args.snapshot)
-        leaked = any(value in args.snapshot for value in PRIVATE)
+        snapshot = json.loads(snapshot_text)
+        leaked = any(value in snapshot_text for value in PRIVATE)
         runs_out = any(signal.get("kind") == "quotaRunsOutBeforeReset" for signal in snapshot.get("signals", []))
         # The snapshot lists only providers with current measurements.
         current = {provider.get("id") for provider in snapshot.get("providers", [])}

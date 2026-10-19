@@ -727,7 +727,8 @@ TestCase {
     function test_languages(data) {
         messages = data.messages;
         var command = AiInsights.command("file:///pkg/scripts/ai-insights.py", "generate", {
-            provider: "openrouter", model: "vendor/model", language: aiInsightsLanguageTag(), snapshot: "{}"});
+            provider: "openrouter", model: "vendor/model", language: aiInsightsLanguageTag(),
+            request: "0123456789abcdef0123456789abcdef"});
         var match = /--language (\\S+)/.exec(command);
         verify(match !== null, command);
         console.log("REQUEST_LANGUAGE " + data.tag + " " + match[1] + " " + Qt.locale().name);

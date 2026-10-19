@@ -10,6 +10,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Security
+
+- Keep AI Insights usage snapshots out of process arguments. Pass them through
+  private one-use files, removed before wallet access or AI requests.
+
 ### Fixed
 
 - Keep provider titles literal in the AI Insights Back button, including markup

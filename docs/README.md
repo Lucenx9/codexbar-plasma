@@ -37,7 +37,7 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
 - [Identified-token screenshot](codexbar-plasma-identified-tokens.png): synthetic
   local subtotal retained after an SSH-source failure, used in the usage guide.
 - [AI Insights](ai-insights.md): the optional insight card and analysis view, their
-  boundary decision, allowlisted snapshot, language selection, request and credential contracts,
+  boundary decision, allowlisted snapshot, private helper handoff, language selection, request and credential contracts,
   scheduling, and tests.
 - [Translations](translations.md): adding and checking a language catalog.
 - [CLI 0.56.2 parity baseline](research/2026-09-01-macos-parity-0.56.2.md):

@@ -15,10 +15,28 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 
 HELPER = '''import json, os, signal, sys, time
+from lib.ai_insights_input import consume, discard, prepare
 arguments = sys.argv[1:]
+values = {name: arguments[index + 1] for index, name in enumerate(arguments[:-1])
+          if name.startswith("--") and name not in ("--supervised", "--no-zdr")}
+if values.get("--action") == "prepare":
+    print(json.dumps(prepare()))
+    sys.exit(0)
+if values.get("--action") == "discard":
+    discard(values.get("--request", ""))
+    sys.exit(0)
+if values.get("--action") == "generate":
+    snapshot = consume(values.get("--request", ""))
+    pid = os.getpid()
+    for _ in range(3):
+        assert snapshot.encode() not in open(f"/proc/{pid}/cmdline", "rb").read()
+        pid = int(open(f"/proc/{pid}/stat").read().rsplit(")", 1)[1].split()[1])
+        if pid <= 1:
+            break
+    assert "--snapshot" not in arguments
+    arguments += ["--received-snapshot", snapshot]
 with open(LOG_PATH, "a") as log:
     log.write(json.dumps(arguments) + "\\n")
-values = dict(zip(arguments[::2], arguments[1::2]))
 model = values.get("--model", "")
 if model == "killed-model":
     os.killpg(os.getpgrp(), signal.SIGKILL)
@@ -122,7 +140,8 @@ TestCase {
         compare(argument(call, "--action"), "generate");
         compare(argument(call, "--language"), "it");
         compare(argument(call, "--provider"), "openrouter");
-        compare(JSON.parse(argument(call, "--snapshot")), JSON.parse(snapshot));
+        compare(JSON.parse(argument(call, "--received-snapshot")), JSON.parse(snapshot));
+        verify(call.indexOf("--snapshot") < 0);
         verify(call.indexOf("--no-zdr") < 0);
         var cache = JSON.parse(generated.signalArguments[0][0]);
         compare(cache.summary, "Insight [it] <b>plain</b>");
@@ -140,6 +159,24 @@ TestCase {
         tryCompare(generated, "count", 1, 10000);
         compare(calls().length, 1);
         compare(attempts.count, 1);
+    }
+
+    function test_privateHandoffKeepsTheCapturedSnapshot() {
+        var controller = create();
+        verify(controller.generate());
+        controller.snapshotText = JSON.stringify({providers: [{id: "changed"}]});
+        controller.snapshotId = "changed";
+        tryCompare(generated, "count", 1, 10000);
+        compare(JSON.parse(argument(calls()[0], "--received-snapshot")), JSON.parse(snapshot));
+        compare(JSON.parse(generated.signalArguments[0][0]).snapshot, "0000abcd");
+    }
+
+    function test_oversizedSnapshotStartsNoPreparation() {
+        var controller = create({snapshotText: "x".repeat(16385)});
+        verify(!controller.generate());
+        compare(controller.errorReason, "invalid_input");
+        verify(!controller.busy);
+        compare(calls().length, 0);
     }
     function test_failedSuccessReplyPreservesTheConfirmedInsight() {
         var controller = create({model: "failed-success-model"});
@@ -333,8 +370,8 @@ TestCase {
         var source = Qt.createQmlObject('import QtQuick; import org.kde.plasma.plasma5support; DataSource { engine: "executable"; interval: 0 }', testCase);
         var reply = null;
         source.newData.connect(function(name, data) { reply = data; source.disconnectSource(name); });
-        var command = AiInsights.command("HELPER_URL", "generate", {provider: "openrouter",
-            model: "slow-model", language: "it", snapshot: snapshot}).replace(" 180s ", " 1s ");
+        var command = (AiInsights.command("HELPER_URL", "models", {provider: "openrouter"})
+            + " --model slow-model").replace(" 45s ", " 1s ");
         source.connectSource(command);
         tryVerify(function() { return reply !== null; }, 10000);
         compare(Number(reply["exit code"]), 9);
