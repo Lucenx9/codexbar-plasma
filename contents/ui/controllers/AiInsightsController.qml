@@ -247,7 +247,7 @@ Item {
                 return
             }
             activeRequest = input.request
-            var settings = inputSettings.createObject(lifecycle, {location: input.location})
+            var settings = inputSettings.createObject(lifecycle, {location: input.location}) as Core.Settings
             if (!settings) {
                 retire()
                 fail("unavailable", 0)
