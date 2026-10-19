@@ -518,6 +518,10 @@ msgstr ""
 msgid "Settings…"
 msgstr ""
 
+#: contents/ui/components/FullRepresentation.qml scripts/smoke/Capture.qml
+msgid "Install and use CLI"
+msgstr ""
+
 #: contents/ui/components/FullRepresentation.qml
 msgid "Configure providers…"
 msgstr ""
@@ -554,10 +558,9 @@ msgstr ""
 
 #: contents/ui/components/FullRepresentation.qml
 msgid ""
-"Plasma could not run '%1'. In widget settings, open General > Managed CLI to "
-"install and select the CodexBar CLI, then Apply. If it is already installed, "
-"find it with 'command -v codexbar' in a terminal and paste the absolute path "
-"into Diagnostics."
+"Plasma could not run '%1'. Install or reuse a private official CLI for this "
+"widget and use it immediately. If your CLI is installed elsewhere, set its "
+"path in Settings > Diagnostics."
 msgstr ""
 
 #: contents/ui/components/FullRepresentation.qml
@@ -2579,7 +2582,7 @@ msgstr ""
 msgid "Open release page"
 msgstr ""
 
-#: contents/ui/configGeneral.qml scripts/smoke/Capture.qml
+#: contents/ui/configGeneral.qml
 msgid "Managed CLI"
 msgstr ""
 

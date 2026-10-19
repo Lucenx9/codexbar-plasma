@@ -31,9 +31,10 @@ downloading the package. The [runtime requirements](#requirements) still apply.
 1. If `codexbar` is absent from your terminal's PATH, setup offers to install or
    reuse a private official CLI. Answer `y` to prepare it now.
 2. Add **CodexBar** to your panel through **Add Widgets**. If you prepared the
-   private CLI, open the widget settings, select **General → Managed CLI →
-   Use managed CLI**, and click **Apply**. This selection is required even
-   after the terminal reports that the private CLI is ready.
+   private CLI and the popup reports that the CLI is missing, click **Install
+   and use CLI**. This reuses the prepared copy offline and selects it immediately.
+   You can also select **General → Managed CLI → Use managed CLI** in widget
+   settings, then **Apply**.
 3. Enable and configure your providers in the widget's **Providers** settings.
 
 Existing CLI installations and provider credentials are preserved. Rerunning
@@ -59,8 +60,9 @@ bash -o pipefail -c 'curl -fsSL --connect-timeout 10 --max-time 30 --max-filesiz
 ```
 
 Add `--with-cli` after `--no-input`, inside the quotes, to explicitly install
-or reuse the private CLI too. Selecting it in widget settings is still
-required. A CLI failure leaves the widget installed and returns a nonzero status.
+or reuse the private CLI too. Select it through **Install and use CLI** in the
+missing-CLI popup, or through **Use managed CLI** in settings followed by **Apply**.
+A CLI failure leaves the widget installed and returns a nonzero status.
 
 </details>
 
@@ -70,7 +72,10 @@ required. A CLI failure leaves the widget installed and returns a nonzero status
    [official CodexBar release tarballs](https://github.com/steipete/CodexBar/releases/latest)
    or another method documented by [upstream CodexBar](https://github.com/steipete/CodexBar).
    Third-party packages such as AUR can lag behind upstream releases.
-   Alternatively, install the widget first and use **General → Managed CLI →
+   Alternatively, install the widget first and click **Install and use CLI** in
+   the missing-CLI popup. This installs or reuses a private official Linux binary
+   and selects it immediately, without opening settings or pressing Apply.
+   You can also use **General → Managed CLI →
    Install and select managed CLI**, then **Apply**. This downloads an official
    Linux binary to a private directory without replacing a system installation.
    If the CLI is missing, the popup shows this setup route even after switching
@@ -284,8 +289,12 @@ in widget settings to check the connection. Retry is unavailable while a quota
 refresh is running; the last known quotas stay visible when available.
 
 If the popup says **CodexBar CLI not found**, Plasma could not run the
-configured command at all, so there is nothing to retry. Set an absolute path as
-described below. **Diagnostics → Check versions** reports the widget and CLI
+configured command at all. Click **Install and use CLI** to install or reuse a
+private official CLI and start fetching usage immediately. Progress and failures
+appear in the popup, where you can retry preparation or open **Settings**.
+This leaves provider configuration and automatic-update preferences unchanged.
+To use an existing external CLI, set its absolute path as described below.
+**Diagnostics → Check versions** reports the widget and CLI
 versions and the absolute command the shell resolved.
 
 Run `codexbar usage --format json --json-only` in a terminal. If it fails,

@@ -1271,6 +1271,12 @@ with retained quotas, checks that repeated activation cannot start another reque
 usage without rescanning cost history. `tests/test_usage_recovery.py` exercises
 the production action handlers and message controls with keyboard activation,
 observing refresh and native configuration actions at their effect boundaries.
+The missing-CLI state also offers direct preparation through the applet-owned
+managed CLI controller. `tests/test_popup_cli_setup.py` exercises immediate
+selection and refresh after installation or offline reuse, failures and retry,
+timeout, late replies, command changes, and exclusion while usable data exists.
+The `cli-setup` smoke scenario activates the real popup button and waits for
+provider data after the synthetic managed helper prepares a private fixture CLI.
 
 Run the popup smoke test from a graphical Plasma 6 session:
 

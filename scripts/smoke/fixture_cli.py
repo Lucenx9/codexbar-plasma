@@ -36,7 +36,7 @@ SCENARIOS += ("subscription-dates",)
 SCENARIOS += ("identified-local", "identified-partial", "identified-ssh-failure", "identified-only")
 
 SCENARIOS += ("providers-0740",)
-SCENARIOS += ("empty-providers", "usage-error", "usage-recovery", "cli-missing")
+SCENARIOS += ("empty-providers", "usage-error", "usage-recovery", "cli-missing", "cli-setup")
 SCENARIOS += ("ai-insights", "ai-insights-it", "ai-insights-mismatch", "ai-insights-error", "ai-insights-single",
               "settings-ai-insights", "settings-ai-insights-narrow")
 MAX_SCENARIO_TIMEOUT_SECONDS = 120
