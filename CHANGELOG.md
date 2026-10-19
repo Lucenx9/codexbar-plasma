@@ -13,7 +13,7 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 ### Security
 
 - Omit filesystem paths from shared support reports, including custom home
-  directories and paths embedded in Diagnostics errors.
+  directories and absolute, relative or tilde-qualified paths in Diagnostics errors.
 
 ### Fixed
 

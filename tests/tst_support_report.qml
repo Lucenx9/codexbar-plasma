@@ -1,6 +1,7 @@
 import QtQuick
 import QtTest
 import "../contents/ui/SupportReport.js" as SupportReport
+import "../contents/ui/SafeText.js" as SafeText
 
 TestCase {
     name: "SupportReport"
@@ -75,8 +76,7 @@ TestCase {
                           "Could not open /data/private alice/tool after failure"]) {
             var shared = SupportReport.sharedText(text, 1024)
             verify(shared.indexOf("alice") < 0 && shared.indexOf("private") < 0, shared)
-            verify(shared.indexOf("Could not open") >= 0, shared)
-            verify(shared.indexOf("[path]") >= 0, shared)
+            compare(shared, "[path]")
         }
         var multiline = SupportReport.sharedText("Failed /srv/private alice/tool\nExit code 2", 1024)
         verify(multiline.indexOf("alice") < 0)
@@ -86,12 +86,45 @@ TestCase {
     function test_executablePrefixedFailuresKeepTheirNonPersonalReason() {
         compare(SupportReport.sharedText("/srv/alice/codexbar: Permission denied"), "[path]: Permission denied")
         compare(SupportReport.sharedText("bash: line 1: /srv/alice/codexbar: No such file or directory"),
-            "bash: line 1: [path]: No such file or directory")
+            "[path]: No such file or directory")
         compare(SupportReport.sharedText("/srv/alice/codexbar: Exec format error"), "[path]: Exec format error")
         var loader = SupportReport.sharedText("/srv/alice/codexbar: error while loading shared libraries: "
             + "/data/private-alice/libcustom.so: cannot open shared object file: No such file or directory")
         compare(loader, "[path]: error while loading shared libraries")
         verify(loader.indexOf("alice") < 0)
+    }
+
+    function test_relativeAndTildePathsOmitTheWholeDiagnosticLine() {
+        for (var path of ["alice/project/config.json", "~alice/.config/tool", "~/private-alice/tool",
+                          "./alice/tool", "../alice/tool", '"private alice/project/config.json"',
+                          "'private alice/project/config.json'", "alice\\/project\\/config.json",
+                          "~alice\\u002f.config\\u002ftool"]) {
+            var error = "Could not open " + path + " after failure"
+            compare(SupportReport.sharedText(error), "[path]", path)
+            var report = SupportReport.markdown({checkError: error, lastError: error})
+            verify(report.indexOf("alice") < 0 && report.indexOf("private") < 0, report)
+        }
+        compare(SupportReport.sharedText("Before\nCould not open private alice/project\nExit code 2"),
+            "Before [path] Exit code 2")
+        compare(SupportReport.sharedText("Connection timed out. Retry later."),
+            "Connection timed out. Retry later.")
+        compare(SupportReport.sharedText("~alice/bin/codexbar: Permission denied"), "[path]: Permission denied")
+    }
+
+    function test_credentialFilteringCannotHideThePathSeparator() {
+        for (var path of ["alice-token=work/project/config.json", "~alice-password=work/.config/tool",
+                          "alice-account_id=work/project/config.json", "alicehttps://work/project/config.json"]) {
+            var error = "Could not open " + path + " after failure"
+            for (var input of [error, SafeText.cliMessage(SafeText.stripLoaderDiagnostics(error),
+                                                         SafeText.maximumCliMessageLength)]) {
+                var shared = SupportReport.sharedText(input)
+                verify(shared.indexOf("alice") < 0 && shared.indexOf("work") < 0, shared)
+                var report = SupportReport.markdown({checkError: input, lastError: input})
+                verify(report.indexOf("alice") < 0, report)
+            }
+        }
+        compare(SupportReport.sharedText("Before\nBearer token-secret\nExit code 2"),
+            "Before [redacted] Exit code 2")
     }
 
     function test_redactionBeforeBoundsAndMarkdownEscape() {

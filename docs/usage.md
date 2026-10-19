@@ -775,12 +775,13 @@ fields; track proposed extensions in the issue tracker.
   It does not run provider diagnostics, fetch usage, check upstream releases,
   or include diagnostic output, account labels, credentials or config dumps.
   Resolved filesystem paths are omitted, while the report states whether the
-  selected and PATH CLI resolve to the same location. Paths inside error text
-  and the remainder of that line are also omitted, including custom home
-  directories and paths containing spaces. Common permission, missing-file,
+  selected and PATH CLI resolve to the same location. Entire error lines that
+  contain filesystem separators are also omitted, including absolute, relative,
+  tilde-qualified and space-containing paths. Common permission, missing-file,
   executable-format and shared-library startup reasons remain as fixed text.
-  Recognized credentials/identifiers
-  are redacted. The local **Check versions** display still shows the full path.
+  Lines already containing credential-redaction markers are omitted too, since
+  that filtering may have hidden a path separator. Recognized identifiers are
+  redacted. The local **Check versions** display still shows the full path.
   Versions come from offline `kinfo`, installed Debian package metadata when
   available, `kf6-config`, and Qt 6 `qtpaths`; unavailable versions remain unknown.
   Module checks use this QML engine; PlasmaCore remains explicitly **not

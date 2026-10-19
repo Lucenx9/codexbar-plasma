@@ -43,25 +43,26 @@ function sharedText(value, limit) {
     if (typeof value !== "string") return ""
     return SafeText.truncatedText(SafeText.cliDiagnostic(value, SafeText.maximumDiagnosticLength)
         .replace(/\\u002f|\\\//gi, "/")
+        // Earlier credential filtering may consume a path's slash. Treat its
+        // marker as ambiguous too, and never guess either path boundary.
+        .replace(/^[^\r\n]*(?:\/|\[redacted\])[^\r\n]*/gim, redactedDiagnosticLine)
         .replace(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, "[email]")
         .replace(/\b(?:account|org|organization|workspace|project)[-_ ]?id["']?\s*[:=]\s*(?:"(?:[^"\\\r\n]|\\.)*"?|'(?:[^'\\\r\n]|\\.)*'?|[^\s,;]+)/gi, "identifier=[redacted]")
         .replace(/\b(?:acct|org|proj|workspace)_[A-Za-z0-9_-]+\b/g, "[identifier]")
         .replace(/\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/g, "[token]")
         .replace(/\b(?:https?|wss?):\/\/[^\s"'<>]+/gi, "[url]")
-        // A path may contain spaces, quotes and arbitrary directory names.
-        // Drop the rest of its line rather than guessing where it ends.
-        .replace(/(?:file:\/\/)?\/[^\r\n]*/gi, redactedPath)
         .replace(/[\x00-\x1f\x7f\u0060<>]/g, " "), limit || 1024)
 }
 
-function redactedPath(value) {
+function redactedDiagnosticLine(value) {
     // Keep common startup failures as fixed text, without retaining a path's
     // arbitrary suffix or a loader's potentially personal library filename.
+    var marker = value.indexOf("/") >= 0 ? "[path]" : "[redacted]"
     if (/: error while loading shared libraries:/.test(value)) {
-        return "[path]: error while loading shared libraries"
+        return marker + ": error while loading shared libraries"
     }
     var reason = /: (Permission denied|No such file or directory|Exec format error)\s*$/.exec(value)
-    return "[path]" + (reason ? ": " + reason[1] : "")
+    return marker + (reason ? ": " + reason[1] : "")
 }
 
 function response(text) {
