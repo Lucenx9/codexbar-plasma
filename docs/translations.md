@@ -38,6 +38,14 @@ terms such as "provider", "account", and "token" remain unchanged.
 Spanish instructions use the formal address consistently. Brazilian Portuguese
 uses "Padrão" for the Standard panel style.
 
+Use each catalog's translated AI Insights name in connection results as well as
+settings. French uses "jetons" for usage tokens and "fournisseur" for providers;
+German uses "Anbieter" for providers. French, Spanish, and Brazilian Portuguese
+use the feminine form for CLI, including update labels and instructions.
+References to settings pages and source choices must match their translated
+labels exactly. The provider-list suffix "CodexBar default" describes a provider
+enabled by default, not a default account.
+
 Translate labels against their displayed values. "Code review remaining" labels
 a remaining quota percentage, and "Included plan" labels usage included in a
 plan. Neither describes a count of reviews or a separate included subscription.

@@ -1556,15 +1556,15 @@ msgid ""
 "Connection works, but %1 is not in the list of models usable for AI "
 "Insights. Choose a listed model."
 msgstr ""
-"Die Verbindung funktioniert, aber %1 ist nicht in der Liste der für AI "
-"Insights nutzbaren Modelle. Wählen Sie ein aufgeführtes Modell."
+"Die Verbindung funktioniert, aber %1 ist nicht in der Liste der für "
+"KI-Einblicke nutzbaren Modelle. Wählen Sie ein aufgeführtes Modell."
 
 #: contents/ui/configAiInsights.qml
 msgid ""
 "Connection works, and %1 is in the list of models usable for AI Insights."
 msgstr ""
-"Die Verbindung funktioniert, und %1 ist in der Liste der für AI Insights "
-"nutzbaren Modelle."
+"Die Verbindung funktioniert, und %1 ist in der Liste der für "
+"KI-Einblicke nutzbaren Modelle."
 
 #: contents/ui/configAiInsights.qml
 msgid ""
@@ -1675,9 +1675,9 @@ msgid ""
 "emails, projects, file paths, or prompts."
 msgstr ""
 "An %1 werden nur aggregierte Nutzungsstatistiken gesendet: Kontingente, "
-"Rücksetzzeiten, Tempoprognosen sowie wöchentliche Ausgaben und Tokens pro "
-"Provider. Niemals Kontonamen, E-Mail-Adressen, Projekte, Dateipfade oder "
-"Prompts."
+"Rücksetzzeiten, Verbrauchsprognosen sowie wöchentliche Ausgaben und "
+"Tokens pro Anbieter. Niemals Kontonamen, E-Mail-Adressen, Projekte, "
+"Dateipfade oder Prompts."
 
 #: contents/ui/configAiInsights.qml
 msgid ""
