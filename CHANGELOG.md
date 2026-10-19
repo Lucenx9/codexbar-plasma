@@ -12,6 +12,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep provider titles literal in the AI Insights Back button, including markup
+  and ampersands.
 - Correct translated provider-default labels, settings references, and grammar.
   Use consistent localized names for AI Insights, tokens, providers, and the CLI
   across the five shipped catalogs.

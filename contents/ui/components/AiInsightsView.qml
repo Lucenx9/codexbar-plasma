@@ -66,6 +66,27 @@ ColumnLayout {
         display: PlasmaComponents.AbstractButton.TextBesideIcon
         Accessible.name: i18n("Back to %1", view.backText)
         onClicked: view.backRequested(visualFocus)
+
+        // The default Plasma label parses rich text and inserts mnemonic markup.
+        contentItem: RowLayout {
+            spacing: backButton.spacing
+
+            Kirigami.Icon {
+                source: backButton.icon.name
+                implicitWidth: Kirigami.Units.iconSizes.smallMedium
+                implicitHeight: implicitWidth
+                color: backButton.icon.color
+                Layout.alignment: Qt.AlignVCenter
+            }
+
+            PlainPlasmaLabel {
+                text: view.backText
+                font: backButton.font
+                elide: Text.ElideRight
+                Layout.fillWidth: true
+                Layout.alignment: Qt.AlignVCenter
+            }
+        }
     }
 
     PlasmaComponents.ScrollView {
