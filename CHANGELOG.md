@@ -25,6 +25,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Align Diagnostics support report preview button with the `DisclosureButton`
+  primitive property contract.
 - Verify an existing managed CLI before reusing it during preparation. Report
   unusable copies without selecting them or repeating a failed usage refresh.
 - Give the Overview and Usage & Spend provider identity tiles the same subtle

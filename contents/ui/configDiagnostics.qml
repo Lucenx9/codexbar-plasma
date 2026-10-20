@@ -394,7 +394,7 @@ KCM.SimpleKCM {
         Components.DisclosureButton {
             id: supportPreviewDisclosure
             objectName: "supportPreviewDisclosure"
-            text: i18n("Report preview")
+            plainText: i18n("Report preview")
             expanded: false
             visible: page.supportTimestamp.length > 0
             onClicked: expanded = !expanded
