@@ -489,7 +489,7 @@ function historyRows(fmt, tokenCost, showsTokens, fallbackLabel) {
             label: item.label && item.label.length > 0 ? item.label : fallbackLabel,
             value: amountSummary(fmt, item),
             incompleteRequests: acceptedIncompleteRequests(item),
-            percent: maximum > 0 && magnitude > 0 ? Math.max(3, magnitude * 100 / maximum) : 0,
+            percent: maximum > 0 && magnitude > 0 ? Math.max(3, (magnitude / maximum) * 100) : 0,
             isPeak: maximum > 0 && magnitude === maximum
         })
     }

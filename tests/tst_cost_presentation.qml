@@ -3,6 +3,7 @@ import QtTest
 import "../contents/ui/CostPresentation.js" as CostPresentation
 import "../contents/ui/CostResponse.js" as CostResponse
 import "../contents/ui/PrivacyPresentation.js" as Privacy
+import "../contents/ui/ProviderNormalizer.js" as Normalizer
 
 TestCase {
     name: "CostPresentation"
@@ -563,6 +564,25 @@ TestCase {
         compare(byTokens[0].label, "Tue")
         compare(byTokens[0].isPeak, false)
         compare(byTokens[1].isPeak, true)
+    }
+
+    function test_historyRowsScaleLargeFiniteAmounts_data() {
+        return [{ tag: "cost", showsTokens: false }, { tag: "tokens", showsTokens: true }]
+    }
+
+    function test_historyRowsScaleLargeFiniteAmounts(data) {
+        var daily = Normalizer.normalizeCostDaily([
+            { date: "2026-10-19", totalCost: 1e308, totalTokens: 1e308 },
+            { date: "2026-10-20", totalCost: 5e307, totalTokens: 5e307 }
+        ], "USD", 2, "2026-10-20T12:00:00Z")
+        compare(CostPresentation.metricValue(daily[1], data.showsTokens), 5e307)
+        compare(CostPresentation.sparklineMax(daily, data.showsTokens), 1e308)
+        var rows = CostPresentation.historyRows(fmt, { daily: daily }, data.showsTokens, "Latest")
+        compare(rows.length, 2)
+        compare(rows[0].percent, 50)
+        compare(rows[1].percent, 100)
+        compare(rows[0].isPeak, false)
+        compare(rows[1].isPeak, true)
     }
 
     function test_historyRowsPreserveMeasuredZeroAndFilterMissingMetrics_data() {
