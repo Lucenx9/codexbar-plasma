@@ -662,7 +662,8 @@ and clipboard content remain under your control after closing the window.
 - Token breakdowns, model summaries, recent daily spend, cost history bars, and
   average cost per 1M tokens, with a configurable cost history window. Recent
   history rows show measured zero costs and token counts alongside positive
-  amounts; missing amounts stay omitted. The daily average stays visible for a
+  amounts; missing amounts stay omitted. Their bars stay proportional even for
+  very large reported amounts. The daily average stays visible for a
   range measured as zero, and the peak still names a day only once something
   was spent.
 - **Quota weeks** in the expanded provider details split the local history by

@@ -25,6 +25,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Preserve proportional cost-history bars for very large finite cost and token
+  amounts instead of displaying every overflowing percentage as a full bar.
 - Align Diagnostics support report preview button with the `DisclosureButton`
   primitive property contract.
 - Verify an existing managed CLI before reusing it during preparation. Report
