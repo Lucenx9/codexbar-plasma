@@ -101,7 +101,9 @@ function amountString(fmt, value, currency) {
     if (code === "Quota") {
         return String(Math.round(numeric))
     }
-    var negative = numeric < 0
+    // Use the same precision as the amount, before applying locale separators.
+    // A negative value that rounds to zero must not display as "-$0.00".
+    var negative = numeric < 0 && Math.abs(numeric).toFixed(2) !== "0.00"
     var amount = groupedDecimalString(fmt, Math.abs(numeric), 2)
     if (code === "USD") {
         return negative ? "-$" + amount : "$" + amount
