@@ -652,6 +652,12 @@ clipboard interoperability with every Wayland application or portal backend.
   roster do not consume the settings selection limit.
   An empty filtered roster suppresses panel text; automatic mode retains its
   loading and no-data text fallback.
+- `ProviderOrder.toggledSelection` shares the panel and Overview selection
+  transition: it normalizes aliases, follows roster order, and retains saved
+  providers absent from the roster without mutating either input. The panel
+  settings page calls it directly; `OverviewProviders.js` applies its visible
+  selection limit before calling it. Direct `tst_provider_order.qml` and
+  `tst_overview_selection.qml` cover the shared transition and Overview policy.
 - `OverviewProviders.js` owns the Overview-tab provider selection without
   effects. An empty stored value means the first three eligible providers,
   `__none__` stores an explicit empty selection, and aliases with mixed-case

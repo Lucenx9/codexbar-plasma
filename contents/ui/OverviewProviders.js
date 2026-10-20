@@ -83,43 +83,15 @@ function selectedProviderCount(orderedProviderIDs, selectedProviderIDs) {
 // beyond the visible limit keeps the current selection.
 function toggledSelection(orderedProviderIDs, selectedProviderIDs, providerID, checked) {
     var selected = Array.isArray(selectedProviderIDs) ? selectedProviderIDs : [];
-    var selectedSet = ({});
-    for (var i = 0; i < selected.length; i++) {
-        var normalizedSelected = ProviderOrder.normalizedProviderID(selected[i]);
-        if (normalizedSelected.length > 0) {
-            selectedSet[normalizedSelected] = true;
-        }
-    }
-
     var key = ProviderOrder.normalizedProviderID(providerID);
     if (key.length === 0) {
         return selected.slice(0);
     }
-    if (checked) {
-        if (!Guards.hasOwnKey(selectedSet, key)
-                && selectedProviderCount(orderedProviderIDs, selected) >= maximumOverviewProviders) {
-            return selected.slice(0);
-        }
-        selectedSet[key] = true;
-    } else if (Guards.hasOwnKey(selectedSet, key)) {
-        delete selectedSet[key];
+    if (checked && selectedProviderCount(orderedProviderIDs, selected) >= maximumOverviewProviders
+            && !selected.some(function(item) { return ProviderOrder.normalizedProviderID(item) === key; })) {
+        return selected.slice(0);
     }
-
-    var result = [];
-    var roster = Array.isArray(orderedProviderIDs) ? orderedProviderIDs : [];
-    for (var j = 0; j < roster.length; j++) {
-        var candidate = ProviderOrder.normalizedProviderID(roster[j]);
-        if (candidate.length > 0 && Guards.hasOwnKey(selectedSet, candidate) && result.indexOf(candidate) === -1) {
-            result.push(candidate);
-        }
-    }
-    for (var k = 0; k < selected.length; k++) {
-        var prior = ProviderOrder.normalizedProviderID(selected[k]);
-        if (prior.length > 0 && Guards.hasOwnKey(selectedSet, prior) && result.indexOf(prior) === -1) {
-            result.push(prior);
-        }
-    }
-    return result;
+    return ProviderOrder.toggledSelection(orderedProviderIDs, selected, key, checked);
 }
 
 function selectionText(providerIDs) {

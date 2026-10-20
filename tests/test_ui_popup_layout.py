@@ -349,8 +349,6 @@ class PopupLayoutTest(unittest.TestCase):
     def test_usage_rows(self):
         applet.require("row.pace = paceSummaryPartsText(snapshot.paceParts)", "usage rows must localize structured pace fields")
 
-        applet.require_definition_where_used("paceSummaryText")
-
         usage_percent_body = id_block(provider_usage_row_text, "usagePercentLabel")
         if not code_contains(usage_percent_body, "font.weight: Font.DemiBold"):
             raise AssertionError("usagePercentLabel must remain a prominent scan target")

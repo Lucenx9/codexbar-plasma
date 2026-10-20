@@ -13,7 +13,6 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # redundant. It stays as the only pin that the applet resolves its readable
 # accents through the shared contrast helper.
 require_in_surface applet 'import "ThemeContrast.js" as ThemeContrast'
-require_definition_where_used applet contrastTextColor
 
 python3 - "$ROOT_DIR" <<'PY'
 import pathlib
@@ -55,7 +54,7 @@ def current_function(text, index):
 def allowed_qml(path, text, index):
     return (
         path in allowed_files
-        and current_function(text, index) in {"providerColor", "contrastTextColor", "withAlpha"}
+        and current_function(text, index) in {"providerColor", "withAlpha"}
     )
 
 def function_body(text, name):

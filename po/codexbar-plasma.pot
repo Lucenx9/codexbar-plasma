@@ -754,14 +754,13 @@ msgstr ""
 
 #: contents/ui/components/PanelSettingsPreview.qml
 #: contents/ui/components/PanelText.qml
-#: contents/ui/components/UsageWindowText.qml contents/ui/main.qml
+#: contents/ui/components/UsageWindowText.qml
 msgid "left"
 msgstr ""
 
 #: contents/ui/components/PanelSettingsPreview.qml
 #: contents/ui/components/PanelText.qml
-#: contents/ui/components/UsageWindowText.qml contents/ui/main.qml
-#: scripts/smoke/Capture.qml
+#: contents/ui/components/UsageWindowText.qml scripts/smoke/Capture.qml
 msgid "used"
 msgstr ""
 

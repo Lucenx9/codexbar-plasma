@@ -191,10 +191,6 @@ KCM.SimpleKCM {
         return OverviewProviders.resolvedProviderIDs(overviewRosterProviderIDs(), cfg_overviewProviderIDs)
     }
 
-    function parseOverviewProviderIDs(value) {
-        return OverviewProviders.configuredProviderIDs(value)
-    }
-
     function overviewProviderSelected(providerID) {
         return OverviewProviders.isSelected(resolvedOverviewProviderIDs(), providerID)
     }

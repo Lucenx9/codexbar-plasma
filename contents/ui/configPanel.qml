@@ -173,7 +173,7 @@ KCM.SimpleKCM {
         for (var i = 0; i < orderedPanelProviderRoster.length; i++) {
             ordered.push(orderedPanelProviderRoster[i].provider)
         }
-        cfg_panelProviderIDs = PanelProviders.selectionText(PanelProviders.toggledSelection(
+        cfg_panelProviderIDs = PanelProviders.selectionText(ProviderOrder.toggledSelection(
             ordered, resolvedPanelProviderIDs(), providerID, checked))
     }
 

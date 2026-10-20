@@ -252,9 +252,6 @@ TestCase {
         }
         function usagePercentText(row) { return usageLabels.percentText(row, false); }
         function usageConfidenceText(row) { return usageLabels.confidenceText(row); }
-        function percentSuffix() {
-            return "left";
-        }
         function quotaMeterColor(item, accent) {
             return quotaWarning || (secondaryWarning && item.value === 70) ? Qt.rgba(1, 0.5, 0, 1) : accent;
         }

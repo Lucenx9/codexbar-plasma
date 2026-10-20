@@ -220,4 +220,58 @@ TestCase {
         compare(ordered.length, ProviderOrder.maximumProviderItems);
         compare(ordered[0].provider, "provider-12");
     }
+
+    function test_toggleFollowsRosterOrderAndKeepsAbsentSelection() {
+        var roster = ["codex", "claude", "gemini"];
+
+        var next = ProviderOrder.toggledSelection(roster, ["claude"], "gemini", true);
+        compare(next.join(","), "claude,gemini");
+
+        next = ProviderOrder.toggledSelection(roster, ["claude", "gemini"], "claude", false);
+        compare(next.join(","), "gemini");
+
+        // Roster order wins even when the stored selection lists another order.
+        next = ProviderOrder.toggledSelection(roster, ["gemini", "codex"], "claude", true);
+        compare(next.join(","), "codex,claude,gemini");
+
+        // A selected provider missing from the roster survives a later toggle.
+        next = ProviderOrder.toggledSelection(["codex"], ["codex", "opencode"], "codex", false);
+        compare(next.join(","), "opencode");
+    }
+
+    function test_toggleRejectsMalformedInput() {
+        // A provider can only be toggled into the selection through a roster
+        // entry, so an empty roster yields an empty selection.
+        var next = ProviderOrder.toggledSelection(null, null, "codex", true);
+        compare(next.join(","), "");
+        next = ProviderOrder.toggledSelection(["codex"], "claude", "claude", false);
+        compare(next.join(","), "");
+        next = ProviderOrder.toggledSelection(["codex"], ["codex"], "", true);
+        compare(next.join(","), "codex");
+        next = ProviderOrder.toggledSelection(["codex"], ["codex"], new Array(600).join("x"), true);
+        compare(next.join(","), "codex");
+        next = ProviderOrder.toggledSelection(["codex"], ["codex"], "constructor", true);
+        compare(next.join(","), "codex");
+    }
+
+    function test_toggleNormalizesProviderIDs() {
+        var next = ProviderOrder.toggledSelection(["groqcloud"], [], "groqcloud", true);
+        compare(next.join(","), "groq");
+        next = ProviderOrder.toggledSelection(["groq"], ["groq"], "GROQCLOUD", false);
+        compare(next.join(","), "");
+        // A stored raw spelling still toggles through its canonical ID.
+        next = ProviderOrder.toggledSelection(["groqcloud"], ["groqcloud"], "groqcloud", false);
+        compare(next.join(","), "");
+        next = ProviderOrder.toggledSelection(["groqcloud", "codex"], ["groqcloud"], "codex", true);
+        compare(next.join(","), "groq,codex");
+    }
+
+    function test_toggleDeduplicatesWithoutMutatingInputs() {
+        var roster = ["groqcloud", "GROQ", "codex", "constructor"];
+        var selected = ["CODEX", "groqcloud", "groq", "missing", "constructor"];
+        var next = ProviderOrder.toggledSelection(roster, selected, "codex", false);
+        compare(next, ["groq", "missing"]);
+        compare(roster, ["groqcloud", "GROQ", "codex", "constructor"]);
+        compare(selected, ["CODEX", "groqcloud", "groq", "missing", "constructor"]);
+    }
 }
