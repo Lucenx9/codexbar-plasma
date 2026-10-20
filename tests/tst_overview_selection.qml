@@ -100,6 +100,15 @@ TestCase {
         compare(OverviewProviders.selectionText("codex"), OverviewProviders.noneValue);
     }
 
+    function test_recheckingAnAliasAtTheLimitKeepsTheSelection() {
+        var roster = ["codex", "groqcloud", "cursor", "openai"];
+        var selected = ["cursor", "GROQCLOUD", "codex", "missing"];
+        compare(OverviewProviders.toggledSelection(roster, selected, "groq", true),
+            ["codex", "groq", "cursor", "missing"]);
+        compare(selected, ["cursor", "GROQCLOUD", "codex", "missing"]);
+        compare(OverviewProviders.toggledSelection(roster, selected, "openai", true), selected);
+    }
+
     function test_absentSelectionsDoNotOccupyVisibleSlots() {
         var saved = ["claude", "gemini", "copilot"];
         var roster = ["codex", "groqcloud", "cursor", "openai"];

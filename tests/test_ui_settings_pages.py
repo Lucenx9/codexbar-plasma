@@ -399,7 +399,6 @@ class SettingsPagesTest(unittest.TestCase):
                 )
         for overview_delegate_function in (
             "resolvedOverviewProviderIDs",
-            "parseOverviewProviderIDs",
             "overviewProviderSelected",
             "toggleOverviewProvider",
         ):

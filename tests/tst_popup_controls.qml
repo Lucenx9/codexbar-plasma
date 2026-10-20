@@ -89,9 +89,6 @@ TestCase {
         }
         function usagePercentText(row) { return usageLabels.percentText(row, false); }
         function usageConfidenceText(row) { return usageLabels.confidenceText(row); }
-        function percentSuffix() {
-            return "left";
-        }
         function statusBadgeText() {
             return "Issue";
         }
@@ -100,9 +97,6 @@ TestCase {
         }
         function quotaMeterColor() {
             return providerColor();
-        }
-        function contrastTextColor() {
-            return "white";
         }
         property bool accountsLoading: false
         property var accountOptions: []

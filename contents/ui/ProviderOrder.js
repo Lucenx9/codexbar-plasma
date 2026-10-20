@@ -1,5 +1,6 @@
 .pragma library
 .import "ProviderIdentity.js" as ProviderIdentity
+.import "Guards.js" as Guards
 
 var maximumProviderItems = 256;
 var maximumProviderOrderLength = maximumProviderItems * (ProviderIdentity.maximumProviderIDLength + 1);
@@ -167,4 +168,45 @@ function movedOrder(items, configuredValue, index, delta) {
     }
     tokens[slots[slots.length - 1]] = movedProviderID;
     return tokens.join(",");
+}
+
+// Returns the next selection after one toggle. Roster order wins so the stored
+// value follows the saved provider order; selected providers missing from the
+// current roster survive, so disabling a provider elsewhere does not silently
+// drop it from the selection on the next toggle.
+function toggledSelection(orderedProviderIDs, selectedProviderIDs, providerID, checked) {
+    var selected = Array.isArray(selectedProviderIDs) ? selectedProviderIDs : [];
+    var selectedSet = ({});
+    for (var i = 0; i < selected.length; i++) {
+        var normalizedSelected = normalizedProviderID(selected[i]);
+        if (normalizedSelected.length > 0) {
+            selectedSet[normalizedSelected] = true;
+        }
+    }
+
+    var key = normalizedProviderID(providerID);
+    if (key.length > 0) {
+        if (checked) {
+            selectedSet[key] = true;
+        } else if (Guards.hasOwnKey(selectedSet, key)) {
+            delete selectedSet[key];
+        }
+    }
+
+    var result = [];
+    var roster = Array.isArray(orderedProviderIDs) ? orderedProviderIDs : [];
+    for (var j = 0; j < roster.length; j++) {
+        var candidate = normalizedProviderID(roster[j]);
+        if (candidate.length > 0 && Guards.hasOwnKey(selectedSet, candidate)
+                && result.indexOf(candidate) === -1) {
+            result.push(candidate);
+        }
+    }
+    for (var k = 0; k < selected.length; k++) {
+        var prior = normalizedProviderID(selected[k]);
+        if (prior.length > 0 && Guards.hasOwnKey(selectedSet, prior) && result.indexOf(prior) === -1) {
+            result.push(prior);
+        }
+    }
+    return result;
 }

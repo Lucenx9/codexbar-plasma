@@ -1159,10 +1159,6 @@ PlasmoidItem {
         return row && Normalizer.authoritativeQuota(row) && row.paceOnTop === false && Number(row.paceEtaSeconds) > 0
     }
 
-    function paceSummaryText(pace) {
-        return paceSummaryPartsText(PacePresentation.summaryParts(pace))
-    }
-
     function paceSummaryPartsText(parts) {
         return usageWindowText.paceSummaryPartsText(parts)
     }
@@ -1569,11 +1565,6 @@ PlasmoidItem {
             + opacity + ")"
     }
 
-    function contrastTextColor(color) {
-        var luminance = (0.2126 * color.r) + (0.7152 * color.g) + (0.0722 * color.b)
-        return luminance > 0.62 ? Qt.rgba(0.08, 0.08, 0.1, 1) : Qt.rgba(1, 1, 1, 1)
-    }
-
     function readableAccentColor(accent, background) {
         var surface = background || Kirigami.Theme.backgroundColor
         return ThemeContrast.readableAccentColor(
@@ -1764,10 +1755,6 @@ PlasmoidItem {
             return -1
         }
         return usageBarsShowUsed ? row.pacePercent : clamp(100 - row.pacePercent, 0, 100)
-    }
-
-    function percentSuffix() {
-        return usageBarsShowUsed ? i18n("used") : i18n("left")
     }
 
     function resetLabel(value) {

@@ -193,7 +193,6 @@ TestCase {
         function withAlpha(color, alpha) { return Qt.rgba(0, 0, 1, alpha); }
         function usagePercentText(row) { return usageLabels.percentText(row, false); }
         function usageConfidenceText(row) { return usageLabels.confidenceText(row); }
-        function percentSuffix() { return "left"; }
         function quotaMeterColor() { return "blue"; }
         function quotaWarningMarkers() { return []; }
         function usagePaceText(row) { return row.pace; }

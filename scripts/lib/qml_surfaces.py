@@ -184,7 +184,7 @@ class Surface:
 
         A file needs the declaration when it calls the helper unqualified.
         Components reach the applet root through their `applet` property
-        (`applet.contrastTextColor(...)`), so such a call obliges the surface
+        (`applet.providerColor(...)`), so such a call obliges the surface
         root instead. Calls qualified by a JS import namespace resolve to that
         module and oblige nobody here.
 

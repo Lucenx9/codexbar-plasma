@@ -72,51 +72,6 @@ TestCase {
         compare(ids(PanelProviders.filteredItems(withJunk, "claude,constructor")), "claude");
     }
 
-    function test_toggleFollowsRosterOrderAndKeepsAbsentSelection() {
-        var roster = ["codex", "claude", "gemini"];
-
-        var next = PanelProviders.toggledSelection(roster, ["claude"], "gemini", true);
-        compare(next.join(","), "claude,gemini");
-
-        next = PanelProviders.toggledSelection(roster, ["claude", "gemini"], "claude", false);
-        compare(next.join(","), "gemini");
-
-        // Roster order wins even when the stored selection lists another order.
-        next = PanelProviders.toggledSelection(roster, ["gemini", "codex"], "claude", true);
-        compare(next.join(","), "codex,claude,gemini");
-
-        // A selected provider missing from the roster survives a later toggle.
-        next = PanelProviders.toggledSelection(["codex"], ["codex", "opencode"], "codex", false);
-        compare(next.join(","), "opencode");
-    }
-
-    function test_toggleRejectsMalformedInput() {
-        // A provider can only be toggled into the selection through a roster
-        // entry, so an empty roster yields an empty selection.
-        var next = PanelProviders.toggledSelection(null, null, "codex", true);
-        compare(next.join(","), "");
-        next = PanelProviders.toggledSelection(["codex"], "claude", "claude", false);
-        compare(next.join(","), "");
-        next = PanelProviders.toggledSelection(["codex"], ["codex"], "", true);
-        compare(next.join(","), "codex");
-        next = PanelProviders.toggledSelection(["codex"], ["codex"], new Array(600).join("x"), true);
-        compare(next.join(","), "codex");
-        next = PanelProviders.toggledSelection(["codex"], ["codex"], "constructor", true);
-        compare(next.join(","), "codex");
-    }
-
-    function test_toggleNormalizesProviderIDs() {
-        var next = PanelProviders.toggledSelection(["groqcloud"], [], "groqcloud", true);
-        compare(next.join(","), "groq");
-        next = PanelProviders.toggledSelection(["groq"], ["groq"], "GROQCLOUD", false);
-        compare(next.join(","), "");
-        // A stored raw spelling still toggles through its canonical ID.
-        next = PanelProviders.toggledSelection(["groqcloud"], ["groqcloud"], "groqcloud", false);
-        compare(next.join(","), "");
-        next = PanelProviders.toggledSelection(["groqcloud", "codex"], ["groqcloud"], "codex", true);
-        compare(next.join(","), "groq,codex");
-    }
-
     function test_selectionTextRoundTripsEmptyAsNone() {
         compare(PanelProviders.selectionText(["codex", "claude"]), "codex,claude");
         compare(PanelProviders.selectionText([]), PanelProviders.noneValue);

@@ -23,7 +23,7 @@ class LocalizedCliLabelTests(unittest.TestCase):
         applet.texts = {main: main.read_text()}
         applet.files = [main]
         signatures = {"capitalize": "value",
-                      "paceSummaryText": "pace", "paceSummaryPartsText": "parts",
+                      "paceSummaryPartsText": "parts",
                       "paceEtaText": "seconds",
                       "usageCountText": "value, unit",
                       "dashboardPartText": "part"}
@@ -222,14 +222,14 @@ TestCase {
             "OMP \u00b7 " + row.labels[5]);
         compare(sessionLabels.sessionSubtitle({provider: "", dialect: "future", host: "", source: "ide"}, false),
             "future \u00b7 IDE");
-        compare(paceSummaryText({stage: "ahead", deltaPercent: 13, expectedUsedPercent: 30,
-            willLastToReset: false, etaSeconds: 3600, summary: "English summary"}), row.labels[6]);
-        compare(paceSummaryText({stage: "onTrack", willLastToReset: true}),
+        compare(paceSummaryPartsText(PacePresentation.summaryParts({stage: "ahead", deltaPercent: 13, expectedUsedPercent: 30,
+            willLastToReset: false, etaSeconds: 3600, summary: "English summary"})), row.labels[6]);
+        compare(paceSummaryPartsText(PacePresentation.summaryParts({stage: "onTrack", willLastToReset: true})),
             i18n("On pace") + " | " + i18n("Lasts until reset"));
-        compare(paceSummaryText({stage: "behind", deltaPercent: -3}), i18n("%1% in reserve", 3));
-        compare(paceSummaryText({willLastToReset: false, etaSeconds: 0}), i18n("Runs out now"));
-        compare(paceSummaryText({summary: "Legacy forecast"}), "Legacy forecast");
-        compare(paceSummaryText(null), "");
+        compare(paceSummaryPartsText(PacePresentation.summaryParts({stage: "behind", deltaPercent: -3})), i18n("%1% in reserve", 3));
+        compare(paceSummaryPartsText(PacePresentation.summaryParts({willLastToReset: false, etaSeconds: 0})), i18n("Runs out now"));
+        compare(paceSummaryPartsText(PacePresentation.summaryParts({summary: "Legacy forecast"})), "Legacy forecast");
+        compare(paceSummaryPartsText(PacePresentation.summaryParts(null)), "");
         privacyMode = true;
         compare(sessionLabels.sessionStateText("futureState"), i18n("Unknown"));
         compare(sessionLabels.sessionSourceText("futureSource"), i18n("Unknown"));

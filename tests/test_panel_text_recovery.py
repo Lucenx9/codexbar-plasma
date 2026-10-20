@@ -134,7 +134,7 @@ class PanelTextRecoveryTests(unittest.TestCase):
         functions = []
         for name in ("menuBarDisplayText", "safeMenuBarDisplayMode", "panelDisplayRow",
                      "switcherCandidateRows",
-                     "clamp", "providerKey", "displayPercent", "percentSuffix",
+                     "clamp", "providerKey", "displayPercent",
                      "paceMarkerPercent",
                      "paceWarningActive", "paceEtaText", "runOutTextForRow",
                      "resetTextForRow", "usageResetText", "resetText", "resetLabel"):
