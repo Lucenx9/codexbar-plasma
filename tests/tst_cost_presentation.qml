@@ -233,6 +233,21 @@ TestCase {
         compare(CostPresentation.amountString(fmt, null, "Quota"), "-")
     }
 
+    function test_amountStringDoesNotDisplayNegativeZero() {
+        for (var format of [fmt, CostPresentation.numberFormat(".", ","), null]) {
+            for (var currency of ["USD", "EUR", ""]) {
+                for (var value of [-0, -0.001, -0.0049]) {
+                    compare(CostPresentation.amountString(format, value, currency),
+                        CostPresentation.amountString(format, 0, currency))
+                }
+                for (var negative of [-0.005, -0.01, -12.5]) {
+                    compare(CostPresentation.amountString(format, negative, currency),
+                        "-" + CostPresentation.amountString(format, -negative, currency))
+                }
+            }
+        }
+    }
+
     function test_nonNumericAmountDegradesToDash() {
         compare(CostPresentation.amountString(fmt, "abc", "USD"), "-")
         compare(CostPresentation.amountString(fmt, "abc", "EUR"), "-")

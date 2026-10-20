@@ -25,6 +25,7 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Monetary amounts that round to zero no longer retain a negative sign.
 - Align Diagnostics support report preview button with the `DisclosureButton`
   primitive property contract.
 - Verify an existing managed CLI before reusing it during preparation. Report
