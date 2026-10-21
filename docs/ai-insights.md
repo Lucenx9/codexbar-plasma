@@ -207,8 +207,8 @@ levels before parsing; brackets and escaped quotes inside strings do not count.
 Failures map to bounded reasons: `missing_key`, `secret_unavailable`, `auth`
 (401), `credits` (402, or OpenAI `insufficient_quota`), `forbidden` (403),
 `model` (404, invalid or router model), `request` (400/422), `rate_limited`
-(429, with `Retry-After` up to 24 hours), `timeout`, `network`, `routing`
-(OpenRouter 503), `unavailable`, `refused`, `truncated`, `format`,
+(429, with `Retry-After` as seconds or an HTTP date, bounded to 24 hours),
+`timeout`, `network`, `routing` (OpenRouter 503), `unavailable`, `refused`, `truncated`, `format`,
 `invalid_input`, and `endpoint`. OpenRouter can report a provider failure as
 `200 OK` with only an error object; its numeric code maps through the same
 table, honoring the response's `Retry-After`, and a choice that finished with
