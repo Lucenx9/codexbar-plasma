@@ -571,7 +571,7 @@ function sumTokenParts(inputTokens, outputTokens, cacheReadTokens, cacheCreation
 }
 
 // `maximumDays` defaults to the charted bound; aggregates over a longer
-// calendar period may pass up to the scan budget.
+// calendar period may pass its span. Record inspection stays separately bounded.
 function boundedHistoryDays(days, maximumDays) {
     var numericDays = strictFiniteNumber(days)
     return isFinite(numericDays)

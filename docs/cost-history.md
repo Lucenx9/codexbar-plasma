@@ -49,7 +49,13 @@ snapshot without a usable `updatedAt` keeps its Today amounts.
   Without a usable scan date, the window keeps spanning the recorded dates.
   The chart and daily rows keep at most 365 days, while period
   models and the daily average cover the whole span within the 2,048-record
-  scan budget; the CLI's totals still cover the whole history.
+  scan budget; the CLI's totals still cover the whole history. That budget limits
+  input records, not elapsed calendar days. Longer sparse histories aggregate
+  models across their full span and count eligible zero-activity dates in the
+  average denominator without allocating a row per date. Duplicate dates,
+  unknown days and truncated scans still prevent zero-day inference. An
+  amount-bearing row covers its date even if a second row for that date has
+  no amounts, matching the shorter-history gap-fill rule.
 - The global activity heatmap uses the unfiltered history's calendar dates,
   preserving unavailable days at either boundary and between measured days.
   Unavailable days occupy empty cells, so filtering missing amounts never shifts

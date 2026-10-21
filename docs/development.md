@@ -725,7 +725,9 @@ clipboard interoperability with every Wayland application or portal backend.
   legacy marker and restore field absence. Privacy retains the semantic value.
   The notification planner preserves an already notified quota severity and
   same-window pace warning across nonauthoritative observations while disarming
-  resets. Only authoritative observations can establish recovery or escalation;
+  resets. An all-nonauthoritative initial observation leaves the scope unprimed,
+  so its first authoritative quota establishes a silent baseline.
+  Only authoritative observations can establish recovery or escalation;
   a new reset timestamp still gives a forecast its own notification identity.
   `tst_usage_confidence.qml` exercises display, retention, ranking, visibility,
   notifications, and AI Insights at public interfaces. The `estimated-usage`,

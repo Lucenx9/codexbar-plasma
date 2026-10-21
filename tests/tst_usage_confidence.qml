@@ -298,6 +298,26 @@ TestCase {
         };
     }
 
+    function test_firstExactQuotaAfterDegradedReadingsPrimesSilently_data() {
+        var cases = [];
+        for (var confidence of ["percentOnly", "estimated", "unknown"])
+            for (var mode of ["prime", "observe"])
+                cases.push({tag: confidence + "-" + mode, confidence: confidence, mode: mode});
+        return cases;
+    }
+    function test_firstExactQuotaAfterDegradedReadingsPrimesSilently(data) {
+        var options = {mode: data.mode, quotaEnabled: true, paceEnabled: true,
+            resetEnabled: true, statusEnabled: true};
+        var first = Notifications.transition([observation(data.confidence, 95, "", false)], {}, options);
+        compare(first.intents.length, 0);
+        options.mode = "observe";
+        var exact = Notifications.transition([observation("exact", 95, "major", true)], first.nextMemo, options);
+        compare(exact.intents.length, 0);
+        var recovered = Notifications.transition([observation("exact", 10, "", false)], exact.nextMemo, options);
+        var risen = Notifications.transition([observation("exact", 95, "major", true)], recovered.nextMemo, options);
+        compare(risen.intents.map(function(intent) { return intent.kind; }), ["quota", "pace"]);
+    }
+
     function test_estimatesNeitherNotifyNorArmOrConsumeQuotaTransitions_data() {
         return degradedConfidence_data();
     }

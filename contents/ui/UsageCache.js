@@ -242,8 +242,14 @@ function encode(items, context, nowMs) {
     if (snapshots.length === 0) {
         return ""
     }
-    var serialized = JSON.stringify({ version: 1, context: context, snapshots: snapshots })
-    return withinByteLimit(serialized) ? serialized : ""
+    // Retain the leading providers that fit instead of clearing every saved
+    // quota when another otherwise valid snapshot exceeds the byte budget.
+    while (snapshots.length > 0) {
+        var serialized = JSON.stringify({ version: 1, context: context, snapshots: snapshots })
+        if (withinByteLimit(serialized)) return serialized
+        snapshots.pop()
+    }
+    return ""
 }
 
 // Persisted data is untrusted. Rebuild only the quota contract that QML already

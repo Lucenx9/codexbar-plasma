@@ -26,6 +26,45 @@ function recordedHistoryDays(daily, scanDay) {
     return isFinite(first) ? Math.round((last - first) / 86400000) + 1 : NaN;
 }
 
+// Long sparse histories need a calendar denominator, not an array with one
+// entry per day. Inspect only the same bounded input tail as the normalizer.
+function longHistoryAverage(items, currency, recordedDays, scanDay) {
+    var source = Array.isArray(items) ? items : [];
+    var first = Math.max(0, source.length - Normalizer.maximumCostHistoryScanItems);
+    var scan = Normalizer.parsedCalendarDateKey(scanDay);
+    var firstDayMs = scan ? scan.timestampMs - (recordedDays - 1) * 86400000 : NaN;
+    var canFill = first === 0 && scan !== null;
+    var seen = ({});
+    var blocked = ({});
+    var retained = [];
+    for (var i = first; i < source.length; i++) {
+        var item = source[i];
+        if (!Normalizer.isCliRecord(item)) continue;
+        var day = Normalizer.parsedCalendarDateKey(Normalizer.boundedDisplayText(
+            item.date || item.day || item.dayKey || "", 120));
+        if (scan && day && (day.timestampMs > scan.timestampMs || day.timestampMs < firstDayMs)) continue;
+        if (!Normalizer.costRecordHasAmounts(item)) {
+            if (day) blocked[day.key] = true;
+            continue;
+        }
+        if (!day || Normalizer.hasOwnKey(seen, day.key)) canFill = false;
+        if (day) seen[day.key] = true;
+        retained.push(item);
+    }
+    // Match daily gap filling: an amount row covers its date even when a
+    // second, incomplete record for the same date contains no amounts.
+    canFill = canFill && Object.keys(blocked).every(function(key) {
+        return Normalizer.hasOwnKey(seen, key);
+    });
+    var daily = Normalizer.normalizeCostDaily(retained, currency,
+        Normalizer.maximumCostHistoryScanItems, undefined, Normalizer.maximumCostHistoryScanItems);
+    var zeroDays = canFill && daily.length > 0 ? Math.max(0, recordedDays - daily.length) : 0;
+    return {
+        cost: CostPresentation.averageDailyValue(daily, false, zeroDays),
+        tokens: CostPresentation.averageDailyValue(daily, true, zeroDays)
+    };
+}
+
 function normalizeSnapshot(item, requestedHistoryDays) {
     var provider = Normalizer.providerSnapshotKey(item.provider);
     var currency = Normalizer.boundedDisplayText(item.currencyCode || "USD", 12);
@@ -48,9 +87,9 @@ function normalizeSnapshot(item, requestedHistoryDays) {
     // All history charts at most the newest year, but its model totals and
     // daily average cover every recorded day within the scan budget.
     var aggregateBound = Normalizer.maximumCostHistoryScanItems;
-    var aggregateDays = isFinite(recordedDays) ? Math.min(aggregateBound, recordedDays) : historyDays;
-    var modelSummary = Normalizer.normalizeCostModels(item.daily, currency, aggregateDays, item.updatedAt, true, aggregateBound);
-    var aggregateDaily = aggregateDays > historyDays
+    var aggregateDays = isFinite(recordedDays) ? recordedDays : historyDays;
+    var modelSummary = Normalizer.normalizeCostModels(item.daily, currency, aggregateDays, item.updatedAt, true, Math.max(aggregateBound, aggregateDays));
+    var aggregateDaily = aggregateDays > historyDays && aggregateDays <= aggregateBound
         ? Normalizer.normalizeCostDaily(item.daily, currency, aggregateDays, item.updatedAt, aggregateBound) : null;
     return {
         provider: provider,
@@ -79,7 +118,9 @@ function normalizeSnapshot(item, requestedHistoryDays) {
             sourceTruncated: false, hasUnknownCost: false },
         modelsTruncated: modelSummary.truncated,
         // Null when the charted days already cover the whole range.
-        averageDaily: aggregateDaily ? {
+        averageDaily: aggregateDays > aggregateBound
+            ? longHistoryAverage(item.daily, currency, recordedDays, scanDay)
+            : aggregateDaily ? {
             cost: CostPresentation.averageDailyValue(aggregateDaily, false),
             tokens: CostPresentation.averageDailyValue(aggregateDaily, true)
         } : null,

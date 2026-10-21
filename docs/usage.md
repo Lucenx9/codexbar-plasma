@@ -343,7 +343,9 @@ quota response includes newly fetched service status, that status still updates
 and can trigger incident notifications independently of the retained quotas.
 Stale quotas preserve the previous quota, pace, and reset notification state,
 even when the CLI reports success with old quotas and current status. If no fresh
-quota has been seen, the first fresh measurement establishes that state silently.
+quota has been seen, the first fresh authoritative measurement establishes that
+state silently. Estimated, percentage-only and unknown readings do not establish
+that baseline.
 Panel and popup run-out countdowns advance from the receipt time of their own
 forecast.
 Selecting a cached account preserves that time, including in privacy mode;
@@ -368,7 +370,9 @@ If a partial refresh finishes before that verification, its results take
 precedence for the providers it returned. Other cached providers are restored
 as last known and included when the merged snapshot is saved.
 
-The disk cache is limited to 64 KiB of UTF-8 on both save and restore. It holds
+The disk cache is limited to 64 KiB of UTF-8 on both save and restore. When
+providers exceed the save budget, it keeps the leading providers that fit rather
+than discarding the entire cache. The live provider list is unaffected. It holds
 at most 64 providers and only their primary, secondary,
 tertiary, and up to 24 extra quota windows per provider, with only percentages,
 bounded semantic usage confidence, reset timestamps, measurement timestamps,
@@ -658,7 +662,9 @@ and clipboard content remain under your control after closing the window.
   **All history** totals cover every recorded day. Its chart, heatmap, and
   history rows start at the oldest recorded day and show at most the newest
   365 days; its model totals and daily average cover up to the newest 2,048
-  daily records. Dates after a snapshot's scan day do not extend that history
+  daily records, even when those records span more than 2,048 calendar days.
+  Empty dates are counted without allocating a row for every day in that span.
+  Dates after a snapshot's scan day do not extend that history
   or lower its daily cost and token averages.
 - Token breakdowns, model summaries, recent daily spend, cost history bars, and
   average cost per 1M tokens, with a configurable cost history window. Recent

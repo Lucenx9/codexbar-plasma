@@ -25,6 +25,32 @@ TestCase {
     function fresh() {
         return State.accepted([], [item("codex", 20), item("claude", 40)], context, now).providers
     }
+    function test_largeRosterKeepsTheCachePrefixThatFits() {
+        var incoming = [];
+        for (var i = 0; i < 31; i++) {
+            var provider = item("provider-" + i, 40);
+            var rows = [];
+            for (var lane of ["primary", "secondary", "tertiary"])
+                rows.push({lane: lane, hasPercent: true, usedPercent: 40,
+                    resetsAt: new Date(now + 3600000).toISOString()});
+            for (var extra = 0; extra < 24; extra++)
+                rows.push({lane: "extra", windowId: "window-" + extra, hasPercent: true,
+                    usedPercent: 40, resetsAt: new Date(now + 3600000).toISOString()});
+            provider.rows = rows;
+            incoming.push(provider);
+        }
+        var result = State.accepted(fresh(), incoming, context, now);
+        compare(result.providers.length, incoming.length);
+        verify(result.refreshCompleted);
+        verify(result.cacheValue.length > 0);
+        verify(Cache.withinByteLimit(result.cacheValue));
+        var restored = Cache.decode(result.cacheValue, context, now);
+        verify(restored.length > 0 && restored.length < incoming.length);
+        compare(restored.map(function(provider) { return provider.provider; }),
+            incoming.slice(0, restored.length).map(function(provider) { return provider.provider; }));
+        compare(Cache.encode(result.providers.slice(0, restored.length + 1), context, now), result.cacheValue);
+    }
+
     function test_liveSuccessAndFailurePublishDifferentClockAndNotificationIntents() {
         var previous = fresh()
         var saved = JSON.stringify(previous)

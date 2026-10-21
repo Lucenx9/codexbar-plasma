@@ -653,7 +653,7 @@ TestCase {
 
         var currentScope = "codex/current-account"
         var result = transition(
-            "observe", [observation("", "", [], currentScope)], previous)
+            "observe", [observation("", "", [usageRow("", 0, false)], currentScope)], previous)
         verify(Object.keys(result.nextMemo).length <= limit)
         compare(result.nextMemo["scope:" + currentScope], "1")
     }
