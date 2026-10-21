@@ -143,6 +143,10 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
   environment-only secret, the Linux Gemini Auto regression, the disabled
   app-cache fallback, installer compatibility, and carried blockers rechecked
   with the isolated official CLI.
+- [0.79.0 release review](research/2026-10-21-macos-parity-0.79.0.md): the
+  0.78.0/0.79.0 delta, verified OpenCode Go costs and detail severity, remaining
+  custom-provider routing failure, Vercel setup blocker, libxml2 removal,
+  installer compatibility, and isolated carried-blocker checks.
 - [0.75.0 Codex contract verification](research/2026-10-15-codex-contracts-0.75.0.md):
   synthetic native partial-priced cost output, identified-request local/remote
   merge and failure semantics, authoritative reset-credit inventory, and the
