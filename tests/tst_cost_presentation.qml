@@ -428,6 +428,23 @@ TestCase {
         compare(CostPresentation.averageDailyValue([], false), null)
     }
 
+    function test_averageDailyValueAvoidsIntermediateOverflow() {
+        for (var showsTokens of [false, true]) {
+            var points = [
+                {cost: Number.MAX_VALUE, tokens: Number.MAX_VALUE, currency: "EUR"},
+                {cost: Number.MAX_VALUE, tokens: Number.MAX_VALUE, currency: "EUR"}
+            ]
+            var average = CostPresentation.averageDailyValue(points, showsTokens)
+            compare(average.value, Number.MAX_VALUE)
+            compare(average.currency, "EUR")
+            points.push({cost: null, tokens: null})
+            points.push({cost: 0, tokens: 0, currency: "EUR"})
+            average = CostPresentation.averageDailyValue(points, showsTokens)
+            verify(isFinite(average.value))
+            verify(Math.abs(average.value / Number.MAX_VALUE - 2 / 3) < 1e-15)
+        }
+    }
+
     // A range the CLI measured as zero is an answer, not a missing one. The
     // history rows below the average already print those zeros.
     function test_averageDailyValueKeepsAFullyMeasuredZeroRange() {

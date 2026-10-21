@@ -524,15 +524,17 @@ function averageDailyValue(points, showsTokens) {
     if (!Array.isArray(points) || points.length === 0) {
         return null
     }
-    var total = 0
+    var average = 0
     var count = 0
     var currency = "USD"
     for (var i = 0; i < points.length; i++) {
         if (!hasMetricValue(points[i], showsTokens)) {
             continue
         }
-        total += Math.max(0, metricValue(points[i], showsTokens))
         count += 1
+        // Nonnegative values keep this difference finite even when their sum
+        // would overflow before division by the measured day count.
+        average += (Math.max(0, metricValue(points[i], showsTokens)) - average) / count
         if (points[i].currency) {
             currency = points[i].currency
         }
@@ -542,7 +544,7 @@ function averageDailyValue(points, showsTokens) {
     if (count === 0) {
         return null
     }
-    return { value: total / count, currency: currency }
+    return { value: average, currency: currency }
 }
 
 function perMillionAmount(tokenCost) {
