@@ -428,6 +428,18 @@ TestCase {
         compare(CostPresentation.averageDailyValue([], false), null)
     }
 
+    function test_averageDailyValuePreservesHalfTokenRounding() {
+        var points = [803, 136, 8, 19].map(function(tokens) {
+            return {tokens: tokens}
+        })
+        for (var order = 0; order < 2; order++) {
+            var average = CostPresentation.averageDailyValue(points, true)
+            compare(CostPresentation.tokenCountString(average.value), "242")
+            verify(average.value === 241.5)
+            points.reverse()
+        }
+    }
+
     function test_averageDailyValueAvoidsIntermediateOverflow() {
         for (var showsTokens of [false, true]) {
             var points = [

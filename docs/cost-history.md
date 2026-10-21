@@ -35,8 +35,9 @@ snapshot without a usable `updatedAt` keeps its Today amounts.
   highest of them, the row their bars highlight. The daily average covers the
   whole range and divides the measured days only, so a range measured as zero
   averages to zero; a range with no measured day has no average at all.
-  Its incremental mean avoids an overflowing intermediate sum for very large
-  finite daily costs or token counts.
+  If very large finite daily costs or token counts overflow the sum, an
+  incremental mean supplies the average. Ordinary sums retain their existing
+  rounding behavior.
 - **Month to date** and **All history** come from the CLI's `cost --period`.
   Period identifiers accept only strings; malformed values use the existing
   day-range fallback and preserve a bounded legacy label when supplied.
