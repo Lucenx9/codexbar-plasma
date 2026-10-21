@@ -337,7 +337,8 @@ the retained-data indication. When a provider-scoped reply contains multiple
 records, an unreadable record does not prevent a later healthy record from
 updating that provider; a reply with no readable records remains an error.
 Retained data never generates quota, pace, reset,
-or status notifications, and its run-out forecasts are suppressed. If a failed
+or status notifications, and its pace and run-out forecasts are suppressed,
+including in privacy mode. If a failed
 quota response includes newly fetched service status, that status still updates
 and can trigger incident notifications independently of the retained quotas.
 Stale quotas preserve the previous quota, pace, and reset notification state,

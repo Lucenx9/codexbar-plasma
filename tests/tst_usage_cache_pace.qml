@@ -3,11 +3,52 @@ import QtTest
 import "../contents/ui/UsageCache.js" as Cache
 import "../contents/ui/ProviderNormalizer.js" as Normalizer
 import "../contents/ui/PanelDisplay.js" as PanelDisplay
+import "../contents/ui/ProviderSnapshot.js" as Snapshot
+import "../contents/ui/UsageState.js" as State
+import "../contents/ui/PrivacyPresentation.js" as Privacy
+import "../contents/ui/components" as Components
 
 TestCase {
     name: "UsageCachePace"
 
     readonly property double nowMs: Date.parse("2026-09-11T12:00:00Z")
+
+    function i18n(text, value) { return text.replace("%1", value); }
+    function i18np(one, many, value) { return i18n(value === 1 ? one : many, value); }
+
+    Components.UsageWindowText { id: windowText }
+
+    function test_privacyCannotRestoreStaleForecasts_data() {
+        return [
+            {tag: "failed-refresh", failed: true, age: 60000, stale: true},
+            {tag: "expired-measurement", failed: false, age: Cache.maximumAgeMs + 1, stale: true},
+            {tag: "fresh-control", failed: false, age: 60000, stale: false}
+        ];
+    }
+
+    function test_privacyCannotRestoreStaleForecasts(data) {
+        var snapshot = Snapshot.normalize({provider: "codex", usage: {
+            updatedAt: new Date(nowMs - data.age).toISOString(),
+            dataConfidence: "exact", primary: {usedPercent: 72}
+        }, pace: {primary: {stage: "behind", deltaPercent: -20,
+            expectedUsedPercent: 40, willLastToReset: false, etaSeconds: 3600}}}, nowMs);
+        snapshot.rows[0].pace = windowText.paceSummaryPartsText(snapshot.rows[0].paceParts);
+        verify(snapshot.rows[0].pace.length > 0);
+        var original = JSON.stringify(snapshot);
+        var state = State.accepted([], [snapshot], "", nowMs);
+        if (data.failed) {
+            state = State.failed(state.providers, [Snapshot.normalize({provider: "codex",
+                error: {message: "offline"}}, nowMs)], "", nowMs);
+        }
+        var retained = state.providers[0];
+        var presented = Privacy.provider(retained, true, {rowLabels: ["Session"]});
+        // main.qml rebuilds localized pace from these parts in privacy mode.
+        var pace = windowText.paceSummaryPartsText(presented.rows[0].paceParts);
+        compare(retained.usageStale, data.stale);
+        compare(pace.length === 0, data.stale);
+        compare(PanelDisplay.rowForMode(presented.rows, "runOut", "auto") === null, data.stale);
+        compare(JSON.stringify(snapshot), original);
+    }
 
     function test_successfulMeasurementForecastsRespectFreshness_data() {
         return [
