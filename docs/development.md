@@ -799,6 +799,8 @@ clipboard interoperability with every Wayland application or portal backend.
   and KDE desktop styles, including localized-number round trips. It also
   confirms Arabic, Persian, and Bengali digits in all six editors, starting
   from a different value so the unparsable-input fallback cannot mask a failure.
+  Invalid text and legacy ASCII unit suffixes exercise the locale parser's
+  exception path before the compatibility fallback.
   The desktop run of `tst_settings_pages.qml` also keeps Custom refresh visible
   while a typed interval passes through a preset prefix.
 - Prefer declarative bindings. Move repeated or expensive calculations into

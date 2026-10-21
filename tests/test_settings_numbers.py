@@ -79,6 +79,18 @@ TestCase {
         keyClick(Qt.Key_Return);
         compare(field.value, data.value);
     }
+    function test_legacyTextFallback_data() {
+        return test_typing_data().slice(0, 6);
+    }
+    function test_legacyTextFallback(data) {
+        var field = data.field;
+        var locale = Qt.locale("C");
+        field.value = data.value;
+        page.cfg_costHistoryDays = data.value;
+        compare(field.valueFromText("", locale), data.value);
+        compare(field.valueFromText("invalid", locale), data.value);
+        compare(field.valueFromText(String(data.value) + " units", locale), data.value);
+    }
 }
 '''
 
