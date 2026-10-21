@@ -25,6 +25,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep daily cost and token averages available when very large finite amounts
+  would overflow an intermediate sum.
 - Monetary amounts that round to zero no longer retain a negative sign.
 - Preserve proportional cost-history bars for very large finite cost and token
   amounts instead of displaying every overflowing percentage as a full bar.

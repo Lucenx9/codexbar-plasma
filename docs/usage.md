@@ -663,7 +663,8 @@ and clipboard content remain under your control after closing the window.
   average cost per 1M tokens, with a configurable cost history window. Recent
   history rows show measured zero costs and token counts alongside positive
   amounts; missing amounts stay omitted. Their bars stay proportional even for
-  very large reported amounts. The daily average stays visible for a
+  very large reported amounts. Daily averages avoid overflow when summing those
+  amounts. The daily average stays visible for a
   range measured as zero, and the peak still names a day only once something
   was spent.
 - Monetary amounts use two decimal places; amounts that round to zero omit
