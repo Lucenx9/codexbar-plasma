@@ -4,6 +4,7 @@ Every network test talks to a local HTTP server; no real provider is contacted
 and no real credential or wallet is used.
 """
 import gettext
+from email.utils import formatdate
 import http.server
 import io
 import importlib.util
@@ -429,6 +430,21 @@ class ResponseValidationTests(HelperTestCase):
                 self.assertEqual(self.reply(payload, status, headers, provider), {"status": "error", **expected})
         quota = {"error": {"message": "You exceeded your current quota", "code": "insufficient_quota"}}
         self.assertEqual(self.reply(quota, 429, {}, "openai"), {"status": "error", "reason": "credits"})
+
+    def test_http_date_retry_after_reaches_the_controller_reply(self):
+        now = 1800000000.25
+        cases = [(formatdate(now + 3600.75, usegmt=True), 3601),
+                 (formatdate(now + 172800, usegmt=True), ai.MAX_RETRY_AFTER),
+                 (formatdate(now - 60, usegmt=True), 0),
+                 ("Fri Jan 15 09:00:01 2027", 3601),
+                 ("not a date", 0), ("Fri, 99 Jan 2027 09:00:01 GMT", 0)]
+        for deadline, expected in cases:
+            with self.subTest(deadline=deadline), patch.object(ai.time, "time", return_value=now):
+                headers = {"Retry-After": deadline}
+                result = {"status": "error", "reason": "rate_limited"}
+                if expected:
+                    result["retryAfter"] = expected
+                self.assertEqual(self.reply({"error": {"code": 429}}, 429, headers), result)
 
     def test_openrouter_errors_inside_a_200_reply_keep_their_reason(self):
         # OpenRouter reports a provider failure after the headers as 200 OK

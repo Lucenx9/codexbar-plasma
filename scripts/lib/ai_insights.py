@@ -11,8 +11,11 @@ and raw error bodies are deliberately omitted.
 import http.client
 from contextlib import contextmanager
 import ctypes
+from datetime import timezone
+from email.utils import parsedate_to_datetime
 import ipaddress
 import json
+import math
 import os
 import re
 import signal
@@ -273,10 +276,17 @@ def key_status(provider):
 
 
 def retry_after_seconds(headers):
+    raw = str(headers.get("Retry-After", "")).strip()
     try:
-        value = int(str(headers.get("Retry-After", "")).strip())
+        value = int(raw)
     except (TypeError, ValueError):
-        return 0
+        try:
+            deadline = parsedate_to_datetime(raw)
+            if deadline.tzinfo is None:
+                deadline = deadline.replace(tzinfo=timezone.utc)
+            value = math.ceil(deadline.timestamp() - time.time())
+        except (TypeError, ValueError, OverflowError):
+            return 0
     return max(0, min(MAX_RETRY_AFTER, value))
 
 

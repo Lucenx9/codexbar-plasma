@@ -25,6 +25,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Honor AI Insights rate-limit deadlines supplied as HTTP dates, so generation
+  does not become available before the provider-requested wait has elapsed.
+
 - Keep stale pace and run-out forecasts hidden in privacy mode after a failed
   refresh or an expired quota measurement.
 - Keep fractional quota percentages in AI Insights so nearly exhausted quotas
