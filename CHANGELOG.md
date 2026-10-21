@@ -25,6 +25,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Accept localized digits and grouping separators in settings number fields,
+  including Arabic, Persian, and Bengali numerals.
 - Keep daily cost and token averages available when very large finite amounts
   would overflow an intermediate sum.
 - Monetary amounts that round to zero no longer retain a negative sign.

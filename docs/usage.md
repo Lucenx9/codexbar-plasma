@@ -765,7 +765,8 @@ fields; track proposed extensions in the issue tracker.
   Explanatory text is set in small secondary type below the control
   it describes, and dependent options are indented under the option they need.
   Number fields keep units in their labels so multi-digit keyboard edits work
-  with the KDE desktop style.
+  with the KDE desktop style. They accept the regional locale's digits and
+  grouping separators, including Arabic, Persian, and Bengali numerals.
   **Diagnostics** also reports the widget version, and, after **Check
   versions**, the CLI version and the absolute command the shell resolved.
   **Support report → Collect support report** gathers an offline Markdown

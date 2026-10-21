@@ -27,7 +27,8 @@ TestCase {
     function editCostHistoryDays(value) { cfg_costHistoryDays = value; }
     function i18n(text, value) { return value === undefined ? text : text.replace("%1", value); }
     function i18np(one, many, count) { return (count === 1 ? one : many).replace("%1", count); }
-    QtObject { id: refreshPresetCombo; property int currentValue: -1 }
+    function refreshPresetIndex(value) { return -1; }
+    QtObject { id: refreshPresetCombo; property int currentValue: -1; property int currentIndex: -1 }
     QtObject { id: costUsageEnabledCheck; property bool checked: true }
     QtObject { id: identifiedTokensCheck; property bool checked: true }
     QtObject { id: updateChecksEnabledCheck; property bool checked: true }
@@ -56,6 +57,39 @@ TestCase {
         compare(field.value, data.value);
         compare(field.valueFromText(field.textFromValue(data.value, field.locale), field.locale), data.value);
         compare(field.valueFromText("", field.locale), data.value);
+    }
+    function test_localizedRoundTrip_data() {
+        var rows = [];
+        for (var locale of ["ar_EG", "fa_IR", "bn_BD"]) {
+            for (var row of test_typing_data().slice(0, 6)) {
+                rows.push({tag: row.tag + "-" + locale, field: row.field,
+                    value: row.value, locale: locale});
+            }
+        }
+        return rows;
+    }
+    function test_localizedRoundTrip(data) {
+        var field = data.field;
+        field.locale = Qt.locale(data.locale);
+        field.value = field.from;
+        var text = field.textFromValue(data.value, field.locale);
+        compare(field.valueFromText(text, field.locale), data.value);
+        field.contentItem.forceActiveFocus(Qt.TabFocusReason);
+        field.contentItem.text = text;
+        keyClick(Qt.Key_Return);
+        compare(field.value, data.value);
+    }
+    function test_legacyTextFallback_data() {
+        return test_typing_data().slice(0, 6);
+    }
+    function test_legacyTextFallback(data) {
+        var field = data.field;
+        var locale = Qt.locale("C");
+        field.value = data.value;
+        page.cfg_costHistoryDays = data.value;
+        compare(field.valueFromText("", locale), data.value);
+        compare(field.valueFromText("invalid", locale), data.value);
+        compare(field.valueFromText(String(data.value) + " units", locale), data.value);
     }
 }
 '''

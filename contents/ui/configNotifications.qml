@@ -50,6 +50,14 @@ KCM.SimpleKCM {
             // Unparsable text keeps the current threshold. Substituting the
             // schema default here would move a configured threshold silently.
             valueFromText: function(text, locale) {
+                try {
+                    var localized = Number.fromLocaleString(locale, text)
+                    if (isFinite(localized)) {
+                        return localized
+                    }
+                } catch (error) {
+                    // Invalid locale text still needs the compatibility fallback.
+                }
                 var match = text.match(/\d+/)
                 return match ? parseInt(match[0], 10) : value
             }
@@ -67,6 +75,14 @@ KCM.SimpleKCM {
             to: 100
             editable: true
             valueFromText: function(text, locale) {
+                try {
+                    var localized = Number.fromLocaleString(locale, text)
+                    if (isFinite(localized)) {
+                        return localized
+                    }
+                } catch (error) {
+                    // Invalid locale text still needs the compatibility fallback.
+                }
                 var match = text.match(/\d+/)
                 return match ? parseInt(match[0], 10) : value
             }
