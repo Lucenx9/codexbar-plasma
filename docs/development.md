@@ -796,9 +796,11 @@ clipboard interoperability with every Wayland application or portal backend.
   The KDE desktop style commits each keystroke; formatting a unit suffix into
   the editor rewrites its text mid-entry and can drop subsequent digits.
   `test_settings_numbers.py` types into the production editors with both Basic
-  and KDE desktop styles, including localized-number round trips. The desktop
-  run of `tst_settings_pages.qml` also keeps Custom refresh visible while a
-  typed interval passes through a preset prefix.
+  and KDE desktop styles, including localized-number round trips. It also
+  confirms Arabic, Persian, and Bengali digits in all six editors, starting
+  from a different value so the unparsable-input fallback cannot mask a failure.
+  The desktop run of `tst_settings_pages.qml` also keeps Custom refresh visible
+  while a typed interval passes through a preset prefix.
 - Prefer declarative bindings. Move repeated or expensive calculations into
   helpers or cached properties. Avoid heavy JavaScript in delegates, compact
   rendering, timers, and DataSource callbacks; profile before optimizing.

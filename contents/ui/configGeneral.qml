@@ -501,6 +501,10 @@ KCM.SimpleKCM {
             // one number. Units stay in the label: the KDE style commits each
             // keystroke, so an in-field suffix would swallow later digits.
             valueFromText: function(text, locale) {
+                var localized = Number.fromLocaleString(locale, text)
+                if (isFinite(localized)) {
+                    return localized
+                }
                 var match = text.match(/\d{1,3}(?:[\s.,'\u00a0\u202f]\d{3})+(?!\d)|\d+/)
                 return match ? parseInt(match[0].replace(/\D/g, ""), 10) : value
             }
@@ -591,6 +595,10 @@ KCM.SimpleKCM {
             to: 365
             editable: true
             valueFromText: function(text, locale) {
+                var localized = Number.fromLocaleString(locale, text)
+                if (isFinite(localized)) {
+                    return localized
+                }
                 var match = text.match(/\d+/)
                 return match ? parseInt(match[0], 10) : page.cfg_costHistoryDays
             }
@@ -635,6 +643,10 @@ KCM.SimpleKCM {
             editable: true
             enabled: identifiedTokensCheck.checked
             valueFromText: function(text, locale) {
+                var localized = Number.fromLocaleString(locale, text)
+                if (isFinite(localized)) {
+                    return localized
+                }
                 var match = text.match(/\d+/)
                 return match ? parseInt(match[0], 10) : value
             }
@@ -684,6 +696,10 @@ KCM.SimpleKCM {
             editable: true
             enabled: updateChecksEnabledCheck.checked
             valueFromText: function(text, locale) {
+                var localized = Number.fromLocaleString(locale, text)
+                if (isFinite(localized)) {
+                    return localized
+                }
                 var match = text.match(/\d+/)
                 return match ? parseInt(match[0], 10) : value
             }
