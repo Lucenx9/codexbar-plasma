@@ -53,7 +53,9 @@ snapshot without a usable `updatedAt` keeps its Today amounts.
   input records, not elapsed calendar days. Longer sparse histories aggregate
   models across their full span and count eligible zero-activity dates in the
   average denominator without allocating a row per date. Duplicate dates,
-  unknown days and truncated scans still prevent zero-day inference.
+  unknown days and truncated scans still prevent zero-day inference. An
+  amount-bearing row covers its date even if a second row for that date has
+  no amounts, matching the shorter-history gap-fill rule.
 - The global activity heatmap uses the unfiltered history's calendar dates,
   preserving unavailable days at either boundary and between measured days.
   Unavailable days occupy empty cells, so filtering missing amounts never shifts

@@ -35,6 +35,7 @@ function longHistoryAverage(items, currency, recordedDays, scanDay) {
     var firstDayMs = scan ? scan.timestampMs - (recordedDays - 1) * 86400000 : NaN;
     var canFill = first === 0 && scan !== null;
     var seen = ({});
+    var blocked = ({});
     var retained = [];
     for (var i = first; i < source.length; i++) {
         var item = source[i];
@@ -42,14 +43,19 @@ function longHistoryAverage(items, currency, recordedDays, scanDay) {
         var day = Normalizer.parsedCalendarDateKey(Normalizer.boundedDisplayText(
             item.date || item.day || item.dayKey || "", 120));
         if (scan && day && (day.timestampMs > scan.timestampMs || day.timestampMs < firstDayMs)) continue;
-        if (!day && !Normalizer.costRecordHasAmounts(item)) continue;
-        if (!day || Normalizer.hasOwnKey(seen, day.key)
-                || !Normalizer.costRecordHasAmounts(item)) {
-            canFill = false;
+        if (!Normalizer.costRecordHasAmounts(item)) {
+            if (day) blocked[day.key] = true;
+            continue;
         }
+        if (!day || Normalizer.hasOwnKey(seen, day.key)) canFill = false;
         if (day) seen[day.key] = true;
         retained.push(item);
     }
+    // Match daily gap filling: an amount row covers its date even when a
+    // second, incomplete record for the same date contains no amounts.
+    canFill = canFill && Object.keys(blocked).every(function(key) {
+        return Normalizer.hasOwnKey(seen, key);
+    });
     var daily = Normalizer.normalizeCostDaily(retained, currency,
         Normalizer.maximumCostHistoryScanItems, undefined, Normalizer.maximumCostHistoryScanItems);
     var zeroDays = canFill && daily.length > 0 ? Math.max(0, recordedDays - daily.length) : 0;

@@ -478,6 +478,8 @@ TestCase {
             {tag: "sparse", extra: [], scan: "2026-10-21", expectedCost: 30 / 2486, expectedTokens: 300 / 2486},
             {tag: "future", extra: [{date: "2026-10-22", totalCost: 999}], scan: "2026-10-21", expectedCost: 30 / 2486, expectedTokens: 300 / 2486},
             {tag: "older-trimmed-date", extra: [{date: " 1970-01-01 ", totalCost: 999}], scan: "2026-10-21", expectedCost: 30 / 2486, expectedTokens: 300 / 2486},
+            {tag: "unknown-row-with-measured-date", extra: [{date: "2020-01-01", incompleteRequestCount: 1}], scan: "2026-10-21", expectedCost: 30 / 2486, expectedTokens: 300 / 2486},
+            {tag: "unknown-row-before-measured-date", extra: [{date: "2020-01-01", incompleteRequestCount: 1}], extraFirst: true, scan: "2026-10-21", expectedCost: 30 / 2486, expectedTokens: 300 / 2486},
             {tag: "unknown-day", extra: [{date: "2026-10-20", incompleteRequestCount: 1}], scan: "2026-10-21", expectedCost: 15, expectedTokens: 150},
             {tag: "duplicate", extra: [{date: "2020-01-01", totalCost: 6}], scan: "2026-10-21", expectedCost: 12, expectedTokens: 150},
             {tag: "no-clock", extra: [], scan: undefined, expectedCost: 15, expectedTokens: 150}
@@ -486,6 +488,7 @@ TestCase {
     function test_longHistoryAverageKeepsUnknownDaysAndInputBounds(data) {
         var daily = [{date: "2020-01-01", totalCost: 10, totalTokens: 100},
             {date: "2026-10-21", totalCost: 20, totalTokens: 200}].concat(data.extra);
+        if (data.extraFirst) daily.unshift(daily.pop());
         var cost = parse({provider: "codex", reportingPeriod: "all",
             updatedAt: data.scan, daily: daily}).costs.codex;
         compare(cost.averageDaily.cost.value, data.expectedCost);
