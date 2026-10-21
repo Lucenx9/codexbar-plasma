@@ -53,6 +53,28 @@ TestCase {
         return AiInsightsSnapshot.build(items, now, 80)
     }
 
+    function test_quotaSignalsPreserveThresholdBoundaries_data() {
+        return [
+            {tag: "below-warning", used: 79.6, warning: 80, kind: ""},
+            {tag: "at-warning", used: 80, warning: 80, kind: "quotaNearLimit"},
+            {tag: "below-custom-warning", used: 94.6, warning: 95, kind: ""},
+            {tag: "at-custom-warning", used: 95, warning: 95, kind: "quotaNearLimit"},
+            {tag: "almost-exhausted", used: 99.6, warning: 80, kind: "quotaNearLimit"},
+            {tag: "fraction-remaining", used: 99.999, warning: 80, kind: "quotaNearLimit"},
+            {tag: "exhausted", used: 100, warning: 80, kind: "quotaExhausted"}
+        ]
+    }
+
+    function test_quotaSignalsPreserveThresholdBoundaries(data) {
+        var item = provider("codex", {rows: [
+            {lane: "primary", hasPercent: true, usedPercent: data.used}
+        ]})
+        var snapshot = JSON.parse(AiInsightsSnapshot.build([item], now, data.warning).text)
+        compare(snapshot.signals.map(function(signal) { return signal.kind }),
+            data.kind ? [data.kind] : [])
+        compare(snapshot.providers[0].quotas[0].usedPercent, data.used)
+    }
+
     function test_snapshotIsAnExplicitAllowlist() {
         var result = build([provider("codex", {tokenCost: history(20, 3, 1)})])
         verify(result.sufficient)
@@ -66,7 +88,7 @@ TestCase {
         compare(Object.keys(snapshot).sort(), ["notes", "providers", "signals", "version"])
         compare(Object.keys(snapshot.providers[0]).sort(), ["id", "quotas", "spend", "tokens"])
         compare(snapshot.providers[0].quotas, [
-            {window: "primary", usedPercent: 72, windowHours: 5, resetsInHours: 2,
+            {window: "primary", usedPercent: 72.4, windowHours: 5, resetsInHours: 2,
                 forecast: "runsOutBeforeReset", runsOutInHours: 1, expectedUsedPercentNow: 40},
             {window: "secondary", usedPercent: 28, windowHours: 168, forecast: "lastsUntilReset"}
         ])

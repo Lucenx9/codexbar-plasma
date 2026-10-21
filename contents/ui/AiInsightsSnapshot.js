@@ -35,7 +35,7 @@ function quota(row, nowMs) {
     }
     var result = {
         window: lanes.indexOf(field(row, "lane")) >= 0 ? row.lane : "extra",
-        usedPercent: Math.round(Math.max(0, Math.min(100, row.usedPercent)))
+        usedPercent: Math.max(0, Math.min(100, row.usedPercent))
     }
     var minutes = field(row, "windowMinutes")
     if (finite(minutes) && minutes > 0) {
