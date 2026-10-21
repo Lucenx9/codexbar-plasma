@@ -256,7 +256,8 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   rewrite the saved source silently. The API-source workaround is documented in
   docs/usage.md. Done when an official release lets Linux Gemini Auto reach
   the OAuth strategy again, verified in the isolated probe.
-  [Evidence](docs/research/2026-10-17-macos-parity-0.77.0.md#linux-cli-contract-changes).
+  [Original regression](docs/research/2026-10-17-macos-parity-0.77.0.md#linux-cli-contract-changes);
+  [0.78.0/0.79.0 recheck](docs/research/2026-10-21-macos-parity-0.79.0.md#carried-forward-blockers-rechecked).
 
 ### Custom provider routing
 

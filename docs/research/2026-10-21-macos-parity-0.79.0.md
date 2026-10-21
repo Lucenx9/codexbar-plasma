@@ -35,8 +35,8 @@ executed against host data nor replaced.
   input/output counts of 100/50, one daily/model breakdown, `rolling:30`,
   established coverage, and `listPriceEstimate` provenance. `--provider all`
   includes this record too. Plasma's production `CostResponse.response`
-  consumes the captured record unchanged: an executed temporary QtTest confirms
-  the total amounts and model label. `CostController` already forwards the
+  normalizes the captured record: an executed temporary QtTest confirms
+  the normalized total amounts and model label. `CostController` already forwards the
   selected provider and `CostResponse` accepts generic provider IDs, so this
   contract needs no new scanner or provider allowlist in Plasma.
 - Detail-row `severity` is an optional typed value, independent of `progress`.
