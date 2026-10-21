@@ -8,9 +8,16 @@ Issues linked below preserve discussion; this file owns parity status.
 
 ## Review baseline
 
-- Last release reviewed: [CodexBar 0.77.0](https://github.com/steipete/CodexBar/releases/tag/v0.77.0),
-  commit `d235901d4fc51f9421f43838e8a60f567bd6038e`, checked 2026-10-17.
-- Coverage: the [0.77.0 review](docs/research/2026-10-17-macos-parity-0.77.0.md)
+- Last release reviewed: [CodexBar 0.79.0](https://github.com/steipete/CodexBar/releases/tag/v0.79.0),
+  commit `b49d42eb53bbf79785b344492d594760dd163eac`, checked 2026-10-21.
+- Coverage: the [0.79.0 review](docs/research/2026-10-21-macos-parity-0.79.0.md)
+  against Plasma `8826e05` covers 0.78.0 and 0.79.0. Isolated official Linux
+  probes verify OpenCode Go local costs and existing Plasma normalization,
+  detail-row severity, Vercel personal-budget setup limits, unchanged registry
+  and carried blockers, and a remaining custom-provider routing failure despite
+  the release claim. Both archives pass managed-installer validation; 0.79.0
+  removes the 0.78.0 libxml2 dependency. Authenticated output remains unverified.
+- Previous coverage: the [0.77.0 review](docs/research/2026-10-17-macos-parity-0.77.0.md)
   against Plasma `232e688` verifies the 106-provider registry, Munito's
   reachable API-key setup, Future AGI's environment-only secret, the Gemini
   Auto regression on Linux, the disabled `shareUsageWithCLI` fallback, managed
@@ -118,10 +125,10 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Private account selection
 
 - [ ] Avoid passing account labels, which may be email addresses, in usage
-  process arguments. Official Linux CLI 0.77.0 advertises `--account` and
+  process arguments. Official Linux CLI 0.79.0 advertises `--account` and
   `--account-index`, but rejects `usage --account-stdin --format json --json-only`
   with `Unknown option --account-stdin` (isolated empty configuration,
-  2026-10-19, exit 1). A private-input selector would close this exposure.
+  2026-10-21, exit 1). A private-input selector would close this exposure.
   Before choosing an index workaround, verify a supported mapping from the
   discovered account identities to CLI indexes across refreshes and config
   changes; the frontend currently deduplicates account options by identity.
@@ -141,7 +148,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   [Future AGI](docs/research/2026-10-17-macos-parity-0.77.0.md#linux-cli-contract-changes).
 
 - [ ] Enable generic settings and token-account editing through official
-  descriptors and writes. Linux 0.77.0 still rejects `config providers
+  descriptors and writes. Linux 0.79.0 still rejects `config providers
   --descriptors` (106 records, same four keys); its provider records have no
   descriptor. Helmcode and TypeSafe make this concrete: both are cookie-only,
   both refuse `--source api`, and their documented `cookieSource`/`cookieHeader`
@@ -182,6 +189,10 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   `--label` and `--workspace-id` remain z.ai-only: Linux 0.74.1 rejects
   `set-api-key --provider clinepass --label` despite the release claim (#4305),
   and labeled Kimi, Doubao, and OpenCode Go accounts remain blocked too.
+  0.78.0 adds Vercel personal budgets with a separate access token and Team
+  ID. Linux 0.79.0 reaches that strategy with environment values, but still
+  rejects `set-api-key --provider vercel --workspace-id` as z.ai-only and has
+  no writer for `VERCEL_ACCESS_TOKEN`. The existing gateway-key setup is separate.
   Source persistence has the supported 0.73.0 `set-source` writer and
   version-gated Plasma controls; generic source descriptors and other field
   writers are absent.
@@ -199,7 +210,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Provider onboarding
 
 - [ ] Add CLI-described browser-cookie import, local-file setup, OAuth/device
-  flow, CLI-auth setup, and token-account actions. Linux 0.77.0 still has no
+  flow, CLI-auth setup, and token-account actions. Linux 0.79.0 still has no
   generic `config action` command (`set-api-key` and `set-source` are field
   writers; the `usage_updated` hook event is CLI automation surface, not a setup
   action). Done when supported actions expose validated
@@ -236,8 +247,8 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 
 ### Gemini automatic source
 
-- [ ] Restore Gemini usage under the default Auto source on Linux. Linux 0.77.0
-  rejects Gemini Auto as a macOS-only web source before any strategy runs,
+- [ ] Restore Gemini usage under the default Auto source on Linux. Linux
+  0.77.0 through 0.79.0 rejects Gemini Auto as a macOS-only web source before any strategy runs,
   where 0.76.0 reached the Gemini CLI OAuth strategy; the Linux web gate treats
   Auto as web for every provider that lists a web source, although Gemini Auto
   resolves only the OAuth strategy. The explicit API source still works, so
@@ -245,14 +256,26 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   rewrite the saved source silently. The API-source workaround is documented in
   docs/usage.md. Done when an official release lets Linux Gemini Auto reach
   the OAuth strategy again, verified in the isolated probe.
-  [Evidence](docs/research/2026-10-17-macos-parity-0.77.0.md#linux-cli-contract-changes).
+  [Original regression](docs/research/2026-10-17-macos-parity-0.77.0.md#linux-cli-contract-changes);
+  [0.78.0/0.79.0 recheck](docs/research/2026-10-21-macos-parity-0.79.0.md#carried-forward-blockers-rechecked).
+
+### Custom provider routing
+
+- [ ] Restore custom catalog IDs in the official Linux usage path. Linux
+  0.79.0 discovers and fetches a synthetic `audit-fixture` plugin through
+  `plugins list` and `plugins fetch`, but `usage --provider audit-fixture`
+  returns a Codex error even after approval. Done when the released usage
+  command preserves the requested custom identity and Plasma's existing
+  discovery/normalization is verified against that output. Do not relabel the
+  wrong provider or read plugin files in QML.
+  [Evidence](docs/research/2026-10-21-macos-parity-0.79.0.md#linux-cli-contract-changes).
 
 ### Cursor cost
 
 - [ ] Show Cursor cost history through the generic Linux `cost` path. Linux
-  0.77.0 still rejects Cursor and lists Antigravity, Claude, Codex, Muse
-  Code, and Pi as supported; the 0.74.0 `cursor-agent` login (#4397) changes
-  usage authentication only;
+  0.79.0 still rejects Cursor and lists Antigravity, Claude, Codex, Muse
+  Code, OpenCode Go, and Pi as supported; the 0.74.0 `cursor-agent` login
+  (#4397) changes usage authentication only;
   the descriptor gate keeps the new cookie-source availability errors unreachable.
   The 0.68.0 all-history date-range fix (#4028) targets macOS Usage & Spend
   refreshes, not the Linux cost allowlist.
@@ -350,9 +373,33 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   [Source comparison](docs/research/2026-09-09-macos-parity-0.57.0.md#automatic-balance-text-needs-a-generic-contract);
   [0.60.4 evidence](docs/research/2026-09-16-macos-parity-0.60.4.md#linux-cli-contract-changes-since-0580).
 
+## Plasma-native work with verified CLI contracts
+
+- [ ] Preserve and present optional detail-row severity. Official Linux CLI
+  0.79.0 `plugins fetch` emits `severity: warning` from a synthetic plugin;
+  the typed contract allows `normal`, `warning`, and `critical`, independently
+  of progress. `UsageDetails.normalizeSections` currently drops it. Done when
+  bounded normalization, theme/accessibility presentation, privacy/cache paths,
+  and direct QtTests preserve severity without inferring it from percentages.
+  [Evidence](docs/research/2026-10-21-macos-parity-0.79.0.md#linux-cli-contract-changes).
+
 ## Verify before accepting implementation work
 
 These are unresolved Linux candidates, not confirmed missing features.
+
+- [ ] Evaluate the 0.78.0 all-account Overview and optional bare-percent panel
+  text against Plasma's current provider/account navigation and accessibility.
+  Verify authenticated Linux multi-account identities before choosing an
+  account-row model. Done when each candidate has a bounded accept/reject
+  decision and any accepted work has a concrete contract. Account editing
+  remains in the generic-writer blocker above.
+  [Comparison](docs/research/2026-10-21-macos-parity-0.79.0.md#plasma-comparison).
+- [ ] Verify 0.78.0/0.79.0 authenticated changes for Claude Auto/adapter
+  selection, Vercel personal budgets, Cursor unified-account additional spend,
+  Grok billing, TypeSafe requests, and Antigravity ordinary/model quota buckets.
+  Done when emitted Linux output establishes whether existing generic fields
+  suffice; retain setup blockers until official writers exist.
+  [Limits](docs/research/2026-10-21-macos-parity-0.79.0.md#unverified-in-this-review).
 
 - [ ] Verify authenticated Claude Platform output from an official Linux CLI
   once a supported cookie writer/action exists. Confirm primary API credits,
