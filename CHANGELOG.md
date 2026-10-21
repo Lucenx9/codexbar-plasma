@@ -25,6 +25,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Preserve older model totals and accurate daily averages in sparse All history
+  scans spanning more than 2,048 calendar days.
+
 - Honor AI Insights rate-limit deadlines supplied as HTTP dates, so generation
   does not become available before the provider-requested wait has elapsed.
 

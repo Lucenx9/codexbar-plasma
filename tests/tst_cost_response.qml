@@ -456,6 +456,65 @@ TestCase {
         compare(rolling.averageDaily, null);
         compare(rolling.models[0].cost, 30);
     }
+    function test_sparseAllHistorySpansMoreCalendarDaysThanTheRecordBudget() {
+        var daily = [
+            {date: "2020-01-01", totalCost: 10, totalTokens: 100,
+                modelBreakdowns: [{modelName: "older", cost: 10, totalTokens: 100}]},
+            {date: "2026-10-21", totalCost: 20, totalTokens: 200,
+                modelBreakdowns: [{modelName: "recent", cost: 20, totalTokens: 200}]}
+        ];
+        var cost = parse({provider: "codex", reportingPeriod: "all",
+            updatedAt: "2026-10-21", daily: daily}).costs.codex;
+        compare(cost.models.length, 2);
+        compare(cost.models[0].cost + cost.models[1].cost, 30);
+        compare(cost.daily.length, 365);
+        var span = (Date.UTC(2026, 9, 21) - Date.UTC(2020, 0, 1)) / 86400000 + 1;
+        compare(cost.averageDaily.cost.value, 30 / span);
+        compare(cost.averageDaily.tokens.value, 300 / span);
+    }
+
+    function test_longHistoryAverageKeepsUnknownDaysAndInputBounds_data() {
+        return [
+            {tag: "sparse", extra: [], scan: "2026-10-21", expectedCost: 30 / 2486, expectedTokens: 300 / 2486},
+            {tag: "future", extra: [{date: "2026-10-22", totalCost: 999}], scan: "2026-10-21", expectedCost: 30 / 2486, expectedTokens: 300 / 2486},
+            {tag: "older-trimmed-date", extra: [{date: " 1970-01-01 ", totalCost: 999}], scan: "2026-10-21", expectedCost: 30 / 2486, expectedTokens: 300 / 2486},
+            {tag: "unknown-day", extra: [{date: "2026-10-20", incompleteRequestCount: 1}], scan: "2026-10-21", expectedCost: 15, expectedTokens: 150},
+            {tag: "duplicate", extra: [{date: "2020-01-01", totalCost: 6}], scan: "2026-10-21", expectedCost: 12, expectedTokens: 150},
+            {tag: "no-clock", extra: [], scan: undefined, expectedCost: 15, expectedTokens: 150}
+        ];
+    }
+    function test_longHistoryAverageKeepsUnknownDaysAndInputBounds(data) {
+        var daily = [{date: "2020-01-01", totalCost: 10, totalTokens: 100},
+            {date: "2026-10-21", totalCost: 20, totalTokens: 200}].concat(data.extra);
+        var cost = parse({provider: "codex", reportingPeriod: "all",
+            updatedAt: data.scan, daily: daily}).costs.codex;
+        compare(cost.averageDaily.cost.value, data.expectedCost);
+        compare(cost.averageDaily.tokens.value, data.expectedTokens);
+    }
+    function test_longHistoryMissingMetricAndTruncatedSourceStayUnknown() {
+        var daily = [{date: "2020-01-01", totalTokens: 100},
+            {date: "2026-10-21", totalTokens: 200}];
+        var payload = {provider: "codex", reportingPeriod: "all", updatedAt: "2026-10-21", daily: daily};
+        compare(parse(payload).costs.codex.averageDaily.cost, null);
+        // Uninspected records must never become inferred zero-activity dates.
+        for (var i = 0; i < Normalizer.maximumCostHistoryScanItems; i++) daily.unshift(null);
+        var bounded = parse(payload).costs.codex;
+        compare(bounded.averageDaily.tokens.value, 150);
+        compare(bounded.averageDaily.cost, null);
+    }
+
+    function test_extremeSparseSpanStaysBoundedAndAveragesOverflowSafely() {
+        var payload = {provider: "codex", reportingPeriod: "all", updatedAt: "9999-12-31", daily: [
+            {date: "1970-01-01", totalCost: Number.MAX_VALUE},
+            {date: "9999-12-31", totalCost: Number.MAX_VALUE}
+        ]};
+        var cost = parse(payload).costs.codex;
+        var days = (Date.UTC(9999, 11, 31) - Date.UTC(1970, 0, 1)) / 86400000 + 1;
+        compare(cost.daily.length, 365);
+        compare(cost.averageDaily.cost.value, Number.MAX_VALUE * (2 / days));
+        compare(cost.averageDaily.tokens, null);
+    }
+
     function test_rejectedArgumentsAreReportedApartFromProviderFailures() {
         // CLI 0.66.0 rejects `--period` with an args error record.
         var rejected = parse([{ provider: "cli", source: "cli",

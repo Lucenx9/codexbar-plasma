@@ -520,7 +520,7 @@ function peakPoint(points, showsTokens) {
     return peak && peak.magnitude > 0 ? peak : null
 }
 
-function averageDailyValue(points, showsTokens) {
+function averageDailyValue(points, showsTokens, zeroDays) {
     if (!Array.isArray(points) || points.length === 0) {
         return null
     }
@@ -548,7 +548,11 @@ function averageDailyValue(points, showsTokens) {
     }
     // Preserve ordinary sums' rounding boundaries; use the incremental mean
     // only when the intermediate sum cannot be represented.
-    return { value: isFinite(total) ? total / count : average, currency: currency }
+    // Sparse all-history aggregates count omitted zero-activity dates without
+    // allocating a row per calendar day. An unavailable metric still stays null.
+    var denominator = count + (typeof zeroDays === "number" && isFinite(zeroDays)
+        ? Math.max(0, Math.floor(zeroDays)) : 0)
+    return { value: isFinite(total) ? total / denominator : average * (count / denominator), currency: currency }
 }
 
 function perMillionAmount(tokenCost) {
