@@ -156,8 +156,12 @@ function clearObservedRowState(nextMemo, observation) {
 }
 
 function primeScope(nextMemo, observation, options) {
-    nextMemo[scopePrimedKey(observation)] = "1"
     var observedRows = Array.isArray(observation.rows) ? observation.rows : []
+    // A degraded first reading supplies no threshold baseline. Wait for an
+    // authoritative row, including a measured value below the warning level.
+    if (observedRows.some(function(row) { return row && Normalizer.authoritativeQuota(row) })) {
+        nextMemo[scopePrimedKey(observation)] = "1"
+    }
     for (var rowIndex = 0; rowIndex < observedRows.length; rowIndex++) {
         if (!Normalizer.authoritativeQuota(observedRows[rowIndex])) {
             delete nextMemo[quotaKey(observation, observedRows[rowIndex], rowIndex)]

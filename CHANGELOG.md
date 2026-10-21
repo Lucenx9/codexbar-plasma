@@ -25,6 +25,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Establish the first authoritative quota notification baseline silently after
+  estimated, percentage-only, or unknown readings.
+- Keep the providers that fit in the quota cache when a large roster exceeds
+  the 64 KiB save limit, instead of clearing every saved quota.
+
 - Preserve older model totals and accurate daily averages in sparse All history
   scans spanning more than 2,048 calendar days.
 
