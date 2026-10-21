@@ -104,6 +104,7 @@ function reconcile(previous, incoming, nowMs, pinnedAccounts) {
                 var copy = Guards.copyObject(row)
                 copy.paceKnown = false
                 copy.pace = ""
+                copy.paceParts = []
                 copy.pacePercent = -1
                 copy.paceEtaSeconds = 0
                 return copy

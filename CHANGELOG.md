@@ -25,6 +25,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep stale pace and run-out forecasts hidden in privacy mode after a failed
+  refresh or an expired quota measurement.
 - Keep fractional quota percentages in AI Insights so nearly exhausted quotas
   and values just below the warning threshold do not trigger false signals.
 - Accept localized digits and grouping separators in settings number fields,
