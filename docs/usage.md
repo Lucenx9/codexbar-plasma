@@ -999,8 +999,9 @@ explanation of your current usage: a quota likely to run out before its reset,
 a notable change in spending or tokens between the last two complete weeks, or
 a notable difference between providers. It explains facts the widget has
 already measured; forecasts come from the CLI pace data, and comparisons appear
-only when the history supports them. It is off by default. While it is off, the
-widget builds no AI data, starts no AI process, contacts no AI service, and
+only when the history supports them. Quota signals use the measured percentage
+without rounding across warning or exhaustion thresholds. It is off by default.
+While it is off, the widget builds no AI data, starts no AI process, contacts no AI service, and
 shows no card. The [AI Insights reference](ai-insights.md) documents the data
 and request contracts.
 

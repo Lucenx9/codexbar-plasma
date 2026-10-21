@@ -132,8 +132,10 @@ object from an allowlist. It never copies an input record.
   an insight never starts a cost scan.
 - Signals are deterministic: exhausted quota, forecast exhaustion before reset,
   quota at or above the warning threshold, a spend or token change of at least
-  25% between the two periods, and a known service incident. An increase above
-  300% carries `changeMultiple` (the ratio of the two periods) instead of
+  25% between the two periods, and a known service incident. Quota percentages
+  retain their measured fractional part, so rounding cannot cross the warning
+  threshold or turn a nearly exhausted quota into an exhausted one. An increase
+  above 300% carries `changeMultiple` (the ratio of the two periods) instead of
   `changePercent`, so the model never has to divide and sees only one form.
 - The serialized snapshot is ASCII, at most 16 KiB, and identified by an FNV-1a
   hash. Automatic generation skips a request when the snapshot is identical to

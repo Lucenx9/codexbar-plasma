@@ -25,6 +25,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep fractional quota percentages in AI Insights so nearly exhausted quotas
+  and values just below the warning threshold do not trigger false signals.
 - Accept localized digits and grouping separators in settings number fields,
   including Arabic, Persian, and Bengali numerals.
 - Keep daily cost and token averages available when very large finite amounts
