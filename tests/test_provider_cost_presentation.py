@@ -444,6 +444,13 @@ TestCase {
         compare(costLabels.costAverageDailyLine(twoDays(), average), "");
         root.costHistoryShowsTokens = false;
     }
+    function test_perMillionLineHandlesLargeFiniteTotals() {
+        compare(costLabels.costPerMillionLine(
+            {totals: {cost: 1e308, tokens: 1e308, currency: "EUR"}}),
+            "Average: EUR 1,000,000.00 / 1M tokens");
+        compare(costLabels.costPerMillionLine(
+            {totals: {cost: Number.MAX_VALUE, tokens: 1, currency: "USD"}}), "");
+    }
     // A peak older than the seven history rows is neither shown nor
     // highlighted there, so the peak line names the highlighted row instead.
     function test_peakLineNamesTheHighlightedHistoryRow() {

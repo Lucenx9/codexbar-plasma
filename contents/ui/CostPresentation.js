@@ -564,8 +564,16 @@ function perMillionAmount(tokenCost) {
     if (!isFinite(cost) || !isFinite(tokens) || cost <= 0 || tokens <= 0) {
         return null
     }
+    var value = cost * 1000000 / tokens
+    // Preserve ordinary rounding; scale the denominator only on overflow.
+    if (!isFinite(value)) {
+        value = cost / (tokens / 1000000)
+    }
+    if (!isFinite(value)) {
+        return null
+    }
     return {
-        value: cost * 1000000 / tokens,
+        value: value,
         currency: tokenCost.totals.currency || "USD"
     }
 }
