@@ -691,7 +691,9 @@ and clipboard content remain under your control after closing the window.
   in part, so that day and any unscanned trailing days also make the affected
   week read "at least". When the CLI reports that history
   coverage is still being established, every displayed week reads "at least"
-  even if its recorded days have numeric amounts.
+  even if its recorded days have numeric amounts. If a local midnight clock
+  change prevents Qt from advancing the calendar, the affected week and older
+  weeks are omitted; newer valid weeks remain available.
 - Token, request, and point counts use the current language's singular and
   plural forms. Large counts retain compact notation such as `1K` and `4.3B`,
   with the regional decimal mark that costs use, such as `4,3B` in Italian.

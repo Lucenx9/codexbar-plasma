@@ -25,6 +25,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Prevent quota-week cost calculations from freezing the popup when a missing
+  history day coincides with a daylight-saving jump at local midnight.
 - Establish the first authoritative quota notification baseline silently after
   estimated, percentage-only, or unknown readings.
 - Keep the providers that fit in the quota cache when a large roster exceeds
