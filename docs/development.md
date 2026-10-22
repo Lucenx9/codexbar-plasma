@@ -1005,6 +1005,11 @@ executes the owning QML cost and reset-credit adapters against the compiled
 English fallback and all five translation catalogs. Surface checks enforce
 module delegation and keep plural-aware localization in QML.
 
+`tests/test_quota_window_calendar.py` runs the quota-week calculation in UTC
+and America/Santiago with a process timeout. Sparse history across a nonexistent
+local midnight must terminate without discarding newer valid weeks or presenting
+missing days as complete totals.
+
 `tests/tst_overview_selection.qml` directly covers Overview eligibility,
 placeholder suppression, the identity detail fallback chain, automatic and
 stored selections, aliased roster IDs,

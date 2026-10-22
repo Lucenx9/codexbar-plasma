@@ -78,7 +78,13 @@ function expectedDayCount(startMs, endMs, scanStartMs, todayStartMs) {
         if (cursor.getTime() >= scanStartMs) {
             count += 1
         }
-        cursor = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() + 1)
+        var next = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() + 1)
+        // Qt can resolve a nonexistent midnight back into the preceding day.
+        // Refuse this window instead of looping forever or claiming full coverage.
+        if (!(next.getTime() > cursor.getTime())) {
+            return null
+        }
+        cursor = next
     }
     return count
 }
@@ -156,6 +162,9 @@ function windows(daily, resetsAtMs, windowMinutes, nowMs, limit) {
             continue
         }
         var expected = expectedDayCount(startMs, endMs, scanStartMs, todayStartMs)
+        if (expected === null) {
+            break
+        }
         var cost = metricTotal(attributed, "cost", expected)
         var tokens = metricTotal(attributed, "tokens", expected)
         result.push({
