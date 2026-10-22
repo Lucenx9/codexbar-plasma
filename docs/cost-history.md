@@ -64,6 +64,9 @@ snapshot without a usable `updatedAt` keeps its Today amounts.
   the newest 365 calendar days. Legacy non-date labels retain sequence order
   and leave the rows unlabelled, because only calendar-aligned days give each
   row one weekday.
+- Global cost and token aggregates that overflow the numeric range remain
+  unavailable. An overflowing daily sum has no chart point and keeps an empty
+  heatmap cell. Other dates, measured zeros, and the other metric remain usable.
 - Model names are strings. Numeric names are not coerced into display labels.
   Tied model amounts use the label as a stable ordering tiebreaker.
 - Sharing uses a separate token ranking from the full bounded period model

@@ -25,6 +25,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep overflowing multi-provider cost and token sums unavailable in Usage &
+  Spend, preserving calendar gaps and other valid amounts.
 - Prevent quota-week cost calculations from freezing the popup when a missing
   history day coincides with a daylight-saving jump at local midnight.
 - Establish the first authoritative quota notification baseline silently after

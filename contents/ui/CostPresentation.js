@@ -1129,6 +1129,11 @@ function spendDailyPoints(fmt, costs, showsTokens) {
             continue
         }
         var item = byDate[day]
+        // Finite provider amounts can overflow when combined. Leave that day
+        // unavailable instead of passing infinity to chart scaling as zero.
+        if (!isFinite(item.value)) {
+            continue
+        }
         item.displayValue = metricText(fmt, item.value, item.currency, showsTokens)
         result.push(item)
     }
@@ -1164,7 +1169,7 @@ function spendTotals(costs) {
         hasCost = true
     }
     return {
-        cost: hasCost ? totalCost : null,
+        cost: hasCost && isFinite(totalCost) ? totalCost : null,
         tokens: hasTokens && isFinite(totalTokens) ? totalTokens : null,
         currency: currency,
         hasMixedCostCurrencies: spendHasMixedCostCurrencies(items)
