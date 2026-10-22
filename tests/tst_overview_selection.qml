@@ -229,6 +229,11 @@ TestCase {
         return [
             {tag: "detail-rows", usage: {details: [{rows: [{label: "Requests", value: "42"}]}]}, useful: true},
             {tag: "detail-chart", usage: {details: [{chart: {kind: "bars", points: [{label: "Today", value: 42}]}}]}, useful: true},
+            {tag: "detail-title", usage: {details: [{title: "No activity"}]}, useful: true},
+            {tag: "chart-title", usage: {details: [{chart: {kind: "bars", title: "No activity", points: []}}]}, useful: true},
+            {tag: "chart-unit", usage: {details: [{chart: {kind: "line", unit: "requests", points: []}}]}, useful: true},
+            {tag: "empty-chart", usage: {details: [{chart: {kind: "bars", points: []}}]}, useful: false},
+            {tag: "invalid-chart-points", usage: {details: [{chart: {kind: "line", points: [{label: "Today", value: {}}]}}]}, useful: false},
             {tag: "dashboard", usage: {openAIAPIUsage: {currentDay: {costUSD: 1.25}}}, useful: true},
             {tag: "empty-details", usage: {details: []}, useful: false},
             {tag: "invalid-details", usage: {details: [{rows: [{label: "Requests", value: {}}]}]}, useful: false},

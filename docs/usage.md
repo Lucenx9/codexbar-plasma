@@ -241,7 +241,8 @@ work and upstream contract requirements.
   Overview displays a subset, for example **3 of 20 providers**.
   A provider with valid detail sections or a dashboard summary stays eligible
   when the same response also reports an error. A failed provider with no usable
-  data is omitted.
+  data is omitted. An empty chart without titles, units, or valid points does
+  not keep an otherwise empty failed provider visible.
   Provider selection checkboxes preserve literal characters such as `&`, `<`,
   and `>` in display names, including with KDE desktop styles.
 - Usage dashboard summaries for provider payloads that expose API spend,

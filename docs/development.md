@@ -671,6 +671,8 @@ clipboard interoperability with every Wayland application or portal backend.
   monthly limit, subscription date, cost figure, detail section, dashboard summary,
   or placeholder keeps the provider
   visible. QML binds the resulting rows and localizes them; the module reads no root state.
+  An empty detail-chart container needs a section/chart title, unit, row, or
+  valid point to count as usable content for eligibility.
 - `PopupHiddenRows.js` owns the popup's hidden usage rows without effects.
   Entries store a validated provider ID and a row key (`primary`, `secondary`,
   `tertiary`, or `extra:<CLI window ID>`) and no provider prose, so the Popup
@@ -1014,7 +1016,8 @@ missing days as complete totals.
 `tests/tst_overview_selection.qml` directly covers Overview eligibility,
 placeholder suppression, the identity detail fallback chain, automatic and
 stored selections, normalized detail/dashboard survivors with optional errors,
-empty or malformed supplemental data, automatic-selection eligibility, aliased roster IDs,
+empty or malformed supplemental data, unlabeled empty charts versus preserved
+section/chart headings and units, automatic-selection eligibility, aliased roster IDs,
 unusable stored values, and unusable roster entries alongside the settings-page
 toggles. `tests/tst_provider_auto_select.qml` covers malformed percentages,
 missing data, provider cost competition, fractional usage, severity tie breaks, and
