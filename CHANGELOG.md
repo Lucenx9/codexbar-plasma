@@ -25,6 +25,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Preserve finite average costs per million tokens when scaling a large cost
+  would overflow; omit averages whose final ratio cannot be represented.
 - Keep overflowing multi-provider cost and token sums unavailable in Usage &
   Spend, preserving calendar gaps and other valid amounts.
 - Prevent quota-week cost calculations from freezing the popup when a missing

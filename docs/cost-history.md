@@ -38,6 +38,9 @@ snapshot without a usable `updatedAt` keeps its Today amounts.
   If very large finite daily costs or token counts overflow the sum, an
   incremental mean supplies the average. Ordinary sums retain their existing
   rounding behavior.
+- The average cost per million tokens requires positive cost and token totals.
+  Large finite totals keep a representable ratio even when multiplying the
+  cost by one million would overflow. An unrepresentable ratio is omitted.
 - **Month to date** and **All history** come from the CLI's `cost --period`.
   Period identifiers accept only strings; malformed values use the existing
   day-range fallback and preserve a bounded legacy label when supplied.

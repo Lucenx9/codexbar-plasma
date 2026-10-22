@@ -436,6 +436,11 @@ TestCase {
         compare(costLabels.costPerMillionLine(
             {totals: {cost: 2, tokens: 1000000, currency: "USD"}}),
             "Average: $2.00 / 1M tokens");
+        compare(costLabels.costPerMillionLine(
+            {totals: {cost: Number.MAX_VALUE, tokens: Number.MAX_VALUE, currency: "USD"}}),
+            "Average: $1,000,000.00 / 1M tokens");
+        compare(costLabels.costPerMillionLine(
+            {totals: {cost: Number.MAX_VALUE, tokens: 1, currency: "USD"}}), "");
         compare(costLabels.costPeakLine([]), "");
         // All history longer than the chart supplies its whole-range average.
         var average = {cost: {value: 9, currency: "USD"}, tokens: null};

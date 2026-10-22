@@ -492,6 +492,27 @@ TestCase {
         compare(CostPresentation.perMillionAmount(null), null)
     }
 
+    function test_perMillionAmountPreservesFiniteRatioWhenScalingOverflows() {
+        var amount = CostPresentation.perMillionAmount({ totals: {
+            cost: Number.MAX_VALUE, tokens: Number.MAX_VALUE, currency: "EUR"
+        } })
+        compare(amount.value, 1000000)
+        compare(amount.currency, "EUR")
+    }
+
+    function test_perMillionAmountRejectsAnUnrepresentableRatio() {
+        compare(CostPresentation.perMillionAmount({ totals: {
+            cost: Number.MAX_VALUE, tokens: 1, currency: "USD"
+        } }), null)
+    }
+
+    function test_perMillionAmountPreservesSmallFiniteCosts() {
+        var amount = CostPresentation.perMillionAmount({ totals: {
+            cost: 1e-320, tokens: 1e-320, currency: "USD"
+        } })
+        compare(amount.value, 1000000)
+    }
+
     function test_chartBarGeometryKeepsTheLastBarInsideTheCanvas() {
         var dense = CostPresentation.chartBarGeometry(100, 365)
         verify(dense.offset >= 0)

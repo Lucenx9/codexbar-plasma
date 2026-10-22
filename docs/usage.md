@@ -669,7 +669,8 @@ and clipboard content remain under your control after closing the window.
   Dates after a snapshot's scan day do not extend that history
   or lower its daily cost and token averages.
 - Token breakdowns, model summaries, recent daily spend, cost history bars, and
-  average cost per 1M tokens, with a configurable cost history window. Recent
+  average cost per 1M tokens, with a configurable cost history window. The average
+  preserves finite ratios for very large totals and omits unrepresentable ratios. Recent
   history rows show measured zero costs and token counts alongside positive
   amounts; missing amounts stay omitted. Their bars stay proportional even for
   very large reported amounts. Daily averages avoid overflow when summing those
