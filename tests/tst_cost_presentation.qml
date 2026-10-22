@@ -492,6 +492,32 @@ TestCase {
         compare(CostPresentation.perMillionAmount(null), null)
     }
 
+    function test_perMillionAmountKeepsRepresentableRatios_data() {
+        return [
+            {tag: "ordinary", cost: 2, tokens: 1000000, expected: 2},
+            {tag: "large equal totals", cost: 1e308, tokens: 1e308, expected: 1000000},
+            {tag: "maximum equal totals", cost: Number.MAX_VALUE, tokens: Number.MAX_VALUE, expected: 1000000},
+            {tag: "maximum rate", cost: Number.MAX_VALUE, tokens: 1000000, expected: Number.MAX_VALUE},
+            {tag: "smallest rate", cost: Number.MIN_VALUE, tokens: 1000000, expected: Number.MIN_VALUE}
+        ]
+    }
+
+    function test_perMillionAmountKeepsRepresentableRatios(data) {
+        var result = CostPresentation.perMillionAmount({totals: {
+            cost: data.cost, tokens: data.tokens, currency: "EUR"
+        }})
+        verify(result !== null)
+        verify(isFinite(result.value))
+        verify(Math.abs(result.value / data.expected - 1) < 1e-14)
+        compare(result.currency, "EUR")
+    }
+
+    function test_perMillionAmountOmitsUnrepresentableRatios() {
+        compare(CostPresentation.perMillionAmount({totals: {
+            cost: Number.MAX_VALUE, tokens: 1, currency: "USD"
+        }}), null)
+    }
+
     function test_chartBarGeometryKeepsTheLastBarInsideTheCanvas() {
         var dense = CostPresentation.chartBarGeometry(100, 365)
         verify(dense.offset >= 0)
