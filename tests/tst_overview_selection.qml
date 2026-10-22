@@ -1,6 +1,9 @@
 import QtQuick
 import QtTest
 import "../contents/ui/OverviewProviders.js" as OverviewProviders
+import "../contents/ui/ProviderSnapshot.js" as Snapshot
+import "../contents/ui/ProviderAutoSelect.js" as AutoSelect
+import "../contents/ui/UsageCache.js" as Cache
 
 TestCase {
     name: "OverviewProviders"
@@ -220,6 +223,38 @@ TestCase {
         compare(providerIDs(OverviewProviders.visibleItems(roster, "   ")), "claude,gemini,cursor");
         compare(providerIDs(OverviewProviders.visibleItems(roster, null)), "claude,gemini,cursor");
         compare(OverviewProviders.visibleItems([errorOnly("codex")], "").length, 0);
+    }
+
+    function test_supplementalUsageSurvivesAnOptionalFailure_data() {
+        return [
+            {tag: "detail-rows", usage: {details: [{rows: [{label: "Requests", value: "42"}]}]}, useful: true},
+            {tag: "detail-chart", usage: {details: [{chart: {kind: "bars", points: [{label: "Today", value: 42}]}}]}, useful: true},
+            {tag: "detail-title", usage: {details: [{title: "No activity"}]}, useful: true},
+            {tag: "chart-title", usage: {details: [{chart: {kind: "bars", title: "No activity", points: []}}]}, useful: true},
+            {tag: "chart-unit", usage: {details: [{chart: {kind: "line", unit: "requests", points: []}}]}, useful: true},
+            {tag: "empty-chart", usage: {details: [{chart: {kind: "bars", points: []}}]}, useful: false},
+            {tag: "invalid-chart-points", usage: {details: [{chart: {kind: "line", points: [{label: "Today", value: {}}]}}]}, useful: false},
+            {tag: "dashboard", usage: {openAIAPIUsage: {currentDay: {costUSD: 1.25}}}, useful: true},
+            {tag: "empty-details", usage: {details: []}, useful: false},
+            {tag: "invalid-details", usage: {details: [{rows: [{label: "Requests", value: {}}]}]}, useful: false},
+            {tag: "empty-dashboard", usage: {openAIAPIUsage: {}}, useful: false}
+        ];
+    }
+
+    function test_supplementalUsageSurvivesAnOptionalFailure(data) {
+        var snapshot = Snapshot.normalize({provider: "bifrost", usage: data.usage,
+            error: {message: "Synthetic optional failure"}}, 1000);
+        var item = Cache.reconcile([], [snapshot], 1000)[0];
+        compare(item.rows.length, 0);
+        compare(item.placeholder, "");
+        compare(item.usageStale, false);
+        var before = JSON.stringify(item);
+        compare(OverviewProviders.isErrorOnly(item), !data.useful);
+        for (var selection of ["", "bifrost"]) {
+            compare(providerIDs(OverviewProviders.visibleItems([item], selection)), data.useful ? "bifrost" : "");
+        }
+        compare(AutoSelect.bestIndex([errorOnly("codex"), item]), data.useful ? 1 : 0);
+        compare(JSON.stringify(item), before);
     }
 
     function test_storedSelectionKeepsRosterOrderAndTheVisibleLimit() {

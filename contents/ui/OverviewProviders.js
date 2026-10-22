@@ -143,9 +143,20 @@ function detailText(item) {
     return "";
 }
 
+// Normalized sections can retain an empty chart container. Only its visible
+// labels or points, a section title, or detail rows provide usable content.
+function hasDetailContent(sections) {
+    return Array.isArray(sections) && sections.some(function(section) {
+        return section.title.length > 0 || section.rows.length > 0
+            || (section.chart && (section.chart.title.length > 0
+                || section.chart.unit.length > 0 || section.chart.points.length > 0));
+    });
+}
+
 // A snapshot that carries an error and nothing else. Any surviving quota row,
-// credit balance, subscription date, Codex monthly limit, cost figure, or
-// placeholder keeps the provider eligible, so a failed enrichment never hides healthy data.
+// credit balance, subscription date, Codex monthly limit, cost figure, detail
+// section, dashboard summary, or placeholder keeps the provider eligible, so a
+// failed enrichment never hides healthy data.
 function isErrorOnly(item) {
     return !!(item
         && item.error
@@ -155,6 +166,8 @@ function isErrorOnly(item) {
         && item.credits === null
         && item.codexCreditLimit === null
         && (!item.subscriptionDates || item.subscriptionDates.length === 0)
+        && !hasDetailContent(item.providerDetails)
+        && !item.usageDashboard
         && !item.resetCredits
         && !item.providerCost
         && !item.tokenCost);
