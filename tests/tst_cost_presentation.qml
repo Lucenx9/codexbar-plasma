@@ -912,6 +912,37 @@ TestCase {
         compare(points[0].displayValue, "$2.00")
     }
 
+    function test_spendAggregatesRejectOverflow_data() {
+        return [{tag: "cost", tokens: false}, {tag: "tokens", tokens: true}]
+    }
+
+    function test_spendAggregatesRejectOverflow(data) {
+        var costs = []
+        for (var index = 0; index < 3; index++) {
+            var cost = data.tokens ? 2 : 1e308
+            var tokens = data.tokens ? 1e308 : 5
+            costs.push({totals: {cost: cost, tokens: tokens, currency: "USD"},
+                daily: [dailyPoint("2026-09-01", cost, tokens, "USD"),
+                    dailyPoint("2026-09-02", 0, 0, "USD")]})
+        }
+        var before = JSON.stringify(costs)
+        var points = CostPresentation.spendDailyPoints(fmt, costs, data.tokens)
+        compare(points.length, 1)
+        compare(points[0].label, "2026-09-02")
+        compare(points[0].value, 0)
+        var days = CostPresentation.spendHeatmapDays(points, costs)
+        compare(days.length, 2)
+        compare(days[0], null)
+        compare(days[1].value, 0)
+        var totals = CostPresentation.spendTotals(costs)
+        compare(data.tokens ? totals.tokens : totals.cost, null)
+        compare(data.tokens ? totals.cost : totals.tokens, data.tokens ? 6 : 15)
+        var healthyPoints = CostPresentation.spendDailyPoints(fmt, costs, !data.tokens)
+        compare(healthyPoints.length, 2)
+        compare(healthyPoints[0].value, data.tokens ? 6 : 15)
+        compare(JSON.stringify(costs), before)
+    }
+
     function test_spendHeatmapCellsPadTheOldestCornerAndKeepTheNewestDayLast() {
         var points = []
         for (var day = 0; day < 30; day++) {

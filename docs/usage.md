@@ -203,6 +203,8 @@ work and upstream contract requirements.
   calendar, including its first and last days, and for the rest of the newest
   week. Measured zero remains a recorded
   day. It stays hidden for ranges that fill a single column.
+  Cost or token sums that exceed the numeric range stay unavailable, with an
+  empty heatmap cell for that day. Other dates and valid metrics remain visible.
 - Usage, cost and account refreshes reject results from process failures even
   when stdout contains valid JSON, preserving existing data under their normal
   retention rules. The CLI's structured provider errors remain usable at
