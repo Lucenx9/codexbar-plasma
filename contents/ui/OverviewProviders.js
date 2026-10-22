@@ -144,8 +144,9 @@ function detailText(item) {
 }
 
 // A snapshot that carries an error and nothing else. Any surviving quota row,
-// credit balance, subscription date, Codex monthly limit, cost figure, or
-// placeholder keeps the provider eligible, so a failed enrichment never hides healthy data.
+// credit balance, subscription date, Codex monthly limit, cost figure, detail
+// section, dashboard summary, or placeholder keeps the provider eligible, so a
+// failed enrichment never hides healthy data.
 function isErrorOnly(item) {
     return !!(item
         && item.error
@@ -155,6 +156,8 @@ function isErrorOnly(item) {
         && item.credits === null
         && item.codexCreditLimit === null
         && (!item.subscriptionDates || item.subscriptionDates.length === 0)
+        && (!item.providerDetails || item.providerDetails.length === 0)
+        && !item.usageDashboard
         && !item.resetCredits
         && !item.providerCost
         && !item.tokenCost);

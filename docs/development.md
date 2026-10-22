@@ -668,7 +668,8 @@ clipboard interoperability with every Wayland application or portal backend.
   runtime share its parsing so the checkboxes cannot drift from the applied
   selection. It also classifies eligibility: a snapshot carrying an error and
   nothing else has no row, while any surviving quota, credit balance, Codex
-  monthly limit, subscription date, cost figure, or placeholder keeps the provider
+  monthly limit, subscription date, cost figure, detail section, dashboard summary,
+  or placeholder keeps the provider
   visible. QML binds the resulting rows and localizes them; the module reads no root state.
 - `PopupHiddenRows.js` owns the popup's hidden usage rows without effects.
   Entries store a validated provider ID and a row key (`primary`, `secondary`,
@@ -1012,7 +1013,8 @@ missing days as complete totals.
 
 `tests/tst_overview_selection.qml` directly covers Overview eligibility,
 placeholder suppression, the identity detail fallback chain, automatic and
-stored selections, aliased roster IDs,
+stored selections, normalized detail/dashboard survivors with optional errors,
+empty or malformed supplemental data, automatic-selection eligibility, aliased roster IDs,
 unusable stored values, and unusable roster entries alongside the settings-page
 toggles. `tests/tst_provider_auto_select.qml` covers malformed percentages,
 missing data, provider cost competition, fractional usage, severity tie breaks, and

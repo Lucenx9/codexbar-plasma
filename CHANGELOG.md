@@ -25,6 +25,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep providers with valid detail sections or dashboard summaries eligible for
+  Overview and automatic selection when the same response carries an error.
 - Preserve the average cost per million tokens when large finite totals
   overflow an intermediate calculation. Omit rates that cannot be represented.
 - Keep overflowing multi-provider cost and token sums unavailable in Usage &
