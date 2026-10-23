@@ -12,6 +12,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep the full hover and keyboard-focus outline visible on provider popup
+  actions with recent KDE desktop styles.
 - Keep `LICENSE` as the unmodified MIT text so GitHub detects the license, and
   state the Poe icon's CC BY 4.0 exclusion in `NOTICE.md`.
 
