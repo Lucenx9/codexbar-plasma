@@ -33,7 +33,8 @@ The Poe provider icon (contents/icons/providers/poe.svg) is adapted from
 "Poe App Logo" by SVG Stack for theme coloring:
 https://svgstack.com/icon/poe-app-logo-3748
 It is licensed under Creative Commons Attribution 4.0 International (CC BY
-4.0): https://creativecommons.org/licenses/by/4.0/
+4.0), not under the MIT License in LICENSE:
+https://creativecommons.org/licenses/by/4.0/
 SVG Stack's license policy: https://svgstack.com/page/license
 
 Some provider icons use vendors' official brand marks. Brand names and marks
