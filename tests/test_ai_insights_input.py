@@ -35,6 +35,15 @@ class InputRootTests(unittest.TestCase):
                 inputs.discard(prepared["request"])
         self.assertEqual(stat.S_IMODE(occupied.stat().st_mode), 0o777)
 
+    def test_roots_are_canonical_for_the_qml_path_check(self):
+        # QML rejects empty and dot segments before writing the snapshot.
+        for candidate in ("/" + str(self.runtime), str(self.runtime / ".." / "runtime")):
+            with self.subTest(candidate=candidate), patch.dict(os.environ, {"XDG_RUNTIME_DIR": candidate}):
+                self.assertEqual(str(inputs.input_root()), str(self.runtime / self.name))
+        with patch.object(inputs.tempfile, "gettempdir", return_value="/" + str(self.base)), \
+                patch.dict(os.environ, {"XDG_RUNTIME_DIR": ""}):
+            self.assertEqual(str(inputs.input_root()), str(self.base / self.name))
+
     def test_unsafe_runtime_candidates_fall_back_without_changing_them(self):
         regular = self.base / "file"
         regular.write_text("unchanged")

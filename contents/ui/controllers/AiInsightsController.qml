@@ -264,6 +264,8 @@ Item {
             serial += 1
             activeSource = CommandLedger.withRunNonce(AiInsights.command(controller.scriptUrl, "generate", options),
                 serial, Date.now() + "-" + Math.random())
+            // Preparation must not consume the generation's 180-second shell bound.
+            deadline.restart()
             processSource.connectSource(activeSource)
         }
     }

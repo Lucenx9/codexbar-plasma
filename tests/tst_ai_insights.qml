@@ -235,12 +235,17 @@ TestCase {
     function test_preparedInputRequiresSuccessfulBoundedLocalDescriptor() {
         var request = "0123456789abcdef0123456789abcdef"
         var descriptor = JSON.stringify({status: "ready", request: request,
-            path: "/tmp/test 'dir/" + request + "/payload.ini"})
+            path: "/tmp/test 'dir/codexbar-plasma-ai-1000/" + request + "/payload.ini"})
         compare(AiInsights.preparedInput(descriptor, 0, 0).location,
-            "file:///tmp/test%20'dir/" + request + "/payload.ini")
+            "file:///tmp/test%20'dir/codexbar-plasma-ai-1000/" + request + "/payload.ini")
         compare(AiInsights.preparedInput(descriptor, 1, 0), null)
         compare(AiInsights.preparedInput(descriptor, 0, 1), null)
-        for (var path of ["https://host/" + request + "/payload.ini", "/tmp/other.ini", "/tmp/\n/" + request + "/payload.ini"]) {
+        for (var path of ["https://host/" + request + "/payload.ini", "/tmp/other.ini", "/tmp/\n/" + request + "/payload.ini",
+                "/tmp/" + request + "/payload.ini", "/tmp/other/" + request + "/payload.ini",
+                "/tmp/codexbar-plasma-ai-1000/../../home/user/codexbar-plasma-ai-1000/" + request + "/payload.ini",
+                "/tmp/./codexbar-plasma-ai-1000/" + request + "/payload.ini",
+                "/tmp//codexbar-plasma-ai-1000/" + request + "/payload.ini",
+                "/tmp/codexbar-plasma-ai-1000/" + request.replace("0", "1") + "/payload.ini"]) {
             compare(AiInsights.preparedInput(JSON.stringify({status: "ready", request: request, path: path}), 0, 0), null)
         }
     }

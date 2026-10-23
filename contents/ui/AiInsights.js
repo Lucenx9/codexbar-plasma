@@ -362,10 +362,15 @@ function encodedSnapshot(text) {
 
 function preparedInput(text, exitCode, exitStatus) {
     var value = successfulExit(exitCode, exitStatus) ? parseReply(text) : null
+    var segments = value && typeof value.path === "string" ? value.path.split("/") : []
+    // QtCore.Settings resolves dot segments, so they could move the write
+    // outside the helper's private `codexbar-plasma-ai-<uid>/<request>` file.
     if (!value || value.status !== "ready" || !validInputRequest(value.request)
             || typeof value.path !== "string" || value.path.length > 4096
             || value.path.charAt(0) !== "/" || /[\x00-\x1f\x7f]/.test(value.path)
-            || !value.path.endsWith("/" + value.request + "/payload.ini")) {
+            || segments.slice(1).some(function(segment) { return segment === "" || segment === "." || segment === ".." })
+            || !/^codexbar-plasma-ai-[0-9]+$/.test(segments[segments.length - 3])
+            || segments[segments.length - 2] !== value.request || segments[segments.length - 1] !== "payload.ini") {
         return null
     }
     return {request: value.request,
