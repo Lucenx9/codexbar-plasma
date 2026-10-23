@@ -286,7 +286,7 @@ class SettingsPagesTest(unittest.TestCase):
         for last_check_fragment in (
             "UpdateLogic.lastCheckMs(value)",
             'i18n("Last checked: never")',
-            "Qt.locale().toString(checkedAt, Locale.ShortFormat)",
+            "checkedAt.toLocaleString(Qt.locale(), Locale.ShortFormat)",
         ):
             if not code_contains(last_update_check_body, last_check_fragment):
                 raise AssertionError(
