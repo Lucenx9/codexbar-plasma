@@ -25,6 +25,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Compare saved widget update versions without rounding large numeric components,
+  preserving the updater's ordering for leading-zero ties, so restarting Plasma
+  preserves newer offers and discards older ones correctly.
 - Keep the AI Insights Back button inside narrow popups, with the full destination
   available on hover and keyboard focus. Truncated Overview, Usage & Spend and
   Sessions summaries, session names and metadata now reveal their full text on hover.
