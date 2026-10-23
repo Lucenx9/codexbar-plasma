@@ -17,6 +17,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Recognize installed Ollama models from registries with a port in AI Insights
+  connection tests when the model name omits its default `:latest` tag.
 - Preserve the managed CLI rollback copy when reinstalling a retained release
   fails while moving the verified files into place.
 - Keep the full hover and keyboard-focus outline visible on provider popup

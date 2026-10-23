@@ -1056,7 +1056,10 @@ Enable it in **AI Insights** settings, choose a provider and a model, and use
 **Test connection** to check the service and list available models. It sends
 no generation request, so it also says whether the chosen model is in that list
 rather than claiming it will answer; OpenRouter's Zero Data Retention routing is
-checked only when an insight is generated. Changing the model clears the
+checked only when an insight is generated. For Ollama, an omitted model tag
+matches the installed `:latest` variant, including names such as
+`registry.example:5000/team/model`; the registry port is not a model tag.
+Changing the model clears the
 previous test result. Disabling AI Insights on this settings page retires any
 pending connection test or wallet operation and ignores its late reply. The card
 and settings reject success replies from a helper that exits with an error or
