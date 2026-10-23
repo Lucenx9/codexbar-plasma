@@ -10,6 +10,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Security
+
+- Redact secret-key and secret-access-key assignments, including AWS environment
+  variable and SDK spellings, in CLI messages, diagnostics, and shared support reports.
+
 ### Fixed
 
 - Recognize installed Ollama models from registries with a port in AI Insights
