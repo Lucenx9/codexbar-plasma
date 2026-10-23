@@ -274,6 +274,32 @@ TestCase {
         return null;
     }
 
+    function test_longBackLabelStaysInsideView() {
+        var holder = create(viewComponent);
+        holder.width = 240;
+        holder.view.backText = Array(12).join("Provider <name> & ");
+        var back = find(holder.view, "aiInsightsBackButton");
+        var label = buttonLabel(back.contentItem);
+        waitForRendering(back);
+        verify(back.width <= holder.width, "Back must not push the page outside the popup");
+        verify(label.truncated);
+        var tip = null;
+        for (var child of back.data) {
+            if (child.plainText !== undefined)
+                tip = child;
+        }
+        verify(tip !== null);
+        compare(tip.plainText, "Back to " + holder.view.backText);
+        tip.delay = 0;
+        holder.view.focusBack(true);
+        tryCompare(tip, "visible", true);
+        keyClick(Qt.Key_Space);
+        compare(holder.backs, 1);
+        holder.view.backText = "Codex";
+        tryCompare(label, "truncated", false);
+        tryCompare(tip, "visible", false);
+    }
+
     function test_backLabelStaysLiteral_data() {
         return [
             {tag: "overview", title: "Overview", hidden: false},

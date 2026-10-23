@@ -112,12 +112,24 @@ ColumnLayout {
             }
 
             PlainPlasmaLabel {
+                id: spendMetaLabel
+
                 visible: view.applet.costUsageEnabled !== false
                 text: view.applet.spendTotalLine()
                 font: Kirigami.Theme.smallFont
                 opacity: view.applet.secondaryTextOpacity
                 Layout.fillWidth: true
                 elide: Text.ElideRight
+
+                HoverHandler {
+                    id: spendMetaLabelHover
+                }
+
+                PlainToolTip {
+                    parent: spendMetaLabel
+                    visible: spendMetaLabel.truncated && spendMetaLabelHover.hovered
+                    plainText: spendMetaLabel.text
+                }
             }
         }
 

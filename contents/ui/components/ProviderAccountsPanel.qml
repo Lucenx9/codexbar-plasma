@@ -153,7 +153,7 @@ ColumnLayout {
                 hoverEnabled: true
                 checkable: true
                 checked: accountSelected
-                plainText: accountFontMetrics.elidedText(fullLabel, Qt.ElideRight,
+                plainText: accountFontMetrics.elidedText(fullLabel, Qt.ElideMiddle,
                     Math.max(0, width - labelPadding))
                 Accessible.name: fullLabel
                 icon.name: "user-identity"

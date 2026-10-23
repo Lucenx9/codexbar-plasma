@@ -877,6 +877,8 @@ Item {
                     }
 
                     PlainPlasmaLabel {
+                        id: overviewMetaLabel
+
                         objectName: "overviewProviderCountLabel"
                         readonly property int providerCount: applet.overviewProviderItems.length
                         readonly property int totalProviderCount: applet.providers.length
@@ -892,6 +894,16 @@ Item {
                         opacity: applet.secondaryTextOpacity
                         Layout.fillWidth: true
                         elide: Text.ElideRight
+
+                        HoverHandler {
+                            id: overviewMetaLabelHover
+                        }
+
+                        PlainToolTip {
+                            parent: overviewMetaLabel
+                            visible: overviewMetaLabel.truncated && overviewMetaLabelHover.hovered
+                            plainText: overviewMetaLabel.text
+                        }
                     }
                 }
 
@@ -1143,6 +1155,7 @@ Item {
 
                                 Components.PlainButton {
                                     objectName: "restorePopupUsageRowButton"
+                                    flat: true
                                     plainText: i18n("Restore")
                                     icon.name: "view-visible"
                                     Accessible.name: i18n("Restore %1", modelData.label)
@@ -1404,6 +1417,7 @@ Item {
 
                                 Components.PlainButton {
                                     objectName: "restoreDetailSectionButton"
+                                    flat: true
                                     plainText: i18n("Restore")
                                     icon.name: "view-visible"
                                     Accessible.name: i18n("Restore %1", modelData.title)
