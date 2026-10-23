@@ -127,6 +127,18 @@ TestCase {
             "Before [redacted] Exit code 2")
     }
 
+    function test_secretKeyAliasesNeverReachSharedReports() {
+        for (var input of ["AWS_SECRET_ACCESS_KEY=SYNTHETIC_CREDENTIAL_VALUE",
+                           "secret_key: SYNTHETIC_CREDENTIAL_VALUE",
+                           '{"secretAccessKey":"SYNTHETIC_CREDENTIAL_VALUE"}']) {
+            var shared = SupportReport.sharedText(input)
+            verify(shared.indexOf("SYNTHETIC_CREDENTIAL_VALUE") === -1)
+            verify(shared.indexOf("[redacted]") >= 0)
+            var report = SupportReport.markdown({lastError: input, checkError: input})
+            verify(report.indexOf("SYNTHETIC_CREDENTIAL_VALUE") === -1)
+        }
+    }
+
     function test_redactionBeforeBoundsAndMarkdownEscape() {
         var text = SupportReport.sharedText("Bearer \"" + "SECRET".repeat(200) + "\"\n<script>` /Users/alice/config", 128)
         verify(text.indexOf("SECRET") === -1)

@@ -118,6 +118,24 @@ TestCase {
         compare(diagnostic.match(/\[redacted\]/g).length, 4)
     }
 
+    function test_redactsSecretKeyAliases_data() {
+        return [
+            {tag: "environment", input: "AWS_SECRET_ACCESS_KEY=SYNTHETIC_CREDENTIAL_VALUE"},
+            {tag: "snake", input: "secret_key: SYNTHETIC_CREDENTIAL_VALUE"},
+            {tag: "camel", input: '{"secretKey":"SYNTHETIC_CREDENTIAL_VALUE"}'},
+            {tag: "sdk", input: '{"secretAccessKey":"SYNTHETIC_CREDENTIAL_VALUE"}'},
+            {tag: "hyphen", input: "secret-access-key='SYNTHETIC_CREDENTIAL_VALUE'"},
+            {tag: "spaces", input: "secret access key: SYNTHETIC_CREDENTIAL_VALUE"}
+        ]
+    }
+
+    function test_redactsSecretKeyAliases(data) {
+        for (var output of [SafeText.cliMessage(data.input), SafeText.cliDiagnostic(data.input)]) {
+            verify(output.indexOf("SYNTHETIC_CREDENTIAL_VALUE") === -1)
+            verify(output.indexOf("[redacted]") >= 0)
+        }
+    }
+
     function test_redactsQuotedAndJsonCredentialShapes() {
         var message = SafeText.cliDiagnostic(
             "Authorization: \"Bearer header.payload.signature\"\n"

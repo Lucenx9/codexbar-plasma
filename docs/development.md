@@ -1225,8 +1225,11 @@ display retain their paths. Lines with prior credential-redaction markers are
 omitted too, since that filtering may have consumed a path separator. JSON slash
 escapes are normalized before filtering, and common executable startup failures
 retain only a fixed reason, never the personal path or library filename.
-`tests/tst_support_report.qml` exercises
-that separation.
+`SafeText.js` redacts secret-key and secret-access-key assignments alongside
+the existing credential names, including environment-variable and SDK spellings.
+`tests/tst_safe_text.qml` checks the message and diagnostic adapters;
+`tests/tst_support_report.qml` checks that the same values cannot reach shared
+text or the Markdown report, and exercises the path separation above.
 The offline `collect-support-report.py` helper reuses CLI version/ownership probes. Its only
 CLI commands are `--version` and `config providers --format json --json-only`
 (verified on official Linux CLI 0.67.0 and 0.73.0); the provider list discards
