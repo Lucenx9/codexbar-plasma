@@ -25,3 +25,11 @@ updates:
       timezone: Europe/Rome
     commit-message:
       prefix: ci
+    ignore:
+      # Stay on Ubuntu 24.04; only its digest refreshes.
+      - dependency-name: ubuntu
+        update-types:
+          - version-update:semver-major
+          - version-update:semver-minor
+      # The untagged Neon stage would resolve against `latest`; refresh it by hand.
+      - dependency-name: "*neon/docker-images/plasma"
