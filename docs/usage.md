@@ -462,8 +462,9 @@ Provider-specific editable settings depend on the official CLI contract.
   default account is used. For a provider without token-account support it says
   that CodexBar cannot switch its accounts and disables its **Accounts…** entry;
   the reload button can retry. Either explanation disappears when the popup
-  closes; the **Accounts…** entry stays disabled. Changing the CLI path, provider, source or
-  CodexBar configuration, or installing a managed CLI, enables the entry again.
+  closes; an unsupported provider's **Accounts…** entry stays disabled. Changing
+  the CLI path, provider, source or CodexBar configuration, or installing a
+  managed CLI, enables the entry again.
   Local cost history is independent of this selection; changing accounts does not filter the local cost scan.
   Repeated records for the same account keep the first successful read, so an
   earlier failed record cannot hide valid quotas. Accounts retain their original
