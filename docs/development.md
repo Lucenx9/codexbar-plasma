@@ -236,6 +236,11 @@ synchronized.
   for per-user locking, daily throttling, bounded official asset downloads, strict
   archive extraction, isolated-environment version probes, atomic activation and
   rollback. Only the exact managed command is eligible for update/rollback.
+  Replacing a retained release keeps its backup outside temporary staging until
+  the verified replacement is in place. A failed move restores that backup;
+  a failed restore leaves `.retained-*` inside the private CLI root for manual
+  recovery. `test_managed_cli.py` injects both failure cases and verifies the
+  rollback copy survives staging cleanup.
   `failure_status` maps a raised failure onto the bounded status the widget
   renders, so a refused download (`unverified`) stays distinct from an
   unreachable server (`network`) and an unsupported system (`unsupported`).
