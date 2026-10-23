@@ -86,6 +86,7 @@ class ManagedCliTests(unittest.TestCase):
             self.assertEqual(self.operation("automatic")["version"], "0.62.0")
         # Explicit Update now may reinstall the previously rejected version.
         self.assertEqual(self.operation("update")["version"], "0.63.0")
+        self.assertFalse(list(self.root.glob(".retained-*")))
 
     def test_owns_command_resolves_canonical_probe_paths(self):
         self.operation("install")
@@ -182,6 +183,51 @@ class ManagedCliTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "checksum_file"):
             self.operation("update")
         self.assertEqual(cli.status(self.root)["version"], "0.62.0")
+
+    def test_failed_reinstallation_preserves_rollback_copy(self):
+        self.operation("install")
+        self.publish("0.63.0")
+        self.operation("update")
+        self.operation("rollback")
+        before = cli.status(self.root)
+        rename = os.rename
+
+        def fail_staged_move(source, target):
+            if source.name == "release":
+                raise OSError("synthetic install interruption")
+            return rename(source, target)
+
+        with patch.object(cli.os, "rename", side_effect=fail_staged_move), self.assertRaises(OSError):
+            self.operation("update")
+
+        self.assertEqual(cli.status(self.root), before)
+        self.assertEqual(self.operation("rollback")["version"], "0.63.0")
+
+    def test_failed_reinstallation_and_recovery_keep_backup_on_disk(self):
+        self.operation("install")
+        self.publish("0.63.0")
+        self.operation("update")
+        previous = self.root / cli.installed(self.root)["target"]
+        receipt = (previous / "receipt.json").read_bytes()
+        binary = (previous / "CodexBarCLI").read_bytes()
+        self.operation("rollback")
+        rename = os.rename
+
+        def fail_replacement_and_recovery(source, target):
+            if target == previous:
+                raise OSError("synthetic filesystem failure")
+            return rename(source, target)
+
+        with patch.object(cli.os, "rename", side_effect=fail_replacement_and_recovery), self.assertRaises(OSError):
+            self.operation("update")
+
+        self.assertEqual(cli.status(self.root)["version"], "0.62.0")
+        backups = list(self.root.glob(".retained-*"))
+        self.assertEqual(len(backups), 1)
+        self.assertEqual((backups[0] / "receipt.json").read_bytes(), receipt)
+        self.assertEqual((backups[0] / "CodexBarCLI").read_bytes(), binary)
+        os.rename(backups[0], previous)
+        self.assertEqual(self.operation("rollback")["version"], "0.63.0")
 
     def test_install_accepts_bounded_third_party_notices(self):
         notice = tarfile.TarInfo("THIRD_PARTY_NOTICES")
