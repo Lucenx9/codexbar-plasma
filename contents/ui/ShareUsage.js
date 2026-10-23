@@ -16,10 +16,11 @@ function label(value) {
     if (typeof value !== "string") return ""
     var text = SafeText.cliMessage(value, 120)
         .replace(/[\u202a-\u202e\u2066-\u2069]/g, "")
+        .replace(/\bhttps?:\S+/g, "[redacted]")
     // Spaces do not delimit filesystem paths. Omit the whole label rather
     // than guessing where a path ends and sharing its remaining components.
     if (/(^|[^\w/])(?:\/|~\/|[A-Za-z]:\\)\S+/.test(text)) return "[redacted]"
-    return text.replace(/\S+@\S+|\b(?:https?|file):\S+/g, "[redacted]")
+    return text.replace(/\S+@\S+|\bfile:\S+/g, "[redacted]")
 }
 
 function quantities(value) {

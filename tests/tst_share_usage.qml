@@ -146,6 +146,20 @@ TestCase {
         compare(ShareUsage.snapshot([input], 30, "", false).models[0].label, "synthetic/model")
     }
 
+    function test_webUrlsPreserveTheRestOfTheLabel_data() {
+        return [
+            {tag: "http", label: "model http://example.test/info", expected: "model [redacted]"},
+            {tag: "https", label: "model https://example.test/info", expected: "model [redacted]"},
+            {tag: "url-and-path", label: "model https://example.test/info /a b", expected: "[redacted]"}
+        ]
+    }
+
+    function test_webUrlsPreserveTheRestOfTheLabel(data) {
+        var input = cost("codex", 100, 1, "USD")
+        input.models[0].label = data.label
+        compare(ShareUsage.snapshot([input], 30, "", false).models[0].label, data.expected)
+    }
+
     function test_calendarPeriodsShareOnlyTheirOwnSnapshots() {
         var monthToDate = cost("codex", 10, 1, "USD")
         monthToDate.period = "month-to-date"
