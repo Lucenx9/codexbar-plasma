@@ -10,6 +10,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+## 0.2.51 - 2026-10-23
+
 ### Added
 
 - Install or reuse and immediately select the private official CLI directly
@@ -28,9 +30,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Display localized dates correctly in managed CLI settings and shared usage cards.
 - Reveal the full Diagnostics "Resolved command" path on hover when the
   narrow settings page elides its middle directories.
-
 - Hide the popup's "no named accounts" and "cannot switch accounts"
   explanations after the popup closes, instead of keeping them until the CLI
   or CodexBar configuration changes.
@@ -58,13 +60,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Keep saving and restoring other providers' last known quotas after selecting
   an account, instead of losing the whole quota cache on the next restart.
   A selected account's quotas are never saved or restored as the default account's.
-
 - Preserve older model totals and accurate daily averages in sparse All history
   scans spanning more than 2,048 calendar days.
-
 - Honor AI Insights rate-limit deadlines supplied as HTTP dates, so generation
   does not become available before the provider-requested wait has elapsed.
-
 - Keep stale pace and run-out forecasts hidden in privacy mode after a failed
   refresh or an expired quota measurement.
 - Keep fractional quota percentages in AI Insights so nearly exhausted quotas
@@ -87,6 +86,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Correct translated provider-default labels, settings references, and grammar.
   Use consistent localized names for AI Insights, tokens, providers, and the CLI
   across the five shipped catalogs.
+
+[Full diff](https://github.com/Lucenx9/codexbar-plasma/compare/v0.2.50...v0.2.51)
 
 ## 0.2.50 - 2026-10-18
 
