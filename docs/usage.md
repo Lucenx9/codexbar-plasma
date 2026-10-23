@@ -1024,6 +1024,10 @@ reinstallation of the replaced version. A newer release remains eligible;
 and previous copies are retained. Other versions are removed by the next update
 check once they have been inactive for an hour, so recent CLI processes can
 finish using their resource bundles without old releases filling the disk.
+If reinstalling a retained version fails while moving its replacement into
+place, the previous copy is restored. If filesystem errors also prevent that
+recovery, its files remain in a `.retained-*` directory inside the private CLI
+directory for manual recovery; the active version stays available.
 A restored CLI does not roll back upstream provider configuration changes.
 
 ## AI Insights

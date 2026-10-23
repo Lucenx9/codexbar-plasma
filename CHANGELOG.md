@@ -12,6 +12,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Preserve the managed CLI rollback copy when reinstalling a retained release
+  fails while moving the verified files into place.
 - Keep the full hover and keyboard-focus outline visible on provider popup
   actions with recent KDE desktop styles.
 - Keep `LICENSE` as the unmodified MIT text so GitHub detects the license, and

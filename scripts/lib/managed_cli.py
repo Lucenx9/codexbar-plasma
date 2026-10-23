@@ -347,12 +347,26 @@ def install(root, automatic=False):
             raise ValueError("version_probe")
         (extracted / "receipt.json").write_text(json.dumps(dict(version=version, sha256=expected)))
         target = "releases/v" + version + "-" + expected[:16]
+        retained = None
         if (root / target).exists():
             # Replace a retained copy only with freshly verified content, never the active copy.
             if not installed(root, target) or (current and target == current["target"]):
                 raise ValueError("existing_release")
-            os.rename(root / target, stage / "retained-release")
-        os.rename(extracted, root / target)
+            # Keep recovery outside staging: even a failed restore must survive
+            # TemporaryDirectory cleanup for manual recovery.
+            retained = root / (".retained-" + uuid.uuid4().hex)
+            os.rename(root / target, retained)
+        try:
+            os.rename(extracted, root / target)
+        except OSError:
+            if retained is not None:
+                os.rename(retained, root / target)
+            raise
+        if retained is not None:
+            try:
+                shutil.rmtree(retained)
+            except OSError:
+                pass  # The verified replacement is already in place.
         activate(root, target, state, current["target"] if current else "")
     return {**status(root), "status": "installed"}
 
