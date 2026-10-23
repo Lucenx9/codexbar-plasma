@@ -26,7 +26,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 ### Fixed
 
 - Compare saved widget update versions without rounding large numeric components,
-  so restarting Plasma preserves newer offers and discards older ones correctly.
+  preserving the updater's ordering for leading-zero ties, so restarting Plasma
+  preserves newer offers and discards older ones correctly.
 - Keep providers with valid detail sections or dashboard summaries eligible for
   Overview and automatic selection when the same response carries an error.
   Empty charts without labels or valid points do not occupy an Overview slot.

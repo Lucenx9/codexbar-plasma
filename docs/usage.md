@@ -890,7 +890,8 @@ fields; track proposed extensions in the issue tracker.
   offer if it reports the widget is current or skips the release. After updating
   through another method, restarting Plasma clears the offer once the widget
   runs that release or a newer one. Numeric version components are compared
-  exactly, including long build numbers. The applet runs both
+  exactly, including long build numbers, with the updater's text ordering used
+  to break ties between numerically equal versions. The applet runs both
   actions, so closing the settings window does not stop them. The update
   notification opens the release page on GitHub when clicked, where supported.
   Failed upgrades restore the previous widget package so installation can be

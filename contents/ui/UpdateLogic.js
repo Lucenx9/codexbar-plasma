@@ -69,7 +69,9 @@ function compareNumericVersions(left, right) {
             return leftPart < rightPart ? -1 : 1
         }
     }
-    return 0
+    // GNU sort -V breaks numerically equal versions by the full original text.
+    // Apply that tie only after later components have had a chance to differ.
+    return left === right ? 0 : (left < right ? -1 : 1)
 }
 
 // Restores a persisted "update available" version only while it is still newer
