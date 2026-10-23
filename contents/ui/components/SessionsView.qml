@@ -105,6 +105,8 @@ ColumnLayout {
             }
 
             Components.PlainPlasmaLabel {
+                id: sessionsMetaLabel
+
                 text: [view.applet.sessionsLastUpdatedText,
                     i18np("%1 local session", "%1 local sessions", view.applet.sessions.length)]
                     .filter(function(part) { return part.length > 0 })
@@ -113,6 +115,16 @@ ColumnLayout {
                 opacity: view.applet.secondaryTextOpacity
                 Layout.fillWidth: true
                 elide: Text.ElideRight
+
+                HoverHandler {
+                    id: sessionsMetaLabelHover
+                }
+
+                PlainToolTip {
+                    parent: sessionsMetaLabel
+                    visible: sessionsMetaLabel.truncated && sessionsMetaLabelHover.hovered
+                    plainText: sessionsMetaLabel.text
+                }
             }
         }
 
@@ -264,21 +276,45 @@ ColumnLayout {
                             }
 
                             Components.PlainPlasmaLabel {
+                                id: sessionNameLabel
+
                                 visible: sessionCard.session.sessionName.length > 0
                                     && sessionCard.session.sessionName !== sessionCard.title
                                 text: sessionCard.session.sessionName
                                 opacity: view.applet.valueTextOpacity
                                 Layout.fillWidth: true
                                 elide: Text.ElideRight
+
+                                HoverHandler {
+                                    id: sessionNameLabelHover
+                                }
+
+                                PlainToolTip {
+                                    parent: sessionNameLabel
+                                    visible: sessionNameLabel.truncated && sessionNameLabelHover.hovered
+                                    plainText: sessionNameLabel.text
+                                }
                             }
 
                             Components.PlainPlasmaLabel {
+                                id: sessionSubtitleLabel
+
                                 visible: sessionCard.subtitle.length > 0
                                 text: sessionCard.subtitle
                                 opacity: view.applet.secondaryTextOpacity
                                 font.pixelSize: Kirigami.Theme.smallFont.pixelSize
                                 Layout.fillWidth: true
                                 elide: Text.ElideRight
+
+                                HoverHandler {
+                                    id: sessionSubtitleLabelHover
+                                }
+
+                                PlainToolTip {
+                                    parent: sessionSubtitleLabel
+                                    visible: sessionSubtitleLabel.truncated && sessionSubtitleLabelHover.hovered
+                                    plainText: sessionSubtitleLabel.text
+                                }
                             }
                         }
 

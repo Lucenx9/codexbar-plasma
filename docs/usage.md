@@ -174,11 +174,15 @@ work and upstream contract requirements.
 - Hovering or keyboard-focusing an Overview row whose title, detail line or
   quota caption is cut short in a narrow popup shows the full text in a
   tooltip. Hovering a global or provider tab whose name is cut short, an
-  account button whose label is cut short, or a provider header title, account, or plan
-  that is cut short, or a provider detail section title, row label or value
+  account button whose label is abbreviated in the middle, or a provider header
+  title, account, or plan that is cut short, or a provider detail section title, row label or value
   that is cut short, shows the full displayed text in
   a tooltip. Quota-window titles, reset descriptions, and provider-chart titles
   and units also reveal their full displayed text on hover when truncated.
+  Overview, Usage & Spend and Sessions header summaries, session names and
+  session metadata also reveal their full displayed text on hover when truncated.
+  The AI Insights Back button stays within the popup and reveals a truncated
+  destination on hover or keyboard focus.
   Keyboard focus also reveals the name of a truncated or icon-only tab. Text that fits gets no tooltip.
 - Refresh, copy, share, hide and tab-scroll icon buttons show their action
   labels on keyboard focus as well as hover. The copy confirmation takes

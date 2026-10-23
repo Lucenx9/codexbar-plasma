@@ -60,12 +60,19 @@ ColumnLayout {
     PlasmaComponents.ToolButton {
         id: backButton
         objectName: "aiInsightsBackButton"
+        Layout.maximumWidth: view.width
 
         icon.name: "go-previous-symbolic"
         text: view.backText
         display: PlasmaComponents.AbstractButton.TextBesideIcon
         Accessible.name: i18n("Back to %1", view.backText)
         onClicked: view.backRequested(visualFocus)
+
+        PlainToolTip {
+            parent: backButton
+            visible: backLabel.truncated && (backButton.hovered || backButton.visualFocus)
+            plainText: backButton.Accessible.name
+        }
 
         // The default Plasma label parses rich text and inserts mnemonic markup.
         contentItem: RowLayout {
@@ -80,6 +87,8 @@ ColumnLayout {
             }
 
             PlainPlasmaLabel {
+                id: backLabel
+
                 text: view.backText
                 font: backButton.font
                 elide: Text.ElideRight
