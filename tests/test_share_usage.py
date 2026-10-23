@@ -132,6 +132,9 @@ class ShareUsageWindowTests(unittest.TestCase):
             env = dict(os.environ,
                        QT_QPA_PLATFORM="offscreen",
                        QT_QUICK_BACKEND="software",
+                       # Without a platform theme, Kirigami selects the embedded
+                       # breeze-internal icon theme; Neon KF 6.31/Plasma 6.8 warns it is missing.
+                       QT_QPA_PLATFORMTHEME="kde",
                        QT_QUICK_CONTROLS_STYLE=os.environ.get("QT_QUICK_CONTROLS_STYLE", "org.kde.desktop"))
             result = subprocess.run([runner, "-input", str(work)], env=env,
                                     capture_output=True, text=True, timeout=30, check=False)
