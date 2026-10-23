@@ -10,6 +10,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Fixed
+
+- Keep `LICENSE` as the unmodified MIT text so GitHub detects the license, and
+  state the Poe icon's CC BY 4.0 exclusion in `NOTICE.md`.
+
 ## 0.2.51 - 2026-10-23
 
 ### Added
