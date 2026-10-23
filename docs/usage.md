@@ -817,7 +817,10 @@ fields; track proposed extensions in the issue tracker.
   executable-format and shared-library startup reasons remain as fixed text.
   Lines already containing credential-redaction markers are omitted too, since
   that filtering may have hidden a path separator. Recognized identifiers are
-  redacted. The local **Check versions** display still shows the full path.
+  redacted. Credential filtering covers secret-key and secret-access-key
+  assignments, including `AWS_SECRET_ACCESS_KEY` and `secretAccessKey`, in CLI
+  messages, Diagnostics, and shared reports.
+  The local **Check versions** display still shows the full path.
   Versions come from offline `kinfo`, installed Debian package metadata when
   available, `kf6-config`, and Qt 6 `qtpaths`; unavailable versions remain unknown.
   Module checks use this QML engine; PlasmaCore remains explicitly **not
