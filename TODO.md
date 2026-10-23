@@ -273,7 +273,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Custom provider routing
 
 - [ ] Restore custom catalog IDs in the official Linux usage path. Linux
-  0.79.0 and 0.80.0 discover and fetches a synthetic `audit-fixture` plugin through
+  0.79.0 and 0.80.0 discover and fetch a synthetic `audit-fixture` plugin through
   `plugins list` and `plugins fetch`, but `usage --provider audit-fixture`
   returns a Codex error even after approval. Done when the released usage
   command preserves the requested custom identity and Plasma's existing
@@ -411,7 +411,10 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   config-changed conflict error. Done when Plasma starts the command only on
   request, shows the URI and code without logging them, handles cancel,
   failure, expiry, and stale replies, refreshes Copilot afterwards, keeps the
-  existing key setup, and is tested with fixture event streams.
+  existing key setup, and is tested with fixture event streams. Gate the action
+  on the existing bounded CLI version probe, or an equivalent advertised
+  capability, so it stays hidden below 0.80.0, with an older-version
+  regression test.
   [Evidence](docs/research/2026-10-23-macos-parity-0.80.0.md#linux-cli-contract-changes).
 
 ## Verify before accepting implementation work
