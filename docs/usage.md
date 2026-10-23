@@ -187,6 +187,8 @@ work and upstream contract requirements.
 - Refresh, copy, share, hide and tab-scroll icon buttons show their action
   labels on keyboard focus as well as hover. The copy confirmation takes
   precedence over its action label.
+  Provider action rows keep their full native hover and focus outlines visible
+  inside the scrollable popup.
 - Overflowing popup tabs have separate scroll buttons and immediate keyboard
   focus reveal, so navigation never covers provider labels. A tab wider than the
   available area stays aligned at its start when focused or selected again.

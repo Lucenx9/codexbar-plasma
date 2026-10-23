@@ -1603,6 +1603,9 @@ Item {
 
                                 Controls.ItemDelegate {
                                     Layout.fillWidth: true
+                                    // Keep expanding native highlights inside the scroll clip.
+                                    Layout.leftMargin: Kirigami.Units.smallSpacing
+                                    Layout.rightMargin: Kirigami.Units.smallSpacing
                                     leftPadding: Kirigami.Units.smallSpacing
                                     rightPadding: Kirigami.Units.smallSpacing
                                     text: modelData.title
