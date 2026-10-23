@@ -120,6 +120,32 @@ TestCase {
         verify(JSON.stringify(data).indexOf("/home/alice/private-project") === -1)
     }
 
+    function test_pathsWithSpacesRedactTheWholeExportLabel_data() {
+        return [
+            {tag: "minimal", label: "/a b"},
+            {tag: "unix", label: "model /home/synthetic user/private project"},
+            {tag: "quoted", label: 'model "/home/synthetic user/private project"'},
+            {tag: "file-url", label: "model file:///home/synthetic user/private project"},
+            {tag: "tilde", label: "model ~/synthetic user/private project"},
+            {tag: "windows", label: "model C:\\synthetic user\\private project"}
+        ]
+    }
+
+    function test_pathsWithSpacesRedactTheWholeExportLabel(data) {
+        var input = cost("codex", 100, 1, "USD")
+        input.models[0].label = data.label
+        var snapshot = ShareUsage.snapshot([input], 30, "", false)
+        compare(snapshot.models[0].label, "[redacted]")
+        compare(snapshot.models[0].tokens, 100)
+        compare(input.models[0].label, data.label)
+    }
+
+    function test_namespacedModelLabelsRemainVisible() {
+        var input = cost("codex", 100, 1, "USD")
+        input.models[0].label = "synthetic/model"
+        compare(ShareUsage.snapshot([input], 30, "", false).models[0].label, "synthetic/model")
+    }
+
     function test_calendarPeriodsShareOnlyTheirOwnSnapshots() {
         var monthToDate = cost("codex", 10, 1, "USD")
         monthToDate.period = "month-to-date"
