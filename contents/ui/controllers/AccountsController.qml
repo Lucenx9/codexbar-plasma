@@ -37,6 +37,17 @@ Item {
         return key.length > 0 && Guards.hasOwnKey(lifecycle.availability, key) ? lifecycle.availability[key] : "";
     }
 
+    // The availability once a discovery started since the last dismissNotices();
+    // the availability itself persists for the provider's Accounts… entry.
+    function noticeForProvider(providerID) {
+        var key = Normalizer.normalizedProviderID(providerID);
+        return key.length > 0 && Guards.hasOwnKey(lifecycle.notices, key) ? availabilityForProvider(key) : "";
+    }
+
+    function dismissNotices() {
+        lifecycle.notices = ({});
+    }
+
     // The owning applet calls this when its CLI/configuration identity changes.
     // Ordinary usage refreshes and account selection preserve these lists.
     function reset() {
@@ -44,6 +55,7 @@ Item {
         lifecycle.options = ({});
         lifecycle.errors = ({});
         lifecycle.availability = ({});
+        lifecycle.notices = ({});
     }
 
     Component.onDestruction: lifecycle.retireRequests()
@@ -55,6 +67,7 @@ Item {
         property var options: ({})
         property var errors: ({})
         property var availability: ({})
+        property var notices: ({})
         property int runSerial: 0
         readonly property int accountCommandTimeoutMs: 60000
         readonly property string commandContext: JSON.stringify([controller.commandPath, controller.sourceMode, controller.includeStatus])
@@ -87,6 +100,10 @@ Item {
             var descriptor = CommandLedger.descriptor("account", key, Date.now(), accountCommandTimeoutMs);
             descriptor.commandSignature = baseCommand;
             commands = CommandLedger.opened(commands, source, descriptor);
+            // Armed per request, so a reply after dismissNotices() stays silent.
+            var nextNotices = Guards.copyObject(notices);
+            nextNotices[key] = true;
+            notices = nextNotices;
             accountsSource.connectSource(source);
             return true;
         }
