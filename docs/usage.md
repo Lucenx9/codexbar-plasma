@@ -932,6 +932,7 @@ the widget version, installed CLI version, resolved command path, and installati
 guidance using the same local probe as the release checker. It also reports the
 PATH-resolved system CLI version whenever it differs from the selected command,
 so drift between a managed copy and a package-manager installation stays visible.
+Hovering a resolved command path that is shortened in the middle shows it in full.
 Editing the command path clears the previous result. Prerelease or custom version
 strings are not silently treated as older stable versions. Network errors do not
 affect quota fetching or replace the installed version with a guessed value.

@@ -489,6 +489,18 @@ KCM.SimpleKCM {
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             elide: Text.ElideMiddle
+
+            HoverHandler {
+                id: resolvedCommandHover
+            }
+
+            // Middle elision hides the directories a bug report needs.
+            Components.PlainToolTip {
+                objectName: "resolvedCommandToolTip"
+                parent: resolvedCommandLabel
+                visible: resolvedCommandLabel.truncated && resolvedCommandHover.hovered
+                plainText: resolvedCommandLabel.text
+            }
         }
 
         Components.PlainControlsLabel {

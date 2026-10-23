@@ -305,6 +305,50 @@ TestCase {
         verify(resolvedCommandLabel.text !== "Not checked");
     }
 
+    // A middle-elided resolved path must stay readable on hover, and a path
+    // that fits must not grow a redundant tooltip.
+    function test_diagnosticsRevealsTruncatedResolvedPath() {
+        var longPath = "/home/test/.local/share/codexbar-plasma/cli/releases/0.62.0/bin/codexbar";
+        var page = createPage("../contents/ui/configDiagnostics.qml", {
+            cfg_commandPath: longPath,
+            width: 240
+        });
+        if (!page)
+            return;
+
+        var versions = findChild(page, "cliVersionsController");
+        versions.activeSource = "environment";
+        versions.accept("environment", {
+            "exit code": 0,
+            stdout: JSON.stringify({status: "local", version: "0.62.0",
+                path: longPath, manager: "managed"})
+        });
+        var label = findChild(page, "resolvedCommandLabel");
+        var tip = findChild(page, "resolvedCommandToolTip");
+        verify(label !== null && tip !== null);
+        compare(label.text, longPath);
+        tryVerify(function() { return label.truncated; });
+        compare(tip.plainText, longPath);
+        mouseMove(testCase, testCase.width - 1, testCase.height - 1);
+        wait(300);
+        mouseMove(label, label.width / 2, label.height / 2);
+        tryCompare(tip, "visible", true);
+        mouseMove(testCase, testCase.width - 1, testCase.height - 1);
+        tryCompare(tip, "visible", false);
+
+        versions.activeSource = "environment";
+        versions.accept("environment", {
+            "exit code": 0,
+            stdout: JSON.stringify({status: "local", version: "0.62.0",
+                path: "/usr/bin/codexbar", manager: "external"})
+        });
+        tryCompare(label, "text", "/usr/bin/codexbar");
+        tryVerify(function() { return !label.truncated; });
+        mouseMove(label, label.width / 2, label.height / 2);
+        wait(tip.delay + 100);
+        verify(!tip.visible);
+    }
+
     function test_diagnosticsShowsSystemCliWhenItDiffers() {
         var page = createPage("../contents/ui/configDiagnostics.qml", {
             cfg_commandPath: "/home/test/.local/share/codexbar-plasma/cli/current/codexbar"
