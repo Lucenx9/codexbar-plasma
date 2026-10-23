@@ -15,3 +15,13 @@ updates:
       actions:
         patterns:
           - "*"
+  # The CI image recipe pins its base images by digest. A monthly PR is the
+  # reminder to rebuild the image; see "CI image" in docs/development.md.
+  - package-ecosystem: docker
+    directory: /ci
+    schedule:
+      interval: monthly
+      time: "09:00"
+      timezone: Europe/Rome
+    commit-message:
+      prefix: ci

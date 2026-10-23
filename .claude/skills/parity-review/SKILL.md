@@ -78,7 +78,8 @@ sandbox /tmp/probe/bin/codexbar --version
   blockers rechecked; excluded from the Linux backlog; unverified; probe method.
   The probe method names the `bwrap` isolation.
 - Index the note in `docs/README.md`.
-- In TODO.md, update the review baseline, add gaps with evidence and a done
+- In TODO.md, replace the review baseline's coverage with this review (earlier
+  coverage stays in its indexed note), add gaps with evidence and a done
   condition, remove implemented ones, and revise resolved blockers.
 
 ## 5. Deliver
