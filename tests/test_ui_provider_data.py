@@ -258,11 +258,6 @@ class ProviderDataTest(unittest.TestCase):
             raise AssertionError("startup cache restore must merge normalized, redacted quotas with early live results")
         if "providers.every(" in restore_body:
             raise AssertionError("a successful partial startup refresh must not bypass cached-provider restoration")
-        if "UsageState.accepted(providers, items, usageCacheContext(), Date.now())" not in function_body(main_text, "commitUsageSnapshot"):
-            raise AssertionError(
-                "the live refresh must reconcile without an account pin; only the fingerprinted cache restore may skip "
-                "the account-key comparison for a provider whose explicit selection it verified"
-            )
         panel_clock_body = id_block(main_text, "panelClockTimer")
         for fragment in ("root.panelClockMs = Date.now()", "root.expireStaleUsage(root.panelClockMs)"):
             if not code_contains(panel_clock_body, fragment):

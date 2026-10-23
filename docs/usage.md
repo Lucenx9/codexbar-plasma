@@ -363,9 +363,7 @@ a later refresh for another account cannot restart its countdown.
 Failed refreshes stop reusing measurements older than 24 hours, and a quota
 measurement older than 24 hours never stamps a new snapshot as fresh. A failed refresh that
 reports a different account than the retained measurement does not reuse it; a
-failure that reports no account still does. Restored cache entries hold no
-account, so an early failed refresh keeps them only for a provider whose
-explicit account selection the cache fingerprint already covers. The existing minute
+failure that reports no account still does. The existing minute
 timer also removes expired retained data when automatic refresh is disabled;
 the error remains visible and healthy providers are unaffected. Successful
 responses without measured quotas keep their valid credits, subscription dates,
@@ -379,6 +377,13 @@ last known, even if they were saved recently. A cache is not a successful refres
 If a partial refresh finishes before that verification, its results take
 precedence for the providers it returned. Other cached providers are restored
 as last known and included when the merged snapshot is saved.
+
+Explicit account selections last only for the current session, so the disk
+cache leaves out every provider with a selected account. Its quotas are never
+restored as the default account's after a restart, and a restore that finishes
+after a selection never fills that provider with default-account quotas. Other
+providers keep being saved and restored while a selection is active, and a
+provider is saved again once it returns to its default account.
 
 The disk cache is limited to 64 KiB of UTF-8 on both save and restore. When
 providers exceed the save budget, it keeps the leading providers that fit rather

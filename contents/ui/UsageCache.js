@@ -37,24 +37,20 @@ function withCurrentStatus(snapshot, source) {
     return next
 }
 
-// A provider is identity-pinned when the caller carries its explicit account
-// override, the same value the disk cache context fingerprints. An automatic or
-// default account is never pinned: the CLI can hand it a different identity
-// between sessions while that fingerprint stays unchanged.
-function pinnedProvider(pinnedAccounts, providerID) {
-    return Normalizer.isCliRecord(pinnedAccounts)
-        && Guards.hasOwnKey(pinnedAccounts, providerID)
-        && typeof pinnedAccounts[providerID] === "string"
-        && pinnedAccounts[providerID].length > 0
+// Explicit account selections are memory-only and absent from the disk cache
+// context, so a provider with an override is neither saved nor restored: its
+// quota must never come back as the default account's after a restart, and the
+// default account's saved quota must never fill in for the selected one.
+function accountOverridden(accounts, providerID) {
+    return Normalizer.isCliRecord(accounts)
+        && Guards.hasOwnKey(accounts, providerID)
+        && typeof accounts[providerID] === "string"
+        && accounts[providerID].length > 0
 }
 
 // Inputs are normalized live snapshots. A successful empty usage result replaces
 // old quotas; only an explicit failure may reuse them in the same account scope.
-// `pinnedAccounts` reaches this function from the verified disk-cache restore,
-// whose entries deliberately store no identity: for a pinned provider the key
-// comparison could only reject its own verified account instead of protecting
-// it, while every other provider keeps the comparison.
-function reconcile(previous, incoming, nowMs, pinnedAccounts) {
+function reconcile(previous, incoming, nowMs) {
     var byProvider = ({})
     previous.forEach(function(item) { byProvider[item.provider] = item })
     return incoming.map(function(item) {
@@ -62,8 +58,7 @@ function reconcile(previous, incoming, nowMs, pinnedAccounts) {
         var old = byProvider[item.provider]
         var incomingAccountKey = Normalizer.accountKey(item)
         if (item.error.length > 0 && hasQuota(old) && recent(old.lastGoodAtMs, nowMs)
-                && (pinnedProvider(pinnedAccounts, item.provider)
-                    || incomingAccountKey.length === 0
+                && (incomingAccountKey.length === 0
                     || incomingAccountKey === Normalizer.accountKey(old))) {
             next = withCurrentStatus(old, item)
             next.error = item.error
@@ -125,8 +120,11 @@ function reconcile(previous, incoming, nowMs, pinnedAccounts) {
 
 // Restores cached provider snapshots during widget initialization, merging any
 // cached providers missing from live results while keeping live data fresh.
-function restore(cached, live, nowMs, pinnedAccounts) {
-    if (!Array.isArray(cached) || cached.length === 0) {
+function restore(cached, live, nowMs, accounts) {
+    cached = Array.isArray(cached) ? cached.filter(function(item) {
+        return !accountOverridden(accounts, item.provider)
+    }) : []
+    if (cached.length === 0) {
         return Array.isArray(live) ? live : []
     }
     if (!Array.isArray(live) || live.length === 0) {
@@ -136,7 +134,7 @@ function restore(cached, live, nowMs, pinnedAccounts) {
             return copy
         })
     }
-    var reconciled = reconcile(cached, live, nowMs, pinnedAccounts).map(function(item, index) {
+    var reconciled = reconcile(cached, live, nowMs).map(function(item, index) {
         var current = live[index]
         // These measurements were already accepted by the live refresh path.
         return hasQuota(current) && recent(current.lastGoodAtMs, nowMs) ? current : item
@@ -203,14 +201,15 @@ function extraRecord(id, window) {
     return windowID.length > 0 ? { id: windowID, window: window } : { window: window }
 }
 
-function encode(items, context, nowMs) {
+function encode(items, context, nowMs, accounts) {
     if (!validContext(context)) {
         return ""
     }
     var snapshots = []
     for (var i = 0; i < items.length && snapshots.length < maximumEntries; i++) {
         var item = items[i]
-        if (!recent(item.lastGoodAtMs, nowMs) || !hasQuota(item)) {
+        if (!recent(item.lastGoodAtMs, nowMs) || !hasQuota(item)
+                || accountOverridden(accounts, item.provider)) {
             continue
         }
         var windows = ({})

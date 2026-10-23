@@ -339,10 +339,10 @@ PlasmoidItem {
         if (providerConfigStamp.length === 0 || commandSource.length === 0) {
             return ""
         }
-        var accounts = Object.keys(selectedAccounts).sort().map(function(key) {
-            return [key, root.selectedAccounts[key]]
-        })
-        return Qt.md5(JSON.stringify([usageIdentityContext, accounts, providerConfigStamp]))
+        // Account selections are memory-only, so they stay out of the persisted
+        // fingerprint; UsageState omits overridden providers from the cache instead.
+        // The empty list keeps the tuple, and so existing caches, unchanged.
+        return Qt.md5(JSON.stringify([usageIdentityContext, [], providerConfigStamp]))
     }
 
     // The sole cache writer. Pure transitions decide data and label semantics;
@@ -384,7 +384,7 @@ PlasmoidItem {
         usageController.reset()
         applyUsageTransition(UsageState.invalidated(providers, providerID,
             providerID ? normalizeProvider({provider: providerID}) : null,
-            usageCacheContext(), Date.now()))
+            usageCacheContext(), Date.now(), selectedAccounts))
         if (!providerID) {
             accountsController.reset()
         }
@@ -409,7 +409,8 @@ PlasmoidItem {
     }
 
     function commitUsageSnapshot(items) {
-        applyUsageTransition(UsageState.accepted(providers, items, usageCacheContext(), Date.now()))
+        applyUsageTransition(UsageState.accepted(providers, items, usageCacheContext(), Date.now(),
+            selectedAccounts))
     }
 
     function failUsageRefresh(message) {
@@ -417,7 +418,8 @@ PlasmoidItem {
         var failures = providers.map(function(item) {
             return root.normalizeProvider(root.providerErrorPayload(item.provider, message))
         })
-        applyUsageTransition(UsageState.failed(providers, failures, usageCacheContext(), nowMs))
+        applyUsageTransition(UsageState.failed(providers, failures, usageCacheContext(), nowMs,
+            selectedAccounts))
     }
 
     function expireStaleUsage(nowMs) {
@@ -431,7 +433,8 @@ PlasmoidItem {
             return root.normalizeProvider(root.providerErrorPayload(item.provider,
                 item.error || i18n("Cached usage has expired. Refresh to try again.")))
         })
-        applyUsageTransition(UsageState.expired(providers, replacements, usageCacheContext(), nowMs))
+        applyUsageTransition(UsageState.expired(providers, replacements, usageCacheContext(), nowMs,
+            selectedAccounts))
     }
 
     function lastGoodUsageText(item) {

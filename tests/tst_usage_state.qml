@@ -112,15 +112,31 @@ TestCase {
         compare(State.restored(previous, cached, {}, "", "", now), null)
         compare(State.restored([], [], {}, "", context, now).cacheValue, "")
     }
-    function test_liveFailuresCannotUseRestoreAccountPin() {
-        var previous = State.accepted([], [item("codex", 20, "old@example.test")], context, now).providers
-        var failed = item("codex", 0, "", "offline")
-        failed.account = "other@example.test"
-        failed.accountKey = ""
-        verify(!Cache.hasQuota(State.accepted(previous, [failed], context, now).providers[0]))
-        var restored = State.restored([failed], previous, {codex: "verified-account"}, "", context, now)
-        verify(Cache.hasQuota(restored.providers[0]))
-        verify(restored.providers[0].usageStale)
+    function test_accountOverridesArePublishedButNotPersisted() {
+        var accounts = {codex: "work@example.test"}
+        var live = [item("codex", 80, "work@example.test"), item("claude", 12)]
+        function saved(result) {
+            return Cache.decode(result.cacheValue, context, now).map(function(entry) {
+                return entry.provider + ":" + entry.usage.primary.usedPercent
+            }).join(",")
+        }
+        var accepted = State.accepted([], live, context, now, accounts)
+        compare(accepted.providers.length, 2)
+        compare(accepted.providers[0].rows[0].usedPercent, 80)
+        compare(saved(accepted), "claude:12")
+        var failed = State.failed(accepted.providers, [item("codex", 0, "", "offline"),
+            item("claude", 0, "", "offline")], context, now, accounts)
+        verify(Cache.hasQuota(failed.providers[0]))
+        compare(saved(failed), "claude:12")
+        compare(saved(State.invalidated(accepted.providers, "claude", item("claude", undefined),
+            context, now, accounts)), "")
+        // A late restore keeps the selected account's live failure free of
+        // the default account's cached quota, then republishes only siblings.
+        var restored = State.restored([item("codex", 0, "", "offline")], fresh(), accounts, "", context, now)
+        verify(!Cache.hasQuota(restored.providers[0]))
+        compare(restored.providers.map(function(p) { return p.provider }), ["codex", "claude"])
+        compare(saved(restored), "claude:40")
+        compare(saved(State.accepted([], live, context, now)), "codex:80,claude:12")
     }
     function test_expiryPreservesCurrentStatusButRemovesMeasurementAndDiskQuota() {
         var previous = State.failed(fresh(), [item("codex", 0, "", "offline"), item("claude", 0, "", "offline")], context, now).providers

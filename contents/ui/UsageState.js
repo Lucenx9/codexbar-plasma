@@ -5,10 +5,12 @@
 // Inputs are normalized, presented snapshots. Cache remains the authority for
 // retention/account isolation and the allowlisted persisted format. A null
 // cacheValue means leave disk state untouched; an empty string means clear it.
-function publication(items, context, nowMs, label) {
+// `accounts` is the live explicit account selection: those providers stay in the
+// published list but are left out of the disk cache.
+function publication(items, context, nowMs, label, accounts) {
     return {
         providers: items,
-        cacheValue: context.length > 0 ? Cache.encode(items, context, nowMs) : null,
+        cacheValue: context.length > 0 ? Cache.encode(items, context, nowMs, accounts) : null,
         label: label,
         nowMs: nowMs,
         refreshCompleted: false,
@@ -21,11 +23,10 @@ function hasStale(items) {
     return items.some(function(item) { return item.usageStale === true })
 }
 
-function accepted(previous, incoming, context, nowMs) {
-    // Live results never use the disk restore's verified account pin.
+function accepted(previous, incoming, context, nowMs, accounts) {
     var items = Cache.reconcile(previous, incoming, nowMs)
     var fresh = items.some(function(item) { return !item.usageStale && item.error.length === 0 })
-    var result = publication(items, context, nowMs, hasStale(items) ? "stale" : fresh ? "updated" : "clear")
+    var result = publication(items, context, nowMs, hasStale(items) ? "stale" : fresh ? "updated" : "clear", accounts)
     result.refreshCompleted = true
     result.receivedFreshUsage = fresh
     return result
@@ -37,27 +38,27 @@ function restored(previous, cached, accounts, order, context, nowMs) {
     var merged = Cache.restore(cached, previous, nowMs, accounts)
     var items = merged.length > 0 ? Order.orderedItems(merged, order) : previous
     // A fresh early result keeps its update label when the checksum arrives.
-    return publication(items, context, nowMs, hasStale(items) ? "stale" : "keep")
+    return publication(items, context, nowMs, hasStale(items) ? "stale" : "keep", accounts)
 }
 
-function invalidated(previous, providerID, replacement, context, nowMs) {
+function invalidated(previous, providerID, replacement, context, nowMs, accounts) {
     var items = providerID ? previous.map(function(item) {
         return item.provider === providerID ? replacement : item
     }) : []
-    var result = publication(items, context, nowMs, "clear")
+    var result = publication(items, context, nowMs, "clear", accounts)
     if (!providerID && context.length === 0)
         result.cacheValue = ""
     return result
 }
 
-function failed(previous, failures, context, nowMs) {
+function failed(previous, failures, context, nowMs, accounts) {
     var items = Cache.reconcile(previous, failures, nowMs)
-    var result = publication(items, context, nowMs, hasStale(items) ? "stale" : "clear")
+    var result = publication(items, context, nowMs, hasStale(items) ? "stale" : "clear", accounts)
     result.advanceClock = true
     return result
 }
 
-function expired(previous, replacements, context, nowMs) {
+function expired(previous, replacements, context, nowMs, accounts) {
     var ids = Cache.expiredProviderIDs(previous, nowMs)
     if (ids.length === 0)
         return null
@@ -72,5 +73,5 @@ function expired(previous, replacements, context, nowMs) {
         next.usageStale = false
         return next
     })
-    return publication(items, context, nowMs, hasStale(items) ? "keep" : "clear")
+    return publication(items, context, nowMs, hasStale(items) ? "keep" : "clear", accounts)
 }

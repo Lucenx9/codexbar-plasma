@@ -480,8 +480,10 @@ The quota cache adapts the bounded stale reuse and background refresh patterns i
 [RFC 5861](https://www.rfc-editor.org/rfc/rfc5861.html); this is a local application
 policy, not an HTTP cache implementation. Failed retries preserve the original
 measurement time. The 24-hour retention limit applies in memory and on restore.
-The context fingerprint isolates CLI/configuration/account selections; it is not
-an integrity check or encryption. Cached JSON remains untrusted and is rebuilt
+The context fingerprint isolates CLI/configuration selections; it is not
+an integrity check or encryption. Memory-only account selections stay out of the
+fingerprint, so `UsageCache.js` omits overridden providers when saving and
+restoring instead. Cached JSON remains untrusted and is rebuilt
 from allowlisted, bounded fields, following
 [OWASP input validation guidance](https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html).
 Omitting identities, credentials, paths, and provider prose follows
@@ -993,6 +995,10 @@ counts refresh starts for cached/uncached accounts in single-provider and
 aggregate modes. Its CLI fixture reproduces the Codex token-account rejection
 and covers selected usage, repeat refresh, missing accounts, clearing the
 selection, exact spacing, and late replies when account choices share a command.
+`tests/test_usage_cache_account_selection.py` runs the production quota-cache
+adapters and `selectAccount` against a stand-in configuration and restarts
+them without the memory-only selection, covering sibling persistence after
+accepted and failed refreshes, a return to the default account, and a late restore.
 `tests/test_account_parse_containment.py` checks account
 snapshot presentation and selection freshness.
 
