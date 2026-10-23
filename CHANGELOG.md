@@ -26,6 +26,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Reveal the full Diagnostics "Resolved command" path on hover when the
+  narrow settings page elides its middle directories.
+
 - Hide the popup's "no named accounts" and "cannot switch accounts"
   explanations after the popup closes, instead of keeping them until the CLI
   or CodexBar configuration changes.
