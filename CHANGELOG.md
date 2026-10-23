@@ -25,6 +25,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep the AI Insights Back button inside narrow popups, with the full destination
+  available on hover and keyboard focus. Truncated Overview, Usage & Spend and
+  Sessions summaries, session names and metadata now reveal their full text on hover.
+- Abbreviate long account choices in the middle, preserving their trailing identity,
+  and use flat Restore actions for hidden popup rows and detail sections.
 - Keep providers with valid detail sections or dashboard summaries eligible for
   Overview and automatic selection when the same response carries an error.
   Empty charts without labels or valid points do not occupy an Overview slot.

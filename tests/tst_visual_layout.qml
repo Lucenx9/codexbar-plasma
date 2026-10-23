@@ -866,6 +866,38 @@ TestCase {
         compare(idle.opacity, applet.secondaryTextOpacity);
     }
 
+    function test_truncatedSessionMetadataRevealsLiteralText() {
+        var longName = Array(12).join("<session> & name ");
+        applet.sessions = [
+            {provider: "claude", projectName: "Project", sessionName: longName, host: "",
+             state: "active", source: longName, activityMs: Date.now()}
+        ];
+        var view = createControl("SessionsView", {applet: applet, width: 240, height: 300});
+        if (!view) return;
+        waitForRendering(view);
+        var labels = [];
+        findAllItems(view, function(item) {
+            return item.elide !== undefined && typeof item.text === "string"
+                && item.text.indexOf(longName) >= 0;
+        }, labels);
+        compare(labels.length, 2);
+        for (var label of labels) {
+            verify(label.truncated);
+            var tips = [];
+            findAllItems(label, function(item) {
+                return item.plainText !== undefined;
+            }, tips);
+            compare(tips.length, 1);
+            var tip = tips[0];
+            compare(tip.text, SafeText.plainTextAsRichText(label.text));
+            tip.delay = 0;
+            mouseMove(label, label.width / 2, label.height / 2);
+            tryCompare(tip, "visible", true);
+            mouseMove(testCase, testCase.width - 1, testCase.height - 1);
+            tryCompare(tip, "visible", false);
+        }
+    }
+
     // An open Sessions tab rescans every 30 seconds and each scan delivers a
     // new array. Same-size rescans must update cards in place so hover and
     // keyboard focus survive, and relative ages must use the scan's clock.
