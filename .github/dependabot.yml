@@ -15,3 +15,21 @@ updates:
       actions:
         patterns:
           - "*"
+  # The CI image recipe pins its base images by digest. A monthly PR is the
+  # reminder to rebuild the image; see "CI image" in docs/development.md.
+  - package-ecosystem: docker
+    directory: /ci
+    schedule:
+      interval: monthly
+      time: "09:00"
+      timezone: Europe/Rome
+    commit-message:
+      prefix: ci
+    ignore:
+      # Stay on Ubuntu 24.04; only its digest refreshes.
+      - dependency-name: ubuntu
+        update-types:
+          - version-update:semver-major
+          - version-update:semver-minor
+      # The untagged Neon stage would resolve against `latest`; refresh it by hand.
+      - dependency-name: "*neon/docker-images/plasma"

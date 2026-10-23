@@ -960,6 +960,13 @@ Once the workflow exists on `main`, a recipe PR can publish its candidate with:
 gh workflow run ci-image.yml --ref main -f revision=codex/update-ci-image
 ```
 
+[Dependabot](../.github/dependabot.yml) opens a monthly PR when the digest of
+the pinned Ubuntu 24.04 base moves; it ignores newer Ubuntu releases. It
+excludes the Neon stage, which is pinned by digest without a tag; refresh that
+digest by hand during the same rebuild. Such a PR changes a recipe input, so its runtime jobs fail the
+input-hash check by design. Publish a candidate from its branch, then pin the
+reported digest in both runtime jobs of the same PR.
+
 Create the initial package through the repository image workflow with
 `GITHUB_TOKEN` so Actions access is assigned to this repository. The source
 label records its repository association. A CLI publication alone did not grant
@@ -1891,9 +1898,11 @@ define the review. Instructions alone do not schedule execution.
 5. Update TODO in the same PR: add new gaps with evidence and a concrete done
    condition, remove already implemented ones, and revise resolved blockers.
    Keep TODO short enough to scan; link substantial reusable evidence in a
-   dated research note and index it. Leave completed behavior in the guides and
-   Git history. Preserve historical evidence, and update maintained claims that
-   the new evidence supersedes.
+   dated research note and index it. The review baseline summarizes only the
+   newest review; earlier coverage lives in its indexed note. The
+   [TODO gate](../scripts/todo_gate.py) sends only the first 40,000 characters.
+   Leave completed behavior in the guides and Git history. Preserve historical
+   evidence, and update maintained claims that the new evidence supersedes.
 6. Review the diff, run required checks, and open or update one Conventional
    Commit PR for the review. Follow its latest CI through completion under
    [delivery and CI](#delivery-and-ci). A scheduled review authorizes the TODO
