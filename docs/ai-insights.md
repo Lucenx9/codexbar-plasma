@@ -195,6 +195,12 @@ GPT-4o snapshots before `2024-08-06`, and `o1-preview`/`o1-mini` snapshots;
 and installed Ollama models.
 No default cloud model is chosen and no price is claimed; users pick a model.
 
+Connection tests match an untagged Ollama model against its installed `:latest`
+name. Only a colon after the final slash denotes a tag; a registry port does
+not. This follows Ollama's [name parser and default-tag cases](https://github.com/ollama/ollama/blob/675150d6ad2747df1e218ef59de9194bc4a7e538/types/model/name_test.go#L73).
+Explicit tags and registry ports still match exactly, and cloud model IDs keep
+their exact-match behavior.
+
 The expected answer is `{"summary": string, "highlights": [string]}`. The helper
 accepts a fenced JSON block, then bounds the summary to 600 characters and at
 most three 160-character highlights, strips control characters and Markdown

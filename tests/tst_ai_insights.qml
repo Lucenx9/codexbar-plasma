@@ -190,6 +190,24 @@ TestCase {
         verify(!AiInsights.modelListed("openai", "gpt-x", ["gpt-x:latest"]))
     }
 
+    function test_modelListedWithRegistryPort_data() {
+        return [
+            {tag: "default-tag", model: "registry.example:5000/team/model", listed: "registry.example:5000/team/model:latest", expected: true},
+            {tag: "explicit-tag", model: "registry.example:5000/team/model:q4", listed: "registry.example:5000/team/model:q4", expected: true},
+            {tag: "different-tag", model: "registry.example:5000/team/model", listed: "registry.example:5000/team/model:q4", expected: false},
+            {tag: "different-port", model: "registry.example:5000/team/model", listed: "registry.example:5001/team/model:latest", expected: false},
+            {tag: "explicit-tag-is-not-defaulted", model: "registry.example:5000/team/model:q4", listed: "registry.example:5000/team/model:q4:latest", expected: false}
+        ]
+    }
+
+    function test_modelListedWithRegistryPort(data) {
+        verify(AiInsights.validModel("ollama", data.model))
+        var reply = AiInsights.modelsReply(JSON.stringify({status: "ok", key: "none",
+            models: [{id: data.listed}]}), 0, 0)
+        compare(reply.outcome, "ok")
+        compare(AiInsights.modelListed("ollama", data.model, reply.models), data.expected)
+    }
+
     function test_modelLabelDropsTheVendorPath() {
         compare(AiInsights.modelLabel("deepseek/deepseek-v4.1-flash"), "deepseek-v4.1-flash")
         compare(AiInsights.modelLabel("hf.co/user/model:q4"), "model:q4")

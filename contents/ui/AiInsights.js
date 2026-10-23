@@ -459,13 +459,15 @@ function modelsReply(text, exitCode, exitStatus) {
 
 // Whether a listed model matches the configured one. Ollama resolves an
 // untagged name to its ":latest" tag, which is how it lists that model.
+// A registry port precedes the final slash and is not a model tag.
 function modelListed(provider, model, models) {
     var value = typeof model === "string" ? model.trim() : ""
     if (value.length === 0 || !Array.isArray(models)) {
         return false
     }
     return models.indexOf(value) >= 0
-        || (provider === "ollama" && value.indexOf(":") < 0 && models.indexOf(value + ":latest") >= 0)
+        || (provider === "ollama" && value.lastIndexOf(":") <= value.lastIndexOf("/")
+            && models.indexOf(value + ":latest") >= 0)
 }
 
 // Card presentation: a "vendor/model" identifier shows only its model part.
