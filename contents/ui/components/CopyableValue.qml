@@ -27,6 +27,8 @@ RowLayout {
     spacing: Kirigami.Units.smallSpacing / 2
 
     PlainPlasmaLabel {
+        id: valueLabel
+
         text: valueRow.text
         font.weight: valueRow.fontWeight
         font.pixelSize: valueRow.pixelSize > 0 ? valueRow.pixelSize : Kirigami.Theme.defaultFont.pixelSize
@@ -38,6 +40,16 @@ RowLayout {
         // otherwise elide a title that fits.
         Layout.maximumWidth: Math.ceil(implicitWidth)
         elide: Text.ElideRight
+
+        HoverHandler {
+            id: valueHover
+        }
+
+        PlainToolTip {
+            parent: valueLabel
+            visible: valueLabel.truncated && valueHover.hovered && !valueRow.copied
+            plainText: valueLabel.text
+        }
     }
 
     PlasmaComponents.ToolButton {
