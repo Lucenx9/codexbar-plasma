@@ -55,6 +55,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   estimated, percentage-only, or unknown readings.
 - Keep the providers that fit in the quota cache when a large roster exceeds
   the 64 KiB save limit, instead of clearing every saved quota.
+- Keep saving and restoring other providers' last known quotas after selecting
+  an account, instead of losing the whole quota cache on the next restart.
+  A selected account's quotas are never saved or restored as the default account's.
 
 - Preserve older model totals and accurate daily averages in sparse All history
   scans spanning more than 2,048 calendar days.

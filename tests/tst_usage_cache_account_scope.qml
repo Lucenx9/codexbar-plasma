@@ -1,5 +1,6 @@
 import QtQuick
 import QtTest
+import "../contents/ui/Guards.js" as Guards
 import "../contents/ui/UsageCache.js" as Cache
 
 TestCase {
@@ -47,38 +48,42 @@ TestCase {
         compare(incoming.rows.length, 0);
     }
 
-    function test_pinnedCacheRestoreKeepsIdentityFreeQuota() {
-        // encode() stores no identities, so a decoded entry always has an empty
-        // key. For a provider pinned to an explicit account the cache context
-        // already verified that scope, and an identified early failure must not
-        // drop its quota. Automatic accounts are not pinned: the CLI may hand
-        // them a different identity between sessions, so they keep the check.
-        var cached = Cache.reconcile([], [{
-            provider: "codex", account: "", accountKey: "",
-            error: "", updatedAt: "", rows: [
-                { lane: "primary", hasPercent: true, usedPercent: 72 }
-            ]
-        }], nowMs);
-        var failure = {
-            provider: "codex", account: "", accountKey: "Organization A",
-            error: "Synthetic failure", updatedAt: "", rows: []
-        };
-        var pinned = Cache.restore(cached, [failure], nowMs + 60000,
-            { codex: "Organization A" });
-        compare(pinned.length, 1);
-        compare(pinned[0].rows.length, 1);
-        compare(pinned[0].rows[0].usedPercent, 72);
-        compare(pinned[0].lastGoodAtMs, nowMs);
-        verify(pinned[0].usageStale);
-        compare(pinned[0].error, "Synthetic failure");
-        // Another provider's pin never covers this one.
-        compare(Cache.restore(cached, [failure], nowMs + 60000,
-            { claude: "Organization A" })[0].rows.length, 0);
-        compare(Cache.restore(cached, [failure], nowMs + 60000,
-            { codex: "" })[0].rows.length, 0);
-        compare(Cache.restore(cached, [failure], nowMs + 60000, ({}))[0].rows.length, 0);
-        compare(Cache.restore(cached, [failure], nowMs + 60000)[0].rows.length, 0);
-        // The live refresh path never receives a pin and keeps rejecting it.
-        compare(Cache.reconcile(cached, [failure], nowMs + 60000)[0].rows.length, 0);
+    function test_accountOverridesStayOutOfDiskCacheInBothDirections() {
+        // encode() stores no identities and the cache context no longer covers
+        // the memory-only selection, so an overridden provider is neither saved
+        // nor restored, while its siblings keep both directions.
+        var context = Qt.md5("account-scope")
+        var items = Cache.reconcile([], ["codex", "claude"].map(function(id, index) {
+            return { provider: id, account: "", accountKey: "", error: "", updatedAt: "",
+                rows: [{ lane: "primary", hasPercent: true, usedPercent: 70 + index }] }
+        }), nowMs)
+        function saved(accounts) {
+            return Cache.decode(Cache.encode(items, context, nowMs, accounts), context, nowMs)
+                .map(function(entry) { return entry.provider }).join(",")
+        }
+        compare(saved(), "codex,claude")
+        compare(saved({ codex: "Organization A" }), "claude")
+        compare(saved({ codex: "" }), "codex,claude")
+        compare(saved({ codex: 7 }), "codex,claude")
+        compare(saved(JSON.parse('{"__proto__": {"codex": "A"}}')), "codex,claude")
+        compare(Cache.encode(items, context, nowMs, { codex: "A", claude: "B" }), "")
+
+        // An identity-free cached default quota must not cover an identified
+        // or unidentified failure of the selected account, even when restored late.
+        var failure = { provider: "codex", account: "", accountKey: "Organization A",
+            error: "Synthetic failure", updatedAt: "", rows: [] }
+        var anonymous = Guards.copyObject(failure)
+        anonymous.accountKey = ""
+        var accounts = { codex: "Organization A" }
+        var restored = Cache.restore(items, [failure], nowMs + 60000, accounts)
+        compare(restored.map(function(item) { return item.provider }), ["codex", "claude"])
+        compare(restored[0].rows.length, 0)
+        verify(restored[1].usageStale)
+        compare(Cache.restore(items, [anonymous], nowMs + 60000, accounts)[0].rows.length, 0)
+        compare(Cache.restore(items, [], nowMs + 60000, accounts)
+            .map(function(item) { return item.provider }), ["claude"])
+        // Without a selection the default account's unidentified failure still reuses it.
+        compare(Cache.restore(items, [anonymous], nowMs + 60000)[0].rows.length, 1)
+        compare(items[0].rows[0].usedPercent, 70)
     }
 }
