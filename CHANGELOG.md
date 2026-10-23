@@ -18,6 +18,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Security
 
+- Redact the entire shared model label when it contains a filesystem path,
+  so spaces in directory names cannot expose the remaining path components.
 - Keep AI Insights usage snapshots out of process arguments. Pass them through
   private one-use files, written only at the helper's validated private location
   and removed before wallet access or AI requests.

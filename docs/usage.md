@@ -622,8 +622,10 @@ Costs estimate usage, not subscription fees; subscription plans are not exported
 
 Only aggregate fields enter the export. Account identities, projects, absolute
 paths embedded in model labels, raw diagnostics, and conversation content are
-excluded. Privacy mode keeps its model anonymization and masks unknown provider
-identifiers in both exports; changing that setting closes an open snapshot.
+excluded. A model label containing an absolute path is redacted in full,
+including paths with spaces. Privacy mode keeps its model anonymization and
+masks unknown provider identifiers in both exports; changing that setting closes
+an open snapshot.
 Nothing is uploaded. Copying or saving is an explicit action. The exported file
 and clipboard content remain under your control after closing the window.
 
