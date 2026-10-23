@@ -304,7 +304,7 @@ KCM.SimpleKCM {
         }
         var checkedAt = new Date(checkedAtMs)
         return i18n("Last checked: %1",
-            Qt.locale().toString(checkedAt, Locale.ShortFormat))
+            checkedAt.toLocaleString(Qt.locale(), Locale.ShortFormat))
     }
 
     onCfg_refreshIntervalChanged: {

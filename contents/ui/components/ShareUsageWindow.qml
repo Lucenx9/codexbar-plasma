@@ -34,7 +34,7 @@ Controls.ApplicationWindow {
     readonly property string costText: snapshot.currencies.length === 0 ? i18n("Cost unavailable") : snapshot.currencies.map(function (row) {
         return applet.amountString(row.cost, row.currency);
     }).join(" · ")
-    readonly property string createdText: i18n("Created %1", Qt.locale().toString(new Date(snapshot.createdAt), Locale.ShortFormat))
+    readonly property string createdText: i18n("Created %1", new Date(snapshot.createdAt).toLocaleString(Qt.locale(), Locale.ShortFormat))
     readonly property string statisticsText: ["CodexBar", periodText, tokensText,
         i18n("Estimated usage cost"), costText, i18n("Providers"), providerLines.join("\n"),
         omittedProviderText(), i18n("Top models by tokens"), modelLines.join("\n"),
