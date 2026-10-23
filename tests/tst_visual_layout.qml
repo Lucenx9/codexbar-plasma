@@ -85,7 +85,7 @@ TestCase {
         function accountErrorForProvider() {
             return "";
         }
-        function accountAvailabilityForProvider() {
+        function accountNoticeForProvider() {
             return "named";
         }
         function selectedAccountForProvider() {

@@ -25,6 +25,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Hide the popup's "no named accounts" and "cannot switch accounts"
+  explanations after the popup closes, instead of keeping them until the CLI
+  or CodexBar configuration changes.
 - Compare saved widget update versions without rounding large numeric components,
   preserving the updater's ordering for leading-zero ties, so restarting Plasma
   preserves newer offers and discards older ones correctly.

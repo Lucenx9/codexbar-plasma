@@ -221,6 +221,12 @@ PlasmoidItem {
     onProviderOrderRawChanged: providers = ProviderOrder.orderedItems(
         providers, providerOrderRaw)
     onCostHistoryDaysChanged: applyTokenCosts()
+    // An account discovery result is explained once, while the popup stays open.
+    onExpandedChanged: {
+        if (!expanded) {
+            accountsController.dismissNotices()
+        }
+    }
     onTokenCostsChanged: applyTokenCosts()
     onAutoSelectProviderChanged: updateSelectedProvider()
     onOverviewProviderIDsRawChanged: updateSelectedProvider()
@@ -680,6 +686,11 @@ PlasmoidItem {
     function accountAvailabilityForProvider(providerID) {
         var key = providerMapKey(providerID)
         return key.length > 0 ? accountsController.availabilityForProvider(key) : ""
+    }
+
+    function accountNoticeForProvider(providerID) {
+        var key = providerMapKey(providerID)
+        return key.length > 0 ? accountsController.noticeForProvider(key) : ""
     }
 
     function privateErrorText(text) {

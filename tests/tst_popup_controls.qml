@@ -106,7 +106,7 @@ TestCase {
         function accountLoadingForProvider() {
             return accountsLoading;
         }
-        function accountAvailabilityForProvider() {
+        function accountNoticeForProvider() {
             return accountAvailability;
         }
         function accountOptionsForProvider() {

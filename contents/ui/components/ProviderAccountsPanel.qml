@@ -17,7 +17,7 @@ ColumnLayout {
     // "none" or "unsupported" explains an empty discovery result while the
     // default account is really in use and no newer failure is shown.
     readonly property string availability: providerID.length > 0
-        ? applet.accountAvailabilityForProvider(providerID) : ""
+        ? applet.accountNoticeForProvider(providerID) : ""
     readonly property bool availabilityExplained: accountOptions.length === 0
         && (availability === "none" || availability === "unsupported")
         && applet.selectedAccountForProvider(providerID).length === 0

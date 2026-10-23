@@ -359,8 +359,10 @@ synchronized.
   provider. `availabilityForProvider()` reports the last success as `named`,
   `none` (missing token accounts or an empty list) or `unsupported` (the CLI's
   "does not support token accounts" argument error). Without a selection or a
-  newer error, the accounts panel explains the last two; `unsupported` disables
-  that provider's menu entry, while the panel's reload can retry. `reset()` runs
+  newer error, the accounts panel explains the last two through
+  `noticeForProvider()` until `dismissNotices()`, which `main.qml` calls when
+  the popup closes; `unsupported` disables that provider's menu entry, while
+  the panel's reload can retry. `reset()` runs
   on usage identity, CodexBar config and managed CLI changes, and on an empty
   roster; an in-place package upgrade needs a reload or a Plasma restart.
   `main.qml` owns account selection and cache invalidation, localizes
@@ -1073,7 +1075,7 @@ Surface checks protect process ownership and registration/retirement ordering.
 `tests/test_accounts_controller.py` instantiates the production controller with
 isolated CLI processes and real Plasma DataSource/timers. It covers concurrent
 providers, duplicate suppression, quoted arguments, retained lists, successful
-empty results, account availability, context changes, reset, original
+empty results, account availability and notice dismissal, context changes, reset, original
 measurement timestamps, and recovery after the production 60-second timeout.
 It adds about 90 seconds to `make check`; optional KDE modules may skip locally, while
 `QML_TEST_REQUIRE_NO_SKIPS=1` rejects skips in CI. Direct tests in

@@ -317,6 +317,9 @@ class UsageRecoveryTests(unittest.TestCase):
         surface = Surface("applet", ROOT)
         main = ROOT / "contents/ui/main.qml"
         source = main.read_text()
+        # Closing the popup dismisses account discovery explanations.
+        self.assertRegex(source, r"onExpandedChanged: \{\s*if \(!expanded\) \{\s*"
+                                 r"accountsController\.dismissNotices\(\)")
         surface.texts = {main: source}
         functions = []
         for name in ("actionRows", "providerAccountAction", "providerDocsUrl",

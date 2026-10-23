@@ -106,6 +106,10 @@ TestCase {
         compare(subject.errorForProvider("codex"), "");
         compare(subject.availabilityForProvider("codex"), "none");
         compare(subject.availabilityForProvider("claude"), "named");
+        compare(subject.noticeForProvider("codex"), "none");
+        subject.dismissNotices();
+        compare(subject.noticeForProvider("codex"), "");
+        compare(subject.availabilityForProvider("codex"), "none");
     }
     function test_unsupportedProviderIsReportedWithoutAnError() {
         var subject = create("no-support");
@@ -117,8 +121,17 @@ TestCase {
         compare(subject.options.codex, []);
         compare(subject.errorForProvider("codex"), "");
         compare(subject.availabilityForProvider("codex"), "unsupported");
+        compare(subject.noticeForProvider("codex"), "unsupported");
+        // Closing the popup dismisses the explanation, not the availability.
+        subject.dismissNotices();
+        compare(subject.noticeForProvider("codex"), "");
+        compare(subject.availabilityForProvider("codex"), "unsupported");
+        verify(subject.load("codex"));
+        tryVerify(function() { return !subject.loadingForProvider("codex"); });
+        compare(subject.noticeForProvider("codex"), "unsupported");
         subject.reset();
         compare(subject.availabilityForProvider("codex"), "");
+        compare(subject.noticeForProvider("codex"), "");
     }
     function test_changedInputsRetireRequestsBeforeNewLoads_data() {
         return [{tag: "path", field: "commandPath", value: "FIXTURE_PATH/normal"},

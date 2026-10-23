@@ -37,6 +37,17 @@ Item {
         return key.length > 0 && Guards.hasOwnKey(lifecycle.availability, key) ? lifecycle.availability[key] : "";
     }
 
+    // The availability of the latest discovery until dismissNotices(); the
+    // availability itself persists for the provider's Accounts… entry.
+    function noticeForProvider(providerID) {
+        var key = Normalizer.normalizedProviderID(providerID);
+        return key.length > 0 && Guards.hasOwnKey(lifecycle.notices, key) ? availabilityForProvider(key) : "";
+    }
+
+    function dismissNotices() {
+        lifecycle.notices = ({});
+    }
+
     // The owning applet calls this when its CLI/configuration identity changes.
     // Ordinary usage refreshes and account selection preserve these lists.
     function reset() {
@@ -44,6 +55,7 @@ Item {
         lifecycle.options = ({});
         lifecycle.errors = ({});
         lifecycle.availability = ({});
+        lifecycle.notices = ({});
     }
 
     Component.onDestruction: lifecycle.retireRequests()
@@ -55,6 +67,7 @@ Item {
         property var options: ({})
         property var errors: ({})
         property var availability: ({})
+        property var notices: ({})
         property int runSerial: 0
         readonly property int accountCommandTimeoutMs: 60000
         readonly property string commandContext: JSON.stringify([controller.commandPath, controller.sourceMode, controller.includeStatus])
@@ -130,6 +143,9 @@ Item {
                 var nextAvailability = Guards.copyObject(availability);
                 nextAvailability[decision.providerID] = result.availability;
                 availability = nextAvailability;
+                var nextNotices = Guards.copyObject(notices);
+                nextNotices[decision.providerID] = true;
+                notices = nextNotices;
                 break;
             case "tooLarge":
                 message = i18n("codexbar response exceeded the supported size.");
