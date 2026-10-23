@@ -133,6 +133,20 @@ TestCase {
         compare(subject.availabilityForProvider("codex"), "");
         compare(subject.noticeForProvider("codex"), "");
     }
+    function test_dismissedNoticeIgnoresLateReplies_data() {
+        return [{tag: "none", script: "empty"}, {tag: "unsupported", script: "no-support"}];
+    }
+    function test_dismissedNoticeIgnoresLateReplies(data) {
+        var subject = create(data.script);
+        verify(subject.load("codex"));
+        completed(subject, "codex", data.script + " 1");
+        verify(subject.load("codex"));
+        // The popup closes, and may reopen, before discovery answers.
+        subject.dismissNotices();
+        tryVerify(function() { return !subject.loadingForProvider("codex"); }, 8000);
+        compare(subject.availabilityForProvider("codex"), data.tag);
+        compare(subject.noticeForProvider("codex"), "");
+    }
     function test_changedInputsRetireRequestsBeforeNewLoads_data() {
         return [{tag: "path", field: "commandPath", value: "FIXTURE_PATH/normal"},
                 {tag: "source", field: "sourceMode", value: "cli"},

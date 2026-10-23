@@ -37,8 +37,8 @@ Item {
         return key.length > 0 && Guards.hasOwnKey(lifecycle.availability, key) ? lifecycle.availability[key] : "";
     }
 
-    // The availability of the latest discovery until dismissNotices(); the
-    // availability itself persists for the provider's Accounts… entry.
+    // The availability once a discovery started since the last dismissNotices();
+    // the availability itself persists for the provider's Accounts… entry.
     function noticeForProvider(providerID) {
         var key = Normalizer.normalizedProviderID(providerID);
         return key.length > 0 && Guards.hasOwnKey(lifecycle.notices, key) ? availabilityForProvider(key) : "";
@@ -100,6 +100,10 @@ Item {
             var descriptor = CommandLedger.descriptor("account", key, Date.now(), accountCommandTimeoutMs);
             descriptor.commandSignature = baseCommand;
             commands = CommandLedger.opened(commands, source, descriptor);
+            // Armed per request, so a reply after dismissNotices() stays silent.
+            var nextNotices = Guards.copyObject(notices);
+            nextNotices[key] = true;
+            notices = nextNotices;
             accountsSource.connectSource(source);
             return true;
         }
@@ -143,9 +147,6 @@ Item {
                 var nextAvailability = Guards.copyObject(availability);
                 nextAvailability[decision.providerID] = result.availability;
                 availability = nextAvailability;
-                var nextNotices = Guards.copyObject(notices);
-                nextNotices[decision.providerID] = true;
-                notices = nextNotices;
                 break;
             case "tooLarge":
                 message = i18n("codexbar response exceeded the supported size.");

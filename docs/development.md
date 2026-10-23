@@ -360,8 +360,9 @@ synchronized.
   `none` (missing token accounts or an empty list) or `unsupported` (the CLI's
   "does not support token accounts" argument error). Without a selection or a
   newer error, the accounts panel explains the last two through
-  `noticeForProvider()` until `dismissNotices()`, which `main.qml` calls when
-  the popup closes; `unsupported` disables that provider's menu entry, while
+  `noticeForProvider()`. Each started discovery arms that notice and
+  `dismissNotices()`, which `main.qml` calls when the popup closes, clears it,
+  so a reply arriving after the popup closed stays silent; `unsupported` disables that provider's menu entry, while
   the panel's reload can retry. `reset()` runs
   on usage identity, CodexBar config and managed CLI changes, and on an empty
   roster; an in-place package upgrade needs a reload or a Plasma restart.
