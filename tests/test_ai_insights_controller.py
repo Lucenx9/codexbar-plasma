@@ -20,6 +20,9 @@ arguments = sys.argv[1:]
 values = {name: arguments[index + 1] for index, name in enumerate(arguments[:-1])
           if name.startswith("--") and name not in ("--supervised", "--no-zdr")}
 if values.get("--action") == "prepare":
+    if os.path.exists(LOG_PATH + ".slow-prepare"):
+        os.unlink(LOG_PATH + ".slow-prepare")
+        time.sleep(2)
     print(json.dumps(prepare()))
     sys.exit(0)
 if values.get("--action") == "discard":
@@ -47,6 +50,8 @@ if model == "cancellation-model":
         time.sleep(0.02)
     with open(LOG_PATH, "a") as log:
         log.write(json.dumps(["completed"]) + "\\n")
+if model == "arm-slow-prepare-model":
+    open(LOG_PATH + ".slow-prepare", "w").close()
 if model == "release-model":
     open(LOG_PATH + ".release", "w").close()
 if model == "auth-model":
@@ -365,6 +370,21 @@ TestCase {
         wait(2000);
         compare(generated.count, 1, "an expired reply cannot replace the recovered request");
         compare(controller.errorReason, "");
+    }
+    function test_14_deadlineCoversOnlyTheGenerationPhase() {
+        var controller = create({model: "arm-slow-prepare-model"});
+        verify(controller.generate());
+        tryCompare(generated, "count", 1, 10000);
+        var deadline = findChild(controller, "aiInsightsDeadline");
+        verify(deadline !== null);
+        // A 2-second preparation and a 1.5-second generation each fit a
+        // 3-second deadline; together they do not.
+        deadline.interval = 3000;
+        controller.model = "slow-model";
+        verify(controller.generate());
+        tryCompare(generated, "count", 2, 10000);
+        compare(controller.errorReason, "");
+        deadline.interval = 185000;
     }
     function test_15_supervisedGnuTimeoutReportsNativeCrash() {
         var source = Qt.createQmlObject('import QtQuick; import org.kde.plasma.plasma5support; DataSource { engine: "executable"; interval: 0 }', testCase);

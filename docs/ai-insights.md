@@ -221,11 +221,14 @@ table, honoring the response's `Retry-After`, and a choice that finished with
   mode `0600` beneath a `codexbar-plasma-ai-<uid>` root. The root prefers
   `XDG_RUNTIME_DIR` only when it is an existing absolute, non-symlink directory
   owned by the current user with no group or other permissions. Otherwise it
-  uses the OS temporary directory. That fallback still fails closed if another
+  uses the OS temporary directory. Either base is lexically normalized first,
+  so the path QML validates has no empty or dot segments. That fallback still fails closed if another
   user has occupied the predictable root, preventing generation without exposing
   data; it does not eliminate that availability risk. The helper never repairs
   or deletes an unsafe existing root. The controller captures the snapshot and
-  request context before preparation, writes the ASCII snapshot as hexadecimal with
+  request context before preparation. It accepts only an absolute
+  `codexbar-plasma-ai-<uid>/<request>/payload.ini` path without empty, `.` or
+  `..` segments, writes the ASCII snapshot as hexadecimal with
   `QtCore.Settings.setValue` and `sync`, and destroys the Settings object.
   The generation command carries only `--request <random-id>`.
   `scripts/lib/ai_insights_input.py` validates the directory, file ownership,
@@ -275,7 +278,8 @@ table, honoring the response's `Retry-After`, and a choice that finished with
   across plasmashell restarts.
 - One request at a time, with a per-request nonce. The helper's HTTP timeout is
   150 seconds, the shell bound 180 seconds, and the QML deadline 185 seconds,
-  which leaves room for reasoning models and slower local models. The whole
+  restarted when generation starts so preparation never shortens it. This
+  leaves room for reasoning models and slower local models. The whole
   generation, including a wallet unlock prompt, the model lookup, and a retry,
   shares a 170-second budget: each request waits only for what remains, and no
   request starts with less than 30 seconds left. If the shell bound still stops
@@ -317,8 +321,8 @@ table, honoring the response's `Retry-After`, and a choice that finished with
   with ordinary Overview/provider titles, accessibility, mouse and keyboard
   navigation, and no generation on return.
 - `tests/tst_ai_insights.qml`: language tags, context keys, cache validation and
-  invalidation, schedule and restart rules, retry delays, command quoting, and
-  reply validation, including markup that must stay literal and success JSON
+  invalidation, schedule and restart rules, retry delays, command quoting,
+  prepared-input paths, and reply validation, including markup that must stay literal and success JSON
   from failed, crashed or unconfirmed processes.
 - `tests/tst_ai_insights_snapshot.qml`: the allowlist against injected fields,
   that only current providers are sent, partial and complete history, currencies,
@@ -340,7 +344,7 @@ table, honoring the response's `Retry-After`, and a choice that finished with
   Plasma's executable DataSource with a recording helper, covering disabled,
   manual, duplicate, automatic, restart, language/model/disable changes during a
   request, failures (including success JSON followed by exit 1), invalid commands,
-  failed attempts and rate limits across
+  a deadline that preparation does not shorten, failed attempts and rate limits across
   restarts, and destruction. Its recording helper consumes the production
   private-file contract and checks its own and its timeout parent's `/proc`
   command lines for snapshot bytes.

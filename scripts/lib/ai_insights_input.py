@@ -13,17 +13,22 @@ MAX_FILE_BYTES = MAX_BYTES * 2 + 128
 MAX_AGE = 300
 
 
+def canonical(path):
+    # QML rejects empty and dot segments; POSIX normpath keeps a leading "//".
+    return Path("/" + os.path.normpath(path).lstrip("/"))
+
+
 def input_root():
     runtime = os.environ.get("XDG_RUNTIME_DIR", "")
     if runtime.startswith("/"):
-        base = Path(runtime)
+        base = canonical(runtime)
         try:
             info = base.lstat()
             if stat.S_ISDIR(info.st_mode) and info.st_uid == os.getuid() and not info.st_mode & 0o077:
                 return base / f"codexbar-plasma-ai-{os.getuid()}"
         except OSError:
             pass
-    return Path(tempfile.gettempdir()) / f"codexbar-plasma-ai-{os.getuid()}"
+    return canonical(tempfile.gettempdir()) / f"codexbar-plasma-ai-{os.getuid()}"
 
 
 def private_directory(path):
