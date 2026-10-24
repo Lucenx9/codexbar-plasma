@@ -14,6 +14,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 - Redact secret-key and secret-access-key assignments, including AWS environment
   variable and SDK spellings, in CLI messages, diagnostics, and shared support reports.
+- Redact credentials inside JSON embedded as an escaped string in CLI errors,
+  including multiply escaped JSON and quoted values with spaces or separators.
 
 ### Fixed
 

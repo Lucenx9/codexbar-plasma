@@ -165,6 +165,38 @@ TestCase {
         compare(diagnostic.match(/\[redacted\]/g).length, 4)
     }
 
+    // CLI errors often embed an upstream JSON body as a JSON string, so key
+    // quotes arrive escaped, once or more. The secret has spaces, separators
+    // and escaped quotes so a partial value parse cannot leave a suffix.
+    function test_redactsCredentialsInsideEscapedJson_data() {
+        var secret = 'LEAKA one, LEAKB; "LEAKC" tail LEAKD'
+        var keys = ["api_key", "access_token", "Authorization", "password", "Cookie", "token"]
+        var rows = []
+        for (var k = 0; k < keys.length; k++) {
+            var body = {}
+            body[keys[k]] = keys[k] === "Authorization" ? "Basic " + secret : secret
+            var once = JSON.stringify({ message: "HTTP 401: " + JSON.stringify(body) })
+            var twice = JSON.stringify({ error: once })
+            rows.push({ tag: keys[k] + "-once", input: once })
+            rows.push({ tag: keys[k] + "-twice", input: twice })
+        }
+        rows.push({ tag: "bearer-once",
+            input: JSON.stringify({ message: "HTTP 401: Bearer \"" + secret + "\"" }) })
+        return rows
+    }
+
+    function test_redactsCredentialsInsideEscapedJson(data) {
+        var outputs = [
+            SafeText.cliDiagnostic(data.input, 4096),
+            SafeText.cliMessage(data.input, 500)
+        ]
+        for (var i = 0; i < outputs.length; i++) {
+            verify(/LEAK[ABCD]/.test(outputs[i]) === false, outputs[i])
+            verify(outputs[i].indexOf("HTTP 401") !== -1, outputs[i])
+            verify(outputs[i].indexOf("[redacted]") !== -1, outputs[i])
+        }
+    }
+
     function test_redactsEscapedLineBreaksInsideCredentialValues() {
         var escapedLineBreak = "\\" + "\n"
         var secrets = ["AUTHLEAK", "COOKIELEAK", "TOKENLEAK", "BEARERLEAK"]

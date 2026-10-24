@@ -1232,6 +1232,9 @@ escapes are normalized before filtering, and common executable startup failures
 retain only a fixed reason, never the personal path or library filename.
 `SafeText.js` redacts secret-key and secret-access-key assignments alongside
 the existing credential names, including environment-variable and SDK spellings.
+It also matches keys whose quotes are backslash-escaped by one or more JSON
+encodings, and removes the rest of the line after an escaped quoted value
+instead of parsing where that value ends.
 `tests/tst_safe_text.qml` checks the message and diagnostic adapters;
 `tests/tst_support_report.qml` checks that the same values cannot reach shared
 text or the Markdown report, and exercises the path separation above.
