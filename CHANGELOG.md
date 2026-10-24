@@ -23,7 +23,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 - Compare widget updates launched from a checkout against the installed package,
   including after downloading, to avoid downgrades, redundant reinstalls, and
-  skipped upgrades caused by an unrelated checkout version.
+  skipped upgrades caused by an unrelated checkout version. Wait for an ongoing
+  installation before validating the initial installed metadata.
 - Keep the working managed CLI active when its previous copy is damaged,
   non-executable, or fails its offline version check during rollback.
 - Keep keyboard focus on a provider tab when refreshed usage changes its values

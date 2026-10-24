@@ -11,6 +11,7 @@ import shlex
 import subprocess
 import tempfile
 import termios
+import time
 import unittest
 import zipfile
 
@@ -476,6 +477,50 @@ exit 22
                                  ["KPlugin"]["Version"], installed if expected == "current" else "9.9.9")
                 if expected == "current":
                     self.assertEqual(self.calls(), "")
+
+    def test_checkout_update_waits_for_an_install_before_reading_metadata(self):
+        metadata = self.root / "checkout.json"
+        metadata.write_text(json.dumps({"KPlugin": {"Version": "0.1.0"}}))
+        self.installed.mkdir(parents=True)
+        installed_metadata = self.installed / "metadata.json"
+        installed_metadata.write_text("partial installation")
+        lock_dir = Path(self.env["XDG_DATA_HOME"]) / "codexbar-plasma"
+        lock_dir.mkdir()
+        waiting = self.root / "lock-waiting"
+        (self.bin / "flock").unlink()
+        self.fake("flock", 'echo waiting > "$FIXTURE/lock-waiting"\nexec '
+                  + shlex.quote(shutil.which("flock")) + ' "$@"')
+        curl = self.bin / "curl"
+        curl.write_text(curl.read_text() + '''
+python3 - <<'INNER'
+import fcntl, os, pathlib
+path = pathlib.Path(os.environ["XDG_DATA_HOME"]) / "codexbar-plasma/widget-update.lock"
+with path.open("a") as lock:
+    fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+INNER
+''')
+        with (lock_dir / "widget-update.lock").open("w") as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX)
+            process = subprocess.Popen([str(self.bin / "bash"), str(SCRIPT), "--install",
+                                        "--metadata", str(metadata)], env=self.env,
+                                       text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            try:
+                deadline = time.monotonic() + 5
+                while not waiting.exists() and process.poll() is None and time.monotonic() < deadline:
+                    time.sleep(0.01)
+                waited = waiting.exists()
+                installed_metadata.write_text(json.dumps({"KPackageStructure": "Plasma/Applet",
+                    "KPlugin": {"Id": "app.codexbar.plasma", "Version": "9.9.9"}}))
+                fcntl.flock(lock, fcntl.LOCK_UN)
+                stdout, stderr = process.communicate(timeout=10)
+            finally:
+                if process.poll() is None:
+                    process.kill()
+                    process.communicate()
+        self.assertTrue(waited, stderr)
+        self.assertEqual(process.returncode, 0, stderr)
+        self.assertEqual(json.loads(stdout)["status"], "current")
+        self.assertEqual(self.calls(), "")
 
     def test_checkout_update_rechecks_the_installed_package_after_download(self):
         metadata = self.root / "checkout.json"

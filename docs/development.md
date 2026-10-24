@@ -36,7 +36,9 @@ For an existing checkout, `./install.sh` builds, installs, and restarts Plasma.
 From this checkout, `make update` installs the latest immutable GitHub release
 using the bundled helper. It does not pull Git changes or install local edits.
 Install comparisons use the existing per-user package version, not the checkout's
-metadata, and recheck that package after acquiring the installation lock.
+metadata. Update-mode installs hold the installation lock for the initial metadata
+read, release it before network requests, and reacquire it for the final recheck
+and installation. The applet's install deadline covers both bounded lock waits.
 For those, use `make install` or `./install.sh`. Release-package users can use
 [the widget's update settings](../README.md#update) without a checkout.
 
