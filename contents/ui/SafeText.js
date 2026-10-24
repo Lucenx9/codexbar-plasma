@@ -68,12 +68,15 @@ function redactCredentialWindow(text, lookaheadText) {
     return redactedText
 }
 
+// Keys and values inside a JSON string that embeds another JSON document carry
+// backslash-escaped quotes, once per encoding level. Parsing such an escaped
+// value cannot reliably find its end, so it redacts the rest of the line.
 function redactCredentialText(text) {
     return text
-        .replace(/((?:proxy-)?authorization["']?\s*[:=]\s*)(?:"(?:\\(?:[\s\S]|$)|[^"\\])*(?:"|$)|'(?:\\(?:[\s\S]|$)|[^'\\])*(?:'|$)|[^\r\n]*)/gi, "$1[redacted]")
-        .replace(/\bbearer\s+(?:"(?:\\(?:[\s\S]|$)|[^"\\])*(?:"|$)|'(?:\\(?:[\s\S]|$)|[^'\\])*(?:'|$)|[^\s,;]+)/gi, "Bearer [redacted]")
-        .replace(/((?:set-cookie|cookie)["']?\s*[:=]\s*)(?:"(?:\\(?:[\s\S]|$)|[^"\\])*(?:"|$)|'(?:\\(?:[\s\S]|$)|[^'\\])*(?:'|$)|[^\r\n]*)/gi, "$1[redacted]")
-        .replace(/((?:api[-_ ]?key|access[-_ ]?token|refresh[-_ ]?token|id[-_ ]?token|token|client[-_ ]?secret|private[-_ ]?key|password|secret[-_ ]?(?:access[-_ ]?)?key|secret)["']?\s*[:=]\s*)(?:"(?:\\(?:[\s\S]|$)|[^"\\])*(?:"|$)|'(?:\\(?:[\s\S]|$)|[^'\\])*(?:'|$)|[^\s,;]+)/gi, "$1[redacted]")
+        .replace(/((?:proxy-)?authorization\\*["']?\s*[:=]\s*)(?:"(?:\\(?:[\s\S]|$)|[^"\\])*(?:"|$)|'(?:\\(?:[\s\S]|$)|[^'\\])*(?:'|$)|[^\r\n]*)/gi, "$1[redacted]")
+        .replace(/\bbearer\s+(?:"(?:\\(?:[\s\S]|$)|[^"\\])*(?:"|$)|'(?:\\(?:[\s\S]|$)|[^'\\])*(?:'|$)|\\+["'][^\r\n]*|[^\s,;]+)/gi, "Bearer [redacted]")
+        .replace(/((?:set-cookie|cookie)\\*["']?\s*[:=]\s*)(?:"(?:\\(?:[\s\S]|$)|[^"\\])*(?:"|$)|'(?:\\(?:[\s\S]|$)|[^'\\])*(?:'|$)|[^\r\n]*)/gi, "$1[redacted]")
+        .replace(/((?:api[-_ ]?key|access[-_ ]?token|refresh[-_ ]?token|id[-_ ]?token|token|client[-_ ]?secret|private[-_ ]?key|password|secret[-_ ]?(?:access[-_ ]?)?key|secret)\\*["']?\s*[:=]\s*)(?:"(?:\\(?:[\s\S]|$)|[^"\\])*(?:"|$)|'(?:\\(?:[\s\S]|$)|[^'\\])*(?:'|$)|\\+["'][^\r\n]*|[^\s,;]+)/gi, "$1[redacted]")
         .replace(/\bsk-[A-Za-z0-9_-]{8,}\b/gi, "[redacted]")
 }
 
