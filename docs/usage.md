@@ -771,8 +771,10 @@ fields; track proposed extensions in the issue tracker.
   not repeat a warning, and a previously armed reset can still be reported.
   Named extra windows keep separate baselines by their CLI IDs, even when
   their labels match or their display order changes.
-  A status page that briefly cannot be reached does not announce an ongoing
-  incident again once it answers. Notification text is shown
+  A status page that cannot be reached does not trigger an incident notification
+  or establish a status baseline. It preserves the previous notification state,
+  so it does not announce an ongoing incident again once the page answers.
+  Notification text is shown
   literally: markup in provider or status text never becomes a link, emphasis,
   or an image.
 - Clicking the available-update notification opens that release's page on

@@ -274,14 +274,19 @@ TestCase {
     }
 
     function test_unknownStatusKeepsTheLastIncidentUntilAnAuthoritativeReply_data() {
-        return [{ tag: "observe", mode: "observe" }, { tag: "prime", mode: "prime" }]
+        return [
+            { tag: "observe-missing", mode: "observe", explicitUnknown: false },
+            { tag: "prime-missing", mode: "prime", explicitUnknown: false },
+            { tag: "observe-failed-fetch", mode: "observe", explicitUnknown: true },
+            { tag: "prime-failed-fetch", mode: "prime", explicitUnknown: true }
+        ]
     }
 
     function test_unknownStatusKeepsTheLastIncidentUntilAnAuthoritativeReply(data) {
         var initial = transition("prime", [observation(
             "minor", "incident-1", [usageRow("minor", 85, false)])])
-        var unknown = observation("", "", [usageRow("major", 96, false)])
-        unknown.statusKnown = false
+        var unknown = observation(data.explicitUnknown ? "unknown" : "", "", [usageRow("major", 96, false)])
+        unknown.statusKnown = data.explicitUnknown
         var unavailable = transition(data.mode, [unknown], initial.nextMemo)
         compare(intentKinds(unavailable), data.mode === "observe" ? "quota" : "")
 
@@ -300,13 +305,34 @@ TestCase {
         compare(intentKinds(recurring), "status")
     }
 
-    function test_unknownStatusDoesNotInventAHealthyBaseline() {
-        var unknown = observation("", "", [usageRow("minor", 85, false)])
-        unknown.statusKnown = false
-        var initial = transition("prime", [unknown])
+    function test_unknownStatusDoesNotInventAHealthyBaseline_data() {
+        return test_unknownStatusKeepsTheLastIncidentUntilAnAuthoritativeReply_data()
+    }
+
+    function test_unknownStatusDoesNotInventAHealthyBaseline(data) {
+        var unknown = observation(data.explicitUnknown ? "unknown" : "", "", [usageRow("minor", 85, false)])
+        unknown.statusKnown = data.explicitUnknown
+        var initial = transition(data.mode, [unknown])
         var firstStatus = transition("observe", [observation(
             "major", "incident-1", [usageRow("minor", 85, false)])], initial.nextMemo)
         compare(firstStatus.intents.length, 0)
+    }
+
+    function test_failedStatusFetchDoesNotBecomeAnIncident() {
+        var healthy = observation("", "", [])
+        healthy.statusKnown = true
+        var unavailable = observation("unknown", "", [])
+        unavailable.statusKnown = true
+        var state = transition("prime", [healthy])
+        for (var i = 0; i < 3; i++) {
+            state = transition("observe", [unavailable], state.nextMemo)
+            compare(state.intents.length, 0)
+            state = transition("observe", [healthy], state.nextMemo)
+            compare(state.intents.length, 0)
+        }
+        state = transition("observe", [unavailable], state.nextMemo)
+        var incident = transition("observe", [observation("major", "incident-1", [])], state.nextMemo)
+        compare(intentKinds(incident), "status")
     }
 
     function test_paceWarningPrimesStaysQuietAndReannouncesAfterRecovery() {

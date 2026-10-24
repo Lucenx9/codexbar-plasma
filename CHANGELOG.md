@@ -19,6 +19,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Avoid false incident notifications when a provider's status page cannot be
+  reached, including repeated network failures and startup without status data.
 - Keep managed CLI installation and selection working when the data directory
   contains parent segments or symbolic links.
 - Recognize installed Ollama models from registries with a port in AI Insights
