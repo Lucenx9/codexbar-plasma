@@ -1618,6 +1618,7 @@ Item {
                                     Layout.rightMargin: Kirigami.Units.smallSpacing
                                     leftPadding: Kirigami.Units.smallSpacing
                                     rightPadding: Kirigami.Units.smallSpacing
+                                        + (modelData.expandable === true ? Kirigami.Units.iconSizes.small + Kirigami.Units.smallSpacing : 0)
                                     text: modelData.title
                                     icon.name: modelData.icon
                                     enabled: modelData.enabled
@@ -1625,6 +1626,17 @@ Item {
 
                                     Accessible.checkable: modelData.expandable === true
                                     Accessible.checked: providerActionRow.statusExpanded
+
+                                    Kirigami.Icon {
+                                        visible: modelData.expandable === true
+                                        anchors.right: parent.right
+                                        anchors.rightMargin: Kirigami.Units.smallSpacing
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        width: Kirigami.Units.iconSizes.small
+                                        height: width
+                                        source: providerActionRow.statusExpanded ? "arrow-down"
+                                            : (parent.mirrored ? "arrow-left" : "arrow-right")
+                                    }
                                 }
 
                                 Components.StatusComponentsList {
@@ -1632,6 +1644,8 @@ Item {
                                     Layout.fillWidth: true
                                     applet: fullRoot.applet
                                     statusState: applet.statusComponents
+                                    expandedGroups: applet.statusComponentGroups
+                                    onGroupToggled: function(name) { applet.toggleStatusComponentGroup(name) }
                                     onOpenRequested: applet.performAction("status-page")
                                 }
                             }

@@ -327,7 +327,8 @@ class UsageRecoveryTests(unittest.TestCase):
                      "providerKey", "providerMapKey", "accountLoadingForProvider",
                      "accountAvailabilityForProvider", "performAction",
                      "toggleStatusComponents", "finishStatusComponents",
-                     "collapseStatusComponents", "statusComponentsExpanded"):
+                     "collapseStatusComponents", "statusComponentsExpanded",
+                     "toggleStatusComponentGroup"):
             signature = re.search(r"function " + name + r"\([^)]*\)", source).group(0)
             functions.append(signature + " {" + surface.function_body(name) + "}")
         qml = MENU_QML.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
@@ -365,6 +366,7 @@ TestCase {
         property var selectedProviderData: null
         property var openedUrls: []
         property var statusComponents: ({ provider: "", loading: false, failed: false, rows: [] })
+        property var statusComponentGroups: []
         property url statusComponentsScriptUrl: "file:///widget/scripts/status-components.py"
         property var accountsController: QtObject {
             property var availability: ({})
@@ -445,10 +447,16 @@ TestCase {
         compare(root.statusComponents.loading, true);
         root.finishStatusComponents(request.context, null);
         compare(root.statusComponents.failed, true);
+        root.toggleStatusComponentGroup("APIs");
+        root.toggleStatusComponentGroup("__proto__");
+        compare(root.statusComponentGroups, ["APIs", "__proto__"]);
+        root.toggleStatusComponentGroup("__proto__");
+        compare(root.statusComponentGroups, ["APIs"]);
         root.performAction("status-page");
         compare(root.openedUrls, [root.providerStatusUrl("codex")]);
         root.performAction(row);
         compare(root.statusComponents.provider, "");
+        compare(root.statusComponentGroups, []);
         verify(statusComponentsProcess.cancelled > 0);
         root.finishStatusComponents(request.context, []);
         compare(root.statusComponents.provider, "");

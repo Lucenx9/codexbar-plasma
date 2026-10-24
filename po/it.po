@@ -3527,12 +3527,34 @@ msgid "Status Page"
 msgstr "Pagina di stato"
 
 #: contents/ui/components/StatusComponentsList.qml
+msgctxt "Status of one service component"
 msgid "Operational"
 msgstr "Operativo"
 
 #: contents/ui/components/StatusComponentsList.qml
+msgctxt "Status of one service component"
 msgid "Degraded performance"
 msgstr "Prestazioni ridotte"
+
+#: contents/ui/components/StatusComponentsList.qml
+msgctxt "Status of one service component"
+msgid "Partial outage"
+msgstr "Interruzione parziale"
+
+#: contents/ui/components/StatusComponentsList.qml
+msgctxt "Status of one service component"
+msgid "Major outage"
+msgstr "Interruzione grave"
+
+#: contents/ui/components/StatusComponentsList.qml
+msgctxt "Status of one service component"
+msgid "Under maintenance"
+msgstr "In manutenzione"
+
+#: contents/ui/components/StatusComponentsList.qml
+msgctxt "Status of one service component"
+msgid "Unknown"
+msgstr "Sconosciuto"
 
 #: contents/ui/components/StatusComponentsList.qml
 msgid "Loading service status…"

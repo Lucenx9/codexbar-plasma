@@ -14,6 +14,10 @@ TestCase {
         return text
     }
 
+    function i18nc(context, text) {
+        return text
+    }
+
     QtObject {
         id: fakeApplet
 
@@ -34,6 +38,10 @@ TestCase {
                 { name: "G".repeat(120), indicator: "major", children: [
                     { name: "Chat Completions", indicator: "major", children: [] }] },
                 { name: "Claude Code", indicator: "none", children: [] }] })
+            // The owner keeps open groups, as the applet does across row rebuilds.
+            onGroupToggled: function(name) {
+                expandedGroups = expandedGroups.indexOf(name) >= 0 ? [] : [name]
+            }
         }
     }
 
@@ -64,7 +72,7 @@ TestCase {
     function test_groupTogglesFromKeyboard() {
         var list = createTemporaryObject(listComponent, testCase)
         var toggle = findChild(list, "statusGroupToggle")
-        compare(toggle.Accessible.name, "G".repeat(120))
+        compare(toggle.Accessible.name, "G".repeat(120) + ", Partial outage")
         compare(labelsWithText(list, "Chat Completions", []).length, 0)
         toggle.forceActiveFocus()
         keyClick(Qt.Key_Space)
@@ -74,5 +82,7 @@ TestCase {
         keyClick(Qt.Key_Space)
         verify(!toggle.expanded)
         compare(labelsWithText(list, "Chat Completions", []).length, 0)
+        list.expandedGroups = ["G".repeat(120)]
+        verify(toggle.expanded)
     }
 }

@@ -10,25 +10,29 @@ ColumnLayout {
 
     required property var applet
     required property var statusState
+    property var expandedGroups: []
 
+    signal groupToggled(string name)
     signal openRequested()
 
     spacing: 0
 
+    // Component states follow the page's own scale, which differs from the
+    // provider status pill, so they carry their own translation context.
     function indicatorText(indicator) {
         switch (indicator) {
         case "none":
-            return i18n("Operational")
+            return i18nc("Status of one service component", "Operational")
         case "minor":
-            return i18n("Degraded performance")
+            return i18nc("Status of one service component", "Degraded performance")
         case "major":
-            return i18n("Partial outage")
+            return i18nc("Status of one service component", "Partial outage")
         case "critical":
-            return i18n("Major outage")
+            return i18nc("Status of one service component", "Major outage")
         case "maintenance":
-            return i18n("Maintenance")
+            return i18nc("Status of one service component", "Under maintenance")
         default:
-            return i18n("Status unknown")
+            return i18nc("Status of one service component", "Unknown")
         }
     }
 
@@ -41,7 +45,7 @@ ColumnLayout {
 
         required property var row
         property int depth: 0
-        property bool expanded: false
+        readonly property bool expanded: depth === 0 && statusList.expandedGroups.indexOf(row.name) >= 0
 
         Layout.fillWidth: true
         Layout.leftMargin: Kirigami.Units.largeSpacing + depth * Kirigami.Units.gridUnit * 2
@@ -62,8 +66,8 @@ ColumnLayout {
             objectName: "statusGroupToggle"
             visible: componentRow.row.children.length > 0
             expanded: componentRow.expanded
-            Accessible.name: componentRow.row.name
-            onClicked: componentRow.expanded = !componentRow.expanded
+            Accessible.name: componentRow.row.name + ", " + statusList.indicatorText(componentRow.row.indicator)
+            onClicked: statusList.groupToggled(componentRow.row.name)
         }
 
         PlainPlasmaLabel {

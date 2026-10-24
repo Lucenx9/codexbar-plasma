@@ -28,7 +28,8 @@ INDICATORS = {
     "full_outage": "critical",
     "under_maintenance": "maintenance",
 }
-RANK = ["none", "maintenance", "unknown", "minor", "major", "critical"]
+# Upstream ranks unknown with maintenance when a group takes its worst child.
+RANK = {"none": 0, "maintenance": 1, "unknown": 1, "minor": 2, "major": 3, "critical": 4}
 
 
 class NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -47,7 +48,7 @@ def row(name, status, children=()):
 
 
 def worst(children):
-    return max((child["indicator"] for child in children), key=RANK.index, default="none")
+    return max((child["indicator"] for child in children), key=RANK.get, default="none")
 
 
 def parse_statuspage(payload):
@@ -71,8 +72,9 @@ def parse_statuspage(payload):
 
 def parse_incidentio(payload):
     summary = payload["summary"]
-    statuses = {a["component_id"]: a.get("status") for a in summary.get("affected_components") or []
-                if isinstance(a, dict) and isinstance(a.get("component_id"), str)}
+    # As upstream, an affected entry without a status leaves the component operational.
+    statuses = {a["component_id"]: a["status"] for a in summary.get("affected_components") or []
+                if isinstance(a, dict) and isinstance(a.get("component_id"), str) and isinstance(a.get("status"), str)}
 
     def leaf(component):
         return row(name_text(component.get("name")), statuses.get(component.get("component_id"), "operational"))

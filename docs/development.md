@@ -303,7 +303,10 @@ synchronized.
   feeds, builds the command, and validates the record;
   `components/StatusComponentsList.qml` localizes states. Widget QML still
   sends no HTTP itself. Expansion stays out of the action-row model so a
-  state change never rebuilds the focused row. `tests/tst_status_components.qml`
+  state change never rebuilds the focused row, and open group names live in
+  `statusComponentGroups` so a usage refresh that rebuilds the rows restores
+  them. Component states use the page's scale (degraded, partial, major) and a
+  separate translation context from the provider status pill. `tests/tst_status_components.qml`
   and `tests/test_status_components.py` cover validation and both feed formats
   offline; `tests/tst_status_components_list.qml` covers long-name elision and
   keyboard toggling. Replace the helper when the CLI exposes components; see

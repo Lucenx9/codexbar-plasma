@@ -90,6 +90,8 @@ PlasmoidItem {
     readonly property var presentedProviderData: providerPresentation(selectedProviderData)
     // A non-empty provider means its status-component list is expanded.
     property var statusComponents: ({ provider: "", loading: false, failed: false, rows: [] })
+    // Open group names live here so rebuilt action rows restore them.
+    property var statusComponentGroups: []
     property bool costUsageEnabled: Plasmoid.configuration.costUsageEnabled !== false
     property int costHistoryDays: isFinite(Number(Plasmoid.configuration.costHistoryDays)) ? Math.max(1, Math.min(365, Number(Plasmoid.configuration.costHistoryDays))) : 30
     // A calendar period replaces the day window until a day count is chosen
@@ -1515,12 +1517,22 @@ PlasmoidItem {
             return
         }
         statusComponents = { provider: key, loading: true, failed: false, rows: [] }
+        statusComponentGroups = []
         statusComponentsProcess.start(command, { provider: key }, 30000)
     }
 
     function collapseStatusComponents() {
         statusComponentsProcess.cancel()
         statusComponents = { provider: "", loading: false, failed: false, rows: [] }
+        statusComponentGroups = []
+    }
+
+    function toggleStatusComponentGroup(name) {
+        var groups = statusComponentGroups.filter(function(group) { return group !== name })
+        if (groups.length === statusComponentGroups.length) {
+            groups.push(name)
+        }
+        statusComponentGroups = groups
     }
 
     function finishStatusComponents(context, rows) {

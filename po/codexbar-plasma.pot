@@ -1958,27 +1958,33 @@ msgid "Activity heatmap"
 msgstr ""
 
 #: contents/ui/components/StatusComponentsList.qml
+msgctxt "Status of one service component"
 msgid "Operational"
 msgstr ""
 
 #: contents/ui/components/StatusComponentsList.qml
+msgctxt "Status of one service component"
 msgid "Degraded performance"
 msgstr ""
 
-#: contents/ui/components/StatusComponentsList.qml contents/ui/main.qml
+#: contents/ui/components/StatusComponentsList.qml
+msgctxt "Status of one service component"
 msgid "Partial outage"
 msgstr ""
 
-#: contents/ui/components/StatusComponentsList.qml contents/ui/main.qml
+#: contents/ui/components/StatusComponentsList.qml
+msgctxt "Status of one service component"
 msgid "Major outage"
 msgstr ""
 
-#: contents/ui/components/StatusComponentsList.qml contents/ui/main.qml
-msgid "Maintenance"
+#: contents/ui/components/StatusComponentsList.qml
+msgctxt "Status of one service component"
+msgid "Under maintenance"
 msgstr ""
 
-#: contents/ui/components/StatusComponentsList.qml contents/ui/main.qml
-msgid "Status unknown"
+#: contents/ui/components/StatusComponentsList.qml
+msgctxt "Status of one service component"
+msgid "Unknown"
 msgstr ""
 
 #: contents/ui/components/StatusComponentsList.qml
@@ -3758,7 +3764,23 @@ msgid "Reset unavailable"
 msgstr ""
 
 #: contents/ui/main.qml
+msgid "Partial outage"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Major outage"
+msgstr ""
+
+#: contents/ui/main.qml
 msgid "Critical issue"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Maintenance"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Status unknown"
 msgstr ""
 
 #: contents/ui/main.qml

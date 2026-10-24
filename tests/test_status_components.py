@@ -41,6 +41,16 @@ class StatusComponentsTests(unittest.TestCase):
                 {"name": "Batch", "indicator": "critical", "children": []}]},
             {"name": "Login", "indicator": "unknown", "children": []}])
 
+    def test_incidentio_matches_upstream_rank_and_missing_status(self):
+        rows = status.parse("incidentio", incidentio([
+            {"group": {"id": "g", "name": "Codex", "components": [
+                {"component_id": "m", "name": "CLI"}, {"component_id": "u", "name": "Web"}]}},
+            {"component": {"component_id": "n", "name": "Login"}},
+        ], [{"component_id": "m", "status": "under_maintenance"}, {"component_id": "u", "status": "new_state"},
+            {"component_id": "n", "status": None}]))
+        self.assertEqual(rows[0]["indicator"], "maintenance")
+        self.assertEqual(rows[1]["indicator"], "none")
+
     def test_statuspage_nests_children_in_position_order(self):
         rows = status.parse("statuspage", json.dumps({"components": [
             {"id": "c2", "name": "Child 2", "status": "operational", "group_id": "g", "position": 3},
