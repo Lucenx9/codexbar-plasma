@@ -619,7 +619,10 @@ clipboard interoperability with every Wayland application or portal backend.
   decisions pure and covered by `tests/tst_notification_planner.qml` and
   `tests/tst_notification_memo.qml`. A failed status-page fetch, which the CLI
   reports as severity `unknown`, keeps a known incident baseline instead of
-  replacing it. Predictive warnings prime silently and fire
+  replacing it. The planner treats that severity as missing status evidence,
+  even when a status object was returned: it neither notifies nor primes a new
+  baseline, while fresh quota observations still run independently.
+  Predictive warnings prime silently and fire
   on a new projected-exhaustion transition. Missing usage rows retain their
   threshold state within the bounded memo; only observed rows can establish
   recovery or consume an armed reset.

@@ -329,7 +329,8 @@ function transition(observations, previousMemo, options) {
             }
             continue
         }
-        if ((!options || options.statusEnabled !== false) && item.statusKnown !== false) {
+        if ((!options || options.statusEnabled !== false) && item.statusKnown !== false
+                && item.statusSeverity !== "unknown") {
             var value = statusValue(item)
             if (mode === "prime") {
                 // Rebuild silently without erasing a temporarily missing id.
@@ -352,8 +353,8 @@ function transition(observations, previousMemo, options) {
                 }
             }
         } else if (mode === "prime") {
-            // A cached usage-only snapshot is still missing status evidence
-            // after status fetching is re-enabled.
+            // Missing status or a failed status fetch cannot establish a new
+            // baseline or replace one carried across a settings change.
             NotificationMemo.carryStatusMemo(previousMemo, item.providerID, nextMemo)
         }
         // Current status remains useful when a successful reply carries old
