@@ -409,13 +409,19 @@ Item {
                     }
 
                     Repeater {
-                        model: applet.presentedProviders
+                        id: providerTabRepeater
+
+                        // Snapshot values change on refresh; the ordered IDs
+                        // keep the focused delegate alive while its data updates.
+                        model: fullRoot.applet.presentedProviders.map(function(item) { return item.provider })
 
                         delegate: Rectangle {
                             id: providerTab
 
                             required property int index
                             required property var modelData
+                            modelData: fullRoot.applet.presentedProviders[index]
+                                || ({provider: "", title: "", error: ""})
                             readonly property bool selected: index === applet.selectedProviderIndex
                             readonly property bool keyboardFocusVisible: providerFocus.visualFocus
                             readonly property real meter: applet.switcherPercent(modelData)

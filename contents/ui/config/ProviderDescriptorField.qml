@@ -24,17 +24,17 @@ ColumnLayout {
     RowLayout {
         Layout.fillWidth: true
         spacing: Kirigami.Units.smallSpacing
-        visible: modelData.kind === "secret"
+        visible: fieldRoot.modelData.kind === "secret"
 
         Components.PlainControlsLabel {
-            text: modelData.title
+            text: fieldRoot.modelData.title
             opacity: fieldRoot.secondaryTextOpacity
             Layout.preferredWidth: Kirigami.Units.gridUnit * 7
             elide: Text.ElideRight
         }
 
         Components.PlainControlsLabel {
-            text: modelData.redactedValue.length > 0 ? modelData.redactedValue : i18n("Not configured")
+            text: fieldRoot.modelData.redactedValue.length > 0 ? fieldRoot.modelData.redactedValue : i18n("Not configured")
             Layout.fillWidth: true
             elide: Text.ElideRight
         }
@@ -42,20 +42,20 @@ ColumnLayout {
         Controls.Button {
             objectName: "descriptorSecretButton"
             text: i18n("Set…")
-            Accessible.name: i18n("Set %1", modelData.title)
+            Accessible.name: i18n("Set %1", fieldRoot.modelData.title)
             icon.name: "password-show-off"
             enabled: fieldRoot.providerAvailable && !fieldRoot.writePending
-            onClicked: if (fieldRoot.providerAvailable) fieldRoot.secretPromptRequested(modelData)
+            onClicked: if (fieldRoot.providerAvailable) fieldRoot.secretPromptRequested(fieldRoot.modelData)
         }
     }
 
     RowLayout {
         Layout.fillWidth: true
         spacing: Kirigami.Units.smallSpacing
-        visible: modelData.kind === "text" || modelData.kind === "number"
+        visible: fieldRoot.modelData.kind === "text" || fieldRoot.modelData.kind === "number"
 
         Components.PlainControlsLabel {
-            text: modelData.title
+            text: fieldRoot.modelData.title
             opacity: fieldRoot.secondaryTextOpacity
             Layout.preferredWidth: Kirigami.Units.gridUnit * 7
             elide: Text.ElideRight
@@ -65,31 +65,31 @@ ColumnLayout {
             id: descriptorTextField
             objectName: "descriptorTextField"
             Layout.fillWidth: true
-            text: modelData.valueText
-            placeholderText: SafeText.plainTextAsRichText(modelData.description)
-            Accessible.name: modelData.title
-            Accessible.description: modelData.description
-            inputMethodHints: modelData.kind === "number" ? Qt.ImhDigitsOnly : Qt.ImhNone
+            text: fieldRoot.modelData.valueText
+            placeholderText: SafeText.plainTextAsRichText(fieldRoot.modelData.description)
+            Accessible.name: fieldRoot.modelData.title
+            Accessible.description: fieldRoot.modelData.description
+            inputMethodHints: fieldRoot.modelData.kind === "number" ? Qt.ImhDigitsOnly : Qt.ImhNone
             enabled: fieldRoot.providerAvailable && !fieldRoot.writePending
         }
 
         Controls.Button {
             objectName: "descriptorTextSaveButton"
             text: i18n("Save")
-            Accessible.name: i18n("Save %1", modelData.title)
+            Accessible.name: i18n("Save %1", fieldRoot.modelData.title)
             icon.name: "document-save"
             enabled: fieldRoot.providerAvailable && !fieldRoot.writePending
-            onClicked: if (fieldRoot.providerAvailable) fieldRoot.writeRequested(modelData, descriptorTextField.text)
+            onClicked: if (fieldRoot.providerAvailable) fieldRoot.writeRequested(fieldRoot.modelData, descriptorTextField.text)
         }
     }
 
     RowLayout {
         Layout.fillWidth: true
         spacing: Kirigami.Units.smallSpacing
-        visible: modelData.kind === "enum"
+        visible: fieldRoot.modelData.kind === "enum"
 
         Components.PlainControlsLabel {
-            text: modelData.title
+            text: fieldRoot.modelData.title
             opacity: fieldRoot.secondaryTextOpacity
             Layout.preferredWidth: Kirigami.Units.gridUnit * 7
             elide: Text.ElideRight
@@ -103,13 +103,13 @@ ColumnLayout {
             readonly property bool descriptorWritePending: fieldRoot.writePending
 
             Layout.fillWidth: true
-            model: modelData.options
+            model: fieldRoot.modelData.options
             textRole: "title"
-            Accessible.name: modelData.title
+            Accessible.name: fieldRoot.modelData.title
             valueRole: "id"
-            currentIndex: modelData.selectedOptionIndex
+            currentIndex: fieldRoot.modelData.selectedOptionIndex
             enabled: fieldRoot.providerAvailable
-                && modelData.options.length > 0
+                && fieldRoot.modelData.options.length > 0
                 && !descriptorWritePending
             onDescriptorWritePendingChanged: {
                 if (descriptorWritePending || !restoreBindingAfterWrite) {
@@ -117,7 +117,7 @@ ColumnLayout {
                 }
                 restoreBindingAfterWrite = false
                 currentIndex = Qt.binding(function() {
-                    return modelData.selectedOptionIndex
+                    return fieldRoot.modelData.selectedOptionIndex
                 })
             }
         }
@@ -127,7 +127,7 @@ ColumnLayout {
             objectName: "descriptorEnumSaveButton"
 
             text: i18n("Save")
-            Accessible.name: i18n("Save %1", modelData.title)
+            Accessible.name: i18n("Save %1", fieldRoot.modelData.title)
             icon.name: "document-save"
             enabled: fieldRoot.providerAvailable
                 && descriptorEnumBox.currentIndex >= 0
@@ -136,7 +136,7 @@ ColumnLayout {
                 if (!fieldRoot.providerAvailable) {
                     return
                 }
-                fieldRoot.enumWriteRequested(modelData, descriptorEnumBox.currentIndex)
+                fieldRoot.enumWriteRequested(fieldRoot.modelData, descriptorEnumBox.currentIndex)
                 // A rejected plan never enters the pending state,
                 // so it keeps the user's choice available to retry.
                 // A started write restores the binding only when its
@@ -150,10 +150,10 @@ ColumnLayout {
     RowLayout {
         Layout.fillWidth: true
         spacing: Kirigami.Units.smallSpacing
-        visible: modelData.kind === "boolean"
+        visible: fieldRoot.modelData.kind === "boolean"
 
         Components.PlainControlsLabel {
-            text: modelData.title
+            text: fieldRoot.modelData.title
             opacity: fieldRoot.secondaryTextOpacity
             Layout.preferredWidth: Kirigami.Units.gridUnit * 7
             elide: Text.ElideRight
@@ -161,21 +161,21 @@ ColumnLayout {
 
         Components.PlainCheckBox {
             objectName: "descriptorBooleanBox"
-            checked: modelData.value === true || String(modelData.value).toLowerCase() === "true"
-            plainText: modelData.description
-            Accessible.name: modelData.title
-            Accessible.description: modelData.description
+            checked: fieldRoot.modelData.value === true || String(fieldRoot.modelData.value).toLowerCase() === "true"
+            plainText: fieldRoot.modelData.description
+            Accessible.name: fieldRoot.modelData.title
+            Accessible.description: fieldRoot.modelData.description
             implicitWidth: 0
             Layout.fillWidth: true
             enabled: fieldRoot.providerAvailable && !fieldRoot.writePending
             onClicked: {
                 if (fieldRoot.providerAvailable) {
-                    fieldRoot.writeRequested(modelData, checked ? "true" : "false")
+                    fieldRoot.writeRequested(fieldRoot.modelData, checked ? "true" : "false")
                 }
                 // Restore the binding the click severed so the box reflects the
                 // saved value (and reverts on a failed write).
                 checked = Qt.binding(function() {
-                    return modelData.value === true || String(modelData.value).toLowerCase() === "true"
+                    return fieldRoot.modelData.value === true || String(fieldRoot.modelData.value).toLowerCase() === "true"
                 })
             }
         }
@@ -183,13 +183,13 @@ ColumnLayout {
 
     Components.PlainControlsLabel {
         Layout.fillWidth: true
-        text: modelData.description
+        text: fieldRoot.modelData.description
         opacity: fieldRoot.secondaryTextOpacity
         font: Kirigami.Theme.smallFont
         wrapMode: Text.WordWrap
-        visible: modelData.description.length > 0
-            && modelData.kind !== "boolean"
-            && modelData.kind !== "text"
-            && modelData.kind !== "number"
+        visible: fieldRoot.modelData.description.length > 0
+            && fieldRoot.modelData.kind !== "boolean"
+            && fieldRoot.modelData.kind !== "text"
+            && fieldRoot.modelData.kind !== "number"
     }
 }

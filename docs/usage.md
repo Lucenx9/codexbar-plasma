@@ -64,7 +64,8 @@ work and upstream contract requirements.
   The provider header and tab navigation stay visible while account choices,
   incident notices, errors, and usage details scroll below them. Switching
   provider or account starts the details at the top; refreshing the same account
-  keeps the scroll position.
+  keeps the scroll position. Usage refreshes keep keyboard focus on the provider
+  tab while the provider order remains unchanged.
 - Provider tabs show **Plan renews on** and **Plan expires on** separately from
   quota resets when the CLI supplies valid subscription dates. Datetimes follow
   your regional date and clock format; dates marked as calendar-only keep their
@@ -201,7 +202,8 @@ work and upstream contract requirements.
 - Global **Usage & Spend** tab with a Cost/Tokens selector, a range selector
   (7, 30, or 90 days, **Month to date**, or **All history**), interactive daily chart, activity heatmap, and provider totals that
   keep different currencies separate. Chart and heatmap dates use the system
-  locale's short date format, and cost lines separate amount and tokens with
+  locale's short date format. Chart guide lines follow theme text-color changes
+  while the popup stays open. Cost lines separate amount and tokens with
   ` · `. The heatmap groups the range into weekday
   rows, labelled with the system locale's short day names and starting on its
   first day of the week, so each weekday keeps its row as the range moves. Week

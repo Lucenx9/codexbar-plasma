@@ -21,6 +21,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep keyboard focus on a provider tab when refreshed usage changes its values
+  without changing the provider order.
+- Repaint chart guide lines when the theme text color changes, including when
+  the provider accent stays the same.
 - Bound hung usage, cost, session, account, and provider-list CLI processes and
   their children with GNU `timeout`, including after cancelling a request or
   closing the widget, so repeated refreshes do not leave them running indefinitely.

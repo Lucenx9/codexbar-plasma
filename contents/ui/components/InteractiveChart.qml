@@ -30,6 +30,7 @@ ColumnLayout {
     readonly property bool hasActivePoint: activeIndex >= 0 && activeIndex < pointCount
     readonly property var valueDomain: ChartScale.domain(points)
     readonly property real lineMarkerInset: 3.5
+    readonly property color guideColor: Kirigami.Theme.textColor
 
     Layout.fillWidth: true
     spacing: Kirigami.Units.smallSpacing / 2
@@ -183,6 +184,7 @@ ColumnLayout {
             function onKindChanged() { plot.requestPaint() }
             function onSelectedIndexChanged() { plot.requestPaint() }
             function onHoveredIndexChanged() { plot.requestPaint() }
+            function onGuideColorChanged() { plot.requestPaint() }
         }
 
         Keys.onPressed: function(event) {
@@ -221,7 +223,7 @@ ColumnLayout {
                 baseline = CostPresentation.chartLineY(height,
                     chart.chartFraction(0), chart.lineMarkerInset)
             }
-            context.fillStyle = chart.applet.canvasColor(Kirigami.Theme.textColor, 0.12)
+            context.fillStyle = chart.applet.canvasColor(chart.guideColor, 0.12)
             context.fillRect(0, baseline, width, 1)
             if (chart.pointCount === 0 || chart.valueDomain.minimum === chart.valueDomain.maximum) {
                 return
@@ -231,7 +233,7 @@ ColumnLayout {
                 var peakBar = ChartScale.barGeometry(height, chart.valueDomain.maximum, chart.valueDomain)
                 var peakY = Math.round(peakBar.baseline - peakBar.height)
                 if (baseline - peakY >= Kirigami.Units.gridUnit) {
-                    context.fillStyle = chart.applet.canvasColor(Kirigami.Theme.textColor, 0.08)
+                    context.fillStyle = chart.applet.canvasColor(chart.guideColor, 0.08)
                     context.fillRect(0, peakY, width, 1)
                 }
             }
