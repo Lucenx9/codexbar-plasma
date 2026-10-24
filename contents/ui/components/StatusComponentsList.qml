@@ -56,24 +56,31 @@ ColumnLayout {
             color: statusList.indicatorColor(componentRow.row.indicator)
         }
 
+        // The arrow alone is the control, so a long remote name elides in
+        // the label instead of widening the popup past its status column.
         DisclosureButton {
             objectName: "statusGroupToggle"
             visible: componentRow.row.children.length > 0
-            plainText: componentRow.row.name
             expanded: componentRow.expanded
+            Accessible.name: componentRow.row.name
             onClicked: componentRow.expanded = !componentRow.expanded
         }
 
         PlainPlasmaLabel {
-            visible: componentRow.row.children.length === 0
+            id: componentName
+
             text: componentRow.row.name
             elide: Text.ElideRight
             Layout.fillWidth: true
-        }
 
-        Item {
-            visible: componentRow.row.children.length > 0
-            Layout.fillWidth: true
+            HoverHandler {
+                id: componentNameHover
+            }
+
+            PlainToolTip {
+                visible: componentName.truncated && componentNameHover.hovered
+                plainText: componentName.text
+            }
         }
 
         PlainPlasmaLabel {

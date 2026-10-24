@@ -1485,9 +1485,9 @@ PlasmoidItem {
             rows.push({ title: i18n("Usage Dashboard"), icon: "view-statistics", action: "dashboard", enabled: true })
         }
         if (safeStatusUrl(item.provider, item.statusUrl).length > 0) {
-            var expandable = StatusComponents.feed(providerKey(item.provider)).length > 0
+            // Expansion stays out of the rows: rebuilding them would destroy the focused row.
             rows.push({ title: i18n("Status Page"), icon: "network-connect", action: "status", enabled: true,
-                expandable: expandable, expanded: expandable && statusComponents.provider === providerKey(item.provider) })
+                expandable: StatusComponents.feed(providerKey(item.provider)).length > 0 })
         }
         if (showProviderChangelogs && item.changelogUrl && item.changelogUrl.length > 0) {
             rows.push({ title: i18n("Changelog"), icon: "view-list-details", action: "changelog", enabled: true })
@@ -1501,6 +1501,10 @@ PlasmoidItem {
         rows.push({ title: i18n("Settings…"), icon: "configure", action: "settings", enabled: true })
         rows.push({ title: i18n("About CodexBar"), icon: "help-about", action: "about", enabled: true })
         return rows
+    }
+
+    function statusComponentsExpanded(item) {
+        return !!item && statusComponents.provider.length > 0 && statusComponents.provider === providerKey(item.provider)
     }
 
     function toggleStatusComponents(item) {

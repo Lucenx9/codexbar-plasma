@@ -1593,7 +1593,11 @@ Item {
                             model: applet.presentedProviderData ? applet.actionRows(applet.selectedProviderData) : []
 
                             delegate: ColumnLayout {
+                                id: providerActionRow
+
                                 required property var modelData
+                                readonly property bool statusExpanded: modelData.expandable === true
+                                    && applet.statusComponentsExpanded(applet.selectedProviderData)
 
                                 Layout.fillWidth: true
                                 spacing: 0
@@ -1620,11 +1624,11 @@ Item {
                                     onClicked: applet.performAction(modelData)
 
                                     Accessible.checkable: modelData.expandable === true
-                                    Accessible.checked: modelData.expanded === true
+                                    Accessible.checked: providerActionRow.statusExpanded
                                 }
 
                                 Components.StatusComponentsList {
-                                    visible: modelData.expanded === true
+                                    visible: providerActionRow.statusExpanded
                                     Layout.fillWidth: true
                                     applet: fullRoot.applet
                                     statusState: applet.statusComponents

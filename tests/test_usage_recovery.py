@@ -327,7 +327,7 @@ class UsageRecoveryTests(unittest.TestCase):
                      "providerKey", "providerMapKey", "accountLoadingForProvider",
                      "accountAvailabilityForProvider", "performAction",
                      "toggleStatusComponents", "finishStatusComponents",
-                     "collapseStatusComponents"):
+                     "collapseStatusComponents", "statusComponentsExpanded"):
             signature = re.search(r"function " + name + r"\([^)]*\)", source).group(0)
             functions.append(signature + " {" + surface.function_body(name) + "}")
         qml = MENU_QML.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
@@ -431,14 +431,16 @@ TestCase {
         root.openedUrls = [];
         var row = root.actionRows(codex).filter(function(row) { return row.action === "status"; })[0];
         compare(row.expandable, true);
-        compare(row.expanded, false);
+        verify(!("expanded" in row));
+        compare(root.statusComponentsExpanded(codex), false);
         root.performAction(row);
         compare(root.openedUrls, []);
         compare(root.statusComponents.provider, "codex");
         compare(root.statusComponents.loading, true);
         var request = statusComponentsProcess.started[statusComponentsProcess.started.length - 1];
         verify(/--provider openai$/.test(request.command));
-        compare(root.actionRows(codex).filter(function(row) { return row.action === "status"; })[0].expanded, true);
+        compare(root.statusComponentsExpanded(codex), true);
+        compare(root.statusComponentsExpanded(menuItem("claude")), false);
         root.finishStatusComponents({provider: "claude"}, [{name: "Late", indicator: "none", children: []}]);
         compare(root.statusComponents.loading, true);
         root.finishStatusComponents(request.context, null);
