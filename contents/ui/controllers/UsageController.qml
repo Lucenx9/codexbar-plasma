@@ -165,7 +165,8 @@ Item {
                 return "";
             }
             commandRunSerial += 1;
-            return CommandLedger.withRunNonce(command, commandRunSerial, Date.now() + "-" + Math.random());
+            var bounded = Guards.boundedShellCommand(command, defaultCommandTimeoutMs / 1000 + 2, 1, true);
+            return CommandLedger.withRunNonce(bounded, commandRunSerial, Date.now() + "-" + Math.random());
         }
 
         function connectUsageCommand(sourceName, descriptor) {

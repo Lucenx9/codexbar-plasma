@@ -1,6 +1,7 @@
 import QtQuick
 import org.kde.plasma.plasma5support as Plasma5Support
 import "../CommandLedger.js" as CommandLedger
+import "../Guards.js" as Guards
 
 // One active request. Callers own command construction, immutable context,
 // response interpretation and retry policy; this component owns execution.
@@ -21,8 +22,10 @@ Item {
         if (lifecycle.destroyed || revision !== lifecycle.revision)
             return false;
         lifecycle.runSerial += 1;
-        var source = CommandLedger.withRunNonce(command, lifecycle.runSerial, Date.now() + "-" + Math.random());
-        var descriptor = CommandLedger.descriptor("process", "", Date.now(), timeoutMs);
+        var nowMs = Date.now();
+        var descriptor = CommandLedger.descriptor("process", "", nowMs, timeoutMs);
+        var bounded = Guards.boundedShellCommand(command, (descriptor.deadlineMs - nowMs) / 1000 + 2, 1, true);
+        var source = CommandLedger.withRunNonce(bounded, lifecycle.runSerial, nowMs + "-" + Math.random());
         descriptor.context = context;
         lifecycle.commands = CommandLedger.opened(lifecycle.commands, source, descriptor);
         lifecycle.running = true;

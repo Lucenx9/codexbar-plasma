@@ -21,6 +21,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Bound hung usage, cost, session, account, and provider-list CLI processes and
+  their children with GNU `timeout`, including after cancelling a request or
+  closing the widget, so repeated refreshes do not leave them running indefinitely.
 - Avoid false incident notifications when a provider's status page cannot be
   reached, including repeated network failures and startup without status data.
 - Keep managed CLI installation and selection working when the data directory

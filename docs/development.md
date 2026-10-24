@@ -541,13 +541,23 @@ context and raw stdout, stderr and exit status; timeout forwards the context.
 Callers construct commands and treat context as immutable. The component uses
 `CommandLedger.js` for unique sources and deadlines, retires before callbacks,
 and rejects late or duplicate replies. Cancellation and destruction disconnect
-sources; they do not promise to terminate an underlying subprocess. Reentrant
+sources immediately. With GNU `timeout`, the command also has an independent
+process-group bound two seconds beyond its UI deadline and a one-second TERM
+grace before KILL. `Guards.boundedShellCommand` builds the bound before the nonce
+is added, and a waiting shell keeps the timeout monitor alive after source
+disconnection or destruction. Usage, account discovery and settings provider
+rosters use the same guard with their own deadlines. Without GNU `timeout`,
+reads retain their existing unbounded-process fallback. Reentrant
 callbacks cannot publish retired results over newer work. Domain normalization,
 cache retention, localization and retry policies remain in the controllers.
 `tests/test_cli_process.py` exercises the production component with a fake
 executable transport, including immediate replies, supersession, deadlines,
 reentrancy and destruction. Controller tests retain real executable-engine
 coverage, including source isolation between instances.
+`tests/test_cli_process_bounds.py` exercises process termination through the
+real executable engine with shortened controller deadlines, including hung
+children and request retirement. It verifies process exit separately from UI
+timeout state; source disconnection alone does not establish termination.
 
 When multiple pages consume one CLI envelope, share the bounded record/envelope
 contract and keep page-specific projections separate. Avoid both duplicate raw

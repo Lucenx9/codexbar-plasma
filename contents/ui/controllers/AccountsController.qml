@@ -96,7 +96,8 @@ Item {
             }
             setError(key, "");
             runSerial += 1;
-            var source = CommandLedger.withRunNonce(baseCommand, runSerial, Date.now() + "-" + Math.random());
+            var bounded = Guards.boundedShellCommand(baseCommand, accountCommandTimeoutMs / 1000 + 2, 1, true);
+            var source = CommandLedger.withRunNonce(bounded, runSerial, Date.now() + "-" + Math.random());
             var descriptor = CommandLedger.descriptor("account", key, Date.now(), accountCommandTimeoutMs);
             descriptor.commandSignature = baseCommand;
             commands = CommandLedger.opened(commands, source, descriptor);

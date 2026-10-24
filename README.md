@@ -132,6 +132,9 @@ for its limits.
   downloads support Linux x86_64/aarch64 with glibc or musl; the downloaded
   executable must pass a local version probe before activation.
 - `notify-send` for Plasma notifications.
+- GNU `timeout` bounds background usage, cost, session, account, and provider-list
+  processes after their UI deadlines or cancellation. Without it, these reads
+  still work, but disconnecting a request cannot terminate a hung CLI process.
 - Offline Diagnostics support-report collection: `python3` and GNU `timeout`.
   Other Diagnostics controls remain available without this report helper.
 - Optional AI Insights only: `python3`, GNU `timeout`, and the `QtCore` QML

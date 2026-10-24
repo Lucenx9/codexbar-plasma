@@ -204,7 +204,8 @@ class CliProcessTests(unittest.TestCase):
     def test_transport_lifecycle(self):
         source = (ROOT / "contents/ui/controllers/CliProcess.qml").read_text()
         source = source.replace('import org.kde.plasma.plasma5support as Plasma5Support\n', '')
-        source = source.replace('"../CommandLedger.js"', json.dumps((ROOT / "contents/ui/CommandLedger.js").as_uri()))
+        for module in ("CommandLedger", "Guards"):
+            source = source.replace(f'"../{module}.js"', json.dumps((ROOT / f"contents/ui/{module}.js").as_uri()))
         source = source.replace('id: process', 'id: process\n    property alias testSource: commandSource', 1)
         source = source.replace('Plasma5Support.DataSource {', 'QtObject {')
         source = source.replace('engine: "executable"\n        interval: 0', TRANSPORT)
