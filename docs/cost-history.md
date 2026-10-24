@@ -96,6 +96,8 @@ without fetching data. While a day is pinned, the chart readout and the
 drill-down heading name it, so the latest-day summary under the chart is hidden. A background refresh retains the pinned date even when
 its chart position changes; a missing or ambiguous date clears the pin.
 `sourceIndex` cannot identify a day across different snapshots.
+Month to date and All history keep the selected day and expanded details when
+their day count grows; their period name identifies the range.
 
 The global Usage & Spend chart also retains its selected date across refreshes,
 including when earlier days arrive or leave the window. A missing or ambiguous

@@ -21,9 +21,10 @@ ColumnLayout {
     // account label both participate, so a reselect under either spelling
     // clears them. The label is read from the unprojected snapshot because
     // privacy mode flattens it; the key additionally catches spacing-distinct
-    // accounts that collapse to one label.
+    // accounts that collapse to one label. Calendar ranges keep their identity
+    // as their recorded day count grows on a later scan.
     readonly property string selectionScope: providerData ? JSON.stringify([providerData.provider, accountSelectionKey,
-        accountSelectionLabel, tokenCost ? tokenCost.historyDays : 0, tokenCost ? tokenCost.period : ""]) : ""
+        accountSelectionLabel, tokenCost ? (CostPresentation.costPeriod(tokenCost.period) || tokenCost.historyDays) : 0]) : ""
     readonly property var selectedDay: CostPresentation.selectedCostDay(tokenCost ? tokenCost.daily : [], chartPoints, costChart.selectedIndex)
     readonly property bool hasVisibleDetails: detailsExpanded || selectedDay !== null
 

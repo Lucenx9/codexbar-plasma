@@ -672,6 +672,8 @@ and clipboard content remain under your control after closing the window.
   day's model costs and tokens. Hover previews stay inside the chart, keeping
   the layout steady. The cost/token selector reuses the loaded data.
   Missing model breakdowns and truncated lists are identified explicitly.
+  The selected day and expanded provider details survive a refresh that adds
+  a day to **Month to date** or **All history**.
 - Local-history scans run independently from quota refreshes, automatically
   about once an hour; the **Usage & Spend** refresh button starts one immediately.
   Revisiting **Usage & Spend** refreshes history that became stale since the last
