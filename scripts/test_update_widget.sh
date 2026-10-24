@@ -78,7 +78,7 @@ install_seconds = integer_constant(updater_text, "KPACKAGE_INSTALL_MAX_TIME_SECO
 kill_after_seconds = integer_constant(updater_text, "KPACKAGE_INSTALL_KILL_AFTER_SECONDS")
 lock_wait_seconds = integer_constant(updater_text, "INSTALL_LOCK_WAIT_SECONDS")
 outer_seconds = integer_constant(main_qml_text, "widgetAutoUpdateTimeoutMs") / 1000
-minimum_seconds = (metadata_seconds + checksum_seconds + asset_seconds + lock_wait_seconds
+minimum_seconds = (metadata_seconds + checksum_seconds + asset_seconds + 2 * lock_wait_seconds
                    + install_seconds + kill_after_seconds)
 required_outer_seconds = minimum_seconds + 30
 if outer_seconds < required_outer_seconds:

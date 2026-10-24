@@ -933,6 +933,8 @@ fields; track proposed extensions in the issue tracker.
   Updates launched from a checkout also compare against the installed per-user
   package and recheck it after downloading, so a different checkout version or
   a concurrent update cannot cause a downgrade or redundant reinstall.
+  Before reading the installed version, update-mode installs wait for an ongoing
+  installation to finish, so its temporary partial package is not rejected.
   A failed updater process cannot announce success, advance the successful-check
   time, or clear a known update offer, even if its JSON reports success.
 

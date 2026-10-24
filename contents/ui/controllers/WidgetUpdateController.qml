@@ -94,7 +94,7 @@ Item {
         property bool connectedUpdateInstallMode: false
         property bool pendingAutomaticUpdateCheck: false
         readonly property int widgetUpdateCheckTimeoutMs: 60000
-        readonly property int widgetAutoUpdateTimeoutMs: 600000
+        readonly property int widgetAutoUpdateTimeoutMs: 660000
         readonly property int widgetUpdateMinimumTimerDelayMs: 60000
         readonly property int widgetUpdateRetryBaseDelayMs: 300000
         readonly property int widgetUpdateRetryMaximumDelayMs: 21600000

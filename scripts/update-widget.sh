@@ -433,10 +433,14 @@ if [[ "$MODE" == "install" ]]; then
   [[ "$install_data_home" == /* ]] || install_data_home="${HOME:-}/.local/share"
   installed_widget_root="$install_data_home/plasma/plasmoids/$PLUGIN_ID"
   # A checkout's version says nothing about the per-user package being updated.
-  if [[ "$SETUP" == false && ( -e "$installed_widget_root" || -L "$installed_widget_root" ) ]]; then
-    installed_widget_matches "$installed_widget_root" \
-      || fail "local_metadata_invalid" "installed widget cannot be safely updated"
-    METADATA_PATH="$installed_widget_root/metadata.json"
+  if [[ "$SETUP" == false ]]; then
+    acquire_install_lock \
+      || fail "package_install_failed" "another widget installation did not finish in time"
+    if [[ -e "$installed_widget_root" || -L "$installed_widget_root" ]]; then
+      installed_widget_matches "$installed_widget_root" \
+        || fail "local_metadata_invalid" "installed widget cannot be safely updated"
+      METADATA_PATH="$installed_widget_root/metadata.json"
+    fi
   fi
 fi
 
@@ -463,6 +467,9 @@ fi
 local_version="$(jq -r '.KPlugin.Version' "$METADATA_PATH")"
 if [[ ! "$local_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   fail "local_metadata_invalid" "local widget version must use X.Y.Z"
+fi
+if [[ "$MODE" == install && "$SETUP" == false ]]; then
+  exec 9>&-
 fi
 
 if [[ -z "$RELEASE_JSON" ]]; then
