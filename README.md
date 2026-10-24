@@ -254,6 +254,9 @@ the advertised tag, verifies SHA-256 digests and the published checksum, and
 checks the applet ID and version before installation. A validation mismatch
 aborts the update. Before upgrading, the helper backs up the installed widget
 and restores it if installation fails or the installed metadata is invalid.
+When launched from a checkout with `make update`, it compares the release with
+the installed per-user package, including after downloading, so the checkout's
+version cannot cause a downgrade or skip a needed upgrade.
 
 **General → CLI updates** offers a manual check of official CodexBar releases
 and optional daily checks, off by default. Notifications can be enabled separately.

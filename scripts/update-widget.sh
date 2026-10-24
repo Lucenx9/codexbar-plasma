@@ -429,6 +429,15 @@ if [[ "$MODE" == "install" ]]; then
   require_command timeout
   require_command flock
   require_command mkdir
+  install_data_home="${XDG_DATA_HOME:-}"
+  [[ "$install_data_home" == /* ]] || install_data_home="${HOME:-}/.local/share"
+  installed_widget_root="$install_data_home/plasma/plasmoids/$PLUGIN_ID"
+  # A checkout's version says nothing about the per-user package being updated.
+  if [[ "$SETUP" == false && ( -e "$installed_widget_root" || -L "$installed_widget_root" ) ]]; then
+    installed_widget_matches "$installed_widget_root" \
+      || fail "local_metadata_invalid" "installed widget cannot be safely updated"
+    METADATA_PATH="$installed_widget_root/metadata.json"
+  fi
 fi
 
 if [[ "$SETUP" == true && "$INSTALL_OPTION" == -i ]]; then
@@ -604,11 +613,14 @@ setup_progress 'Waiting for the widget installation lock...'
 acquire_install_lock \
   || fail "package_install_failed" "another widget installation did not finish in time"
 # Another instance may have installed this release while this one downloaded it.
-# A fresh setup reads its synthetic 0.0.0 stub until here, so recheck the
-# installed metadata once it may exist.
+# Always recheck the installation target, including checkout and fresh setup runs.
+if [[ -e "$installed_widget_root" || -L "$installed_widget_root" ]]; then
+  installed_widget_matches "$installed_widget_root" \
+    || fail "local_metadata_invalid" "installed widget cannot be safely backed up"
+fi
 installed_metadata="$METADATA_PATH"
-if [[ "$SETUP" == true && "$INSTALL_OPTION" == -i && -f "$INSTALLED_ROOT/metadata.json" ]]; then
-  installed_metadata="$INSTALLED_ROOT/metadata.json"
+if [[ -f "$installed_widget_root/metadata.json" ]]; then
+  installed_metadata="$installed_widget_root/metadata.json"
 fi
 installed_version="$(jq -r '.KPlugin.Version? // empty' "$installed_metadata" 2>/dev/null || true)"
 if [[ "$installed_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] \
@@ -621,13 +633,6 @@ fi
 
 # Snapshot the actual per-user install, including when this helper runs from a
 # checkout. A sibling backup permits an atomic restore on the same filesystem.
-install_data_home="${XDG_DATA_HOME:-}"
-[[ "$install_data_home" == /* ]] || install_data_home="${HOME:-}/.local/share"
-installed_widget_root="$install_data_home/plasma/plasmoids/$PLUGIN_ID"
-if [[ -e "$installed_widget_root" || -L "$installed_widget_root" ]]; then
-  installed_widget_matches "$installed_widget_root" \
-    || fail "local_metadata_invalid" "installed widget cannot be safely backed up"
-fi
 widget_backup="$(snapshot_widget_package "$installed_widget_root")" \
   || fail "package_install_failed" "could not back up installed widget; update stopped"
 install_succeeded=false

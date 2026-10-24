@@ -930,6 +930,9 @@ fields; track proposed extensions in the issue tracker.
   notification opens the release page on GitHub when clicked, where supported.
   Failed upgrades restore the previous widget package so installation can be
   retried. A failed first installation removes its partial package.
+  Updates launched from a checkout also compare against the installed per-user
+  package and recheck it after downloading, so a different checkout version or
+  a concurrent update cannot cause a downgrade or redundant reinstall.
   A failed updater process cannot announce success, advance the successful-check
   time, or clear a known update offer, even if its JSON reports success.
 
