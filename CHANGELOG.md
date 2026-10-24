@@ -19,6 +19,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep managed CLI installation and selection working when the data directory
+  contains parent segments or symbolic links.
 - Recognize installed Ollama models from registries with a port in AI Insights
   connection tests when the model name omits its default `:latest` tag.
 - Preserve the managed CLI rollback copy when reinstalling a retained release

@@ -101,6 +101,31 @@ class ManagedCliTests(unittest.TestCase):
         self.assertFalse(cli.owns_command(""))
         self.assertFalse(cli.owns_command("/usr/bin/codexbar"))
 
+    def test_install_normalizes_data_home_before_returning_the_selected_path(self):
+        data = self.base / "data"
+        data.mkdir()
+        expected = str(data / "codexbar-plasma/cli/current/codexbar")
+        for location in (str(data / ".." / "data"), "/" + str(data)):
+            with self.subTest(location=location), patch.dict(os.environ, {"XDG_DATA_HOME": location}):
+                result = self.operation("install")
+                self.assertIn(result["status"], ("installed", "ready"))
+                self.assertEqual(result["path"], expected)
+                self.assertTrue(cli.owns_command(result["path"]))
+                self.assertTrue(cli.owns_command(str(Path(location) / "codexbar-plasma/cli/current/codexbar")))
+                self.assertTrue(os.access(result["path"], os.X_OK))
+
+    def test_data_home_parent_segments_preserve_symlink_resolution(self):
+        nested = self.base / "nested"
+        (nested / "child").mkdir(parents=True)
+        alias = self.base / "alias"
+        alias.symlink_to(nested / "child", target_is_directory=True)
+        with patch.dict(os.environ, {"XDG_DATA_HOME": str(alias / ".." / "data")}):
+            result = self.operation("install")
+            self.assertEqual(result["status"], "installed")
+            self.assertEqual(result["path"], str(nested / "data/codexbar-plasma/cli/current/codexbar"))
+            self.assertTrue(cli.owns_command(result["path"]))
+        self.assertFalse((self.base / "data/codexbar-plasma").exists())
+
     def test_select_existing_copy_is_offline_even_during_an_update(self):
         self.operation("install")
         with (self.root / ".lock").open("w") as lock, \
