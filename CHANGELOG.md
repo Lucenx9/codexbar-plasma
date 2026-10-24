@@ -21,6 +21,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Preserve a provider's selected cost-history day and expanded details when
+  Month to date or All history gains another day during a refresh.
 - Avoid false incident notifications when a provider's status page cannot be
   reached, including repeated network failures and startup without status data.
 - Keep managed CLI installation and selection working when the data directory

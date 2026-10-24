@@ -387,6 +387,51 @@ class CostSectionTests(unittest.TestCase):
     }
     ''')
 
+    def test_calendar_history_growth_preserves_provider_selection(self):
+        self.run_fixture('''
+    function test_calendarGrowth_data() {
+        return [{tag: "month-to-date", period: "month-to-date"},
+            {tag: "all", period: "all"}];
+    }
+    function test_calendarGrowth(data) {
+        function snapshot(day) {
+            var daily = [];
+            for (var i = 1; i <= day; i++)
+                daily.push({date: "2026-09-0" + i, totalCost: i, totalTokens: i * 10});
+            var payload = [{provider: "codex", reportingPeriod: data.period,
+                historyDays: day, updatedAt: "2026-09-0" + day, daily: daily}];
+            return Object.assign({}, CostResponse.response(JSON.stringify(payload), "", 30, 0).costs.codex,
+                {windowLabel: data.period, hintLine: ""});
+        }
+        testCase.providerData = {provider: "codex", tokenCost: snapshot(2)};
+        var subject = createTemporaryObject(providerFactory, testCase);
+        verify(subject !== null);
+        var section = findChild(subject, "providerLocalCostSection");
+        var chart = findChild(subject, "providerCostChart");
+        section.detailsExpanded = true;
+        chart.selectedIndex = 1;
+        compare(section.selectedDay.label, "2026-09-02");
+
+        testCase.providerData = {provider: "codex", tokenCost: snapshot(3)};
+        compare(section.tokenCost.historyDays, 3);
+        compare(chart.selectedIndex, 1);
+        compare(section.selectedDay.label, "2026-09-02");
+        compare(section.detailsExpanded, true);
+
+        // Choosing another range still retires both the pin and disclosure.
+        testCase.providerData = {provider: "codex", tokenCost: Object.assign({}, snapshot(3),
+            {period: "", historyDays: 3})};
+        compare(chart.selectedIndex, -1);
+        compare(section.detailsExpanded, false);
+        section.detailsExpanded = true;
+        chart.selectedIndex = 1;
+        testCase.providerData = {provider: "codex", tokenCost: Object.assign({}, snapshot(3),
+            {period: "", historyDays: 7})};
+        compare(chart.selectedIndex, -1);
+        compare(section.detailsExpanded, false);
+    }
+    ''')
+
     def test_provider_rows_state_excluded_requests(self):
         self.run_fixture('''
     // Official per-day and per-model incomplete-request counts reach their
