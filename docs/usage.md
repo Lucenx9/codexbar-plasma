@@ -819,7 +819,9 @@ fields; track proposed extensions in the issue tracker.
   that filtering may have hidden a path separator. Recognized identifiers are
   redacted. Credential filtering covers secret-key and secret-access-key
   assignments, including `AWS_SECRET_ACCESS_KEY` and `secretAccessKey`, in CLI
-  messages, Diagnostics, and shared reports.
+  messages, Diagnostics, and shared reports. It also recognizes credential names
+  inside escaped JSON strings; an escaped quoted value removes the rest of its
+  line to avoid retaining fragments of the secret.
   The local **Check versions** display still shows the full path.
   Versions come from offline `kinfo`, installed Debian package metadata when
   available, `kf6-config`, and Qt 6 `qtpaths`; unavailable versions remain unknown.
