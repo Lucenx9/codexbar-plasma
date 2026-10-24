@@ -41,7 +41,7 @@ ColumnLayout {
 
     RowLayout {
         Layout.fillWidth: true
-        spacing: Kirigami.Units.smallSpacing
+        spacing: Kirigami.Units.smallSpacing / 2
 
         PlainPlasmaLabel {
             visible: !accountsPanel.largeAccountList

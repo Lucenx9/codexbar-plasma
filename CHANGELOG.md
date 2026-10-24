@@ -21,6 +21,7 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Align accounts header control spacing with other popup section headers.
 - Keep keyboard focus on a provider tab when refreshed usage changes its values
   without changing the provider order.
 - Repaint chart guide lines when the theme text color changes, including when
