@@ -39,7 +39,7 @@ UNSUPPORTED = frozenset(("asset_missing", "unsupported_platform"))
 def root_path():
     data = os.environ.get("XDG_DATA_HOME", "")
     base = Path(data) if data.startswith("/") else Path.home() / ".local/share"
-    return base / "codexbar-plasma/cli"
+    return Path(os.path.realpath(base)) / "codexbar-plasma/cli"
 
 
 def private_directory(path):
