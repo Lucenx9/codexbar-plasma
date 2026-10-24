@@ -976,7 +976,9 @@ Preparation does not repair a damaged existing copy automatically.
 
 **General → Managed CLI → Install and select managed CLI** installs the latest
 stable official Linux release under `$XDG_DATA_HOME/codexbar-plasma/cli`, falling
-back to `~/.local/share/codexbar-plasma/cli`. When the selected command is a
+back to `~/.local/share/codexbar-plasma/cli`. The base data directory is resolved
+before installation, preserving symbolic-link targets and returning a command
+path without parent segments. When the selected command is a
 working external copy, the widget first asks for confirmation: installing keeps
 that copy for outside use but creates a second private copy, and later updates
 through the original method no longer affect the widget. General probes the

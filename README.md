@@ -263,8 +263,9 @@ resolved command, and recognized installation manager.
 
 **General → Managed CLI** can install and select a separate private CLI, update
 it immediately, or restore its previous version. An existing managed copy can be
-selected offline with **Use managed CLI**. Before a first install, an offline
-probe identifies the selected CLI so a working external copy receives a
+selected offline with **Use managed CLI**. Custom data directories are resolved
+before installation, including symbolic links and parent segments. Before a
+first install, an offline probe identifies the selected CLI so a working external copy receives a
 confirmation without needing a GitHub release check.
 If the probe cannot identify the CLI, installation waits until **Retry** succeeds
 or the selected command is confirmed missing. **Automatically update the

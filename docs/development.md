@@ -236,6 +236,9 @@ synchronized.
   for per-user locking, daily throttling, bounded official asset downloads, strict
   archive extraction, isolated-environment version probes, atomic activation and
   rollback. Only the exact managed command is eligible for update/rollback.
+  Resolve the base data directory before appending the private CLI root: staging
+  and returned command paths must agree even when `XDG_DATA_HOME` combines a
+  symbolic link with `..`. Keep the root's own symlink and ownership checks.
   Replacing a retained release keeps its backup outside temporary staging until
   the verified replacement is in place. A failed move restores that backup;
   a failed restore leaves `.retained-*` inside the private CLI root for manual
