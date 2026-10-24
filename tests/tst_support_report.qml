@@ -172,6 +172,28 @@ TestCase {
         verify(text.indexOf("next") !== -1, text)
     }
 
+    // CLI errors may embed an upstream JSON body as an escaped JSON string,
+    // once or more, so identifier keys arrive followed by escaped quotes.
+    function test_identifiersInsideEscapedJsonNeverReachSharedText_data() {
+        var keys = ["account_id", "accountId", "org_id", "organization_id", "workspace_id", "project_id"]
+        var rows = []
+        for (var k = 0; k < keys.length; k++) {
+            var body = {}
+            body[keys[k]] = "LEAKA one, LEAKB; \"LEAKC\" tail"
+            var once = JSON.stringify({message: "HTTP 403: " + JSON.stringify(body)})
+            rows.push({tag: keys[k] + "-once", input: once})
+            rows.push({tag: keys[k] + "-twice", input: JSON.stringify({error: once})})
+        }
+        return rows
+    }
+
+    function test_identifiersInsideEscapedJsonNeverReachSharedText(data) {
+        var text = SupportReport.sharedText(data.input, 1024)
+        verify(/LEAK[ABC]/.test(text) === false, text)
+        verify(text.indexOf("HTTP 403") !== -1, text)
+        verify(text.indexOf("identifier=[redacted]") !== -1, text)
+    }
+
     function test_unknownFieldsDoNotEnterCliNormalization() {
         var value = payload()
         value.selected.secret = {nested: {account: "PRIVATE_MARKER"}}

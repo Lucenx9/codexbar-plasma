@@ -47,7 +47,9 @@ function sharedText(value, limit) {
         // marker as ambiguous too, and never guess either path boundary.
         .replace(/^[^\r\n]*(?:\/|\[redacted\])[^\r\n]*/gim, redactedDiagnosticLine)
         .replace(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, "[email]")
-        .replace(/\b(?:account|org|organization|workspace|project)[-_ ]?id["']?\s*[:=]\s*(?:"(?:[^"\\\r\n]|\\.)*"?|'(?:[^'\\\r\n]|\\.)*'?|[^\s,;]+)/gi, "identifier=[redacted]")
+        // Escaped JSON embedded in a CLI error quotes keys and values with
+        // backslashes; as in SafeText, such a value redacts the rest of the line.
+        .replace(/\b(?:account|org|organization|workspace|project)[-_ ]?id\\*["']?\s*[:=]\s*(?:"(?:[^"\\\r\n]|\\.)*"?|'(?:[^'\\\r\n]|\\.)*'?|\\+["'][^\r\n]*|[^\s,;]+)/gi, "identifier=[redacted]")
         .replace(/\b(?:acct|org|proj|workspace)_[A-Za-z0-9_-]+\b/g, "[identifier]")
         .replace(/\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/g, "[token]")
         .replace(/\b(?:https?|wss?):\/\/[^\s"'<>]+/gi, "[url]")
