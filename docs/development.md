@@ -236,6 +236,10 @@ synchronized.
   for per-user locking, daily throttling, bounded official asset downloads, strict
   archive extraction, isolated-environment version probes, atomic activation and
   rollback. Only the exact managed command is eligible for update/rollback.
+  Rollback runs the same bounded, isolated version probe used for offline reuse
+  against the previous copy before writing activation state or switching the
+  symlink. A failed probe returns `no_previous` without changing either; the
+  managed CLI tests cover damaged executables, version mismatches and timeout.
   Resolve the base data directory before appending the private CLI root: staging
   and returned command paths must agree even when `XDG_DATA_HOME` combines a
   symbolic link with `..`. Keep the root's own symlink and ownership checks.

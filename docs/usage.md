@@ -1042,7 +1042,11 @@ Reasons stay generic; command output, paths and remote text are never shown.
 **Restore previous version** switches back immediately and prevents automatic
 reinstallation of the replaced version. A newer release remains eligible;
 **Update now** explicitly permits reinstalling the skipped version. The current
-and previous copies are retained. Other versions are removed by the next update
+and previous copies are retained. Before restoring, the helper checks the previous
+copy's executable version offline with a timeout. If that copy is damaged,
+non-executable, or does not match its receipt, it reports no previous CLI version
+available and keeps the active copy and automatic-update state unchanged.
+Other versions are removed by the next update
 check once they have been inactive for an hour, so recent CLI processes can
 finish using their resource bundles without old releases filling the disk.
 If reinstalling a retained version fails while moving its replacement into

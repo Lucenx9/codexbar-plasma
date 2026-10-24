@@ -276,7 +276,9 @@ managed CLI daily** is optional and off by default; it acts only while the
 managed command path is selected. Downloads match the host architecture/libc,
 verify GitHub SHA-256 metadata and the published checksum, accept only bounded
 expected archive entries (including the optional third-party notice), and
-switch atomically after a version probe. A restored version stays selected
+switch atomically after a version probe. Restoring a previous copy also verifies
+its executable version first; a failed check leaves the working CLI selected.
+A restored version stays selected
 until a newer release arrives or you explicitly update again. See
 [managed CLI details](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/usage.md#managed-cli).
 
