@@ -88,6 +88,43 @@ class ManagedCliTests(unittest.TestCase):
         self.assertEqual(self.operation("update")["version"], "0.63.0")
         self.assertFalse(list(self.root.glob(".retained-*")))
 
+    def test_rollback_rejects_unusable_previous_copy_without_changing_state(self):
+        self.operation("install")
+        self.publish("0.63.0")
+        self.operation("update")
+        before = os.readlink(self.root / "current")
+        state = (self.root / "state.json").read_bytes()
+        previous = cli.state_record(self.root)["previous"]
+        binary = self.root / previous / "CodexBarCLI"
+        for failure in ("not executable", "corrupt executable", "wrong version", "failed probe"):
+            with self.subTest(failure=failure):
+                binary.write_text('#!/bin/sh\nprintf "CodexBar 0.62.0\\n"\n')
+                binary.chmod(0o700)
+                if failure == "not executable":
+                    binary.chmod(0o600)
+                elif failure == "corrupt executable":
+                    binary.write_bytes(b"not an executable")
+                elif failure == "wrong version":
+                    binary.write_text('#!/bin/sh\nprintf "CodexBar 0.61.0\\n"\n')
+                else:
+                    binary.write_text('#!/bin/sh\nexit 1\n')
+                with patch.object(cli.cli_release, "latest_release") as remote:
+                    result = cli.run("rollback", self.command)
+                self.assertEqual(result, {"status": "no_previous"})
+                self.assertEqual(os.readlink(self.root / "current"), before)
+                self.assertEqual((self.root / "state.json").read_bytes(), state)
+                self.assertTrue(os.access(self.command, os.X_OK))
+                remote.assert_not_called()
+
+    def test_rollback_probe_timeout_keeps_current_copy(self):
+        self.operation("install")
+        self.publish("0.63.0")
+        self.operation("update")
+        before = cli.status(self.root)
+        with patch.object(cli.cli_release, "bounded_command", side_effect=ValueError("command_timeout")):
+            self.assertEqual(cli.run("rollback", self.command), {"status": "no_previous"})
+        self.assertEqual(cli.status(self.root), before)
+
     def test_owns_command_resolves_canonical_probe_paths(self):
         self.operation("install")
         current = cli.installed(self.root)

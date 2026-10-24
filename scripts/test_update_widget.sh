@@ -602,6 +602,9 @@ if [[ "$concurrent_statuses" != "current,installed" ]] \
   exit 1
 fi
 
+# Integrity failures must target a newer release than the actual installed copy.
+printf '%s\n' '{"KPackageStructure":"Plasma/Applet","KPlugin":{"Id":"app.codexbar.plasma","Version":"0.1.0"}}' \
+  > "$XDG_DATA_HOME/plasma/plasmoids/app.codexbar.plasma/metadata.json"
 rm -f "$fixture_dir/install.marker"
 jq '
   (.assets[] | select(.name == "codexbar-plasma.plasmoid")).digest =

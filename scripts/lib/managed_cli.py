@@ -440,6 +440,9 @@ def run(action, command=""):
             current = installed(root)
             if not previous or not current:
                 return {"status": "no_previous"}
+            with tempfile.TemporaryDirectory(prefix="codexbar-cli-probe-") as home:
+                if not probe_version(root / previous["target"] / "codexbar", previous["version"], home):
+                    return {"status": "no_previous"}
             activate(root, previous["target"], state, current["target"], current["version"])
             return {**status(root), "status": "restored"}
         result = install(root, automatic=action == "automatic")

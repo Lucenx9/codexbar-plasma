@@ -35,6 +35,8 @@ For an existing checkout, `./install.sh` builds, installs, and restarts Plasma.
 
 From this checkout, `make update` installs the latest immutable GitHub release
 using the bundled helper. It does not pull Git changes or install local edits.
+Install comparisons use the existing per-user package version, not the checkout's
+metadata, and recheck that package after acquiring the installation lock.
 For those, use `make install` or `./install.sh`. Release-package users can use
 [the widget's update settings](../README.md#update) without a checkout.
 
@@ -236,6 +238,10 @@ synchronized.
   for per-user locking, daily throttling, bounded official asset downloads, strict
   archive extraction, isolated-environment version probes, atomic activation and
   rollback. Only the exact managed command is eligible for update/rollback.
+  Rollback runs the same bounded, isolated version probe used for offline reuse
+  against the previous copy before writing activation state or switching the
+  symlink. A failed probe returns `no_previous` without changing either; the
+  managed CLI tests cover damaged executables, version mismatches and timeout.
   Resolve the base data directory before appending the private CLI root: staging
   and returned command paths must agree even when `XDG_DATA_HOME` combines a
   symbolic link with `..`. Keep the root's own symlink and ownership checks.

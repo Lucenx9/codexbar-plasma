@@ -455,6 +455,55 @@ exit 22
                 self.assertEqual(json.loads(result.stdout)["status"], expected)
                 self.assertEqual(result.stderr, "")
 
+    def test_checkout_update_compares_the_installed_package(self):
+        metadata = self.root / "checkout.json"
+        self.installed.mkdir(parents=True)
+        for checkout, installed, expected in (("0.1.0", "10.0.0", "current"),
+                                               ("0.1.0", "9.9.9", "current"),
+                                               ("10.0.0", "1.0.0", "installed")):
+            with self.subTest(checkout=checkout, installed=installed):
+                metadata.write_text(json.dumps({"KPlugin": {"Version": checkout}}))
+                (self.installed / "metadata.json").write_text(json.dumps({
+                    "KPackageStructure": "Plasma/Applet",
+                    "KPlugin": {"Id": "app.codexbar.plasma", "Version": installed}}))
+                (self.root / "calls").write_text("")
+                result = subprocess.run([str(self.bin / "bash"), str(SCRIPT), "--install",
+                                         "--metadata", str(metadata)], env=self.env,
+                                        text=True, capture_output=True, timeout=30)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(json.loads(result.stdout)["status"], expected)
+                self.assertEqual(json.loads((self.installed / "metadata.json").read_text())
+                                 ["KPlugin"]["Version"], installed if expected == "current" else "9.9.9")
+                if expected == "current":
+                    self.assertEqual(self.calls(), "")
+
+    def test_checkout_update_rechecks_the_installed_package_after_download(self):
+        metadata = self.root / "checkout.json"
+        metadata.write_text(json.dumps({"KPlugin": {"Version": "0.1.0"}}))
+        self.installed.mkdir(parents=True)
+        (self.installed / "metadata.json").write_text(json.dumps({
+            "KPackageStructure": "Plasma/Applet",
+            "KPlugin": {"Id": "app.codexbar.plasma", "Version": "1.0.0"}}))
+        curl = self.bin / "curl"
+        curl.write_text(curl.read_text() + '''
+if [[ "$url" == *.plasmoid ]]; then
+  python3 - <<'INNER'
+import json, os, pathlib
+metadata = pathlib.Path(os.environ["XDG_DATA_HOME"]) / "plasma/plasmoids/app.codexbar.plasma/metadata.json"
+value = json.loads(metadata.read_text())
+value["KPlugin"]["Version"] = "10.0.0"
+metadata.write_text(json.dumps(value))
+INNER
+fi
+''')
+        result = subprocess.run([str(self.bin / "bash"), str(SCRIPT), "--install",
+                                 "--metadata", str(metadata)], env=self.env,
+                                text=True, capture_output=True, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout)["status"], "current")
+        self.assertEqual(json.loads(result.stdout)["localVersion"], "10.0.0")
+        self.assertEqual(self.calls(), "")
+
     def test_update_mode_missing_jq_still_returns_json(self):
         (self.bin / "jq").unlink()
         result = subprocess.run([str(self.bin / "bash"), str(SCRIPT), "--check"],
@@ -645,7 +694,7 @@ esac
 if [[ "$file" == codexbar-plasma.plasmoid ]]; then
   winner="$XDG_DATA_HOME/plasma/plasmoids/app.codexbar.plasma"
   mkdir -p "$winner"
-  printf '%s' '{"KPlugin":{"Version":"9.9.9"}}' > "$winner/metadata.json"
+  printf '%s' '{"KPackageStructure":"Plasma/Applet","KPlugin":{"Id":"app.codexbar.plasma","Version":"9.9.9"}}' > "$winner/metadata.json"
 fi
 python3 - "$FIXTURE/$file" "$output" <<'INNER'
 import pathlib, sys
