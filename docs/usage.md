@@ -307,6 +307,14 @@ Popup refreshes and settings checks run independently for each widget instance.
 Starting the same check in another widget or reopening a settings page does not
 reuse an earlier request's result.
 
+With GNU `timeout` available, usage, cost, session, account, and provider-list
+requests also have a process deadline. A hung CLI and its children receive a
+termination signal two seconds after the request's UI deadline, then are killed
+if still running one second later. Cancelling a request or closing the widget
+retires its result immediately and leaves this process deadline in place.
+Without GNU `timeout`, the UI deadline still applies, but cannot stop a hung
+process.
+
 When no provider data is available, the popup offers **Configure providers**
 with a hint to open **Providers** in widget settings. A confirmed empty list of
 enabled providers uses this setup state and still clears previous quotas and

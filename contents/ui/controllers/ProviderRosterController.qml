@@ -75,7 +75,8 @@ Item {
             "--json-only"
         ].join(" ")
         commandRunSerial += 1
-        var sourceName = CommandLedger.withRunNonce(command, commandRunSerial, Date.now() + "-" + Math.random())
+        var bounded = Guards.boundedShellCommand(command, providerRosterCommandTimeoutMs / 1000 + 2, 1, true)
+        var sourceName = CommandLedger.withRunNonce(bounded, commandRunSerial, Date.now() + "-" + Math.random())
         var descriptor = CommandLedger.descriptor(
             "enabledProviderRoster", "", Date.now(),
             providerRosterCommandTimeoutMs, providerRosterCommandTimeoutMs)
