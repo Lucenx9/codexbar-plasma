@@ -9,6 +9,11 @@ TestCase {
     visible: true
     property var componentHolders: []
 
+    Component {
+        id: paintSpyComponent
+        SignalSpy { signalName: "painted" }
+    }
+
     function cleanupTestCase() {
         for (var i = 0; i < componentHolders.length; i++) {
             componentHolders[i].destroy()
@@ -18,7 +23,12 @@ TestCase {
     function createChart(properties) {
         var component
         try {
-            var holder = Qt.createQmlObject('import QtQuick; import "../contents/ui/components" as Components; ' + 'QtObject { property Component chartComponent: Component {' + ' Components.InteractiveChart { function i18n(text) { return text } } } }', this, Qt.resolvedUrl("InteractiveChartTest.qml"))
+            var holder = Qt.createQmlObject('import QtQuick; import org.kde.kirigami as Kirigami; '
+                + 'import "../contents/ui/components" as Components; '
+                + 'QtObject { property Component chartComponent: Component {'
+                + ' Components.InteractiveChart { function i18n(text) { return text } '
+                + 'function setThemeTextColor(value) { Kirigami.Theme.inherit = false; Kirigami.Theme.textColor = value } '
+                + '} } }', this, Qt.resolvedUrl("InteractiveChartTest.qml"))
             component = holder.chartComponent
             componentHolders.push(holder)
         } catch (error) {
@@ -62,6 +72,33 @@ TestCase {
         verify(waitForRendering(plot))
         var alpha = plot.getContext("2d").getImageData(0, 2, 1, 1).data[3]
         compare(alpha > 0, data.guide)
+    }
+
+    function test_themeChangeRepaintsGuidesWithAFixedAccent() {
+        var chart = createChart({
+            applet: {secondaryTextOpacity: 0.7, canvasColor: function(color) { return color.toString() }},
+            width: 300,
+            points: [{label: "First", value: 1}, {label: "Peak", value: 10}],
+            accent: "blue"
+        })
+        if (!chart)
+            return
+        chart.setThemeTextColor("#ff0000")
+        var plot = chart.nextItemInFocusChain(true)
+        var paints = createTemporaryObject(paintSpyComponent, this, {target: plot})
+        tryCompare(plot, "available", true)
+        tryVerify(function() { return paints.count > 0 })
+        var before = plot.getContext("2d").getImageData(0, 2, 1, 1).data
+        compare(before[0], 255)
+        compare(before[1], 0)
+        paints.clear()
+
+        chart.setThemeTextColor("#00ff00")
+        tryVerify(function() { return paints.count > 0 })
+        compare(chart.accent.toString(), "#0000ff")
+        var after = plot.getContext("2d").getImageData(0, 2, 1, 1).data
+        compare(after[0], 0)
+        compare(after[1], 255)
     }
 
     function test_firstInspectionKeepsPlotGeometry(data) {

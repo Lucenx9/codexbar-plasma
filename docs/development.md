@@ -1316,7 +1316,12 @@ wall time on the same coverage; concurrent job durations are not additive.
 
 `tests/tst_interactive_chart.qml` checks that first pointer and keyboard
 inspection preserve the plot position and chart height. It also checks that
-leaving the plot or clearing its points preserves the reserved readout space.
+leaving the plot or clearing its points preserves the reserved readout space,
+and reads painted pixels after a theme text-color change with a fixed accent.
+`tests/test_provider_tab_refresh.py` executes the production provider-tab
+Repeater to verify that changed usage preserves its focused delegate and updates
+its meter and accessible name. Reordered, replaced, and removed providers must
+activate the current provider without binding or lifecycle warnings.
 
 ## Popup smoke tests
 
