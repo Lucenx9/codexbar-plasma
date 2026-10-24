@@ -1618,6 +1618,17 @@ Item {
                                     icon.name: modelData.icon
                                     enabled: modelData.enabled
                                     onClicked: applet.performAction(modelData)
+
+                                    Accessible.checkable: modelData.expandable === true
+                                    Accessible.checked: modelData.expanded === true
+                                }
+
+                                Components.StatusComponentsList {
+                                    visible: modelData.expanded === true
+                                    Layout.fillWidth: true
+                                    applet: fullRoot.applet
+                                    statusState: applet.statusComponents
+                                    onOpenRequested: applet.performAction("status-page")
                                 }
                             }
                         }

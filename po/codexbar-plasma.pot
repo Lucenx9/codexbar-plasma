@@ -1957,6 +1957,42 @@ msgstr ""
 msgid "Activity heatmap"
 msgstr ""
 
+#: contents/ui/components/StatusComponentsList.qml
+msgid "Operational"
+msgstr ""
+
+#: contents/ui/components/StatusComponentsList.qml
+msgid "Degraded performance"
+msgstr ""
+
+#: contents/ui/components/StatusComponentsList.qml contents/ui/main.qml
+msgid "Partial outage"
+msgstr ""
+
+#: contents/ui/components/StatusComponentsList.qml contents/ui/main.qml
+msgid "Major outage"
+msgstr ""
+
+#: contents/ui/components/StatusComponentsList.qml contents/ui/main.qml
+msgid "Maintenance"
+msgstr ""
+
+#: contents/ui/components/StatusComponentsList.qml contents/ui/main.qml
+msgid "Status unknown"
+msgstr ""
+
+#: contents/ui/components/StatusComponentsList.qml
+msgid "Loading service status…"
+msgstr ""
+
+#: contents/ui/components/StatusComponentsList.qml
+msgid "Service status is unavailable."
+msgstr ""
+
+#: contents/ui/components/StatusComponentsList.qml
+msgid "Open Status Page"
+msgstr ""
+
 #: contents/ui/components/TimeLabels.qml
 msgctxt ""
 "Full regional date %1 and clock time %2 for a subscription renewal or "
@@ -3722,23 +3758,7 @@ msgid "Reset unavailable"
 msgstr ""
 
 #: contents/ui/main.qml
-msgid "Partial outage"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Major outage"
-msgstr ""
-
-#: contents/ui/main.qml
 msgid "Critical issue"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Maintenance"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Status unknown"
 msgstr ""
 
 #: contents/ui/main.qml

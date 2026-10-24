@@ -287,6 +287,18 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   [Source comparison](docs/research/2026-09-09-macos-parity-0.57.0.md#automatic-balance-text-needs-a-generic-contract);
   [0.60.4 evidence](docs/research/2026-09-16-macos-parity-0.60.4.md#linux-cli-contract-changes-since-0580).
 
+### Status components
+
+- [ ] Read service components from an official CLI field. The 0.79.0 Linux
+  `usage --status` record and the v0.81.0 `ProviderStatusPayload` source emit
+  only `indicator`, `description`, `updatedAt`, and `url`, although the macOS
+  app's `ProviderStatusComponent` model carries grouped components for Claude,
+  Codex, and Augment. Plasma reads Claude and OpenAI components through
+  `scripts/status-components.py` meanwhile. Done when a released CLI emits the
+  component tree and the widget consumes it, removing the helper and covering
+  every provider the CLI describes.
+  [Payload source](https://github.com/steipete/CodexBar/blob/v0.81.0/Sources/CodexBarCLI/CLIPayloads.swift).
+
 ## Plasma-native work with verified CLI contracts
 
 - [ ] Preserve and present optional detail-row severity. Official Linux CLI

@@ -3509,6 +3509,26 @@ msgstr "Painel de uso"
 msgid "Status Page"
 msgstr "Página de status"
 
+#: contents/ui/components/StatusComponentsList.qml
+msgid "Operational"
+msgstr "Operacional"
+
+#: contents/ui/components/StatusComponentsList.qml
+msgid "Degraded performance"
+msgstr "Desempenho degradado"
+
+#: contents/ui/components/StatusComponentsList.qml
+msgid "Loading service status…"
+msgstr "Carregando o status dos serviços…"
+
+#: contents/ui/components/StatusComponentsList.qml
+msgid "Service status is unavailable."
+msgstr "O status dos serviços não está disponível."
+
+#: contents/ui/components/StatusComponentsList.qml
+msgid "Open Status Page"
+msgstr "Abrir página de status"
+
 #: contents/ui/main.qml
 msgid "Changelog"
 msgstr "Registro de alterações"

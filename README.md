@@ -137,6 +137,9 @@ for its limits.
   still work, but disconnecting a request cannot terminate a hung CLI process.
 - Offline Diagnostics support-report collection: `python3` and GNU `timeout`.
   Other Diagnostics controls remain available without this report helper.
+- Service components under Status Page for Claude and OpenAI: `python3` and
+  GNU `timeout`. Without them, the list reports the status as unavailable and
+  still opens the page.
 - Optional AI Insights only: `python3`, GNU `timeout`, and the `QtCore` QML
   module for its private snapshot handoff; for OpenRouter or
   OpenAI keys also `kdialog`, `secret-tool`, and a Secret Service provider such

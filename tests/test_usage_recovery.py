@@ -319,13 +319,15 @@ class UsageRecoveryTests(unittest.TestCase):
         source = main.read_text()
         # Closing the popup dismisses account discovery explanations.
         self.assertRegex(source, r"onExpandedChanged: \{\s*if \(!expanded\) \{\s*"
-                                 r"accountsController\.dismissNotices\(\)")
+                                 r"accountsController\.dismissNotices\(\)\s*collapseStatusComponents\(\)")
         surface.texts = {main: source}
         functions = []
         for name in ("actionRows", "providerAccountAction", "providerDocsUrl",
                      "providerLoginUrl", "providerStatusUrl", "safeStatusUrl",
                      "providerKey", "providerMapKey", "accountLoadingForProvider",
-                     "accountAvailabilityForProvider", "performAction"):
+                     "accountAvailabilityForProvider", "performAction",
+                     "toggleStatusComponents", "finishStatusComponents",
+                     "collapseStatusComponents"):
             signature = re.search(r"function " + name + r"\([^)]*\)", source).group(0)
             functions.append(signature + " {" + surface.function_body(name) + "}")
         qml = MENU_QML.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
@@ -347,13 +349,23 @@ MENU_QML = '''import QtQuick
 import QtTest
 import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
 import "SOURCE_URL/ProviderIdentity.js" as ProviderIdentity
+import "SOURCE_URL/StatusComponents.js" as StatusComponents
 TestCase {
     name: "PopupMenuRows"
+    QtObject {
+        id: statusComponentsProcess
+        property var started: []
+        property int cancelled: 0
+        function start(command, context, timeoutMs) { started.push({command: command, context: context}); return true; }
+        function cancel() { cancelled += 1; }
+    }
     QtObject {
         id: root
         property bool showProviderChangelogs: false
         property var selectedProviderData: null
         property var openedUrls: []
+        property var statusComponents: ({ provider: "", loading: false, failed: false, rows: [] })
+        property url statusComponentsScriptUrl: "file:///widget/scripts/status-components.py"
         property var accountsController: QtObject {
             property var availability: ({})
             function loadingForProvider(key) { return false; }
@@ -408,6 +420,36 @@ TestCase {
         root.openedUrls = [];
         root.performAction({action: "status"});
         compare(root.openedUrls, [item.statusUrl]);
+    }
+    // Claude and OpenAI pages expand into components; other providers keep
+    // opening the page. A late result for a collapsed list is ignored.
+    function test_statusComponentsExpandOnlyForSupportedPages() {
+        var cursor = menuItem("cursor");
+        compare(root.actionRows(cursor).filter(function(row) { return row.action === "status"; })[0].expandable, false);
+        var codex = menuItem("codex");
+        root.selectedProviderData = codex;
+        root.openedUrls = [];
+        var row = root.actionRows(codex).filter(function(row) { return row.action === "status"; })[0];
+        compare(row.expandable, true);
+        compare(row.expanded, false);
+        root.performAction(row);
+        compare(root.openedUrls, []);
+        compare(root.statusComponents.provider, "codex");
+        compare(root.statusComponents.loading, true);
+        var request = statusComponentsProcess.started[statusComponentsProcess.started.length - 1];
+        verify(/--provider openai$/.test(request.command));
+        compare(root.actionRows(codex).filter(function(row) { return row.action === "status"; })[0].expanded, true);
+        root.finishStatusComponents({provider: "claude"}, [{name: "Late", indicator: "none", children: []}]);
+        compare(root.statusComponents.loading, true);
+        root.finishStatusComponents(request.context, null);
+        compare(root.statusComponents.failed, true);
+        root.performAction("status-page");
+        compare(root.openedUrls, [root.providerStatusUrl("codex")]);
+        root.performAction(row);
+        compare(root.statusComponents.provider, "");
+        verify(statusComponentsProcess.cancelled > 0);
+        root.finishStatusComponents(request.context, []);
+        compare(root.statusComponents.provider, "");
     }
 }
 '''

@@ -775,6 +775,15 @@ fields; track proposed extensions in the issue tracker.
   refresh omits status, a previously retained outage is hidden; this is not
   evidence of recovery. Current status can still report an incident when quota
   fetching fails.
+- Status Page in the provider actions expands, for Claude, Claude Platform,
+  Codex, and OpenAI, into the service components of the public status page:
+  status.claude.com for Claude and status.openai.com for Codex and OpenAI, whose
+  groups such as APIs, ChatGPT, and Codex expand into their components. Each
+  component shows a colored dot and its state. The list is read when expanded,
+  through `scripts/status-components.py`, because the official CLI reports only
+  the overall status. Open Status Page at the end of the list opens the site;
+  other providers keep opening it directly. A page that cannot be read shows
+  the status as unavailable and leaves the provider's CLI status unchanged.
 - Optional quota warning markers on usage bars.
 - Optional Plasma notifications for provider status incidents, configurable
   quota crossings, predicted quota exhaustion from CLI pace data, and when a

@@ -3555,6 +3555,26 @@ msgstr "Nutzungsübersicht"
 msgid "Status Page"
 msgstr "Statusseite"
 
+#: contents/ui/components/StatusComponentsList.qml
+msgid "Operational"
+msgstr "Betriebsbereit"
+
+#: contents/ui/components/StatusComponentsList.qml
+msgid "Degraded performance"
+msgstr "Eingeschränkte Leistung"
+
+#: contents/ui/components/StatusComponentsList.qml
+msgid "Loading service status…"
+msgstr "Dienststatus wird geladen…"
+
+#: contents/ui/components/StatusComponentsList.qml
+msgid "Service status is unavailable."
+msgstr "Der Dienststatus ist nicht verfügbar."
+
+#: contents/ui/components/StatusComponentsList.qml
+msgid "Open Status Page"
+msgstr "Statusseite öffnen"
+
 #: contents/ui/main.qml
 msgid "Changelog"
 msgstr "Änderungsprotokoll"

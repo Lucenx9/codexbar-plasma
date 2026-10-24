@@ -10,6 +10,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Added
+
+- Expand Status Page for Claude, Claude Platform, Codex, and OpenAI into the
+  status of each service component read from the public status page, with
+  OpenAI's grouped components collapsible, and open the page from the list.
+
 ### Security
 
 - Redact secret-key and secret-access-key assignments, including AWS environment
