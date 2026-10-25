@@ -179,9 +179,9 @@ KCM.SimpleKCM {
                         Components.PlainControlsLabel {
                             objectName: modelData
                             Layout.fillWidth: true
-                            text: critical
-                                ? i18n("Critical from %1%", page.cfg_quotaCriticalPercent.toLocaleString(Qt.locale(), 'f', 0))
-                                : i18n("Warning from %1%", page.cfg_quotaWarningPercent.toLocaleString(Qt.locale(), 'f', 0))
+                            text: !critical
+                                ? i18n("Warning from %1%", page.cfg_quotaWarningPercent.toLocaleString(Qt.locale(), 'f', 0))
+                                : i18n("Critical from %1%", page.cfg_quotaCriticalPercent.toLocaleString(Qt.locale(), 'f', 0))
                             font: Kirigami.Theme.smallFont
                             wrapMode: Text.WordWrap
                         }
