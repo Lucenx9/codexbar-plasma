@@ -103,7 +103,7 @@ TestCase {
         wait(0);
     }
 
-    function test_existingManagedCopyCanBeSelectedWithoutAProcess() {
+    function test_existingManagedCopyNeedsSuccessfulVerification() {
         var page = createPage("../contents/ui/configGeneral.qml", {cfg_commandPath: "/usr/bin/codexbar"});
         if (!page) return;
         var managed = findChild(page, "managedCliController");
@@ -114,7 +114,16 @@ TestCase {
             status: "ready", version: "0.62.0", previous: "", path: path})});
         var button = findChild(page, "installManagedCliButton");
         compare(button.text, "Use managed CLI");
+        managed.scriptUrl = "file:///nonexistent-helper.py";
         button.clicked();
+        verify(managed.busy);
+        compare(managed.activeAction, "install");
+        compare(page.cfg_commandPath, "/usr/bin/codexbar");
+        tryVerify(function() { return !managed.busy; });
+        compare(page.cfg_commandPath, "/usr/bin/codexbar");
+        managed.activeSource = "verified";
+        managed.accept("verified", {"exit code": 0, stdout: JSON.stringify({
+            status: "ready", version: "0.62.0", previous: "", path: path})});
         compare(page.cfg_commandPath, path);
         verify(!managed.busy);
         verify(managed.selected);

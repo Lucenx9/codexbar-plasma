@@ -236,6 +236,14 @@ synchronized.
   local CLI enables first installation; failed probes show an offline Retry action.
   `test_managed_cli_install_confirmation.py`
   exercises these page interactions with real synthetic CLI version banners.
+  Selecting a prepared managed copy also runs the helper's `install` action,
+  which verifies existing copies offline before emitting `installed(path)`.
+  The page must not select a path from the metadata-only `status` response.
+  The same tests exercise the real helper with healthy, non-executable,
+  corrupt, and version-mismatched prepared copies, without network access.
+  Restoring defaults explicitly retires the request, including when the command
+  is already the default and its change handler would not run; a delayed-helper
+  test checks that the reset selection survives completion.
   `scripts/manage-cli.py` calls `scripts/lib/managed_cli.py`
   for per-user locking, daily throttling, bounded official asset downloads, strict
   archive extraction, isolated-environment version probes, atomic activation and
