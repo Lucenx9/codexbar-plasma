@@ -27,7 +27,8 @@ snapshot without a usable `updatedAt` keeps its Today amounts.
   Quota-week sums mark trailing days after a stale snapshot, the last scanned
   day of a snapshot taken before today, and measured days with excluded
   incomplete requests as partial; a newer usage refresh does not make those
-  costs known.
+  costs known. Quota-week costs use the normalized totals' currency, which
+  remains available after privacy projection.
   Recent history rows show both available amounts, including zero, in either
   metric mode. The selected metric still controls row filtering and bar scaling.
   Bar scaling preserves finite proportions even for very large reported amounts.

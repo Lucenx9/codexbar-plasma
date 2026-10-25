@@ -19,6 +19,7 @@ import org.kde.plasma.components as PlasmaComponents
 import "SOURCE_URL/components" as Components
 import "SOURCE_URL/CostPresentation.js" as CostPresentation
 import "SOURCE_URL/CostResponse.js" as CostResponse
+import "SOURCE_URL/PrivacyPresentation.js" as Privacy
 TestCase {
     id: testCase
     name: "CostSections"
@@ -367,6 +368,47 @@ class CostSectionTests(unittest.TestCase):
         testCase.providerData = { provider: "codex", tokenCost: tokenCost,
             rows: [{ lane: "primary", windowMinutes: 300, resetsAt: new Date(reset).toISOString() }] };
         tryVerify(function() { return section.windows.length === 0 && !section.visible; });
+    }
+    ''')
+
+    def test_quota_weeks_keep_currency_in_privacy_mode(self):
+        self.run_fixture('''
+    function test_privateQuotaCurrency_data() {
+        return [
+            { tag: "euro", currency: "EUR", expected: "EUR 2" },
+            { tag: "dollar", currency: "USD", expected: "USD 2" }
+        ];
+    }
+    function test_privateQuotaCurrency(data) {
+        var scan = new Date(2026, 8, 17, 12).getTime();
+        var reset = new Date(2026, 8, 24).toISOString();
+        var parsed = CostResponse.response(JSON.stringify([{
+            provider: "codex", currencyCode: data.currency, historyDays: 1,
+            updatedAt: new Date(scan).toISOString(),
+            totals: { totalCost: 2, totalTokens: 100 },
+            daily: [{ date: "2026-09-17", totalCost: 2, totalTokens: 100 }]
+        }]), "", 1, 0);
+        compare(parsed.outcome, "success");
+        fakeApplet.panelClockMs = scan;
+        var subject = createTemporaryObject(providerFactory, testCase);
+        verify(subject !== null);
+        var all = [];
+        walkTree(subject, all);
+        var section = all.filter(function(item) { return item.objectName === "quotaWindowSection"; })[0];
+        verify(section !== undefined);
+        // Exercise the real projection on both transitions. Localized labels
+        // are supplied by main.qml after projection and do not affect amounts.
+        for (var privacy of [false, true, false]) {
+            var cost = Privacy.cost(parsed.costs.codex, privacy);
+            cost.windowLabel = "Today";
+            cost.hintLine = "";
+            testCase.providerData = { provider: "codex", tokenCost: cost,
+                rows: [{ lane: "secondary", windowMinutes: 10080, resetsAt: reset }] };
+            compare(section.windows.length, 1);
+            compare(section.windows[0].cost, 2);
+            // The fixture formatter exposes the currency passed by the view.
+            compare(section.amountText(section.windows[0]).split(" · ")[0], data.expected);
+        }
     }
     ''')
 

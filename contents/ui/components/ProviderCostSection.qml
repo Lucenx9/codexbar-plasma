@@ -447,7 +447,7 @@ ColumnLayout {
             return i18n("%1 - %2", instantText(window.startMs), instantText(window.endMs));
         }
         function amountText(window) {
-            var currency = tokenCostSection.tokenCost ? tokenCostSection.tokenCost.currency : "USD";
+            var currency = tokenCostSection.tokenCost ? tokenCostSection.tokenCost.totals.currency : "USD";
             var historyIncomplete = tokenCostSection.tokenCost
                 && tokenCostSection.tokenCost.historyCoverageEstablished === false;
             var cost = window.cost === null ? i18n("Cost unavailable")
