@@ -229,6 +229,8 @@ TestCase {
             fuzzyCompare(pixel.b, color.b, 0.02);
         }
 
+        compare(findChild(page, "quotaWarningLegendSwatch").color, Kirigami.Theme.neutralTextColor);
+        compare(findChild(page, "quotaCriticalLegendSwatch").color, Kirigami.Theme.negativeTextColor);
         verifyColorAt(60, Kirigami.Theme.highlightColor);
         verifyColorAt(80, Kirigami.Theme.neutralTextColor);
         verifyColorAt(95, Kirigami.Theme.negativeTextColor);

@@ -530,8 +530,9 @@ Provider-specific editable settings depend on the official CLI contract.
   diagnostics**, choose a **Source mode**, and select **Save**. The choices
   are Automatic, API, CLI, OAuth, and Web; CodexBar validates which modes
   the provider supports. Unsupported choices show an error without confirming
-  a save. The selector starts blank because the provider registry does not
-  expose the saved mode; inspect redacted settings to request source details.
+  a save. The selector starts at **Choose a source** because the provider
+  registry does not expose the saved mode; inspect redacted settings to
+  request source details.
   Changes are saved immediately, independently of Apply and Cancel. A successful
   save preserves provider enablement and credentials and invalidates cached
   usage through the existing provider-config revision. The source override in Diagnostics
@@ -846,8 +847,9 @@ fields; track proposed extensions in the issue tracker.
   with the KDE desktop style. They accept the regional locale's digits and
   grouping separators, including Arabic, Persian, and Bengali numerals.
   **Notifications** previews the quota warning and critical color ranges as
-  you edit their thresholds. The legend names both thresholds; the scale uses
-  your Plasma theme and mirrors in right-to-left layouts. **Apply** saves the
+  you edit their thresholds. The legend names both thresholds beside a swatch
+  of their color; the scale uses your Plasma theme and mirrors in right-to-left
+  layouts. **Apply** saves the
   pending values. The preview remains available when notifications are off,
   since the same thresholds also control usage-meter colors.
   **Diagnostics** also reports the widget version, and, after **Check

@@ -3747,6 +3747,10 @@ msgid "Web"
 msgstr "Web"
 
 #: contents/ui/configProviders.qml
+msgid "Choose a source"
+msgstr "Scegli una sorgente"
+
+#: contents/ui/configProviders.qml
 msgid ""
 "Choose a source to save. CodexBar validates support for this provider; "
 "Automatic clears its saved override. The source override in Diagnostics "

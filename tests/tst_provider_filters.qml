@@ -560,8 +560,10 @@ TestCase {
         page.handleCliVersionResult("CodexBar 0.73.0", 0);
         verify(box.visible);
         compare(box.currentIndex, -1);
+        compare(box.displayText, "Choose a source");
         verify(!save.enabled);
         box.currentIndex = 1;
+        compare(box.displayText, "API");
         verify(save.enabled);
         page.loading = true;
         verify(!box.enabled && !save.enabled);
