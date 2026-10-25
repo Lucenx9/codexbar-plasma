@@ -1054,8 +1054,12 @@ Changing the command dismisses a pending confirmation. Installation happens
 immediately;
 **Apply** or **OK** saves its `current/codexbar` path as the widget command.
 **Cancel** leaves the downloaded copy unused and preserves the saved command.
-If a managed copy already exists, **Use managed CLI** selects it offline without
-checking GitHub or downloading again. System, AUR, other package-manager copies,
+If a managed copy already exists, **Use managed CLI** verifies its executable
+version against its receipt offline before selecting it, without checking GitHub
+or downloading again. A damaged, non-executable, or mismatched copy reports the
+verification failure and leaves the selected command unchanged, just like the
+popup setup action. **Restore all defaults** cancels a pending selection so its
+late result cannot change the reset command. System, AUR, other package-manager copies,
 and provider configuration are unchanged.
 To return to an external copy, enter its path or `codexbar` in **Diagnostics**
 and apply. **Check versions** identifies the managed copy offline.

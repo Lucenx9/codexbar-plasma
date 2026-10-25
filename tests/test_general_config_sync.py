@@ -27,6 +27,7 @@ TestCase {
         property bool costHistoryRangeEditPending: false
         property bool costHistoryMetricEditPending: false
         property bool defaultsActionRequested: false
+        property QtObject managedCli: QtObject { function retire() {} }
         SOURCE_HANDLERS
         SOURCE_FUNCTIONS
     }}
