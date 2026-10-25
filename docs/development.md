@@ -1248,6 +1248,10 @@ opening check to the real Popup and Notifications pages, including the provider
 roster arriving after the Popup page opens and mirrored padding restoration on
 both pages. It also requires the viewport padding and, for the static
 Notifications content, the content height to stay constant across frames.
+It samples the Notifications color preview before and after pending threshold
+edits, including coincident thresholds and the 1%/100% limits in both layout
+directions. The preview uses sharp color boundaries, rather than a blended
+gradient that would imply intermediate warning states.
 The QML runner repeats both geometry files with the KDE desktop controls style
 because its scrollbar reserves viewport width, unlike the default overlay style.
 It also checks checkbox label text after the active style processes mnemonics,

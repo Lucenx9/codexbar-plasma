@@ -2705,6 +2705,20 @@ msgid "Thresholds also set warning colors and markers on usage meters."
 msgstr ""
 
 #: contents/ui/configNotifications.qml
+msgid "Color preview:"
+msgstr ""
+
+#: contents/ui/configNotifications.qml
+#, kde-format
+msgid "Warning from %1%"
+msgstr ""
+
+#: contents/ui/configNotifications.qml
+#, kde-format
+msgid "Critical from %1%"
+msgstr ""
+
+#: contents/ui/configNotifications.qml
 msgid "Enable Plasma notifications"
 msgstr ""
 

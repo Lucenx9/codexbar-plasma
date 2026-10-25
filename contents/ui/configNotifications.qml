@@ -99,6 +99,71 @@ KCM.SimpleKCM {
             wrapMode: Text.WordWrap
         }
 
+        ColumnLayout {
+            objectName: "quotaColorPreview"
+            Kirigami.FormData.label: i18n("Color preview:")
+            Kirigami.FormData.labelAlignment: Qt.AlignTop
+            Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            spacing: Kirigami.Units.smallSpacing
+
+            Rectangle {
+                id: colorScale
+                objectName: "quotaColorScale"
+                Layout.fillWidth: true
+                Layout.preferredHeight: Kirigami.Units.smallSpacing * 2
+                radius: height / 2
+                Accessible.ignored: true
+                readonly property real firstBoundary: page.mirrored
+                    ? 1 - page.cfg_quotaCriticalPercent / 100 : page.cfg_quotaWarningPercent / 100
+                readonly property real secondBoundary: page.mirrored
+                    ? 1 - page.cfg_quotaWarningPercent / 100 : page.cfg_quotaCriticalPercent / 100
+                readonly property color lowColor: page.mirrored
+                    ? (page.cfg_quotaCriticalPercent === 100 ? Kirigami.Theme.neutralTextColor : Kirigami.Theme.negativeTextColor)
+                    : Kirigami.Theme.highlightColor
+                readonly property color highColor: page.mirrored
+                    ? Kirigami.Theme.highlightColor
+                    : (page.cfg_quotaCriticalPercent === 100 ? Kirigami.Theme.neutralTextColor : Kirigami.Theme.negativeTextColor)
+                readonly property color middleColor: page.cfg_quotaWarningPercent === page.cfg_quotaCriticalPercent
+                    ? highColor : Kirigami.Theme.neutralTextColor
+
+                gradient: Gradient {
+                    orientation: Gradient.Horizontal
+                    // Qt merges coincident stops; distinct positions keep the severity boundaries sharp.
+                    GradientStop { position: 0; color: colorScale.lowColor }
+                    GradientStop { position: Math.max(0, colorScale.firstBoundary - 0.000001); color: colorScale.lowColor }
+                    GradientStop { position: colorScale.firstBoundary; color: colorScale.middleColor }
+                    GradientStop { position: Math.max(colorScale.firstBoundary, colorScale.secondBoundary - 0.000001); color: colorScale.middleColor }
+                    GradientStop { position: colorScale.secondBoundary; color: colorScale.highColor }
+                    GradientStop { position: 1; color: colorScale.highColor }
+                }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: Kirigami.Units.largeSpacing
+
+                Components.PlainControlsLabel {
+                    objectName: "quotaWarningLegend"
+                    Layout.fillWidth: true
+                    Layout.preferredWidth: 1
+                    text: i18n("Warning from %1%", page.cfg_quotaWarningPercent.toLocaleString(Qt.locale(), 'f', 0))
+                    font: Kirigami.Theme.smallFont
+                    wrapMode: Text.WordWrap
+                }
+
+                Components.PlainControlsLabel {
+                    objectName: "quotaCriticalLegend"
+                    Layout.fillWidth: true
+                    Layout.preferredWidth: 1
+                    text: i18n("Critical from %1%", page.cfg_quotaCriticalPercent.toLocaleString(Qt.locale(), 'f', 0))
+                    font: Kirigami.Theme.smallFont
+                    wrapMode: Text.WordWrap
+                }
+            }
+        }
+
         Kirigami.Separator {
             Kirigami.FormData.label: i18n("Notifications")
             Kirigami.FormData.isSection: true

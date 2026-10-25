@@ -4015,3 +4015,17 @@ msgstr "Munito"
 #: contents/ui/controllers/ManagedCliController.qml
 msgid "The existing managed CLI could not be verified. Choose another CLI in Settings > Diagnostics."
 msgstr "La CLI gérée existante n’a pas pu être vérifiée. Choisissez une autre CLI dans Réglages > Diagnostic."
+
+#: contents/ui/configNotifications.qml
+msgid "Color preview:"
+msgstr "Aperçu des couleurs :"
+
+#: contents/ui/configNotifications.qml
+#, kde-format
+msgid "Warning from %1%"
+msgstr "Avertissement à partir de %1 %"
+
+#: contents/ui/configNotifications.qml
+#, kde-format
+msgid "Critical from %1%"
+msgstr "Critique à partir de %1 %"

@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls as Controls
 import QtQuick.Window
 import QtTest
+import org.kde.kirigami as Kirigami
 import "../contents/ui/PopupHiddenSections.js" as Sections
 
 // Opening the Popup and Notifications settings pages must not shift text or
@@ -179,7 +180,8 @@ TestCase {
         });
         if (!page)
             return;
-        var names = ["quotaWarningPercentSpin", "quotaCriticalPercentSpin", "notifyStatusIncidentsCheck"];
+        var names = ["quotaWarningPercentSpin", "quotaCriticalPercentSpin", "quotaColorScale",
+            "quotaWarningLegend", "quotaCriticalLegend", "notifyStatusIncidentsCheck"];
         measuredItems = names.map(function (name) {
             var item = findChild(page, name);
             verify(item !== null, name);
@@ -188,6 +190,72 @@ TestCase {
         wait(1000);
         measuredItems = [];
         verifyViewportStill(names, true);
+    }
+
+    function test_quotaColorsFollowPendingThresholds_data() {
+        return [{tag: "ltr", rtl: false}, {tag: "rtl", rtl: true}];
+    }
+
+    function test_quotaColorsFollowPendingThresholds(data) {
+        width = 420;
+        height = 640;
+        mirroredPage = data.rtl;
+        var page = createPage("../contents/ui/configNotifications.qml", {
+            cfg_quotaWarningPercent: 70,
+            cfg_quotaCriticalPercent: 90
+        });
+        if (!page)
+            return;
+        var scale = findChild(page, "quotaColorScale");
+        var warning = findChild(page, "quotaWarningLegend");
+        var critical = findChild(page, "quotaCriticalLegend");
+        verify(scale && warning && critical);
+
+        function verifyColorAt(percent, color) {
+            verify(waitForPolish(page));
+            testCase.Window.window.update();
+            verify(waitForRendering(page));
+            tryVerify(function() {
+                var origin = scale.mapToItem(page, 0, 0);
+                return origin.x >= 0 && origin.x + scale.width <= page.width;
+            });
+            var image = grabImage(testCase);
+            var fraction = data.rtl ? 1 - percent / 100 : percent / 100;
+            var point = scale.mapToItem(testCase, scale.width * fraction, scale.height / 2);
+            var pixel = image.pixel(Math.floor(point.x * image.width / testCase.width),
+                Math.floor(point.y * image.height / testCase.height));
+            fuzzyCompare(pixel.r, color.r, 0.02);
+            fuzzyCompare(pixel.g, color.g, 0.02);
+            fuzzyCompare(pixel.b, color.b, 0.02);
+        }
+
+        verifyColorAt(60, Kirigami.Theme.highlightColor);
+        verifyColorAt(80, Kirigami.Theme.neutralTextColor);
+        verifyColorAt(95, Kirigami.Theme.negativeTextColor);
+
+        page.cfg_quotaWarningPercent = 20;
+        page.cfg_quotaCriticalPercent = 40;
+        verifyColorAt(10, Kirigami.Theme.highlightColor);
+        verifyColorAt(30, Kirigami.Theme.neutralTextColor);
+        verifyColorAt(80, Kirigami.Theme.negativeTextColor);
+        verify(warning.text.indexOf("20") >= 0);
+        verify(critical.text.indexOf("40") >= 0);
+
+        page.cfg_quotaWarningPercent = 96;
+        compare(page.cfg_quotaCriticalPercent, 96);
+        verifyColorAt(80, Kirigami.Theme.highlightColor);
+        verifyColorAt(98, Kirigami.Theme.negativeTextColor);
+        verify(warning.text.indexOf("96") >= 0);
+        verify(critical.text.indexOf("96") >= 0);
+
+        page.cfg_quotaWarningPercent = 1;
+        page.cfg_quotaCriticalPercent = 100;
+        verifyColorAt(50, Kirigami.Theme.neutralTextColor);
+        verify(critical.text.indexOf("100") >= 0);
+        for (var item of [scale, warning, critical]) {
+            var position = item.mapToItem(page, 0, 0);
+            verify(position.x >= 0 && position.x + item.width <= page.width);
+        }
     }
 
     function test_restoreAllDetailSectionsIsPendingAndProviderScoped() {

@@ -834,6 +834,11 @@ fields; track proposed extensions in the issue tracker.
   Number fields keep units in their labels so multi-digit keyboard edits work
   with the KDE desktop style. They accept the regional locale's digits and
   grouping separators, including Arabic, Persian, and Bengali numerals.
+  **Notifications** previews the quota warning and critical color ranges as
+  you edit their thresholds. The legend names both thresholds; the scale uses
+  your Plasma theme and mirrors in right-to-left layouts. **Apply** saves the
+  pending values. The preview remains available when notifications are off,
+  since the same thresholds also control usage-meter colors.
   **Diagnostics** also reports the widget version, and, after **Check
   versions**, the CLI version and the absolute command the shell resolved.
   **Support report → Collect support report** gathers an offline Markdown
