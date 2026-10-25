@@ -148,6 +148,7 @@ work and upstream contract requirements.
 - Auto-select highest-usage provider for the compact panel and provider detail
   focus. Measured consumption takes precedence even for fractional percentage
   differences; incident severity breaks equal-consumption ties, then saved provider order.
+  An unavailable service status does not break a consumption tie.
 - Panel providers can be limited to a chosen set in **Panel → Panel
   providers**. The choice lists the enabled providers in their saved order, is
   limited to the four meters the panel can draw, and can also be left automatic
