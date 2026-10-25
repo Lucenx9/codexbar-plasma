@@ -318,6 +318,7 @@ TestCase {
 
     function init() {
         applet.sessions = [];
+        applet.privacyMode = false;
         applet.expanded = false;
         applet.openedProvider = "";
         applet.hoveredPanelProviderID = "";
@@ -866,6 +867,69 @@ TestCase {
         compare(active.color, theme.positive);
         verify(active.color !== applet.brandAccent);
         compare(idle.opacity, applet.secondaryTextOpacity);
+    }
+
+    function test_sessionRowsReserveSpaceIndependently_data() {
+        return [
+            {tag: "narrow", width: 240, privacy: false},
+            {tag: "small", width: 320, privacy: false},
+            {tag: "normal", width: 540, privacy: false},
+            {tag: "wide", width: 900, privacy: false},
+            {tag: "private", width: 240, privacy: true}
+        ];
+    }
+
+    function test_sessionRowsReserveSpaceIndependently(data) {
+        failOnWarning(/Binding loop|recursive rearrange/);
+        applet.sessionsErrorText = "";
+        applet.privacyMode = data.privacy;
+        applet.sessions = [{provider: "codex", projectName: Array(15).join("Workspace "),
+            sessionName: "", host: "", state: "idle", source: "cli", activityMs: 1}];
+        var view = createControl("SessionsView", {applet: applet, width: data.width, height: 300});
+        if (!view) return;
+        waitForRendering(view);
+        var title = findItem(view, function(item) {
+            return item.visible && item.elide !== undefined && item.text === (data.privacy ? "Session 1" : applet.sessions[0].projectName);
+        });
+        var state = findItem(view, function(item) { return item.visible && item.text === "Idle"; });
+        var subtitle = findItem(view, function(item) {
+            return item.visible && item.elide !== undefined && item.text === "codex · Command line";
+        });
+        var age = findItem(view, function(item) { return item.visible && item.text === "Just now"; });
+        verify(title !== null && state !== null && subtitle !== null && age !== null);
+        var titleRow = title.parent;
+        verify(titleRow.width > subtitle.width,
+            "the age still takes space from the title above it");
+        verify(title.mapToItem(view, title.width, 0).x <= state.mapToItem(view, 0, 0).x);
+        verify(subtitle.mapToItem(view, subtitle.width, 0).x <= age.mapToItem(view, 0, 0).x);
+        verify(state.mapToItem(view, state.width, 0).x < data.width);
+        verify(age.mapToItem(view, age.width, 0).x < data.width);
+        var originalTitleWidth = titleRow.width;
+
+        // Unknown CLI states stay literal and bounded. They must not push the
+        // title or copy action out of the card at a narrow width.
+        var unknownState = Array(16).join("<state> & ");
+        applet.sessions = [{provider: "codex", projectName: applet.sessions[0].projectName,
+            sessionName: "", host: "", state: unknownState, source: "cli", activityMs: 1}];
+        wait(0);
+        if (data.privacy) {
+            compare(state.text, "Unknown");
+            return;
+        }
+        compare(state.text, unknownState);
+        verify(state.truncated);
+        verify(titleRow.width > 0 && titleRow.width < originalTitleWidth);
+        verify(titleRow.mapToItem(view, titleRow.width, 0).x <= state.mapToItem(view, 0, 0).x);
+        var tips = [];
+        findAllItems(state, function(item) { return item.plainText !== undefined; }, tips);
+        compare(tips.length, 1);
+        var tip = tips[0];
+        compare(tip.text, SafeText.plainTextAsRichText(unknownState));
+        if (data.width > testCase.width) return;
+        tip.delay = 0;
+        mouseMove(state, state.width / 2, state.height / 2);
+        tryCompare(tip, "visible", true);
+        mouseMove(testCase, testCase.width - 1, testCase.height - 1);
     }
 
     function test_truncatedSessionMetadataRevealsLiteralText_data() {

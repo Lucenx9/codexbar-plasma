@@ -219,7 +219,7 @@ ColumnLayout {
                         Kirigami.Theme.backgroundColor)
 
                     Layout.fillWidth: true
-                    Layout.preferredHeight: sessionRow.implicitHeight + Kirigami.Units.largeSpacing
+                    Layout.preferredHeight: sessionRow.implicitHeight + Kirigami.Units.largeSpacing * 2
                     radius: view.applet.nestedSurfaceRadius
                     // The card reveals its copy action on hover, so the
                     // surface confirms the hover the same way overview rows do.
@@ -244,34 +244,75 @@ ColumnLayout {
                         id: sessionRow
 
                         anchors.fill: parent
-                        anchors.margins: Kirigami.Units.largeSpacing / 2
-                        spacing: Kirigami.Units.smallSpacing
+                        anchors.margins: Kirigami.Units.largeSpacing
+                        spacing: Kirigami.Units.largeSpacing
 
-                        Kirigami.Icon {
-                            source: view.applet.providerIconSource(sessionCard.session.provider)
-                            fallback: "system-run-symbolic"
-                            isMask: view.applet.providerIconIsMask(sessionCard.session.provider)
-                            color: sessionCard.accent
+                        Item {
                             Layout.preferredWidth: Kirigami.Units.iconSizes.smallMedium
-                            Layout.preferredHeight: Kirigami.Units.iconSizes.smallMedium
+                            Layout.preferredHeight: sessionTitleValue.implicitHeight
                             Layout.alignment: Qt.AlignTop
+
+                            Kirigami.Icon {
+                                anchors.centerIn: parent
+                                source: view.applet.providerIconSource(sessionCard.session.provider)
+                                fallback: "system-run-symbolic"
+                                isMask: view.applet.providerIconIsMask(sessionCard.session.provider)
+                                color: sessionCard.accent
+                                width: Kirigami.Units.iconSizes.smallMedium
+                                height: width
+                            }
                         }
 
                         ColumnLayout {
                             Layout.fillWidth: true
                             spacing: 0
 
-                            Components.CopyableValue {
-                                id: sessionTitleValue
+                            Item {
+                                id: sessionTitleRow
 
-                                text: sessionCard.title
-                                fontWeight: Font.DemiBold
-                                copyAccessibleName: i18n("Copy session name")
-                                copyEnabled: !view.applet.privacyMode
-                                copyRevealed: sessionCardHover.hovered
-                                copied: view.copiedValueKey === sessionCard.titleCopyKey
-                                onCopyRequested: function(text) {
-                                    view.copySessionValue(text, sessionCard.titleCopyKey)
+                                Layout.fillWidth: true
+                                implicitHeight: Math.max(sessionTitleValue.implicitHeight,
+                                    sessionStateLabel.implicitHeight)
+
+                                Components.CopyableValue {
+                                    id: sessionTitleValue
+
+                                    anchors.left: parent.left
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: Math.max(0, parent.width - sessionStateLabel.width
+                                        - Kirigami.Units.smallSpacing)
+                                    text: sessionCard.title
+                                    fontWeight: Font.DemiBold
+                                    copyAccessibleName: i18n("Copy session name")
+                                    copyEnabled: !view.applet.privacyMode
+                                    copyRevealed: sessionCardHover.hovered
+                                    copied: view.copiedValueKey === sessionCard.titleCopyKey
+                                    onCopyRequested: function(text) {
+                                        view.copySessionValue(text, sessionCard.titleCopyKey)
+                                    }
+                                }
+
+                                Components.PlainPlasmaLabel {
+                                    id: sessionStateLabel
+
+                                    anchors.right: parent.right
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: Math.min(implicitWidth, parent.width * 0.4)
+                                    text: sessionLabels.sessionStateText(sessionCard.session.state)
+                                    color: sessionCard.activeSession
+                                        ? Kirigami.Theme.positiveTextColor : Kirigami.Theme.textColor
+                                    opacity: sessionCard.activeSession ? 1 : view.applet.secondaryTextOpacity
+                                    font.weight: sessionCard.activeSession ? Font.DemiBold : Font.Normal
+                                    horizontalAlignment: Text.AlignRight
+                                    elide: Text.ElideRight
+
+                                    HoverHandler { id: sessionStateHover }
+
+                                    PlainToolTip {
+                                        parent: sessionStateLabel
+                                        visible: sessionStateLabel.truncated && sessionStateHover.hovered
+                                        plainText: sessionStateLabel.text
+                                    }
                                 }
                             }
 
@@ -296,55 +337,55 @@ ColumnLayout {
                                 }
                             }
 
-                            Components.PlainPlasmaLabel {
-                                id: sessionSubtitleLabel
-
-                                visible: sessionCard.subtitle.length > 0
-                                text: sessionCard.subtitle
-                                opacity: view.applet.secondaryTextOpacity
-                                font.pixelSize: Kirigami.Theme.smallFont.pixelSize
+                            // Age competes only with metadata, leaving the title
+                            // the space beside its shorter state on the line above.
+                            Item {
                                 Layout.fillWidth: true
-                                elide: Text.ElideRight
+                                implicitHeight: Math.max(sessionSubtitleLabel.implicitHeight,
+                                    sessionActivityLabel.implicitHeight)
 
-                                HoverHandler {
-                                    id: sessionSubtitleLabelHover
+                                Components.PlainPlasmaLabel {
+                                    id: sessionSubtitleLabel
+
+                                    anchors.left: parent.left
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: Math.max(0, parent.width - sessionActivityLabel.width
+                                        - Kirigami.Units.smallSpacing)
+                                    visible: sessionCard.subtitle.length > 0
+                                    text: sessionCard.subtitle
+                                    opacity: view.applet.secondaryTextOpacity
+                                    font: Kirigami.Theme.smallFont
+                                    elide: Text.ElideRight
+
+                                    HoverHandler { id: sessionSubtitleLabelHover }
+
+                                    PlainToolTip {
+                                        parent: sessionSubtitleLabel
+                                        visible: sessionSubtitleLabel.truncated && sessionSubtitleLabelHover.hovered
+                                        plainText: sessionSubtitleLabel.text
+                                    }
                                 }
 
-                                PlainToolTip {
-                                    parent: sessionSubtitleLabel
-                                    visible: sessionSubtitleLabel.truncated && sessionSubtitleLabelHover.hovered
-                                    plainText: sessionSubtitleLabel.text
+                                Components.PlainPlasmaLabel {
+                                    id: sessionActivityLabel
+
+                                    anchors.right: parent.right
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: Math.min(implicitWidth, parent.width * 0.5)
+                                    text: sessionLabels.sessionActivityText(sessionCard.session, view.sessionClockMs)
+                                    opacity: view.applet.secondaryTextOpacity
+                                    font: Kirigami.Theme.smallFont
+                                    horizontalAlignment: Text.AlignRight
+                                    elide: Text.ElideRight
+
+                                    HoverHandler { id: sessionActivityHover }
+
+                                    PlainToolTip {
+                                        parent: sessionActivityLabel
+                                        visible: sessionActivityLabel.truncated && sessionActivityHover.hovered
+                                        plainText: sessionActivityLabel.text
+                                    }
                                 }
-                            }
-                        }
-
-                        ColumnLayout {
-                            spacing: 0
-                            Layout.alignment: Qt.AlignTop
-
-                            // State reads the same for every provider, so it
-                            // uses the theme's meaning colors, not the accent.
-                            Components.PlainPlasmaLabel {
-                                text: sessionLabels.sessionStateText(sessionCard.session.state)
-                                color: sessionCard.activeSession
-                                    ? Kirigami.Theme.positiveTextColor
-                                    : Kirigami.Theme.textColor
-                                opacity: sessionCard.activeSession ? 1 : view.applet.secondaryTextOpacity
-                                font.weight: sessionCard.activeSession ? Font.DemiBold : Font.Normal
-                                horizontalAlignment: Text.AlignRight
-                                // Share the title row's height so the state sits
-                                // on the title's line instead of above it.
-                                verticalAlignment: Text.AlignVCenter
-                                Layout.preferredHeight: sessionTitleValue.actionSize
-                                Layout.alignment: Qt.AlignRight
-                            }
-
-                            Components.PlainPlasmaLabel {
-                                text: sessionLabels.sessionActivityText(sessionCard.session, view.sessionClockMs)
-                                opacity: view.applet.secondaryTextOpacity
-                                font.pixelSize: Kirigami.Theme.smallFont.pixelSize
-                                horizontalAlignment: Text.AlignRight
-                                Layout.alignment: Qt.AlignRight
                             }
                         }
                     }

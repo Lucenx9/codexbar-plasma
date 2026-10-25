@@ -20,6 +20,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Give session names more space with independent title and metadata rows, align
+  provider icons with their titles, and use consistent inset spacing. Keep long
+  session states and activity ages inside the card with full-text tooltips.
+
 - Mark the inspected chart point with a vertical guide, including zero values,
   reveal abbreviated point labels and values in a tooltip, and show keyboard
   readouts immediately across cost, Usage & Spend, and provider detail charts.
