@@ -135,7 +135,7 @@ TestCase {
         verify(row.paceKnown);
         compare(row.pacePercent, 43);
         compare(row.paceEtaSeconds, 64800);
-        compare(text.paceSummaryPartsText(row.paceParts), "37% in deficit | Expected 43% used | Runs out in 18 hours");
+        compare(text.paceSummaryPartsText(row.paceParts), "37% in deficit · Expected 43% used · Runs out in 18 hours");
         compare(panelText.paceText(row), "43% used, behind pace");
         for (var mode of ["pace", "resetTime", "runOut"])
             compare(PanelDisplay.rowForMode(item.rows, mode), row);
