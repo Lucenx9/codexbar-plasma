@@ -55,7 +55,8 @@ function bestIndex(items) {
         // Missing percentages and idle quotas tie on consumption; incidents
         // distinguish them without outweighing even fractional positive usage.
         var percent = Math.max(0, usedPercent(item));
-        var severity = NotificationMemo.severityRank(item.statusSeverity);
+        // A failed status fetch is missing evidence, not an incident tie-break.
+        var severity = item.statusSeverity === "unknown" ? 0 : NotificationMemo.severityRank(item.statusSeverity);
         if (percent > bestPercent || (percent === bestPercent && severity > bestSeverity)) {
             bestPercent = percent;
             bestSeverity = severity;
