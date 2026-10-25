@@ -247,7 +247,10 @@ work and upstream contract requirements.
   the theme's positive color while active, the provider (or `OMP` for an OMP
   Pi-family session), and the source. The host name appears only when sessions
   come from more than one host. Hovering a card reveals a copy action beside
-  its title. Rescans with an unchanged session count update cards in place,
+  its title. Names and states share the first line; provider metadata and activity
+  age share a separate line, so a long age does not shorten the name above it.
+  Long states and ages stay within the card and reveal their full text on hover.
+  Rescans with an unchanged session count update cards in place,
   preserving hover and keyboard focus at the same list position. A changed
   session count recreates the cards. Ages use the current clock after each scan.
 - Overview providers can be limited to a chosen set of up to 3 providers, or
