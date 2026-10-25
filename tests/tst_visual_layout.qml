@@ -199,6 +199,9 @@ TestCase {
         function providerIconIsMask() {
             return true;
         }
+        function readableAccentColor(accent) {
+            return accent;
+        }
         function providerReadableColor() {
             return brandAccent;
         }
@@ -974,6 +977,29 @@ TestCase {
     // An open Sessions tab rescans every 30 seconds and each scan delivers a
     // new array. Same-size rescans must update cards in place so hover and
     // keyboard focus survive, and relative ages must use the scan's clock.
+    function test_sessionWithoutProviderUsesNeutralIconAndHighlightInsteadOfProviderDefault() {
+        applet.sessionsErrorText = "";
+        applet.sessionsLoading = false;
+        applet.sessions = [
+            {provider: "", projectName: "Workspace", sessionName: "", host: "",
+             state: "idle", source: "cli", activityMs: 1}
+        ];
+        var view = createControl("SessionsView", {
+            applet: applet,
+            width: 540,
+            height: 300
+        });
+        if (!view)
+            return;
+        wait(0);
+        var icon = findItem(view, function (item) {
+            return item.visible && item.fallback === "system-run-symbolic";
+        });
+        verify(icon !== null);
+        compare(String(icon.source), "system-run-symbolic");
+        verify(icon.color !== applet.brandAccent);
+    }
+
     function test_sessionRescanKeepsCardsAndResyncsAges() {
         applet.sessionsErrorText = "";
         applet.sessionsLoading = false;

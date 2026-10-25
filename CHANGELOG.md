@@ -63,6 +63,13 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep quota-week cost windows, cost-history day labels, and AI Insights 7-day
+  comparisons accurate across days whose local midnight is skipped by a
+  spring-forward transition.
+- Use the generic session icon and theme highlight color when a session card has
+  no provider instead of falling back to the Codex icon and brand color.
+- Keep keyboard focus on Overview provider rows and provider action rows when
+  refreshed usage or account-loading state updates their values.
 - Keep the Status Page disclosure arrow inside the highlighted action row for
   Claude and OpenAI providers, with consistent spacing and keyboard focus.
 - Keep automatic provider selection in saved order when usage is tied and a

@@ -214,9 +214,13 @@ ColumnLayout {
                     readonly property string subtitle: sessionLabels.sessionSubtitle(
                         session, view.applet.sessionHostsVary)
                     readonly property string titleCopyKey: "title:" + index
-                    readonly property color accent: view.applet.providerReadableColor(
-                        session.provider,
-                        Kirigami.Theme.backgroundColor)
+                    readonly property color accent: session.provider.length > 0
+                        ? view.applet.providerReadableColor(
+                            session.provider,
+                            Kirigami.Theme.backgroundColor)
+                        : view.applet.readableAccentColor(
+                            Kirigami.Theme.highlightColor,
+                            Kirigami.Theme.backgroundColor)
 
                     Layout.fillWidth: true
                     Layout.preferredHeight: sessionRow.implicitHeight + Kirigami.Units.largeSpacing * 2
@@ -254,7 +258,9 @@ ColumnLayout {
 
                             Kirigami.Icon {
                                 anchors.centerIn: parent
-                                source: view.applet.providerIconSource(sessionCard.session.provider)
+                                source: sessionCard.session.provider.length > 0
+                                    ? view.applet.providerIconSource(sessionCard.session.provider)
+                                    : "system-run-symbolic"
                                 fallback: "system-run-symbolic"
                                 isMask: view.applet.providerIconIsMask(sessionCard.session.provider)
                                 color: sessionCard.accent
