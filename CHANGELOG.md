@@ -16,6 +16,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   status of each service component read from the public status page, with
   OpenAI's grouped components collapsible, and open the page from the list.
 
+### Changed
+
+- Make Overview quota names easier to distinguish from reset metadata, keep
+  percentages aligned with their meters, and align provider icons with their
+  names and accounts. Reveal usage-row hide actions immediately on hover or keyboard focus.
+
 ### Security
 
 - Redact secret-key and secret-access-key assignments, including AWS environment

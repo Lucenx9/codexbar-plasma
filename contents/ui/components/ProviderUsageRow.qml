@@ -83,12 +83,6 @@ ColumnLayout {
 
             onClicked: usageRow.applet.hidePopupUsageRow(
                 usageRow.providerData ? usageRow.providerData.provider : "", usageRow.rowData)
-
-            Behavior on opacity {
-                NumberAnimation {
-                    duration: Kirigami.Units.shortDuration
-                }
-            }
         }
 
         PlainPlasmaLabel {
