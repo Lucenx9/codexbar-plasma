@@ -60,6 +60,7 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Preserve the currency on quota-week cost totals when privacy mode is enabled.
 - Verify a prepared managed CLI before selecting it in General settings, keeping
   the current command when the copy is damaged, non-executable, or has the wrong
   version, consistently with setup from the popup. Restoring defaults also

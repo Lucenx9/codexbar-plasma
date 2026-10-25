@@ -744,7 +744,8 @@ and clipboard content remain under your control after closing the window.
   refresh reports them. History is kept per day, so when the reset
   falls inside a day that whole day counts toward one week, and the totals are
   marked `≈`. Unknown or missing days, and days with requests excluded from
-  the CLI totals, make a total read "at least". Weeks reaching back before
+  the CLI totals, make a total read "at least". Cost totals keep their currency
+  in privacy mode. Weeks reaching back before
   the scanned history range are left out rather than shown incomplete. If the
   last successful cost scan is older than today, its last day was scanned only
   in part, so that day and any unscanned trailing days also make the affected
