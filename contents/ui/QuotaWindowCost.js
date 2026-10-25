@@ -24,12 +24,21 @@ function dayRange(label) {
     var year = Number(match[1])
     var month = Number(match[2]) - 1
     var day = Number(match[3])
-    var start = new Date(year, month, day)
-    // Reject dates the constructor silently rolled over, such as 2026-02-30.
-    if (start.getFullYear() !== year || start.getMonth() !== month || start.getDate() !== day) {
+    var utcMs = Date.UTC(year, month, day)
+    var utc = new Date(utcMs)
+    // Reject dates the calendar itself does not have, such as 2026-02-30.
+    if (utc.getUTCFullYear() !== year || utc.getUTCMonth() !== month || utc.getUTCDate() !== day) {
         return null
     }
-    return {startMs: start.getTime(), endMs: new Date(year, month, day + 1).getTime()}
+    var start = new Date(year, month, day)
+    var hasMidnight = start.getFullYear() === year && start.getMonth() === month
+        && start.getDate() === day && isLocalMidnight(start.getTime())
+    return {
+        utcMs: utcMs,
+        startMs: hasMidnight ? start.getTime() : new Date(year, month, day, 12).getTime(),
+        endMs: new Date(year, month, day + 1).getTime(),
+        hasMidnight: hasMidnight
+    }
 }
 
 function isLocalMidnight(timestampMs) {
@@ -75,6 +84,9 @@ function expectedDayCount(startMs, endMs, scanStartMs, todayStartMs) {
     }
     var count = 0
     while (cursor.getTime() < endMs && cursor.getTime() <= todayStartMs) {
+        if (!isLocalMidnight(cursor.getTime())) {
+            return null
+        }
         if (cursor.getTime() >= scanStartMs) {
             count += 1
         }
@@ -117,24 +129,33 @@ function windows(daily, resetsAtMs, windowMinutes, nowMs, limit) {
         if (!range) {
             return []
         }
-        days.push({startMs: range.startMs, cost: daily[i].cost, tokens: daily[i].tokens,
+        days.push({utcMs: range.utcMs, startMs: range.startMs, hasMidnight: range.hasMidnight,
+            cost: daily[i].cost, tokens: daily[i].tokens,
             incompleteRequests: daily[i].incompleteRequests})
     }
-    days.sort(function(left, right) { return left.startMs - right.startMs })
+    days.sort(function(left, right) { return left.utcMs - right.utcMs })
     // A date reported twice cannot be attributed honestly: summing both would
     // double count it and picking one would guess.
     for (var d = 1; d < days.length; d++) {
-        if (days[d].startMs === days[d - 1].startMs) {
+        if (days[d].utcMs === days[d - 1].utcMs) {
             return []
         }
     }
     var scanStartMs = days[0].startMs
     var now = new Date(nowMs)
-    var todayStartMs = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
+    var todayUtcMs = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())
+    var todayNoon = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12)
+    var todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    var todayStartMs = todayMidnight.getFullYear() === now.getFullYear()
+        && todayMidnight.getMonth() === now.getMonth()
+        && todayMidnight.getDate() === now.getDate()
+        && isLocalMidnight(todayMidnight.getTime())
+        ? todayMidnight.getTime()
+        : todayNoon.getTime()
     // The history ends on the day it was scanned. A scan from before today,
     // such as one taken before midnight, saw only part of that day, so its
     // amounts are a lower bound even though the date is present.
-    if (days[days.length - 1].startMs < todayStartMs) {
+    if (days[days.length - 1].utcMs < todayUtcMs) {
         days[days.length - 1].scanIncomplete = true
     }
 
@@ -153,7 +174,7 @@ function windows(daily, resetsAtMs, windowMinutes, nowMs, limit) {
             break
         }
         var attributed = days.filter(function(day) {
-            return day.startMs >= startMs && day.startMs < endMs && day.startMs <= todayStartMs
+            return day.hasMidnight && day.startMs >= startMs && day.startMs < endMs && day.utcMs <= todayUtcMs
         })
         // Right after a mid-day reset the current window holds no local
         // midnight yet: today belongs to the previous window. Skip it rather

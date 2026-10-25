@@ -63,6 +63,13 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep quota-week cost windows, cost-history day labels, and AI Insights 7-day
+  comparisons accurate across days whose local midnight is skipped by a
+  spring-forward transition.
+- Use the generic session icon and theme highlight color when a session card has
+  no provider instead of falling back to the Codex icon and brand color.
+- Keep keyboard focus on Overview provider rows and provider action rows when
+  refreshed usage or account-loading state updates their values.
 - Preserve the currency on quota-week cost totals when privacy mode is enabled.
 - Verify a prepared managed CLI before selecting it in General settings, keeping
   the current command when the copy is damaged, non-executable, or has the wrong

@@ -947,10 +947,16 @@ Item {
                     }
 
                     Repeater {
-                        model: applet.presentedOverviewProviders
+                        id: overviewProviderRepeater
+
+                        model: applet.presentedOverviewProviders.map(function(item) { return item.provider })
 
                         delegate: Components.OverviewProviderRow {
+                            required property int index
+
                             applet: fullRoot.applet
+                            modelData: fullRoot.applet.presentedOverviewProviders[index]
+                                || ({provider: "", title: "", error: "", rows: []})
                             onSelected: function(providerData) {
                                 var nextProviderIndex = applet.providerIndex(providerData)
                                 if (nextProviderIndex >= 0) {
@@ -1591,12 +1597,16 @@ Item {
                         Repeater {
                             id: providerActionRows
 
-                            model: applet.presentedProviderData ? applet.actionRows(applet.selectedProviderData) : []
+                            readonly property var rows: applet.presentedProviderData ? applet.actionRows(applet.selectedProviderData) : []
+                            model: rows.map(function(row) { return row.action })
 
                             delegate: ColumnLayout {
                                 id: providerActionRow
 
+                                required property int index
                                 required property var modelData
+                                modelData: providerActionRows.rows[index]
+                                    || ({title: "", icon: "", action: "", enabled: false})
                                 readonly property bool statusExpanded: modelData.expandable === true
                                     && applet.statusComponentsExpanded(applet.selectedProviderData)
 

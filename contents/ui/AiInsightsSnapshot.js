@@ -98,7 +98,9 @@ function periods(tokenCost, nowMs, metric) {
         return null
     }
     for (var offset = 1; offset <= comparisonDays * 2; offset++) {
-        var day = new Date(now.getFullYear(), now.getMonth(), now.getDate() - offset)
+        // Construct at local noon so a spring-forward transition at 00:00
+        // cannot roll the calendar day back into the previous date.
+        var day = new Date(now.getFullYear(), now.getMonth(), now.getDate() - offset, 12)
         var record = Guards.hasOwnKey(byDate, dateKey(day)) ? byDate[dateKey(day)] : null
         var value = field(record, metric)
         if (!finite(value) || value < 0) {
