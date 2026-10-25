@@ -1525,6 +1525,9 @@ It also checks the inspection guide through actual canvas pixels for hovered
 and keyboard-selected bar and line points, including signed and all-zero data.
 `tst_visual_layout.qml` verifies full-text readout tooltips with escaped markup,
 immediate keyboard readouts, and tooltip suppression when values fit or disappear.
+It also checks provider quota metadata returning between shared and stacked
+lines on resize, including mirrored layouts, doubled text size, and unbroken
+forecast text that must wrap inside the meter width.
 `make smoke` additionally requires the graphical environment and reports a
 failure rather than silently skipping when that environment is unavailable.
 

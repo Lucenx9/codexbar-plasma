@@ -195,6 +195,11 @@ work and upstream contract requirements.
   Usage-row hide actions appear immediately on hover or keyboard focus.
   Provider action rows keep their full native hover and focus outlines visible
   inside the scrollable popup.
+- Provider quota percentages use a slightly larger type size and align with
+  the end of their meters. Pace forecasts and reset metadata share a line when
+  they fit; longer text or larger fonts put the reset on a separate line below
+  the forecast. Long forecast words wrap inside the popup, and an abbreviated
+  reset still reveals its full text on hover.
 - Overflowing popup tabs have separate scroll buttons and immediate keyboard
   focus reveal, so navigation never covers provider labels. A tab wider than the
   available area stays aligned at its start when focused or selected again.

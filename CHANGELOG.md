@@ -20,6 +20,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Emphasize provider quota percentages and stack pace forecasts above reset
+  metadata when the popup width or text size leaves too little room for both.
 - Give session names more space with independent title and metadata rows, align
   provider icons with their titles, and use consistent inset spacing. Keep long
   session states and activity ages inside the card with full-text tooltips.
