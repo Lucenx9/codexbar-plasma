@@ -127,7 +127,10 @@ Rectangle {
             readonly property var segments: (card.presentation.shares || []).filter(function (row) {
                 return row.share > 0;
             })
-            readonly property real available: width - Math.max(0, segments.length - 1) * spacing
+            // Width left for proportional shares after the gaps and each
+            // segment's minimum (pill) width, so small shares never overflow.
+            readonly property real available: Math.max(0, width - Math.max(0, segments.length - 1) * spacing
+                - segments.length * height)
             readonly property real spacing: 2
             visible: segments.length > 0
             color: card.ruleColor
@@ -142,7 +145,7 @@ Rectangle {
                     model: shareBar.segments
                     Rectangle {
                         required property var modelData
-                        width: Math.max(height, shareBar.available * modelData.share)
+                        width: height + shareBar.available * modelData.share
                         height: shareBar.height
                         radius: height / 2
                         color: modelData.color
