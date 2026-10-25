@@ -1514,6 +1514,10 @@ snapshot adapter and hidden-section filters: nested lists received over a QML
 signal must become JavaScript arrays before those filters consume them.
 `tst_interactive_chart.qml` checks the painted peak guideline for both local
 cost bars and CLI detail bars, while keeping line charts free of that guide.
+It also checks the inspection guide through actual canvas pixels for hovered
+and keyboard-selected bar and line points, including signed and all-zero data.
+`tst_visual_layout.qml` verifies full-text readout tooltips with escaped markup,
+immediate keyboard readouts, and tooltip suppression when values fit or disappear.
 `make smoke` additionally requires the graphical environment and reports a
 failure rather than silently skipping when that environment is unavailable.
 

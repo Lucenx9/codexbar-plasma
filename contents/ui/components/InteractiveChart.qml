@@ -111,12 +111,15 @@ ColumnLayout {
         spacing: Kirigami.Units.smallSpacing
 
         Behavior on opacity {
+            enabled: !plot.activeFocus
             NumberAnimation {
                 duration: Kirigami.Units.shortDuration
             }
         }
 
         PlainPlasmaLabel {
+            id: chartPointLabel
+
             text: chart.readoutValid ? chart.pointLabel(chart.points[chart.readoutIndex]) : ""
             // The retained text outlives the fade, and a zero opacity does not
             // take an item out of the accessibility tree the way visibility
@@ -130,6 +133,8 @@ ColumnLayout {
         }
 
         PlainPlasmaLabel {
+            id: chartPointValue
+
             text: chart.readoutValid ? chart.pointDisplayValue(chart.points[chart.readoutIndex]) : ""
             Accessible.ignored: !chart.hasActivePoint
             font.weight: Font.DemiBold
@@ -225,6 +230,21 @@ ColumnLayout {
             }
             context.fillStyle = chart.applet.canvasColor(chart.guideColor, 0.12)
             context.fillRect(0, baseline, width, 1)
+            // Keep inspection visible for zero points and flat zero series,
+            // where changing a bar's fill cannot identify the active position.
+            if (chart.hasActivePoint) {
+                var guideX
+                if (chart.kind === "line") {
+                    guideX = CostPresentation.chartLineX(
+                        width, chart.pointCount, chart.activeIndex, chart.lineMarkerInset)
+                } else {
+                    var guideBars = CostPresentation.chartBarGeometry(width, chart.pointCount)
+                    guideX = guideBars.offset + chart.activeIndex * guideBars.step
+                        + guideBars.barWidth / 2
+                }
+                context.fillStyle = chart.applet.canvasColor(chart.guideColor, 0.35)
+                context.fillRect(Math.max(0, Math.min(width - 1, Math.round(guideX))), 0, 1, height)
+            }
             if (chart.pointCount === 0 || chart.valueDomain.minimum === chart.valueDomain.maximum) {
                 return
             }
@@ -295,6 +315,8 @@ ColumnLayout {
         }
 
         MouseArea {
+            id: plotMouse
+
             anchors.fill: parent
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
@@ -306,6 +328,16 @@ ColumnLayout {
                 plot.forceActiveFocus(Qt.MouseFocusReason)
                 chart.selectedIndex = chart.indexAt(mouse.x)
             }
+        }
+
+        PlainToolTip {
+            parent: plot
+            visible: chart.hasActivePoint
+                && (chartPointLabel.truncated || chartPointValue.truncated)
+                && (plotMouse.containsMouse || plot.activeFocus)
+            plainText: chart.hasActivePoint
+                ? i18n("%1: %2", chart.pointLabel(chart.points[chart.activeIndex]),
+                    chart.pointDisplayValue(chart.points[chart.activeIndex])) : ""
         }
     }
 

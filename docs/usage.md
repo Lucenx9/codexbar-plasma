@@ -207,7 +207,13 @@ work and upstream contract requirements.
   (7, 30, or 90 days, **Month to date**, or **All history**), interactive daily chart, activity heatmap, and provider totals that
   keep different currencies separate. Chart and heatmap dates use the system
   locale's short date format. Chart guide lines follow theme text-color changes
-  while the popup stays open. Cost lines separate amount and tokens with
+  while the popup stays open. Hovering or using the arrow keys to inspect a
+  chart point shows a vertical guide, including for zero values and entirely
+  zero-valued series. Abbreviated point labels or values reveal their full text
+  in a tooltip while hovering the plot or keeping keyboard focus there.
+  Keyboard inspection shows the readout immediately. These interactions also
+  apply to provider cost and detail charts.
+  Cost lines separate amount and tokens with
   ` · `. The heatmap groups the range into weekday
   rows, labelled with the system locale's short day names and starting on its
   first day of the week, so each weekday keeps its row as the range moves. Week

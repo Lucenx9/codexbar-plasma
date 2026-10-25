@@ -47,6 +47,52 @@ TestCase {
         return [{tag: "hover", keyboard: false}, {tag: "keyboard", keyboard: true}]
     }
 
+    function test_inspectionGuideMarksTheActivePosition_data() {
+        return [
+            {tag: "zero-bars-hover", kind: "bar", values: [0, 0, 0], keyboard: false, x: 150},
+            {tag: "zero-bars-keyboard", kind: "bars", values: [0, 0, 0], keyboard: true, x: 250},
+            {tag: "signed-bars", kind: "bar", values: [-3, 0, 9], keyboard: false, x: 150},
+            {tag: "zero-line", kind: "line", values: [0, 0, 0], keyboard: true, x: 297},
+            {tag: "signed-line", kind: "line", values: [-3, 0, 9], keyboard: false, x: 150},
+            {tag: "single-point", kind: "line", values: [0], keyboard: true, x: 150}
+        ]
+    }
+
+    function test_inspectionGuideMarksTheActivePosition(data) {
+        var chart = createChart({
+            applet: {secondaryTextOpacity: 0.7, canvasColor: function(color, alpha) {
+                return Qt.rgba(0, 0, 0, alpha).toString()
+            }},
+            width: 300,
+            points: data.values.map(function(value, index) { return {label: String(index), value: value} }),
+            accent: "blue",
+            kind: data.kind
+        })
+        if (!chart)
+            return
+        failOnWarning(/.*/)
+        var plot = chart.nextItemInFocusChain(true)
+        var paints = createTemporaryObject(paintSpyComponent, this, {target: plot})
+        tryCompare(plot, "available", true)
+        tryVerify(function() { return paints.count > 0 })
+        compare(plot.getContext("2d").getImageData(data.x, 0, 1, 1).data[3], 0)
+        paints.clear()
+        if (data.keyboard) {
+            plot.forceActiveFocus(Qt.TabFocusReason)
+            keyClick(Qt.Key_End)
+        } else {
+            mouseMove(plot, data.x, plot.height / 2)
+        }
+        tryVerify(function() { return paints.count > 0 })
+        verify(plot.getContext("2d").getImageData(data.x, 0, 1, 1).data[3] > 0,
+            "The inspected point needs a visible guide, including zero values")
+        paints.clear()
+        mouseMove(this, 330, 230)
+        chart.selectedIndex = -1
+        tryVerify(function() { return paints.count > 0 })
+        compare(plot.getContext("2d").getImageData(data.x, 0, 1, 1).data[3], 0)
+    }
+
     function test_detailBarsKeepPeakGuideline_data() {
         return [{tag: "cost-bars", kind: "bar", guide: true},
             {tag: "detail-bars", kind: "bars", guide: true},
