@@ -958,8 +958,15 @@ fields; track proposed extensions in the issue tracker.
   opt-in.
 - Configurable order for the provider identity, service status, usage text, and
   provider meters shown in the panel.
-- Check for widget updates, notify when an update is available, and opt in to
-  silent automatic widget installation. Startup respects the interval since the
+- Check for widget updates, notify, and install widget updates automatically
+  by default. In **General → Updates**, clear **Install widget updates
+  automatically** and apply to opt out. Existing instances without a saved
+  value adopt the new default; explicitly saved choices are kept. Plasma may
+  have omitted the previous off setting because it matched the old default.
+  **Restore all defaults** also enables automatic widget installation when
+  applied. Installed updates need a Plasma restart or logout/login to take
+  effect; the automatic updater never restarts Plasma itself.
+  Startup respects the interval since the
   last successful check; first use and overdue checks run immediately.
   **Check for widget updates now** checks on demand, even with automatic checks
   off. When a check finds a newer release, **Install update** installs it like
@@ -1246,7 +1253,7 @@ and 95% critical thresholds. Reset notifications are off until enabled.
 | CLI release checks | Off; manual checks available in General |
 | Managed CLI automatic updates | Off; requires the managed copy to be selected |
 | Plasma notifications | On; quota warnings on; predicted exhaustion and limit-reset notices off |
-| Widget updates | Check and notify every 24 hours; automatic installation off |
+| Widget updates | Check and install automatically every 24 hours, with notifications; restart Plasma to apply installed updates |
 | Panel appearance | Standard style with colored provider icons and automatic quota capsules, including a single provider |
 | Extra panel content | Provider names, usage text and credit balances off |
 | Panel element order | Default grouping of selected text with its meters; custom orders retain separate elements |

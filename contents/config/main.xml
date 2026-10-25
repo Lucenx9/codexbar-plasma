@@ -153,7 +153,7 @@
     </entry>
     <entry name="autoUpdateEnabled" type="Bool">
       <label>Install widget updates automatically.</label>
-      <default>false</default>
+      <default>true</default>
     </entry>
     <entry name="autoUpdateIntervalHours" type="Int">
       <label>Widget update check interval in hours.</label>

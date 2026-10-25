@@ -71,7 +71,7 @@ KCM.SimpleKCM {
     property alias cfg_updateNotificationsEnabled: updateNotificationsEnabledCheck.checked
     property bool cfg_updateNotificationsEnabledDefault: true
     property alias cfg_autoUpdateEnabled: autoUpdateEnabledCheck.checked
-    property bool cfg_autoUpdateEnabledDefault: false
+    property bool cfg_autoUpdateEnabledDefault: true
     property alias cfg_autoUpdateIntervalHours: autoUpdateIntervalHoursSpin.value
     property int cfg_autoUpdateIntervalHoursDefault: 24
 

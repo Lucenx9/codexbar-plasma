@@ -485,6 +485,7 @@ TestCase {
             cfg_quotaWarningPercent: 70,
             cfg_quotaCriticalPercent: 90,
             cfg_enableNotifications: false,
+            cfg_autoUpdateEnabled: false,
             cfg_autoUpdateIntervalHours: 48,
             cfg_menuBarDisplayMode: "pace",
             cfg_panelStyle: "minimal",
@@ -521,6 +522,7 @@ TestCase {
         compare(page.cfg_quotaWarningPercent, 80);
         compare(page.cfg_quotaCriticalPercent, 95);
         compare(page.cfg_enableNotifications, true);
+        compare(page.cfg_autoUpdateEnabled, true);
         compare(page.cfg_autoUpdateIntervalHours, 24);
         compare(page.cfg_menuBarDisplayMode, "percent");
         compare(page.cfg_panelStyle, "standard");
