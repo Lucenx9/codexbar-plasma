@@ -168,6 +168,9 @@ work and upstream contract requirements.
   detail line shows the account identity when the CLI provides one, and an
   active service incident otherwise; an operational status or the provider's
   own source name is never presented as identity.
+  Provider icons align with the name and account. Each quota name is emphasized
+  separately from its reset, which shortens first when space is limited; the
+  percentage stays aligned with the end of its meter.
 - Screen readers hear what the popup draws. Overview rows describe their
   detail line, then each named quota with its reset; provider tabs describe
   the quota their underline draws, a last-known-usage note, and a refresh
@@ -188,6 +191,7 @@ work and upstream contract requirements.
 - Refresh, copy, share, hide and tab-scroll icon buttons show their action
   labels on keyboard focus as well as hover. The copy confirmation takes
   precedence over its action label.
+  Usage-row hide actions appear immediately on hover or keyboard focus.
   Provider action rows keep their full native hover and focus outlines visible
   inside the scrollable popup.
 - Overflowing popup tabs have separate scroll buttons and immediate keyboard

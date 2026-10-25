@@ -1846,7 +1846,7 @@ TestCase {
         compare(button.visible, true);
         compare(button.opacity, 0);
         button.forceActiveFocus(Qt.TabFocusReason);
-        tryCompare(button, "opacity", 1);
+        compare(button.opacity, 1);
         mouseClick(button);
         compare(applet.hiddenUsageRowRequest, {provider: "codex", label: "Primary"});
 

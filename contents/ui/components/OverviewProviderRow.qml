@@ -104,6 +104,7 @@ Rectangle {
         Rectangle {
             id: overviewProviderIdentitySurface
 
+            Layout.alignment: Qt.AlignTop
             Layout.preferredWidth: Kirigami.Units.iconSizes.medium
                 + Kirigami.Units.smallSpacing * 2
             Layout.preferredHeight: Layout.preferredWidth
@@ -157,26 +158,54 @@ Rectangle {
 
                     required property var modelData
                     readonly property bool captionTruncated: overviewMeterCaption.truncated
+                        || overviewMeterReset.truncated
 
                     Layout.fillWidth: true
                     Layout.topMargin: Kirigami.Units.smallSpacing / 2
                     spacing: Kirigami.Units.smallSpacing / 2
 
-                    RowLayout {
+                    Item {
+                        id: overviewMeterHeader
+
                         Layout.fillWidth: true
-                        spacing: Kirigami.Units.smallSpacing
+                        implicitHeight: Math.max(overviewMeterCaption.implicitHeight,
+                            overviewMeterReset.implicitHeight, overviewMeterPercent.implicitHeight)
+                        implicitWidth: overviewMeterCaption.implicitWidth
+                            + overviewMeterReset.implicitWidth + overviewMeterPercent.implicitWidth
+                            + Kirigami.Units.smallSpacing * 2
 
                         PlainPlasmaLabel {
                             id: overviewMeterCaption
 
-                            text: overviewRow.meterCaption(overviewMeter.modelData)
-                            font: Kirigami.Theme.smallFont
-                            opacity: overviewRow.applet.secondaryTextOpacity
-                            Layout.fillWidth: true
+                            text: overviewMeter.modelData.label || ""
+                            font.pointSize: Kirigami.Theme.smallFont.pointSize
+                            font.weight: Font.DemiBold
+                            opacity: overviewRow.applet.valueTextOpacity
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: Math.min(implicitWidth, Math.max(0,
+                                overviewMeterPercent.x - Kirigami.Units.smallSpacing))
                             elide: Text.ElideRight
                         }
 
                         PlainPlasmaLabel {
+                            id: overviewMeterReset
+
+                            text: overviewRow.applet.resetTextForRow(overviewMeter.modelData)
+                            visible: text.length > 0
+                            font: Kirigami.Theme.smallFont
+                            opacity: overviewRow.applet.secondaryTextOpacity
+                            anchors.verticalCenter: parent.verticalCenter
+                            x: overviewMeterCaption.width + Kirigami.Units.smallSpacing
+                            width: Math.max(0, overviewMeterPercent.x - x
+                                - Kirigami.Units.smallSpacing)
+                            elide: Text.ElideRight
+                        }
+
+                        PlainPlasmaLabel {
+                            id: overviewMeterPercent
+
+                            anchors.right: parent.right
+                            anchors.verticalCenter: parent.verticalCenter
                             text: overviewRow.applet.usagePercentText(overviewMeter.modelData)
                             font.pointSize: Kirigami.Theme.smallFont.pointSize
                             font.weight: Font.DemiBold
@@ -225,6 +254,8 @@ Rectangle {
             isMask: true
             color: Kirigami.Theme.textColor
             opacity: overviewRow.applet.secondaryTextOpacity
+            Layout.alignment: Qt.AlignTop
+            Layout.topMargin: Kirigami.Units.smallSpacing * 3
             Layout.preferredWidth: Kirigami.Units.iconSizes.small
             Layout.preferredHeight: Kirigami.Units.iconSizes.small
             Accessible.role: Accessible.Graphic

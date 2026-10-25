@@ -36,6 +36,7 @@ TestCase {
         property string lastUpdatedText: "Updated 12:00"
         property string providerUpdatedText: "Provider updated 11:55"
         property real secondaryTextOpacity: 0.7
+        property real valueTextOpacity: 0.85
         property real roundedSurfaceRadius: 8
         property real nestedSurfaceRadius: 4
         property real compactMeterTrackHeight: 5
@@ -235,6 +236,7 @@ TestCase {
     // Each quota window is named beside its own meter, so a short session
     // window can never stand in for an exhausted weekly one.
     function test_overviewNamesEveryQuotaWindow() {
+        failOnWarning(/Qt Quick Layouts: Detected recursive rearrange/);
         var measured = Object.assign({}, provider, {
             testRows: [
                 {label: "Session", hasPercent: true, leftPercent: 57, reset: "in 2h"},
@@ -246,7 +248,8 @@ TestCase {
         });
         if (!row)
             return;
-        verify(findText(row, "Session · Resets in 2h") !== null);
+        verify(findText(row, "Session") !== null);
+        verify(findText(row, "Resets in 2h") !== null);
         verify(findText(row, "57% left") !== null);
         verify(findText(row, "Weekly") !== null);
         verify(findText(row, "0% left") !== null);
