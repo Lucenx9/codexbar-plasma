@@ -25,7 +25,12 @@ Controls.ApplicationWindow {
     readonly property string noticeText: snapshot.partial ? i18n("Some data is missing, incomplete, or estimated. Unavailable amounts are not zero.") : ""
     readonly property string privacyText: i18n("Created locally. Only aggregate usage is included. Costs are usage estimates, not subscription fees.")
     readonly property var providerLines: snapshot.providers.map(function (row) {
-        return applet.providerDisplayTitle(row.provider) + " · " + amountText(row);
+        var share = shareText(row);
+        return applet.providerDisplayTitle(row.provider) + " · " + amountText(row) + (share ? " · " + share : "");
+    })
+    readonly property var providerRows: snapshot.providers.map(function (row) {
+        return { title: applet.providerDisplayTitle(row.provider), detail: amountText(row),
+            badge: shareText(row), share: row.share, color: applet.providerColor(row.provider) };
     })
     readonly property var modelLines: snapshot.models.map(function (row) {
         return row.label + " · " + applet.providerDisplayTitle(row.provider) + " · " + amountText(row);
@@ -70,6 +75,11 @@ Controls.ApplicationWindow {
         if (row.cost !== null)
             parts.push(applet.amountString(row.cost, row.currency));
         return parts.length > 0 ? parts.join(" · ") : i18n("Unavailable");
+    }
+
+    function shareText(row) {
+        var label = ShareUsage.percentLabel(row.share);
+        return label ? i18n("%1%", label) : "";
     }
 
     function omittedProviderText() {
@@ -166,11 +176,9 @@ Controls.ApplicationWindow {
                 tokens: window.snapshot.tokens === null ? "-" : Costs.tokenCountString(window.snapshot.tokens, window.applet.costNumberFormat),
                 costTitle: i18n("Estimated usage cost"),
                 cost: window.costText,
+                shares: window.providerRows,
                 sections: [
-                    { title: i18n("Providers"), rows: window.snapshot.providers.map(function(row) {
-                        return { title: window.applet.providerDisplayTitle(row.provider), detail: window.amountText(row),
-                            color: window.applet.providerColor(row.provider) }
-                    }), extra: window.omittedProviderText() },
+                    { title: i18n("Providers"), rows: window.providerRows, extra: window.omittedProviderText() },
                     { title: i18n("Top models by tokens"), rows: window.snapshot.models.map(function(row) {
                         return { title: row.label,
                             detail: window.applet.providerDisplayTitle(row.provider) + " · " + window.amountText(row),

@@ -394,6 +394,7 @@ msgid "Latest dashboard day"
 msgstr ""
 
 #: contents/ui/components/CostText.qml
+#: contents/ui/components/ShareUsageWindow.qml
 #, kde-format
 msgid "%1%"
 msgstr ""

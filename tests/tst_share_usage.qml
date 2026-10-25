@@ -91,7 +91,27 @@ TestCase {
         compare(data.providers[3].tokens, null)
         compare(data.providers[3].cost, 0)
         compare(data.models.length, 3)
+        compare(data.providers.map(function(row) { return row.share }), [100 / 170, 50 / 170, 20 / 170, null])
         compare(ShareUsage.snapshot([cost("pi", null, null, "USD")], 30, "", false).tokens, null)
+        compare(ShareUsage.snapshot([cost("pi", 0, 1, "USD")], 30, "", false).providers[0].share, null)
+    }
+
+    function test_percentLabel_data() {
+        return [
+            {tag: "zero", share: 0, label: "0"},
+            {tag: "tiny", share: 0.0001, label: "<1"},
+            {tag: "rounded", share: 0.584, label: "58"},
+            {tag: "near-whole", share: 0.996, label: ">99"},
+            {tag: "whole", share: 1, label: "100"},
+            {tag: "unknown", share: null, label: ""},
+            {tag: "nan", share: NaN, label: ""},
+            {tag: "negative", share: -0.1, label: ""},
+            {tag: "excess", share: 1.5, label: ""},
+            {tag: "string", share: "0.5", label: ""}
+        ]
+    }
+    function test_percentLabel(data) {
+        compare(ShareUsage.percentLabel(data.share), data.label)
     }
 
     function test_allowlistAndDetachedSnapshot() {
@@ -189,6 +209,7 @@ TestCase {
         for (var i = 0; i < 140; i++) many.push(cost("p" + i, i, 1, "USD"))
         data = ShareUsage.snapshot(many, 30, "", false)
         compare(data.providers.length, 8)
+        verify(data.providers.reduce(function(sum, row) { return sum + row.share }, 0) < 1)
         compare(data.models.length, 6)
         verify(data.omittedProviders > 0)
         verify(data.omittedModels > 0)

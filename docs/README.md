@@ -189,7 +189,8 @@ when the product changes instead of adding dated before/after copies.
 - [Hidden usage rows](codexbar-plasma-hidden-usage-rows.png): synthetic provider tab showing the inline restore list.
 - [Usage and spend](codexbar-plasma-usage-spend.png)
 - [Shared usage card](codexbar-plasma-share.png): synthetic local PNG summary,
-  with separate provider/model rows and the repository attribution.
+  with the provider token-share bar, separate provider/model rows, and the
+  repository attribution.
 - [Sessions](codexbar-plasma-sessions.png)
 - [Standard panel](codexbar-plasma-panel-standard.png): colored provider icons and dual quota capsules.
 - [Minimal panel](codexbar-plasma-panel-minimal.png): monochrome provider icons and dual quota capsules.

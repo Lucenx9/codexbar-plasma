@@ -635,7 +635,9 @@ normalizer caps its existing cost-first list. Both rankings pass through the
 privacy projection. The export never serializes a provider record, account, project, or raw error.
 `main.qml` freezes that projection when the user opens the lazy-loaded
 `ShareUsageWindow.qml`. `ShareUsageCard.qml` renders the export with system
-fonts, tabular figures, theme colors, and responsive provider/model columns.
+fonts, tabular figures, theme colors, a provider token-share bar, and responsive
+provider/model columns. `ShareUsage.js` bounds each provider share against the
+token total and formats its whole-percent label.
 The separate window owns capture generations, native
 clipboard writes, save results, and the save dialog. Closing or changing privacy
 retires pending captures; the panel popup may close independently.

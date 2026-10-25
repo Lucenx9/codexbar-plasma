@@ -652,7 +652,11 @@ uses the Plasma colors and fonts and includes a small
 `github.com/Lucenx9/codexbar-plasma` attribution in its footer.
 
 Totals include the loaded providers; at most eight provider rows and six models
-are shown, ranked by tokens, with omitted row counts. Model rows without a token
+are shown, ranked by tokens, with omitted row counts. A colored bar under the
+totals and a percentage in each provider row show its share of tracked tokens;
+omitted providers leave the end of the bar uncolored. A nonzero share below 1%
+reads `<1%`, and the bar is replaced by a plain divider when no provider
+reports tokens. Model rows without a token
 count are excluded from the ranking. Currencies remain separate. Unknown values
 are not zero, and incomplete or estimated data retains a notice in both exports.
 The ordinary six-row display limit alone does not trigger that notice.
