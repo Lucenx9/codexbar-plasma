@@ -12,6 +12,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Added
 
+- Preview quota warning and critical color ranges in Notifications settings
+  while editing thresholds, before applying them.
 - Expand Status Page for Claude, Claude Platform, Codex, and OpenAI into the
   status of each service component read from the public status page, with
   OpenAI's grouped components collapsible, and open the page from the list.
