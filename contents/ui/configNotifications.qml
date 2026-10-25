@@ -152,36 +152,36 @@ KCM.SimpleKCM {
                 }
 
                 Repeater {
-                    model: [
-                        {name: "quotaWarningLegend", color: Kirigami.Theme.neutralTextColor,
-                            text: i18n("Warning from %1%", page.cfg_quotaWarningPercent.toLocaleString(Qt.locale(), 'f', 0))},
-                        {name: "quotaCriticalLegend",
-                            color: page.cfg_quotaCriticalPercent === 100 ? Kirigami.Theme.neutralTextColor : Kirigami.Theme.negativeTextColor,
-                            text: i18n("Critical from %1%", page.cfg_quotaCriticalPercent.toLocaleString(Qt.locale(), 'f', 0))}
-                    ]
+                    // A constant model keeps the legend items alive while thresholds change.
+                    model: ["quotaWarningLegend", "quotaCriticalLegend"]
 
                     delegate: RowLayout {
-                        required property var modelData
+                        required property int index
+                        required property string modelData
+                        readonly property bool critical: index === 1
                         // Pack legends at the start, yet let them shrink and wrap when narrow.
                         Layout.fillWidth: true
                         Layout.maximumWidth: implicitWidth
                         spacing: Kirigami.Units.smallSpacing
 
                         Rectangle {
-                            objectName: modelData.name + "Swatch"
+                            objectName: modelData + "Swatch"
                             Layout.alignment: Qt.AlignTop
                             Layout.topMargin: Math.max(0, Math.round((legendMetrics.height - height) / 2))
                             implicitWidth: Kirigami.Units.smallSpacing * 2
                             implicitHeight: implicitWidth
                             radius: width / 2
-                            color: modelData.color
+                            color: critical && page.cfg_quotaCriticalPercent !== 100
+                                ? Kirigami.Theme.negativeTextColor : Kirigami.Theme.neutralTextColor
                             Accessible.ignored: true
                         }
 
                         Components.PlainControlsLabel {
-                            objectName: modelData.name
+                            objectName: modelData
                             Layout.fillWidth: true
-                            text: modelData.text
+                            text: critical
+                                ? i18n("Critical from %1%", page.cfg_quotaCriticalPercent.toLocaleString(Qt.locale(), 'f', 0))
+                                : i18n("Warning from %1%", page.cfg_quotaWarningPercent.toLocaleString(Qt.locale(), 'f', 0))
                             font: Kirigami.Theme.smallFont
                             wrapMode: Text.WordWrap
                         }
