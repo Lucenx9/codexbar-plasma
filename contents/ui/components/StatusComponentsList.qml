@@ -142,7 +142,7 @@ ColumnLayout {
     Controls.ItemDelegate {
         Layout.fillWidth: true
         Layout.leftMargin: Kirigami.Units.largeSpacing
-        Layout.rightMargin: Kirigami.Units.smallSpacing
+        Layout.rightMargin: Kirigami.Units.largeSpacing
         leftPadding: Kirigami.Units.smallSpacing
         rightPadding: Kirigami.Units.smallSpacing
         text: i18n("Open Status Page")
