@@ -1524,6 +1524,7 @@ KCM.SimpleKCM {
                                 Layout.fillWidth: true
                                 model: [i18n("Automatic"), "API", "CLI", "OAuth", i18n("Web")]
                                 currentIndex: -1
+                                displayText: currentIndex < 0 ? i18n("Choose a source") : currentText
                                 Accessible.name: i18n("Source mode")
                                 enabled: page.selectedProvider !== null
                                     && !page.loading

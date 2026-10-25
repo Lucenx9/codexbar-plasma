@@ -140,26 +140,52 @@ KCM.SimpleKCM {
                 }
             }
 
+            // Swatches tie each legend to its color; label position along the
+            // scale would only line up with one threshold pair.
             RowLayout {
                 Layout.fillWidth: true
-                spacing: Kirigami.Units.largeSpacing
+                spacing: Kirigami.Units.largeSpacing * 2
 
-                Components.PlainControlsLabel {
-                    objectName: "quotaWarningLegend"
-                    Layout.fillWidth: true
-                    Layout.preferredWidth: 1
-                    text: i18n("Warning from %1%", page.cfg_quotaWarningPercent.toLocaleString(Qt.locale(), 'f', 0))
+                FontMetrics {
+                    id: legendMetrics
                     font: Kirigami.Theme.smallFont
-                    wrapMode: Text.WordWrap
                 }
 
-                Components.PlainControlsLabel {
-                    objectName: "quotaCriticalLegend"
-                    Layout.fillWidth: true
-                    Layout.preferredWidth: 1
-                    text: i18n("Critical from %1%", page.cfg_quotaCriticalPercent.toLocaleString(Qt.locale(), 'f', 0))
-                    font: Kirigami.Theme.smallFont
-                    wrapMode: Text.WordWrap
+                Repeater {
+                    // A constant model keeps the legend items alive while thresholds change.
+                    model: ["quotaWarningLegend", "quotaCriticalLegend"]
+
+                    delegate: RowLayout {
+                        required property int index
+                        required property var modelData
+                        readonly property bool critical: index === 1
+                        // Pack legends at the start, yet let them shrink and wrap when narrow.
+                        Layout.fillWidth: true
+                        Layout.maximumWidth: implicitWidth
+                        spacing: Kirigami.Units.smallSpacing
+
+                        Rectangle {
+                            objectName: modelData + "Swatch"
+                            Layout.alignment: Qt.AlignTop
+                            Layout.topMargin: Math.max(0, Math.round((legendMetrics.height - height) / 2))
+                            implicitWidth: Kirigami.Units.smallSpacing * 2
+                            implicitHeight: implicitWidth
+                            radius: width / 2
+                            color: critical && page.cfg_quotaCriticalPercent !== 100
+                                ? Kirigami.Theme.negativeTextColor : Kirigami.Theme.neutralTextColor
+                            Accessible.ignored: true
+                        }
+
+                        Components.PlainControlsLabel {
+                            objectName: modelData
+                            Layout.fillWidth: true
+                            text: !critical
+                                ? i18n("Warning from %1%", page.cfg_quotaWarningPercent.toLocaleString(Qt.locale(), 'f', 0))
+                                : i18n("Critical from %1%", page.cfg_quotaCriticalPercent.toLocaleString(Qt.locale(), 'f', 0))
+                            font: Kirigami.Theme.smallFont
+                            wrapMode: Text.WordWrap
+                        }
+                    }
                 }
             }
         }

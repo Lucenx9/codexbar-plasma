@@ -13,13 +13,16 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 ### Added
 
 - Preview quota warning and critical color ranges in Notifications settings
-  while editing thresholds, before applying them.
+  while editing thresholds, before applying them, with a color swatch beside
+  each threshold in the legend.
 - Expand Status Page for Claude, Claude Platform, Codex, and OpenAI into the
   status of each service component read from the public status page, with
   OpenAI's grouped components collapsible, and open the page from the list.
 
 ### Changed
 
+- Show a **Choose a source** prompt in the provider Source mode selector instead
+  of a blank field before a mode is selected.
 - Switch cost history between Cost and Tokens with a one-click toggle in
   provider details and Usage & Spend, instead of a menu that repeated the
   section title.
