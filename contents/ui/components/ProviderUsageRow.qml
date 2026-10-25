@@ -91,6 +91,7 @@ ColumnLayout {
 
             visible: usageRow.rowData.hasPercent
             text: usageRow.applet.usagePercentText(usageRow.rowData)
+            font.pointSize: Kirigami.Theme.defaultFont.pointSize * 1.15
             font.weight: Font.DemiBold
             horizontalAlignment: Text.AlignRight
             elide: Text.ElideRight
@@ -164,12 +165,29 @@ ColumnLayout {
         }
     }
 
-    RowLayout {
+    TextMetrics {
+        id: usageMetadataMetrics
+
+        font: usagePaceLabel.font
+        text: usagePaceLabel.text + usageResetLabel.text
+    }
+
+    GridLayout {
+        id: usageMetadataLayout
+
+        // Measure the unwrapped text, so changing columns never feeds the
+        // resulting label geometry back into the layout decision.
+        readonly property bool stacked: usagePaceLabel.visible && usageResetLabel.visible
+            && usageMetadataMetrics.advanceWidth + columnSpacing > width
+
         visible: usageRow.summaryText.length > 0
             || (usageRow.showPace && usageRow.rowData.pace.length > 0)
             || usageRow.resetText.length > 0
         Layout.fillWidth: true
-        spacing: Kirigami.Units.smallSpacing
+        Layout.minimumWidth: 0
+        columns: stacked ? 1 : 2
+        columnSpacing: Kirigami.Units.smallSpacing
+        rowSpacing: Kirigami.Units.smallSpacing / 2
 
         PlainPlasmaLabel {
             id: usagePaceLabel
@@ -183,7 +201,8 @@ ColumnLayout {
             opacity: usageRow.applet.secondaryTextOpacity
             Layout.alignment: Qt.AlignBaseline
             Layout.fillWidth: true
-            wrapMode: Text.WordWrap
+            Layout.minimumWidth: 0
+            wrapMode: Text.Wrap
         }
 
         PlainPlasmaLabel {
@@ -193,10 +212,14 @@ ColumnLayout {
             text: usageRow.resetText
             font: Kirigami.Theme.smallFont
             opacity: usageRow.applet.secondaryTextOpacity
-            horizontalAlignment: Text.AlignRight
+            horizontalAlignment: usageMetadataLayout.stacked || !usagePaceLabel.visible
+                ? Text.AlignLeft : Text.AlignRight
             elide: Text.ElideRight
             Layout.alignment: Qt.AlignBaseline
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 14
+            Layout.fillWidth: true
+            Layout.minimumWidth: 0
+            Layout.maximumWidth: usageMetadataLayout.stacked || !usagePaceLabel.visible
+                ? Infinity : implicitWidth
 
             HoverHandler { id: usageResetHover }
 

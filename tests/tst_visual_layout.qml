@@ -1939,6 +1939,65 @@ TestCase {
         verify(pace !== null);
     }
 
+    function test_providerUsageMetadataAdaptsToAvailableWidth_data() {
+        return [
+            {tag: "ltr", mirrored: false, fontScale: 1},
+            {tag: "rtl", mirrored: true, fontScale: 1},
+            {tag: "large-text", mirrored: false, fontScale: 2}
+        ];
+    }
+
+    function test_providerUsageMetadataAdaptsToAvailableWidth(data) {
+        failOnWarning(/Qt Quick Layouts: Detected recursive rearrange|Binding loop detected/);
+        var holder = createTemporaryQmlObject(
+            'import QtQuick; Item { LayoutMirroring.childrenInherit: true }', testCase);
+        holder.LayoutMirroring.enabled = data.mirrored;
+        var model = usageRowData();
+        model.pace = "37% in deficit | Expected 43% used | Runs out in 18 hours";
+        var row = createControl("ProviderUsageRow", {
+            applet: applet, providerData: {provider: "codex"}, modelData: model, width: 240
+        }, holder);
+        if (!row)
+            return;
+        var pace = findItem(row, item => item.objectName === "usagePaceLabel");
+        var reset = findItem(row, item => item.text === model.reset);
+        var originalFontSize = pace.font.pointSize;
+        pace.font.pointSize = originalFontSize * data.fontScale;
+        reset.font.pointSize = originalFontSize * data.fontScale;
+        for (var width of [900 * data.fontScale, 540, 240, 900 * data.fontScale]) {
+            row.width = width;
+            verify(waitForPolish(row));
+            if (width === 240 || (width === 540 && data.fontScale === 2)) {
+                verify(reset.mapToItem(row, 0, 0).y >= pace.mapToItem(row, 0, pace.height).y,
+                    "Long forecasts and reset times must use separate rows when space is limited");
+            } else {
+                fuzzyCompare(pace.mapToItem(row, 0, 0).y, reset.mapToItem(row, 0, 0).y, 1);
+            }
+            for (var label of [pace, reset]) {
+                verify(label.width > 0);
+                verify(label.mapToItem(row, 0, 0).x >= -1);
+                verify(label.mapToItem(row, label.width, 0).x <= row.width + 1,
+                    "Quota metadata must stay within the meter width");
+            }
+        }
+        // An unbroken CLI fallback still wraps inside the popup.
+        model.pace = "VeryLongForecast".repeat(12);
+        row.modelData = model;
+        row.width = 240;
+        verify(waitForPolish(row));
+        compare(pace.text, model.pace);
+        verify(pace.contentWidth <= pace.width + 1);
+        verify(reset.mapToItem(row, 0, 0).y >= pace.mapToItem(row, 0, pace.height).y);
+
+        model.pace = "";
+        model.reset = "Resets after the next billing cycle ".repeat(4);
+        row.modelData = model;
+        verify(waitForPolish(row));
+        compare(pace.visible, false);
+        verify(reset.truncated);
+        verify(reset.width <= row.width);
+    }
+
     // The hide action stays out of sight until the row is hovered or the
     // button takes focus, and asks the applet to hide this provider's row.
     function test_providerUsageRowOffersHideAction() {
