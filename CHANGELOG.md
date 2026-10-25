@@ -18,6 +18,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Mark the inspected chart point with a vertical guide, including zero values,
+  reveal abbreviated point labels and values in a tooltip, and show keyboard
+  readouts immediately across cost, Usage & Spend, and provider detail charts.
 - Make Overview quota names easier to distinguish from reset metadata, keep
   percentages aligned with their meters, and align provider icons with their
   names and accounts. Reveal usage-row hide actions immediately on hover or keyboard focus.

@@ -297,7 +297,9 @@ TestCase {
     function createControl(type, properties, parent) {
         var holder;
         try {
-            holder = Qt.createQmlObject('import QtQuick; import "../contents/ui/components" as Components; QtObject { property Component control: Component { Components.' + type + ' { function i18n(text) { return text } function i18np(one, many, count) { return count === 1 ? one : many } } } }', testCase, Qt.resolvedUrl("VisualLayoutTest.qml"));
+            holder = Qt.createQmlObject('import QtQuick; import "../contents/ui/components" as Components; QtObject { property Component control: Component { Components.' + type
+                + ' { function i18n(text) { for (var i = 1; i < arguments.length; i++) text = text.replace("%" + i, String(arguments[i])); return text }'
+                + ' function i18np(one, many, count) { return count === 1 ? one : many } } } }', testCase, Qt.resolvedUrl("VisualLayoutTest.qml"));
         } catch (error) {
             if (/module "org\.kde\.(kirigami|plasma\.components)" is not installed/.test(String(error))) {
                 skip("Visual layout checks need the optional KDE QML modules");
@@ -1462,6 +1464,54 @@ TestCase {
         tryCompare(chart, "selectedIndex", -1);
         keyClick(Qt.Key_End);
         compare(chart.selectedIndex, -1);
+    }
+
+    function test_chartReadoutRevealsTruncatedText_data() {
+        return [
+            {tag: "hover-label", keyboard: false, longLabel: true},
+            {tag: "hover-value", keyboard: false, longLabel: false},
+            {tag: "keyboard-label", keyboard: true, longLabel: true},
+            {tag: "keyboard-value", keyboard: true, longLabel: false}
+        ];
+    }
+
+    function test_chartReadoutRevealsTruncatedText(data) {
+        var longText = "Platform infrastructure <model> & enterprise workspace allowance";
+        var chart = createControl("InteractiveChart", {
+            applet: applet, width: 240, accent: "blue",
+            points: [{label: data.longLabel ? longText : "Day", value: 0,
+                displayValue: data.longLabel ? "0" : longText}]
+        });
+        if (!chart)
+            return;
+        var plot = findItem(chart, item => typeof item.requestPaint === "function");
+        verify(plot !== null);
+        if (data.keyboard) {
+            plot.forceActiveFocus(Qt.TabFocusReason);
+            keyClick(Qt.Key_Home);
+        } else {
+            mouseMove(plot, plot.width / 2, plot.height / 2);
+        }
+        var label = findItem(chart, item => item.text === longText);
+        verify(label !== null);
+        tryCompare(label, "truncated", true);
+        if (data.keyboard)
+            compare(label.parent.opacity, 1, "Keyboard inspection must show its readout immediately");
+        var tips = [];
+        findAllItems(plot, item => typeof item.plainText === "string" && item.delay !== undefined, tips);
+        compare(tips.length, 1);
+        var tip = tips[0];
+        tryCompare(tip, "visible", true, tip.delay + 1000);
+        verify(tip.plainText.indexOf(longText) >= 0);
+        verify(tip.text.indexOf("&lt;model&gt;") >= 0);
+
+        // Both fields fit after a refresh, so inspection needs no tooltip.
+        chart.points = [{label: "Day", value: 0, displayValue: "0"}];
+        tryCompare(tip, "visible", false);
+        // Reopening with an empty snapshot must not expose retained readout text.
+        chart.points = [];
+        compare(tip.plainText, "");
+        mouseMove(testCase, 600, 220);
     }
 
     function test_providerDetailValuesStayWithinPopup_data() {
