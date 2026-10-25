@@ -23,6 +23,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 - Show a **Choose a source** prompt in the provider Source mode selector instead
   of a blank field before a mode is selected.
+- Enable automatic widget installation by default, including existing instances
+  without a saved preference. Explicitly saved choices are preserved; to opt
+  out, clear **General → Updates → Install widget updates automatically** and
+  apply. Plasma may have omitted the old off value because it matched the
+  previous default. Updates still require a Plasma restart or logout/login to
+  take effect; Plasma is never restarted automatically.
 - Switch cost history between Cost and Tokens with a one-click toggle in
   provider details and Usage & Spend, instead of a menu that repeated the
   section title.

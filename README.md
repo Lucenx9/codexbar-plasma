@@ -203,7 +203,7 @@ themes.
   notices. It is off by default and has no prices or account-wide coverage.
 - A local **Sessions** tab. Transcript paths and working directories are never
   displayed or opened.
-- Refresh on popup opening, plus optional privacy mode and automatic widget updates.
+- Refresh on popup opening and automatic widget updates by default, plus optional privacy mode.
 - Optional, off-by-default beta [AI Insights](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/usage.md#ai-insights):
   a short summary in Overview with an in-popup analysis view, from a local
   Ollama model, OpenRouter, or OpenAI,
@@ -251,7 +251,12 @@ are enabled by default. Checks run every 24 hours by default; restarting Plasma
 respects the last successful check, while first use or an overdue check runs
 immediately. Manual checks bypass the interval. Clicking an update notification
 opens that release's page on GitHub where the installed `notify-send` supports notification actions.
-**Install widget updates automatically** is opt-in.
+**Install widget updates automatically** is enabled by default. This also applies
+to existing instances without a saved value; explicitly saved choices are kept.
+To opt out, clear that checkbox and apply the settings. Plasma may have omitted
+the previous off setting because it matched the old default. Installed updates
+take effect after you restart Plasma or log out and back in; the automatic
+updater never restarts Plasma itself.
 
 The widget-update helper accepts only immutable GitHub releases. It binds assets to
 the advertised tag, verifies SHA-256 digests and the published checksum, and
