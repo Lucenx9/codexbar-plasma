@@ -183,8 +183,7 @@ Rectangle {
                             opacity: overviewRow.applet.valueTextOpacity
                             anchors.verticalCenter: parent.verticalCenter
                             width: Math.min(implicitWidth, Math.max(0,
-                                overviewMeterPercent.x - Kirigami.Units.smallSpacing)
-                                * (overviewMeterReset.visible ? 0.4 : 1))
+                                overviewMeterPercent.x - Kirigami.Units.smallSpacing))
                             elide: Text.ElideRight
                         }
 
