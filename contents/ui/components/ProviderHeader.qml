@@ -51,6 +51,7 @@ RowLayout {
 
     ColumnLayout {
         Layout.fillWidth: true
+        Layout.minimumWidth: 0
         spacing: Kirigami.Units.smallSpacing / 2
 
         RowLayout {
@@ -113,12 +114,23 @@ RowLayout {
 
         }
 
-        RowLayout {
+        GridLayout {
             id: providerMetaRow
+
+            // Unelided text widths keep this decision independent of the
+            // geometry assigned to either label by the layout.
+            readonly property bool stacked: providerHeaderRow.hasAccount && providerHeaderRow.hasPlan
+                && Math.ceil(providerAccountLabel.implicitWidth) + Math.ceil(providerPlanLabel.implicitWidth)
+                    + Math.ceil(providerMetaSeparator.implicitWidth) + columnSpacing * 3 > width
 
             visible: providerHeaderRow.hasAccount || providerHeaderRow.hasPlan
             Layout.fillWidth: true
-            spacing: Kirigami.Units.smallSpacing
+            Layout.minimumWidth: 0
+            // Capped labels must not cap the grid after its filler disappears.
+            Layout.maximumWidth: Infinity
+            columns: stacked ? 1 : 4
+            columnSpacing: Kirigami.Units.smallSpacing
+            rowSpacing: Kirigami.Units.smallSpacing / 2
 
             PlainPlasmaLabel {
                 id: providerAccountLabel
@@ -129,10 +141,8 @@ RowLayout {
                 font: Kirigami.Theme.smallFont
                 opacity: providerHeaderRow.applet.secondaryTextOpacity
                 elide: Text.ElideMiddle
-                // The plan sits beside the account instead of drifting to the
-                // row's far end. The label never grows past its own text, so
-                // the trailing filler keeps both left-aligned, while filling
-                // lets the account elide first on narrow popups.
+                // Keep short metadata adjacent; each label gets the available
+                // line when the pair would otherwise need to be abbreviated.
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
                 Layout.maximumWidth: Math.ceil(implicitWidth)
@@ -152,7 +162,7 @@ RowLayout {
                 id: providerMetaSeparator
 
                 Layout.alignment: Qt.AlignBaseline
-                visible: providerHeaderRow.hasAccount && providerHeaderRow.hasPlan
+                visible: providerHeaderRow.hasAccount && providerHeaderRow.hasPlan && !providerMetaRow.stacked
                 text: "·"
                 font: Kirigami.Theme.smallFont
                 opacity: providerHeaderRow.applet.secondaryTextOpacity
@@ -185,6 +195,7 @@ RowLayout {
             }
 
             Item {
+                visible: !providerMetaRow.stacked
                 Layout.fillWidth: true
             }
         }
