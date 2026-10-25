@@ -151,6 +151,10 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
   108-provider registry, Soniox key setup, the Copilot `config login` command,
   the verified musl Codex cost fix, the daily-target comparison, installer
   compatibility, and isolated carried-blocker checks.
+- [0.81.0 release review](research/2026-10-25-macos-parity-0.81.0.md): the
+  110-provider registry, abliteration.ai and Chatbox AI key setup, the
+  per-strategy Linux Auto gate with the fixed Gemini Auto regression, plugin
+  window titles, and isolated carried-blocker checks.
 - [0.75.0 Codex contract verification](research/2026-10-15-codex-contracts-0.75.0.md):
   synthetic native partial-priced cost output, identified-request local/remote
   merge and failure semantics, authoritative reset-credit inventory, and the
