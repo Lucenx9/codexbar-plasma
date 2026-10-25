@@ -120,8 +120,8 @@ RowLayout {
             // Unelided text widths keep this decision independent of the
             // geometry assigned to either label by the layout.
             readonly property bool stacked: providerHeaderRow.hasAccount && providerHeaderRow.hasPlan
-                && Math.ceil(providerAccountLabel.implicitWidth + providerPlanLabel.implicitWidth
-                    + providerMetaSeparator.implicitWidth) + columnSpacing * 2 > width
+                && Math.ceil(providerAccountLabel.implicitWidth) + Math.ceil(providerPlanLabel.implicitWidth)
+                    + Math.ceil(providerMetaSeparator.implicitWidth) + columnSpacing * 3 > width
 
             visible: providerHeaderRow.hasAccount || providerHeaderRow.hasPlan
             Layout.fillWidth: true

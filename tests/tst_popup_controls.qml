@@ -643,6 +643,17 @@ TestCase {
             return separator.visible && !account.truncated && !plan.truncated
                 && Math.abs(header.implicitHeight - wideHeight) < 1;
         });
+        // Sweep the tight boundary, including the filler gap and fractional
+        // font metrics: inline metadata must never abbreviate either value.
+        var chromeWidth = layout.width - account.parent.width;
+        var textWidth = account.implicitWidth + plan.implicitWidth + separator.implicitWidth;
+        var gap = account.parent.columnSpacing;
+        for (var extra = 0; extra <= gap * 4; extra++) {
+            layout.width = Math.ceil(chromeWidth + textWidth + extra);
+            wait(20);
+            verify(!separator.visible || (!account.truncated && !plan.truncated),
+                "Inline metadata truncates at width " + layout.width);
+        }
     }
 
     function test_incidentBadgeYieldsToTheStatusBanner() {
