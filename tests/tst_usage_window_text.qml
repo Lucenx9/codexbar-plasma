@@ -67,7 +67,7 @@ TestCase {
             }
         ];
         var before = JSON.stringify(parts);
-        compare(subject.paceSummaryPartsText(parts), "On pace | 13% in deficit | 3% in reserve | Expected 40% used | Lasts until reset | Runs out in 1 hour | Runs out now | Legacy <forecast>");
+        compare(subject.paceSummaryPartsText(parts), "On pace \u00b7 13% in deficit \u00b7 3% in reserve \u00b7 Expected 40% used \u00b7 Lasts until reset \u00b7 Runs out in 1 hour \u00b7 Runs out now \u00b7 Legacy <forecast>");
         compare(JSON.stringify(parts), before);
         compare(subject.paceSummaryPartsText([]), "");
     }

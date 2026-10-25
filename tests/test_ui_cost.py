@@ -26,6 +26,7 @@ cost_presentation_text = cost_presentation_js.read_text(encoding="utf-8")
 provider_cost_section_text = provider_cost_section_qml.read_text(encoding="utf-8")
 interactive_chart_text = interactive_chart_qml.read_text(encoding="utf-8")
 spend_view_text = spend_view_qml.read_text(encoding="utf-8")
+cost_metric_toggle_text = (root / "contents/ui/components/CostMetricToggle.qml").read_text(encoding="utf-8")
 full_representation_text = full_representation_qml.read_text(encoding="utf-8")
 cost_trust_notice_text = cost_trust_notice_qml.read_text(encoding="utf-8")
 main_qml_text = (root / "contents/ui/main.qml").read_text(encoding="utf-8")
@@ -158,7 +159,7 @@ class CostTest(unittest.TestCase):
         history_controls = applet.id_block("historyControlsRow")
         if "ComboBox" in spend_header or "spendTotalLine()" not in spend_header:
             raise AssertionError("history filters must leave the full header width available for the spend total")
-        for control_id in ("metricCombo", "rangeCombo"):
+        for control_id in ("metricToggle", "rangeCombo"):
             if f"id: {control_id}" not in history_controls:
                 raise AssertionError("history filters must remain grouped on their own row")
 
@@ -322,7 +323,8 @@ class CostTest(unittest.TestCase):
             "accountSelectionKey,",
             "accountSelectionLabel,",
             "applet.accountLabel(providerData)",
-            "applet.setCostHistoryMetric(valueAt(index))",
+            "Components.CostMetricToggle {",
+            "applet: tokenCostSection.applet",
         ):
             if not code_contains(token_cost_section_body, fragment):
                 raise AssertionError(f"provider cost selection is missing {fragment!r}")
@@ -411,15 +413,27 @@ class CostTest(unittest.TestCase):
     def test_spend_range_and_refresh(self):
         if not code_contains(spend_view_text, "rangeCombo.valueAt(index)"):
             raise AssertionError("the cost range selector must use the activated option instead of stale currentValue")
-        for metric_combo_source, metric_combo_text in (
+        if not code_contains(spend_view_text, "rangeCombo.currentIndex = Qt.binding(function"):
+            raise AssertionError(
+                "SpendView.qml must restore the range combo's currentIndex "
+                "binding after an interactive pick severs it"
+            )
+        # Both history views share one metric control; its checked buttons
+        # follow the applet setting after a click severs their bindings.
+        for metric_source, metric_text in (
             ("SpendView.qml", spend_view_text),
             ("ProviderCostSection.qml", provider_cost_section_text),
         ):
-            if not code_contains(metric_combo_text, "currentIndex = Qt.binding(function"):
-                raise AssertionError(
-                    f"{metric_combo_source} must restore the metric combo's currentIndex "
-                    "binding after an interactive pick severs it"
-                )
+            if "Components.CostMetricToggle {" not in metric_text or "PlainComboBox {\n            objectName: \"providerCostMetricCombo\"" in metric_text:
+                raise AssertionError(f"{metric_source} must use the shared Cost/Tokens toggle")
+        for toggle_fragment in (
+            "readonly property int currentIndex: applet.costHistoryShowsTokens ? 1 : 0",
+            "applet.setCostHistoryMetric(values[index])",
+            "checked = Qt.binding(function",
+            'Accessible.name: i18n("History metric")',
+        ):
+            if not code_contains(cost_metric_toggle_text, toggle_fragment):
+                raise AssertionError(f"CostMetricToggle.qml is missing {toggle_fragment!r}")
         if not code_contains(spend_view_text, "view.applet.refreshCost(true)"):
             raise AssertionError("the cost refresh button must explicitly bypass the automatic hourly throttle")
         for cost_loading_fragment in (

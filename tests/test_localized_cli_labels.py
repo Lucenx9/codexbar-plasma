@@ -31,17 +31,17 @@ class LocalizedCliLabelTests(unittest.TestCase):
                              for name, args in signatures.items())
         expected = {
             "en": ["Active", "Idle", "Running", "Working", "Desktop app", "Command line",
-                   "13% in deficit | Expected 30% used | Runs out in 1 hour"],
+                   "13% in deficit · Expected 30% used · Runs out in 1 hour"],
             "it": ["Attiva", "Inattiva", "In esecuzione", "Al lavoro", "Applicazione desktop",
-                   "Riga di comando", "13% oltre il previsto | Utilizzo previsto: 30% | Esaurimento previsto tra 1 ora"],
+                   "Riga di comando", "13% oltre il previsto · Utilizzo previsto: 30% · Esaurimento previsto tra 1 ora"],
             "fr": ["Active", "Inactive", "En cours", "Au travail", "Application de bureau",
-                   "Ligne de commande", "13 % au-delà des prévisions | Utilisation prévue : 30 % | Épuisement prévu dans 1 heure"],
+                   "Ligne de commande", "13 % au-delà des prévisions · Utilisation prévue : 30 % · Épuisement prévu dans 1 heure"],
             "de": ["Aktiv", "Inaktiv", "Wird ausgeführt", "In Bearbeitung", "Desktop-Anwendung",
-                   "Befehlszeile", "13% über dem Soll | Erwarteter Verbrauch: 30% | Voraussichtlich in 1 Stunde aufgebraucht"],
+                   "Befehlszeile", "13% über dem Soll · Erwarteter Verbrauch: 30% · Voraussichtlich in 1 Stunde aufgebraucht"],
             "es": ["Activa", "Inactiva", "En ejecución", "Trabajando", "Aplicación de escritorio",
-                   "Línea de comandos", "13 % por encima de lo previsto | Uso previsto: 30 % | Agotamiento previsto en 1 hora"],
+                   "Línea de comandos", "13 % por encima de lo previsto · Uso previsto: 30 % · Agotamiento previsto en 1 hora"],
             "pt_BR": ["Ativa", "Inativa", "Em execução", "Trabalhando", "Aplicativo de desktop",
-                      "Linha de comando", "13% acima do previsto | Uso previsto: 30% | Esgotamento previsto em 1 hora"],
+                      "Linha de comando", "13% acima do previsto · Uso previsto: 30% · Esgotamento previsto em 1 hora"],
         }
         count_labels = {
             "en": [["token", "tokens"], ["request", "requests"], ["point", "points"]],
@@ -225,7 +225,7 @@ TestCase {
         compare(paceSummaryPartsText(PacePresentation.summaryParts({stage: "ahead", deltaPercent: 13, expectedUsedPercent: 30,
             willLastToReset: false, etaSeconds: 3600, summary: "English summary"})), row.labels[6]);
         compare(paceSummaryPartsText(PacePresentation.summaryParts({stage: "onTrack", willLastToReset: true})),
-            i18n("On pace") + " | " + i18n("Lasts until reset"));
+            i18n("On pace") + " \u00b7 " + i18n("Lasts until reset"));
         compare(paceSummaryPartsText(PacePresentation.summaryParts({stage: "behind", deltaPercent: -3})), i18n("%1% in reserve", 3));
         compare(paceSummaryPartsText(PacePresentation.summaryParts({willLastToReset: false, etaSeconds: 0})), i18n("Runs out now"));
         compare(paceSummaryPartsText(PacePresentation.summaryParts({summary: "Legacy forecast"})), "Legacy forecast");

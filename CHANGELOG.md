@@ -20,6 +20,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Switch cost history between Cost and Tokens with a one-click toggle in
+  provider details and Usage & Spend, instead of a menu that repeated the
+  section title.
+- Keep pace and quota warning markers visible over the colored usage fill,
+  and separate pace forecast parts with ` · ` like other popup metadata.
 - Place the provider plan below the account when header text does not fit on
   one line, keeping both more readable in narrow popups and with larger fonts.
 - Emphasize provider quota percentages and stack pace forecasts above reset
