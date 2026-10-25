@@ -528,10 +528,10 @@ Provider-specific editable settings depend on the official CLI contract.
   CLI versions omit the editor.
 - Gemini under the default Automatic source: CLI 0.77.0 through 0.80.0 on Linux
   rejects Auto for Gemini as a macOS-only web source, so signed-in Gemini users see an error
-  where 0.76.0 worked. As a workaround, open **Providers → Settings and
-  diagnostics** for Gemini, choose **API** as the **Source mode**, and select
-  **Save**. Plasma never rewrites the saved source for you; switch back to
-  Automatic once an official CLI release fixes this.
+  where 0.76.0 worked. CLI 0.81.0 fixes this. With an affected CLI, update it, or open
+  **Providers → Settings and diagnostics** for Gemini, choose **API** as the
+  **Source mode**, and select **Save**. Plasma never rewrites the saved source for
+  you; switch back to Automatic after updating to 0.81.0 or later.
 - Single API-key setup for Tavily, Linkup, Aerostack, Sail Research, and Sofya
   uses the official Linux CLI writer verified at 0.74.0. Exa and Cosmic AI have
   metadata and dashboard links, but their additional key/project IDs have no
