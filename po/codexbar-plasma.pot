@@ -260,11 +260,20 @@ msgstr ""
 msgid "Average: %1 / 1M tokens"
 msgstr ""
 
+#: contents/ui/components/CostMetricToggle.qml
+msgid "History metric"
+msgstr ""
+
+#: contents/ui/components/CostMetricToggle.qml
 #: contents/ui/components/CostText.qml
 #: contents/ui/components/ProviderCostSection.qml
-#: contents/ui/components/RateWindowLabels.qml
-#: contents/ui/components/SpendView.qml contents/ui/main.qml
+#: contents/ui/components/RateWindowLabels.qml contents/ui/main.qml
 msgid "Cost"
+msgstr ""
+
+#: contents/ui/components/CostMetricToggle.qml
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Tokens"
 msgstr ""
 
 #: contents/ui/components/CostText.qml
@@ -1027,17 +1036,6 @@ msgid "%1 incomplete request excluded"
 msgid_plural "%1 incomplete requests excluded"
 msgstr[0] ""
 msgstr[1] ""
-
-#: contents/ui/components/ProviderCostSection.qml
-#: contents/ui/components/RateWindowLabels.qml
-#: contents/ui/components/SpendView.qml
-msgid "Tokens"
-msgstr ""
-
-#: contents/ui/components/ProviderCostSection.qml
-#: contents/ui/components/SpendView.qml
-msgid "History metric"
-msgstr ""
 
 #: contents/ui/components/ProviderCostSection.qml
 #: contents/ui/components/SpendView.qml

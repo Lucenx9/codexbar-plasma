@@ -25,13 +25,6 @@ ColumnLayout {
     readonly property real markerPercent: applet.paceMarkerPercent(rowData)
     readonly property string resetText: usageRow.applet.resetLabel(
         usageRow.applet.usageResetText(usageRow.rowData))
-    // Every marker drawn on the meter shares one geometry so pace and quota
-    // thresholds read as the same kind of annotation. The inset matters: a
-    // marker that spans the track edge to edge looks like a gap in the accent
-    // fill rather than a tick placed on top of it.
-    readonly property real meterMarkerInset: Math.max(1, Math.round(applet.meterTrackHeight / 7))
-    readonly property real meterMarkerWidth: Math.max(2, Math.round(applet.meterTrackHeight / 3.5))
-
     Layout.fillWidth: true
     spacing: Math.round(Kirigami.Units.smallSpacing / 1.5)
 
@@ -131,15 +124,11 @@ ColumnLayout {
             }
         }
 
-        Rectangle {
+        MeterMarker {
             objectName: "usagePaceMarker"
-            visible: usageRow.showPace && usageRow.markerPercent > 0 && usageRow.markerPercent < 100
-            x: Math.max(0, Math.min(parent.width - width, parent.width * usageRow.markerPercent / 100 - width / 2))
-            y: usageRow.meterMarkerInset
-            width: usageRow.meterMarkerWidth
-            height: parent.height - usageRow.meterMarkerInset * 2
-            radius: width / 2
-            color: usageRow.rowData.paceOnTop
+            visible: usageRow.showPace && percent > 0 && percent < 100
+            percent: usageRow.markerPercent
+            markerColor: usageRow.rowData.paceOnTop
                 ? usageRow.applet.withAlpha(Kirigami.Theme.positiveTextColor, 0.9)
                 : usageRow.applet.withAlpha(Kirigami.Theme.negativeTextColor, 0.9)
         }
@@ -149,18 +138,12 @@ ColumnLayout {
 
             model: usageRow.applet.quotaWarningMarkers(usageRow.rowData)
 
-            delegate: Rectangle {
+            delegate: MeterMarker {
                 required property var modelData
-                readonly property real warningPercent: Number(modelData.percent) || 0
 
-                visible: warningPercent > 0 && warningPercent < 100
-                x: Math.max(0, Math.min(usageBar.width - width, usageBar.width * warningPercent / 100 - width / 2))
-                y: usageRow.meterMarkerInset
-                width: usageRow.meterMarkerWidth
-                height: usageBar.height - usageRow.meterMarkerInset * 2
-                radius: width / 2
-                color: usageRow.applet.statusBadgeColor(modelData.severity)
-                opacity: 0.72
+                percent: Number(modelData.percent) || 0
+                markerColor: usageRow.applet.withAlpha(
+                    usageRow.applet.statusBadgeColor(modelData.severity), 0.72)
             }
         }
     }

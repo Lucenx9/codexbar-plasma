@@ -80,7 +80,7 @@ QtObject {
                 break;
             }
         }
-        return labels.join(" | ");
+        return labels.join(" \u00b7 ");
     }
 
     function paceEtaText(seconds) {
