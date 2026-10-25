@@ -31,6 +31,7 @@ import "UsageState.js" as UsageState
 import "ProviderViewModel.js" as ProviderViewModel
 import "QuotaThresholds.js" as QuotaThresholds
 import "SafeText.js" as SafeText
+import "StatusComponents.js" as StatusComponents
 import "ThemeContrast.js" as ThemeContrast
 import "UpdateLogic.js" as UpdateLogic
 
@@ -87,6 +88,10 @@ PlasmoidItem {
         return PrivacyPresentation.session(item, privacyMode)
     })
     readonly property var presentedProviderData: providerPresentation(selectedProviderData)
+    // A non-empty provider means its status-component list is expanded.
+    property var statusComponents: ({ provider: "", loading: false, failed: false, rows: [] })
+    // Open group names live here so rebuilt action rows restore them.
+    property var statusComponentGroups: []
     property bool costUsageEnabled: Plasmoid.configuration.costUsageEnabled !== false
     property int costHistoryDays: isFinite(Number(Plasmoid.configuration.costHistoryDays)) ? Math.max(1, Math.min(365, Number(Plasmoid.configuration.costHistoryDays))) : 30
     // A calendar period replaces the day window until a day count is chosen
@@ -225,8 +230,11 @@ PlasmoidItem {
     onExpandedChanged: {
         if (!expanded) {
             accountsController.dismissNotices()
+            collapseStatusComponents()
         }
     }
+    // Another tab or view retires the list and its request; it refetches on return.
+    onSelectedProviderIDChanged: collapseStatusComponents()
     onTokenCostsChanged: applyTokenCosts()
     onAutoSelectProviderChanged: updateSelectedProvider()
     onOverviewProviderIDsRawChanged: updateSelectedProvider()
@@ -1481,7 +1489,9 @@ PlasmoidItem {
             rows.push({ title: i18n("Usage Dashboard"), icon: "view-statistics", action: "dashboard", enabled: true })
         }
         if (safeStatusUrl(item.provider, item.statusUrl).length > 0) {
-            rows.push({ title: i18n("Status Page"), icon: "network-connect", action: "status", enabled: true })
+            // Expansion stays out of the rows: rebuilding them would destroy the focused row.
+            rows.push({ title: i18n("Status Page"), icon: "network-connect", action: "status", enabled: true,
+                expandable: StatusComponents.feed(providerKey(item.provider)).length > 0 })
         }
         if (showProviderChangelogs && item.changelogUrl && item.changelogUrl.length > 0) {
             rows.push({ title: i18n("Changelog"), icon: "view-list-details", action: "changelog", enabled: true })
@@ -1495,6 +1505,44 @@ PlasmoidItem {
         rows.push({ title: i18n("Settings…"), icon: "configure", action: "settings", enabled: true })
         rows.push({ title: i18n("About CodexBar"), icon: "help-about", action: "about", enabled: true })
         return rows
+    }
+
+    function statusComponentsExpanded(item) {
+        return !!item && statusComponents.provider.length > 0 && statusComponents.provider === providerKey(item.provider)
+    }
+
+    function toggleStatusComponents(item) {
+        var key = providerKey(item.provider)
+        var command = StatusComponents.command(statusComponentsScriptUrl, StatusComponents.feed(key))
+        if (statusComponents.provider === key || command.length === 0) {
+            collapseStatusComponents()
+            return
+        }
+        statusComponents = { provider: key, loading: true, failed: false, rows: [] }
+        statusComponentGroups = []
+        statusComponentsProcess.start(command, { provider: key }, 30000)
+    }
+
+    function collapseStatusComponents() {
+        statusComponentsProcess.cancel()
+        statusComponents = { provider: "", loading: false, failed: false, rows: [] }
+        statusComponentGroups = []
+    }
+
+    function toggleStatusComponentGroup(name) {
+        var groups = statusComponentGroups.filter(function(group) { return group !== name })
+        if (groups.length === statusComponentGroups.length) {
+            groups.push(name)
+        }
+        statusComponentGroups = groups
+    }
+
+    function finishStatusComponents(context, rows) {
+        // A collapsed list or another provider's newer request owns the state.
+        if (!context || context.provider !== statusComponents.provider) {
+            return
+        }
+        statusComponents = { provider: context.provider, loading: false, failed: rows === null, rows: rows || [] }
     }
 
     function providerAccountAction(item) {
@@ -1544,7 +1592,9 @@ PlasmoidItem {
         var item = selectedProviderData
         if (actionID === "dashboard" && item) {
             Qt.openUrlExternally(item.dashboardUrl)
-        } else if (actionID === "status" && item) {
+        } else if (actionID === "status" && item && actionRow && actionRow.expandable === true) {
+            toggleStatusComponents(item)
+        } else if ((actionID === "status" || actionID === "status-page") && item) {
             Qt.openUrlExternally(safeStatusUrl(item.provider, item.statusUrl))
         } else if (actionID === "changelog" && item) {
             Qt.openUrlExternally(item.changelogUrl)
@@ -2050,6 +2100,19 @@ PlasmoidItem {
 
     Components.AiInsightsMessages {
         id: aiInsightsMessages
+    }
+
+    readonly property url statusComponentsScriptUrl: Qt.resolvedUrl("../../scripts/status-components.py")
+
+    Controllers.CliProcess {
+        id: statusComponentsProcess
+
+        onCompleted: function(context, stdoutText) {
+            root.finishStatusComponents(context, StatusComponents.response(stdoutText))
+        }
+        onTimedOut: function(context) {
+            root.finishStatusComponents(context, null)
+        }
     }
 
     Controllers.ProviderConfigWatcher {

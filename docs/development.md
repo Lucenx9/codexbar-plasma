@@ -291,6 +291,27 @@ synchronized.
   `AiInsightsCard.qml` to `AiInsightsView.qml` and restores the origin's scroll
   position and keyboard focus on return. The detail view reuses the card's
   saved-answer presentation; opening it never starts a process or a cost scan.
+- `contents/ui/main.qml` owns the Status Page component list: its expanded
+  provider, the single `CliProcess` request, and the 30-second deadline.
+  Collapsing, closing the popup, switching tab or view, or expanding another
+  provider cancels the
+  request and refetches on the next expansion, and a late
+  result for a provider that is no longer expanded is ignored. The official CLI
+  emits only overall status, so `scripts/status-components.py` is a deliberate
+  exception to CLI ownership: it reads one fixed public feed for Claude or
+  OpenAI without credentials and prints bounded names and indicator values,
+  never other remote text or errors. `StatusComponents.js` maps providers to
+  feeds, builds the command, and validates the record;
+  `components/StatusComponentsList.qml` localizes states. Widget QML still
+  sends no HTTP itself. Expansion stays out of the action-row model so a
+  state change never rebuilds the focused row, and open group names live in
+  `statusComponentGroups` so a usage refresh that rebuilds the rows restores
+  them. Component states use the page's scale (degraded, partial, major) and a
+  separate translation context from the provider status pill. `tests/tst_status_components.qml`
+  and `tests/test_status_components.py` cover validation and both feed formats
+  offline; `tests/tst_status_components_list.qml` covers long-name elision and
+  keyboard toggling. Replace the helper when the CLI exposes components; see
+  [TODO](../TODO.md#status-components).
 - `contents/ui/controllers/WidgetUpdateController.qml` owns the widget updater's
   executable source, per-request nonce, captured install mode, timeout, queued
   install request, and retry/interval timers. It receives update settings, the

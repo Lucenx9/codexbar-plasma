@@ -3555,6 +3555,48 @@ msgstr "Nutzungsübersicht"
 msgid "Status Page"
 msgstr "Statusseite"
 
+#: contents/ui/components/StatusComponentsList.qml
+msgctxt "Status of one service component"
+msgid "Operational"
+msgstr "Betriebsbereit"
+
+#: contents/ui/components/StatusComponentsList.qml
+msgctxt "Status of one service component"
+msgid "Degraded performance"
+msgstr "Eingeschränkte Leistung"
+
+#: contents/ui/components/StatusComponentsList.qml
+msgctxt "Status of one service component"
+msgid "Partial outage"
+msgstr "Teilausfall"
+
+#: contents/ui/components/StatusComponentsList.qml
+msgctxt "Status of one service component"
+msgid "Major outage"
+msgstr "Schwerer Ausfall"
+
+#: contents/ui/components/StatusComponentsList.qml
+msgctxt "Status of one service component"
+msgid "Under maintenance"
+msgstr "In Wartung"
+
+#: contents/ui/components/StatusComponentsList.qml
+msgctxt "Status of one service component"
+msgid "Unknown"
+msgstr "Unbekannt"
+
+#: contents/ui/components/StatusComponentsList.qml
+msgid "Loading service status…"
+msgstr "Dienststatus wird geladen…"
+
+#: contents/ui/components/StatusComponentsList.qml
+msgid "Service status is unavailable."
+msgstr "Der Dienststatus ist nicht verfügbar."
+
+#: contents/ui/components/StatusComponentsList.qml
+msgid "Open Status Page"
+msgstr "Statusseite öffnen"
+
 #: contents/ui/main.qml
 msgid "Changelog"
 msgstr "Änderungsprotokoll"

@@ -1957,6 +1957,48 @@ msgstr ""
 msgid "Activity heatmap"
 msgstr ""
 
+#: contents/ui/components/StatusComponentsList.qml
+msgctxt "Status of one service component"
+msgid "Operational"
+msgstr ""
+
+#: contents/ui/components/StatusComponentsList.qml
+msgctxt "Status of one service component"
+msgid "Degraded performance"
+msgstr ""
+
+#: contents/ui/components/StatusComponentsList.qml
+msgctxt "Status of one service component"
+msgid "Partial outage"
+msgstr ""
+
+#: contents/ui/components/StatusComponentsList.qml
+msgctxt "Status of one service component"
+msgid "Major outage"
+msgstr ""
+
+#: contents/ui/components/StatusComponentsList.qml
+msgctxt "Status of one service component"
+msgid "Under maintenance"
+msgstr ""
+
+#: contents/ui/components/StatusComponentsList.qml
+msgctxt "Status of one service component"
+msgid "Unknown"
+msgstr ""
+
+#: contents/ui/components/StatusComponentsList.qml
+msgid "Loading service status…"
+msgstr ""
+
+#: contents/ui/components/StatusComponentsList.qml
+msgid "Service status is unavailable."
+msgstr ""
+
+#: contents/ui/components/StatusComponentsList.qml
+msgid "Open Status Page"
+msgstr ""
+
 #: contents/ui/components/TimeLabels.qml
 msgctxt ""
 "Full regional date %1 and clock time %2 for a subscription renewal or "

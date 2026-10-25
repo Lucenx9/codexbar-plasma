@@ -3534,6 +3534,48 @@ msgstr "Tableau de bord d'utilisation"
 msgid "Status Page"
 msgstr "État du service"
 
+#: contents/ui/components/StatusComponentsList.qml
+msgctxt "Status of one service component"
+msgid "Operational"
+msgstr "Opérationnel"
+
+#: contents/ui/components/StatusComponentsList.qml
+msgctxt "Status of one service component"
+msgid "Degraded performance"
+msgstr "Performances dégradées"
+
+#: contents/ui/components/StatusComponentsList.qml
+msgctxt "Status of one service component"
+msgid "Partial outage"
+msgstr "Panne partielle"
+
+#: contents/ui/components/StatusComponentsList.qml
+msgctxt "Status of one service component"
+msgid "Major outage"
+msgstr "Panne majeure"
+
+#: contents/ui/components/StatusComponentsList.qml
+msgctxt "Status of one service component"
+msgid "Under maintenance"
+msgstr "En maintenance"
+
+#: contents/ui/components/StatusComponentsList.qml
+msgctxt "Status of one service component"
+msgid "Unknown"
+msgstr "Inconnu"
+
+#: contents/ui/components/StatusComponentsList.qml
+msgid "Loading service status…"
+msgstr "Chargement de l'état des services…"
+
+#: contents/ui/components/StatusComponentsList.qml
+msgid "Service status is unavailable."
+msgstr "L'état des services n'est pas disponible."
+
+#: contents/ui/components/StatusComponentsList.qml
+msgid "Open Status Page"
+msgstr "Ouvrir la page d'état"
+
 #: contents/ui/main.qml
 msgid "Changelog"
 msgstr "Journal des modifications"
