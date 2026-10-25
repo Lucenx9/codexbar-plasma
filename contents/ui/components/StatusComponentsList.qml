@@ -63,6 +63,8 @@ ColumnLayout {
         // The arrow alone is the control, so a long remote name elides in
         // the label instead of widening the popup past its status column.
         DisclosureButton {
+            id: groupToggle
+
             objectName: "statusGroupToggle"
             visible: componentRow.row.children.length > 0
             expanded: componentRow.expanded
@@ -81,8 +83,14 @@ ColumnLayout {
                 id: componentNameHover
             }
 
+            // Like other disclosures, the group title toggles too.
+            TapHandler {
+                enabled: groupToggle.visible
+                onTapped: statusList.groupToggled(componentRow.row.name)
+            }
+
             PlainToolTip {
-                visible: componentName.truncated && componentNameHover.hovered
+                visible: componentName.truncated && (componentNameHover.hovered || groupToggle.visualFocus)
                 plainText: componentName.text
             }
         }

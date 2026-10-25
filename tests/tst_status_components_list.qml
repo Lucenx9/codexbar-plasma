@@ -7,6 +7,7 @@ TestCase {
 
     name: "StatusComponentsList"
     when: windowShown
+    visible: true
     width: 360
     height: 600
 
@@ -83,6 +84,17 @@ TestCase {
         verify(!toggle.expanded)
         compare(labelsWithText(list, "Chat Completions", []).length, 0)
         list.expandedGroups = ["G".repeat(120)]
+        verify(toggle.expanded)
+    }
+
+    // The group title toggles like the arrow; a leaf title does nothing.
+    function test_groupTitleClickToggles() {
+        var list = createTemporaryObject(listComponent, testCase)
+        waitForRendering(list)
+        var toggle = findChild(list, "statusGroupToggle")
+        mouseClick(labelsWithText(list, "G".repeat(120), [])[0])
+        verify(toggle.expanded)
+        mouseClick(labelsWithText(list, "Claude Code", [])[0])
         verify(toggle.expanded)
     }
 }

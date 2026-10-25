@@ -293,7 +293,8 @@ synchronized.
   saved-answer presentation; opening it never starts a process or a cost scan.
 - `contents/ui/main.qml` owns the Status Page component list: its expanded
   provider, the single `CliProcess` request, and the 30-second deadline.
-  Collapsing, closing the popup, or expanding another provider cancels the
+  Collapsing, closing the popup, switching tab or view, or expanding another
+  provider cancels the
   request and refetches on the next expansion, and a late
   result for a provider that is no longer expanded is ignored. The official CLI
   emits only overall status, so `scripts/status-components.py` is a deliberate

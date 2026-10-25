@@ -1,5 +1,6 @@
 .pragma library
 .import "Guards.js" as Guards
+.import "SafeText.js" as SafeText
 
 // Validates the bounded status-component record printed by
 // scripts/status-components.py. Only Claude and OpenAI pages are supported.
@@ -33,7 +34,7 @@ function rows(values, depth) {
         var value = values[i]
         if (!value || typeof value !== "object" || typeof value.name !== "string"
                 || indicators.indexOf(value.indicator) < 0) return null
-        var name = value.name.replace(/[\x00-\x1f\x7f]+/g, " ").trim().slice(0, maximumName)
+        var name = SafeText.truncatedText(value.name.replace(/[\x00-\x1f\x7f]+/g, " ").trim(), maximumName).trim()
         var children = depth === 0 ? rows(value.children, 1) : []
         if (name.length === 0 || children === null) return null
         result.push({name: name, indicator: value.indicator, children: children})

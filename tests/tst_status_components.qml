@@ -39,6 +39,11 @@ TestCase {
         compare(rows[0].children[1].children, [])
         compare(rows[1], {name: "Claude Code", indicator: "maintenance", children: []})
         compare(StatusComponents.response(record([{name: "x".repeat(500), indicator: "none", children: []}]))[0].name.length, 120)
+        // A surrogate pair at the bound is dropped whole, and trailing space trimmed.
+        compare(StatusComponents.response(record([{name: "x".repeat(119) + "\ud83d\ude00", indicator: "none", children: []}]))[0].name,
+            "x".repeat(119))
+        compare(StatusComponents.response(record([{name: "x".repeat(119) + " y", indicator: "none", children: []}]))[0].name,
+            "x".repeat(119))
     }
 
     function test_rejectsFailuresAndInvalidShapes() {

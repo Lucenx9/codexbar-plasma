@@ -320,6 +320,7 @@ class UsageRecoveryTests(unittest.TestCase):
         # Closing the popup dismisses account discovery explanations.
         self.assertRegex(source, r"onExpandedChanged: \{\s*if \(!expanded\) \{\s*"
                                  r"accountsController\.dismissNotices\(\)\s*collapseStatusComponents\(\)")
+        self.assertIn("onSelectedProviderIDChanged: collapseStatusComponents()", source)
         surface.texts = {main: source}
         functions = []
         for name in ("actionRows", "providerAccountAction", "providerDocsUrl",

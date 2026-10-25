@@ -233,6 +233,8 @@ PlasmoidItem {
             collapseStatusComponents()
         }
     }
+    // Another tab or view retires the list and its request; it refetches on return.
+    onSelectedProviderIDChanged: collapseStatusComponents()
     onTokenCostsChanged: applyTokenCosts()
     onAutoSelectProviderChanged: updateSelectedProvider()
     onOverviewProviderIDsRawChanged: updateSelectedProvider()
