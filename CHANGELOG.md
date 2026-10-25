@@ -46,6 +46,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Verify a prepared managed CLI before selecting it in General settings, keeping
+  the current command when the copy is damaged, non-executable, or has the wrong
+  version, consistently with setup from the popup.
 - Keep Overview quota names and reset times visible in right-to-left layouts.
 - Close the service-status list and retire its pending request when opening
   AI Insights, so returning to the provider requires a fresh expansion.

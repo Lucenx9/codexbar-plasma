@@ -909,7 +909,7 @@ KCM.SimpleKCM {
                     || page.installedCliProbeReady)
                 onClicked: {
                     if (managedCli.selected) managedCli.run("update")
-                    else if (managedCli.result.version.length > 0) page.cfg_commandPath = managedCli.result.path
+                    else if (managedCli.result.version.length > 0) managedCli.run("install")
                     else if (ManagedCli.needsInstallConfirmation(managedCli.result, {
                             checked: installedCliProbe.checked,
                             path: installedCliProbe.result.path, version: installedCliProbe.result.version

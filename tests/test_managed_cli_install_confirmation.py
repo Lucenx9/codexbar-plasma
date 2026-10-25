@@ -1,5 +1,6 @@
 """Verify first-install confirmation from an actual offline CLI version probe."""
 
+import json
 import os
 from pathlib import Path
 import subprocess
@@ -124,6 +125,72 @@ TestCase {
 
 
 class ManagedCliInstallConfirmationTests(unittest.TestCase):
+    def test_prepared_copy_is_verified_before_selection(self):
+        for case in ("healthy", "not executable", "wrong version", "corrupt"):
+            with self.subTest(case=case), tempfile.TemporaryDirectory(prefix="prepared-cli-") as temporary:
+                directory = Path(temporary)
+                root = directory / "data/codexbar-plasma/cli"
+                root.mkdir(parents=True, mode=0o700)
+                target = "releases/v0.73.0-" + "a" * 16
+                release = root / target
+                release.mkdir(parents=True, mode=0o700)
+                binary = release / "CodexBarCLI"
+                version = "0.72.0" if case == "wrong version" else "0.73.0"
+                binary.write_text("invalid executable" if case == "corrupt" else
+                                  '#!/bin/sh\nsleep 0.15\nprintf "CodexBar ' + version + '\\n"\n')
+                binary.chmod(0o600 if case == "not executable" else 0o700)
+                (release / "codexbar").symlink_to("CodexBarCLI")
+                (release / "receipt.json").write_text(json.dumps({"version": "0.73.0", "sha256": "a" * 64}))
+                (root / "current").symlink_to(target)
+                qml = '''import QtQuick
+import QtTest
+TestCase {
+    id: testCase
+    name: "PreparedCliSelection"
+    when: windowShown
+    width: 620
+    height: 760
+    function i18n(text, first, second) {
+        return text.replace("%1", first).replace("%2", second);
+    }
+    function i18np(one, many, count) { return (count === 1 ? one : many).replace("%1", count); }
+    function test_selectPreparedCopy() {
+        var factory = Qt.createComponent("PAGE_URL");
+        if (factory.status === Component.Error && /module "org\\.kde\\.[^"]+" is not installed/.test(factory.errorString())) {
+            skip("Managed CLI settings need the optional KDE QML modules");
+            return;
+        }
+        compare(factory.status, Component.Ready, factory.errorString());
+        var page = createTemporaryObject(factory, testCase, {
+            width: width, height: height, cfg_commandPath: "MISSING_PATH"
+        });
+        verify(page !== null);
+        var managed = findChild(page, "managedCliController");
+        tryVerify(function() { return !managed.busy && managed.result.status === "ready"; });
+        var probe = findChild(page, "installedCliProbe");
+        tryVerify(function() { return probe.checked && !probe.busy; });
+        var button = findChild(page, "installManagedCliButton");
+        verify(button.enabled);
+        button.clicked();
+        compare(page.cfg_commandPath, "MISSING_PATH", "Selection must wait for executable verification");
+        verify(managed.busy);
+        verify(!button.enabled);
+        tryVerify(function() { return !managed.busy; });
+        compare(managed.result.status, "EXPECTED_STATUS");
+        compare(page.cfg_commandPath, "EXPECTED_PATH");
+        tryVerify(function() { return probe.checked && !probe.busy; });
+        verify(!findChild(page, "cliReleaseController").checked);
+        verify(!page.cfg_cliAutomaticUpdates);
+    }
+}
+'''
+                missing = str(directory / "missing-cli")
+                qml = qml.replace("PAGE_URL", (ROOT / "contents/ui/configGeneral.qml").as_uri())
+                qml = qml.replace("MISSING_PATH", missing)
+                qml = qml.replace("EXPECTED_STATUS", "ready" if case == "healthy" else "unusable")
+                qml = qml.replace("EXPECTED_PATH", str(root / "current/codexbar") if case == "healthy" else missing)
+                self.run_qml(qml, directory)
+
     def test_settings_with_offline_cli_fixtures(self):
         with tempfile.TemporaryDirectory(prefix="managed install 'test-") as temporary:
             directory = Path(temporary)
@@ -140,20 +207,23 @@ print(json.dumps({"status": "absent" if "status" in sys.argv else "error"}))
             qml = qml.replace("SECOND_CLI_PATH", str(directory / "second-cli"))
             qml = qml.replace("MISSING_CLI_PATH", str(directory / "missing-cli"))
             qml = qml.replace("CLI_PATH", str(directory / "external-cli"))
-            fixture = directory / "tst_install.qml"
-            fixture.write_text(qml)
-            result = subprocess.run(
-                [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],
-                env={**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software",
-                     "XDG_DATA_HOME": str(directory / "data")},
-                capture_output=True, text=True, timeout=30)
-            output = result.stdout + result.stderr
-            self.assertEqual(result.returncode, 0, output)
-            if "SKIP" in output:
-                if os.environ.get("QML_TEST_REQUIRE_NO_SKIPS") == "1":
-                    self.fail(output)
-                self.skipTest("Managed CLI settings need the optional KDE QML modules")
-            self.assertNotIn("QWARN", output)
+            self.run_qml(qml, directory)
+
+    def run_qml(self, qml, directory):
+        fixture = directory / "tst_install.qml"
+        fixture.write_text(qml)
+        result = subprocess.run(
+            [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],
+            env={**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software",
+                 "XDG_DATA_HOME": str(directory / "data")},
+            capture_output=True, text=True, timeout=30)
+        output = result.stdout + result.stderr
+        self.assertEqual(result.returncode, 0, output)
+        if "SKIP" in output:
+            if os.environ.get("QML_TEST_REQUIRE_NO_SKIPS") == "1":
+                self.fail(output)
+            self.skipTest("Managed CLI settings need the optional KDE QML modules")
+        self.assertNotIn("QWARN", output)
 
 
 if __name__ == "__main__":

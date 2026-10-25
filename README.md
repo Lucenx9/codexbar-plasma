@@ -34,7 +34,8 @@ downloading the package. The [runtime requirements](#requirements) still apply.
    private CLI and the popup reports that the CLI is missing, click **Install
    and use CLI**. This reuses the prepared copy offline and selects it immediately.
    You can also select **General → Managed CLI → Use managed CLI** in widget
-   settings, then **Apply**.
+   settings, then **Apply**. Both routes verify the prepared executable before
+   selecting it; an unusable copy leaves the current command unchanged.
 3. Enable and configure your providers in the widget's **Providers** settings.
 
 Existing CLI installations and provider credentials are preserved. Rerunning
