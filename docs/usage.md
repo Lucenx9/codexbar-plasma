@@ -810,7 +810,10 @@ fields; track proposed extensions in the issue tracker.
   Codex, and OpenAI, into the service components of the public status page:
   status.claude.com for Claude and status.openai.com for Codex and OpenAI, whose
   groups such as APIs, ChatGPT, and Codex expand into their components. Each
-  component shows a colored dot and its state. The list is read when expanded,
+  Status Page header is one clickable row, with its disclosure arrow inside
+  the hover and keyboard-focus highlight. Click the title or arrow, or use
+  Space while focused, to expand or collapse the list. Each component shows
+  a colored dot and its state. The list is read when expanded,
   through `scripts/status-components.py`, because the official CLI reports only
   the overall status. Open Status Page at the end of the list opens the site;
   other providers keep opening it directly. A page that cannot be read shows
