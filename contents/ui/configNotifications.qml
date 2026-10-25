@@ -157,7 +157,7 @@ KCM.SimpleKCM {
 
                     delegate: RowLayout {
                         required property int index
-                        required property string modelData
+                        required property var modelData
                         readonly property bool critical: index === 1
                         // Pack legends at the start, yet let them shrink and wrap when narrow.
                         Layout.fillWidth: true
