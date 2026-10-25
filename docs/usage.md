@@ -66,6 +66,9 @@ work and upstream contract requirements.
   provider or account starts the details at the top; refreshing the same account
   keeps the scroll position. Usage refreshes keep keyboard focus on the provider
   tab while the provider order remains unchanged.
+  Account and plan share a line when they fit; narrow widths or larger fonts
+  place the plan below the account. Each keeps its full-text hover tooltip when
+  abbreviated, and the update time remains on a separate line.
 - Provider tabs show **Plan renews on** and **Plan expires on** separately from
   quota resets when the CLI supplies valid subscription dates. Datetimes follow
   your regional date and clock format; dates marked as calendar-only keep their

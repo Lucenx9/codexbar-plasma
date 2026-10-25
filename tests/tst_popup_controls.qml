@@ -142,7 +142,7 @@ TestCase {
         id: actionSpy
     }
 
-    function createControl(type, properties) {
+    function createControl(type, properties, parentItem) {
         var holder;
         try {
             holder = Qt.createQmlObject('import QtQuick; import "../contents/ui/components" as Components; ' + 'QtObject { property Component control: Component { Components.' + type + ' { function i18n(text) { return text } } } }', testCase, Qt.resolvedUrl("PopupControlsTest.qml"));
@@ -154,7 +154,7 @@ TestCase {
             throw error;
         }
         componentHolders.push(holder);
-        var control = createTemporaryObject(holder.control, testCase, properties);
+        var control = createTemporaryObject(holder.control, parentItem || testCase, properties);
         verify(control !== null);
         return control;
     }
@@ -512,10 +512,12 @@ TestCase {
         });
     }
 
-    function test_headerPlanStaysBesideElidedAccount_data() {
+    function test_headerMetadataAdaptsToWidth_data() {
         return [
-            {tag: "narrow", width: 240},
-            {tag: "popup", width: 540}
+            {tag: "normal", large: false, mirrored: false},
+            {tag: "large", large: true, mirrored: false},
+            {tag: "mirrored", large: false, mirrored: true},
+            {tag: "large-mirrored", large: true, mirrored: true}
         ];
     }
 
@@ -567,9 +569,8 @@ TestCase {
             mouseMove(testCase, testCase.width - 1, testCase.height - 1);
             tryCompare(tips[h], "visible", false);
         }
-        // The meta labels cap their own width, so widening alone cannot fit
-        // a long account: swap in short data for the negative case instead.
-        // Widen first: at 200px the fixed chrome (icon, Refresh button) can
+        // Swap in short data for the negative case and widen first:
+        // at 200px the fixed chrome (icon, Refresh button) can
         // squeeze short labels below their implicit width on some font
         // metrics, leaving them truncated.
         header.width = 600;
@@ -591,40 +592,57 @@ TestCase {
         }
     }
 
-    function test_headerPlanStaysBesideElidedAccount(data) {
-        var longAccount = "engineering-with-an-unusually-long-account-name@example.com";
+    function test_headerMetadataAdaptsToWidth(data) {
+        failOnWarning(/Qt Quick Layouts: Detected recursive rearrange|Binding loop detected/);
+        var layout = createTemporaryQmlObject(
+            'import QtQuick; import QtQuick.Layouts; ColumnLayout { '
+            + 'LayoutMirroring.enabled: ' + data.mirrored + '; LayoutMirroring.childrenInherit: true }',
+            testCase, String(Qt.resolvedUrl("HeaderMetadataLayoutTest.qml")));
+        layout.width = 1200;
+        var metadata = Object.assign({}, provider, {account: "engineering-workspace@example.com"});
         var header = createControl("ProviderHeader", {
-            applet: applet,
-            providerData: {
-                provider: "codex",
-                title: "Codex",
-                account: longAccount,
-                planText: "Pro",
-                hasIncident: false
-            },
-            width: data.width
-        });
+            applet: applet, providerData: metadata
+        }, layout);
         if (!header)
             return;
-        var account = findText(header, longAccount);
-        var plan = findText(header, "Pro");
-        verify(account !== null && plan !== null);
-        tryVerify(function () {
-            return account.width > 0 && plan.width > 0;
-        });
-        // The account never claims more width than its own text, so the plan
-        // cannot drift away from the email it qualifies.
-        verify(account.width <= account.implicitWidth + 1);
+        var account = findText(header, metadata.account);
+        var plan = findText(header, provider.planText);
         var separator = findText(header, "·");
-        verify(separator !== null && separator.visible);
-        verify(separator.x - (account.x + account.width) <= 8);
-        verify(plan.x - (separator.x + separator.width) <= 8);
-        // On a narrow popup the account yields first and both stay inside.
-        if (data.width < 300) {
-            verify(account.width < account.implicitWidth);
+        if (data.large) {
+            account.font.pixelSize *= 2;
+            plan.font.pixelSize *= 2;
         }
-        verify(account.mapToItem(header, account.width, 0).x <= header.width + 1);
-        verify(plan.mapToItem(header, plan.width, 0).x <= header.width + 1);
+        tryVerify(function () {
+            return !account.truncated && !plan.truncated && separator.visible
+                && Math.abs(account.mapToItem(header, 0, account.baselineOffset).y
+                    - plan.mapToItem(header, 0, plan.baselineOffset).y) < 1;
+        });
+        var wideHeight = header.implicitHeight;
+        layout.width = 240;
+        tryVerify(function () {
+            return !separator.visible && !plan.truncated
+                && plan.mapToItem(header, 0, 0).y >= account.mapToItem(header, 0, account.height).y;
+        });
+        tryVerify(function () { return header.implicitHeight > wideHeight; });
+        for (var label of [account, plan]) {
+            verify(label.width > 0);
+            verify(label.mapToItem(header, 0, 0).x >= -1);
+            verify(label.mapToItem(header, label.width, 0).x <= header.width + 1);
+        }
+        // A data refresh, privacy change or provider switch must not leave a
+        // blank metadata line or a separator without two adjacent values.
+        header.providerData = Object.assign({}, metadata, {account: ""});
+        tryVerify(function () { return !account.visible && plan.visible && !separator.visible; });
+        header.providerData = Object.assign({}, metadata, {planText: ""});
+        tryVerify(function () { return account.visible && !plan.visible && !separator.visible; });
+        header.providerData = Object.assign({}, metadata, {account: "", planText: ""});
+        tryVerify(function () { return !account.parent.visible; });
+        header.providerData = metadata;
+        layout.width = 1200;
+        tryVerify(function () {
+            return separator.visible && !account.truncated && !plan.truncated
+                && Math.abs(header.implicitHeight - wideHeight) < 1;
+        });
     }
 
     function test_incidentBadgeYieldsToTheStatusBanner() {

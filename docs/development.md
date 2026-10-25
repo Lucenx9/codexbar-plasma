@@ -1528,6 +1528,9 @@ immediate keyboard readouts, and tooltip suppression when values fit or disappea
 It also checks provider quota metadata returning between shared and stacked
 lines on resize, including mirrored layouts, doubled text size, and unbroken
 forecast text that must wrap inside the meter width.
+`tst_popup_controls.qml` checks provider account/plan metadata returning between
+shared and stacked lines on resize, with larger fonts, mirrored layouts, and
+missing identity fields, while preserving full-text hover tooltips.
 `make smoke` additionally requires the graphical environment and reports a
 failure rather than silently skipping when that environment is unavailable.
 

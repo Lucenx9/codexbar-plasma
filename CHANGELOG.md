@@ -20,6 +20,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Place the provider plan below the account when header text does not fit on
+  one line, keeping both more readable in narrow popups and with larger fonts.
 - Emphasize provider quota percentages and stack pace forecasts above reset
   metadata when the popup width or text size leaves too little room for both.
 - Give session names more space with independent title and metadata rows, align
