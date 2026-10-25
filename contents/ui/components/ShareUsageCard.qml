@@ -79,6 +79,7 @@ Rectangle {
                     Layout.fillWidth: true
                 }
                 PlainPlasmaLabel {
+                    id: tokensValue
                     text: card.presentation.tokens
                     font.pointSize: Kirigami.Theme.defaultFont.pointSize * (card.wide ? 5 : 3.8)
                     font.weight: Font.Medium
@@ -93,7 +94,10 @@ Rectangle {
             ColumnLayout {
                 Layout.fillWidth: true
                 Layout.preferredWidth: 2
-                Layout.alignment: Qt.AlignTop
+                // Side by side, the cost shares the token figure's baseline.
+                Layout.alignment: card.wide ? Qt.AlignBottom : Qt.AlignTop
+                Layout.bottomMargin: card.wide ? Math.max(0, (tokensValue.height - tokensValue.baselineOffset)
+                    - (costValue.height - costValue.baselineOffset)) : 0
                 spacing: Kirigami.Units.smallSpacing
                 PlainPlasmaLabel {
                     text: card.presentation.costTitle
@@ -103,6 +107,7 @@ Rectangle {
                     Layout.fillWidth: true
                 }
                 PlainPlasmaLabel {
+                    id: costValue
                     text: card.presentation.cost
                     font.pointSize: Kirigami.Theme.defaultFont.pointSize * 2
                     font.weight: Font.DemiBold
@@ -115,7 +120,39 @@ Rectangle {
             }
         }
 
+        // Provider token shares double as the divider; omitted providers
+        // leave the track visible at the end.
         Rectangle {
+            id: shareBar
+            readonly property var segments: (card.presentation.shares || []).filter(function (row) {
+                return row.share > 0;
+            })
+            readonly property real available: width - Math.max(0, segments.length - 1) * spacing
+            readonly property real spacing: 2
+            visible: segments.length > 0
+            color: card.ruleColor
+            radius: height / 2
+            clip: true
+            implicitHeight: Kirigami.Units.smallSpacing * 1.5
+            Layout.fillWidth: true
+            Row {
+                anchors.fill: parent
+                spacing: shareBar.spacing
+                Repeater {
+                    model: shareBar.segments
+                    Rectangle {
+                        required property var modelData
+                        width: Math.max(height, shareBar.available * modelData.share)
+                        height: shareBar.height
+                        radius: height / 2
+                        color: modelData.color
+                    }
+                }
+            }
+        }
+
+        Rectangle {
+            visible: !shareBar.visible
             color: card.ruleColor
             implicitHeight: 1
             Layout.fillWidth: true
@@ -160,6 +197,19 @@ Rectangle {
                                 radius: width / 2
                                 color: row.modelData.color
                             }
+                            PlainPlasmaLabel {
+                                id: badge
+                                anchors.right: parent.right
+                                anchors.rightMargin: Kirigami.Units.largeSpacing
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: row.modelData.badge || ""
+                                visible: text.length > 0
+                                color: card.secondaryInk
+                                font.weight: Font.Medium
+                                font.features: {
+                                    "tnum": 1
+                                }
+                            }
                             ColumnLayout {
                                 id: rowContent
                                 anchors.left: parent.left
@@ -167,6 +217,7 @@ Rectangle {
                                 anchors.top: parent.top
                                 anchors.leftMargin: Kirigami.Units.largeSpacing * 2
                                 anchors.rightMargin: Kirigami.Units.largeSpacing
+                                    + (badge.visible ? badge.implicitWidth + Kirigami.Units.largeSpacing : 0)
                                 anchors.topMargin: Kirigami.Units.largeSpacing
                                 spacing: Kirigami.Units.smallSpacing / 2
                                 PlainPlasmaLabel {

@@ -21,6 +21,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Show each provider's share of tracked tokens in the shared usage card, as a
+  colored bar under the totals and a percentage in each provider row and the
+  copied statistics, and align the estimated cost with the token total.
 - Show a **Choose a source** prompt in the provider Source mode selector instead
   of a blank field before a mode is selected.
 - Enable automatic widget installation by default, including existing instances

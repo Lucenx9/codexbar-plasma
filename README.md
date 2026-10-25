@@ -164,7 +164,7 @@ and credentials redacted.
 
 Share a local usage summary from **Usage & Spend** as a PNG or copied text.
 The preview includes the selected history range, token totals, estimated usage
-costs, providers, and top models, with a small repository attribution. See [usage sharing](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/usage.md#share-usage).
+costs, provider token shares, and top models, with a small repository attribution. See [usage sharing](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/usage.md#share-usage).
 
 | Standard panel | Minimal panel |
 | --- | --- |

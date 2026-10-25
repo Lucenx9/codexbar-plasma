@@ -101,8 +101,23 @@ function snapshot(costs, days, createdAt, refreshFailed, period) {
     result.omittedProviders = Math.max(0, result.providers.length - 8)
     result.omittedModels += Math.max(0, models.length - 6)
     result.providers = result.providers.slice(0, 8)
+    result.providers.forEach(function(row) { row.share = tokenShare(row.tokens, result.tokens) })
     result.models = models.slice(0, 6)
     return result
+}
+
+// Bounded fraction of the shared token total; null when either side is unknown.
+function tokenShare(tokens, total) {
+    return amount(tokens) === null || amount(total) === null || total <= 0
+        ? null : Math.min(1, tokens / total)
+}
+
+// Whole-percent text that never rounds a nonzero share to 0 or a partial one to 100.
+function percentLabel(share) {
+    if (typeof share !== "number" || !isFinite(share) || share < 0 || share > 1) return ""
+    if (share > 0 && share < 0.01) return "<1"
+    if (share < 1 && share > 0.99) return ">99"
+    return String(Math.round(share * 100))
 }
 
 function localPngUrl(value) {
