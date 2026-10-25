@@ -520,7 +520,7 @@ Item {
             verifyScenario(!details.visible && !section.detailsExpanded, "provider details must start collapsed");
             chart.hoveredIndex = 0;
             costSnapshot = applet.tokenCosts;
-            var metric = findItem(section, "providerCostMetricCombo");
+            var metric = findItem(section, "providerCostMetricToggle");
             metric.activated(1);
             costDetailsStep = 1;
             return false;
@@ -549,7 +549,7 @@ Item {
             verifyScenario(section.selectedDay !== null && details.modelRows.length === 0,
                 "missing daily models must not fall back to the period");
             verifyScenario(hasText(details, i18n("No model breakdown for this day.")), "missing model notice absent");
-            findItem(section, "providerCostMetricCombo").activated(0);
+            findItem(section, "providerCostMetricToggle").activated(0);
             costDetailsStep = 4;
             return false;
         }
@@ -558,7 +558,7 @@ Item {
             if (scenario === "popup-cost-tokens") {
                 verifyScenario(chart.points.length === 0, "token-only data became a cost chart");
                 verifyScenario(hasText(section, i18n("Cost unavailable")), "missing cost became a zero");
-                findItem(section, "providerCostMetricCombo").activated(1);
+                findItem(section, "providerCostMetricToggle").activated(1);
                 costDetailsStep = 5;
                 return false;
             }
@@ -573,7 +573,7 @@ Item {
             verifyScenario(section.detailsExpanded && details.visible && details.modelRows.length === 3,
                 "expanded period details must retain all period models");
             var originalMetricIndex = applet.costHistoryShowsTokens ? 1 : 0;
-            var metricCombo = findItem(section, "providerCostMetricCombo");
+            var metricCombo = findItem(section, "providerCostMetricToggle");
             metricCombo.activated(1 - originalMetricIndex);
             verifyScenario(section.detailsExpanded && details.visible,
                 "metric change collapsed explicitly expanded period details");
@@ -734,10 +734,10 @@ Item {
             if (costDetailsStep === 1) {
                 verifyScenario(empty.visible && empty.text === i18n("No model breakdown for this period.")
                     && !partial.visible, "missing period models must have an explicit empty state");
-                findItem(section, "providerCostMetricCombo").activated(1);
+                findItem(section, "providerCostMetricToggle").activated(1);
             } else if (costDetailsStep === 2) {
                 verifyScenario(chart.points.length === 0, "missing token history became a zero-valued chart");
-                findItem(section, "providerCostMetricCombo").activated(0);
+                findItem(section, "providerCostMetricToggle").activated(0);
             } else if (costDetailsStep === 3) {
                 chart.selectedIndex = chart.points.length - 1;
             } else {
@@ -1088,7 +1088,7 @@ Item {
                 && details.modelRows[0].label === "Model 1"
                 && findItem(section, "costModelsPartialNotice").visible,
                 "private daily models lost amounts, anonymity or truncation");
-            findItem(section, "providerCostMetricCombo").activated(1);
+            findItem(section, "providerCostMetricToggle").activated(1);
         } else if (settingsBehaviorStep === 2) {
             verifyScenario(section.selectedDay === null, "private metric switch retained its day pin");
             chart.moveSelection(-1);
@@ -2238,8 +2238,8 @@ Item {
             if (localizationStep === 1) {
                 if (applet.selectedProviderID !== "codex")
                     return false;
-                var expectedPace = i18n("%1% in deficit", 13) + " | "
-                    + i18n("Expected %1% used", 30) + " | "
+                var expectedPace = i18n("%1% in deficit", 13) + " \u00b7 "
+                    + i18n("Expected %1% used", 30) + " \u00b7 "
                     + i18n("Runs out in %1", expected[2]);
                 verifyScenario(codex.rows[0].pace === expectedPace, "pace summary did not translate");
                 if (!hasText(applet.fullRepresentationItem, expectedPace))

@@ -359,21 +359,25 @@ class PopupLayoutTest(unittest.TestCase):
             raise AssertionError("usageBar must keep its pill track visually restrained")
         # A marker that spans the track edge to edge reads as a gap in the accent fill
         # rather than a threshold, so pace and quota markers share one inset geometry.
+        # A background sliver on each side keeps the tick legible over the fill.
+        marker_body = (root / "contents/ui/components/MeterMarker.qml").read_text(encoding="utf-8")
         for marker_geometry_fragment in (
-            "readonly property real meterMarkerInset:",
-            "readonly property real meterMarkerWidth:",
+            "y: inset",
+            "height: Math.max(0, trackHeight - inset * 2)",
+            "readonly property real knockout: 1",
+            "color: Kirigami.Theme.backgroundColor",
+            "anchors.leftMargin: meterMarker.knockout",
+            "anchors.rightMargin: meterMarker.knockout",
         ):
-            if not code_contains(provider_usage_row_text, marker_geometry_fragment):
+            if not code_contains(marker_body, marker_geometry_fragment):
                 raise AssertionError(
-                    "ProviderUsageRow must define one shared meter marker geometry; "
+                    "MeterMarker.qml must define one shared inset meter marker; "
                     f"missing {marker_geometry_fragment!r}"
                 )
-        if usage_bar_body.count("y: usageRow.meterMarkerInset") != 2:
-            raise AssertionError("both the pace marker and the quota markers must be inset in the track")
-        if usage_bar_body.count("width: usageRow.meterMarkerWidth") != 2:
-            raise AssertionError("both the pace marker and the quota markers must share one marker width")
-        for full_height_marker in ("height: usageBar.height\n", "y: 0\n"):
-            if full_height_marker in usage_bar_body:
+        if usage_bar_body.count("MeterMarker {") != 2:
+            raise AssertionError("both the pace marker and the quota markers must share one marker geometry")
+        for full_height_marker in ("height: usageBar.height\n", "height: trackHeight\n", "y: 0\n"):
+            if full_height_marker in usage_bar_body or full_height_marker in marker_body:
                 raise AssertionError(
                     "quota markers must not span the meter track edge to edge again"
                 )

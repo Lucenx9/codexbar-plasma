@@ -147,12 +147,12 @@ TestCase {
 
     function test_popupRunOutFollowsTheClock_data() {
         return [
-            {tag: "at receipt", elapsedMinutes: 0, expected: "Expected 40% used | Runs out in 2 hours"},
-            {tag: "later", elapsedMinutes: 90, expected: "Expected 40% used | Runs out in 30 minutes"},
-            {tag: "passed", elapsedMinutes: 150, expected: "Expected 40% used | Runs out now"},
-            {tag: "private receipt", privateMode: true, elapsedMinutes: 0, expected: "Expected 40% used | Runs out in 2 hours"},
-            {tag: "private later", privateMode: true, elapsedMinutes: 90, expected: "Expected 40% used | Runs out in 30 minutes"},
-            {tag: "private passed", privateMode: true, elapsedMinutes: 150, expected: "Expected 40% used | Runs out now"}
+            {tag: "at receipt", elapsedMinutes: 0, expected: "Expected 40% used · Runs out in 2 hours"},
+            {tag: "later", elapsedMinutes: 90, expected: "Expected 40% used · Runs out in 30 minutes"},
+            {tag: "passed", elapsedMinutes: 150, expected: "Expected 40% used · Runs out now"},
+            {tag: "private receipt", privateMode: true, elapsedMinutes: 0, expected: "Expected 40% used · Runs out in 2 hours"},
+            {tag: "private later", privateMode: true, elapsedMinutes: 90, expected: "Expected 40% used · Runs out in 30 minutes"},
+            {tag: "private passed", privateMode: true, elapsedMinutes: 150, expected: "Expected 40% used · Runs out now"}
         ];
     }
 
