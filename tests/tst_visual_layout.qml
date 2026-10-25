@@ -1981,7 +1981,7 @@ TestCase {
             }
         }
         // An unbroken CLI fallback still wraps inside the popup.
-        model.pace = "VeryLongForecast".repeat(12);
+        model = Object.assign({}, model, {pace: "VeryLongForecast".repeat(12)});
         row.modelData = model;
         row.width = 240;
         verify(waitForPolish(row));
@@ -1989,8 +1989,9 @@ TestCase {
         verify(pace.contentWidth <= pace.width + 1);
         verify(reset.mapToItem(row, 0, 0).y >= pace.mapToItem(row, 0, pace.height).y);
 
-        model.pace = "";
-        model.reset = "Resets after the next billing cycle ".repeat(4);
+        model = Object.assign({}, model, {
+            pace: "", reset: "Resets after the next billing cycle ".repeat(4)
+        });
         row.modelData = model;
         verify(waitForPolish(row));
         compare(pace.visible, false);
