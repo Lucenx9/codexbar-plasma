@@ -36,6 +36,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep Overview quota names and reset times visible in right-to-left layouts.
+- Close the service-status list and retire its pending request when opening
+  AI Insights, so returning to the provider requires a fresh expansion.
 - Compare widget updates launched from a checkout against the installed package,
   including after downloading, to avoid downgrades, redundant reinstalls, and
   skipped upgrades caused by an unrelated checkout version. Wait for an ongoing
