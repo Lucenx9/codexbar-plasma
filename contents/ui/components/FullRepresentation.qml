@@ -71,6 +71,7 @@ Item {
         if (aiInsightsViewKey.length === 0) {
             return
         }
+        applet.collapseStatusComponents()
         var flickable = aiInsightsOriginScroll().contentItem as Flickable
         aiInsightsReturnY = flickable ? flickable.contentY : 0
         aiInsightsOrigin = aiInsightsViewKey

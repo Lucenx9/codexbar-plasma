@@ -170,7 +170,8 @@ work and upstream contract requirements.
   own source name is never presented as identity.
   Provider icons align with the name and account. Each quota name is emphasized
   separately from its reset, which shortens first when space is limited; the
-  percentage stays aligned with the end of its meter.
+  percentage stays aligned with the end of its meter. Names and resets remain
+  visible when the layout is mirrored for right-to-left languages.
 - Screen readers hear what the popup draws. Overview rows describe their
   detail line, then each named quota with its reset; provider tabs describe
   the quota their underline draws, a last-known-usage note, and a refresh
@@ -794,6 +795,8 @@ fields; track proposed extensions in the issue tracker.
   the overall status. Open Status Page at the end of the list opens the site;
   other providers keep opening it directly. A page that cannot be read shows
   the status as unavailable and leaves the provider's CLI status unchanged.
+  Switching tabs, opening AI Insights, or closing the popup closes the list
+  and retires its pending request. Expanding it again fetches fresh status.
 - Optional quota warning markers on usage bars.
 - Optional Plasma notifications for provider status incidents, configurable
   quota crossings, predicted quota exhaustion from CLI pace data, and when a

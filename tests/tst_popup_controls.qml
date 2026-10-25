@@ -235,7 +235,11 @@ TestCase {
 
     // Each quota window is named beside its own meter, so a short session
     // window can never stand in for an exhausted weekly one.
-    function test_overviewNamesEveryQuotaWindow() {
+    function test_overviewNamesEveryQuotaWindow_data() {
+        return [{tag: "ltr", mirrored: false}, {tag: "rtl", mirrored: true}];
+    }
+
+    function test_overviewNamesEveryQuotaWindow(data) {
         failOnWarning(/Qt Quick Layouts: Detected recursive rearrange/);
         var measured = Object.assign({}, provider, {
             testRows: [
@@ -248,11 +252,26 @@ TestCase {
         });
         if (!row)
             return;
+        row.LayoutMirroring.enabled = data.mirrored;
+        row.LayoutMirroring.childrenInherit = true;
+        waitForRendering(row);
         verify(findText(row, "Session") !== null);
         verify(findText(row, "Resets in 2h") !== null);
         verify(findText(row, "57% left") !== null);
         verify(findText(row, "Weekly") !== null);
         verify(findText(row, "0% left") !== null);
+        var caption = findText(row, "Session");
+        var reset = findText(row, "Resets in 2h");
+        var percent = findText(row, "57% left");
+        verify(caption.width >= caption.implicitWidth);
+        verify(reset.width >= reset.implicitWidth);
+        if (data.mirrored) {
+            verify(percent.x + percent.width <= reset.x);
+            verify(reset.x + reset.width <= caption.x);
+        } else {
+            verify(caption.x + caption.width <= reset.x);
+            verify(reset.x + reset.width <= percent.x);
+        }
     }
 
     // The meters and resets are only visual; the row's accessible description

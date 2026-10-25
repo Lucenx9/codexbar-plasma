@@ -181,9 +181,10 @@ Rectangle {
                             font.pointSize: Kirigami.Theme.smallFont.pointSize
                             font.weight: Font.DemiBold
                             opacity: overviewRow.applet.valueTextOpacity
+                            anchors.left: parent.left
                             anchors.verticalCenter: parent.verticalCenter
                             width: Math.min(implicitWidth, Math.max(0,
-                                overviewMeterPercent.x - Kirigami.Units.smallSpacing))
+                                parent.width - overviewMeterPercent.width - Kirigami.Units.smallSpacing))
                             elide: Text.ElideRight
                         }
 
@@ -194,10 +195,11 @@ Rectangle {
                             visible: text.length > 0
                             font: Kirigami.Theme.smallFont
                             opacity: overviewRow.applet.secondaryTextOpacity
+                            anchors.left: overviewMeterCaption.right
+                            anchors.leftMargin: Kirigami.Units.smallSpacing
                             anchors.verticalCenter: parent.verticalCenter
-                            x: overviewMeterCaption.width + Kirigami.Units.smallSpacing
-                            width: Math.max(0, overviewMeterPercent.x - x
-                                - Kirigami.Units.smallSpacing)
+                            width: Math.max(0, parent.width - overviewMeterCaption.width
+                                - overviewMeterPercent.width - Kirigami.Units.smallSpacing * 2)
                             elide: Text.ElideRight
                         }
 

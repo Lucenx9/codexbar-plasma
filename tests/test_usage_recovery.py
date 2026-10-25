@@ -334,6 +334,13 @@ class UsageRecoveryTests(unittest.TestCase):
             functions.append(signature + " {" + surface.function_body(name) + "}")
         qml = MENU_QML.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
         qml = qml.replace("SOURCE_FUNCTIONS", "\n        ".join(functions))
+        popup = ROOT / "contents/ui/components/FullRepresentation.qml"
+        surface.texts = {popup: popup.read_text()}
+        navigation = []
+        for name in ("openAiInsights", "closeAiInsights", "aiInsightsOriginScroll"):
+            signature = re.search(r"function " + name + r"\([^)]*\)", popup.read_text()).group(0)
+            navigation.append(signature + " {" + surface.function_body(name) + "}")
+        qml = qml.replace("NAVIGATION_FUNCTIONS", "\n        ".join(navigation))
         # The status action opens through the host guard; route the external
         # open through a harness recorder the same way the update tests do.
         qml = qml.replace("Qt.openUrlExternally(", "recordOpenedUrl(")
@@ -378,9 +385,35 @@ TestCase {
         function i18n(text) { return text; }
         function recordOpenedUrl(url) { openedUrls.push(url); }
     }
+    Item {
+        id: fullRoot
+        property var applet: root
+        property string aiInsightsViewKey: "provider:codex"
+        property string aiInsightsOrigin: ""
+        property real aiInsightsReturnY: 0
+        readonly property bool aiInsightsOpen: aiInsightsOrigin.length > 0
+        NAVIGATION_FUNCTIONS
+        Item {
+            id: providerScroll
+            property alias contentItem: originContent
+            Flickable { id: originContent; height: 100; contentHeight: 400 }
+        }
+        Item { id: overviewScroll }
+        QtObject {
+            id: aiInsightsView
+            function scrollToTop() {}
+            function focusBack(keyboard) {}
+        }
+        QtObject { id: providerAiInsightsCard; function focusOpenButton(keyboard) {} }
+        QtObject { id: overviewAiInsightsCard; function focusOpenButton(keyboard) {} }
+    }
     function menuItem(provider) {
         return {provider: provider, account: "", dashboardUrl: "",
                 statusUrl: "", changelogUrl: ""};
+    }
+    function cleanup() {
+        root.collapseStatusComponents();
+        fullRoot.aiInsightsOrigin = "";
     }
     // The overflow menu always offers account switching first, with a docs
     // entry carrying the identity-table URL whenever one exists.
@@ -461,6 +494,37 @@ TestCase {
         verify(statusComponentsProcess.cancelled > 0);
         root.finishStatusComponents(request.context, []);
         compare(root.statusComponents.provider, "");
+    }
+    function test_analysisRetiresStatusComponents_data() {
+        return [{tag: "loading-pointer", loaded: false, keyboard: false},
+                {tag: "loaded-keyboard", loaded: true, keyboard: true}];
+    }
+    function test_analysisRetiresStatusComponents(data) {
+        root.collapseStatusComponents();
+        var codex = menuItem("codex");
+        root.selectedProviderData = codex;
+        root.toggleStatusComponents(codex);
+        var request = statusComponentsProcess.started[statusComponentsProcess.started.length - 1];
+        var rows = [{name: "APIs", indicator: "none", children: []}];
+        if (data.loaded) root.finishStatusComponents(request.context, rows);
+        root.toggleStatusComponentGroup("APIs");
+        var cancellations = statusComponentsProcess.cancelled;
+        fullRoot.openAiInsights(data.keyboard);
+        verify(fullRoot.aiInsightsOpen);
+        compare(root.selectedProviderData.provider, "codex");
+        compare(root.statusComponents.provider, "");
+        compare(root.statusComponentGroups, []);
+        compare(statusComponentsProcess.cancelled, cancellations + 1);
+        root.finishStatusComponents(request.context, rows);
+        compare(root.statusComponents.provider, "");
+        fullRoot.closeAiInsights(true, data.keyboard);
+        verify(!fullRoot.aiInsightsOpen);
+        compare(root.statusComponentsExpanded(codex), false);
+        var started = statusComponentsProcess.started.length;
+        root.toggleStatusComponents(codex);
+        compare(statusComponentsProcess.started.length, started + 1);
+        verify(root.statusComponents.loading);
+        root.collapseStatusComponents();
     }
 }
 '''

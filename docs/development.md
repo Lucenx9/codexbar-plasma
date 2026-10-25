@@ -293,8 +293,8 @@ synchronized.
   saved-answer presentation; opening it never starts a process or a cost scan.
 - `contents/ui/main.qml` owns the Status Page component list: its expanded
   provider, the single `CliProcess` request, and the 30-second deadline.
-  Collapsing, closing the popup, switching tab or view, or expanding another
-  provider cancels the
+  Collapsing, closing the popup, switching tab or view (including opening
+  AI Insights), or expanding another provider cancels the
   request and refetches on the next expansion, and a late
   result for a provider that is no longer expanded is ignored. The official CLI
   emits only overall status, so `scripts/status-components.py` is a deliberate
@@ -310,7 +310,10 @@ synchronized.
   separate translation context from the provider status pill. `tests/tst_status_components.qml`
   and `tests/test_status_components.py` cover validation and both feed formats
   offline; `tests/tst_status_components_list.qml` covers long-name elision and
-  keyboard toggling. Replace the helper when the CLI exposes components; see
+  keyboard toggling. `tests/test_usage_recovery.py` executes the popup navigation
+  and status handlers together, covering cancellation on entering AI Insights,
+  ignored late results, and a fresh fetch after returning. Replace the helper
+  when the CLI exposes components; see
   [TODO](../TODO.md#status-components).
 - `contents/ui/controllers/WidgetUpdateController.qml` owns the widget updater's
   executable source, per-request nonce, captured install mode, timeout, queued
