@@ -70,6 +70,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   no provider instead of falling back to the Codex icon and brand color.
 - Keep keyboard focus on Overview provider rows and provider action rows when
   refreshed usage or account-loading state updates their values.
+- Keep the Status Page disclosure arrow inside the highlighted action row for
+  Claude and OpenAI providers, with consistent spacing and keyboard focus.
+- Keep automatic provider selection in saved order when usage is tied and a
+  service-status fetch fails, instead of treating its unknown state as an incident.
 - Preserve the currency on quota-week cost totals when privacy mode is enabled.
 - Verify a prepared managed CLI before selecting it in General settings, keeping
   the current command when the copy is damaged, non-executable, or has the wrong

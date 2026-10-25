@@ -148,6 +148,7 @@ work and upstream contract requirements.
 - Auto-select highest-usage provider for the compact panel and provider detail
   focus. Measured consumption takes precedence even for fractional percentage
   differences; incident severity breaks equal-consumption ties, then saved provider order.
+  An unavailable service status does not break a consumption tie.
 - Panel providers can be limited to a chosen set in **Panel → Panel
   providers**. The choice lists the enabled providers in their saved order, is
   limited to the four meters the panel can draw, and can also be left automatic
@@ -809,7 +810,10 @@ fields; track proposed extensions in the issue tracker.
   Codex, and OpenAI, into the service components of the public status page:
   status.claude.com for Claude and status.openai.com for Codex and OpenAI, whose
   groups such as APIs, ChatGPT, and Codex expand into their components. Each
-  component shows a colored dot and its state. The list is read when expanded,
+  Status Page header is one clickable row, with its disclosure arrow inside
+  the hover and keyboard-focus highlight. Click the title or arrow, or use
+  Space while focused, to expand or collapse the list. Each component shows
+  a colored dot and its state. The list is read when expanded,
   through `scripts/status-components.py`, because the official CLI reports only
   the overall status. Open Status Page at the end of the list opens the site;
   other providers keep opening it directly. A page that cannot be read shows

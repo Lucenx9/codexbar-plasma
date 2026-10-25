@@ -1623,13 +1623,16 @@ Item {
                                 }
 
                                 Controls.ItemDelegate {
+                                    id: providerActionButton
+
                                     Layout.fillWidth: true
                                     // Keep expanding native highlights inside the scroll clip.
                                     Layout.leftMargin: Kirigami.Units.smallSpacing
                                     Layout.rightMargin: Kirigami.Units.smallSpacing
-                                    leftPadding: Kirigami.Units.smallSpacing
-                                    rightPadding: Kirigami.Units.smallSpacing
-                                        + (modelData.expandable === true ? Kirigami.Units.iconSizes.small + Kirigami.Units.smallSpacing : 0)
+                                    leftPadding: modelData.expandable === true && mirrored
+                                        ? Kirigami.Units.largeSpacing : Kirigami.Units.smallSpacing
+                                    rightPadding: modelData.expandable === true && !mirrored
+                                        ? Kirigami.Units.largeSpacing : Kirigami.Units.smallSpacing
                                     text: modelData.title
                                     icon.name: modelData.icon
                                     enabled: modelData.enabled
@@ -1638,15 +1641,39 @@ Item {
                                     Accessible.checkable: modelData.expandable === true
                                     Accessible.checked: providerActionRow.statusExpanded
 
-                                    Kirigami.Icon {
-                                        visible: modelData.expandable === true
-                                        anchors.right: parent.right
-                                        anchors.rightMargin: Kirigami.Units.smallSpacing
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        width: Kirigami.Units.iconSizes.small
-                                        height: width
-                                        source: providerActionRow.statusExpanded ? "arrow-down"
-                                            : (parent.mirrored ? "arrow-left" : "arrow-right")
+                                    contentItem: RowLayout {
+                                        LayoutMirroring.enabled: providerActionButton.mirrored
+                                        spacing: providerActionButton.spacing
+                                        property alias truncated: actionTitle.truncated
+
+                                        Kirigami.Icon {
+                                            source: providerActionButton.icon.name
+                                            Layout.preferredWidth: providerActionButton.icon.width
+                                            Layout.preferredHeight: providerActionButton.icon.height
+                                            selected: providerActionButton.highlighted || providerActionButton.down
+                                        }
+
+                                        Components.PlainPlasmaLabel {
+                                            id: actionTitle
+
+                                            Layout.fillWidth: true
+                                            text: providerActionButton.text
+                                            font: providerActionButton.font
+                                            elide: Text.ElideRight
+                                            color: providerActionButton.highlighted || providerActionButton.down
+                                                ? Kirigami.Theme.highlightedTextColor
+                                                : (providerActionButton.enabled ? Kirigami.Theme.textColor
+                                                    : Kirigami.Theme.disabledTextColor)
+                                        }
+
+                                        Kirigami.Icon {
+                                            visible: modelData.expandable === true
+                                            Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                                            Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                                            selected: providerActionButton.highlighted || providerActionButton.down
+                                            source: providerActionRow.statusExpanded ? "arrow-down"
+                                                : (providerActionButton.mirrored ? "arrow-left" : "arrow-right")
+                                        }
                                     }
                                 }
 

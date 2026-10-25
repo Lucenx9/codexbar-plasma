@@ -1,6 +1,7 @@
 import QtQuick
 import QtTest
 import "../contents/ui/ProviderAutoSelect.js" as ProviderAutoSelect
+import "../contents/ui/ProviderSnapshot.js" as ProviderSnapshot
 
 TestCase {
     name: "ProviderAutoSelect"
@@ -88,6 +89,33 @@ TestCase {
         critical.statusSeverity = "critical";
         compare(ProviderAutoSelect.bestIndex([busier, critical]), 0);
         compare(ProviderAutoSelect.bestIndex([critical, busier]), 1);
+    }
+
+    function test_unknownStatusDoesNotBreakConsumptionTies_data() {
+        return [
+            {tag: "equal-usage", first: 50, second: 50, expected: 0},
+            {tag: "idle", first: 0, second: 0, expected: 0},
+            {tag: "missing-quotas", first: null, second: null, expected: 0},
+            {tag: "higher-usage-still-wins", first: 50, second: 51, expected: 1}
+        ];
+    }
+
+    function test_unknownStatusDoesNotBreakConsumptionTies(data) {
+        var nowMs = Date.parse("2026-10-25T12:00:00Z");
+        var input = function(id, used, indicator) {
+            return {provider: id, usage: used === null ? {} : {primary: {usedPercent: used}},
+                status: {indicator: indicator}};
+        };
+        var first = ProviderSnapshot.normalize(input("codex", data.first, "none"), nowMs);
+        var second = ProviderSnapshot.normalize(input("claude", data.second, "none"), nowMs);
+        compare(ProviderAutoSelect.bestIndex([first, second]), data.expected);
+
+        // A failed optional status fetch changes no quota or incident evidence.
+        second = ProviderSnapshot.normalize(input("claude", data.second, "unknown"), nowMs);
+        compare(ProviderAutoSelect.usedPercent(first), data.first === null ? -1 : data.first);
+        compare(ProviderAutoSelect.usedPercent(second), data.second === null ? -1 : data.second);
+        compare(ProviderAutoSelect.bestIndex([first, second]), data.expected);
+        compare(ProviderAutoSelect.bestIndex([second, first]), 0);
     }
 
     function test_providersWithoutAnyPercentageRankBySeverityAlone() {
