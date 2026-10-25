@@ -387,6 +387,7 @@ KCM.SimpleKCM {
     }
 
     function restoreUserDefaults() {
+        managedCli.retire()
         cfg_commandPath = cfg_commandPathDefault
         cfg_provider = cfg_providerDefault
         cfg_source = cfg_sourceDefault

@@ -126,7 +126,7 @@ TestCase {
 
 class ManagedCliInstallConfirmationTests(unittest.TestCase):
     def test_prepared_copy_is_verified_before_selection(self):
-        for case in ("healthy", "not executable", "wrong version", "corrupt"):
+        for case in ("healthy", "not executable", "wrong version", "corrupt", "reset defaults"):
             with self.subTest(case=case), tempfile.TemporaryDirectory(prefix="prepared-cli-") as temporary:
                 directory = Path(temporary)
                 root = directory / "data/codexbar-plasma/cli"
@@ -171,10 +171,16 @@ TestCase {
         tryVerify(function() { return probe.checked && !probe.busy; });
         var button = findChild(page, "installManagedCliButton");
         verify(button.enabled);
+        if (RESET_DEFAULTS) page.cfg_privacyMode = true;
         button.clicked();
         compare(page.cfg_commandPath, "MISSING_PATH", "Selection must wait for executable verification");
         verify(managed.busy);
         verify(!button.enabled);
+        if (RESET_DEFAULTS) {
+            page.restoreUserDefaults();
+            // Let the real helper finish after resetting an already-default command.
+            wait(500);
+        }
         tryVerify(function() { return !managed.busy; });
         compare(managed.result.status, "EXPECTED_STATUS");
         compare(page.cfg_commandPath, "EXPECTED_PATH");
@@ -184,10 +190,11 @@ TestCase {
     }
 }
 '''
-                missing = str(directory / "missing-cli")
+                missing = "codexbar" if case == "reset defaults" else str(directory / "missing-cli")
                 qml = qml.replace("PAGE_URL", (ROOT / "contents/ui/configGeneral.qml").as_uri())
                 qml = qml.replace("MISSING_PATH", missing)
-                qml = qml.replace("EXPECTED_STATUS", "ready" if case == "healthy" else "unusable")
+                qml = qml.replace("RESET_DEFAULTS", "true" if case == "reset defaults" else "false")
+                qml = qml.replace("EXPECTED_STATUS", "ready" if case in ("healthy", "reset defaults") else "unusable")
                 qml = qml.replace("EXPECTED_PATH", str(root / "current/codexbar") if case == "healthy" else missing)
                 self.run_qml(qml, directory)
 
