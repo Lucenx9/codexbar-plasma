@@ -1953,7 +1953,7 @@ TestCase {
             'import QtQuick; Item { LayoutMirroring.childrenInherit: true }', testCase);
         holder.LayoutMirroring.enabled = data.mirrored;
         var model = usageRowData();
-        model.pace = "37% in deficit | Expected 43% used | Runs out in 18 hours";
+        model.pace = "37% in deficit · Expected 43% used · Runs out in 18 hours";
         var row = createControl("ProviderUsageRow", {
             applet: applet, providerData: {provider: "codex"}, modelData: model, width: 240
         }, holder);

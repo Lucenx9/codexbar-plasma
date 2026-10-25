@@ -212,7 +212,7 @@ work and upstream contract requirements.
   Selecting a tab keeps its width stable, so neighbouring tabs stay in place.
   Overview, Usage & Spend, Sessions and provider headers use the theme's smaller
   text for summary and update metadata beneath their titles.
-- Global **Usage & Spend** tab with a Cost/Tokens selector, a range selector
+- Global **Usage & Spend** tab with a Cost/Tokens toggle, a range selector
   (7, 30, or 90 days, **Month to date**, or **All history**), interactive daily chart, activity heatmap, and provider totals that
   keep different currencies separate. Chart and heatmap dates use the system
   locale's short date format. Chart guide lines follow theme text-color changes
@@ -694,7 +694,9 @@ and clipboard content remain under your control after closing the window.
   providers from updating.
 - Click a day in the provider chart or select it with the keyboard to see that
   day's model costs and tokens. Hover previews stay inside the chart, keeping
-  the layout steady. The cost/token selector reuses the loaded data.
+  the layout steady. The section's Cost/Tokens toggle shows both choices,
+  switches with one click like the one in **Usage & Spend**, and reuses the
+  loaded data.
   Missing model breakdowns and truncated lists are identified explicitly.
   The selected day and expanded provider details survive a refresh that adds
   a day to **Month to date** or **All history**.
@@ -808,7 +810,9 @@ fields; track proposed extensions in the issue tracker.
   the status as unavailable and leaves the provider's CLI status unchanged.
   Switching tabs, opening AI Insights, or closing the popup closes the list
   and retires its pending request. Expanding it again fetches fresh status.
-- Optional quota warning markers on usage bars.
+- Optional quota warning markers on usage bars. Pace and warning markers keep
+  a thin background edge, so they stay visible where they cross the colored
+  fill. Forecast parts are separated with ` · `, like other popup metadata.
 - Optional Plasma notifications for provider status incidents, configurable
   quota crossings, predicted quota exhaustion from CLI pace data, and when a
   heavily used limit resets back to empty. A temporarily omitted usage window

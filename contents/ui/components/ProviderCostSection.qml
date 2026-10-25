@@ -114,35 +114,10 @@ ColumnLayout {
             elide: Text.ElideRight
         }
 
-        Components.PlainComboBox {
-            objectName: "providerCostMetricCombo"
+        Components.CostMetricToggle {
+            objectName: "providerCostMetricToggle"
             visible: tokenCostSection.tokenCost !== null
-            // A view option inside a secondary section: flat, so it does not
-            // outweigh the quota meters above it.
-            flat: true
-            textRole: "text"
-            valueRole: "value"
-            model: [
-                {
-                    text: i18n("Cost"),
-                    value: "cost"
-                },
-                {
-                    text: i18n("Tokens"),
-                    value: "tokens"
-                }
-            ]
-            currentIndex: tokenCostSection.costHistoryShowsTokens ? 1 : 0
-            Accessible.name: i18n("History metric")
-            onActivated: function (index) {
-                tokenCostSection.applet.setCostHistoryMetric(valueAt(index));
-                // The interactive pick severs the currentIndex binding; restore
-                // it so the combo keeps tracking settings changes made outside
-                // this section.
-                currentIndex = Qt.binding(function () {
-                    return tokenCostSection.costHistoryShowsTokens ? 1 : 0;
-                });
-            }
+            applet: tokenCostSection.applet
         }
     }
 

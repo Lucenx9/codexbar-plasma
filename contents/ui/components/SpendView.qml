@@ -76,22 +76,6 @@ ColumnLayout {
         return 0
     }
 
-    function metricOptions() {
-        return [
-            { text: i18n("Cost"), value: "cost" },
-            { text: i18n("Tokens"), value: "tokens" }
-        ]
-    }
-
-    function metricIndex(options, metric) {
-        for (var i = 0; i < options.length; i++) {
-            if (String(options[i].value) === String(metric)) {
-                return i
-            }
-        }
-        return 0
-    }
-
     RowLayout {
         id: spendHeaderRow
 
@@ -173,23 +157,10 @@ ColumnLayout {
             elide: Text.ElideRight
         }
 
-        Components.PlainComboBox {
-            id: metricCombo
+        Components.CostMetricToggle {
+            id: metricToggle
 
-            textRole: "text"
-            valueRole: "value"
-            model: view.metricOptions()
-            currentIndex: view.metricIndex(model, view.applet.costHistoryMetric)
-            Accessible.name: i18n("History metric")
-            onActivated: function(index) {
-                view.applet.setCostHistoryMetric(metricCombo.valueAt(index))
-                // The interactive pick severs the currentIndex binding; restore
-                // it so the combo keeps tracking settings changes made outside
-                // this view.
-                metricCombo.currentIndex = Qt.binding(function() {
-                    return view.metricIndex(metricCombo.model, view.applet.costHistoryMetric)
-                })
-            }
+            applet: view.applet
         }
 
         Components.PlainComboBox {
@@ -207,8 +178,8 @@ ColumnLayout {
                 } else {
                     view.applet.setCostHistoryDays(value)
                 }
-                // Same restored binding as the metric combo: keep tracking
-                // external settings changes after a pick severs this one.
+                // The pick severs currentIndex; restore the binding so the
+                // combo keeps tracking settings changes made outside this view.
                 rangeCombo.currentIndex = Qt.binding(function() {
                     return view.rangeIndex(rangeCombo.model, view.applet.costHistoryDays,
                         view.applet.costHistoryPeriod)

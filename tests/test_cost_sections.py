@@ -263,11 +263,27 @@ class CostSectionTests(unittest.TestCase):
                 && texts.indexOf("Cost unavailable") >= 0
                 && texts.indexOf("$2.00 \u00b7 60") >= 0;
         });
-        var metricCombos = all.filter(function(item) {
-            return item.objectName === "providerCostMetricCombo";
+        var metricToggles = all.filter(function(item) {
+            return item.objectName === "providerCostMetricToggle";
         });
-        compare(metricCombos.length, 1);
-        compare(metricCombos[0].currentIndex, 0);
+        compare(metricToggles.length, 1);
+        compare(metricToggles[0].currentIndex, 0);
+        // Both choices stay visible; a click asks the applet, and the checked
+        // button follows the applet setting rather than the click.
+        var toggleTree = [];
+        walkTree(metricToggles[0], toggleTree);
+        var metricButtons = toggleTree.filter(function(item) {
+            return item.checkable === true;
+        });
+        compare(metricButtons.length, 2);
+        verify(metricButtons[0].checked && !metricButtons[1].checked);
+        fakeApplet.metricSet = "";
+        mouseClick(metricButtons[1]);
+        compare(fakeApplet.metricSet, "tokens");
+        verify(metricButtons[0].checked && !metricButtons[1].checked);
+        mouseClick(metricButtons[0]);
+        compare(fakeApplet.metricSet, "cost");
+        verify(metricButtons[0].checked, "clicking the checked metric must not uncheck it");
         compare(charts[0].accessibleTitle, "Daily cost history");
         // The latest-day line stays until a day is selected; the readout and
         // drill-down heading then name that day, so the line would repeat it.
@@ -280,7 +296,8 @@ class CostSectionTests(unittest.TestCase):
         compare(charts[0].selectedIndex, 0);
         tryVerify(function() { return !summaries[0].visible; });
         fakeApplet.costHistoryShowsTokens = true;
-        tryVerify(function() { return metricCombos[0].currentIndex === 1; });
+        tryVerify(function() { return metricToggles[0].currentIndex === 1
+                && metricButtons[1].checked && !metricButtons[0].checked; });
         compare(charts[0].accessibleTitle, "Daily token history");
         tryVerify(function() { return charts[0].selectedIndex === -1; });
         fakeApplet.costHistoryShowsTokens = false;
@@ -490,12 +507,11 @@ class CostSectionTests(unittest.TestCase):
         });
         var all = [];
         walkTree(subject, all);
-        var combos = all.filter(function(item) {
-            return typeof item.valueAt === "function" && item.model !== undefined
-                && item.model.length === 2;
+        var metricToggles = all.filter(function(item) {
+            return item.toString().indexOf("CostMetricToggle") >= 0;
         });
-        compare(combos.length, 1);
-        combos[0].activated(1);
+        compare(metricToggles.length, 1);
+        metricToggles[0].activated(1);
         compare(fakeApplet.metricSet, "tokens");
         // The range picker offers the day windows and the CLI's calendar
         // periods, and follows a period chosen here or elsewhere.
