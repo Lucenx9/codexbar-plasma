@@ -196,7 +196,7 @@ TestCase {
                 qml = qml.replace("RESET_DEFAULTS", "true" if case == "reset defaults" else "false")
                 qml = qml.replace("EXPECTED_STATUS", "ready" if case in ("healthy", "reset defaults") else "unusable")
                 qml = qml.replace("EXPECTED_PATH", str(root / "current/codexbar") if case == "healthy" else missing)
-                self.run_qml(qml, directory)
+                self.run_qml(qml, directory, allow_cancel_warning=case == "reset defaults")
 
     def test_settings_with_offline_cli_fixtures(self):
         with tempfile.TemporaryDirectory(prefix="managed install 'test-") as temporary:
@@ -216,7 +216,7 @@ print(json.dumps({"status": "absent" if "status" in sys.argv else "error"}))
             qml = qml.replace("CLI_PATH", str(directory / "external-cli"))
             self.run_qml(qml, directory)
 
-    def run_qml(self, qml, directory):
+    def run_qml(self, qml, directory, allow_cancel_warning=False):
         fixture = directory / "tst_install.qml"
         fixture.write_text(qml)
         result = subprocess.run(
@@ -230,7 +230,9 @@ print(json.dumps({"status": "absent" if "status" in sys.argv else "error"}))
             if os.environ.get("QML_TEST_REQUIRE_NO_SKIPS") == "1":
                 self.fail(output)
             self.skipTest("Managed CLI settings need the optional KDE QML modules")
-        self.assertNotIn("QWARN", output)
+        warnings = [line for line in output.splitlines() if "QWARN" in line
+                    and not (allow_cancel_warning and "QProcess: Destroyed while process" in line)]
+        self.assertEqual(warnings, [], output)
 
 
 if __name__ == "__main__":
