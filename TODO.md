@@ -8,16 +8,14 @@ Issues linked below preserve discussion; this file owns parity status.
 
 ## Review baseline
 
-- Last release reviewed: [CodexBar 0.80.0](https://github.com/steipete/CodexBar/releases/tag/v0.80.0),
-  commit `3e060a954d7310bf2125074024f0b0f8f91db4b0`, checked 2026-10-23.
-- Coverage: the [0.80.0 review](docs/research/2026-10-23-macos-parity-0.80.0.md)
-  against Plasma `b7c8362` verifies the 108-provider registry, Soniox's
-  reachable API-key setup, Trae CN's macOS-only web source, the new Copilot
-  `config login` command's argument and offline failure events, the musl Codex
-  cost crash in 0.79.0 and its fix in 0.80.0, managed-installer compatibility,
-  and unchanged carried blockers, including custom-provider routing.
-  Authenticated output and the Copilot pending/authorized events remain
-  unverified.
+- Last release reviewed: [CodexBar 0.81.0](https://github.com/steipete/CodexBar/releases/tag/v0.81.0),
+  commit `ee890b5f392e70d6e20162d3e95cf9f1be265b60`, checked 2026-10-25.
+- Coverage: the [0.81.0 review](docs/research/2026-10-25-macos-parity-0.81.0.md)
+  against Plasma `af775b8` verifies the 110-provider registry, reachable
+  API-key setup for abliteration.ai and Chatbox AI, the per-strategy Linux Auto
+  web gate (DeepSeek with an environment key, and the fixed Gemini Auto
+  regression), optional plugin window titles, and unchanged carried blockers,
+  including custom-provider routing. Authenticated output remains unverified.
 - Earlier reviews: each dated note in the
   [documentation index](docs/README.md#maintained-references) records its own
   release coverage, probes, and unverified cases. Shared payload structs retain
@@ -120,7 +118,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Provider onboarding
 
 - [ ] Add CLI-described browser-cookie import, local-file setup, OAuth/device
-  flow, CLI-auth setup, and token-account actions. Linux 0.80.0 still has no
+  flow, CLI-auth setup, and token-account actions. Linux 0.81.0 still has no
   generic `config action` command (`set-api-key` and `set-source` are field
   writers; the `usage_updated` hook event is CLI automation surface, not a setup
   action). The Copilot-only `config login` is tracked as Plasma-native work
@@ -157,37 +155,24 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   macOS preference, so Plasma's CLI-sourced pace cannot follow them yet.
   [Prior discussion #170](https://github.com/Lucenx9/codexbar-plasma/issues/170).
 
-### Gemini automatic source
-
-- [ ] Restore Gemini usage under the default Auto source on Linux. Linux
-  0.77.0 through 0.80.0 rejects Gemini Auto as a macOS-only web source before any strategy runs,
-  where 0.76.0 reached the Gemini CLI OAuth strategy; the Linux web gate treats
-  Auto as web for every provider that lists a web source, although Gemini Auto
-  resolves only the OAuth strategy. The explicit API source still works, so
-  affected users can save API in Plasma's Source mode control. Plasma must not
-  rewrite the saved source silently. The API-source workaround is documented in
-  docs/usage.md. Done when an official release lets Linux Gemini Auto reach
-  the OAuth strategy again, verified in the isolated probe.
-  [Original regression](docs/research/2026-10-17-macos-parity-0.77.0.md#linux-cli-contract-changes);
-  [0.78.0/0.79.0 recheck](docs/research/2026-10-21-macos-parity-0.79.0.md#carried-forward-blockers-rechecked);
-  [0.80.0 recheck](docs/research/2026-10-23-macos-parity-0.80.0.md#carried-forward-blockers-rechecked).
-
 ### Custom provider routing
 
 - [ ] Restore custom catalog IDs in the official Linux usage path. Linux
-  0.79.0 and 0.80.0 discover and fetch a synthetic `audit-fixture` plugin through
+  0.79.0 through 0.81.0 discover and fetch a synthetic `audit-fixture` plugin through
   `plugins list` and `plugins fetch`, but `usage --provider audit-fixture`
   returns a Codex error even after approval. Done when the released usage
   command preserves the requested custom identity and Plasma's existing
   discovery/normalization is verified against that output. Do not relabel the
   wrong provider or read plugin files in QML.
   [Evidence](docs/research/2026-10-21-macos-parity-0.79.0.md#linux-cli-contract-changes);
-  [0.80.0 recheck](docs/research/2026-10-23-macos-parity-0.80.0.md#carried-forward-blockers-rechecked).
+  [0.81.0 recheck](docs/research/2026-10-25-macos-parity-0.81.0.md#carried-forward-blockers-rechecked).
+  Since 0.81.0, `plugins fetch` also emits optional window titles that the
+  usage path would carry.
 
 ### Cursor cost
 
 - [ ] Show Cursor cost history through the generic Linux `cost` path. Linux
-  0.80.0 still rejects Cursor and lists Antigravity, Claude, Codex, Muse
+  0.81.0 still rejects Cursor and lists Antigravity, Claude, Codex, Muse
   Code, OpenCode Go, and Pi as supported; the 0.74.0 `cursor-agent` login
   (#4397) changes usage authentication only;
   the descriptor gate keeps the new cookie-source availability errors unreachable.
@@ -256,7 +241,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 - [ ] Offer display-currency selection and conversion through an official Linux
   contract. The 0.56.2 audit records no display-currency setter or descriptor;
   the scoped 0.57.0, 0.58.0, 0.60.4, 0.67.0, 0.69.0, 0.72.0, 0.73.0,
-  0.74.0, 0.74.1, 0.75.0, 0.76.0, 0.77.0, and 0.80.0 config probes expose neither,
+  0.74.0, 0.74.1, 0.75.0, 0.76.0, 0.77.0, 0.80.0, and 0.81.0 config probes expose neither,
   although macOS 0.67.0 adds twelve spend-estimate currencies. Plasma currently
   displays the CLI-emitted currency. Done when released settings and converted
   amounts define currency, rate provenance, and unavailable-conversion behavior,
@@ -316,6 +301,14 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   `configProviders.qml` omits `soniox`. Done when Soniox offers the existing
   key setup with its organization-key guidance and docs link, covered by tests.
   [Evidence](docs/research/2026-10-23-macos-parity-0.80.0.md#linux-cli-contract-changes).
+- [ ] Add abliteration.ai and Chatbox AI to the single API-key setup. Official
+  Linux CLI 0.81.0 accepts `config set-api-key --provider abliteration|chatbox
+  --stdin`, enables each provider, and reaches its network fetch.
+  `supportsApiKeySetup` in `configProviders.qml` omits both. Chatbox takes a
+  Chatbox License Key, not an API key, and that key can authorize AI requests.
+  Done when both offer the existing key setup, Chatbox with license-key wording
+  and its docs link, covered by tests.
+  [Evidence](docs/research/2026-10-25-macos-parity-0.81.0.md#linux-cli-contract-changes).
 - [ ] Offer Copilot GitHub device sign-in through
   `codexbar config login --provider copilot --json`. Official Linux CLI 0.80.0
   advertises the command, rejects other providers with an `args` error, and
@@ -363,6 +356,19 @@ These are unresolved Linux candidates, not confirmed missing features.
   Claude's limits-unavailable state. Done when emitted Linux output shows
   whether Plasma's generic window, details, and spend paths suffice.
   [Limits](docs/research/2026-10-23-macos-parity-0.80.0.md#unverified-in-this-review).
+- [ ] Decide whether Auto panel text should name the lane it picked. macOS
+  0.81.0 adds the window name to Auto percentage, pace, and reset tokens
+  (`5h 84%`) when several windows exist, behind its existing Show window labels
+  option; this is app rendering, not CLI output. Plasma's
+  `PanelDisplay.rowForMode` picks a lane without naming it. Done when a bounded
+  accept/reject decision exists; any accepted work uses the CLI lane labels and
+  keeps panel width and accessibility bounded.
+  [Comparison](docs/research/2026-10-25-macos-parity-0.81.0.md#plasma-comparison).
+- [ ] Verify 0.81.0 authenticated output: abliteration.ai balance and credits,
+  Chatbox AI plan, reward, top-up, and image pools, the DeepSeek API balance
+  under Auto, and a signed-in Gemini Auto fetch. Done when emitted Linux output
+  shows whether Plasma's generic window, details, and spend paths suffice.
+  [Limits](docs/research/2026-10-25-macos-parity-0.81.0.md#unverified-in-this-review).
 
 - [ ] Verify authenticated Claude Platform output from an official Linux CLI
   once a supported cookie writer/action exists. Confirm primary API credits,
