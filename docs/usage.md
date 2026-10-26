@@ -223,8 +223,10 @@ work and upstream contract requirements.
   in a tooltip while hovering the plot or keeping keyboard focus there.
   Keyboard inspection shows the readout immediately. These interactions also
   apply to provider cost and detail charts.
-  Cost lines separate amount and tokens with
-  ` · `. The heatmap groups the range into weekday
+  Provider totals emphasize the selected Cost or Tokens metric, with the other
+  figure on a smaller line beneath it. Missing amounts read as unavailable;
+  measured zero stays zero. Long provider names and figures reveal their full
+  text on hover. The heatmap groups the range into weekday
   rows, labelled with the system locale's short day names and starting on its
   first day of the week, so each weekday keeps its row as the range moves. Week
   columns hold cells that widen up to a 2:1 tile, leaving empty cells for unavailable days in the loaded

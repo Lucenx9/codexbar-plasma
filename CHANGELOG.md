@@ -21,6 +21,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Make Usage & Spend provider totals easier to compare: emphasize the selected
+  Cost or Tokens metric, keep the other figure beneath it, and reveal truncated
+  names and amounts on hover. Missing figures remain explicitly unavailable.
 - Show each provider's share of tracked tokens in the shared usage card, as a
   colored bar under the totals and a percentage in each provider row and the
   copied statistics, and align the estimated cost with the token total.

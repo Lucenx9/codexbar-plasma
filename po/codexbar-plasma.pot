@@ -308,7 +308,8 @@ msgstr[1] ""
 #: contents/ui/components/CostText.qml
 #: contents/ui/components/ProjectCostSection.qml
 #: contents/ui/components/ProviderCostSection.qml
-#: contents/ui/components/ShareUsageWindow.qml scripts/smoke/Capture.qml
+#: contents/ui/components/ShareUsageWindow.qml
+#: contents/ui/components/SpendView.qml scripts/smoke/Capture.qml
 msgid "Tokens unavailable"
 msgstr ""
 
@@ -928,7 +929,8 @@ msgstr ""
 
 #: contents/ui/components/ProjectCostSection.qml
 #: contents/ui/components/ProviderCostSection.qml
-#: contents/ui/components/ShareUsageWindow.qml scripts/smoke/Capture.qml
+#: contents/ui/components/ShareUsageWindow.qml
+#: contents/ui/components/SpendView.qml scripts/smoke/Capture.qml
 msgid "Cost unavailable"
 msgstr ""
 

@@ -116,7 +116,9 @@ figure. A single measurable day remains selectable to inspect its models.
 
 `costHistoryMetric` selects cost or tokens across charts from the same loaded
 payload; the selected metric also controls bar scaling. Metric and day selection
-must not add CLI calls. `historyCoverageIsEstablished` controls the collecting
+must not add CLI calls. Usage & Spend provider totals put the selected metric
+first and keep the other figure beneath it, preserving currency, cost qualifiers,
+and explicit unavailable values. `historyCoverageIsEstablished` controls the collecting
 history notice; a missing flag counts as established for legacy payloads.
 
 `ProviderNormalizer.normalizeCostTrustMetadata` bounds `coverage`, `provenance`,
