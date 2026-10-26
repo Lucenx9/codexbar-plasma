@@ -1485,6 +1485,16 @@ msgstr ""
 msgid "Activity heatmap"
 msgstr "Mapa de calor da atividade"
 
+#: contents/ui/components/SpendView.qml
+msgctxt "Activity heatmap legend, shade of the lowest daily value"
+msgid "Less"
+msgstr "Menos"
+
+#: contents/ui/components/SpendView.qml
+msgctxt "Activity heatmap legend, shade of the highest daily value"
+msgid "More"
+msgstr "Mais"
+
 #: contents/ui/components/TimeLabels.qml
 msgctxt "Abbreviated weekday %1 and clock time %2, such as Wed 14:30"
 msgid "%1 %2"

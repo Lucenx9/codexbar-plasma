@@ -17,6 +17,10 @@ TestCase {
         return second === undefined ? result : result.replace("%2", second);
     }
 
+    function i18nc(context, text) {
+        return text;
+    }
+
     function i18np(singular, plural, count) {
         return (count === 1 ? singular : plural).replace("%1", count);
     }

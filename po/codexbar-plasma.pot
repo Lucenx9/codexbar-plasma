@@ -1958,6 +1958,16 @@ msgstr ""
 msgid "Activity heatmap"
 msgstr ""
 
+#: contents/ui/components/SpendView.qml
+msgctxt "Activity heatmap legend, shade of the lowest daily value"
+msgid "Less"
+msgstr ""
+
+#: contents/ui/components/SpendView.qml
+msgctxt "Activity heatmap legend, shade of the highest daily value"
+msgid "More"
+msgstr ""
+
 #: contents/ui/components/StatusComponentsList.qml
 msgctxt "Status of one service component"
 msgid "Operational"

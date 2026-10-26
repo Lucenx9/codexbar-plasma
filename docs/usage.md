@@ -232,7 +232,8 @@ work and upstream contract requirements.
   columns hold cells that widen up to a 2:1 tile, leaving empty cells for unavailable days in the loaded
   calendar, including its first and last days, and for the rest of the newest
   week. Measured zero remains a recorded
-  day. It stays hidden for ranges that fill a single column.
+  day. A **Less–More** key beside the heading shows the cell shades from the
+  lowest to the highest daily value. It stays hidden for ranges that fill a single column.
   Cost or token sums that exceed the numeric range stay unavailable, with an
   empty heatmap cell for that day. Other dates and valid metrics remain visible.
 - Usage, cost and account refreshes reject results from process failures even
