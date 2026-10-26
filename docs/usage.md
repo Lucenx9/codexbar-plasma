@@ -332,11 +332,12 @@ Popup refreshes and settings checks run independently for each widget instance.
 Starting the same check in another widget or reopening a settings page does not
 reuse an earlier request's result.
 
-With GNU `timeout` available, usage, cost, session, account, and provider-list
-requests also have a process deadline. A hung CLI and its children receive a
-termination signal two seconds after the request's UI deadline, then are killed
-if still running one second later. Cancelling a request or closing the widget
-retires its result immediately and leaves this process deadline in place.
+With GNU `timeout` available, usage, cost, session, account, provider-list, and
+provider settings commands also have a process deadline. A hung CLI and its
+children receive a termination signal two seconds after the request's UI
+deadline, then are killed if still running one second later. Cancelling a
+request or closing the widget or settings retires its result immediately and
+leaves this process deadline in place.
 Without GNU `timeout`, the UI deadline still applies, but cannot stop a hung
 process.
 
@@ -1212,7 +1213,9 @@ history, and provider messages are never sent. Only providers with current
 measurements are sent; one retained after a failed refresh, or without data,
 is left out. Weekly spending comparisons
 require cost history already loaded in **Usage & Spend** and scanned today;
-generating an insight never starts a cost scan.
+generating an insight never starts a cost scan. Duplicate dates in the two
+comparison weeks or today suppress spending and token comparisons for that
+provider, while its current quotas and other providers remain available.
 
 **Frequency** defaults to **Only on request**. **Every 6 hours**, **Every 12
 hours**, and **Daily** generate in the background at most once per interval,

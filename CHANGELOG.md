@@ -63,6 +63,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Bound provider-settings CLI processes and their children after the request
+  deadline, even when the settings page closes, instead of leaving hung
+  commands running indefinitely. This uses GNU `timeout` when available.
+- Omit AI Insights spending and token comparisons when duplicate dates make
+  their history ambiguous, instead of deriving trends from whichever row came
+  last. Current quotas and other providers remain available.
 - Keep quota-week cost windows, cost-history day labels, and AI Insights 7-day
   comparisons accurate across days whose local midnight is skipped by a
   spring-forward transition.

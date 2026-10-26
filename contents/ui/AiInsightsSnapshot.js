@@ -88,13 +88,15 @@ function periods(tokenCost, nowMs, metric) {
     for (var i = 0; i < daily.length && i < 400; i++) {
         var label = field(daily[i], "label")
         if (typeof label === "string" && /^\d{4}-\d{2}-\d{2}$/.test(label) && !Guards.isUnsafeObjectKey(label)) {
-            byDate[label] = daily[i]
+            // Duplicate dates survive cost normalization. Neither choosing a
+            // row nor summing them establishes one complete day's activity.
+            byDate[label] = Guards.hasOwnKey(byDate, label) ? null : daily[i]
         }
     }
     var sums = [0, 0]
     var incomplete = false
     var now = new Date(nowMs)
-    if (!Guards.hasOwnKey(byDate, dateKey(now))) {
+    if (!Guards.hasOwnKey(byDate, dateKey(now)) || byDate[dateKey(now)] === null) {
         return null
     }
     for (var offset = 1; offset <= comparisonDays * 2; offset++) {

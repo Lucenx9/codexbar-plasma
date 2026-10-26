@@ -435,7 +435,14 @@ synchronized.
   are presentation-only and receive normalized data plus an explicit parent API
   such as `applet` or `configPage`.
 - `contents/ui/configProviders.qml` owns provider setup processes, prompts,
-  configuration writes, and effects. Its pure protocol and command-planning
+  configuration writes, and effects. Its shared dispatcher wraps every command
+  in the same independent process-group bound as `CliProcess`, using the
+  validated request deadline plus two seconds and a one-second kill grace.
+  Existing diagnostic and secret-prompt bounds remain inside that outer bound;
+  prompt deadlines still allow the full input window. The executed dispatcher
+  test in `test_cli_process_bounds.py` checks a hung CLI and its child both with
+  the engine shell alive and after its destruction, without KDE imports.
+  Its pure protocol and command-planning
   modules live in `contents/ui/config/`. `ProviderOperations.js` owns immutable
   pending-operation state: provider locks and optimistic enablement, field/action
   locks, diagnostic loading, and deferred reload decisions. Reloads wait for all
