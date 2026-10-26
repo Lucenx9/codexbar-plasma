@@ -10,6 +10,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+## 0.2.52 - 2026-10-26
+
 ### Added
 
 - Preview quota warning and critical color ranges in Notifications settings
@@ -49,7 +51,6 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Give session names more space with independent title and metadata rows, align
   provider icons with their titles, and use consistent inset spacing. Keep long
   session states and activity ages inside the card with full-text tooltips.
-
 - Mark the inspected chart point with a vertical guide, including zero values,
   reveal abbreviated point labels and values in a tooltip, and show keyboard
   readouts immediately across cost, Usage & Spend, and provider detail charts.
@@ -123,6 +124,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   actions with recent KDE desktop styles.
 - Keep `LICENSE` as the unmodified MIT text so GitHub detects the license, and
   state the Poe icon's CC BY 4.0 exclusion in `NOTICE.md`.
+
+[Full diff](https://github.com/Lucenx9/codexbar-plasma/compare/v0.2.51...v0.2.52)
 
 ## 0.2.51 - 2026-10-23
 
