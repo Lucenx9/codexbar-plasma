@@ -45,12 +45,12 @@ For those, use `make install` or `./install.sh`. Release-package users can use
 ### Standalone release setup
 
 The [Quick install](../README.md#quick-install-from-a-terminal) command pipes
-[`setup.sh`](../setup.sh) into Bash, with a 30-second total timeout and 64 KiB
-size limit on that first download. The classic interactive pipeline can report
-success if curl fails before producing a script; the separate unattended
-example invokes Bash with `pipefail` so scripts receive that download failure,
-and also bounds connection time and redirects and enforces HTTPS-only transfers.
-Both examples work from a non-Bash calling shell. This small bootstrap downloads
+[`setup.sh`](../setup.sh) into Bash. Both the interactive and unattended examples
+invoke Bash with `pipefail` so an initial download failure returns a nonzero
+status, even if no script reaches Bash. Both enforce HTTPS-only transfers,
+a 30-second total timeout, a 10-second connection timeout, a 64 KiB download
+limit, and at most five redirects. Both work from a non-Bash calling shell.
+The bootstrap downloads
 `scripts/update-widget.sh` completely into a shell variable before running it
 with `bash -c` and `--setup`. Its body is one brace group so a truncated bootstrap
 cannot execute a partial body. The updater download has HTTPS, time, and size
