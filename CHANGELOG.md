@@ -18,6 +18,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Preserve an OpenAI status group's outage severity when the affected component
+  falls beyond the displayed child limit.
 - Keep wrapped service status loading and error messages clear of the popup's right edge, matching the component rows.
 
 ## 0.2.52 - 2026-10-26
