@@ -584,7 +584,10 @@ PlasmoidItem {
     }
 
     function presentedSpendProviderCosts(costs) {
-        return ProviderOrder.orderedItems(costs || spendProviderCosts(), providerOrderRaw)
+        // Follow the provider tabs, which already apply the saved order; the
+        // saved order then places providers that have costs but no tab.
+        var tabOrder = providers.map(function(item) { return item.provider }).join(",")
+        return ProviderOrder.orderedItems(costs || spendProviderCosts(), tabOrder + "," + providerOrderRaw)
     }
 
     function spendDailyPoints() {

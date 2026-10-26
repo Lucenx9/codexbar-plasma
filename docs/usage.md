@@ -233,6 +233,7 @@ work and upstream contract requirements.
   calendar, including its first and last days, and for the rest of the newest
   week. Measured zero remains a recorded
   day. It stays hidden for ranges that fill a single column.
+  Provider totals and project groups follow the provider tab order.
   Cost or token sums that exceed the numeric range stay unavailable, with an
   empty heatmap cell for that day. Other dates and valid metrics remain visible.
 - Usage, cost and account refreshes reject results from process failures even
