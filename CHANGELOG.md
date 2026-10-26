@@ -10,6 +10,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Changed
+
+- Draw the Cost/Tokens history switch as one segmented control, with both
+  choices on a shared track, so the unselected metric no longer reads as a
+  caption beside a single button.
+
 ### Fixed
 
 - Keep wrapped service status loading and error messages clear of the popup's right edge, matching the component rows.
