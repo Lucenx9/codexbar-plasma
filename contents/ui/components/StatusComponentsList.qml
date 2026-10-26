@@ -108,6 +108,7 @@ ColumnLayout {
         opacity: statusList.applet.secondaryTextOpacity
         Layout.fillWidth: true
         Layout.leftMargin: Kirigami.Units.largeSpacing * 2
+        Layout.rightMargin: Kirigami.Units.largeSpacing
         Layout.topMargin: Kirigami.Units.smallSpacing
         Layout.bottomMargin: Kirigami.Units.smallSpacing
         wrapMode: Text.Wrap
@@ -142,6 +143,7 @@ ColumnLayout {
     Controls.ItemDelegate {
         Layout.fillWidth: true
         Layout.leftMargin: Kirigami.Units.largeSpacing
+        // Match the parent action highlights' right edge, not the text rows.
         Layout.rightMargin: Kirigami.Units.smallSpacing
         leftPadding: Kirigami.Units.smallSpacing
         rightPadding: Kirigami.Units.smallSpacing

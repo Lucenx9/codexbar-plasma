@@ -10,6 +10,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Fixed
+
+- Keep wrapped service status loading and error messages clear of the popup's right edge, matching the component rows.
+
 ## 0.2.52 - 2026-10-26
 
 ### Added
