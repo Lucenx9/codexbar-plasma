@@ -51,6 +51,15 @@ class StatusComponentsTests(unittest.TestCase):
         self.assertEqual(rows[0]["indicator"], "maintenance")
         self.assertEqual(rows[1]["indicator"], "none")
 
+    def test_incidentio_group_severity_includes_children_beyond_display_limit(self):
+        components = [{"component_id": str(i), "name": "Component " + str(i)}
+                      for i in range(status.MAXIMUM_COMPONENTS + 1)]
+        rows = status.parse("incidentio", incidentio([
+            {"group": {"name": "APIs", "components": components}},
+        ], [{"component_id": str(status.MAXIMUM_COMPONENTS), "status": "full_outage"}]))
+        self.assertEqual(len(rows[0]["children"]), status.MAXIMUM_COMPONENTS)
+        self.assertEqual(rows[0]["indicator"], "critical")
+
     def test_statuspage_nests_children_in_position_order(self):
         rows = status.parse("statuspage", json.dumps({"components": [
             {"id": "c2", "name": "Child 2", "status": "operational", "group_id": "g", "position": 3},
