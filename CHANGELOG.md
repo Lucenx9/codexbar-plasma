@@ -68,6 +68,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- List **Usage & Spend** provider totals and project groups in the same order
+  as the provider tabs, instead of alphabetically when no provider order is
+  saved.
 - Bound provider-settings CLI processes and their children after the request
   deadline, even when the settings page closes, instead of leaving hung
   commands running indefinitely. This uses GNU `timeout` when available.
