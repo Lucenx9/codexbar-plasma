@@ -47,6 +47,11 @@ ColumnLayout {
         return maximum
     }
 
+    // Shared by the grid and its legend, so the key matches the cells exactly.
+    function heatmapTint(fraction) {
+        return applet.withAlpha(Kirigami.Theme.highlightColor, 0.1 + fraction * 0.8)
+    }
+
     // Day counts are numbers; the calendar periods are the CLI's names.
     function rangeOptions(days) {
         var values = [7, 30, 90]
@@ -336,11 +341,62 @@ ColumnLayout {
                 Layout.fillWidth: true
                 spacing: Kirigami.Units.smallSpacing / 2
 
-                PlainPlasmaLabel {
-                    text: i18n("Activity heatmap")
-                    font.weight: Font.DemiBold
+                RowLayout {
                     Layout.fillWidth: true
-                    elide: Text.ElideRight
+                    spacing: Kirigami.Units.smallSpacing
+
+                    PlainPlasmaLabel {
+                        text: i18n("Activity heatmap")
+                        font.weight: Font.DemiBold
+                        Layout.fillWidth: true
+                        elide: Text.ElideRight
+                    }
+
+                    // The tint is the only magnitude cue: without a key the
+                    // shades read as decoration. Each cell keeps its own
+                    // accessible value, so the key stays out of the tree.
+                    RowLayout {
+                        objectName: "heatmapLegend"
+
+                        spacing: heatmapGrid.cellSpacing
+                        Accessible.ignored: true
+
+                        PlainPlasmaLabel {
+                            text: i18nc("Activity heatmap legend, shade of the lowest daily value", "Less")
+                            font: Kirigami.Theme.smallFont
+                            opacity: view.applet.secondaryTextOpacity
+                            Accessible.ignored: true
+                            Layout.rightMargin: Kirigami.Units.smallSpacing - heatmapGrid.cellSpacing
+                        }
+
+                        Repeater {
+                            model: [0, 0.25, 0.5, 0.75, 1]
+
+                            delegate: Rectangle {
+                                required property var modelData
+
+                                implicitWidth: Math.round(Kirigami.Units.gridUnit * 0.6)
+                                implicitHeight: implicitWidth
+                                radius: Kirigami.Units.cornerRadius / 2
+                                color: view.applet.withAlpha(Kirigami.Theme.textColor, 0.05)
+                                Accessible.ignored: true
+
+                                Rectangle {
+                                    anchors.fill: parent
+                                    radius: parent.radius
+                                    color: view.heatmapTint(parent.modelData)
+                                }
+                            }
+                        }
+
+                        PlainPlasmaLabel {
+                            text: i18nc("Activity heatmap legend, shade of the highest daily value", "More")
+                            font: Kirigami.Theme.smallFont
+                            opacity: view.applet.secondaryTextOpacity
+                            Accessible.ignored: true
+                            Layout.leftMargin: Kirigami.Units.smallSpacing - heatmapGrid.cellSpacing
+                        }
+                    }
                 }
 
                 // The grid follows the selected range instead of a fixed
@@ -452,9 +508,7 @@ ColumnLayout {
                                         anchors.fill: parent
                                         radius: parent.radius
                                         visible: heatmapCell.measured
-                                        color: view.applet.withAlpha(
-                                            Kirigami.Theme.highlightColor,
-                                            0.1 + heatmapCell.fraction * 0.8)
+                                        color: view.heatmapTint(heatmapCell.fraction)
                                     }
 
                                     // The cell carries no border of its own and the

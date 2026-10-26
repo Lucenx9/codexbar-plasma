@@ -18,6 +18,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Expand Status Page for Claude, Claude Platform, Codex, and OpenAI into the
   status of each service component read from the public status page, with
   OpenAI's grouped components collapsible, and open the page from the list.
+- Add a **Less–More** key to the Usage & Spend activity heatmap, painted with
+  the same shades as its cells, so the tint scale reads as spend or token volume.
 
 ### Changed
 

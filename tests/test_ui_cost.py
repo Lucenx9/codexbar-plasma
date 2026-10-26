@@ -515,6 +515,18 @@ class CostTest(unittest.TestCase):
                     "padded heatmap slots carry no day and must stay out of hover, the readout, and "
                     f"the reading order; missing {heatmap_padding_fragment!r}"
                 )
+        # The legend is the only key to the tint scale; it must paint through the
+        # same function as the cells, or it would describe a different scale.
+        for heatmap_legend_fragment in (
+            'objectName: "heatmapLegend"',
+            "color: view.heatmapTint(heatmapCell.fraction)",
+            "color: view.heatmapTint(parent.modelData)",
+        ):
+            if not code_contains(spend_view_text, heatmap_legend_fragment):
+                raise AssertionError(
+                    "the activity heatmap legend must share the cells' tint scale; "
+                    f"missing {heatmap_legend_fragment!r}"
+                )
         if "modelData.monthLine" in spend_view_text:
             raise AssertionError(
                 "the Usage & Spend provider rows must not repeat the window label that the "
