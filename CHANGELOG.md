@@ -12,6 +12,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Separate README installation methods and first-run setup, group feature
+  dependencies, and show the automatic widget-update default beside setup.
+  The interactive terminal command now propagates download failures.
+
 - Draw the Cost/Tokens history switch as one segmented control, with both
   choices on a shared track, so the unselected metric no longer reads as a
   caption beside a single button.

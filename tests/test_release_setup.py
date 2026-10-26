@@ -365,6 +365,7 @@ exit 22
     def test_readme_pipeline_keeps_curl_failure_visible(self):
         self.fake("curl", 'printf "%s\\n" "curl: (22) synthetic download failure" >&2\nexit 22')
         result = self.run_readme()
+        self.assertEqual(result.returncode, 22, result.stderr)
         self.assertIn("synthetic download failure", result.stderr)
         self.assertEqual(self.calls(), "")
         self.assertFalse(self.installed.exists())
