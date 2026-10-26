@@ -143,7 +143,8 @@ ColumnLayout {
     Controls.ItemDelegate {
         Layout.fillWidth: true
         Layout.leftMargin: Kirigami.Units.largeSpacing
-        Layout.rightMargin: Kirigami.Units.largeSpacing
+        // Match the parent action highlights' right edge, not the text rows.
+        Layout.rightMargin: Kirigami.Units.smallSpacing
         leftPadding: Kirigami.Units.smallSpacing
         rightPadding: Kirigami.Units.smallSpacing
         text: i18n("Open Status Page")

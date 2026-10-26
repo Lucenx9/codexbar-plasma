@@ -12,7 +12,7 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
-- Align right margins of the service status page item delegate and status messages in `StatusComponentsList.qml` with status rows.
+- Keep wrapped service status loading and error messages clear of the popup's right edge, matching the component rows.
 
 ## 0.2.52 - 2026-10-26
 
