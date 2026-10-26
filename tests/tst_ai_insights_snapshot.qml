@@ -1,6 +1,7 @@
 import QtQuick
 import QtTest
 import "../contents/ui/AiInsightsSnapshot.js" as AiInsightsSnapshot
+import "../contents/ui/CostResponse.js" as CostResponse
 
 TestCase {
     name: "AiInsightsSnapshot"
@@ -142,6 +143,50 @@ TestCase {
         unestablished.historyCoverageEstablished = false
         snapshot = JSON.parse(build([provider("claude", {tokenCost: unestablished})]).text)
         verify(snapshot.providers[0].spend === undefined && snapshot.providers[0].tokens === undefined)
+    }
+
+    function test_duplicateHistoryDatesCannotInventComparisons_data() {
+        var cases = []
+        for (var offset of [0, 1, 7, 8, 14, 15]) {
+            for (var first of [false, true]) {
+                cases.push({tag: offset + "-" + first, offset: offset, first: first})
+            }
+        }
+        return cases
+    }
+
+    function test_duplicateHistoryDatesCannotInventComparisons(data) {
+        var daily = history(20, 3, 1).daily.map(function(day) {
+            return {date: day.label, totalCost: day.cost, totalTokens: day.tokens}
+        })
+        var duplicate = {date: dayLabel(data.offset), totalCost: 1000, totalTokens: 1000000}
+        // A third occurrence must not turn an ambiguous date back into a day.
+        daily = data.first ? [duplicate, duplicate].concat(daily) : daily.concat([duplicate, duplicate])
+        var response = CostResponse.response(JSON.stringify([{provider: "codex", daily: daily,
+            updatedAt: new Date(now).toISOString()}]), "", 30, 0)
+        compare(response.outcome, "success")
+        var cost = response.costs.codex
+        compare(cost.daily.filter(function(day) { return day.label === duplicate.date }).length, 3)
+        var original = JSON.stringify(cost)
+        var snapshot = JSON.parse(build([provider("codex", {tokenCost: cost}),
+            provider("claude", {tokenCost: history(20, 3, 1)})]).text)
+        var affected = snapshot.providers[0]
+        if (data.offset <= 14) {
+            verify(affected.spend === undefined, JSON.stringify(affected.spend))
+            verify(affected.tokens === undefined, JSON.stringify(affected.tokens))
+            verify(!snapshot.signals.some(function(signal) {
+                return signal.provider === "codex" && (signal.kind === "spendChange" || signal.kind === "tokenChange")
+            }))
+        } else {
+            compare(affected.spend.last7Days, 21)
+            compare(affected.spend.previous7Days, 7)
+            compare(affected.tokens.last7Days, 14000)
+            compare(affected.tokens.previous7Days, 7000)
+        }
+        compare(affected.quotas.length, 2)
+        compare(snapshot.providers[1].spend.last7Days, 21)
+        compare(snapshot.providers[1].tokens.last7Days, 14000)
+        compare(JSON.stringify(cost), original)
     }
 
     function test_scanFromBeforeMidnightProducesNoComparison() {

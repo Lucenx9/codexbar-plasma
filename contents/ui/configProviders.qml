@@ -356,7 +356,6 @@ KCM.SimpleKCM {
 
     function runCommand(command, descriptor) {
         commandRunSerial += 1
-        var sourceName = CommandLedger.withRunNonce(command, commandRunSerial, Date.now() + "-" + Math.random())
         var nextDescriptor = copyObject(descriptor)
         nextDescriptor.commandPathSignature = commandPath
         // Fail closed like CommandLedger.descriptor: an entry without a usable
@@ -367,6 +366,9 @@ KCM.SimpleKCM {
             timeoutMs = configCommandTimeoutMs
         }
         nextDescriptor.deadlineMs = Date.now() + timeoutMs
+        // Retiring a DataSource does not stop the CLI or its descendants.
+        var bounded = Guards.boundedShellCommand(command, timeoutMs / 1000 + 2, 1, true)
+        var sourceName = CommandLedger.withRunNonce(bounded, commandRunSerial, Date.now() + "-" + Math.random())
         commands = CommandLedger.opened(commands, sourceName, nextDescriptor)
         configSource.connectSource(sourceName)
     }

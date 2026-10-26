@@ -124,6 +124,10 @@ object from an allowlist. It never copies an input record.
   finite amount, and established coverage. The history must reach today: a
   scan from before midnight, for example one kept across a suspend, saw only
   part of yesterday. Missing, unknown, or partial days produce no comparison.
+  Duplicate dates within those fourteen days or today also suppress the
+  comparison: choosing one row or summing duplicates cannot establish a full
+  day's activity. Duplicates outside that span do not affect the comparison;
+  current quotas and other providers remain available.
   Amounts keep their ISO currency per provider and are never summed across
   providers. Spend keeps the qualifier the widget shows beside the amount:
   estimated or approximate sources, including an estimated share, set

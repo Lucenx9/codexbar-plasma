@@ -5,17 +5,22 @@ disconnectSource(), so every CLI owner must bound its command in the shell.
 The synthetic CLI ignores SIGTERM and spawns a child, so only a process-group
 bound with a kill-after escalation ends both.
 """
+import json
 import os
 from pathlib import Path
 import re
 import shutil
 import signal
 import subprocess
+import sys
 import tempfile
 import time
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts/lib"))
+from qml_surfaces import Surface
+
 UI_DEADLINE_MS = 100
 # Shell bound (deadline + 2 s) plus the 1 s kill-after grace, with slack.
 EXIT_WITHIN_SECONDS = 6.0
@@ -134,6 +139,87 @@ def start_time(pid):
 
 
 class CliProcessBoundTests(unittest.TestCase):
+    def test_provider_settings_dispatcher_bounds_hung_descendants(self):
+        page = ROOT / "contents/ui/configProviders.qml"
+        surface = Surface("providers", ROOT)
+        surface.texts = {page: page.read_text()}
+        functions = []
+        for name in ("runCommand", "copyObject"):
+            signature = re.search(r"function " + name + r"\([^)]*\)", page.read_text()).group(0)
+            functions.append(signature + " {" + surface.function_body(name) + "}")
+        with tempfile.TemporaryDirectory(prefix="codexbar provider bounds 'test-") as temporary:
+            directory = Path(temporary)
+            cli = directory / "codexbar"
+            cli.write_text(CLI)
+            cli.chmod(0o700)
+            fixture = directory / "tst_provider_bounds.qml"
+            fixture.write_text('''import QtQuick
+import QtTest
+import "SOURCE_URL/Guards.js" as Guards
+import "SOURCE_URL/CommandLedger.js" as CommandLedger
+TestCase {
+    name: "ProviderSettingsBounds"
+    property string commandPath: CLI_PATH
+    property int commandRunSerial: 0
+    property int configCommandTimeoutMs: 100
+    property var commands: ({})
+    property var configSource: ({connectSource: function(source) {
+        console.log("PROVIDER_COMMAND:" + JSON.stringify(source))
+    }})
+    SOURCE_FUNCTIONS
+    function test_dispatch() {
+        runCommand(Guards.shellQuote(commandPath), {kind: "toggle", provider: "codex", timeoutMs: 100})
+        compare(Object.keys(commands).length, 1)
+    }
+}
+'''.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
+                .replace("CLI_PATH", json.dumps(str(cli)))
+                .replace("SOURCE_FUNCTIONS", "\n".join(functions)))
+            result = subprocess.run(
+                [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],
+                env={**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software"},
+                capture_output=True, text=True, timeout=30)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            command = json.loads(next(line.split("PROVIDER_COMMAND:", 1)[1]
+                                      for line in result.stdout.splitlines() if "PROVIDER_COMMAND:" in line))
+            for destroy_engine_shell in (False, True):
+                with self.subTest(destroy_engine_shell=destroy_engine_shell):
+                    marker = directory / "codexbar.pids"
+                    marker.unlink(missing_ok=True)
+                    process = subprocess.Popen(["sh", "-c", command], start_new_session=True,
+                                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    seen = []
+                    try:
+                        deadline = time.monotonic() + EXIT_WITHIN_SECONDS
+                        while time.monotonic() < deadline:
+                            lines = marker.read_text().splitlines() if marker.exists() else []
+                            seen = [(int(pid), started) for pid, started in
+                                    (line.split() for line in lines)]
+                            if len(seen) == 2:
+                                break
+                            time.sleep(0.02)
+                        self.assertEqual(len(seen), 2, "provider command did not start both processes")
+                        if destroy_engine_shell:
+                            process.kill()
+                        while time.monotonic() < deadline and any(start_time(pid) == started for pid, started in seen):
+                            time.sleep(0.02)
+                        self.assertFalse(any(start_time(pid) == started for pid, started in seen),
+                                         "provider CLI or descendant outlived the hard bound")
+                    finally:
+                        # GNU timeout creates a separate process group; clean
+                        # each recorded survivor as well as the engine shell.
+                        for pid, started in seen:
+                            if start_time(pid) == started:
+                                try:
+                                    os.kill(pid, signal.SIGKILL)
+                                except ProcessLookupError:
+                                    pass
+                        try:
+                            os.killpg(process.pid, signal.SIGKILL)
+                        except ProcessLookupError:
+                            pass
+                        process.wait(timeout=5)
+
     def test_hung_cli_and_descendants_exit_after_timeout_or_retirement(self):
         with tempfile.TemporaryDirectory(prefix="codexbar bounds 'test-") as temporary:
             directory = Path(temporary)
