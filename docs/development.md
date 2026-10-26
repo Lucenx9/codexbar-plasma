@@ -1527,6 +1527,9 @@ Spend/Sessions errors with retained data and empty/loading states, keyboard
 refresh, privacy, and pinned headers. It also exercises the production Spend
 chart's selected date through inserted, expired, and missing days, and clears
 selection on range and metric changes without starting a scan.
+`test_cost_sections.py` also checks the Usage & Spend provider totals in both
+metric modes, including unknown versus zero, estimated costs, full-text hover,
+240-pixel and mirrored layouts, and doubled label fonts.
 The monthly credit regression in
 `test_provider_cost_presentation.py` checks that the production adapter and
 usage-row component keep amounts visible independently of popup pace.

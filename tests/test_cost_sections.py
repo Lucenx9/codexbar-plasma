@@ -66,6 +66,7 @@ TestCase {
     property var providerData: ({ provider: "codex", tokenCost: providerTokenCost })
     property var spendCosts: [{
         provider: "codex", windowValueLine: "$5.00",
+        totals: {cost: 5, tokens: 100, currency: "USD"}, valueMode: "plain",
         historyCoverageEstablished: true,
         projects: { rows: [
             { label: "Priced", cost: 5, tokens: 100, currency: "USD" }
@@ -73,6 +74,7 @@ TestCase {
     }]
     property var presentedCosts: spendCosts.concat([{
         provider: "extra", windowValueLine: "$9.00",
+        totals: {cost: 9, tokens: 9, currency: "USD"}, valueMode: "plain",
         historyCoverageEstablished: true,
         projects: { rows: [
             { label: "Extra", cost: 9, tokens: 9, currency: "USD" }
@@ -113,7 +115,7 @@ TestCase {
         property double panelClockMs: 0
         function usageCountText(value) { return String(value) + " tokens"; }
         function amountString(value, currency) { return (currency || "USD") + " " + String(value); }
-        function qualifiedCostValue(value) { return value; }
+        function qualifiedCostValue(value, mode) { return costText.qualifiedCostValue(value, mode); }
         function providerDisplayTitle(provider) { return provider; }
         function providerReadableColor(provider) { return "#3aa655"; }
         function readableAccentColor(a, b) { return "#3aa655"; }
@@ -137,6 +139,10 @@ TestCase {
         function updateCostTrustNoticeState(scope, summary, dismiss) {
             return { key: scope, dismissed: dismiss, shouldShow: false };
         }
+    }
+
+    Components.CostText {
+        id: costText
     }
 
     Component {
@@ -166,6 +172,9 @@ TestCase {
     Component {
         id: spendFactory
         ColumnLayout {
+            property bool mirrored: false
+            LayoutMirroring.enabled: mirrored
+            LayoutMirroring.childrenInherit: true
             function i18n() { return testCase.i18n.apply(testCase, arguments); }
             function i18np(one, many, count) { return testCase.i18np(one, many, count); }
             function i18nc() { return testCase.i18nc.apply(testCase, arguments); }
@@ -203,6 +212,83 @@ TestCase {
 
 
 class CostSectionTests(unittest.TestCase):
+    def test_spend_provider_totals_follow_metric_and_fit(self):
+        self.run_fixture('''
+    function test_spendProviderTotalsFollowMetricAndFit() {
+        failOnWarning(/Binding loop|Detected recursive rearrange/);
+        var subject = createTemporaryObject(spendFactory, testCase, {width: 540, height: 800});
+        verify(subject !== null);
+        var primary = findChild(subject, "spendProviderPrimary");
+        var secondary = findChild(subject, "spendProviderSecondary");
+        var title = findChild(subject, "spendProviderTitle");
+        verify(primary && secondary && title);
+        compare(primary.text, "USD 5");
+        compare(secondary.text, "100 tokens");
+        fakeApplet.costHistoryShowsTokens = true;
+        compare(primary.text, "100 tokens");
+        compare(secondary.text, "USD 5");
+        compare(fakeApplet.refreshCount, 0);
+
+        // Unknown is distinct from measured zero in either metric order.
+        testCase.presentedCosts = [{provider: "codex", totals: {
+            cost: null, tokens: 0, currency: "EUR"}, valueMode: "plain"}];
+        tryVerify(function() {
+            primary = findChild(subject, "spendProviderPrimary");
+            return primary && primary.text === "0 tokens";
+        });
+        secondary = findChild(subject, "spendProviderSecondary");
+        compare(secondary.text, "Cost unavailable");
+        fakeApplet.costHistoryShowsTokens = false;
+        compare(primary.text, "Cost unavailable");
+        compare(secondary.text, "0 tokens");
+
+        testCase.presentedCosts = [{provider: "Long <provider> & identity ".repeat(5),
+            totals: {cost: 123456789, tokens: null, currency: "EUR"}, valueMode: "estimated"}];
+        tryVerify(function() {
+            primary = findChild(subject, "spendProviderPrimary");
+            return primary && primary.text === "EUR 123456789 (estimated)";
+        });
+        secondary = findChild(subject, "spendProviderSecondary");
+        title = findChild(subject, "spendProviderTitle");
+        compare(secondary.text, "Tokens unavailable");
+        var card = title.parent.parent;
+        compare(card.Accessible.name, title.text);
+        compare(card.Accessible.description, primary.text + ". " + secondary.text);
+        for (var mirrored of [false, true]) {
+            subject.mirrored = mirrored;
+            for (var size of [540, 240]) {
+                subject.width = size;
+                wait(30);
+                for (var label of [title, primary, secondary]) {
+                    var pos = label.mapToItem(card, 0, 0);
+                    verify(label.width > 0);
+                    verify(pos.x >= 0 && pos.x + label.width <= card.width + 1);
+                }
+                var titleLeft = title.mapToItem(card, 0, 0).x;
+                var valueLeft = primary.mapToItem(card, 0, 0).x;
+                verify(mirrored ? valueLeft + primary.width <= titleLeft
+                    : titleLeft + title.width <= valueLeft);
+            }
+        }
+        subject.mirrored = false;
+        primary.font.pointSize *= 2;
+        secondary.font.pointSize *= 2;
+        title.font.pointSize *= 2;
+        wait(30);
+        verify(primary.y + primary.height <= secondary.y);
+        verify(card.height >= primary.height + secondary.height);
+        verify(title.truncated && primary.truncated);
+        mouseMove(card, card.width / 2, card.height / 2);
+        var tree = [];
+        walkTree(card, tree);
+        var tooltips = tree.filter(function(item) { return item.plainText !== undefined; });
+        compare(tooltips.length, 1);
+        tryCompare(tooltips[0], "visible", true);
+        compare(tooltips[0].plainText, title.text + "\\n" + primary.text + "\\n" + secondary.text);
+        verify(tooltips[0].text.indexOf("&lt;provider&gt;") >= 0);
+    }
+    ''')
+
     def test_project_section_follows_metric_and_reports_unavailable(self):
         self.run_fixture('''
     // Project rows come from the shared presentation module and word the
