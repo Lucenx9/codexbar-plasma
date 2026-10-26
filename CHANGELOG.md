@@ -10,6 +10,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Fixed
+
+- Align right margins of the service status page item delegate and status messages in `StatusComponentsList.qml` with status rows.
+
 ## 0.2.52 - 2026-10-26
 
 ### Added
