@@ -58,6 +58,15 @@ TestCase {
         function spendTotalLine() {
             return "Synthetic local history";
         }
+        function amountString(value) {
+            return "$" + value.toFixed(2);
+        }
+        function usageCountText(value) {
+            return value + " tokens";
+        }
+        function qualifiedCostValue(value) {
+            return value;
+        }
         function spendHistoryStillBuilding() {
             return false;
         }
@@ -193,7 +202,8 @@ TestCase {
             applet.costs = data.retained ? [
                 {
                     provider: "codex",
-                    windowValueLine: "$2.00"
+                    totals: {cost: 2, tokens: 100, currency: "USD"},
+                    valueMode: "plain"
                 }
             ] : [];
         } else {
@@ -338,7 +348,8 @@ TestCase {
         applet.costs = [
             {
                 provider: "codex",
-                windowValueLine: "$2.00"
+                totals: {cost: 2, tokens: 100, currency: "USD"},
+                valueMode: "plain"
             }
         ];
         var view = createView("SpendView");

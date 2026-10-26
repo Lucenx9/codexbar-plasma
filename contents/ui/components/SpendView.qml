@@ -534,9 +534,17 @@ ColumnLayout {
                         id: spendProviderCard
 
                         required property var modelData
+                        readonly property var totals: modelData.totals
+                        readonly property string costText: CostPresentation.hasMetricValue(totals, false)
+                            ? view.applet.qualifiedCostValue(view.applet.amountString(totals.cost,
+                                totals.currency), modelData.valueMode)
+                            : i18n("Cost unavailable")
+                        readonly property string tokensText: CostPresentation.hasMetricValue(totals, true)
+                            ? view.applet.usageCountText(totals.tokens, "tokens")
+                            : i18n("Tokens unavailable")
 
                         Layout.fillWidth: true
-                        implicitHeight: spendProviderRow.implicitHeight + Kirigami.Units.largeSpacing
+                        implicitHeight: spendProviderRow.implicitHeight + Kirigami.Units.largeSpacing * 2
                         radius: view.applet.nestedSurfaceRadius
                         // A passive display row: no hover state, because every
                         // other highlighted surface in the popup acts on click
@@ -545,17 +553,28 @@ ColumnLayout {
 
                         Accessible.role: Accessible.ListItem
                         Accessible.name: view.applet.providerDisplayTitle(spendProviderCard.modelData.provider)
-                        Accessible.description: spendProviderCard.modelData.windowValueLine
+                        Accessible.description: spendProviderPrimary.text + ". " + spendProviderSecondary.text
+
+                        HoverHandler { id: spendProviderHover }
+
+                        PlainToolTip {
+                            visible: spendProviderHover.hovered
+                                && (spendProviderTitle.truncated || spendProviderPrimary.truncated
+                                    || spendProviderSecondary.truncated)
+                            plainText: spendProviderTitle.text + "\n" + spendProviderPrimary.text
+                                + "\n" + spendProviderSecondary.text
+                        }
 
                         RowLayout {
                             id: spendProviderRow
 
                             anchors.fill: parent
-                            anchors.margins: Kirigami.Units.largeSpacing / 2
-                            spacing: Kirigami.Units.smallSpacing
+                            anchors.margins: Kirigami.Units.largeSpacing
+                            spacing: Kirigami.Units.largeSpacing
 
                             Rectangle {
                                 Layout.preferredWidth: Kirigami.Units.iconSizes.smallMedium
+                                    + Kirigami.Units.smallSpacing * 2
                                 Layout.preferredHeight: Layout.preferredWidth
                                 // Same identity-tile treatment as the overview
                                 // and header tiles, scaled down for this row.
@@ -574,25 +593,57 @@ ColumnLayout {
                                     color: view.applet.providerReadableColor(
                                         spendProviderCard.modelData.provider,
                                         Kirigami.Theme.backgroundColor)
-                                    width: Kirigami.Units.iconSizes.small
-                                    height: Kirigami.Units.iconSizes.small
+                                    width: Kirigami.Units.iconSizes.smallMedium
+                                    height: Kirigami.Units.iconSizes.smallMedium
                                 }
                             }
 
                             PlainPlasmaLabel {
+                                id: spendProviderTitle
+                                objectName: "spendProviderTitle"
+
                                 text: view.applet.providerDisplayTitle(spendProviderCard.modelData.provider)
                                 font.weight: Font.DemiBold
                                 Layout.fillWidth: true
+                                Layout.minimumWidth: 0
+                                Layout.preferredWidth: 1
                                 elide: Text.ElideRight
                             }
 
-                            PlainPlasmaLabel {
-                                // The range selector above states the window once,
-                                // so each row carries only its own figures.
-                                text: spendProviderCard.modelData.windowValueLine
-                                opacity: view.applet.valueTextOpacity
-                                horizontalAlignment: Text.AlignRight
-                                elide: Text.ElideRight
+                            ColumnLayout {
+                                // Equal flexible columns keep long amounts from
+                                // pushing the provider identity out of the row.
+                                Layout.fillWidth: true
+                                Layout.minimumWidth: 0
+                                Layout.preferredWidth: 1
+                                spacing: Kirigami.Units.smallSpacing / 2
+
+                                PlainPlasmaLabel {
+                                    id: spendProviderPrimary
+                                    objectName: "spendProviderPrimary"
+
+                                    text: view.applet.costHistoryShowsTokens
+                                        ? spendProviderCard.tokensText : spendProviderCard.costText
+                                    font.weight: Font.DemiBold
+                                    Layout.fillWidth: true
+                                    Layout.minimumWidth: 0
+                                    horizontalAlignment: Text.AlignRight
+                                    elide: Text.ElideRight
+                                }
+
+                                PlainPlasmaLabel {
+                                    id: spendProviderSecondary
+                                    objectName: "spendProviderSecondary"
+
+                                    text: view.applet.costHistoryShowsTokens
+                                        ? spendProviderCard.costText : spendProviderCard.tokensText
+                                    font: Kirigami.Theme.smallFont
+                                    opacity: view.applet.secondaryTextOpacity
+                                    Layout.fillWidth: true
+                                    Layout.minimumWidth: 0
+                                    horizontalAlignment: Text.AlignRight
+                                    elide: Text.ElideRight
+                                }
                             }
                         }
                     }
