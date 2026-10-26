@@ -258,7 +258,8 @@ TestCase {
         applet.files = [main]
         names = ("costHistoryWindowLabel",
                  "costChartPoints", "spendTotalLine", "spendProviderCosts",
-                 "spendHistoryStillBuilding", "costPresentation", "providerTitle",
+                 "spendHistoryStillBuilding", "presentedSpendProviderCosts",
+                 "costPresentation", "providerTitle",
                  "providerKey", "amountString", "usageCountText", "tokenCountString",
                  "qualifiedCostValue")
         functions = []
@@ -360,6 +361,7 @@ import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
 import "SOURCE_URL/ProviderIdentity.js" as ProviderIdentity
 import "SOURCE_URL/CostPresentation.js" as CostPresentation
 import "SOURCE_URL/PrivacyPresentation.js" as PrivacyPresentation
+import "SOURCE_URL/ProviderOrder.js" as ProviderOrder
 TestCase {
     name: "MainCostWrappers"
     Components.ProviderNames {
@@ -378,6 +380,8 @@ TestCase {
         property int costHistoryDays: 30
         property string costHistoryPeriod: ""
         property var tokenCosts: ({})
+        property var providers: []
+        property string providerOrderRaw: ""
         property bool privacyMode: false
         // QtObject has no default property, so the copied wrappers reach the
         // real component through this property.
@@ -525,6 +529,23 @@ TestCase {
         compare(costs[0].provider, "codex");
         compare(costs[1].provider, "zai");
         root.tokenCosts = ({});
+    }
+    // The visible list follows the provider tabs, not the title sort, and the
+    // saved order still places a provider that has costs but no tab.
+    function test_presentedSpendFollowsProviderTabs() {
+        var costs = [{provider: "claude"}, {provider: "codex"}, {provider: "zai"}];
+        var previousProviders = root.providers;
+        var previousOrder = root.providerOrderRaw;
+        root.providers = [{provider: "codex"}, {provider: "claude"}];
+        root.providerOrderRaw = "";
+        compare(root.presentedSpendProviderCosts(costs).map(function(item) { return item.provider; }),
+            ["codex", "claude", "zai"]);
+        root.providers = [{provider: "codex"}];
+        root.providerOrderRaw = "zai,claude";
+        compare(root.presentedSpendProviderCosts(costs).map(function(item) { return item.provider; }),
+            ["codex", "zai", "claude"]);
+        root.providers = previousProviders;
+        root.providerOrderRaw = previousOrder;
     }
     // The still-building flag mirrors the CLI scan coverage, not the spend.
     function test_stillBuildingMirrorsScanCoverage() {
