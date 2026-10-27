@@ -517,10 +517,6 @@ msgstr ""
 msgid "%1 %2"
 msgstr ""
 
-#: contents/ui/components/FullRepresentation.qml
-msgid "For connection checks, open Diagnostics in widget settings."
-msgstr ""
-
 #: contents/ui/components/FullRepresentation.qml contents/ui/configGeneral.qml
 msgid "Retry"
 msgstr ""
@@ -3747,6 +3743,22 @@ msgid "%1 day ago"
 msgid_plural "%1 days ago"
 msgstr[0] ""
 msgstr[1] ""
+
+#: contents/ui/main.qml
+msgid "No internet connection."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "The provider did not respond in time."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Usage refreshes when the connection returns."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "For connection checks, open Diagnostics in widget settings."
+msgstr ""
 
 #: contents/ui/main.qml scripts/smoke/Capture.qml
 msgid "Details hidden by privacy mode."

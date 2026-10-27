@@ -118,8 +118,16 @@ for forbidden in ("Plasmoid.configuration", "required property var applet", "roo
 require_all(applet.id_block("usageController"),
     ("selectedAccounts: root.selectedAccounts", "providerConfigRevision: root.providerConfigRevision",
      "providerConfigStamp: root.providerConfigStamp", "popupVisible: root.expanded",
-     "onSnapshotReceived:", "root.commitUsageSnapshot(", "onFailed:", "root.failUsageRefresh(message)"),
+     "reachability: root.networkReachability", "onSnapshotReceived:", "root.commitUsageSnapshot(", "onFailed:", "root.failUsageRefresh(message)"),
     "usage must receive explicit inputs and publish through the cache owner")
+# QtNetwork's NetworkInformation needs Qt 6.7; only a Loader keeps older
+# Plasma 6 stacks loading the applet with unknown reachability.
+require_all(applet.id_block("networkReachabilityLoader"),
+    ('source: Qt.resolvedUrl("controllers/NetworkReachability.qml")',),
+    "reachability must load optionally")
+for qml_path in (root / "contents").rglob("*.qml"):
+    if qml_path.name != "NetworkReachability.qml" and "import QtNetwork" in qml_path.read_text():
+        raise AssertionError(f"only the optional reachability adapter may import QtNetwork: {qml_path}")
 require_ordered(usage.function_body("connectUsageCommand"),
     ("CommandLedger.opened(", "usageSource.connectSource("),
     "usage requests must register before synchronous replies")

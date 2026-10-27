@@ -32,7 +32,8 @@ Item {
     Layout.preferredWidth: implicitWidth
     Layout.preferredHeight: implicitHeight
 
-    readonly property string usageRecoveryHint: i18n("For connection checks, open Diagnostics in widget settings.")
+    readonly property string providerErrorRaw: applet.selectedProviderData
+        ? String(applet.selectedProviderData.error || "") : ""
 
     // Two different problems reach an empty popup. A shell that cannot run
     // the configured executable needs a command path, not a retry, so it
@@ -137,8 +138,10 @@ Item {
         objectName: "globalErrorMessage"
 
         visible: fullRoot.globalErrorActive
-        plainText: applet.privateErrorText(applet.errorText) + "\n\n" + fullRoot.usageRecoveryHint
-        type: Kirigami.MessageType.Error
+        plainText: applet.usageErrorText(applet.errorText) + "\n\n" + applet.usageRecoveryHint(applet.errorText)
+        // A network failure is transient, not a configuration problem.
+        type: applet.usageErrorKind(applet.errorText).length > 0
+            ? Kirigami.MessageType.Warning : Kirigami.MessageType.Error
         actions: [retryUsageAction, usageSettingsAction]
         width: parent.width
         height: implicitHeight
@@ -1099,9 +1102,10 @@ Item {
                         visible: applet.presentedProviderData
                             && applet.presentedProviderData.error
                             && applet.presentedProviderData.error.length > 0
-                        plainText: (applet.presentedProviderData ? applet.presentedProviderData.error : "")
-                            + (globalErrorMessage.visible ? "" : "\n\n" + fullRoot.usageRecoveryHint)
-                        type: Kirigami.MessageType.Error
+                        plainText: applet.usageErrorText(fullRoot.providerErrorRaw)
+                            + (globalErrorMessage.visible ? "" : "\n\n" + applet.usageRecoveryHint(fullRoot.providerErrorRaw))
+                        type: applet.usageErrorKind(fullRoot.providerErrorRaw).length > 0
+                            ? Kirigami.MessageType.Warning : Kirigami.MessageType.Error
                         actions: globalErrorMessage.visible ? [] : [retryUsageAction, usageSettingsAction]
                         Layout.fillWidth: true
                     }

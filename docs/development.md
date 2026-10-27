@@ -402,6 +402,21 @@ synchronized.
   Other providers keep `--account`; clearing a selection restores the ordinary
   default-account command. Changed inputs still retire previous requests before
   starting their replacement, even when two Codex selections share a command.
+  Its `reachability` input carries `QNetworkInformation` values from
+  `controllers/NetworkReachability.qml`, which `main.qml` loads through a
+  `Loader` because `NetworkInformation` needs Qt 6.7 while the applet supports
+  Plasma 6.0; no other file may import `QtNetwork`. A failed load stays unknown.
+  A return from disconnected, local or site (intranet only) to online starts
+  one refresh after a two-second settle timer; leaving online first cancels
+  it, and a refresh that started after the reconnection makes it a no-op. Offline state does
+  not suppress refreshes, because local sources still answer.
+  `NetworkState.js` classifies provider messages as offline or timeout from
+  Foundation URL error codes and unresolved hosts only, as a tested fallback
+  for the missing CLI kind. `main.qml` classifies the raw message before
+  privacy filtering and localizes the headline and recovery hint.
+  `tests/tst_network_state.qml`, the reconnect case in
+  `test_usage_controller.py`, `tests/tst_network_reachability.qml`, and
+  `test_usage_recovery.py` cover these boundaries.
 - `contents/ui/controllers/AccountsController.qml` owns account discovery's
   executable source, request ledger, nonce, deadlines, per-provider loading and
   errors, and last successful lists. Inputs are the CLI path, source, and status

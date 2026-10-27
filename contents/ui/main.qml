@@ -7,6 +7,7 @@ import "controllers" as Controllers
 import "AiInsights.js" as AiInsights
 import "AiInsightsSnapshot.js" as AiInsightsSnapshot
 import "Guards.js" as Guards
+import "NetworkState.js" as NetworkState
 import "NotificationMemo.js" as NotificationMemo
 import "NotificationPlanner.js" as NotificationPlanner
 import "PacePresentation.js" as PacePresentation
@@ -193,6 +194,12 @@ PlasmoidItem {
     readonly property bool spendSelected: spendAvailable && globalViewSelected && selectedGlobalView === "spend"
     readonly property bool sessionsSelected: sessionsAvailable && globalViewSelected && selectedGlobalView === "sessions"
     readonly property bool providerUsageFeedbackVisible: !spendSelected && !sessionsSelected
+    // The adapter is optional, so the Loader can only type its item as QObject;
+    // hold it untyped, like shareUsageWindow, to read the adapter's property.
+    readonly property var networkReachabilityAdapter: networkReachabilityLoader.item
+    readonly property int networkReachability: networkReachabilityAdapter
+        ? networkReachabilityAdapter.reachability : NetworkState.unknown
+    readonly property bool networkOffline: NetworkState.isOffline(networkReachability)
     readonly property var selectedProviderData: providers.length > 0 && selectedProviderIndex >= 0
         ? providers[Math.min(selectedProviderIndex, providers.length - 1)]
         : null
@@ -705,6 +712,25 @@ PlasmoidItem {
     function accountNoticeForProvider(providerID) {
         var key = providerMapKey(providerID)
         return key.length > 0 ? accountsController.noticeForProvider(key) : ""
+    }
+
+    // Classify the raw message: privacy mode may hide it before display.
+    function usageErrorKind(message) {
+        return NetworkState.errorKind(message, networkReachability)
+    }
+
+    function usageErrorText(message) {
+        var kind = usageErrorKind(message)
+        var detail = privateErrorText(message)
+        return kind === "offline" ? i18n("No internet connection.") + "\n" + detail
+            : kind === "timeout" ? i18n("The provider did not respond in time.") + "\n" + detail
+            : detail
+    }
+
+    function usageRecoveryHint(message) {
+        return usageErrorKind(message) === "offline" && networkOffline
+            ? i18n("Usage refreshes when the connection returns.")
+            : i18n("For connection checks, open Diagnostics in widget settings.")
     }
 
     function privateErrorText(text) {
@@ -2138,6 +2164,12 @@ PlasmoidItem {
         }
     }
 
+    Loader {
+        id: networkReachabilityLoader
+
+        source: Qt.resolvedUrl("controllers/NetworkReachability.qml")
+    }
+
     Controllers.UsageController {
         id: usageController
 
@@ -2152,6 +2184,7 @@ PlasmoidItem {
         refreshIntervalSec: root.refreshIntervalSec
         refreshOnOpen: root.refreshOnOpen
         popupVisible: root.expanded
+        reachability: root.networkReachability
         onSnapshotReceived: function(items) {
             root.commitUsageSnapshot(items.map(function(item) { return root.presentProviderSnapshot(item) }))
             root.applyTokenCosts()

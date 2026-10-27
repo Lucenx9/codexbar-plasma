@@ -10,6 +10,13 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Added
+
+- Refresh usage shortly after the network connection returns instead of
+  waiting for the refresh interval, using Qt's `QtNetwork` QML module when
+  available. Network timeouts and missing connections get a localized
+  explanation above the CLI message and show as warnings instead of errors.
+
 ### Changed
 
 - Give Overview quotas the full card content width below the provider identity,

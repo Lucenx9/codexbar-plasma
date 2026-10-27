@@ -218,6 +218,37 @@ TestCase {
         o.subject.refreshIntervalSec = 0;
         compare(latest(o)[0].account, "run 2");
     }
+    // Reachability uses QNetworkInformation values: 0 unknown, 1 disconnected,
+    // 2 local, 4 online. A returned route refreshes once after it settles.
+    function test_reconnectRefreshesOnceAfterTheRouteSettles() {
+        var o = create("normal", {sourceMode: "cli", reachability: 1});
+        completed(o, 1);
+        o.subject.reachability = 4;
+        o.subject.reachability = 2;
+        o.subject.reachability = 4;
+        wait(1000);
+        compare(o.snapshots.length, 1);
+        completed(o, 2);
+        compare(latest(o)[0].account, "run 2");
+        o.subject.reachability = 1;
+        o.subject.reachability = 4;
+        o.subject.reachability = 1;
+        wait(3500);
+        compare(o.snapshots.length, 2);
+        // A refresh started after the route returned already covers it; the
+        // settle timer must not retire it and start another run.
+        o.subject.reachability = 4;
+        wait(500);
+        o.subject.refresh(false);
+        completed(o, 3);
+        wait(2500);
+        compare(o.snapshots.length, 3);
+        var unknown = create("normal", {sourceMode: "cli"});
+        completed(unknown, 1);
+        unknown.subject.reachability = 4;
+        wait(3500);
+        compare(unknown.snapshots.length, 1);
+    }
     function test_productionTimeoutsReleaseEveryKindAndRejectLateReplies() {
         var aggregate = create("timeout-aggregate", {sourceMode: "cli"});
         var roster = create("timeout-roster");

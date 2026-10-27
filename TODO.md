@@ -266,6 +266,17 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   every provider the CLI describes.
   [Payload source](https://github.com/steipete/CodexBar/blob/v0.82.0/Sources/CodexBarCLI/CLIPayloads.swift).
 
+### Network error classification
+
+- [ ] Classify transport failures in the usage error record. With the network
+  disabled, the installed 0.79.0 Linux CLI reports Codex as
+  `{"code":1,"kind":"provider","message":"Network error: Could not resolve host: chatgpt.com"}`;
+  a stalled request reports `NSURLErrorDomain error -1001` in the same free
+  text. Plasma meanwhile recognizes only Foundation URL error codes and the
+  unresolved-host failure in `NetworkState.js` to add a localized headline.
+  Done when a released CLI emits a typed network kind (for example offline,
+  timeout, DNS or TLS) and the widget reads it instead of the message.
+
 ## Plasma-native work with verified CLI contracts
 
 - [ ] Preserve and present optional detail-row severity. Official Linux CLI
