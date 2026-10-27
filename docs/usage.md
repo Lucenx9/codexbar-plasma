@@ -530,9 +530,12 @@ Provider-specific editable settings depend on the official CLI contract.
   docs/dashboard/login links.
 - The widget also has a renderer for the proposed
   [provider settings descriptor](cli-provider-settings-descriptor.md).
-  Scoped checks through CLI 0.80.0 still find no descriptors, so cookie, base
+  Scoped checks through CLI 0.82.0 still find no descriptors, so cookie, base
   URL, workspace/project, region, and other descriptor-backed editors remain
-  unavailable. CLI 0.73.0 separately supports persistent source writes through
+  unavailable. CLI 0.82.0 adds `codexbar config set-cookie --provider <id>
+  --stdin` and `codexbar config clear-credential --provider <id>` for manual
+  cookies and stored keys; the widget does not offer them yet, so run them in
+  a terminal. CLI 0.73.0 separately supports persistent source writes through
   `codexbar config set-source --provider <id> --source <mode>`; `auto` clears
   the saved override. With CLI 0.73.0 or later, open **Providers → Settings and
   diagnostics**, choose a **Source mode**, and select **Save**. The choices
@@ -564,7 +567,8 @@ Provider-specific editable settings depend on the official CLI contract.
   stdin. Command Code's Automatic source selects API when a key is configured;
   fal needs a key with billing read access. FLORA and Parallel have metadata
   and links, but no key setup action. FLORA also needs a workspace ID with no
-  supported Linux writer, and Parallel needs an unavailable cookie setup action.
+  supported Linux writer, and Parallel needs a manual cookie (CLI 0.82.0
+  `config set-cookie`).
 - Munito offers single API-key setup with CLI 0.77.0 or later, using the
   secure stdin prompt. Use an admin key with Read account data permission.
   Future AGI has fallback metadata and links, but no key setup action: it
@@ -573,7 +577,8 @@ Provider-specific editable settings depend on the official CLI contract.
 - Claude Platform has its own fallback name, the shared Claude icon and brand
   color, and Console billing, login, status and documentation links. Its
   `claude-platform` alias resolves to `claudeplatform`, separately from Claude.
-  CLI 0.76.0 has no supported Linux cookie setup action for it; opening the
+  The widget has no cookie setup action for it; with CLI 0.82.0 or later, store
+  a manual Console cookie with `config set-cookie` in a terminal. Opening the
   login page does not configure CLI authentication.
 - Fallback names, icons, and documentation links for all 106 providers in the
   official CodexBar 0.77.0 registry, plus colors, links, and aliases where
