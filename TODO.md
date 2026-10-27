@@ -57,11 +57,11 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   descriptors and writes. Linux 0.79.0 still rejects `config providers
   --descriptors` (106 records, same four keys); its provider records have no
   descriptor. Manual cookies have the 0.82.0 `set-cookie` writer (see
-  Plasma-native work); Helmcode stays macOS-only even with one. 0.65.0 adds three more cases. Charm Hyper stores a key, but its default
-  source demands web support on Linux, and it works only with `--source api`
-  and Plasma now supports a persistent per-provider source choice. Bifrost
-  needs a gateway base URL
-  (`enterpriseHost`) with no CLI writer; the CLI reads `BIFROST_BASE_URL` from
+  Plasma-native work); Helmcode stays macOS-only even with one. 0.65.0 adds
+  three more cases. Charm Hyper stores a key, but its default source demands
+  web support on Linux, and it works only with `--source api` and Plasma now
+  supports a persistent per-provider source choice. Bifrost needs a gateway
+  base URL (`enterpriseHost`) with no CLI writer; the CLI reads `BIFROST_BASE_URL` from
   the environment instead. The optional GitKraken organization ID has no writer
   either, and neither has llmman's non-default base URL (`LLMMAN_HOST`, 0.66.0).
   0.67.0 adds Raycast, cookie-only with a macOS-only web source; Aixy's
@@ -102,8 +102,8 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 - [ ] Add CLI-described browser-cookie import, local-file setup, OAuth/device
   flow, CLI-auth setup, and token-account actions. Linux 0.82.0 still has no
   generic `config action` command (`set-api-key`, `set-source`, `set-cookie`,
-  and `clear-credential` are field writers; the `usage_updated` hook event is CLI automation surface, not a setup
-  action). The Copilot-only `config login` is tracked as Plasma-native work
+  and `clear-credential` are field writers; the `usage_updated` hook event
+  is CLI automation surface, not a setup action). The Copilot-only `config login` is tracked as Plasma-native work
   below. Trae CN's signed-in dashboard source is macOS-only on Linux and joins
   the browser-import case here. Done when supported actions expose validated
   prompts/results and handle cancellation, failure, and stale responses in
@@ -292,16 +292,16 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   and its docs link, covered by tests.
   [Evidence](docs/research/2026-10-25-macos-parity-0.81.0.md#linux-cli-contract-changes).
 - [ ] Offer manual-cookie setup and credential clearing. Official Linux CLI
-  0.82.0 adds `config set-cookie --provider <id> --stdin [--no-enable]` and
-  `config clear-credential --provider <id> [--api-key] [--cookie]`; 0.81.0
-  rejects both. 49 providers accept a cookie, but only some Linux fetches read
-  it: Claude, Claude Platform, Command Code, Cursor, Mistral, Ollama, OpenCode
-  Go, Parallel, Raycast, TinyApi, Trae CN, TypeSafe, and X API reach their
-  fetch; Helmcode, Abacus AI, DeepSeek, Alibaba, and Manus stay macOS-only.
-  Done when a version-gated action stores a cookie through the secure stdin
-  prompt for a probe-backed allowlist, a clear action removes stored
-  credentials, neither writes the cookie to logs or diagnostics, and tests
-  cover older CLIs, refusals, and refresh afterwards.
+  0.82.0 adds `config set-cookie --provider <id> (--cookie <h>|--stdin)
+  [--no-enable]` and `config clear-credential --provider <id> [--api-key]
+  [--cookie]`; 0.81.0 rejects both. 49 providers accept a cookie; 21 were
+  probed. Under Auto, Claude, Claude Platform, Command Code, Cursor, Mistral,
+  Ollama, OpenCode Go, Parallel, Raycast, TinyApi, Trae CN, TypeSafe, and X
+  API reach their fetch; Gemini does only with `--source web`; Helmcode, Abacus
+  AI, DeepSeek, Alibaba, and Manus stay macOS-only. Done when a version-gated
+  action stores a cookie through the stdin prompt for a probe-backed
+  allowlist, a clear action (any provider) removes stored credentials, no
+  cookie reaches logs or diagnostics, and tests cover older CLIs and refusals.
   [Evidence](docs/research/2026-10-27-macos-parity-0.82.0.md#linux-cli-contract-changes).
 - [ ] Offer Copilot GitHub device sign-in through
   `codexbar config login --provider copilot --json`. Official Linux CLI 0.80.0
