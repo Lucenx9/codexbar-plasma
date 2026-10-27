@@ -22,6 +22,30 @@ TestCase {
         verify(subject !== null); selected.clear(); changed.clear();
         return subject;
     }
+    function test_exitStatusValidation_data() {
+        return [{tag: "numeric-zero", code: 0, success: true},
+                {tag: "string-zero", code: "0", success: true},
+                {tag: "padded-zero", code: " 0 ", success: true},
+                {tag: "nonzero", code: 1, success: false},
+                {tag: "missing", code: undefined, success: false},
+                {tag: "null", code: null, success: false},
+                {tag: "false", code: false, success: false},
+                {tag: "empty", code: "", success: false},
+                {tag: "blank", code: " ", success: false},
+                {tag: "array", code: [], success: false},
+                {tag: "array-zero", code: [0], success: false},
+                {tag: "decimal-string", code: "0.0", success: false}];
+    }
+    function test_exitStatusValidation(data) {
+        var updater = create(); if (!updater) return;
+        updater.activeSource = "synthetic-exit-status";
+        updater.activeAction = "install";
+        updater.accept(updater.activeSource, {"exit code": data.code, stdout: JSON.stringify({status: "installed", version: "0.62.0", path: "/home/test/.local/share/codexbar-plasma/cli/current/codexbar"})});
+        compare(updater.result.status, data.success ? "installed" : "error");
+        compare(updater.busy, false);
+        compare(selected.count, data.success ? 1 : 0);
+        compare(changed.count, data.success ? 1 : 0);
+    }
     function test_statusDoesNotSelectOrMutate() {
         var updater = create();
         updater.run("status"); tryCompare(updater, "busy", false);

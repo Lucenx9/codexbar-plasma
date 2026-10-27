@@ -2,6 +2,7 @@ import QtQuick
 import org.kde.plasma.plasma5support as Plasma5Support
 import "../ManagedCli.js" as ManagedCli
 import "../CommandLedger.js" as CommandLedger
+import "../Guards.js" as Guards
 
 Item {
     id: controller
@@ -56,7 +57,7 @@ Item {
         if (sourceName !== activeSource) return
         var action = activeAction
         retire()
-        result = ManagedCli.nextResponse(result, data && Number(data["exit code"]) === 0 ? data["stdout"] : "")
+        result = ManagedCli.nextResponse(result, data && Guards.exitCode(data["exit code"]) === 0 ? data["stdout"] : "")
         if (action === "install" && ["installed", "ready"].indexOf(result.status) >= 0) installed(result.path)
         if (["installed", "restored"].indexOf(result.status) >= 0) changed()
     }

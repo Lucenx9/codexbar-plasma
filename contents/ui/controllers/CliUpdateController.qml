@@ -3,6 +3,7 @@ import org.kde.plasma.plasma5support as Plasma5Support
 import "../CliUpdate.js" as CliUpdate
 import "../CommandLedger.js" as CommandLedger
 import "../UpdateLogic.js" as UpdateLogic
+import "../Guards.js" as Guards
 
 Item {
     id: controller
@@ -105,7 +106,7 @@ Item {
         if (sourceName !== activeSource) return
         retire()
         checked = true
-        result = CliUpdate.response(data && Number(data["exit code"]) === 0 ? data["stdout"] : "")
+        result = CliUpdate.response(data && Guards.exitCode(data["exit code"]) === 0 ? data["stdout"] : "")
         retryAfter = Date.now() + 60 * 60 * 1000
         var successfulReleaseCheck = ["available", "current", "uncomparable"].indexOf(result.status) >= 0
         // A failed early/retargeted check must retry even if the prior daily check is recent.
