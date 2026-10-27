@@ -235,6 +235,14 @@ TestCase {
         o.subject.reachability = 1;
         wait(3500);
         compare(o.snapshots.length, 2);
+        // A refresh started after the route returned already covers it; the
+        // settle timer must not retire it and start another run.
+        o.subject.reachability = 4;
+        wait(500);
+        o.subject.refresh(false);
+        completed(o, 3);
+        wait(2500);
+        compare(o.snapshots.length, 3);
         var unknown = create("normal", {sourceMode: "cli"});
         completed(unknown, 1);
         unknown.subject.reachability = 4;

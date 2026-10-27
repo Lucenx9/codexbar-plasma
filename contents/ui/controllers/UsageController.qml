@@ -85,6 +85,7 @@ Item {
         property var providerRosterCache: null
         property bool usageRefreshScheduled: false
         property int observedReachability: NetworkState.unknown
+        property double reconnectedAtMs: -1
         property int commandRunSerial: 0
         property var activeCommandDescriptors: ({})
         readonly property int defaultCommandTimeoutMs: 120000
@@ -401,8 +402,10 @@ Item {
         // A returned route gets one refresh instead of waiting for the next
         // interval. Leaving the online state before it settles cancels it.
         function observeReachability(current) {
-            if (NetworkState.reconnected(observedReachability, current))
+            if (NetworkState.reconnected(observedReachability, current)) {
+                reconnectedAtMs = Date.now();
                 reconnectRefreshTimer.restart();
+            }
             else if (current !== NetworkState.online)
                 reconnectRefreshTimer.stop();
             observedReachability = current;
@@ -566,8 +569,11 @@ Item {
 
         // NetworkManager can report a route before name resolution is ready.
         interval: 2000
+        // Work started after the route returned already covers it; only
+        // requests that predate the reconnection are replaced.
         onTriggered: {
-            if (lifecycle.initialized && lifecycle.commandSource.length > 0)
+            if (lifecycle.initialized && lifecycle.commandSource.length > 0
+                    && lifecycle.usageLastRefreshAttemptAtMs < lifecycle.reconnectedAtMs)
                 lifecycle.refreshNow(false);
         }
     }

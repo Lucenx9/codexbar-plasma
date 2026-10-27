@@ -300,7 +300,7 @@ msgstr "L'utilizzo si aggiorna quando torna la connessione."
 
 #: contents/ui/main.qml
 msgid "For connection checks, open Diagnostics in widget settings."
-msgstr "Per controllare la connessione, apri Diagnostica nelle impostazioni del widget."
+msgstr ""
 "Per verificare la connessione, apri Diagnostica nelle impostazioni del "
 "widget."
 

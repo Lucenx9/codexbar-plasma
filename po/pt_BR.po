@@ -298,7 +298,7 @@ msgstr "O uso é atualizado quando a conexão voltar."
 
 #: contents/ui/main.qml
 msgid "For connection checks, open Diagnostics in widget settings."
-msgstr "Para verificar a conexão, abra Diagnóstico nas configurações do widget."
+msgstr ""
 "Para verificar a conexão, abra Diagnóstico nas configurações do widget."
 
 #: contents/ui/components/FullRepresentation.qml

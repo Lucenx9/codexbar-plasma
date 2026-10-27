@@ -26,7 +26,13 @@ extra-window titles, CLI lane titles for providers without a translated lane
 label, reset-description fallbacks, and CLI error messages can
 still appear in English. Translating them reliably needs official CLI message
 identifiers with typed arguments, or a documented locale-aware output contract.
-Do not translate arbitrary provider text by matching English phrases. The CLI's
+Do not translate arbitrary provider text by matching English phrases.
+One bounded exception classifies network failures without translating them:
+`NetworkState.js` recognizes Foundation URL error codes and the
+unresolved-host failure that CLI 0.79.0 reports offline, adds a localized
+headline, and keeps the CLI text unchanged below it. Unrecognized or reworded
+messages fall back to the plain CLI text. It ends when the CLI provides a typed
+network kind ([TODO](../TODO.md#network-error-classification)). The CLI's
 prose-only pace headroom hint also needs a structured presentation field before
 the widget can localize it; it is not appended to the structured pace summary.
 

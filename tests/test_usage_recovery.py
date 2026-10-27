@@ -20,6 +20,7 @@ import org.kde.kirigami as Kirigami
 import org.kde.plasma.components as PlasmaComponents
 import "SOURCE_URL/components" as Components
 import "SOURCE_URL/NetworkState.js" as NetworkState
+import "SOURCE_URL/PrivacyPresentation.js" as PrivacyPresentation
 TestCase {
     id: testCase
     name: "UsageRecovery"
@@ -90,7 +91,7 @@ TestCase {
                 readonly property var presentedProviderData: selectedProviderData
                 property int networkReachability: NetworkState.online
                 readonly property bool networkOffline: NetworkState.isOffline(networkReachability)
-                function privateErrorText(text) { return text; }
+                property bool privacyMode: false
                 function refreshNow(bypass) {
                     refreshes++;
                     bypassRoster = bypass;
@@ -272,6 +273,16 @@ TestCase {
         subject.applet.networkReachability = NetworkState.disconnected;
         compare(subject.message.plainText, "No internet connection.\n" + timeout
             + "\n\nUsage refreshes when the connection returns.");
+        // Privacy mode hides the CLI text but keeps the network explanation,
+        // which names no account or provider data.
+        subject.applet.privacyMode = true;
+        compare(subject.message.plainText, "No internet connection.\nDetails hidden by privacy mode."
+            + "\n\nUsage refreshes when the connection returns.");
+        compare(subject.message.type, Kirigami.MessageType.Warning);
+        subject.applet.selectedProviderData = ({error: "Codex API error 401 for person@example.com.", rows: []});
+        compare(subject.message.plainText, "Details hidden by privacy mode."
+            + "\n\nFor connection checks, open Diagnostics in widget settings.");
+        subject.applet.privacyMode = false;
         subject.applet.selectedProviderData = ({error: "Codex API error 401.", rows: []});
         compare(subject.message.type, Kirigami.MessageType.Error);
         compare(subject.message.plainText, "Codex API error 401.\n\nFor connection checks, open Diagnostics in widget settings.");
@@ -296,7 +307,7 @@ class UsageRecoveryTests(unittest.TestCase):
         surface = Surface("applet", ROOT)
         source = (ROOT / "contents/ui/main.qml").read_text()
         functions = []
-        for name in ("retryUsage", "performAction", "prepareCli", "usageErrorKind", "usageErrorText", "usageRecoveryHint"):
+        for name in ("retryUsage", "performAction", "prepareCli", "usageErrorKind", "usageErrorText", "usageRecoveryHint", "privateErrorText"):
             signature = re.search(r"function " + name + r"\([^)]*\)", source).group(0)
             functions.append(signature + " {" + surface.function_body(name) + "}")
         # Only the native configuration action and refresh effect are observed.
