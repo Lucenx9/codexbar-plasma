@@ -51,6 +51,32 @@ class StatusComponentsTests(unittest.TestCase):
         self.assertEqual(rows[0]["indicator"], "maintenance")
         self.assertEqual(rows[1]["indicator"], "none")
 
+    def test_statuspage_malformed_status_keeps_healthy_components(self):
+        for malformed in ([], {}, ["operational"]):
+            with self.subTest(status=malformed):
+                rows = status.parse("statuspage", json.dumps({"components": [
+                    {"id": "bad", "name": "Unknown service", "status": malformed},
+                    {"id": "good", "name": "Claude Code", "status": "major_outage"},
+                ]}))
+                self.assertEqual([r["indicator"] for r in rows], ["unknown", "critical"])
+
+    def test_incidentio_malformed_items_keep_healthy_components(self):
+        for malformed in (None, [], "invalid", 1):
+            with self.subTest(item=malformed):
+                rows = status.parse("incidentio", incidentio([
+                    malformed, {"component": {"component_id": "good", "name": "Codex"}},
+                ], [{"component_id": "good", "status": "full_outage"}]))
+                self.assertEqual(rows, [{"name": "Codex", "indicator": "critical", "children": []}])
+
+    def test_incidentio_malformed_component_id_cannot_claim_operational(self):
+        for component_id in (None, [], {}, ""):
+            with self.subTest(component_id=component_id):
+                rows = status.parse("incidentio", incidentio([
+                    {"component": {"component_id": component_id, "name": "Unknown service"}},
+                    {"component": {"component_id": "good", "name": "Codex"}},
+                ], [{"component_id": "good", "status": "full_outage"}]))
+                self.assertEqual([r["indicator"] for r in rows], ["unknown", "critical"])
+
     def test_incidentio_group_severity_includes_children_beyond_display_limit(self):
         components = [{"component_id": str(i), "name": "Component " + str(i)}
                       for i in range(status.MAXIMUM_COMPONENTS + 1)]

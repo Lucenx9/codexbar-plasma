@@ -46,7 +46,8 @@ def name_text(value):
 
 
 def row(name, status, children=()):
-    return {"name": name, "indicator": INDICATORS.get(status, "unknown"), "children": list(children)}
+    indicator = INDICATORS.get(status, "unknown") if isinstance(status, str) else "unknown"
+    return {"name": name, "indicator": indicator, "children": list(children)}
 
 
 def worst(children):
@@ -79,13 +80,17 @@ def parse_incidentio(payload):
                 if isinstance(a, dict) and isinstance(a.get("component_id"), str) and isinstance(a.get("status"), str)}
 
     def leaf(component):
-        return row(name_text(component.get("name")), statuses.get(component.get("component_id"), "operational"))
+        component_id = component.get("component_id")
+        state = statuses.get(component_id, "operational") if isinstance(component_id, str) and component_id else None
+        return row(name_text(component.get("name")), state)
 
     def visible(value):
         return isinstance(value, dict) and value.get("hidden") is not True and name_text(value.get("name"))
 
     rows = []
     for item in summary["structure"]["items"]:
+        if not isinstance(item, dict):
+            continue
         group, component = item.get("group"), item.get("component")
         if visible(group):
             leaves = [leaf(c) for c in group.get("components") or [] if visible(c)]
