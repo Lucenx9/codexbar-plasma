@@ -50,12 +50,16 @@ replaced.
   under both Auto and `--source web`. Kimi and Copilot report `No available
   fetch strategy`. The same config file gives identical usage results on
   0.81.0, so 0.82.0 adds the writer and does not change the runtime gate.
+  These 21 providers are the only ones classified; the other 28 that accept a
+  cookie are unverified and stay out of any setup allowlist until probed.
 - `config clear-credential --provider <id> [--api-key] [--cookie]` removes
   `apiKey` and `cookieHeader` (both without flags) and returns
   `{provider, cleared, configPath}`; `cleared` is empty when nothing was stored.
   Enablement, `source`, `cookieSource`, and token accounts are unchanged, so
   manual cookie mode stays selected after its header is cleared. An unknown
-  provider fails with `Unknown or missing provider` (exit 1).
+  provider fails with `Unknown or missing provider` (exit 1). Unlike
+  `set-cookie`, it accepts any registered provider, so it needs no cookie
+  allowlist.
 - Plasma has no cookie setup or credential removal action. `set-api-key` still
   refuses mistral and claudeplatform, so the new writer is the only supported
   way to configure those providers on Linux. This turns the manual-cookie part
