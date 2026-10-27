@@ -363,6 +363,10 @@ class CostSectionTests(unittest.TestCase):
             return item.checkable === true;
         });
         compare(metricButtons.length, 2);
+        // The choices keep their own Button color set: inherited from a view
+        // created hidden, their labels stayed black on Breeze Dark.
+        for (var b = 0; b < metricButtons.length; b++)
+            compare(metricButtons[b].Kirigami.Theme.colorSet, Kirigami.Theme.Button);
         verify(metricButtons[0].checked && !metricButtons[1].checked);
         fakeApplet.metricSet = "";
         mouseClick(metricButtons[1]);

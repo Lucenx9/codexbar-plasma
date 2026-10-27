@@ -431,9 +431,6 @@ class CostTest(unittest.TestCase):
             "applet.setCostHistoryMetric(values[index])",
             "checked = Qt.binding(function",
             'Accessible.name: i18n("History metric")',
-            # The choices keep their own Button theme: inherited from a view
-            # created hidden, their labels stayed black on Breeze Dark.
-            "Kirigami.Theme.inherit: false",
         ):
             if not code_contains(cost_metric_toggle_text, toggle_fragment):
                 raise AssertionError(f"CostMetricToggle.qml is missing {toggle_fragment!r}")
