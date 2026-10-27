@@ -11,6 +11,11 @@ ColumnLayout {
     required property var applet
     required property var statusState
     property var expandedGroups: []
+    // Leaf rows only reserve the arrow's slot when a group needs one, so a
+    // page without groups keeps its names flush with the indicator.
+    readonly property bool hasGroups: (statusList.statusState.rows || []).some(function(row) {
+        return row.children.length > 0
+    })
 
     signal groupToggled(string name)
     signal openRequested()
@@ -60,14 +65,17 @@ ColumnLayout {
             color: statusList.indicatorColor(componentRow.row.indicator)
         }
 
-        // The arrow alone is the control, so a long remote name elides in
-        // the label instead of widening the popup past its status column.
+        // Top-level leaves keep the arrow's slot next to groups so names align;
+        // the arrow alone is the control, so a long name elides in the label.
         DisclosureButton {
             id: groupToggle
 
             objectName: "statusGroupToggle"
-            visible: componentRow.row.children.length > 0
+            visible: componentRow.row.children.length > 0 || (componentRow.depth === 0 && statusList.hasGroups)
+            opacity: componentRow.row.children.length > 0 ? 1 : 0
+            enabled: componentRow.row.children.length > 0
             expanded: componentRow.expanded
+            Accessible.ignored: componentRow.row.children.length === 0
             Accessible.name: componentRow.row.name + ", " + statusList.indicatorText(componentRow.row.indicator)
             onClicked: statusList.groupToggled(componentRow.row.name)
         }
@@ -85,7 +93,7 @@ ColumnLayout {
 
             // Like other disclosures, the group title toggles too.
             TapHandler {
-                enabled: groupToggle.visible
+                enabled: groupToggle.visible && groupToggle.enabled
                 onTapped: statusList.groupToggled(componentRow.row.name)
             }
 

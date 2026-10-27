@@ -33,6 +33,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Align top-level service component labels in the status components list when
+  groups and leaf components are mixed.
+
 - Preserve healthy service-status components when another feed entry is malformed,
   and show OpenAI components without a usable ID as unknown instead of operational.
 
