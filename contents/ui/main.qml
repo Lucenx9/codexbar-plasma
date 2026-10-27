@@ -194,8 +194,10 @@ PlasmoidItem {
     readonly property bool spendSelected: spendAvailable && globalViewSelected && selectedGlobalView === "spend"
     readonly property bool sessionsSelected: sessionsAvailable && globalViewSelected && selectedGlobalView === "sessions"
     readonly property bool providerUsageFeedbackVisible: !spendSelected && !sessionsSelected
+    // The adapter is optional, so qmllint only knows the loaded item as QObject;
+    // read its property by name instead of through a static member lookup.
     readonly property int networkReachability: networkReachabilityLoader.item
-        ? networkReachabilityLoader.item.reachability : NetworkState.unknown
+        ? networkReachabilityLoader.item["reachability"] : NetworkState.unknown
     readonly property bool networkOffline: NetworkState.isOffline(networkReachability)
     readonly property var selectedProviderData: providers.length > 0 && selectedProviderIndex >= 0
         ? providers[Math.min(selectedProviderIndex, providers.length - 1)]
