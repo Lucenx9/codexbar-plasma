@@ -60,14 +60,17 @@ ColumnLayout {
             color: statusList.indicatorColor(componentRow.row.indicator)
         }
 
-        // The arrow alone is the control, so a long remote name elides in
-        // the label instead of widening the popup past its status column.
+        // Top-level rows reserve the disclosure slot so names align vertically
+        // across groups and leaf components.
         DisclosureButton {
             id: groupToggle
 
             objectName: "statusGroupToggle"
-            visible: componentRow.row.children.length > 0
+            visible: componentRow.depth === 0 || componentRow.row.children.length > 0
+            opacity: componentRow.row.children.length > 0 ? 1 : 0
+            enabled: componentRow.row.children.length > 0
             expanded: componentRow.expanded
+            Accessible.ignored: componentRow.row.children.length === 0
             Accessible.name: componentRow.row.name + ", " + statusList.indicatorText(componentRow.row.indicator)
             onClicked: statusList.groupToggled(componentRow.row.name)
         }
@@ -85,7 +88,7 @@ ColumnLayout {
 
             // Like other disclosures, the group title toggles too.
             TapHandler {
-                enabled: groupToggle.visible
+                enabled: groupToggle.visible && groupToggle.enabled
                 onTapped: statusList.groupToggled(componentRow.row.name)
             }
 

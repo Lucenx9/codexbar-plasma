@@ -97,4 +97,16 @@ TestCase {
         mouseClick(labelsWithText(list, "Claude Code", [])[0])
         verify(toggle.expanded)
     }
+
+    // Top-level component labels align vertically whether the row has children or not.
+    function test_topLevelLabelsAlignAcrossGroupsAndLeafComponents() {
+        var list = createTemporaryObject(listComponent, testCase)
+        waitForRendering(list)
+        var groupLabel = labelsWithText(list, "G".repeat(120), [])[0]
+        var leafLabel = labelsWithText(list, "Claude Code", [])[0]
+        verify(groupLabel !== null && leafLabel !== null)
+        var groupX = groupLabel.mapToItem(list, 0, 0).x
+        var leafX = leafLabel.mapToItem(list, 0, 0).x
+        compare(leafX, groupX, "Top-level leaf component label must align with top-level group label")
+    }
 }
