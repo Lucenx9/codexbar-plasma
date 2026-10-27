@@ -8,14 +8,13 @@ Issues linked below preserve discussion; this file owns parity status.
 
 ## Review baseline
 
-- Last release reviewed: [CodexBar 0.81.0](https://github.com/steipete/CodexBar/releases/tag/v0.81.0),
-  commit `ee890b5f392e70d6e20162d3e95cf9f1be265b60`, checked 2026-10-25.
-- Coverage: the [0.81.0 review](docs/research/2026-10-25-macos-parity-0.81.0.md)
-  against Plasma `af775b8` verifies the 110-provider registry, reachable
-  API-key setup for abliteration.ai and Chatbox AI, the per-strategy Linux Auto
-  web gate (DeepSeek with an environment key, and the fixed Gemini Auto
-  regression), optional plugin window titles, and unchanged carried blockers,
-  including custom-provider routing. Authenticated output remains unverified.
+- Last release reviewed: [CodexBar 0.82.0](https://github.com/steipete/CodexBar/releases/tag/v0.82.0),
+  commit `7749f7b94ae8f1b84b9ffb2046643cec810f4078`, checked 2026-10-27.
+- Coverage: the [0.82.0 review](docs/research/2026-10-27-macos-parity-0.82.0.md)
+  against Plasma `3f67915` verifies the unchanged 110-provider registry, the new
+  `config set-cookie` and `clear-credential` writers, which providers' Linux
+  fetches read a manual cookie, and unchanged carried blockers. Custom-provider
+  routing was not reprobed. Authenticated output remains unverified.
 - Earlier reviews: each dated note in the
   [documentation index](docs/README.md#maintained-references) records its own
   release coverage, probes, and unverified cases. Shared payload structs retain
@@ -49,8 +48,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   `FLORA_WORKSPACE_ID` at runtime; `--workspace-id` remains z.ai-only. Linux
   0.77.0 stores Future AGI's `FI_API_KEY`, then refuses to fetch until the
   environment-only `FI_SECRET_KEY` is set; Plasma must not offer a half
-  setup. Parallel refuses API-key/API source and needs the generic cookie
-  action below. Done when released descriptors/writers
+  setup. Done when released descriptors/writers
   enable safe setup without QML config editing.
   [Evidence](docs/research/2026-10-15-macos-parity-0.75.0.md#linux-cli-contract-changes);
   [Future AGI](docs/research/2026-10-17-macos-parity-0.77.0.md#linux-cli-contract-changes).
@@ -58,10 +56,8 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 - [ ] Enable generic settings and token-account editing through official
   descriptors and writes. Linux 0.79.0 still rejects `config providers
   --descriptors` (106 records, same four keys); its provider records have no
-  descriptor. Helmcode and TypeSafe make this concrete: both are cookie-only,
-  both refuse `--source api`, and their documented `cookieSource`/`cookieHeader`
-  config path has no supported writer, so they stay metadata-only on Linux.
-  0.65.0 adds three more cases. Charm Hyper stores a key, but its default
+  descriptor. Manual cookies have the 0.82.0 `set-cookie` writer (see
+  Plasma-native work); Helmcode stays macOS-only even with one. 0.65.0 adds three more cases. Charm Hyper stores a key, but its default
   source demands web support on Linux, and it works only with `--source api`
   and Plasma now supports a persistent per-provider source choice. Bifrost
   needs a gateway base URL
@@ -72,28 +68,14 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   self-hosted base URL (`AIXY_BASE_URL`); and the opt-in LiteLLM model activity
   (`LITELLM_MODEL_USAGE_ENABLED`) and Claude Admin workspace spend
   (`ANTHROPIC_ADMIN_WORKSPACE_SPEND`), none of which has a writer.
-  0.68.0 lifts the runtime gate for Mistral's manual cookie (#4024): with
-  `cookieSource`/`cookieHeader` in the config file, Linux usage attempts the
-  fetch instead of refusing as macOS-only (verified 0.67.0 vs 0.68.0);
-  `set-api-key` still refuses mistral and no writer exists for the cookie
-  fields, so setup stays blocked. 0.72.0 lifts the same gate for Claude's
-  manual `sessionKey` cookie (#4241): with a synthetic manual cookie, Linux
-  usage attempts `claude.ai` instead of reporting no available strategy
-  (verified 0.69.0 vs 0.72.0); browser import stays macOS-only and no writer
-  exists for the cookie fields, so setup stays blocked.
-  0.76.0 adds Claude Platform with the same browser/manual-cookie boundary:
-  its descriptor accepts a manual `Cookie` header containing `sessionKey`, but
-  Auto/Web usage is macOS-only through supported configuration, API-key setup
-  is refused, and no writer exists for the cookie fields.
-  0.77.0 adds a Gemini app web source with the same boundary: Linux runs it
-  only with a manual cookie, which has no writer. Its five-hour and weekly
-  windows also need window-based labels instead of Plasma's static Gemini
-  Pro/Flash/Flash Lite lanes before it is exposed. Token accounts gain a
-  `claudeConfigDirectory` for Claude local cost with no writer either.
+  The 0.77.0 Gemini web source runs on Linux only with a manual cookie and
+  `--source web`; its five-hour and weekly windows need window-based labels
+  instead of Plasma's static Gemini Pro/Flash/Flash Lite lanes before it is
+  exposed. Token accounts gain a `claudeConfigDirectory` for Claude local cost
+  with no writer.
   0.74.0 adds Exa's API key ID (`EXA_API_KEY_ID`) and Cosmic AI's project ID
   (`COSMIC_PROJECT_ID`): both providers store a key, then refuse to fetch
   until that environment-only field is set, and `--workspace-id` is refused.
-  TinyApi and X API are cookie-only with a macOS-only web source.
   `--label` and `--workspace-id` remain z.ai-only: Linux 0.74.1 rejects
   `set-api-key --provider clinepass --label` despite the release claim (#4305),
   and labeled Kimi, Doubao, and OpenCode Go accounts remain blocked too.
@@ -118,12 +100,12 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Provider onboarding
 
 - [ ] Add CLI-described browser-cookie import, local-file setup, OAuth/device
-  flow, CLI-auth setup, and token-account actions. Linux 0.81.0 still has no
-  generic `config action` command (`set-api-key` and `set-source` are field
-  writers; the `usage_updated` hook event is CLI automation surface, not a setup
+  flow, CLI-auth setup, and token-account actions. Linux 0.82.0 still has no
+  generic `config action` command (`set-api-key`, `set-source`, `set-cookie`,
+  and `clear-credential` are field writers; the `usage_updated` hook event is CLI automation surface, not a setup
   action). The Copilot-only `config login` is tracked as Plasma-native work
   below. Trae CN's signed-in dashboard source is macOS-only on Linux and joins
-  the cookie case here. Done when supported actions expose validated
+  the browser-import case here. Done when supported actions expose validated
   prompts/results and handle cancellation, failure, and stale responses in
   Plasma. Preserve current key/link setup. [Prior discussion #168](https://github.com/Lucenx9/codexbar-plasma/issues/168).
 
@@ -172,7 +154,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Cursor cost
 
 - [ ] Show Cursor cost history through the generic Linux `cost` path. Linux
-  0.81.0 still rejects Cursor and lists Antigravity, Claude, Codex, Muse
+  0.82.0 still rejects Cursor and lists Antigravity, Claude, Codex, Muse
   Code, OpenCode Go, and Pi as supported; the 0.74.0 `cursor-agent` login
   (#4397) changes usage authentication only;
   the descriptor gate keeps the new cookie-source availability errors unreachable.
@@ -241,7 +223,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 - [ ] Offer display-currency selection and conversion through an official Linux
   contract. The 0.56.2 audit records no display-currency setter or descriptor;
   the scoped 0.57.0, 0.58.0, 0.60.4, 0.67.0, 0.69.0, 0.72.0, 0.73.0,
-  0.74.0, 0.74.1, 0.75.0, 0.76.0, 0.77.0, 0.80.0, and 0.81.0 config probes expose neither,
+  0.74.0, 0.74.1, 0.75.0, 0.76.0, 0.77.0, 0.80.0, 0.81.0, and 0.82.0 config probes expose neither,
   although macOS 0.67.0 adds twelve spend-estimate currencies. Plasma currently
   displays the CLI-emitted currency. Done when released settings and converted
   amounts define currency, rate provenance, and unavailable-conversion behavior,
@@ -275,14 +257,14 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Status components
 
 - [ ] Read service components from an official CLI field. The 0.79.0 Linux
-  `usage --status` record and the v0.81.0 `ProviderStatusPayload` source emit
+  `usage --status` record and the v0.82.0 `ProviderStatusPayload` source emit
   only `indicator`, `description`, `updatedAt`, and `url`, although the macOS
   app's `ProviderStatusComponent` model carries grouped components for Claude,
   Codex, and Augment. Plasma reads Claude and OpenAI components through
   `scripts/status-components.py` meanwhile. Done when a released CLI emits the
   component tree and the widget consumes it, removing the helper and covering
   every provider the CLI describes.
-  [Payload source](https://github.com/steipete/CodexBar/blob/v0.81.0/Sources/CodexBarCLI/CLIPayloads.swift).
+  [Payload source](https://github.com/steipete/CodexBar/blob/v0.82.0/Sources/CodexBarCLI/CLIPayloads.swift).
 
 ## Plasma-native work with verified CLI contracts
 
@@ -309,6 +291,18 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   Done when both offer the existing key setup, Chatbox with license-key wording
   and its docs link, covered by tests.
   [Evidence](docs/research/2026-10-25-macos-parity-0.81.0.md#linux-cli-contract-changes).
+- [ ] Offer manual-cookie setup and credential clearing. Official Linux CLI
+  0.82.0 adds `config set-cookie --provider <id> --stdin [--no-enable]` and
+  `config clear-credential --provider <id> [--api-key] [--cookie]`; 0.81.0
+  rejects both. 49 providers accept a cookie, but only some Linux fetches read
+  it: Claude, Claude Platform, Command Code, Cursor, Mistral, Ollama, OpenCode
+  Go, Parallel, Raycast, TinyApi, Trae CN, TypeSafe, and X API reach their
+  fetch; Helmcode, Abacus AI, DeepSeek, Alibaba, and Manus stay macOS-only.
+  Done when a version-gated action stores a cookie through the secure stdin
+  prompt for a probe-backed allowlist, a clear action removes stored
+  credentials, neither writes the cookie to logs or diagnostics, and tests
+  cover older CLIs, refusals, and refresh afterwards.
+  [Evidence](docs/research/2026-10-27-macos-parity-0.82.0.md#linux-cli-contract-changes).
 - [ ] Offer Copilot GitHub device sign-in through
   `codexbar config login --provider copilot --json`. Official Linux CLI 0.80.0
   advertises the command, rejects other providers with an `args` error, and
@@ -369,9 +363,14 @@ These are unresolved Linux candidates, not confirmed missing features.
   under Auto, and a signed-in Gemini Auto fetch. Done when emitted Linux output
   shows whether Plasma's generic window, details, and spend paths suffice.
   [Limits](docs/research/2026-10-25-macos-parity-0.81.0.md#unverified-in-this-review).
+- [ ] Verify 0.82.0 authenticated output: manual-cookie fetches, Command Code
+  saved sessions, OpenCode Go `cli` sources, the Kimi Total breakdown, Codex
+  30-day pace, and WorkBuddy resets. Done when emitted Linux output shows
+  whether Plasma's generic paths suffice.
+  [Limits](docs/research/2026-10-27-macos-parity-0.82.0.md#unverified-in-this-review).
 
 - [ ] Verify authenticated Claude Platform output from an official Linux CLI
-  once a supported cookie writer/action exists. Confirm primary API credits,
+  with a 0.82.0 `set-cookie` manual cookie. Confirm primary API credits,
   purchased-credit and grant-expiry lanes, reset descriptions, billing details,
   organization identity, and `providerCost` balance/current-spend semantics.
   Plasma already consumes most generic fields, but it must not parse period

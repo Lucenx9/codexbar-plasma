@@ -155,6 +155,10 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
   110-provider registry, abliteration.ai and Chatbox AI key setup, the
   per-strategy Linux Auto gate with the fixed Gemini Auto regression, plugin
   window titles, and isolated carried-blocker checks.
+- [0.82.0 release review](research/2026-10-27-macos-parity-0.82.0.md): the
+  `config set-cookie` and `clear-credential` writers, which providers accept a
+  manual cookie and which still fail on Linux, and isolated carried-blocker
+  checks.
 - [0.75.0 Codex contract verification](research/2026-10-15-codex-contracts-0.75.0.md):
   synthetic native partial-priced cost output, identified-request local/remote
   merge and failure semantics, authoritative reset-credit inventory, and the
