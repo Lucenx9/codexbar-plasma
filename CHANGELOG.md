@@ -26,6 +26,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep the Cost/Tokens labels in Usage & Spend readable on dark color schemes;
+  they were drawn in black on the dark track.
+
 - Preserve an OpenAI status group's outage severity when the affected component
   falls beyond the displayed child limit.
 - Keep wrapped service status loading and error messages clear of the popup's right edge, matching the component rows.
