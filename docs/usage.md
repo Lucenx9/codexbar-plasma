@@ -354,6 +354,18 @@ their cache. Global and provider usage errors offer **Retry** and **Settings**,
 with a hint to open **Diagnostics** for
 connection checks.
 
+A network failure reads as a warning instead of an error. When the CLI message
+carries a Foundation URL error code or an unresolved host, the popup puts
+**No internet connection** or **The provider did not respond in time** above
+the original message; other provider errors keep the CLI text unchanged. With
+Qt's `QtNetwork` QML module (Qt 6.7 or later), the widget also follows Plasma's
+network reachability. Without an internet route, a timeout reads as no
+connection and the hint says usage refreshes when the connection returns:
+about two seconds after the route returns, the widget refreshes usage without
+waiting for the refresh interval. Local sources keep refreshing while offline.
+Without the module, or while reachability is unknown, refreshes follow the
+configured interval.
+
 Long error messages scroll with the view's content, including when no data is
 available. The tab navigation and each view's header remain reachable with
 larger fonts. Usage & Spend also keeps its history selectors above the scroll

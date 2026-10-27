@@ -470,14 +470,8 @@ class PopupLayoutTest(unittest.TestCase):
             raise AssertionError("reset credits must not use loose numeric coercion")
 
     def test_feedback_and_empty_states(self):
-        for message_id, message_type in (
-            ("globalErrorMessage", "Kirigami.MessageType.Error"),
-            ("providerErrorMessage", "Kirigami.MessageType.Error"),
-        ):
-            message_body = id_block(main_text, message_id)
-            if not code_contains(message_body, f"type: {message_type}"):
-                raise AssertionError(f"{message_id} must use the native semantic message style")
-
+        # Error/warning message types are exercised on the production blocks
+        # by test_usage_recovery.py.
         provider_usage_loading_body = id_block(main_text, "providerUsageLoadingRow")
         if not code_contains(provider_usage_loading_body, "visible: applet.loading && applet.errorText.length === 0"):
             raise AssertionError("an error-only popup must not display a loading indicator")

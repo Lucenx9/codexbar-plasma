@@ -38,6 +38,7 @@ and GNU gettext; see [Development](#development).
 | AI Insights | `python3`, GNU `timeout`, and the `QtCore` QML module |
 | AI Insights keys for OpenRouter or OpenAI | Also `kdialog`, `secret-tool`, and a Secret Service provider such as KWallet |
 | Identified Codex token subtotals | CLI 0.75.0 or later and GNU `timeout` |
+| Refresh as soon as the network connection returns | Qt 6.7 or later with the `QtNetwork` QML module |
 | SSH source for identified Codex tokens | Also the CLI on the remote computer and noninteractive SSH authentication with trusted host keys |
 
 Without GNU `timeout`, background CLI reads still work, but canceling a request

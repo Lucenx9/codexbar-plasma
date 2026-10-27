@@ -19,6 +19,7 @@ import QtTest
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.components as PlasmaComponents
 import "SOURCE_URL/components" as Components
+import "SOURCE_URL/NetworkState.js" as NetworkState
 TestCase {
     id: testCase
     name: "UsageRecovery"
@@ -45,8 +46,8 @@ TestCase {
             property alias errorScroll: emptyErrorScroll
             SOURCE_ERROR_PROPERTY
             SOURCE_MISSING_PROPERTY
+            SOURCE_PROVIDER_ERROR_PROPERTY
             property int settingsOpened: 0
-            readonly property string usageRecoveryHint: "Diagnostics in widget settings"
 
             Controls.Action {
                 id: configureAction
@@ -87,6 +88,8 @@ TestCase {
                 property var selectedProviderData: ({error: "Synthetic provider failure", rows: [{percent: 43}],
                     usageStale: true, lastGoodAtMs: 1000})
                 readonly property var presentedProviderData: selectedProviderData
+                property int networkReachability: NetworkState.online
+                readonly property bool networkOffline: NetworkState.isOffline(networkReachability)
                 function privateErrorText(text) { return text; }
                 function refreshNow(bypass) {
                     refreshes++;
@@ -256,6 +259,34 @@ TestCase {
         verify(!subject.globalMessage.visible && subject.message.visible);
         compare(subject.message.actions.length, 2);
     }
+
+    function test_networkFailuresExplainTheConnectionAndStayWarnings() {
+        var subject = createSubject();
+        var timeout = "Network error: The operation could not be completed. (NSURLErrorDomain error -1001.)";
+        subject.applet.selectedProviderData = ({error: timeout, rows: [{percent: 43}], usageStale: true, lastGoodAtMs: 1000});
+        compare(subject.message.type, Kirigami.MessageType.Warning);
+        compare(subject.message.plainText, "The provider did not respond in time.\n" + timeout
+            + "\n\nFor connection checks, open Diagnostics in widget settings.");
+        // Without an internet route the timeout is the connection, which the
+        // controller retries as soon as the route returns.
+        subject.applet.networkReachability = NetworkState.disconnected;
+        compare(subject.message.plainText, "No internet connection.\n" + timeout
+            + "\n\nUsage refreshes when the connection returns.");
+        subject.applet.selectedProviderData = ({error: "Codex API error 401.", rows: []});
+        compare(subject.message.type, Kirigami.MessageType.Error);
+        compare(subject.message.plainText, "Codex API error 401.\n\nFor connection checks, open Diagnostics in widget settings.");
+
+        subject.applet.selectedProviderData = null;
+        subject.applet.errorText = "Synthetic connection failure";
+        compare(subject.globalMessage.type, Kirigami.MessageType.Error);
+        subject.applet.networkReachability = NetworkState.unknown;
+        subject.applet.errorText = "Network error: Could not resolve host: chatgpt.com";
+        verify(subject.globalMessage.visible);
+        compare(subject.globalMessage.type, Kirigami.MessageType.Warning);
+        // An unknown route has no reconnect trigger, so keep the Diagnostics hint.
+        compare(subject.globalMessage.plainText, "No internet connection.\nNetwork error: Could not resolve host: chatgpt.com"
+            + "\n\nFor connection checks, open Diagnostics in widget settings.");
+    }
 }
 '''
 
@@ -265,7 +296,7 @@ class UsageRecoveryTests(unittest.TestCase):
         surface = Surface("applet", ROOT)
         source = (ROOT / "contents/ui/main.qml").read_text()
         functions = []
-        for name in ("retryUsage", "performAction", "prepareCli"):
+        for name in ("retryUsage", "performAction", "prepareCli", "usageErrorKind", "usageErrorText", "usageRecoveryHint"):
             signature = re.search(r"function " + name + r"\([^)]*\)", source).group(0)
             functions.append(signature + " {" + surface.function_body(name) + "}")
         # Only the native configuration action and refresh effect are observed.
@@ -297,6 +328,10 @@ class UsageRecoveryTests(unittest.TestCase):
             r"readonly property bool globalErrorActive:.*?(?=\n\n)", representation, re.S)
         assert error_condition
         qml = qml.replace("SOURCE_ERROR_PROPERTY", error_condition.group(0))
+        raw_error = re.search(
+            r"readonly property string providerErrorRaw:.*?(?=\n\n)", representation, re.S)
+        assert raw_error
+        qml = qml.replace("SOURCE_PROVIDER_ERROR_PROPERTY", raw_error.group(0))
         qml = qml.replace(
             "parent: applet.presentedProviderData ? providerErrorSlot\n"
             "            : applet.overviewSelected ? overviewErrorSlot : emptyErrorSlot",

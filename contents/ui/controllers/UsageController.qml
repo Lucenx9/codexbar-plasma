@@ -2,6 +2,7 @@ import QtQuick
 import org.kde.plasma.plasma5support as Plasma5Support
 import "../CommandLedger.js" as CommandLedger
 import "../Guards.js" as Guards
+import "../NetworkState.js" as NetworkState
 import "../ProviderFallbackQueue.js" as ProviderFallbackQueue
 import "../ProviderIdentity.js" as ProviderIdentity
 import "../ProviderNormalizer.js" as Normalizer
@@ -26,6 +27,9 @@ Item {
     property int refreshIntervalSec: 300
     property bool refreshOnOpen: false
     property bool popupVisible: false
+    // QNetworkInformation reachability supplied by the applet; unknown when
+    // QtNetwork or its backend is unavailable.
+    property int reachability: NetworkState.unknown
 
     readonly property bool loading: lifecycle.loading
     readonly property string errorText: lifecycle.errorText
@@ -59,7 +63,9 @@ Item {
         if (popupVisible)
             Qt.callLater(lifecycle.refreshUsageOnOpen);
     }
+    onReachabilityChanged: lifecycle.observeReachability(reachability)
     Component.onCompleted: {
+        lifecycle.observedReachability = reachability;
         lifecycle.initialized = true;
         lifecycle.scheduleUsageRefresh();
     }
@@ -78,6 +84,7 @@ Item {
         property string providerConfigCommandSource: buildProviderConfigCommand()
         property var providerRosterCache: null
         property bool usageRefreshScheduled: false
+        property int observedReachability: NetworkState.unknown
         property int commandRunSerial: 0
         property var activeCommandDescriptors: ({})
         readonly property int defaultCommandTimeoutMs: 120000
@@ -391,6 +398,16 @@ Item {
             providerFallbackState = null;
         }
 
+        // A returned route gets one refresh instead of waiting for the next
+        // interval. Leaving the online state before it settles cancels it.
+        function observeReachability(current) {
+            if (NetworkState.reconnected(observedReachability, current))
+                reconnectRefreshTimer.restart();
+            else if (current !== NetworkState.online)
+                reconnectRefreshTimer.stop();
+            observedReachability = current;
+        }
+
         function refreshUsageOnOpen() {
             if (PopupRefreshPolicy.shouldRefresh({
                 enabled: controller.refreshOnOpen,
@@ -541,6 +558,17 @@ Item {
             if (!lifecycle.hasPendingPeriodicRefreshCommands()) {
                 lifecycle.refreshNow(false);
             }
+        }
+    }
+
+    Timer {
+        id: reconnectRefreshTimer
+
+        // NetworkManager can report a route before name resolution is ready.
+        interval: 2000
+        onTriggered: {
+            if (lifecycle.initialized && lifecycle.commandSource.length > 0)
+                lifecycle.refreshNow(false);
         }
     }
 

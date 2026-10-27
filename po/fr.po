@@ -286,9 +286,21 @@ msgstr "La source du total affiché pour la période n'a pas pu être vérifiée
 msgid "%1 %2"
 msgstr "%1 %2"
 
-#: contents/ui/components/FullRepresentation.qml
+#: contents/ui/main.qml
+msgid "No internet connection."
+msgstr "Aucune connexion Internet."
+
+#: contents/ui/main.qml
+msgid "The provider did not respond in time."
+msgstr "Le fournisseur n'a pas répondu à temps."
+
+#: contents/ui/main.qml
+msgid "Usage refreshes when the connection returns."
+msgstr "L'utilisation s'actualise au retour de la connexion."
+
+#: contents/ui/main.qml
 msgid "For connection checks, open Diagnostics in widget settings."
-msgstr ""
+msgstr "Pour vérifier la connexion, ouvrez Diagnostic dans les réglages du widget."
 "Pour vérifier la connexion, ouvrez Diagnostic dans les paramètres du widget."
 
 #: contents/ui/components/FullRepresentation.qml

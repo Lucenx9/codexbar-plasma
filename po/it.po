@@ -286,9 +286,21 @@ msgstr ""
 msgid "%1 %2"
 msgstr "%1 %2"
 
-#: contents/ui/components/FullRepresentation.qml
+#: contents/ui/main.qml
+msgid "No internet connection."
+msgstr "Nessuna connessione a Internet."
+
+#: contents/ui/main.qml
+msgid "The provider did not respond in time."
+msgstr "Il provider non ha risposto in tempo."
+
+#: contents/ui/main.qml
+msgid "Usage refreshes when the connection returns."
+msgstr "L'utilizzo si aggiorna quando torna la connessione."
+
+#: contents/ui/main.qml
 msgid "For connection checks, open Diagnostics in widget settings."
-msgstr ""
+msgstr "Per controllare la connessione, apri Diagnostica nelle impostazioni del widget."
 "Per verificare la connessione, apri Diagnostica nelle impostazioni del "
 "widget."
 
