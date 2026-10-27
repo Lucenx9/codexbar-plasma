@@ -109,4 +109,29 @@ TestCase {
         var leafX = leafLabel.mapToItem(list, 0, 0).x
         compare(leafX, groupX, "Top-level leaf component label must align with top-level group label")
     }
+
+    Component {
+        id: flatListComponent
+
+        Components.StatusComponentsList {
+            width: testCase.width
+            applet: fakeApplet
+            statusState: ({ loading: false, failed: false, rows: [
+                { name: "Claude API", indicator: "none", children: [] },
+                { name: "Claude Code", indicator: "none", children: [] }] })
+        }
+    }
+
+    // Without any group, leaf names sit next to their indicator instead of
+    // leaving an empty arrow column.
+    function test_flatListReservesNoDisclosureSlot() {
+        var list = createTemporaryObject(flatListComponent, testCase)
+        waitForRendering(list)
+        var toggle = findChild(list, "statusGroupToggle")
+        verify(toggle === null || !toggle.visible)
+        var label = labelsWithText(list, "Claude Code", [])[0]
+        var row = label.parent
+        var indicator = row.children[0]
+        compare(label.x, indicator.x + indicator.width + row.spacing)
+    }
 }
