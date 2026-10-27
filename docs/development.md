@@ -406,9 +406,9 @@ synchronized.
   `controllers/NetworkReachability.qml`, which `main.qml` loads through a
   `Loader` because `NetworkInformation` needs Qt 6.7 while the applet supports
   Plasma 6.0; no other file may import `QtNetwork`. A failed load stays unknown.
-  A return from disconnected/local to online starts one refresh after a
-  two-second settle timer; leaving online first cancels it, and a refresh that
-  started after the reconnection makes it a no-op. Offline state does
+  A return from disconnected, local or site (intranet only) to online starts
+  one refresh after a two-second settle timer; leaving online first cancels
+  it, and a refresh that started after the reconnection makes it a no-op. Offline state does
   not suppress refreshes, because local sources still answer.
   `NetworkState.js` classifies provider messages as offline or timeout from
   Foundation URL error codes and unresolved hosts only, as a tested fallback

@@ -66,10 +66,11 @@ TestCase {
     function test_reconnected() {
         verify(NetworkState.reconnected(disconnected, online))
         verify(NetworkState.reconnected(local, online))
+        // Site is intranet-only, so gaining the internet route is a return too.
+        verify(NetworkState.reconnected(site, online))
         // Startup and backend changes are not a recovered connection.
         verify(!NetworkState.reconnected(unknown, online))
         verify(!NetworkState.reconnected(online, online))
-        verify(!NetworkState.reconnected(site, online))
         verify(!NetworkState.reconnected(disconnected, local))
         verify(!NetworkState.reconnected(disconnected, unknown))
         verify(!NetworkState.reconnected(disconnected, "4"))

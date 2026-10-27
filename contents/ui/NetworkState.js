@@ -20,9 +20,10 @@ function isOffline(reachability) {
 }
 
 // Only a return to a full internet route counts: startup (unknown) and an
-// intranet-only route must not start a refresh on their own.
+// intranet-only route must not start a refresh on their own. A route can pass
+// through site (intranet only) on its way back, which still has no internet.
 function reconnected(previous, current) {
-    return isOffline(previous) && current === online
+    return (isOffline(previous) || previous === site) && current === online
 }
 
 function messageKind(message) {
