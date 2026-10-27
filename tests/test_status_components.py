@@ -74,6 +74,33 @@ class StatusComponentsTests(unittest.TestCase):
                 {"name": "Child 2", "indicator": "none", "children": []}]},
             {"name": "Claude Code", "indicator": "critical", "children": []}])
 
+    def test_record_fits_the_widget_reader_limit(self):
+        # 64 groups of 64 children with maximal escaped names exceeded the
+        # 256 KiB stdout limit in StatusComponents.js, so a valid page read as unavailable.
+        reader = (SCRIPT.parents[1] / "contents/ui/StatusComponents.js").read_text()
+        self.assertIn("text.length > " + str(status.MAXIMUM_OUTPUT), reader)
+        components = []
+        for g in range(status.MAXIMUM_COMPONENTS):
+            components.append({"id": "g" + str(g), "name": "\u00e9" * 500, "status": "major_outage",
+                               "group": True, "position": g})
+            components.extend({"id": f"c{g}.{c}", "name": "\U0001f600" * 500, "status": "operational",
+                               "group_id": "g" + str(g), "position": g}
+                              for c in range(status.MAXIMUM_COMPONENTS))
+        output = io.StringIO()
+        with patch.object(status, "fetch", return_value=json.dumps({"components": components}).encode()), \
+                patch.object(sys, "argv", ["status-components.py", "--provider", "claude"]), redirect_stdout(output):
+            status.main()
+        self.assertLessEqual(len(output.getvalue()), status.MAXIMUM_OUTPUT)
+        record = json.loads(output.getvalue())
+        self.assertEqual(record["status"], "ok")
+        self.assertEqual(record["components"][0]["indicator"], "critical")
+        self.assertGreater(len(record["components"][0]["children"]), 0)
+
+    def test_small_records_are_not_trimmed(self):
+        rows = [{"name": "Group", "indicator": "minor", "children": [
+            {"name": "Child", "indicator": "minor", "children": []}]}]
+        self.assertEqual(status.within_output(rows), rows)
+
     def test_bounds_names_and_counts(self):
         rows = status.parse("statuspage", json.dumps({"components": [
             {"id": str(i), "name": "x" * 500, "status": "operational"} for i in range(100)]}))

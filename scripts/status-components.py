@@ -19,6 +19,8 @@ FEEDS = {
 MAXIMUM_BYTES = 1024 * 1024
 MAXIMUM_COMPONENTS = 64
 MAXIMUM_NAME = 120
+# StatusComponents.js rejects longer stdout; print() adds one newline.
+MAXIMUM_OUTPUT = 262144
 # Matches the upstream CodexBar mapping to the CLI's status indicator values.
 INDICATORS = {
     "operational": "none",
@@ -94,11 +96,36 @@ def parse_incidentio(payload):
     return rows
 
 
+def within_output(rows):
+    """Keep leading rows and children whose printed record fits the reader's limit.
+
+    Default json.dumps output composes: each list item adds its own length plus
+    a ", " separator, so the budget is exact. Group indicators were computed
+    before trimming, so a dropped child never lowers its group's severity.
+    """
+    budget = MAXIMUM_OUTPUT - 1 - len(json.dumps({"status": "ok", "components": []}))
+    kept = []
+    for value in rows:
+        group = {**value, "children": []}
+        cost = len(json.dumps(group)) + (2 if kept else 0)
+        if cost > budget:
+            break
+        budget -= cost
+        for child in value["children"]:
+            cost = len(json.dumps(child)) + (2 if group["children"] else 0)
+            if cost > budget:
+                break
+            budget -= cost
+            group["children"].append(child)
+        kept.append(group)
+    return kept
+
+
 def parse(kind, raw):
     rows = (parse_incidentio if kind == "incidentio" else parse_statuspage)(json.loads(raw))
     if not rows:
         raise ValueError("empty")
-    return rows[:MAXIMUM_COMPONENTS]
+    return within_output(rows[:MAXIMUM_COMPONENTS])
 
 
 def fetch(url):
