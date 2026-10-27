@@ -172,8 +172,10 @@ work and upstream contract requirements.
   detail line shows the account identity when the CLI provides one, and an
   active service incident otherwise; an operational status or the provider's
   own source name is never presented as identity.
-  Provider icons align with the name and account. Each quota name is emphasized
-  separately from its reset, which shortens first when space is limited; the
+  Provider icons and the navigation arrow share an identity header with the
+  name and account. Quota captions and meters span the full content width below
+  that header, giving resets more room in narrow popups. Each quota name is
+  emphasized separately from its reset, which shortens first when space is limited; the
   percentage stays aligned with the end of its meter. Names and resets remain
   visible when the layout is mirrored for right-to-left languages.
 - Screen readers hear what the popup draws. Overview rows describe their
