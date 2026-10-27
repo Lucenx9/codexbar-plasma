@@ -828,6 +828,8 @@ fields; track proposed extensions in the issue tracker.
   a colored dot and its state. OpenAI group states include all visible components
   in the feed, even when the list exceeds the 64-child display limit. A list
   too long for the widget's 256 KiB reader limit omits its trailing components.
+  Malformed individual entries do not discard healthy components. An unreadable
+  component status or missing OpenAI component ID is shown as unknown.
   The list is read when expanded,
   through `scripts/status-components.py`, because the official CLI reports only
   the overall status. Open Status Page at the end of the list opens the site;
