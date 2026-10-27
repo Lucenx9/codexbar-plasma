@@ -236,7 +236,12 @@ TestCase {
     // Each quota window is named beside its own meter, so a short session
     // window can never stand in for an exhausted weekly one.
     function test_overviewNamesEveryQuotaWindow_data() {
-        return [{tag: "ltr", mirrored: false}, {tag: "rtl", mirrored: true}];
+        return [
+            {tag: "ltr", mirrored: false, width: 540},
+            {tag: "rtl", mirrored: true, width: 540},
+            {tag: "narrow-ltr", mirrored: false, width: 240},
+            {tag: "narrow-rtl", mirrored: true, width: 240}
+        ];
     }
 
     function test_overviewNamesEveryQuotaWindow(data) {
@@ -248,7 +253,7 @@ TestCase {
             ]
         });
         var row = createControl("OverviewProviderRow", {
-            applet: applet, modelData: measured, width: 540
+            applet: applet, modelData: measured, width: data.width
         });
         if (!row)
             return;
@@ -265,6 +270,15 @@ TestCase {
         var percent = findText(row, "57% left");
         verify(caption.width >= caption.implicitWidth);
         verify(reset.width >= reset.implicitWidth);
+        // Quotas span the card inset below the identity, without reserving
+        // side columns for the provider icon and navigation affordance.
+        var title = findText(row, "Codex");
+        var identityHeader = title.parent.parent;
+        var quotaHeader = caption.parent;
+        compare(quotaHeader.width, identityHeader.width);
+        compare(quotaHeader.mapToItem(row, 0, 0).x, identityHeader.mapToItem(row, 0, 0).x);
+        verify(quotaHeader.mapToItem(row, 0, 0).y
+            >= identityHeader.mapToItem(row, 0, identityHeader.height).y);
         if (data.mirrored) {
             verify(percent.x + percent.width <= reset.x);
             verify(reset.x + reset.width <= caption.x);

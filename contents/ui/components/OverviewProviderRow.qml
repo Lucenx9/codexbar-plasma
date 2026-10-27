@@ -92,176 +92,180 @@ Rectangle {
         }
     }
 
-    RowLayout {
+    ColumnLayout {
         id: overviewRowContent
 
         anchors.fill: parent
         anchors.margins: Kirigami.Units.largeSpacing
         anchors.leftMargin: Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing
         anchors.rightMargin: Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing
-        spacing: Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing
+        spacing: Kirigami.Units.smallSpacing
 
-        Rectangle {
-            id: overviewProviderIdentitySurface
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: Kirigami.Units.largeSpacing
 
-            Layout.alignment: Qt.AlignTop
-            Layout.preferredWidth: Kirigami.Units.iconSizes.medium
-                + Kirigami.Units.smallSpacing * 2
-            Layout.preferredHeight: Layout.preferredWidth
-            radius: overviewRow.applet.nestedSurfaceRadius
-            color: overviewRow.applet.withAlpha(overviewRow.accent, 0.1)
-            border.width: 1
-            border.color: overviewRow.applet.withAlpha(Kirigami.Theme.textColor, 0.1)
+            Rectangle {
+                id: overviewProviderIdentitySurface
+
+                Layout.alignment: Qt.AlignVCenter
+                Layout.preferredWidth: Kirigami.Units.iconSizes.medium
+                    + Kirigami.Units.smallSpacing * 2
+                Layout.preferredHeight: Layout.preferredWidth
+                radius: overviewRow.applet.nestedSurfaceRadius
+                color: overviewRow.applet.withAlpha(overviewRow.accent, 0.1)
+                border.width: 1
+                border.color: overviewRow.applet.withAlpha(Kirigami.Theme.textColor, 0.1)
+
+                Kirigami.Icon {
+                    anchors.centerIn: parent
+                    source: overviewRow.applet.providerIconSource(overviewRow.providerData.provider)
+                    fallback: "view-statistics"
+                    isMask: overviewRow.applet.providerIconIsMask(overviewRow.providerData.provider)
+                    color: overviewRow.accent
+                    width: Kirigami.Units.iconSizes.medium
+                    height: Kirigami.Units.iconSizes.medium
+                }
+            }
+
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: Kirigami.Units.smallSpacing
+
+                PlainPlasmaLabel {
+                    id: overviewRowTitle
+
+                    text: overviewRow.providerData.title
+                    font.weight: Font.DemiBold
+                    Layout.fillWidth: true
+                    elide: Text.ElideRight
+                }
+
+                PlainPlasmaLabel {
+                    id: overviewRowDetail
+
+                    visible: overviewRow.detail.length > 0
+                    text: overviewRow.detail
+                    font: Kirigami.Theme.smallFont
+                    opacity: overviewRow.applet.secondaryTextOpacity
+                    Layout.fillWidth: true
+                    elide: Text.ElideMiddle
+                }
+            }
 
             Kirigami.Icon {
-                anchors.centerIn: parent
-                source: overviewRow.applet.providerIconSource(overviewRow.providerData.provider)
-                fallback: "view-statistics"
-                isMask: overviewRow.applet.providerIconIsMask(overviewRow.providerData.provider)
-                color: overviewRow.accent
-                width: Kirigami.Units.iconSizes.medium
-                height: Kirigami.Units.iconSizes.medium
+                source: overviewRow.LayoutMirroring.enabled ? "go-previous-symbolic" : "go-next-symbolic"
+                isMask: true
+                color: Kirigami.Theme.textColor
+                opacity: overviewRow.applet.secondaryTextOpacity
+                Layout.alignment: Qt.AlignVCenter
+                Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                Accessible.role: Accessible.Graphic
+                Accessible.ignored: true
             }
         }
 
-        ColumnLayout {
-            Layout.fillWidth: true
-            spacing: Kirigami.Units.smallSpacing
+        Repeater {
+            id: overviewMeters
 
-            PlainPlasmaLabel {
-                id: overviewRowTitle
+            model: overviewRow.meterRows
 
-                text: overviewRow.providerData.title
-                font.weight: Font.DemiBold
+            delegate: ColumnLayout {
+                id: overviewMeter
+
+                required property var modelData
+                readonly property bool captionTruncated: overviewMeterCaption.truncated
+                    || overviewMeterReset.truncated
+
                 Layout.fillWidth: true
-                elide: Text.ElideRight
-            }
+                Layout.topMargin: Kirigami.Units.smallSpacing / 2
+                spacing: Kirigami.Units.smallSpacing / 2
 
-            PlainPlasmaLabel {
-                id: overviewRowDetail
-
-                visible: overviewRow.detail.length > 0
-                text: overviewRow.detail
-                font: Kirigami.Theme.smallFont
-                opacity: overviewRow.applet.secondaryTextOpacity
-                Layout.fillWidth: true
-                elide: Text.ElideMiddle
-            }
-
-            Repeater {
-                id: overviewMeters
-
-                model: overviewRow.meterRows
-
-                delegate: ColumnLayout {
-                    id: overviewMeter
-
-                    required property var modelData
-                    readonly property bool captionTruncated: overviewMeterCaption.truncated
-                        || overviewMeterReset.truncated
+                Item {
+                    id: overviewMeterHeader
 
                     Layout.fillWidth: true
-                    Layout.topMargin: Kirigami.Units.smallSpacing / 2
-                    spacing: Kirigami.Units.smallSpacing / 2
+                    implicitHeight: Math.max(overviewMeterCaption.implicitHeight,
+                        overviewMeterReset.implicitHeight, overviewMeterPercent.implicitHeight)
+                    implicitWidth: overviewMeterCaption.implicitWidth
+                        + overviewMeterReset.implicitWidth + overviewMeterPercent.implicitWidth
+                        + Kirigami.Units.smallSpacing * 2
 
-                    Item {
-                        id: overviewMeterHeader
+                    PlainPlasmaLabel {
+                        id: overviewMeterCaption
 
-                        Layout.fillWidth: true
-                        implicitHeight: Math.max(overviewMeterCaption.implicitHeight,
-                            overviewMeterReset.implicitHeight, overviewMeterPercent.implicitHeight)
-                        implicitWidth: overviewMeterCaption.implicitWidth
-                            + overviewMeterReset.implicitWidth + overviewMeterPercent.implicitWidth
-                            + Kirigami.Units.smallSpacing * 2
-
-                        PlainPlasmaLabel {
-                            id: overviewMeterCaption
-
-                            text: overviewMeter.modelData.label || ""
-                            font.pointSize: Kirigami.Theme.smallFont.pointSize
-                            font.weight: Font.DemiBold
-                            opacity: overviewRow.applet.valueTextOpacity
-                            anchors.left: parent.left
-                            anchors.verticalCenter: parent.verticalCenter
-                            width: Math.min(implicitWidth, Math.max(0,
-                                parent.width - overviewMeterPercent.width - Kirigami.Units.smallSpacing))
-                            elide: Text.ElideRight
-                        }
-
-                        PlainPlasmaLabel {
-                            id: overviewMeterReset
-
-                            text: overviewRow.applet.resetTextForRow(overviewMeter.modelData)
-                            visible: text.length > 0
-                            font: Kirigami.Theme.smallFont
-                            opacity: overviewRow.applet.secondaryTextOpacity
-                            anchors.left: overviewMeterCaption.right
-                            anchors.leftMargin: Kirigami.Units.smallSpacing
-                            anchors.verticalCenter: parent.verticalCenter
-                            width: Math.max(0, parent.width - overviewMeterCaption.width
-                                - overviewMeterPercent.width - Kirigami.Units.smallSpacing * 2)
-                            elide: Text.ElideRight
-                        }
-
-                        PlainPlasmaLabel {
-                            id: overviewMeterPercent
-
-                            anchors.right: parent.right
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: overviewRow.applet.usagePercentText(overviewMeter.modelData)
-                            font.pointSize: Kirigami.Theme.smallFont.pointSize
-                            font.weight: Font.DemiBold
-                            horizontalAlignment: Text.AlignRight
-                        }
+                        text: overviewMeter.modelData.label || ""
+                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                        font.weight: Font.DemiBold
+                        opacity: overviewRow.applet.valueTextOpacity
+                        anchors.left: parent.left
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: Math.min(implicitWidth, Math.max(0,
+                            parent.width - overviewMeterPercent.width - Kirigami.Units.smallSpacing))
+                        elide: Text.ElideRight
                     }
 
+                    PlainPlasmaLabel {
+                        id: overviewMeterReset
+
+                        text: overviewRow.applet.resetTextForRow(overviewMeter.modelData)
+                        visible: text.length > 0
+                        font: Kirigami.Theme.smallFont
+                        opacity: overviewRow.applet.secondaryTextOpacity
+                        anchors.left: overviewMeterCaption.right
+                        anchors.leftMargin: Kirigami.Units.smallSpacing
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: Math.max(0, parent.width - overviewMeterCaption.width
+                            - overviewMeterPercent.width - Kirigami.Units.smallSpacing * 2)
+                        elide: Text.ElideRight
+                    }
+
+                    PlainPlasmaLabel {
+                        id: overviewMeterPercent
+
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: overviewRow.applet.usagePercentText(overviewMeter.modelData)
+                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                        font.weight: Font.DemiBold
+                        horizontalAlignment: Text.AlignRight
+                    }
+                }
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: overviewRow.applet.compactMeterTrackHeight
+                    radius: height / 2
+                    color: overviewRow.applet.withAlpha(Kirigami.Theme.textColor, 0.1)
+                    clip: true
+
                     Rectangle {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: overviewRow.applet.compactMeterTrackHeight
-                        radius: height / 2
-                        color: overviewRow.applet.withAlpha(Kirigami.Theme.textColor, 0.1)
-                        clip: true
+                        readonly property real shownPercent: overviewRow.applet.displayPercent(overviewMeter.modelData)
 
-                        Rectangle {
-                            readonly property real shownPercent: overviewRow.applet.displayPercent(overviewMeter.modelData)
+                        width: shownPercent <= 0
+                            ? 0
+                            : Math.max(parent.height, parent.width * shownPercent / 100)
+                        height: parent.height
+                        radius: parent.radius
+                        color: overviewRow.applet.quotaMeterColor(
+                            overviewMeter.modelData, overviewRow.accent)
 
-                            width: shownPercent <= 0
-                                ? 0
-                                : Math.max(parent.height, parent.width * shownPercent / 100)
-                            height: parent.height
-                            radius: parent.radius
-                            color: overviewRow.applet.quotaMeterColor(
-                                overviewMeter.modelData, overviewRow.accent)
-
-                            Behavior on color {
-                                ColorAnimation {
-                                    duration: Kirigami.Units.longDuration
-                                }
+                        Behavior on color {
+                            ColorAnimation {
+                                duration: Kirigami.Units.longDuration
                             }
+                        }
 
-                            Behavior on width {
-                                NumberAnimation {
-                                    duration: Kirigami.Units.longDuration
-                                    easing.type: Easing.OutCubic
-                                }
+                        Behavior on width {
+                            NumberAnimation {
+                                duration: Kirigami.Units.longDuration
+                                easing.type: Easing.OutCubic
                             }
                         }
                     }
                 }
             }
-        }
-
-        Kirigami.Icon {
-            source: "go-next-symbolic"
-            isMask: true
-            color: Kirigami.Theme.textColor
-            opacity: overviewRow.applet.secondaryTextOpacity
-            Layout.alignment: Qt.AlignTop
-            Layout.topMargin: Kirigami.Units.smallSpacing * 3
-            Layout.preferredWidth: Kirigami.Units.iconSizes.small
-            Layout.preferredHeight: Kirigami.Units.iconSizes.small
-            Accessible.role: Accessible.Graphic
-            Accessible.ignored: true
         }
     }
 

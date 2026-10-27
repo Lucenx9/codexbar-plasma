@@ -12,6 +12,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Give Overview quotas the full card content width below the provider identity,
+  leaving more room for reset labels and meters. Center the navigation arrow
+  beside the identity and point it toward the reading direction.
+
 - Separate README installation methods and first-run setup, group feature
   dependencies, and show the automatic widget-update default beside setup.
   The interactive terminal command now propagates download failures.
