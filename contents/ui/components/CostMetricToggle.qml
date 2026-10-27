@@ -46,6 +46,11 @@ Controls.Control {
                 checkable: true
                 checked: metricToggle.currentIndex === index
                 Accessible.name: modelData
+                // Flat ToolButtons inherit the parent theme. Created while
+                // Usage & Spend was hidden, they kept the unsynced default
+                // black text after the view appeared, invisible on Breeze
+                // Dark. Their own Button color set follows the scheme.
+                Kirigami.Theme.inherit: false
 
                 onClicked: {
                     metricToggle.activated(index);
