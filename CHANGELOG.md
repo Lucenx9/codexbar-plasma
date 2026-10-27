@@ -26,6 +26,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Reject incomplete or malformed CLI-helper exit results instead of announcing
+  a successful release check or selecting an unconfirmed managed CLI.
+
 - Keep the Cost/Tokens labels in Usage & Spend readable on dark color schemes;
   they were drawn in black on the dark track.
 
