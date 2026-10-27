@@ -1028,6 +1028,9 @@ setting and privacy mode, and announce each version once per widget instance.
 Clicking a notification opens the corresponding official release page where
 notification actions are supported.
 
+An incomplete or failed helper result cannot announce a CLI release or select
+the managed CLI. Retry the operation after checking its reported error.
+
 An upstream release may precede its availability in AUR or a distribution
 repository. The widget identifies positive package ownership through pacman,
 dpkg, RPM, or APK, and recognizes a Homebrew formula by its installed prefix and

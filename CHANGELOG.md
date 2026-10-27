@@ -29,6 +29,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Preserve healthy service-status components when another feed entry is malformed,
   and show OpenAI components without a usable ID as unknown instead of operational.
 
+- Reject incomplete or malformed CLI-helper exit results instead of announcing
+  a successful release check or selecting an unconfirmed managed CLI.
+
 - Keep the Cost/Tokens labels in Usage & Spend readable on dark color schemes;
   they were drawn in black on the dark track.
 

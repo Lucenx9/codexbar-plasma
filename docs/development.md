@@ -218,6 +218,10 @@ synchronized.
   probe on opening/command changes for managed-install confirmation; Diagnostics uses its
   local-only mode; `main.qml` persists background check timestamps, while
   `UpdateNotificationsController.qml` persists notification deduplication.
+  Both this controller and `ManagedCliController.qml` validate process results
+  with `Guards.exitCode`: only numeric zero or an integer-string zero accepts
+  stdout. Null, booleans, blank strings, arrays, and missing codes fail without
+  emitting successful-check, installation-selection, or change signals.
   `CliUpdate.js` bounds results and constructs host-pinned release links. `scripts/check-cli-update.py` probes `--version` and positive package
   ownership, then optionally reads the official GitHub latest-release metadata.
   This read-only entry point never installs or changes the CLI. Shared probes and
