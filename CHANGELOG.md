@@ -33,6 +33,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Preserve the last session list and timestamp when a scan returns only unreadable
+  records, instead of silently clearing the Sessions tab.
+
 - Report the Diagnostics support check as failed when its helper exit code is
   missing or malformed, instead of accepting partial support facts.
 

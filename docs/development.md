@@ -376,6 +376,8 @@ synchronized.
   bounds and classifies CLI output through the existing session normalizer.
   The shared response decoder admits session stdout only after a zero exit code;
   failed scans retain the previous successful snapshot and timestamp.
+  A nonempty session list with no usable records is a failed scan, not a
+  confirmed empty result. Mixed lists retain their readable sessions.
 - `contents/ui/controllers/ProviderConfigWatcher.qml` owns the read-only config
   checksum command, minute polling, connection changes, and retired replies.
   It starts after the applet initializes and emits accepted checksum changes;
@@ -1213,7 +1215,8 @@ with temporary synthetic CLI executables and real Plasma DataSource/timers.
 It checks visible refresh scheduling, interval changes, hidden and queued work,
 duplicate requests, command isolation, retained snapshots, successful empty
 responses, and the production 60-second timeout followed by recovery. Failed
-processes with valid empty or populated JSON also preserve the last snapshot.
+processes with valid empty or populated JSON also preserve the last snapshot,
+as do successful processes whose nonempty lists contain only unreadable records.
 Failed scans record attempt completion separately from successful snapshot completion;
 the full retry cooldown starts at the reply or timeout, even after a long scan.
 Manual retry bypasses that cooldown, and a command change clears it. The test

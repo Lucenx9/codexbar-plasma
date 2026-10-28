@@ -552,7 +552,9 @@ function normalizeSessions(payload) {
         }
     }
     nextSessions.sort(function(a, b) { return b.activityMs - a.activityMs })
-    return nextSessions
+    // Dropping unreadable records does not confirm that no sessions exist.
+    // Preserve the previous scan when a nonempty reply has no usable records.
+    return items.length === 0 || nextSessions.length > 0 ? nextSessions : null
 }
 
 // NaN when no nonnegative part is usable; an explicitly measured zero stays zero.
