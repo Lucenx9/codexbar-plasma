@@ -282,6 +282,28 @@ TestCase {
         }
     }
 
+    function test_supportReportRejectsMalformedExitCode_data() {
+        return [{tag: "null", code: null}, {tag: "false", code: false}, {tag: "empty", code: ""},
+                {tag: "blank", code: " "}, {tag: "array", code: []}, {tag: "array-zero", code: [0]}];
+    }
+
+    function test_supportReportRejectsMalformedExitCode(data) {
+        var page = createPage("../contents/ui/configDiagnostics.qml", {cfg_commandPath: "codexbar"});
+        if (!page) return;
+        var stdout = JSON.stringify({environment: {}, selected: {}, system: {}, providers: {}, tools: {}});
+        page.supportSource = "run";
+        page.supportTimestamp = "2026-10-28T13:00:00Z";
+        // A malformed exit code must not read as a successful support check.
+        page.acceptSupport("run", {"exit code": data.code, stdout: stdout});
+        verify(!page.supportFacts.valid);
+        verify(page.supportError.indexOf("failed") >= 0);
+        page.supportSource = "ok-run";
+        page.supportError = "";
+        page.acceptSupport("ok-run", {"exit code": "0", stdout: stdout});
+        verify(page.supportFacts.valid);
+        compare(page.supportError, "");
+    }
+
     function test_diagnosticsRejectsBlankPath() {
         var page = createPage("../contents/ui/configDiagnostics.qml", {cfg_commandPath: "   "});
         if (!page) return;

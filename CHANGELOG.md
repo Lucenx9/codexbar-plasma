@@ -33,6 +33,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Report the Diagnostics support check as failed when its helper exit code is
+  missing or malformed, instead of accepting partial support facts.
+
 - Reject incomplete or malformed AI Insights helper exit results instead of
   accepting an unconfirmed insight, API-key status, or model list.
 

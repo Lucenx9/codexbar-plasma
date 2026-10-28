@@ -113,9 +113,9 @@ KCM.SimpleKCM {
     function acceptSupport(sourceName, data) {
         if (sourceName !== supportSource || sourceName.length === 0) return
         retireSupport()
-        if (!data || Number(data["exit code"]) !== 0) {
+        var exitCode = Guards.exitCode(data ? data["exit code"] : undefined)
+        if (exitCode !== 0) {
             // Helper stderr is deliberately excluded from shareable reports.
-            var exitCode = data ? Number(data["exit code"]) : -1
             supportError = exitCode === 124 || exitCode === 137
                 ? i18n("Support checks timed out. Partial results remain available.")
                 : i18n("Support checks failed. Partial results remain available.")
