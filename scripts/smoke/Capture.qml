@@ -388,9 +388,10 @@ Item {
     function verifyTabNavigation() {
         var popup = applet.fullRepresentationItem;
         var strip = findItem(popup, "providerTabsFlickable");
+        var navigation = findItem(popup, "popupTabStrip");
         var previous = findItem(popup, "previousTabsButton");
         var next = findItem(popup, "nextTabsButton");
-        verifyScenario(strip && previous && next, "tab navigation controls missing");
+        verifyScenario(strip && navigation && previous && next, "tab navigation controls missing");
         var countLabel = findItem(popup, "overviewProviderCountLabel");
         verifyScenario(countLabel.text.indexOf(i18np("%2 of %1 provider", "%2 of %1 providers",
             applet.providers.length, 3)) >= 0, "Overview did not identify its subset of the provider roster");
@@ -398,10 +399,10 @@ Item {
         verifyScenario(previous.x + previous.width <= strip.x
             && next.x >= strip.x + strip.width, "scroll controls overlap tabs");
         verifyScenario(!previous.enabled && next.enabled, "incorrect controls at start of strip");
-        var focus = strip.selectedTab.nextItemInFocusChain(true);
+        var focus = navigation.selectedTab.nextItemInFocusChain(true);
         var visited = 0;
         var lastFocused = null;
-        while (strip.containsTab(focus) && visited < 20) {
+        while (navigation.containsTab(focus) && visited < 20) {
             lastFocused = focus;
             focus.forceActiveFocus(Qt.TabFocusReason);
             var position = focus.mapToItem(strip, 0, 0);
@@ -416,7 +417,7 @@ Item {
         verifyScenario(focusedTip !== null && focusedTip.plainText === lastFocused.parent.modelData.title,
             "a truncated provider name lost its complete tooltip text");
         navigationTooltip = focusedTip;
-        var tabs = strip.focusableTabs(lastFocused);
+        var tabs = navigation.focusableTabs(lastFocused);
         providerTabWidths = tabs.filter(function(item) {
             return item.parent && item.parent.modelData;
         }).map(function(item) {
@@ -428,15 +429,15 @@ Item {
         var last = tabs[tabs.length - 1];
         verifyScenario(last === lastFocused && tabs.length >= visited,
             "the strip collected a different set of keyboard tabs");
-        verifyScenario(strip.navigateFromTab(last, Qt.Key_Right) && first.activeFocus
+        verifyScenario(navigation.navigateFromTab(last, Qt.Key_Right) && first.activeFocus
             && first.mapToItem(strip, 0, 0).x >= -1, "Right on the last tab did not wrap to the first");
-        verifyScenario(strip.navigateFromTab(first, Qt.Key_Left) && last.activeFocus,
+        verifyScenario(navigation.navigateFromTab(first, Qt.Key_Left) && last.activeFocus,
             "Left on the first tab did not wrap to the last");
-        verifyScenario(strip.navigateFromTab(last, Qt.Key_Home) && first.activeFocus,
+        verifyScenario(navigation.navigateFromTab(last, Qt.Key_Home) && first.activeFocus,
             "Home did not focus the first tab");
-        verifyScenario(strip.navigateFromTab(first, Qt.Key_End) && last.activeFocus
+        verifyScenario(navigation.navigateFromTab(first, Qt.Key_End) && last.activeFocus
             && last.mapToItem(strip, 0, 0).x + last.width <= strip.width + 1, "End did not focus the last tab");
-        verifyScenario(!strip.navigateFromTab(last, Qt.Key_Up) && last.activeFocus,
+        verifyScenario(!navigation.navigateFromTab(last, Qt.Key_Up) && last.activeFocus,
             "an unrelated key moved tab focus");
         applet.selectedProviderID = "example-7";
         applet.selectGlobalView("overview");

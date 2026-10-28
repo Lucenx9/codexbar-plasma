@@ -8,9 +8,9 @@ import "../ProviderNormalizer.js" as Normalizer
 QtObject {
     id: root
 
-    required property var applet
-    readonly property var numberFormat: applet.costNumberFormat
-    readonly property bool showsTokens: applet.costHistoryShowsTokens
+    required property var numberFormat
+    required property bool showsTokens
+    required property var tokenCountText
 
     function costSparklineSummary(points) {
         var summary = CostPresentation.sparklineSummary(root.numberFormat, points, root.showsTokens)
@@ -36,9 +36,7 @@ QtObject {
     }
 
     function costModelRows(tokenCost) {
-        return CostPresentation.modelRows(root.numberFormat, tokenCost, function(tokens) {
-            return root.applet.usageCountText(tokens, "tokens")
-        })
+        return CostPresentation.modelRows(root.numberFormat, tokenCost, root.tokenCountText)
     }
 
     // Cost text dates a CLI calendar key like the chart does; other labels

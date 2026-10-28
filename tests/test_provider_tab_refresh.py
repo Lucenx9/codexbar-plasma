@@ -74,18 +74,12 @@ TestCase {
         function performAction(action) { lastPerformedAction = typeof action === "string" ? action : (action.action || ""); }
     }
 
-    Item {
-        id: providerTabsFlickable
-        height: 64
-        function claimSelectedTab() {}
-        function ensureVisible() {}
-        function navigateFromTab() { return false; }
-    }
-
     ColumnLayout {
         width: parent.width
 
-        RowLayout {
+        Components.PopupTabStrip {
+            id: providerTabsBar
+            surfaceRadius: 8
             Layout.fillWidth: true
             Repeater { PRODUCTION_REPEATER }
         }

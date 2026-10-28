@@ -459,6 +459,23 @@ synchronized.
   `FullRepresentation.qml` in the same directory renders the popup. Components
   are presentation-only and receive normalized data plus an explicit parent API
   such as `applet` or `configPage`.
+- `components/PopupTabStrip.qml` owns the popup tab viewport, overflow controls,
+  selected-tab reveal, and keyboard focus traversal. It receives the surface
+  radius and caller-declared tab contents, without an applet reference.
+  `FullRepresentation.qml` retains provider/global tab rendering and selection
+  effects. Tabs pass their focus and selection to the strip through `tabStrip`,
+  `ensureVisible`, `claimSelectedTab`, and `navigateFromTab`; `tabHeight` sizes
+  their contents. `TabStripGeometry.js` retains the pure geometry decisions.
+  Direct `tst_popup_tab_strip.qml` covers keyboard wrapping and activation,
+  pointer controls, the mouse wheel, resize, fitting content, and foreign focus.
+  The provider-refresh harness uses the production strip, and `tabs-overflow`
+  checks the complete popup with synthetic data.
+- `components/CostLabels.qml` localizes cost-history summaries, breakdowns,
+  and model rows from an explicit number format, selected metric, and token-count
+  formatter. `ProviderCostSection.qml` supplies these inputs; the module never
+  reads the applet. Direct `tst_cost_labels.qml` exercises the production module
+  with `CostText`, including reactive formats and input immutability. These
+  tests replace the label checks formerly embedded in a copied-root fixture.
 - `contents/ui/configProviders.qml` owns provider setup processes, prompts,
   configuration writes, and effects. Its shared dispatcher wraps every command
   in the same independent process-group bound as `CliProcess`, using the

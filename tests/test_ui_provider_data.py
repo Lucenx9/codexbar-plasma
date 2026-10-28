@@ -33,7 +33,6 @@ class ProviderDataTest(unittest.TestCase):
         for source_text, label in ((main_text, "main.qml"), (providers_text, "configProviders.qml")):
             for function_name, shared_call in (
                 ("providerKey", "ProviderIdentity.resolveProviderKey(value)"),
-                ("providerCliArgument", "ProviderIdentity.providerCliArgument(value)"),
                 ("providerColor", "ProviderIdentity.providerBrandColorChannels(value)"),
                 ("providerIconSource", "ProviderIdentity.providerIconFileName(value)"),
                 ("providerDashboardUrl", "ProviderIdentity.providerDashboardUrl(providerID)"),

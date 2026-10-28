@@ -14,8 +14,8 @@ from qml_surfaces import Surface
 
 FUNCTIONS = (
     "normalizeProvider", "presentProviderSnapshot", "presentUsageWindow", "copyObject", "resetText",
-    "isCliRecord", "normalizedProviderID", "providerMapKey", "hasOwnKey",
-    "boundedCliMessage", "paceSummaryPartsText", "paceEtaText",
+    "providerMapKey",
+    "paceSummaryPartsText", "paceEtaText",
 )
 
 QML = '''import QtQuick

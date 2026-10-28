@@ -4,7 +4,6 @@ import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.components as PlasmaComponents
 import "." as Components
-import "../TabStripGeometry.js" as TabStripGeometry
 
 Item {
     id: fullRoot
@@ -156,525 +155,282 @@ Item {
         anchors.margins: Kirigami.Units.largeSpacing
         spacing: Kirigami.Units.largeSpacing
 
-        Item {
+        Components.PopupTabStrip {
             id: providerTabsBar
 
-            // Compare against the full strip, not the narrower scroll viewport:
-            // reserving button space must not make overflow self-sustaining.
-            // A zero width during initialization must not flash the buttons.
-            readonly property bool tabsOverflow: width > 0
-                && providerTabs.implicitWidth > width - Kirigami.Units.smallSpacing
-
             visible: applet.providers.length > 0 || applet.spendAvailable || applet.sessionsAvailable
+            surfaceRadius: applet.roundedSurfaceRadius
             Layout.fillWidth: true
             Layout.preferredHeight: Kirigami.Units.gridUnit * 2.35
 
-            Rectangle {
-                id: providerTabsSurface
+            Components.GlobalTab {
+                id: overviewTab
+                objectName: "overviewTab"
 
-                anchors.fill: parent
-                radius: applet.roundedSurfaceRadius
-                color: applet.withAlpha(Kirigami.Theme.textColor, 0.035)
-                border.width: 1
-                border.color: applet.withAlpha(Kirigami.Theme.textColor, 0.06)
+                visible: applet.overviewAvailable
+                applet: fullRoot.applet
+                title: i18n("Overview")
+                showLabel: applet.showPopupTabLabels
+                tabStrip: providerTabsBar
+                iconName: "view-grid-symbolic"
+                tabHeight: providerTabsBar.tabHeight
+                selected: applet.overviewSelected
+                onActivated: {
+                    fullRoot.closeAiInsights(false, false)
+                    applet.selectGlobalView("overview")
+                }
             }
 
-            Flickable {
-                id: providerTabsFlickable
-                objectName: "providerTabsFlickable"
+            Components.GlobalTab {
+                id: spendTab
 
-                // The selected provider tab, so geometry changes can bring it
-                // back into view without every delegate registering itself.
-                property Item selectedTab: null
-                readonly property real tabPageStep: Math.max(Kirigami.Units.gridUnit * 4, width * 0.6)
-                readonly property real tabWheelStep: Kirigami.Units.gridUnit * 5
+                visible: applet.spendAvailable
+                applet: fullRoot.applet
+                title: i18n("Usage & Spend")
+                showLabel: applet.showPopupTabLabels
+                tabStrip: providerTabsBar
+                iconName: "office-chart-bar"
+                tabHeight: providerTabsBar.tabHeight
+                selected: applet.spendSelected
+                onActivated: applet.selectGlobalView("spend")
+            }
 
-                function scrollTo(position, immediate) {
-                    var bounded = TabStripGeometry.boundedPosition(position, contentWidth, width)
-                    providerTabsScroll.stop()
-                    if (immediate || Kirigami.Units.shortDuration <= 0) {
-                        contentX = bounded
-                        return
+            Components.GlobalTab {
+                id: sessionsTab
+
+                visible: applet.sessionsAvailable
+                applet: fullRoot.applet
+                title: i18n("Sessions")
+                showLabel: applet.showPopupTabLabels
+                tabStrip: providerTabsBar
+                iconName: "system-run-symbolic"
+                tabHeight: providerTabsBar.tabHeight
+                selected: applet.sessionsSelected
+                onActivated: applet.selectGlobalView("sessions")
+            }
+
+            Rectangle {
+                visible: applet.providers.length > 0
+                    && (applet.overviewAvailable || applet.spendAvailable || applet.sessionsAvailable)
+                Layout.preferredHeight: providerTabsBar.tabHeight - Kirigami.Units.smallSpacing * 2
+                Layout.preferredWidth: 1
+                Layout.alignment: Qt.AlignVCenter
+                color: applet.withAlpha(Kirigami.Theme.textColor, 0.12)
+            }
+
+            Repeater {
+                id: providerTabRepeater
+
+                // Snapshot values change on refresh; the ordered IDs
+                // keep the focused delegate alive while its data updates.
+                model: fullRoot.applet.presentedProviders.map(function(item) { return item.provider })
+
+                delegate: Rectangle {
+                    id: providerTab
+
+                    required property int index
+                    required property var modelData
+                    modelData: fullRoot.applet.presentedProviders[index]
+                        || ({provider: "", title: "", error: ""})
+                    readonly property bool selected: index === applet.selectedProviderIndex
+                    readonly property bool keyboardFocusVisible: providerFocus.visualFocus
+                    readonly property real meter: applet.switcherPercent(modelData)
+                    readonly property color accent: applet.providerReadableColor(
+                        modelData.provider,
+                        Kirigami.Theme.backgroundColor)
+                    readonly property color foreground: selected
+                        ? Kirigami.Theme.textColor
+                        : applet.withAlpha(Kirigami.Theme.textColor, 0.72)
+
+                    function activate() {
+                        fullRoot.closeAiInsights(false, false)
+                        applet.selectedProviderID = modelData.provider
+                        applet.selectionInitialized = true
                     }
-                    providerTabsScroll.to = bounded
-                    providerTabsScroll.start()
-                }
 
-                function scrollBy(delta, immediate) {
-                    scrollTo(contentX + delta, immediate)
-                }
-
-                // Tabs come from three different delegates, so walk the parent
-                // chain instead of keeping a registry of them in sync.
-                function containsTab(item) {
-                    var node = item
-                    while (node) {
-                        if (node === providerTabs) {
-                            return true
-                        }
-                        node = node.parent
+                    // An auto-selected provider can sit past the right
+                    // edge; keep the active tab reachable and visible.
+                    function claimSelectedTab() {
+                        providerTabsBar.claimSelectedTab(providerTab, selected)
                     }
-                    return false
-                }
 
-                function ensureVisible(item) {
-                    providerTabsScroll.stop()
-                    if (!interactive || !item || item.width <= 0 || !containsTab(item)) {
-                        return
-                    }
-                    var target = TabStripGeometry.revealPosition(
-                        item.mapToItem(providerTabs, 0, 0).x,
-                        item.width,
-                        contentX,
-                        width,
-                        Kirigami.Units.gridUnit)
-                    // Keep an already-visible tab in place instead of aligning
-                    // it again on every focus or selection report.
-                    if (target !== null) {
-                        // Focus, selection and resize are direct navigation.
-                        // A focused tab must be visible before its next keypress.
-                        scrollTo(target, true)
-                    }
-                }
+                    Layout.preferredWidth: applet.showPopupTabLabels
+                        ? Math.min(
+                            Kirigami.Units.gridUnit * 7,
+                            Math.max(Kirigami.Units.gridUnit * 4.2,
+                                Math.ceil(providerTabLabelSizing.implicitWidth) + Kirigami.Units.gridUnit * 2.2))
+                        : providerTabsBar.tabHeight
+                    Layout.preferredHeight: providerTabsBar.tabHeight
+                    radius: applet.roundedSurfaceRadius
+                    color: providerTabMouse.pressed
+                        ? applet.withAlpha(Kirigami.Theme.focusColor, 0.1)
+                        : (selected
+                        ? applet.withAlpha(Kirigami.Theme.textColor, 0.1)
+                        : (keyboardFocusVisible
+                        ? applet.withAlpha(Kirigami.Theme.focusColor, 0.06)
+                        : (providerTabMouse.containsMouse ? applet.withAlpha(Kirigami.Theme.textColor, 0.05) : "transparent")
+                        ))
+                    border.width: keyboardFocusVisible ? 1 : 0
+                    border.color: Kirigami.Theme.focusColor
+                    opacity: modelData.error.length > 0 ? 0.62 : 1
+                    scale: providerTabMouse.pressed ? 0.985 : 1
+                    onSelectedChanged: providerTab.claimSelectedTab()
+                    Component.onCompleted: providerTab.claimSelectedTab()
 
-                // Every tab kind reports through here: tracking only provider
-                // tabs would leave a stale one selected once a global view is
-                // picked, and a later resize would scroll it back into view.
-                function claimSelectedTab(item, isSelected) {
-                    if (!isSelected) {
-                        if (selectedTab === item) {
-                            selectedTab = null
-                        }
-                        return
-                    }
-                    selectedTab = item
-                    ensureVisible(item)
-                }
-
-                function revealSelectedTab() {
-                    ensureVisible(selectedTab)
-                }
-
-                // The focusable tabs in strip order, read off the focus chain
-                // around the given tab. Both walks stop at the first item
-                // outside the strip, and at a tab already collected in case
-                // the chain wraps back without leaving the strip.
-                function focusableTabs(item) {
-                    var tabs = [item]
-                    var candidate = item.nextItemInFocusChain(false)
-                    while (candidate && containsTab(candidate) && tabs.indexOf(candidate) < 0) {
-                        tabs.unshift(candidate)
-                        candidate = candidate.nextItemInFocusChain(false)
-                    }
-                    candidate = item.nextItemInFocusChain(true)
-                    while (candidate && containsTab(candidate) && tabs.indexOf(candidate) < 0) {
-                        tabs.push(candidate)
-                        candidate = candidate.nextItemInFocusChain(true)
-                    }
-                    return tabs
-                }
-
-                // Arrow keys wrap around the strip and Home/End jump to its
-                // ends, as in the WAI-ARIA tabs pattern. Focus moves without
-                // selecting, so browsing tabs never switches the view.
-                function navigateFromTab(item, key) {
-                    var action = ""
-                    switch (key) {
-                    case Qt.Key_Left:
-                        action = "previous"
-                        break
-                    case Qt.Key_Right:
-                        action = "next"
-                        break
-                    case Qt.Key_Home:
-                        action = "first"
-                        break
-                    case Qt.Key_End:
-                        action = "last"
-                        break
-                    default:
-                        return false
-                    }
-                    if (!item || !containsTab(item)) {
-                        return false
-                    }
-                    var tabs = focusableTabs(item)
-                    var target = TabStripGeometry.keyboardTargetIndex(action, tabs.indexOf(item), tabs.length)
-                    if (target < 0) {
-                        return false
-                    }
-                    tabs[target].forceActiveFocus(action === "next" || action === "last"
-                        ? Qt.TabFocusReason : Qt.BacktabFocusReason)
-                    return true
-                }
-
-                anchors.fill: parent
-                anchors.margins: Kirigami.Units.smallSpacing / 2
-                anchors.leftMargin: providerTabsBar.tabsOverflow
-                    ? previousTabsButton.width + Kirigami.Units.smallSpacing : Kirigami.Units.smallSpacing / 2
-                anchors.rightMargin: providerTabsBar.tabsOverflow
-                    ? nextTabsButton.width + Kirigami.Units.smallSpacing : Kirigami.Units.smallSpacing / 2
-                clip: true
-                boundsBehavior: Flickable.StopAtBounds
-                contentWidth: providerTabs.implicitWidth
-                contentHeight: height
-                interactive: contentWidth > width
-
-                onMovementStarted: providerTabsScroll.stop()
-                onWidthChanged: Qt.callLater(providerTabsFlickable.revealSelectedTab)
-                onContentWidthChanged: Qt.callLater(providerTabsFlickable.revealSelectedTab)
-
-                NumberAnimation {
-                    id: providerTabsScroll
-
-                    target: providerTabsFlickable
-                    property: "contentX"
-                    duration: Kirigami.Units.shortDuration
-                    easing.type: Easing.OutCubic
-                }
-
-                // Touchpads flick this strip horizontally, but a plain mouse
-                // only sends a vertical wheel, which a horizontal-only
-                // Flickable ignores; without this the overflowing tabs can
-                // only be reached by dragging the strip.
-                WheelHandler {
-                    enabled: providerTabsFlickable.interactive
-                    acceptedDevices: PointerDevice.Mouse
-
-                    onWheel: function(event) {
-                        var delta = event.angleDelta.y !== 0 ? event.angleDelta.y : event.angleDelta.x
-                        if (delta === 0) {
-                            return
-                        }
-                        providerTabsFlickable.scrollBy(
-                            -delta / 120 * providerTabsFlickable.tabWheelStep)
-                    }
-                }
-
-                RowLayout {
-                    id: providerTabs
-
-                    height: providerTabsFlickable.height
-                    spacing: Kirigami.Units.smallSpacing / 2
-
-                    Components.GlobalTab {
-                        id: overviewTab
-                        objectName: "overviewTab"
-
-                        visible: applet.overviewAvailable
-                        applet: fullRoot.applet
-                        title: i18n("Overview")
-                        showLabel: applet.showPopupTabLabels
-                        tabStrip: providerTabsFlickable
-                        iconName: "view-grid-symbolic"
-                        tabHeight: providerTabsFlickable.height
-                        selected: applet.overviewSelected
-                        onActivated: {
-                            fullRoot.closeAiInsights(false, false)
-                            applet.selectGlobalView("overview")
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: Kirigami.Units.shortDuration
                         }
                     }
 
-                    Components.GlobalTab {
-                        id: spendTab
-
-                        visible: applet.spendAvailable
-                        applet: fullRoot.applet
-                        title: i18n("Usage & Spend")
-                        showLabel: applet.showPopupTabLabels
-                        tabStrip: providerTabsFlickable
-                        iconName: "office-chart-bar"
-                        tabHeight: providerTabsFlickable.height
-                        selected: applet.spendSelected
-                        onActivated: applet.selectGlobalView("spend")
+                    Behavior on scale {
+                        NumberAnimation {
+                            duration: Kirigami.Units.shortDuration
+                            easing.type: Easing.OutCubic
+                        }
                     }
 
-                    Components.GlobalTab {
-                        id: sessionsTab
+                    Controls.Control {
+                        id: providerFocus
 
-                        visible: applet.sessionsAvailable
-                        applet: fullRoot.applet
-                        title: i18n("Sessions")
-                        showLabel: applet.showPopupTabLabels
-                        tabStrip: providerTabsFlickable
-                        iconName: "system-run-symbolic"
-                        tabHeight: providerTabsFlickable.height
-                        selected: applet.sessionsSelected
-                        onActivated: applet.selectGlobalView("sessions")
+                        anchors.fill: parent
+                        activeFocusOnTab: true
+                        background: null
+
+                        onActiveFocusChanged: {
+                            if (activeFocus) {
+                                providerTabsBar.ensureVisible(providerTab)
+                            }
+                        }
+
+                        Accessible.role: Accessible.PageTab
+                        Accessible.name: providerTab.modelData.title
+                        Accessible.description: applet.switcherDescription(providerTab.modelData)
+                        Accessible.selectable: true
+                        Accessible.selected: providerTab.selected
+                        Accessible.onPressAction: providerTab.activate()
+
+                        Keys.onPressed: function(event) {
+                            switch (event.key) {
+                            case Qt.Key_Space:
+                            case Qt.Key_Enter:
+                            case Qt.Key_Return:
+                            case Qt.Key_Select:
+                                providerTab.activate()
+                                event.accepted = true
+                                break
+                            default:
+                                event.accepted = providerTabsBar.navigateFromTab(providerFocus, event.key)
+                                break
+                            }
+                        }
                     }
 
+                    MouseArea {
+                        id: providerTabMouse
+
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onPressed: providerFocus.forceActiveFocus(Qt.MouseFocusReason)
+                        onClicked: providerTab.activate()
+                    }
+
+                    // Labelled tabs are capped in width, so a long
+                    // provider name elides; hover or keyboard focus reveals it.
+                    PlainToolTip {
+                        parent: providerTabMouse
+                        visible: (!applet.showPopupTabLabels || providerTabLabel.truncated)
+                            && (providerTabMouse.containsMouse || providerFocus.visualFocus)
+                        plainText: modelData.title
+                    }
+
+                    PlainPlasmaLabel {
+                        id: providerTabLabelSizing
+
+                        visible: false
+                        Accessible.ignored: true
+                        text: providerTab.modelData.title
+                        font.weight: Font.DemiBold
+                    }
+
+                    RowLayout {
+                        id: providerTabContent
+
+                        anchors.fill: parent
+                        anchors.margins: Kirigami.Units.smallSpacing
+                        spacing: Kirigami.Units.smallSpacing
+
+                        Item {
+                            id: providerTabLeadingSpacer
+
+                            visible: !applet.showPopupTabLabels
+                            Layout.fillWidth: !applet.showPopupTabLabels
+                        }
+
+                        Kirigami.Icon {
+                            source: applet.providerIconSource(modelData.provider)
+                            fallback: "view-statistics"
+                            isMask: applet.providerIconIsMask(modelData.provider)
+                            // Unselected tabs dim but keep their hue, so the
+                            // provider stays recognizable while selection
+                            // reads the same way as on the global tabs.
+                            color: providerTab.selected ? providerTab.accent : applet.withAlpha(providerTab.accent, 0.6)
+                            Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                            Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                        }
+
+                        Item {
+                            id: providerTabTrailingSpacer
+
+                            visible: !applet.showPopupTabLabels
+                            Layout.fillWidth: !applet.showPopupTabLabels
+                        }
+
+                        PlainPlasmaLabel {
+                            id: providerTabLabel
+
+                            visible: applet.showPopupTabLabels
+                            text: modelData.title
+                            font.weight: providerTab.selected ? Font.DemiBold : Font.Normal
+                            color: providerTab.foreground
+                            elide: Text.ElideRight
+                            Layout.fillWidth: true
+                        }
+                    }
+
+                    // The underline is a quota meter, never a selection
+                    // mark: the tab surface alone carries selection, so
+                    // a partly filled bar cannot read as a selected tab.
                     Rectangle {
-                        visible: applet.providers.length > 0
-                            && (applet.overviewAvailable || applet.spendAvailable || applet.sessionsAvailable)
-                        Layout.preferredHeight: providerTabsFlickable.height - Kirigami.Units.smallSpacing * 2
-                        Layout.preferredWidth: 1
-                        Layout.alignment: Qt.AlignVCenter
+                        visible: providerTab.meter >= 0
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.bottom: parent.bottom
+                        anchors.leftMargin: Kirigami.Units.smallSpacing
+                        anchors.rightMargin: Kirigami.Units.smallSpacing
+                        anchors.bottomMargin: 2
+                        height: 2
+                        radius: height / 2
                         color: applet.withAlpha(Kirigami.Theme.textColor, 0.12)
-                    }
+                        clip: true
 
-                    Repeater {
-                        id: providerTabRepeater
+                        Rectangle {
+                            width: providerTab.meter <= 0
+                                ? 0
+                                : Math.max(parent.height, parent.width * Math.max(0, Math.min(100, providerTab.meter)) / 100)
+                            height: parent.height
+                            radius: parent.radius
+                            color: providerTab.accent
 
-                        // Snapshot values change on refresh; the ordered IDs
-                        // keep the focused delegate alive while its data updates.
-                        model: fullRoot.applet.presentedProviders.map(function(item) { return item.provider })
-
-                        delegate: Rectangle {
-                            id: providerTab
-
-                            required property int index
-                            required property var modelData
-                            modelData: fullRoot.applet.presentedProviders[index]
-                                || ({provider: "", title: "", error: ""})
-                            readonly property bool selected: index === applet.selectedProviderIndex
-                            readonly property bool keyboardFocusVisible: providerFocus.visualFocus
-                            readonly property real meter: applet.switcherPercent(modelData)
-                            readonly property color accent: applet.providerReadableColor(
-                                modelData.provider,
-                                Kirigami.Theme.backgroundColor)
-                            readonly property color foreground: selected
-                                ? Kirigami.Theme.textColor
-                                : applet.withAlpha(Kirigami.Theme.textColor, 0.72)
-
-                            function activate() {
-                                fullRoot.closeAiInsights(false, false)
-                                applet.selectedProviderID = modelData.provider
-                                applet.selectionInitialized = true
-                            }
-
-                            // An auto-selected provider can sit past the right
-                            // edge; keep the active tab reachable and visible.
-                            function claimSelectedTab() {
-                                providerTabsFlickable.claimSelectedTab(providerTab, selected)
-                            }
-
-                            Layout.preferredWidth: applet.showPopupTabLabels
-                                ? Math.min(
-                                    Kirigami.Units.gridUnit * 7,
-                                    Math.max(Kirigami.Units.gridUnit * 4.2,
-                                        Math.ceil(providerTabLabelSizing.implicitWidth) + Kirigami.Units.gridUnit * 2.2))
-                                : providerTabsFlickable.height
-                            Layout.preferredHeight: providerTabsFlickable.height
-                            radius: applet.roundedSurfaceRadius
-                            color: providerTabMouse.pressed
-                                ? applet.withAlpha(Kirigami.Theme.focusColor, 0.1)
-                                : (selected
-                                ? applet.withAlpha(Kirigami.Theme.textColor, 0.1)
-                                : (keyboardFocusVisible
-                                ? applet.withAlpha(Kirigami.Theme.focusColor, 0.06)
-                                : (providerTabMouse.containsMouse ? applet.withAlpha(Kirigami.Theme.textColor, 0.05) : "transparent")
-                                ))
-                            border.width: keyboardFocusVisible ? 1 : 0
-                            border.color: Kirigami.Theme.focusColor
-                            opacity: modelData.error.length > 0 ? 0.62 : 1
-                            scale: providerTabMouse.pressed ? 0.985 : 1
-                            onSelectedChanged: providerTab.claimSelectedTab()
-                            Component.onCompleted: providerTab.claimSelectedTab()
-
-                            Behavior on color {
-                                ColorAnimation {
-                                    duration: Kirigami.Units.shortDuration
-                                }
-                            }
-
-                            Behavior on scale {
+                            Behavior on width {
                                 NumberAnimation {
-                                    duration: Kirigami.Units.shortDuration
+                                    duration: Kirigami.Units.longDuration
                                     easing.type: Easing.OutCubic
                                 }
                             }
-
-                            Controls.Control {
-                                id: providerFocus
-
-                                anchors.fill: parent
-                                activeFocusOnTab: true
-                                background: null
-
-                                onActiveFocusChanged: {
-                                    if (activeFocus) {
-                                        providerTabsFlickable.ensureVisible(providerTab)
-                                    }
-                                }
-
-                                Accessible.role: Accessible.PageTab
-                                Accessible.name: providerTab.modelData.title
-                                Accessible.description: applet.switcherDescription(providerTab.modelData)
-                                Accessible.selectable: true
-                                Accessible.selected: providerTab.selected
-                                Accessible.onPressAction: providerTab.activate()
-
-                                Keys.onPressed: function(event) {
-                                    switch (event.key) {
-                                    case Qt.Key_Space:
-                                    case Qt.Key_Enter:
-                                    case Qt.Key_Return:
-                                    case Qt.Key_Select:
-                                        providerTab.activate()
-                                        event.accepted = true
-                                        break
-                                    default:
-                                        event.accepted = providerTabsFlickable.navigateFromTab(providerFocus, event.key)
-                                        break
-                                    }
-                                }
-                            }
-
-                            MouseArea {
-                                id: providerTabMouse
-
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onPressed: providerFocus.forceActiveFocus(Qt.MouseFocusReason)
-                                onClicked: providerTab.activate()
-                            }
-
-                            // Labelled tabs are capped in width, so a long
-                            // provider name elides; hover or keyboard focus reveals it.
-                            PlainToolTip {
-                                parent: providerTabMouse
-                                visible: (!applet.showPopupTabLabels || providerTabLabel.truncated)
-                                    && (providerTabMouse.containsMouse || providerFocus.visualFocus)
-                                plainText: modelData.title
-                            }
-
-                            PlainPlasmaLabel {
-                                id: providerTabLabelSizing
-
-                                visible: false
-                                Accessible.ignored: true
-                                text: providerTab.modelData.title
-                                font.weight: Font.DemiBold
-                            }
-
-                            RowLayout {
-                                id: providerTabContent
-
-                                anchors.fill: parent
-                                anchors.margins: Kirigami.Units.smallSpacing
-                                spacing: Kirigami.Units.smallSpacing
-
-                                Item {
-                                    id: providerTabLeadingSpacer
-
-                                    visible: !applet.showPopupTabLabels
-                                    Layout.fillWidth: !applet.showPopupTabLabels
-                                }
-
-                                Kirigami.Icon {
-                                    source: applet.providerIconSource(modelData.provider)
-                                    fallback: "view-statistics"
-                                    isMask: applet.providerIconIsMask(modelData.provider)
-                                    // Unselected tabs dim but keep their hue, so the
-                                    // provider stays recognizable while selection
-                                    // reads the same way as on the global tabs.
-                                    color: providerTab.selected ? providerTab.accent : applet.withAlpha(providerTab.accent, 0.6)
-                                    Layout.preferredWidth: Kirigami.Units.iconSizes.small
-                                    Layout.preferredHeight: Kirigami.Units.iconSizes.small
-                                }
-
-                                Item {
-                                    id: providerTabTrailingSpacer
-
-                                    visible: !applet.showPopupTabLabels
-                                    Layout.fillWidth: !applet.showPopupTabLabels
-                                }
-
-                                PlainPlasmaLabel {
-                                    id: providerTabLabel
-
-                                    visible: applet.showPopupTabLabels
-                                    text: modelData.title
-                                    font.weight: providerTab.selected ? Font.DemiBold : Font.Normal
-                                    color: providerTab.foreground
-                                    elide: Text.ElideRight
-                                    Layout.fillWidth: true
-                                }
-                            }
-
-                            // The underline is a quota meter, never a selection
-                            // mark: the tab surface alone carries selection, so
-                            // a partly filled bar cannot read as a selected tab.
-                            Rectangle {
-                                visible: providerTab.meter >= 0
-                                anchors.left: parent.left
-                                anchors.right: parent.right
-                                anchors.bottom: parent.bottom
-                                anchors.leftMargin: Kirigami.Units.smallSpacing
-                                anchors.rightMargin: Kirigami.Units.smallSpacing
-                                anchors.bottomMargin: 2
-                                height: 2
-                                radius: height / 2
-                                color: applet.withAlpha(Kirigami.Theme.textColor, 0.12)
-                                clip: true
-
-                                Rectangle {
-                                    width: providerTab.meter <= 0
-                                        ? 0
-                                        : Math.max(parent.height, parent.width * Math.max(0, Math.min(100, providerTab.meter)) / 100)
-                                    height: parent.height
-                                    radius: parent.radius
-                                    color: providerTab.accent
-
-                                    Behavior on width {
-                                        NumberAnimation {
-                                            duration: Kirigami.Units.longDuration
-                                            easing.type: Easing.OutCubic
-                                        }
-                                    }
-                                }
-                            }
                         }
                     }
-                }
-            }
-
-            PlasmaComponents.ToolButton {
-                id: previousTabsButton
-                objectName: "previousTabsButton"
-
-                anchors.left: parent.left
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.leftMargin: Kirigami.Units.smallSpacing / 2
-                width: height
-                height: parent.height - Kirigami.Units.smallSpacing
-                visible: providerTabsBar.tabsOverflow
-                enabled: providerTabsFlickable.contentX > 0
-                icon.name: "go-previous-symbolic"
-                text: i18n("Show previous tabs")
-                display: PlasmaComponents.AbstractButton.IconOnly
-                Accessible.name: text
-                onClicked: providerTabsFlickable.scrollBy(-providerTabsFlickable.tabPageStep, visualFocus)
-
-                PlainToolTip {
-                    plainText: previousTabsButton.text
-                    visible: previousTabsButton.hovered || previousTabsButton.visualFocus
-                    delay: Kirigami.Units.toolTipDelay
-                }
-            }
-
-            PlasmaComponents.ToolButton {
-                id: nextTabsButton
-                objectName: "nextTabsButton"
-
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.rightMargin: Kirigami.Units.smallSpacing / 2
-                width: height
-                height: parent.height - Kirigami.Units.smallSpacing
-                visible: providerTabsBar.tabsOverflow
-                enabled: providerTabsFlickable.contentX < providerTabsFlickable.contentWidth - providerTabsFlickable.width - 1
-                icon.name: "go-next-symbolic"
-                text: i18n("Show more tabs")
-                display: PlasmaComponents.AbstractButton.IconOnly
-                Accessible.name: text
-                onClicked: providerTabsFlickable.scrollBy(providerTabsFlickable.tabPageStep, visualFocus)
-
-                PlainToolTip {
-                    plainText: nextTabsButton.text
-                    visible: nextTabsButton.hovered || nextTabsButton.visualFocus
-                    delay: Kirigami.Units.toolTipDelay
                 }
             }
         }

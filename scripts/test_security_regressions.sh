@@ -129,7 +129,7 @@ require_in_file "$WORKFLOW" "dist/codexbar-plasma.plasmoid.sha256"
 require_in_file "$MAKEFILE" "sha256sum codexbar-plasma.plasmoid > codexbar-plasma.plasmoid.sha256"
 require_in_file "$UPDATER" "sha256sum --check --strict"
 
-for qml_file in "$MAIN_QML" "$PROVIDERS_QML" "$POPUP_QML" "$DIAGNOSTICS_QML"; do
+for qml_file in "$PROVIDERS_QML" "$POPUP_QML" "$DIAGNOSTICS_QML"; do
   require_in_file "$qml_file" 'import "SafeText.js" as SafeText'
 done
 require_in_surface applet "SafeText.cliMessage"

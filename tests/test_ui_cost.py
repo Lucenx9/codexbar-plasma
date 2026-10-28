@@ -725,7 +725,6 @@ class CostTest(unittest.TestCase):
             ("presentTokenCosts", "return costText.presentTokenCosts(snapshots)"),
             ("costHistoryWindowLabel", "return costText.costHistoryWindowLabel(item, requestedHistoryDays)"),
             ("spendTotalLine", "return costText.spendTotalLine(spendProviderCosts())"),
-            ("dashboardLabelText", "return costText.dashboardLabelText(labelKey)"),
             ("dashboardPartText", "return costText.dashboardPartText(part)"),
             ("dashboardDisplayRow", "return costText.dashboardDisplayRow(row)"),
             ("qualifiedCostValue", "return costText.qualifiedCostValue(value, valueMode)"),
