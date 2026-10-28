@@ -20,6 +20,7 @@ main_text = applet.text
 popup_surface = Surface("popup", root)
 config_text = config_xml.read_text(encoding="utf-8")
 global_tab_text = global_tab_qml.read_text(encoding="utf-8")
+strip_text = (root / "contents/ui/components/PopupTabStrip.qml").read_text(encoding="utf-8")
 
 
 class PopupTabsTest(unittest.TestCase):
@@ -92,10 +93,6 @@ class PopupTabsTest(unittest.TestCase):
         provider_tabs_body = applet.id_block("providerTabsBar")
         for tabs_fragment in (
             "Layout.preferredHeight: Kirigami.Units.gridUnit * 2.35",
-            "id: providerTabsSurface",
-            "radius: applet.roundedSurfaceRadius",
-            "border.color: applet.withAlpha(Kirigami.Theme.textColor, 0.06)",
-            "anchors.margins: Kirigami.Units.smallSpacing / 2",
             "applet.withAlpha(Kirigami.Theme.textColor, 0.1)",
             "anchors.bottomMargin: 2",
             "providerReadableColor(",
@@ -111,76 +108,19 @@ class PopupTabsTest(unittest.TestCase):
                     f"missing {tabs_fragment!r}"
                 )
 
-    def test_tab_strip_scrolling(self):
-        provider_tabs_flickable_body = id_block(main_text, "providerTabsFlickable")
-        for scroll_fragment in (
-            "WheelHandler {",
-            "acceptedDevices: PointerDevice.Mouse",
-            "function ensureVisible(item)",
-            "function focusableTabs(item)",
-            "function navigateFromTab(item, key)",
-            "TabStripGeometry.keyboardTargetIndex(action, tabs.indexOf(item), tabs.length)",
-            "case Qt.Key_Home:",
-            "case Qt.Key_End:",
-            "function scrollBy(delta, immediate)",
-        ):
-            if not code_contains(provider_tabs_flickable_body, scroll_fragment):
-                raise AssertionError(
-                    "the tab strip must stay reachable without touch gestures; "
-                    f"missing {scroll_fragment!r}"
-                )
-        # The scroll arithmetic moved into TabStripGeometry.js, where the edge cases are
-        # tested. Assert the delegation, and that neither decision grew a second copy
-        # back inside the strip.
-        for tab_geometry_fragment in (
-            "TabStripGeometry.boundedPosition(position, contentWidth, width)",
-            "TabStripGeometry.revealPosition(",
-            "if (target !== null) {",
-        ):
-            if not code_contains(provider_tabs_flickable_body, tab_geometry_fragment):
-                raise AssertionError(
-                    "the tab strip must take its scroll positions from TabStripGeometry.js; "
-                    f"missing {tab_geometry_fragment!r}"
-                )
-        for inlined_tab_geometry in (
-            "Math.min(contentWidth - width, position)",
-            "right + margin > contentX + width",
-        ):
-            if inlined_tab_geometry in provider_tabs_flickable_body:
-                raise AssertionError(
-                    "tab strip scroll arithmetic must not be re-inlined beside the module; "
-                    f"found {inlined_tab_geometry!r}"
-                )
-
-        for button_id, direction in (
-            ("previousTabsButton", "-providerTabsFlickable.tabPageStep"),
-            ("nextTabsButton", "providerTabsFlickable.tabPageStep"),
-        ):
-            button_body = applet.id_block(button_id)
-            for fragment in (
-                "visible: providerTabsBar.tabsOverflow",
-                "Accessible.name: text",
-                "display: PlasmaComponents.AbstractButton.IconOnly",
-                f"onClicked: providerTabsFlickable.scrollBy({direction}, visualFocus)",
-                "delay: Kirigami.Units.toolTipDelay",
-            ):
-                if not code_contains(button_body, fragment):
-                    raise AssertionError(f"{button_id} must remain a native accessible scroll control: {fragment}")
-        # Native controls stay outside the viewport; their space is reserved at both
-        # edges, even when the corresponding direction is disabled at an endpoint.
-        for fragment in (
-            "? previousTabsButton.width + Kirigami.Units.smallSpacing",
-            "? nextTabsButton.width + Kirigami.Units.smallSpacing",
-            "scrollTo(target, true)",
-            "onMovementStarted: providerTabsScroll.stop()",
-        ):
-            if not code_contains(provider_tabs_flickable_body, fragment):
-                raise AssertionError(f"tab navigation must preserve visible content and direct focus: {fragment}")
+    def test_tab_strip_owns_navigation_without_applet_effects(self):
+        popup_text = (root / "contents/ui/components/FullRepresentation.qml").read_text()
+        self.assertTrue(code_contains(popup_text, "Components.PopupTabStrip {"))
+        self.assertTrue(code_contains(popup_text, "surfaceRadius: applet.roundedSurfaceRadius"))
+        for forbidden in ("property var applet", "Plasmoid.configuration", "DataSource",
+                          "Qt.openUrlExternally", "TabStripGeometry."):
+            source = popup_text if forbidden == "TabStripGeometry." else strip_text
+            self.assertFalse(code_contains(source, forbidden), forbidden)
 
     def test_tab_keyboard_navigation(self):
         # Arrow, Home and End keys reach the strip through one handler, so every tab
         # kind wraps and jumps the same way.
-        if not code_contains(main_text, "providerTabsFlickable.navigateFromTab(providerFocus, event.key)"):
+        if not code_contains(main_text, "providerTabsBar.navigateFromTab(providerFocus, event.key)"):
             raise AssertionError("the provider tabs must navigate with arrow, Home and End keys")
         # The Overview, Usage & Spend and Sessions tabs share GlobalTab, so its strip
         # wiring below covers navigation, reveal and selection for all three.
@@ -191,7 +131,7 @@ class PopupTabsTest(unittest.TestCase):
             raise AssertionError("the Overview tab must reuse GlobalTab instead of an inline copy")
         overview_tab_body = id_block(main_text, "overviewTab")
         for overview_tab_fragment in (
-            "tabStrip: providerTabsFlickable",
+            "tabStrip: providerTabsBar",
             "selected: applet.overviewSelected",
             'applet.selectGlobalView("overview")',
             # The Overview tab also leaves an open AI Insights analysis page.
@@ -214,14 +154,11 @@ class PopupTabsTest(unittest.TestCase):
                     "the provider tab description must cover quota, stale usage, and errors; "
                     f"missing {switcher_description_fragment!r}"
                 )
-        if not code_contains(main_text, "providerTabsFlickable.ensureVisible(providerTab)"):
+        if not code_contains(main_text, "providerTabsBar.ensureVisible(providerTab)"):
             raise AssertionError("focusing a provider tab must pull it back into view")
-        provider_tabs_flickable_body = id_block(main_text, "providerTabsFlickable")
-        if not code_contains(provider_tabs_flickable_body, "function claimSelectedTab(item, isSelected)"):
-            raise AssertionError("the tab strip must track which tab is selected in one place")
         # Every tab kind must report selection, or the strip keeps revealing a stale tab
         # after the user switches between a provider and a global view.
-        if main_text.count("providerTabsFlickable.claimSelectedTab(") != 1:
+        if main_text.count("providerTabsBar.claimSelectedTab(") != 1:
             raise AssertionError("the provider tabs must report selection; global tabs report through GlobalTab")
         if not code_contains(main_text, "onSelectedChanged: providerTab.claimSelectedTab()"):
             raise AssertionError("selection tracking is missing 'onSelectedChanged: providerTab.claimSelectedTab()'")

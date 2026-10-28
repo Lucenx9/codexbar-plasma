@@ -14,8 +14,8 @@ from qml_surfaces import Surface
 
 FUNCTIONS = (
     "normalizeProvider", "presentProviderSnapshot", "presentUsageWindow", "planText", "capitalize",
-    "isCliRecord", "hasOwnKey", "copyObject", "accountLabel", "providerMapKey",
-    "providerKey", "boundedCliMessage", "normalizedProviderID", "providerErrorPayload",
+    "copyObject", "accountLabel", "providerMapKey",
+    "providerKey", "providerErrorPayload",
     "replaceProviderSnapshot",
 )
 

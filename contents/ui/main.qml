@@ -31,7 +31,6 @@ import "UsageCache.js" as UsageCache
 import "UsageState.js" as UsageState
 import "ProviderViewModel.js" as ProviderViewModel
 import "QuotaThresholds.js" as QuotaThresholds
-import "SafeText.js" as SafeText
 import "StatusComponents.js" as StatusComponents
 import "ThemeContrast.js" as ThemeContrast
 import "UpdateLogic.js" as UpdateLogic
@@ -297,26 +296,6 @@ PlasmoidItem {
             return 0
         }
         return Math.max(0, Math.min(2147480000, Math.floor(revision)))
-    }
-
-    function boundedCliMessage(value) {
-        return SafeText.cliMessage(SafeText.stripLoaderDiagnostics(value), SafeText.maximumCliMessageLength)
-    }
-
-    function isCliRecord(value) {
-        return Normalizer.isCliRecord(value)
-    }
-
-    function normalizedProviderID(value) {
-        return Normalizer.normalizedProviderID(value)
-    }
-
-    function hasOwnKey(item, key) {
-        return Guards.hasOwnKey(item, key)
-    }
-
-    function isUnsafeObjectKey(key) {
-        return Guards.isUnsafeObjectKey(key)
     }
 
     function providerMapKey(providerID) {
@@ -635,10 +614,6 @@ PlasmoidItem {
     // rather than a spend reason.
     function spendHistoryStillBuilding() {
         return CostPresentation.historyStillBuilding(spendProviderCosts())
-    }
-
-    function dashboardLabelText(labelKey) {
-        return costText.dashboardLabelText(labelKey)
     }
 
     function dashboardPartText(part) {
@@ -1405,10 +1380,6 @@ PlasmoidItem {
         return ProviderIdentity.resolveProviderKey(value)
     }
 
-    function providerCliArgument(value) {
-        return ProviderIdentity.providerCliArgument(value)
-    }
-
     function providerDisplayTitle(value) {
         return providerTitle(value, "", privacyMode)
     }
@@ -1684,13 +1655,6 @@ PlasmoidItem {
         return text.charAt(0).toUpperCase() + text.slice(1)
     }
 
-    // Four- and five-figure totals are unreadable as a bare digit run, and
-    // Number.toLocaleString with 'f' localizes the decimal mark without adding
-    // group separators, so the grouping is applied here.
-    function groupedDecimalString(value, digits) {
-        return CostPresentation.groupedDecimalString(costNumberFormat, value, digits)
-    }
-
     function amountString(value, currency) {
         return CostPresentation.amountString(costNumberFormat, value, currency)
     }
@@ -1707,10 +1671,6 @@ PlasmoidItem {
 
     function costLine(label, cost, tokens, currency, valueMode) {
         return costText.costLine(label, cost, tokens, currency, valueMode)
-    }
-
-    function tokenCountString(tokens) {
-        return CostPresentation.tokenCountString(tokens, costNumberFormat)
     }
 
     function usageCountText(value, unit) {

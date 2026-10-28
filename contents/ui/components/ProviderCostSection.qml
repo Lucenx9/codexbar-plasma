@@ -36,7 +36,9 @@ ColumnLayout {
 
     Components.CostLabels {
         id: costLabels
-        applet: tokenCostSection.applet
+        numberFormat: applet.costNumberFormat
+        showsTokens: tokenCostSection.costHistoryShowsTokens
+        tokenCountText: function(tokens) { return applet.usageCountText(tokens, "tokens") }
     }
 
     function amountText(amounts, mode) {

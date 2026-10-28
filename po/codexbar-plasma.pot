@@ -548,14 +548,6 @@ msgid "Sessions"
 msgstr ""
 
 #: contents/ui/components/FullRepresentation.qml
-msgid "Show previous tabs"
-msgstr ""
-
-#: contents/ui/components/FullRepresentation.qml
-msgid "Show more tabs"
-msgstr ""
-
-#: contents/ui/components/FullRepresentation.qml
 msgid "Loading usage…"
 msgstr ""
 
@@ -921,6 +913,14 @@ msgstr ""
 #: contents/ui/components/PlainNote.qml
 #: contents/ui/components/ShareUsageWindow.qml
 msgid "Close"
+msgstr ""
+
+#: contents/ui/components/PopupTabStrip.qml
+msgid "Show previous tabs"
+msgstr ""
+
+#: contents/ui/components/PopupTabStrip.qml
+msgid "Show more tabs"
 msgstr ""
 
 #: contents/ui/components/ProjectCostSection.qml
