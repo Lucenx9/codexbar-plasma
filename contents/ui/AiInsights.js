@@ -399,6 +399,16 @@ function timeoutExit(exitCode, exitStatus) {
     return exitCode === 124 || exitCode === 137 || (exitCode === 9 && exitStatus === 1)
 }
 
+// Reads the executable engine's process result. Only a number or an integer
+// string counts; null, booleans, blank strings, arrays and missing fields stay
+// NaN, so they can never coerce to a successful exit.
+function processResult(data) {
+    return {
+        exitCode: data ? Guards.exitCode(data["exit code"]) : Number.NaN,
+        exitStatus: data ? Guards.exitCode(data["exit status"]) : Number.NaN
+    }
+}
+
 function successfulExit(exitCode, exitStatus) {
     return exitCode === 0 && (exitStatus === undefined || exitStatus === 0)
 }

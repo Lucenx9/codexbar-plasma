@@ -181,8 +181,9 @@ KCM.SimpleKCM {
         var action = activeAction
         retire()
         var stdout = data ? data["stdout"] : ""
-        var exitCode = data && data["exit code"] !== undefined ? Number(data["exit code"]) : NaN
-        var exitStatus = data && data["exit status"] !== undefined ? Number(data["exit status"]) : NaN
+        var processResult = AiInsights.processResult(data)
+        var exitCode = processResult.exitCode
+        var exitStatus = processResult.exitStatus
         if (action === "key-status") {
             keyStatus = AiInsights.statusReply(stdout, ["present", "absent", "unavailable"], exitCode, exitStatus)
         } else if (action === "set-key") {

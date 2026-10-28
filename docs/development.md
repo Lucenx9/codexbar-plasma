@@ -297,7 +297,10 @@ synchronized.
   prompts for them with `kdialog`, and performs the HTTPS or local Ollama
   request. `configAiInsights.qml` owns the key-status, key, and model-discovery
   processes; `components/AiInsightsMessages.qml` localizes helper reasons for
-  both surfaces. See the [AI Insights reference](ai-insights.md) for the
+  both surfaces. Both process owners read exit results through
+  `AiInsights.processResult`, which uses `Guards.exitCode`: null, booleans,
+  blank strings, arrays, and missing fields never count as a successful exit.
+  See the [AI Insights reference](ai-insights.md) for the
   boundary decision and contracts; keep it current with any change.
   `components/FullRepresentation.qml` owns navigation from the compact
   `AiInsightsCard.qml` to `AiInsightsView.qml` and restores the origin's scroll

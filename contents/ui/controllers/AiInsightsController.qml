@@ -200,8 +200,9 @@ Item {
         function accept(sourceName, data) {
             processSource.disconnectSource(sourceName)
             if (sourceName !== activeSource) {
+                var abandonedResult = AiInsights.processResult(data)
                 var abandoned = AiInsights.preparedInput(data ? data["stdout"] : "",
-                    data ? Number(data["exit code"]) : NaN, data ? Number(data["exit status"]) : NaN)
+                    abandonedResult.exitCode, abandonedResult.exitStatus)
                 if (abandoned) discardInput(abandoned.request)
                 return
             }
@@ -215,9 +216,9 @@ Item {
             if (context !== controller.contextKey || !controller.insightsEnabled) {
                 return
             }
+            var processResult = AiInsights.processResult(data)
             var reply = AiInsights.generationReply(data ? data["stdout"] : "",
-                data && data["exit code"] !== undefined ? Number(data["exit code"]) : NaN,
-                data && data["exit status"] !== undefined ? Number(data["exit status"]) : NaN)
+                processResult.exitCode, processResult.exitStatus)
             if (reply.outcome !== "ok") {
                 fail(reply.reason, reply.retryAfterSeconds)
                 return
@@ -239,8 +240,9 @@ Item {
         }
 
         function acceptPreparedInput(data) {
+            var prepared = AiInsights.processResult(data)
             var input = AiInsights.preparedInput(data ? data["stdout"] : "",
-                data ? Number(data["exit code"]) : NaN, data ? Number(data["exit status"]) : NaN)
+                prepared.exitCode, prepared.exitStatus)
             if (!input) {
                 retire()
                 fail("invalid_input", 0)

@@ -336,6 +336,39 @@ TestCase {
         compare(AiInsights.statusReply(JSON.stringify({status: "sk-secret"}), ["present", "absent"], 0), "unavailable")
     }
 
+    function test_processResultRejectsMalformedExitFields_data() {
+        return [{tag: "numeric-zero", code: 0, success: true},
+                {tag: "string-zero", code: "0", success: true},
+                {tag: "padded-zero", code: " 0 ", success: true},
+                {tag: "nonzero", code: 1, success: false},
+                {tag: "missing", code: undefined, success: false},
+                {tag: "null", code: null, success: false},
+                {tag: "false", code: false, success: false},
+                {tag: "empty", code: "", success: false},
+                {tag: "blank", code: " ", success: false},
+                {tag: "array", code: [], success: false},
+                {tag: "array-zero", code: [0], success: false},
+                {tag: "decimal-string", code: "0.0", success: false}]
+    }
+
+    function test_processResultRejectsMalformedExitFields(data) {
+        var ok = JSON.stringify({status: "ok", summary: "Unconfirmed insight", highlights: []})
+        // A malformed exit code with a normal exit status must not confirm a reply.
+        var byCode = AiInsights.processResult({"stdout": ok, "exit code": data.code, "exit status": 0})
+        compare(AiInsights.generationReply(ok, byCode.exitCode, byCode.exitStatus).outcome, data.success ? "ok" : "error")
+        compare(AiInsights.statusReply(JSON.stringify({status: "saved"}), ["saved"], byCode.exitCode, byCode.exitStatus),
+            data.success ? "saved" : "unavailable")
+        // The same values in the exit status field must not read as a normal exit.
+        var byStatus = AiInsights.processResult({"stdout": ok, "exit code": 0, "exit status": data.code})
+        compare(AiInsights.generationReply(ok, byStatus.exitCode, byStatus.exitStatus).outcome, data.success ? "ok" : "error")
+    }
+
+    function test_processResultWithoutDataIsUnknown() {
+        var result = AiInsights.processResult(undefined)
+        verify(isNaN(result.exitCode))
+        verify(isNaN(result.exitStatus))
+    }
+
     function test_failedProcessCannotConfirmModelsOrWalletState_data() {
         return [
             {tag: "failed", exitCode: 1, exitStatus: 0},
