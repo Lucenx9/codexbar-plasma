@@ -104,6 +104,8 @@ TestCase {
     function test_failedRefreshPreservesTheSnapshotAndTimestamp_data() {
         return [{tag: "stderr", script: "failure"}, {tag: "invalid-json", script: "malformed"},
                 {tag: "unsupported", script: "unsupported"}, {tag: "empty-stdout", script: "missing"},
+                {tag: "unreadable-array", script: "unreadable-array"},
+                {tag: "unreadable-envelope", script: "unreadable-envelope"},
                 {tag: "failed-empty-json", script: "failed-empty-json"},
                 {tag: "failed-valid-json", script: "failed-valid-json"}];
     }
@@ -114,6 +116,7 @@ TestCase {
         var updatedAt = subject.lastUpdatedAtMs;
         verify(subject.refresh());
         tryCompare(subject, "loading", false);
+        compare(subject.sessions.length, 1);
         verify(subject.errorText.length > 0);
         compare(subject.sessions[0].projectName, data.script + " 1");
         compare(subject.lastUpdatedAtMs, updatedAt);
@@ -261,6 +264,10 @@ if run > 1:
     if name == "unsupported":
         print("{}")
         sys.exit(0)
+    if name in ("unreadable-array", "unreadable-envelope"):
+        records = [None] if name == "unreadable-array" else {"sessions": [None]}
+        print(json.dumps(records))
+        sys.exit(0)
     if name == "missing":
         sys.exit(0)
     if name == "empty":
@@ -276,6 +283,7 @@ class SessionsControllerTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="codexbar sessions 'test-") as temporary:
             directory = Path(temporary)
             for name in ("normal", "slow", "late", "retry", "slow-failure", "failure",
+                         "unreadable-array", "unreadable-envelope",
                          "malformed", "unsupported", "missing", "empty", "failed-empty-json", "failed-valid-json"):
                 script = directory / name
                 script.write_text(CLI)

@@ -256,7 +256,11 @@ work and upstream contract requirements.
   same cadence from the failure or timeout, so reopening the popup or
   revisiting the tab does not repeat a failed scan immediately.
   A scan that exits with an error preserves the previous list and timestamp,
-  even if it writes valid JSON. Only a successful empty scan clears the list.
+  even if it writes valid JSON. The widget inspects only the first 128 records.
+  A nonempty list with no readable sessions within that limit preserves the
+  previous scan and shows an error. Within the inspected records, malformed
+  entries do not discard readable sessions. Only a successful empty scan clears
+  the list.
   The Sessions refresh button can retry immediately; changing the CLI command
   clears the retry cooldown. Each card shows the project, a state marked with
   the theme's positive color while active, the provider (or `OMP` for an OMP

@@ -73,6 +73,34 @@ TestCase {
         verify(result.message.length <= SafeText.maximumCliMessageLength);
     }
 
+    function test_unreadableRecordsAreNotAnEmptyScan_data() {
+        return [
+            {tag: "null-record", payload: [null]},
+            {tag: "empty-record", payload: [{}]},
+            {tag: "envelope", payload: {sessions: [null, {}, false, "session"]}},
+            {tag: "unusable-identity", payload: [{provider: {}, projectName: [], sessionName: null}]}
+        ];
+    }
+
+    function test_unreadableRecordsAreNotAnEmptyScan(data) {
+        var result = SessionResponse.response(JSON.stringify(data.payload), "", 0);
+        compare(result.outcome, "unsupported");
+        verify(result.sessions === undefined);
+    }
+
+    function test_unreadableRecordDoesNotDiscardHealthySession_data() {
+        return [{tag: "array", wrapped: false}, {tag: "envelope", wrapped: true}];
+    }
+
+    function test_unreadableRecordDoesNotDiscardHealthySession(data) {
+        var items = [null, {}, {provider: "codex", projectName: "Synthetic project"}, false];
+        var payload = data.wrapped ? {sessions: items} : items;
+        var result = SessionResponse.response(JSON.stringify(payload), "", 0);
+        compare(result.outcome, "success");
+        compare(result.sessions.length, 1);
+        compare(result.sessions[0].projectName, "Synthetic project");
+    }
+
     function test_diagnosticsAreBoundedAndRedacted() {
         var result = SessionResponse.response("", "Authorization: Bearer synthetic-session-secret\n" + "x".repeat(800), 0);
         compare(result.outcome, "empty");
