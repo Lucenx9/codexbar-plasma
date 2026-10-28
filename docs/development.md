@@ -376,8 +376,9 @@ synchronized.
   bounds and classifies CLI output through the existing session normalizer.
   The shared response decoder admits session stdout only after a zero exit code;
   failed scans retain the previous successful snapshot and timestamp.
-  A nonempty session list with no usable records is a failed scan, not a
-  confirmed empty result. Mixed lists retain their readable sessions.
+  Normalization inspects only the first 128 records. A nonempty session list
+  with no usable records within that bound is a failed scan, not a confirmed
+  empty result. Mixed lists retain their readable sessions within that bound.
 - `contents/ui/controllers/ProviderConfigWatcher.qml` owns the read-only config
   checksum command, minute polling, connection changes, and retired replies.
   It starts after the applet initializes and emits accepted checksum changes;
