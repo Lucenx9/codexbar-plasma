@@ -33,6 +33,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Reject incomplete or malformed AI Insights helper exit results instead of
+  accepting an unconfirmed insight, API-key status, or model list.
+
 - Align top-level service component labels in the status components list when
   groups and leaf components are mixed.
 

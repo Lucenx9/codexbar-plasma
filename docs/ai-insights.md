@@ -310,7 +310,9 @@ table, honoring the response's `Retry-After`, and a choice that finished with
 - Successful generation, model-list and wallet-operation replies require a
   zero process exit code and a normal exit. A failed or crashed helper cannot
   replace the cached insight, populate the model list, or confirm a wallet
-  operation even if its stdout contains success JSON. Structured error reasons
+  operation even if its stdout contains success JSON. Only a numeric or
+  integer-string zero counts as zero; a missing, null, boolean, blank, or array
+  exit field is an unknown result. Structured error reasons
   and the existing timeout classification remain available.
 - Failures never touch usage data. Every failure waits a full interval (24
   hours in manual mode) before automatic generation; `rate_limited` also waits
