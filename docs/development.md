@@ -1424,6 +1424,9 @@ The lightweight `scope` job compares the tested PR merge tree with its base
 parent, or the full before/after range for a push to `main`. Only changes limited
 to the editorial Markdown allowlist in `scripts/ci_scope.py` omit both Plasma
 jobs (`check-runtime` and `smoke-runtime`). Fast checks and packaging still run.
+Every `make check` target whose script reads an allowlisted Markdown file, such
+as the README setup and registry-size contracts, also runs in the fast `lint`
+job; `tests/test_ci_scope.py` fails when one is missing there.
 Images, translations, code, tests, packaging, CI files, unknown paths, missing
 history, and empty diffs keep full coverage. Tags, scheduled runs, and manual
 runs always use the complete toolchain and graphics.
