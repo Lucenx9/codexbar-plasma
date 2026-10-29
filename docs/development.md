@@ -174,6 +174,17 @@ synchronized.
   precedence, totals, qualifiers, count plurals, dashboard bounds and regional
   format changes. Catalog and integration fixtures exercise the production
   component through its root adapters, including all six shipped languages.
+- `contents/ui/NotificationObservations.js` projects normalized providers into
+  planner observations with `build(providers, selectedAccounts, refreshPending,
+  thresholds)` and returns a copied pending map with
+  `freshPending(items, selectedAccounts, refreshPending)`. It owns account scopes,
+  alias normalization, freshness and quota/pace eligibility; it does not mutate
+  snapshots, localize or dispatch. `main.qml` supplies configured thresholds and
+  commits the pending map before publishing fresh providers. Direct QtTests in
+  `tests/tst_notification_observations.qml` exercise this interface with the real
+  planner, including account switches, stale quotas and fresh status. Keep
+  composition-root effect ordering and routing in `test_notification_wiring.py`;
+  observation tests must not reconstruct root functions from source.
 - `contents/ui/components/ProviderNotificationText.qml` builds localized status,
   quota, predictive pace and reset messages from a planner intent, normalized
   provider/row and preformatted reset/ETA labels. It returns title/body/urgency

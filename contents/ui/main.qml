@@ -9,6 +9,7 @@ import "AiInsightsSnapshot.js" as AiInsightsSnapshot
 import "Guards.js" as Guards
 import "NetworkState.js" as NetworkState
 import "NotificationMemo.js" as NotificationMemo
+import "NotificationObservations.js" as NotificationObservations
 import "NotificationPlanner.js" as NotificationPlanner
 import "PacePresentation.js" as PacePresentation
 import "PanelDisplay.js" as PanelDisplay
@@ -1130,11 +1131,6 @@ PlasmoidItem {
         Qt.callLater(processNotifications)
     }
 
-    function notificationProviderRefreshPending(providerID) {
-        var key = providerMapKey(providerID)
-        return key.length > 0 && notificationRefreshPending[key] === true
-    }
-
     function setNotificationProviderRefreshPending(providerID, pending) {
         var key = providerMapKey(providerID)
         if (key.length === 0) {
@@ -1150,35 +1146,8 @@ PlasmoidItem {
     }
 
     function markNotificationProvidersFresh(items) {
-        var nextPending = copyObject(notificationRefreshPending)
-        for (var i = 0; i < items.length; i++) {
-            var item = items[i]
-            if (!item || (item.usageStale === true && item.statusKnown !== true)) {
-                continue
-            }
-            var providerID = providerMapKey(item.provider)
-            if (providerID.length === 0) {
-                continue
-            }
-            var selectedAccount = selectedAccountForProvider(providerID)
-            if (selectedAccount.length > 0 && accountKey(item) !== selectedAccount) {
-                continue
-            }
-            // A failed account refresh can still carry fresh provider status.
-            // The planner separately ignores missing quota evidence.
-            delete nextPending[providerID]
-        }
-        notificationRefreshPending = nextPending
-    }
-
-    function notificationScopeKey(item) {
-        if (!item) {
-            return JSON.stringify(["", ""])
-        }
-        var providerID = providerMapKey(item.provider)
-        var selectedAccount = selectedAccountForProvider(providerID)
-        var currentAccount = selectedAccount.length > 0 ? selectedAccount : accountKey(item)
-        return JSON.stringify([providerID, currentAccount])
+        notificationRefreshPending = NotificationObservations.freshPending(
+            items, selectedAccounts, notificationRefreshPending)
     }
 
     function paceWarningActive(row) {
@@ -1200,73 +1169,14 @@ PlasmoidItem {
     readonly property int limitResetArmThreshold: 80
     readonly property int limitResetFloor: 5
 
-    function quotaNotificationLevel(row) {
-        if (!row || !row.hasPercent || !Normalizer.authoritativeQuota(row)) {
-            return ""
-        }
-        return QuotaThresholds.level(
-            row.usedPercent,
-            quotaWarningPercent,
-            quotaCriticalPercent)
-    }
-
-    // QML resolves account identity, refresh freshness, configured thresholds,
-    // and the rows to display. The pure planner receives only semantic
-    // observations and returns ordered intents; it never sees i18n or effects.
-    function notificationObservationRows(item) {
-        if (item && item.usageStale === true) {
-            return []
-        }
-        var sourceRows = item && Array.isArray(item.rows) ? item.rows : []
-        var result = []
-        for (var i = 0; i < sourceRows.length; i++) {
-            var row = sourceRows[i]
-            result.push({
-                lane: row && row.lane ? String(row.lane) : "",
-                windowId: row ? Normalizer.extraWindowID(row.windowId) : "",
-                label: row && row.label ? String(row.label) : "",
-                resetsAt: row && row.resetsAt ? String(row.resetsAt) : "",
-                hasPercent: row && row.hasPercent === true,
-                dataConfidence: row ? row.dataConfidence : "",
-                usedPercent: row ? Number(row.usedPercent) : NaN,
-                quotaLevel: quotaNotificationLevel(row),
-                paceKnown: row && row.paceKnown === true,
-                paceActive: paceWarningActive(row)
-            })
-        }
-        return result
-    }
+    // Pure observation projection resolves account identity, freshness and
+    // thresholds. QML retains memo commits, localization and external effects.
 
     function notificationObservations() {
-        var result = []
-        for (var i = 0; i < providers.length; i++) {
-            var item = providers[i]
-            if (!item) {
-                continue
-            }
-            var rows = notificationObservationRows(item)
-            result.push({
-                providerIndex: i,
-                providerID: providerMapKey(item.provider),
-                scopeID: notificationScopeKey(item),
-                pending: NotificationPlanner.observationPending(
-                    (item.usageStale === true && item.statusKnown !== true)
-                        || notificationProviderRefreshPending(item.provider),
-                    String(item.error || "").length > 0,
-                    item.statusKnown === true,
-                    rows.length),
-                errorPresent: String(item.error || "").length > 0,
-                usageStale: item.usageStale === true,
-                statusKnown: item.statusKnown === true,
-                statusActive: item.hasIncident === true
-                    && String(item.statusSeverity || "").length > 0
-                    && String(item.status || "").length > 0,
-                statusSeverity: String(item.statusSeverity || ""),
-                statusIncidentKey: String(item.statusIncidentKey || ""),
-                rows: rows
-            })
-        }
-        return result
+        return NotificationObservations.build(providers, selectedAccounts, notificationRefreshPending, {
+            warningPercent: quotaWarningPercent,
+            criticalPercent: quotaCriticalPercent
+        })
     }
 
     function notificationPlannerOptions(mode) {
