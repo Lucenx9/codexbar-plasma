@@ -226,7 +226,6 @@ TestCase {
         function displayPercent(row) {
             return row.value;
         }
-        property bool showPopupPace: true
         property real meterTrackHeight: 8
         property real compactMeterTrackHeight: 5
         function usageResetText(row) {
@@ -235,26 +234,9 @@ TestCase {
         function resetLabel(value) {
             return value;
         }
-        function usagePaceText(row) {
-            return row.pace || "";
-        }
-        function paceMarkerPercent(row) {
-            return row.pacePercent !== undefined ? row.pacePercent : -1;
-        }
-        function quotaWarningMarkers(row) {
-            return row.warningMarkers || [];
-        }
-        property var hiddenUsageRowRequest: null
         function popupDetailSectionHideable(section) { return section.title.length > 0; }
         function hidePopupDetailSection(providerID, section) {}
-        function popupUsageRowHideable(row) {
-            return row.lane === "primary";
-        }
-        function hidePopupUsageRow(providerID, row) {
-            hiddenUsageRowRequest = {provider: providerID, label: row.label};
-        }
         function usagePercentText(row) { return usageLabels.percentText(row, false); }
-        function usageConfidenceText(row) { return usageLabels.confidenceText(row); }
         function quotaMeterColor(item, accent) {
             return quotaWarning || (secondaryWarning && item.value === 70) ? Qt.rgba(1, 0.5, 0, 1) : accent;
         }
@@ -1890,6 +1872,38 @@ TestCase {
         }
     }
 
+    function createUsageRow(model, width, parent) {
+        var row = createControl("ProviderUsageRow", {
+            rowData: model,
+            showPace: true,
+            hideable: model.lane === "primary",
+            percentText: "",
+            paceText: "",
+            resetText: "",
+            confidenceText: "",
+            shownPercent: 0,
+            markerPercent: -1,
+            meterColor: "steelblue",
+            warningMarkers: [],
+            meterTrackHeight: 8,
+            secondaryTextOpacity: 0.7,
+            width: width
+        }, parent);
+        if (!row)
+            return null;
+        row.percentText = Qt.binding(function() { return usageLabels.percentText(row.rowData, false); });
+        row.paceText = Qt.binding(function() { return row.rowData.pace || ""; });
+        row.resetText = Qt.binding(function() { return row.rowData.reset || ""; });
+        row.shownPercent = Qt.binding(function() { return row.rowData.value || 0; });
+        row.markerPercent = Qt.binding(function() { return row.rowData.pacePercent === undefined ? -1 : row.rowData.pacePercent; });
+        row.warningMarkers = Qt.binding(function() {
+            return (row.rowData.warningMarkers || []).map(function(marker) {
+                return {percent: marker.percent, color: "orange"};
+            });
+        });
+        return row;
+    }
+
     function usageRowData() {
         return {
             label: "Primary",
@@ -1916,9 +1930,7 @@ TestCase {
             : "Resets after the next enterprise workspace billing cycle <UTC> & maintenance";
         var model = ProviderUiStress.quota("demo");
         model[data.field] = longText;
-        var row = createControl("ProviderUsageRow", {
-            applet: applet, providerData: {provider: "codex"}, modelData: model, width: 240
-        });
+        var row = createUsageRow(model, 240);
         if (!row)
             return;
         var percent = findItem(row, item => item.objectName === "usagePercentLabel");
@@ -1936,7 +1948,7 @@ TestCase {
         verify(tip.text.indexOf("&amp;") >= 0);
         mouseMove(testCase, testCase.width - 1, testCase.height - 1);
         tryCompare(tip, "visible", false);
-        row.modelData = ProviderUiStress.quota("demo");
+        row.rowData = ProviderUiStress.quota("demo");
         tryCompare(label, "truncated", false);
         mouseMove(label, label.width / 2, label.height / 2);
         wait(tip.delay + 100);
@@ -1944,12 +1956,7 @@ TestCase {
     }
 
     function test_providerUsageRowResetTextComesFromRowData() {
-        var row = createControl("ProviderUsageRow", {
-            applet: applet,
-            providerData: { provider: "codex" },
-            modelData: usageRowData(),
-            width: 540
-        });
+        var row = createUsageRow(usageRowData(), 540);
         if (!row)
             return;
         // The reset label renders the row's own reset text, not the
@@ -1980,9 +1987,7 @@ TestCase {
         holder.LayoutMirroring.enabled = data.mirrored;
         var model = usageRowData();
         model.pace = "37% in deficit · Expected 43% used · Runs out in 18 hours";
-        var row = createControl("ProviderUsageRow", {
-            applet: applet, providerData: {provider: "codex"}, modelData: model, width: 240
-        }, holder);
+        var row = createUsageRow(model, 240, holder);
         if (!row)
             return;
         var pace = findItem(row, item => item.objectName === "usagePaceLabel");
@@ -2008,7 +2013,7 @@ TestCase {
         }
         // An unbroken CLI fallback still wraps inside the popup.
         model = Object.assign({}, model, {pace: "VeryLongForecast".repeat(12)});
-        row.modelData = model;
+        row.rowData = model;
         row.width = 240;
         verify(waitForPolish(row));
         compare(pace.text, model.pace);
@@ -2018,7 +2023,7 @@ TestCase {
         model = Object.assign({}, model, {
             pace: "", reset: "Resets after the next billing cycle ".repeat(4)
         });
-        row.modelData = model;
+        row.rowData = model;
         verify(waitForPolish(row));
         compare(pace.visible, false);
         verify(reset.truncated);
@@ -2026,17 +2031,12 @@ TestCase {
     }
 
     // The hide action stays out of sight until the row is hovered or the
-    // button takes focus, and asks the applet to hide this provider's row.
+    // button takes focus, and emits an intent without writing configuration.
     function test_providerUsageRowOffersHideAction() {
-        applet.hiddenUsageRowRequest = null;
+        var hideRequests = 0;
         var data = usageRowData();
         data.lane = "primary";
-        var row = createControl("ProviderUsageRow", {
-            applet: applet,
-            providerData: { provider: "codex" },
-            modelData: data,
-            width: 540
-        });
+        var row = createUsageRow(data, 540);
         if (!row)
             return;
         var button = findItem(row, function (item) {
@@ -2047,8 +2047,11 @@ TestCase {
         compare(button.opacity, 0);
         button.forceActiveFocus(Qt.TabFocusReason);
         compare(button.opacity, 1);
+        row.hideRequested.connect(function() { hideRequests++; });
         mouseClick(button);
-        compare(applet.hiddenUsageRowRequest, {provider: "codex", label: "Primary"});
+        compare(hideRequests, 1);
+        keyClick(Qt.Key_Space);
+        compare(hideRequests, 2);
 
         // The hidden action must not push the percentage away from the end
         // of its meter: both share the row's trailing edge.
@@ -2062,24 +2065,14 @@ TestCase {
         fuzzyCompare(percent.mapToItem(row, percent.width, 0).x,
             bar.mapToItem(row, bar.width, 0).x, 0.5);
 
-        var credit = createControl("ProviderUsageRow", {
-            applet: applet,
-            providerData: { provider: "codex" },
-            modelData: usageRowData(),
-            width: 540
-        });
+        var credit = createUsageRow(usageRowData(), 540);
         compare(findItem(credit, function (item) {
             return item.objectName === "hideUsageRowButton";
         }).visible, false);
     }
 
     function test_providerUsageRowDrawsQuotaWarningMarkers() {
-        var row = createControl("ProviderUsageRow", {
-            applet: applet,
-            providerData: { provider: "codex" },
-            modelData: usageRowData(),
-            width: 540
-        });
+        var row = createUsageRow(usageRowData(), 540);
         if (!row)
             return;
         // Every quota threshold the applet reports for the row draws one

@@ -61,7 +61,8 @@ class SettingsWiringTests(unittest.TestCase):
                              ("providerDetailsSection", "showPopupProviderDetails"),
                              ("usageDashboardSection", "showPopupProviderDetails")):
             self.assertIn("visible: applet." + option, applet.id_block(name))
-        applet.require("readonly property bool showPace: applet.showPopupPace !== false", "pace visibility must follow its popup setting")
+        # The production usage delegate is exercised with pace toggled in
+        # test_provider_cost_presentation.py; no private property spelling pin.
 
 
 if __name__ == "__main__":

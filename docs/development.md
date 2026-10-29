@@ -481,6 +481,15 @@ synchronized.
   pointer controls, the mouse wheel, resize, fitting content, and foreign focus.
   The provider-refresh harness uses the production strip, and `tabs-overflow`
   checks the complete popup with synthetic data.
+- `components/ProviderUsageRow.qml` renders a normalized row from explicit
+  text, percentage, color, marker and sizing inputs. It emits `hideRequested()`
+  and has no applet or provider reference. `FullRepresentation.qml` shares one
+  `providerUsageDelegate` between quota and monthly-credit repeaters; that owner
+  binds current settings, clock-dependent labels and theme-derived colors, and
+  routes hide requests to the current provider and row. Layout QtTests exercise
+  the view directly; the credit-row harness executes the shared delegate to
+  check reactive inputs and hide routing. Forecast tests render the real pace
+  label while advancing the applet clock, without extracting its text expression.
 - `components/CostLabels.qml` localizes cost-history summaries, breakdowns,
   and model rows from an explicit number format, selected metric, and token-count
   formatter. `ProviderCostSection.qml` supplies these inputs; the module never

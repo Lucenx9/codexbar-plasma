@@ -10,7 +10,7 @@ from ui_regression_support import (
     overview_provider_row_qml,
     provider_config_row_qml,
     provider_detail_section_qml,
-    provider_usage_row_qml,
+    full_representation_qml,
     providers_qml,
     root,
     theme_contrast_js,
@@ -24,7 +24,7 @@ main_text = applet.text
 providers_text = providers_qml.read_text(encoding="utf-8")
 theme_contrast_text = theme_contrast_js.read_text(encoding="utf-8")
 provider_config_row_text = provider_config_row_qml.read_text(encoding="utf-8")
-provider_usage_row_text = provider_usage_row_qml.read_text(encoding="utf-8")
+usage_delegate_text = Surface("applet", root).id_block("providerUsageDelegate")
 overview_provider_row_text = overview_provider_row_qml.read_text(encoding="utf-8")
 provider_detail_section_text = provider_detail_section_qml.read_text(encoding="utf-8")
 compact_representation_text = compact_representation_qml.read_text(encoding="utf-8")
@@ -105,7 +105,7 @@ class ThemeTest(unittest.TestCase):
             raise AssertionError("ProviderConfigRow must distinguish the CodexBar default from widget defaults")
 
         for source_name, source_text in (
-            ("ProviderUsageRow.qml", provider_usage_row_text),
+            ("FullRepresentation providerUsageDelegate", usage_delegate_text),
             ("ProviderDetailSection.qml", provider_detail_section_text),
             ("CompactRepresentation.qml", compact_representation_text),
             ("OverviewProviderRow.qml", overview_provider_row_text),
@@ -127,7 +127,7 @@ class ThemeTest(unittest.TestCase):
             )
         for meter_surface, meter_surface_text in (
             (overview_provider_row_qml, overview_provider_row_text),
-            (provider_usage_row_qml, provider_usage_row_text),
+            (full_representation_qml, usage_delegate_text),
             (compact_representation_qml, compact_representation_text),
         ):
             if not code_contains(meter_surface_text, "quotaMeterColor("):

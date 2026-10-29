@@ -249,7 +249,7 @@ class PopupLayoutTest(unittest.TestCase):
 
         if not code_contains(main_text, "fullRepresentation:"):
             raise AssertionError("the applet must keep a fullRepresentation root")
-        full_representation_head = id_block(main_text, "fullRoot")[:900]
+        full_representation_head = id_block(main_text, "fullRoot")
         if "standardHeightActive" not in full_representation_head:
             raise AssertionError(
                 "every popup content section must share one standard height; "
@@ -291,8 +291,13 @@ class PopupLayoutTest(unittest.TestCase):
             raise AssertionError(
                 "the provider-cost meter must animate color like the quota meters"
             )
+        delegate = applet.id_block("providerUsageDelegate")
+        self.assertIn("meterTrackHeight: fullRoot.applet.meterTrackHeight", delegate)
+        self.assertNotIn("applet", provider_usage_row_text)
+        self.assertNotIn("Plasmoid", provider_usage_row_text)
+        self.assertEqual(main_text.count("delegate: providerUsageDelegate"), 2)
         if provider_usage_row_text.count(
-            "Layout.preferredHeight: usageRow.applet.meterTrackHeight"
+            "Layout.preferredHeight: usageRow.meterTrackHeight"
         ) != 1:
             raise AssertionError("the provider-usage meter must consume meterTrackHeight")
 
@@ -355,7 +360,7 @@ class PopupLayoutTest(unittest.TestCase):
         if provider_usage_row_text.index("id: usagePercentLabel") > provider_usage_row_text.index("id: usageBar"):
             raise AssertionError("usage percentage must appear in the metric header before its bar")
         usage_bar_body = id_block(provider_usage_row_text, "usageBar")
-        if not code_contains(usage_bar_body, "applet.withAlpha(Kirigami.Theme.textColor, 0.1)"):
+        if not code_contains(usage_bar_body, "usageRow.withAlpha(Kirigami.Theme.textColor, 0.1)"):
             raise AssertionError("usageBar must keep its pill track visually restrained")
         # A marker that spans the track edge to edge reads as a gap in the accent fill
         # rather than a threshold, so pace and quota markers share one inset geometry.
@@ -395,7 +400,7 @@ class PopupLayoutTest(unittest.TestCase):
             "applet.presentedProviderData.codexCreditLimit",
             "applet.codexCreditLimitUsageRow(",
             "model: creditsSection.creditLimitRow ? [creditsSection.creditLimitRow] : []",
-            "delegate: Components.ProviderUsageRow",
+            "delegate: providerUsageDelegate",
         ):
             if not code_contains(credits_section_body, credit_limit_fragment):
                 raise AssertionError(

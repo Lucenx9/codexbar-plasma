@@ -116,6 +116,37 @@ import "SOURCE_URL/PrivacyPresentation.js" as PrivacyPresentation
 import "SOURCE_URL/Guards.js" as Guards
 TestCase {
     name: "PopupPaceClock"
+    when: windowShown
+    visible: true
+    width: 540
+    height: 200
+    Component {
+        id: usageComponent
+        Components.ProviderUsageRow {
+            required property var clockOwner
+            showPace: true
+            hideable: false
+            percentText: ""
+            paceText: clockOwner.usagePaceText(rowData)
+            resetText: ""
+            confidenceText: ""
+            shownPercent: 0
+            markerPercent: -1
+            meterColor: "blue"
+            warningMarkers: []
+            meterTrackHeight: 8
+            secondaryTextOpacity: 0.7
+            function i18n(text, value) { return value === undefined ? text : text.replace("%1", value); }
+        }
+    }
+    function findItem(item, name) {
+        if (item.objectName === name) return item;
+        for (var child of item.children) {
+            var found = findItem(child, name);
+            if (found) return found;
+        }
+        return null;
+    }
     Component {
         id: harness
         QtObject {
@@ -165,9 +196,15 @@ TestCase {
         }, true, "primary", "Session", applet.receivedAtMs, "percentOnly"), "claude");
         applet.privacyMode = !!data.privateMode;
         row = applet.providerPresentation({provider: "claude", rows: [row], primaryRow: row}).rows[0];
+        var view = createTemporaryObject(usageComponent, this, {clockOwner: applet, rowData: row, width: 500});
+        verify(view !== null);
+        // Preserve the snapshot's JavaScript arrays across the creation map.
+        view.rowData = row;
+        var label = findItem(view, "usagePaceLabel");
+        verify(label !== null);
+        compare(label.text, "Expected 40% used · Runs out in 2 hours");
         applet.panelClockMs = applet.receivedAtMs + data.elapsedMinutes * 60000;
-        var usageRow = {applet: applet, rowData: row, showPace: true, summaryText: ""};
-        compare((function() { return PACE_LABEL_TEXT; })(), data.expected);
+        compare(label.text, data.expected);
     }
 }
 '''
@@ -204,13 +241,6 @@ class ForecastClockTests(unittest.TestCase):
         applet = Surface("applet", ROOT)
         main = ROOT / "contents/ui/main.qml"
         source = applet.texts[main]
-        row_file = ROOT / "contents/ui/components/ProviderUsageRow.qml"
-        # Evaluate the popup label's own text binding, not a copy of it.
-        label = Surface("applet", ROOT)
-        label.texts = {row_file: label.texts[row_file]}
-        binding = re.search(
-            r"^\s*text:\s*(.+?)(?=\n\s*[A-Za-z_][\w.]*\s*:)",
-            label.id_block("usagePaceLabel"), re.M | re.S).group(1)
         applet.texts = {main: source}
         functions = []
         for name in ("presentUsageWindow", "paceSummaryPartsText", "paceEtaText", "copyObject", "usagePaceText", "providerPresentation"):
@@ -218,7 +248,7 @@ class ForecastClockTests(unittest.TestCase):
             if match:
                 functions.append(match.group(0) + " {" + applet.function_body(name) + "}")
         qml = POPUP_PACE_QML.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
-        qml = qml.replace("SOURCE_FUNCTIONS", "\n".join(functions)).replace("PACE_LABEL_TEXT", binding)
+        qml = qml.replace("SOURCE_FUNCTIONS", "\n".join(functions))
         run_qml(self, qml, "tst_popup_pace_clock.qml")
 
 

@@ -6,27 +6,33 @@ import org.kde.plasma.components as PlasmaComponents
 ColumnLayout {
     id: usageRow
 
-    required property var applet
-    required property var providerData
-    required property var modelData
-    readonly property var rowData: modelData
-    readonly property bool showPace: applet.showPopupPace !== false
+    required property var rowData
+    required property bool showPace
+    required property bool hideable
+    required property string percentText
+    required property string paceText
+    required property string resetText
+    required property string confidenceText
+    required property real shownPercent
+    required property real markerPercent
+    required property color meterColor
+    required property var warningMarkers
+    required property real meterTrackHeight
+    required property real secondaryTextOpacity
+
+    signal hideRequested()
+
     readonly property string summaryText: typeof rowData.summaryText === "string"
         ? rowData.summaryText : ""
-    readonly property string confidenceText: applet.usageConfidenceText(rowData)
-    readonly property bool hideable: applet.popupUsageRowHideable(rowData)
     // Match the copy action's compact target so the header keeps its height.
     readonly property real actionSize: Kirigami.Units.iconSizes.smallMedium + Kirigami.Units.smallSpacing
 
-    readonly property color accent: applet.providerReadableColor(
-        providerData ? providerData.provider : "",
-        Kirigami.Theme.backgroundColor)
-    readonly property real shownPercent: applet.displayPercent(rowData)
-    readonly property real markerPercent: applet.paceMarkerPercent(rowData)
-    readonly property string resetText: usageRow.applet.resetLabel(
-        usageRow.applet.usageResetText(usageRow.rowData))
     Layout.fillWidth: true
     spacing: Math.round(Kirigami.Units.smallSpacing / 1.5)
+
+    function withAlpha(color, alpha) {
+        return Qt.rgba(color.r, color.g, color.b, alpha)
+    }
 
     HoverHandler {
         id: usageRowHover
@@ -74,8 +80,7 @@ ColumnLayout {
                 plainText: hideUsageRowButton.Accessible.name
             }
 
-            onClicked: usageRow.applet.hidePopupUsageRow(
-                usageRow.providerData ? usageRow.providerData.provider : "", usageRow.rowData)
+            onClicked: usageRow.hideRequested()
         }
 
         PlainPlasmaLabel {
@@ -83,7 +88,7 @@ ColumnLayout {
             objectName: "usagePercentLabel"
 
             visible: usageRow.rowData.hasPercent
-            text: usageRow.applet.usagePercentText(usageRow.rowData)
+            text: usageRow.percentText
             font.pointSize: Kirigami.Theme.defaultFont.pointSize * 1.15
             font.weight: Font.DemiBold
             horizontalAlignment: Text.AlignRight
@@ -97,9 +102,9 @@ ColumnLayout {
 
         visible: usageRow.rowData.hasPercent
         Layout.fillWidth: true
-        Layout.preferredHeight: usageRow.applet.meterTrackHeight
+        Layout.preferredHeight: usageRow.meterTrackHeight
         radius: height / 2
-        color: usageRow.applet.withAlpha(Kirigami.Theme.textColor, 0.1)
+        color: usageRow.withAlpha(Kirigami.Theme.textColor, 0.1)
         clip: true
 
         Rectangle {
@@ -108,7 +113,7 @@ ColumnLayout {
                 : Math.max(parent.height, parent.width * usageRow.shownPercent / 100)
             height: parent.height
             radius: parent.radius
-            color: usageRow.applet.quotaMeterColor(usageRow.rowData, usageRow.accent)
+            color: usageRow.meterColor
 
             Behavior on color {
                 ColorAnimation {
@@ -129,21 +134,20 @@ ColumnLayout {
             visible: usageRow.showPace && percent > 0 && percent < 100
             percent: usageRow.markerPercent
             markerColor: usageRow.rowData.paceOnTop
-                ? usageRow.applet.withAlpha(Kirigami.Theme.positiveTextColor, 0.9)
-                : usageRow.applet.withAlpha(Kirigami.Theme.negativeTextColor, 0.9)
+                ? usageRow.withAlpha(Kirigami.Theme.positiveTextColor, 0.9)
+                : usageRow.withAlpha(Kirigami.Theme.negativeTextColor, 0.9)
         }
 
         Repeater {
             id: quotaWarningMarkerRepeater
 
-            model: usageRow.applet.quotaWarningMarkers(usageRow.rowData)
+            model: usageRow.warningMarkers
 
             delegate: MeterMarker {
                 required property var modelData
 
                 percent: Number(modelData.percent) || 0
-                markerColor: usageRow.applet.withAlpha(
-                    usageRow.applet.statusBadgeColor(modelData.severity), 0.72)
+                markerColor: modelData.color
             }
         }
     }
@@ -179,9 +183,9 @@ ColumnLayout {
             visible: usageRow.summaryText.length > 0
                 || (usageRow.showPace && usageRow.rowData.pace.length > 0)
             text: usageRow.summaryText.length > 0 ? usageRow.summaryText
-                : usageRow.applet.usagePaceText(usageRow.rowData)
+                : usageRow.paceText
             font: Kirigami.Theme.smallFont
-            opacity: usageRow.applet.secondaryTextOpacity
+            opacity: usageRow.secondaryTextOpacity
             Layout.alignment: Qt.AlignBaseline
             Layout.fillWidth: true
             Layout.minimumWidth: 0
@@ -194,7 +198,7 @@ ColumnLayout {
             visible: usageRow.resetText.length > 0
             text: usageRow.resetText
             font: Kirigami.Theme.smallFont
-            opacity: usageRow.applet.secondaryTextOpacity
+            opacity: usageRow.secondaryTextOpacity
             horizontalAlignment: usageMetadataLayout.stacked || !usagePaceLabel.visible
                 ? Text.AlignLeft : Text.AlignRight
             elide: Text.ElideRight
@@ -218,7 +222,7 @@ ColumnLayout {
         visible: usageRow.confidenceText.length > 0
         text: usageRow.confidenceText
         font: Kirigami.Theme.smallFont
-        opacity: usageRow.applet.secondaryTextOpacity
+        opacity: usageRow.secondaryTextOpacity
         Layout.fillWidth: true
         wrapMode: Text.WordWrap
     }
