@@ -2126,7 +2126,7 @@ Item {
                 "estimated quota gained warning colours or threshold markers");
             verifyScenario(applet.autoSelectedProviderIndex(applet.providers) === applet.providerIndexForID("claude"),
                 "estimated quota won automatic selection");
-            verifyScenario(applet.notificationObservationRows(codex)[0].dataConfidence === "estimated",
+            verifyScenario(applet.notificationObservations().filter(function(item) { return item.providerID === "codex"; })[0].rows[0].dataConfidence === "estimated",
                 "notification adapter discarded confidence");
             return applet.selectedProviderID === "codex"
                 && hasVisibleText(applet.fullRepresentationItem, i18n("%1 (estimated)", i18n("%1% %2", 95, i18n("used"))))
@@ -2136,7 +2136,7 @@ Item {
             verifyScenario(claude.rows[0].dataConfidence === "percentOnly", "limited confidence disappeared in the root adapter");
             verifyScenario(applet.quotaSeverity(claude.rows[1]) === "" && applet.quotaWarningMarkers(claude.rows[1]).length === 0,
                 "limited-detail quota gained warning colours or threshold markers");
-            verifyScenario(applet.notificationObservationRows(claude)[0].dataConfidence === "percentOnly",
+            verifyScenario(applet.notificationObservations().filter(function(item) { return item.providerID === "claude"; })[0].rows[0].dataConfidence === "percentOnly",
                 "notification adapter discarded limited confidence");
             verifyScenario(applet.usageResetText(claude.rows[0]) === i18n("Reset unavailable") && applet.usageResetText(claude.rows[1]).length > 0,
                 "reported weekly reset disappeared or missing session reset was not explained");

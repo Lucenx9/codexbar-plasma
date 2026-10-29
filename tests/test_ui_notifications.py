@@ -19,21 +19,6 @@ main_text = applet.text
 
 class NotificationsTest(unittest.TestCase):
     def test_notification_identity(self):
-        notification_scope_body = function_body(main_text, "notificationScopeKey")
-        for scope_fragment in ("providerMapKey(item.provider)", "selectedAccountForProvider", "accountKey(item)", "JSON.stringify"):
-            if not code_contains(notification_scope_body, scope_fragment):
-                raise AssertionError(
-                    "notificationScopeKey must include stable provider/account identity; "
-                    f"missing {scope_fragment!r}"
-                )
-        pending_getter_body = function_body(main_text, "notificationProviderRefreshPending")
-        if not re.fullmatch(
-            r"\s*var\s+key\s*=\s*providerMapKey\(providerID\);?\s*"
-            r"return\s+key\.length\s*>\s*0\s*&&\s*notificationRefreshPending\[key\]\s*===\s*true;?\s*",
-            pending_getter_body,
-            re.S,
-        ):
-            raise AssertionError("notificationProviderRefreshPending must read the provider pending map")
         pending_setter_body = function_body(main_text, "setNotificationProviderRefreshPending")
         for setter_fragment in (
             "var nextPending = copyObject(notificationRefreshPending)",
@@ -84,39 +69,15 @@ class NotificationsTest(unittest.TestCase):
                     f"found {forbidden_planner_fragment!r}"
                 )
 
+        # Direct QtTests own projection rules; pin only the QML input wiring.
         observations_body = applet.function_body("notificationObservations")
-        for observation_fragment in (
-            "var rows = notificationObservationRows(item)",
-            "providerID: providerMapKey(item.provider)",
-            "scopeID: notificationScopeKey(item)",
-            "pending: NotificationPlanner.observationPending(",
-            "notificationProviderRefreshPending(item.provider)",
-            'String(item.error || "").length > 0',
-            "item.hasIncident === true",
-            "rows.length",
-            'errorPresent: String(item.error || "").length > 0',
-            "statusKnown: item.statusKnown === true",
-            "statusIncidentKey: String(item.statusIncidentKey || \"\")",
-            "rows: rows",
-        ):
-            if not code_contains(observations_body, observation_fragment):
-                raise AssertionError(
-                    "notificationObservations must resolve normalized identity and freshness before the planner; "
-                    f"missing {observation_fragment!r}"
-                )
-        observation_rows_body = applet.function_body("notificationObservationRows")
-        for row_fragment in (
-            "hasPercent: row && row.hasPercent === true",
-            "usedPercent: row ? Number(row.usedPercent) : NaN",
-            "quotaLevel: quotaNotificationLevel(row)",
-            "paceKnown: row && row.paceKnown === true",
-            "paceActive: paceWarningActive(row)",
-        ):
-            if not code_contains(observation_rows_body, row_fragment):
-                raise AssertionError(
-                    "notificationObservationRows must adapt display rows into semantic planner input; "
-                    f"missing {row_fragment!r}"
-                )
+        self.assertTrue(code_contains(observations_body,
+            "NotificationObservations.build(providers, selectedAccounts, notificationRefreshPending, {"))
+        for binding in ("warningPercent: quotaWarningPercent", "criticalPercent: quotaCriticalPercent"):
+            self.assertTrue(code_contains(observations_body, binding))
+        observation_source = (root / "contents/ui/NotificationObservations.js").read_text()
+        for forbidden in ("root.", "Plasmoid.", "i18n(", "Qt.", "sendPlasmaNotification"):
+            self.assertNotIn(forbidden, observation_source)
 
         process_notifications_body = applet.function_body("processNotifications")
         for delegation_fragment in (
@@ -255,27 +216,14 @@ class NotificationsTest(unittest.TestCase):
             if received_index < 0 or received_index > providers_index:
                 raise AssertionError(f"{fresh_function} must timestamp usage before publishing it")
         mark_fresh_body = function_body(main_text, "markNotificationProvidersFresh")
-        selected_guard = "selectedAccount.length > 0 && accountKey(item) !== selectedAccount"
-        delete_pending_index = mark_fresh_body.find("delete nextPending[providerID]")
-        if "item.error" in mark_fresh_body:
-            raise AssertionError("usage errors must not discard fresh provider status before the planner classifies the evidence")
-        if not code_contains(mark_fresh_body, "var selectedAccount = selectedAccountForProvider(providerID)"):
-            raise AssertionError("markNotificationProvidersFresh must correlate fresh data with the selected account")
-        if selected_guard not in mark_fresh_body or mark_fresh_body.find(selected_guard) > delete_pending_index:
-            raise AssertionError("stale responses for a previous account must not clear notification suppression")
-        if not re.search(
-            r"if\s*\(selectedAccount\.length\s*>\s*0\s*&&\s*accountKey\(item\)\s*!==\s*selectedAccount\)\s*\{\s*continue;?\s*\}",
-            mark_fresh_body,
-            re.S,
-        ):
-            raise AssertionError("previous-account responses must continue without clearing notification suppression")
+        self.assertTrue(code_contains(mark_fresh_body,
+            "notificationRefreshPending = NotificationObservations.freshPending("))
+        self.assertTrue(code_contains(mark_fresh_body,
+            "items, selectedAccounts, notificationRefreshPending"))
 
     def test_quota_thresholds(self):
-        # The 80/95 steps used to be literals in these two functions, so the notification
-        # level and the markers drawn on the bar could drift apart and neither could be
-        # configured. Both now delegate to one bounded library.
-        if "QuotaThresholds.level(" not in function_body(main_text, "quotaNotificationLevel"):
-            raise AssertionError("quotaNotificationLevel must delegate to QuotaThresholds.level")
+        # Projection tests exercise custom thresholds; the UI must use the same
+        # bounded threshold module for its markers.
         if "QuotaThresholds.markers(" not in function_body(main_text, "quotaWarningMarkers"):
             raise AssertionError("quotaWarningMarkers must delegate to QuotaThresholds.markers")
         for retired_literal in ("usageBarsShowUsed ? 80 : 20", "usageBarsShowUsed ? 95 : 5", "used >= 95", "used >= 80"):
