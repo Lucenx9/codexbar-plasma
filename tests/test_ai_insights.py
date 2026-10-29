@@ -21,6 +21,8 @@ import tempfile
 import threading
 import time
 import unittest
+import urllib.error
+import urllib.request
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -50,6 +52,10 @@ class Handler(http.server.BaseHTTPRequestHandler):
         pass
 
     def respond(self):
+        # Any local process can reach this port; record only the helper's requests.
+        if self.headers.get("User-Agent") != "codexbar-plasma":
+            self.send_error(404)
+            return
         length = int(self.headers.get("Content-Length") or 0)
         body = self.rfile.read(length) if length else b""
         record = {"method": self.command, "path": self.path, "headers": dict(self.headers),
@@ -121,6 +127,17 @@ class HelperTestCase(unittest.TestCase):
 
 
 class RequestContractTests(HelperTestCase):
+    def test_fixture_records_only_helper_requests(self):
+        # Desktop tools probe new local ports; such a request is not the helper's.
+        foreign = urllib.request.Request(self.base + "/", headers={"User-Agent": "node"})
+        with self.assertRaises(urllib.error.HTTPError):
+            urllib.request.build_opener(urllib.request.ProxyHandler({})).open(foreign, timeout=5)
+        self.assertEqual(Handler.requests, [])
+        Handler.routes["/api/v1/chat/completions"] = (200, chat(json.dumps(INSIGHT)), {}, 0)
+        self.assertEqual(self.generate()["status"], "ok")
+        self.assertEqual({request["headers"]["User-Agent"] for request in Handler.metadata + Handler.requests},
+                         {"codexbar-plasma"})
+
     def test_request_language_follows_the_interface_tag(self):
         cases = {"it": "Italian", "en": "English", "de": "German", "fr": "French", "es": "Spanish",
                  "pt-BR": "Brazilian Portuguese"}
