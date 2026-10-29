@@ -35,12 +35,12 @@ class ScopePolicyTests(unittest.TestCase):
         targets = [target for target in targets if not target.startswith("$(")] + [
             "check-python-" + path.stem for path in sorted((ROOT / "tests").glob("test_*.py"))]
         workflow = (ROOT / ".github/workflows/ci.yml").read_text()
-        fast = set(re.search(r"make (check-shellcheck(?:\\\n|[^\n])*)", workflow)[1]
-                   .replace("\\", " ").split())
+        fast_step = re.search(r"- name: Run fast checks\n(.*?)\n\s*- name:", workflow, re.S)[1]
+        fast = set(re.findall(r"(?<![\w-])check-[\w-]+", re.sub(r"#[^\n]*", "", fast_step)))
         markdown = re.compile(r"(?<![\w.-])(?:docs/[\w.-]+|AGENTS|CLAUDE|README|TODO|CHANGELOG"
                               r"|NOTICE|CONTRIBUTING|SECURITY)\.md")
         for target in targets:
-            script = re.search("^" + re.escape(target) + r":\n\t(?:python3 )?(scripts/\S+)", makefile, re.M)
+            script = re.search("^" + re.escape(target) + r":\n\t[^\n]*?(scripts/\S+)", makefile, re.M)
             source = ROOT / (script[1] if script else "tests/" + target.removeprefix("check-python-") + ".py")
             if source.is_file() and markdown.search(source.read_text(encoding="utf-8")):
                 with self.subTest(target=target):
