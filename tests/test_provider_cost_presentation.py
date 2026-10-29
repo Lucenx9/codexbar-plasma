@@ -1,4 +1,4 @@
-"""Exercise the owning cost/credit adapters against every compiled catalog."""
+"""Exercise production cost/credit presentation and the configuration write boundary."""
 
 import gettext
 import json
@@ -17,16 +17,7 @@ from compile_translations import compile_catalogs
 from qml_surfaces import Surface
 
 class ProviderCostPresentationTests(unittest.TestCase):
-    def test_cost_and_reset_adapters_preserve_translated_sections(self):
-        applet = Surface("applet", ROOT)
-        main = ROOT / "contents/ui/main.qml"
-        applet.texts = {main: main.read_text()}
-        applet.files = [main]
-        signatures = {"providerCostSection": "providerID, cost",
-                      "resetCreditsSection": "providerID, resetCredits",
-                      "codexCreditLimitUsageRow": "creditLimit"}
-        adapters = "\n".join(f"function {name}({args}) {{ {applet.function_body(name)} }}"
-                             for name, args in signatures.items())
+    def test_cost_and_reset_details_preserve_translated_sections(self):
         with tempfile.TemporaryDirectory(prefix="codexbar-cost-labels-") as temporary:
             directory = Path(temporary)
             compile_catalogs(directory / "locale")
@@ -91,7 +82,7 @@ import "SOURCE_URL/CostPresentation.js" as CostPresentation
 import "SOURCE_URL/components" as Components
 TestCase {
     id: testCase
-    name: "ProviderCostAdapters"
+    name: "ProviderCostDetailsCatalogs"
     Components.ProviderCostDetails {
         id: providerCostDetails
         numberFormat: testCase.costNumberFormat
@@ -110,18 +101,17 @@ TestCase {
     function i18np(one, many, count) {
         return plurals[count].replace("%1", String(count));
     }
-    ADAPTERS
     function test_sections_data() { return CASES; }
     function test_sections(data) {
         messages = data.messages;
         plurals = data.plurals;
         for (var row of data.rows)
-            compare(providerCostSection(row.provider, row.cost), row.expected, row.provider);
+            compare(providerCostDetails.costSection(row.provider, row.cost), row.expected, row.provider);
         for (var count of data.counts)
-            compare(resetCreditsSection("codex", {availableCount: count.input}), count.expected);
-        compare(resetCreditsSection("claude", {availableCount: 2}), null);
-        compare(resetCreditsSection("codex", {availableCount: 0}), null);
-        var monthly = codexCreditLimitUsageRow({title: "", used: 0, remaining: 1000,
+            compare(providerCostDetails.resetSection("codex", {availableCount: count.input}), count.expected);
+        compare(providerCostDetails.resetSection("claude", {availableCount: 2}), null);
+        compare(providerCostDetails.resetSection("codex", {availableCount: 0}), null);
+        var monthly = providerCostDetails.creditLimitRow({title: "", used: 0, remaining: 1000,
             limit: 1000, usedPercent: 0, leftPercent: 100, resetsAt: "future-reset"});
         compare(monthly.label, data.monthlyTitle);
         compare(monthly.summaryText, data.monthlySummary);
@@ -131,9 +121,9 @@ TestCase {
     }
 }
 '''
-            fixture = directory / "tst_provider_cost_adapters.qml"
+            fixture = directory / "tst_provider_cost_catalogs.qml"
             fixture.write_text(qml.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
-                               .replace("ADAPTERS", adapters).replace("CASES", json.dumps(cases)))
+                               .replace("CASES", json.dumps(cases)))
             result = subprocess.run(
                 [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],
                 env={**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software"},
@@ -147,11 +137,6 @@ TestCase {
             self.assertEqual(warnings, [])
 
     def test_monthly_credit_amounts_remain_visible_without_pace(self):
-        applet = Surface("applet", ROOT)
-        main = ROOT / "contents/ui/main.qml"
-        applet.texts = {main: main.read_text()}
-        applet.files = [main]
-        adapter = applet.function_body("codexCreditLimitUsageRow")
         delegate = Surface("applet", ROOT).id_block("providerUsageDelegate")
         qml = r'''import QtQuick
 import QtTest
@@ -194,7 +179,6 @@ TestCase {
                 source = source.replace("%" + i, String(arguments[i]));
             return source;
         }
-        function codexCreditLimitUsageRow(creditLimit) { ADAPTER }
         function popupUsageRowHideable(row) { return row.lane === "primary"; }
         function providerReadableColor() { return brandColor; }
         function displayPercent(row) { return usageBarsShowUsed ? row.usedPercent : row.leftPercent; }
@@ -283,7 +267,7 @@ TestCase {
         var limit = {title: "Monthly credit limit", used: 15, remaining: 85,
             limit: 100, usedPercent: 15, leftPercent: 85, resetsAt: "in 7d"};
         var row = createTemporaryObject(providerUsageDelegate, fullRoot,
-            {modelData: applet.codexCreditLimitUsageRow(limit), width: 500});
+            {modelData: providerCostDetails.creditLimitRow(limit), width: 500});
         verify(row !== null);
         wait(0);
         verify(hasVisibleText(row, "Used: 15, remaining: 85 of 100"));
@@ -306,7 +290,7 @@ TestCase {
         with tempfile.TemporaryDirectory(prefix="codexbar-credit-row-") as temporary:
             fixture = Path(temporary) / "tst_credit_usage_row.qml"
             fixture.write_text(qml.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
-                               .replace("ADAPTER", adapter).replace("USAGE_DELEGATE", delegate))
+                               .replace("USAGE_DELEGATE", delegate))
             result = subprocess.run(
                 [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],
                 env={**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software"},
@@ -318,36 +302,6 @@ TestCase {
                 'kf.kirigami.platform: Failed to find a Kirigami platform plugin' in line
             )]
             self.assertEqual(warnings, [])
-
-    def test_main_cost_wrappers_delegate_to_presentation(self):
-        applet = Surface("applet", ROOT)
-        main = ROOT / "contents/ui/main.qml"
-        applet.texts = {main: main.read_text()}
-        applet.files = [main]
-        names = ("costHistoryWindowLabel",
-                 "costChartPoints", "spendTotalLine", "spendProviderCosts",
-                 "spendHistoryStillBuilding", "presentedSpendProviderCosts",
-                 "costPresentation", "providerTitle",
-                 "providerKey", "amountString", "usageCountText",
-                 "qualifiedCostValue")
-        functions = []
-        for name in names:
-            signature = re.search(r"function " + name + r"\([^)]*\)",
-                                  applet.texts[main]).group(0)
-            functions.append(signature + " {" + applet.function_body(name) + "}")
-        qml = COST_WRAPPER_QML.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
-        qml = qml.replace("SOURCE_FUNCTIONS", "\n        ".join(functions))
-        with tempfile.TemporaryDirectory(prefix="codexbar-cost-wrappers-") as temporary:
-            fixture = Path(temporary) / "tst_main_cost_wrappers.qml"
-            fixture.write_text(qml)
-            result = subprocess.run(
-                [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],
-                env={**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software"},
-                capture_output=True, text=True, timeout=30)
-            output = result.stdout + result.stderr
-            self.assertEqual(result.returncode, 0, output)
-            self.assertNotIn("SKIP", output)
-            self.assertNotIn("QWARN", output)
 
     def test_cost_metric_helpers_sanitize_before_persisting(self):
         applet = Surface("applet", ROOT)
@@ -416,117 +370,6 @@ TestCase {
         setCostHistoryMetric("bogus");
         compare(costConfiguration.costHistoryMetric, "cost");
         costConfiguration = ({});
-    }
-}
-'''
-
-COST_WRAPPER_QML = '''import QtQuick
-import QtTest
-import "SOURCE_URL/components" as Components
-import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
-import "SOURCE_URL/ProviderIdentity.js" as ProviderIdentity
-import "SOURCE_URL/CostPresentation.js" as CostPresentation
-import "SOURCE_URL/PrivacyPresentation.js" as PrivacyPresentation
-import "SOURCE_URL/ProviderOrder.js" as ProviderOrder
-TestCase {
-    name: "MainCostWrappers"
-    Components.ProviderNames {
-        id: providerNames
-        function i18n(text) { return text }
-    }
-    QtObject {
-        id: root
-        property var costNumberFormat: CostPresentation.numberFormat(",", ".")
-        property bool costHistoryShowsTokens: false
-        property int costHistoryDays: 30
-        property string costHistoryPeriod: ""
-        property var tokenCosts: ({})
-        property var providers: []
-        property string providerOrderRaw: ""
-        property bool privacyMode: false
-        // QtObject has no default property, so the copied wrappers reach the
-        // real component through this property.
-        property QtObject costText: Components.CostText {
-            numberFormat: root.costNumberFormat
-            function i18n() { return root.i18n.apply(root, arguments); }
-            function i18np(one, many, count) { return root.i18np(one, many, count); }
-        }
-        SOURCE_FUNCTIONS
-        function i18n(source) {
-            var text = source;
-            for (var i = 1; i < arguments.length; i++)
-                text = text.replace("%" + i, String(arguments[i]));
-            return text;
-        }
-        function i18np(one, many, count) {
-            return String(count === 1 ? one : many).replace("%1", String(count));
-        }
-    }
-
-    // Calendar periods title themselves in the locale, never from the CLI's
-    // English label or a day count that changes through the month.
-    function test_windowLabelNamesCalendarPeriods() {
-        compare(root.costHistoryWindowLabel({period: "month-to-date"}, 26), "Month to date");
-        compare(root.costHistoryWindowLabel({period: "all"}, 365), "All history");
-        compare(root.costHistoryWindowLabel({period: "quarter"}, 30), "Last 30 days");
-        compare(root.costHistoryWindowLabel(null, 7), "Last 7 days");
-    }
-    // Chart points hide cost-unavailable days but keep their tokens.
-    function test_chartPointsFollowTheSelectedMetric() {
-        var points = [{label: "Mon", cost: null, tokens: 250, currency: "USD"}];
-        root.costHistoryShowsTokens = false;
-        compare(root.costChartPoints(points).length, 0);
-        root.costHistoryShowsTokens = true;
-        compare(root.costChartPoints(points).length, 1);
-        root.costHistoryShowsTokens = false;
-    }
-    // The total line prints the spend subtotal with its token count, and the
-    // unavailable wording only when neither metric survived.
-    function test_spendTotalLinePrintsSubtotalOrUnavailable() {
-        root.tokenCosts = {codex: {provider: "codex", historyDays: 30,
-            totals: {cost: 5, tokens: 100, currency: "USD"}}};
-        compare(root.spendTotalLine(), "$5.00 total \u00b7 100 tokens");
-        root.tokenCosts = {codex: {provider: "codex", historyDays: 30,
-            totals: {cost: null, tokens: null, currency: "USD"}}};
-        compare(root.spendTotalLine(), "Tokens unavailable");
-        root.tokenCosts = ({});
-        compare(root.spendTotalLine(), "");
-    }
-    // Spend snapshots sort by provider title, so the totals follow the same
-    // order the Usage & Spend tab prints.
-    function test_spendSnapshotsSortByProviderTitle() {
-        root.tokenCosts = {zai: {provider: "zai", historyDays: 30},
-                           codex: {provider: "codex", historyDays: 30}};
-        var costs = root.spendProviderCosts();
-        compare(costs.length, 2);
-        compare(costs[0].provider, "codex");
-        compare(costs[1].provider, "zai");
-        root.tokenCosts = ({});
-    }
-    // The visible list follows the provider tabs, not the title sort, and the
-    // saved order still places a provider that has costs but no tab.
-    function test_presentedSpendFollowsProviderTabs() {
-        var costs = [{provider: "claude"}, {provider: "codex"}, {provider: "zai"}];
-        var previousProviders = root.providers;
-        var previousOrder = root.providerOrderRaw;
-        root.providers = [{provider: "codex"}, {provider: "claude"}];
-        root.providerOrderRaw = "";
-        compare(root.presentedSpendProviderCosts(costs).map(function(item) { return item.provider; }),
-            ["codex", "claude", "zai"]);
-        root.providers = [{provider: "codex"}];
-        root.providerOrderRaw = "zai,claude";
-        compare(root.presentedSpendProviderCosts(costs).map(function(item) { return item.provider; }),
-            ["codex", "zai", "claude"]);
-        root.providers = previousProviders;
-        root.providerOrderRaw = previousOrder;
-    }
-    // The still-building flag mirrors the CLI scan coverage, not the spend.
-    function test_stillBuildingMirrorsScanCoverage() {
-        root.tokenCosts = {codex: {provider: "codex", historyDays: 30,
-            historyCoverageEstablished: false}};
-        compare(root.spendHistoryStillBuilding(), true);
-        root.tokenCosts = ({});
-        compare(root.spendHistoryStillBuilding(), false);
     }
 }
 '''

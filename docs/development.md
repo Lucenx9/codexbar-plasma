@@ -551,8 +551,8 @@ synchronized.
   inputs pass through the existing pure module; monthly credit limits retain
   the dedicated `ProviderNormalizer.js` contract. The applet keeps snapshot
   coordination and privacy; the popup owns section visibility. Direct component
-  tests cover formatting, optional fields and normalized limits, and the root
-  adapters are exercised with all six catalogs in
+  tests cover formatting, optional fields and normalized limits, and the production
+  component is exercised directly with all six catalogs in
   `tests/test_provider_cost_presentation.py`.
 - `ResetPresentation.js` parses bounded reset metadata, splits countdowns into
   semantic units using an explicit clock, and classifies existing reset-label
@@ -1153,9 +1153,16 @@ cache-restore/invalidation ordering in the applet.
 `tests/tst_provider_cost_presentation.qml` covers malformed amounts, balance
 precedence, percentage bounds, provider fallbacks, reset counts, metadata bounds,
 and healthy quotas with invalid optional costs. `tests/test_provider_cost_presentation.py`
-executes the owning QML cost and reset-credit adapters against the compiled
-English fallback and all five translation catalogs. Surface checks enforce
-module delegation and keep plural-aware localization in QML.
+executes `ProviderCostDetails` directly against the compiled English fallback
+and all five translation catalogs. The monthly-credit view test also calls that
+component and renders the shared usage delegate. `tst_cost_text.qml`,
+`tst_cost_presentation.qml` and `tst_provider_order.qml` cover labels, totals,
+chart metrics, range filtering, scan coverage and provider ordering through
+production interfaces, without rebuilding root presentation functions in a
+fixture. Surface checks retain root input forwarding and keep plural-aware
+localization in QML. The separate configuration-write fixture still exercises
+the root setters with an isolated configuration object; it does not test
+presentation logic.
 
 `tests/test_quota_window_calendar.py` runs the quota-week calculation in UTC
 and America/Santiago with a process timeout. Sparse history across a nonexistent
