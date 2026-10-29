@@ -152,12 +152,16 @@ TestCase {
         applet.texts = {main: main.read_text()}
         applet.files = [main]
         adapter = applet.function_body("codexCreditLimitUsageRow")
+        delegate = Surface("applet", ROOT).id_block("providerUsageDelegate")
         qml = r'''import QtQuick
 import QtTest
+import org.kde.kirigami as Kirigami
 import "SOURCE_URL/components" as Components
 import "SOURCE_URL/CostPresentation.js" as CostPresentation
 TestCase {
-    id: testCase
+    id: fullRoot
+    property alias applet: applet
+    function i18n(text) { return applet.i18n.apply(applet, arguments); }
     name: "CreditUsageRow"
     Components.UsageWindowText {
         id: usageLabels
@@ -175,6 +179,14 @@ TestCase {
     QtObject {
         id: applet
         property bool showPopupPace: true
+        property var presentedProviderData: ({provider: "codex"})
+        property var hideRequests: []
+        property bool quotaWarning: false
+        property bool usageBarsShowUsed: false
+        property color brandColor: "blue"
+        function hidePopupUsageRow(providerID, row) {
+            hideRequests = hideRequests.concat([{provider: providerID, label: row.label}]);
+        }
         property real secondaryTextOpacity: 0.7
         property int meterTrackHeight: 7
         function i18n(source) {
@@ -183,25 +195,21 @@ TestCase {
             return source;
         }
         function codexCreditLimitUsageRow(creditLimit) { ADAPTER }
-        function popupUsageRowHideable() { return false; }
-        function providerReadableColor() { return "blue"; }
-        function displayPercent(row) { return row.leftPercent; }
+        function popupUsageRowHideable(row) { return row.lane === "primary"; }
+        function providerReadableColor() { return brandColor; }
+        function displayPercent(row) { return usageBarsShowUsed ? row.usedPercent : row.leftPercent; }
         function paceMarkerPercent() { return -1; }
         function resetLabel(value) { return value; }
         function usageResetText(row) { return row.resetsAt || ""; }
-        function withAlpha(color, alpha) { return Qt.rgba(0, 0, 1, alpha); }
-        function usagePercentText(row) { return usageLabels.percentText(row, false); }
+        function withAlpha(color, alpha) { return Qt.rgba(color.r, color.g, color.b, alpha); }
+        function usagePercentText(row) { return usageLabels.percentText(row, usageBarsShowUsed); }
         function usageConfidenceText(row) { return usageLabels.confidenceText(row); }
-        function quotaMeterColor() { return "blue"; }
-        function quotaWarningMarkers() { return []; }
+        function quotaMeterColor() { return quotaWarning ? "red" : brandColor; }
+        function quotaWarningMarkers(row) { return row.warningMarkers || []; }
+        function statusBadgeColor() { return Qt.rgba(1, 0, 0, 1); }
         function usagePaceText(row) { return row.pace; }
     }
-    Component {
-        id: usageComponent
-        Components.ProviderUsageRow {
-            function i18n(text) { return text; }
-        }
-    }
+    Component { USAGE_DELEGATE }
     function hasVisibleText(item, text) {
         if (!item.visible) return false;
         if (item.text === text) return true;
@@ -209,12 +217,73 @@ TestCase {
             if (hasVisibleText(child, text)) return true;
         return false;
     }
+    function findItem(item, name) {
+        if (item.objectName === name) return item;
+        for (var child of item.children) {
+            var found = findItem(child, name);
+            if (found) return found;
+        }
+        return null;
+    }
+    function init() {
+        applet.showPopupPace = true;
+        applet.presentedProviderData = ({provider: "codex"});
+        applet.hideRequests = [];
+        applet.quotaWarning = false;
+        applet.usageBarsShowUsed = false;
+        applet.brandColor = "blue";
+    }
+    function test_sharedDelegateTracksPresentationAndRoutesTheCurrentHideRequest() {
+        var model = {lane: "primary", label: "Session", hasPercent: true,
+            usedPercent: 15, leftPercent: 85, pace: "On pace", resetsAt: "in 7d"};
+        var row = createTemporaryObject(providerUsageDelegate, fullRoot, {modelData: model, width: 500});
+        verify(row !== null);
+        var bar = findItem(row, "usageBar");
+        var percent = findItem(row, "usagePercentLabel");
+        var hide = findItem(row, "hideUsageRowButton");
+        compare(row.shownPercent, 85);
+        verify(percent.text.indexOf("85") >= 0);
+        compare(row.warningMarkers.length, 0);
+        compare(row.meterColor, applet.brandColor);
+        applet.brandColor = "green";
+        tryCompare(bar.children[0], "color", applet.brandColor);
+        applet.usageBarsShowUsed = true;
+        compare(row.shownPercent, 15);
+        verify(percent.text.indexOf("15") >= 0);
+        applet.usageBarsShowUsed = false;
+        compare(row.shownPercent, 85);
+        verify(hide.visible);
+        hide.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Space);
+        compare(applet.hideRequests, [{provider: "codex", label: "Session"}]);
+
+        applet.presentedProviderData = ({provider: "claude"});
+        applet.quotaWarning = true;
+        row.modelData = {lane: "primary", label: "Weekly", hasPercent: true,
+            usedPercent: 98, leftPercent: 2, pace: "Runs out now", resetsAt: "in 1d",
+            warningMarkers: [{percent: 20, severity: "major"}]};
+        compare(row.shownPercent, 2);
+        verify(percent.text.indexOf("2") >= 0);
+        compare(row.meterColor, Qt.rgba(1, 0, 0, 1));
+        tryCompare(bar.children[0], "color", row.meterColor);
+        compare(row.warningMarkers.length, 1);
+        compare(row.warningMarkers[0].percent, 20);
+        compare(row.warningMarkers[0].color.a, 0.72);
+        compare(row.resetText, "in 1d");
+        compare(row.paceText, "Runs out now");
+        mouseClick(hide);
+        compare(applet.hideRequests, [
+            {provider: "codex", label: "Session"}, {provider: "claude", label: "Weekly"}]);
+        applet.showPopupPace = false;
+        verify(!findItem(row, "usagePaceLabel").visible);
+        applet.showPopupPace = true;
+        verify(findItem(row, "usagePaceLabel").visible);
+    }
     function test_summaryAndForecastSettingsAreIndependent() {
         var limit = {title: "Monthly credit limit", used: 15, remaining: 85,
             limit: 100, usedPercent: 15, leftPercent: 85, resetsAt: "in 7d"};
-        var row = createTemporaryObject(usageComponent, testCase,
-            {applet: applet, providerData: {provider: "codex"},
-                modelData: applet.codexCreditLimitUsageRow(limit), width: 500});
+        var row = createTemporaryObject(providerUsageDelegate, fullRoot,
+            {modelData: applet.codexCreditLimitUsageRow(limit), width: 500});
         verify(row !== null);
         wait(0);
         verify(hasVisibleText(row, "Used: 15, remaining: 85 of 100"));
@@ -237,7 +306,7 @@ TestCase {
         with tempfile.TemporaryDirectory(prefix="codexbar-credit-row-") as temporary:
             fixture = Path(temporary) / "tst_credit_usage_row.qml"
             fixture.write_text(qml.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
-                               .replace("ADAPTER", adapter))
+                               .replace("ADAPTER", adapter).replace("USAGE_DELEGATE", delegate))
             result = subprocess.run(
                 [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],
                 env={**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software"},

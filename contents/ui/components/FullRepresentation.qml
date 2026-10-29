@@ -10,6 +10,40 @@ Item {
 
     required property var applet
 
+    // Quota and monthly-credit rows share the same presentation bindings.
+    // The row renders explicit inputs; this owner resolves applet policy and
+    // routes hide requests to the current provider and row.
+    Component {
+        id: providerUsageDelegate
+
+        Components.ProviderUsageRow {
+            required property var modelData
+
+            rowData: modelData
+            showPace: fullRoot.applet.showPopupPace !== false
+            hideable: fullRoot.applet.popupUsageRowHideable(rowData)
+            percentText: fullRoot.applet.usagePercentText(rowData)
+            paceText: fullRoot.applet.usagePaceText(rowData)
+            resetText: fullRoot.applet.resetLabel(fullRoot.applet.usageResetText(rowData))
+            confidenceText: fullRoot.applet.usageConfidenceText(rowData)
+            shownPercent: fullRoot.applet.displayPercent(rowData)
+            markerPercent: fullRoot.applet.paceMarkerPercent(rowData)
+            meterColor: fullRoot.applet.quotaMeterColor(rowData,
+                fullRoot.applet.providerReadableColor(
+                    fullRoot.applet.presentedProviderData ? fullRoot.applet.presentedProviderData.provider : "",
+                    Kirigami.Theme.backgroundColor))
+            warningMarkers: fullRoot.applet.quotaWarningMarkers(rowData).map(function(marker) {
+                return { percent: marker.percent,
+                    color: fullRoot.applet.withAlpha(fullRoot.applet.statusBadgeColor(marker.severity), 0.72) }
+            })
+            meterTrackHeight: fullRoot.applet.meterTrackHeight
+            secondaryTextOpacity: fullRoot.applet.secondaryTextOpacity
+
+            onHideRequested: fullRoot.applet.hidePopupUsageRow(
+                fullRoot.applet.presentedProviderData ? fullRoot.applet.presentedProviderData.provider : "", rowData)
+        }
+    }
+
     // Every content section shares one standard height, so switching tabs
     // never resizes the dialog. Only the content-less states (loading,
     // empty setup, missing CLI) stay compact and content-driven.
@@ -880,10 +914,7 @@ Item {
                     Repeater {
                         model: applet.popupUsageRows(applet.presentedProviderData)
 
-                        delegate: Components.ProviderUsageRow {
-                            applet: fullRoot.applet
-                            providerData: applet.presentedProviderData
-                        }
+                        delegate: providerUsageDelegate
                     }
 
                     ColumnLayout {
@@ -999,10 +1030,7 @@ Item {
                         Repeater {
                             model: creditsSection.creditLimitRow ? [creditsSection.creditLimitRow] : []
 
-                            delegate: Components.ProviderUsageRow {
-                                applet: fullRoot.applet
-                                providerData: applet.presentedProviderData
-                            }
+                            delegate: providerUsageDelegate
                         }
 
                         RowLayout {
