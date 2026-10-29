@@ -114,8 +114,14 @@ class CostTest(unittest.TestCase):
                     "cost snapshot range matching must compare normalized snapshot and selected ranges; "
                     f"missing {range_match_fragment!r}"
                 )
-        if "CostPresentation.spendSnapshots(" not in function_body(main_text, "spendProviderCosts"):
-            raise AssertionError("main.qml must read spend snapshots from CostPresentation.js")
+        spend_provider_costs_body = function_body(main_text, "spendProviderCosts")
+        for fragment in (
+            "CostPresentation.spendSnapshots(tokenCosts, costHistoryDays, function(providerID)",
+            "return providerTitle(providerID)",
+            "}, costHistoryPeriod)",
+            "return snapshots.map(function(item) { return root.costPresentation(item) })",
+        ):
+            self.assertTrue(code_contains(spend_provider_costs_body, fragment), fragment)
 
         provider_token_cost_body = function_body(main_text, "providerTokenCost")
         if not code_contains(provider_token_cost_body, "tokenCosts[key]"):
@@ -143,8 +149,8 @@ class CostTest(unittest.TestCase):
             )
         presented_spend_provider_costs_body = applet.function_body("presentedSpendProviderCosts")
         for spend_order_fragment in (
-            "ProviderOrder.orderedItems(",
-            "providerOrderRaw",
+            'providers.map(function(item) { return item.provider }).join(",")',
+            'ProviderOrder.orderedItems(costs || spendProviderCosts(), tabOrder + "," + providerOrderRaw)',
         ):
             if not code_contains(presented_spend_provider_costs_body, spend_order_fragment):
                 raise AssertionError(
@@ -688,6 +694,15 @@ class CostTest(unittest.TestCase):
         if not re.search(r'item.sessionLine = costLine\(i18n\("Today"\), snapshot.sessionCost,\s*'
                          r'snapshot.sessionTokens, currency\)', present_cost_body):
             raise AssertionError("Today must not inherit history-level trust qualifiers")
+
+    def test_cost_presentation_adapters_forward_current_inputs(self):
+        source = (root / "contents/ui/main.qml").read_text()
+        for name, call in (
+            ("costHistoryWindowLabel", "return costText.costHistoryWindowLabel(item, requestedHistoryDays)"),
+            ("costChartPoints", "return CostPresentation.memoizedChartPoints(memo, costNumberFormat, points, costHistoryShowsTokens)"),
+            ("spendHistoryStillBuilding", "return CostPresentation.historyStillBuilding(spendProviderCosts())"),
+        ):
+            self.assertTrue(code_contains(function_body(source, name), call), name)
 
     def test_provider_cost_details_keep_explicit_inputs_and_effects_in_the_applet(self):
         source = (root / "contents/ui/main.qml").read_text()

@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Window
 import QtTest
 import "../contents/ui/components" as Components
 import "../contents/ui/CostPresentation.js" as CostPresentation
@@ -2062,6 +2063,8 @@ TestCase {
             return item.objectName === "usageBar";
         });
         verify(percent !== null && bar !== null);
+        // Wait for nested layouts as well as the row after input and label updates.
+        verify(waitForPolish(row.Window.window));
         fuzzyCompare(percent.mapToItem(row, percent.width, 0).x,
             bar.mapToItem(row, bar.width, 0).x, 0.5);
 

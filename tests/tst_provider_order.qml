@@ -25,6 +25,19 @@ TestCase {
         }).join(","), "claude,codex,gemini");
     }
 
+    function test_tabOrderPrecedesSavedOrderForCostOnlyProviders() {
+        var costs = [{provider: "claude"}, {provider: "codex"}, {provider: "zai"}];
+        var before = JSON.stringify(costs);
+        // The owner supplies tab IDs first, then the saved order. A repeated
+        // ID must keep its first position, including when it has no usage tab.
+        var ordered = ProviderOrder.orderedItems(costs, "codex,claude,zai,claude,codex");
+        compare(ordered.map(function(item) { return item.provider; }), ["codex", "claude", "zai"]);
+        ordered = ProviderOrder.orderedItems(costs, "codex,zai,claude");
+        compare(ordered.map(function(item) { return item.provider; }), ["codex", "zai", "claude"]);
+        compare(JSON.stringify(costs), before);
+        verify(ordered[0] === costs[1]);
+    }
+
     function test_settingsGroupsPutEnabledProvidersFirstInPopupOrder() {
         var providers = [
             {
