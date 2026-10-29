@@ -193,7 +193,8 @@ def ollama_base(endpoint):
     except ValueError:
         raise Failure("endpoint") from None
     host = (parsed.hostname or "").lower()
-    if (parsed.scheme not in ("http", "https") or not host or parsed.username is not None
+    # Port 0 is no destination; dropping it would silently reach the default port.
+    if (parsed.scheme not in ("http", "https") or not host or port == 0 or parsed.username is not None
             or parsed.password is not None or parsed.query or parsed.fragment
             or parsed.path not in ("", "/")):
         raise Failure("endpoint")
