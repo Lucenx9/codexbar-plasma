@@ -1601,8 +1601,13 @@ selection on range and metric changes without starting a scan.
 metric modes, including unknown versus zero, estimated costs, full-text hover,
 240-pixel and mirrored layouts, and doubled label fonts.
 The monthly credit regression in
-`test_provider_cost_presentation.py` checks that the production adapter and
-usage-row component keep amounts visible independently of popup pace.
+`test_provider_cost_presentation.py` calls `ProviderCostDetails.creditLimitRow`
+directly and renders the shared usage delegate to check that amounts remain
+visible independently of popup pace. Root adapter forwarding is checked in
+`test_ui_cost.py`. The `popup-cost-missing-tokens` smoke scenario executes
+`spendTotalLine()` in the real applet and compares it with the provider snapshot's
+cost total, so dropping the snapshots between selection and presentation fails
+at the runtime boundary.
 
 `make check` covers the runner's portable isolation and failure-handling tests
 and lints the capture QML.
