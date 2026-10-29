@@ -1279,7 +1279,9 @@ the helper against a local HTTP server and fake `secret-tool` and `kdialog`
 executables, and compiles the catalogs to run `main.qml`'s language adapter
 through to the `--language` argument. Adversarial HTTP fixtures cover trickled
 success/error bodies, disconnects, removed models, oversized/deeply nested JSON,
-and malformed destinations. A supervised production-helper fixture verifies
+and malformed destinations. The server records only requests carrying the
+helper's `User-Agent`, because desktop tools may probe any new local port.
+A supervised production-helper fixture verifies
 that killing its timeout owner also stops its wallet child.
 `tests/test_ai_insights_controller.py`
 runs the production controller through Plasma's executable DataSource with a
