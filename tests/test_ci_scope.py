@@ -11,7 +11,7 @@ import tempfile
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
-from ci_scope import ROOT, docs_only, select_runtime, coverage_result
+from ci_scope import EDITORIAL_FILES, ROOT, docs_only, select_runtime, coverage_result
 
 
 class ScopePolicyTests(unittest.TestCase):
@@ -37,8 +37,9 @@ class ScopePolicyTests(unittest.TestCase):
         workflow = (ROOT / ".github/workflows/ci.yml").read_text()
         fast_step = re.search(r"- name: Run fast checks\n(.*?)\n\s*- name:", workflow, re.S)[1]
         fast = set(re.findall(r"(?<![\w-])check-[\w-]+", re.sub(r"#[^\n]*", "", fast_step)))
-        markdown = re.compile(r"(?<![\w.-])(?:docs/[\w.-]+|AGENTS|CLAUDE|README|TODO|CHANGELOG"
-                              r"|NOTICE|CONTRIBUTING|SECURITY)\.md")
+        # Same allowlist as docs_only(): the fixed editorial files plus any docs/ Markdown.
+        markdown = re.compile(r"(?<![\w.-])(?:docs/[\w./-]+\.md|"
+                              + "|".join(map(re.escape, sorted(EDITORIAL_FILES))) + ")")
         for target in targets:
             script = re.search("^" + re.escape(target) + r":\n\t[^\n]*?(scripts/\S+)", makefile, re.M)
             source = ROOT / (script[1] if script else "tests/" + target.removeprefix("check-python-") + ".py")
