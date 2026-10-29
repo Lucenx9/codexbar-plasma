@@ -33,6 +33,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Reject an AI Insights Ollama address with port 0 as invalid instead of
+  silently sending the request to the default HTTP or HTTPS port.
+
 - Preserve the last session list and timestamp when a scan returns only unreadable
   records, instead of silently clearing the Sessions tab.
 

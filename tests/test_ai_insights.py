@@ -353,6 +353,7 @@ class RequestContractTests(HelperTestCase):
                 self.assertEqual(ai.ollama_base(value), expected)
         for value in ("http://192.168.1.4:11434", "http://gpu.example", "ftp://localhost", "https://u:p@gpu.example",
                       "https://gpu.example/api", "https://gpu.example?x=1", "http://localhost:99999",
+                      "http://localhost:0", "https://gpu.example:00",
                       "https://gpu example", "file:///etc/passwd"):
             with self.subTest(value=value), self.assertRaises(ai.Failure):
                 ai.ollama_base(value)
