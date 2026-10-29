@@ -4,6 +4,7 @@ import itertools
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import sys
 import tempfile
@@ -25,6 +26,25 @@ class ScopePolicyTests(unittest.TestCase):
             with self.subTest(path=path):
                 self.assertFalse(docs_only(["README.md", path]))
         self.assertFalse(docs_only([]))
+
+    def test_checks_reading_editorial_markdown_run_with_fast_checks(self):
+        # Editorial-only changes omit check-runtime, so a check that reads an
+        # allowlisted Markdown file must also run in the lint job.
+        makefile = (ROOT / "Makefile").read_text()
+        targets = re.search(r"^CHECK_TARGETS := \\\n((?:\t.*\n)+)", makefile, re.M)[1].replace("\\", "").split()
+        targets = [target for target in targets if not target.startswith("$(")] + [
+            "check-python-" + path.stem for path in sorted((ROOT / "tests").glob("test_*.py"))]
+        workflow = (ROOT / ".github/workflows/ci.yml").read_text()
+        fast = set(re.search(r"make (check-shellcheck(?:\\\n|[^\n])*)", workflow)[1]
+                   .replace("\\", " ").split())
+        markdown = re.compile(r"(?<![\w.-])(?:docs/[\w.-]+|AGENTS|CLAUDE|README|TODO|CHANGELOG"
+                              r"|NOTICE|CONTRIBUTING|SECURITY)\.md")
+        for target in targets:
+            script = re.search("^" + re.escape(target) + r":\n\t(?:python3 )?(scripts/\S+)", makefile, re.M)
+            source = ROOT / (script[1] if script else "tests/" + target.removeprefix("check-python-") + ".py")
+            if source.is_file() and markdown.search(source.read_text(encoding="utf-8")):
+                with self.subTest(target=target):
+                    self.assertIn(target, fast)
 
     def test_gate_accepts_only_proven_coverage_or_explicit_doc_omission(self):
         states = ("success", "failure", "cancelled", "skipped", "", None)

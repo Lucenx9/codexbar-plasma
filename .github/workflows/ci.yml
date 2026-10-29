@@ -48,8 +48,13 @@ jobs:
         run: |
           command -v actionlint
           python3 -c 'import pyflakes'
+          # Checks that read editorial Markdown also run here: an editorial-only
+          # change omits check-runtime. tests/test_ci_scope.py enforces this.
           make check-shellcheck check-workflows check-python-lint check-changelog \
-            check-python-test_documentation check-python-test_ci_scope check-config-schema check-metadata
+            check-python-test_documentation check-python-test_ci_scope check-config-schema check-metadata \
+            check-feature-parity check-provider-icons check-update-widget check-cli-descriptor-contract \
+            check-python-test_changelog check-python-test_release_setup check-python-test_todo_gate \
+            check-python-test_ui_settings_pages
           make package
 
   scope:
