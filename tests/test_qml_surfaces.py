@@ -1,13 +1,18 @@
 """Shell fragment assertions must fail when their source cannot be inspected."""
 
+import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts/lib"))
+from qml_surfaces import surface_files
 
 
 class QmlSurfaceAssertionsTests(unittest.TestCase):
@@ -77,6 +82,25 @@ class QmlSurfaceAssertionsTests(unittest.TestCase):
                 with self.subTest(helper=helper, needle=needle):
                     result = self.run_helper(helper, "applet", needle)
                     self.assertNotEqual(result.returncode, 0, result.stderr)
+
+    def test_unreadable_wildcard_directory_fails_instead_of_returning_partial_sources(self):
+        directory = self.main.parent / "components"
+        directory.mkdir()
+        (directory / "Hidden.qml").write_text("forbidden", encoding="utf-8")
+
+        def deny_directory(scan):
+            def denied(path):
+                if Path(path) == directory:
+                    raise PermissionError("unreadable surface directory")
+                return scan(path)
+            return denied
+
+        # Inject the filesystem error so this also runs in the root CI container.
+        # pathlib uses listdir or scandir depending on the Python version.
+        with mock.patch("os.scandir", side_effect=deny_directory(os.scandir)), \
+                mock.patch("os.listdir", side_effect=deny_directory(os.listdir)):
+            with self.assertRaisesRegex(PermissionError, "unreadable surface directory"):
+                surface_files("applet", self.root)
 
 
 if __name__ == "__main__":

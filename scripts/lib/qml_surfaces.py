@@ -121,10 +121,16 @@ def surface_files(name: str, root: Path | None = None) -> list[Path]:
     excluded = {root / path for path in SURFACE_EXCLUSIONS.get(name, ())}
     seen: dict[Path, None] = {}
     for pattern in SURFACES[name]:
+        candidate = root / pattern
         if any(char in pattern for char in "*?["):
-            matches = sorted(root.glob(pattern))
+            # Manifest wildcards cover filenames only. Unlike glob, iterdir
+            # propagates permission and other scan errors instead of hiding them.
+            try:
+                matches = sorted(path for path in candidate.parent.iterdir()
+                                 if path.match(candidate.name))
+            except FileNotFoundError:
+                matches = []
         else:
-            candidate = root / pattern
             matches = [candidate] if candidate.exists() else []
         for match in matches:
             if match not in excluded:
