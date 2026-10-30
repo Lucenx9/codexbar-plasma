@@ -1006,8 +1006,9 @@ uncovered QML/JS files.
   the check. Use `*_in_file` only for actual per-file contracts, such as safe
   icon fallback in each delegate.
   Shell assertions fail on unknown or empty groups and source discovery/read
-  errors, including negative assertions. `tests/test_qml_surfaces.py` exercises
-  these failures through the actual shell helpers.
+  errors, including unreadable wildcard directories and negative assertions.
+  Missing optional directories still match no files. `tests/test_qml_surfaces.py`
+  covers the loader and actual shell helpers.
 - Use `require_definition_where_used` or
   `Surface.require_definition_where_used` for shared unqualified helpers.
   A declaration in another QML/JS file does not satisfy the caller's scope.
