@@ -15,23 +15,6 @@ CONFIG_XML="${ROOT_DIR}/contents/config/main.xml"
 CONFIG_QML="${ROOT_DIR}/contents/config/config.qml"
 MAKEFILE="${ROOT_DIR}/Makefile"
 
-require_in_file() {
-  local file="$1"
-  local needle="$2"
-  if ! grep -Fq -- "$needle" "$file"; then
-    echo "missing expected fragment in ${file#"$ROOT_DIR"/}: $needle" >&2
-    exit 1
-  fi
-}
-
-reject_in_file() {
-  local file="$1"
-  local needle="$2"
-  if grep -Fq -- "$needle" "$file"; then
-    echo "unexpected fragment in ${file#"$ROOT_DIR"/}: $needle" >&2
-    exit 1
-  fi
-}
 
 reject_in_file "$PROVIDERS_QML" "stdoutText + \"\\n\" + stderrText"
 reject_in_file "$PROVIDERS_QML" "return field.options.length > 0 ? 0 : -1"
