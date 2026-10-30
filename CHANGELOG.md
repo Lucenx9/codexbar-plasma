@@ -10,6 +10,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+## 0.2.53 - 2026-10-30
+
 ### Added
 
 - Refresh usage shortly after the network connection returns instead of
@@ -59,9 +61,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 - Preserve an OpenAI status group's outage severity when the affected component
   falls beyond the displayed child limit.
-- Keep wrapped service status loading and error messages clear of the popup's right edge, matching the component rows.
+- Keep wrapped service status loading and error messages clear of the popup's
+  right edge, matching the component rows.
 - Keep the Status Page component list within the widget's 256 KiB reader limit,
   dropping trailing components instead of showing a valid page as unavailable.
+
+[Full diff](https://github.com/Lucenx9/codexbar-plasma/compare/v0.2.52...v0.2.53)
 
 ## 0.2.52 - 2026-10-26
 
