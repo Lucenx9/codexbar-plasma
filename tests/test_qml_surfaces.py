@@ -2,6 +2,7 @@
 
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
@@ -101,6 +102,21 @@ class QmlSurfaceAssertionsTests(unittest.TestCase):
                 mock.patch("os.listdir", side_effect=deny_directory(os.listdir)):
             with self.assertRaisesRegex(PermissionError, "unreadable surface directory"):
                 surface_files("applet", self.root)
+
+
+class QmlSurfaceHelperShadowingTests(unittest.TestCase):
+    def test_sourcing_scripts_do_not_redefine_library_helpers(self):
+        # A local copy silently replaces the hardened helper, so a negative
+        # assertion on a missing or unreadable file passes again.
+        library = (ROOT / "scripts/lib/qml_surfaces.sh").read_text(encoding="utf-8")
+        helpers = set(re.findall(r"^([a-z_]+)\(\) \{", library, re.M))
+        for script in sorted((ROOT / "scripts").glob("*.sh")):
+            text = script.read_text(encoding="utf-8")
+            if "scripts/lib/qml_surfaces.sh" not in text:
+                continue
+            defined = set(re.findall(r"^([a-z_]+)\(\) \{", text, re.M))
+            with self.subTest(script=script.name):
+                self.assertEqual(defined & helpers, set())
 
 
 if __name__ == "__main__":

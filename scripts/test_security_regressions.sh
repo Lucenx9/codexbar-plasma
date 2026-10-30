@@ -22,14 +22,6 @@ MAKEFILE="${ROOT_DIR}/Makefile"
 UPDATER="${ROOT_DIR}/scripts/update-widget.sh"
 FULL_REPRESENTATION_QML="${ROOT_DIR}/contents/ui/components/FullRepresentation.qml"
 
-require_in_file() {
-  local file="$1"
-  local needle="$2"
-  if ! grep -Fq -- "$needle" "$file"; then
-    echo "missing expected security hardening fragment in ${file#"$ROOT_DIR"/}: $needle" >&2
-    exit 1
-  fi
-}
 
 require_text() {
   local label="$1"

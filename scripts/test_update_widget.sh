@@ -8,23 +8,6 @@ MAKEFILE="${ROOT_DIR}/Makefile"
 INSTALL_SCRIPT="${ROOT_DIR}/install.sh"
 README="${ROOT_DIR}/README.md"
 
-require_in_file() {
-  local file="$1"
-  local needle="$2"
-  if ! grep -Fq -- "$needle" "$file"; then
-    echo "missing expected updater fragment in ${file#"$ROOT_DIR"/}: $needle" >&2
-    exit 1
-  fi
-}
-
-reject_in_file() {
-  local file="$1"
-  local needle="$2"
-  if grep -Fq -- "$needle" "$file"; then
-    echo "unexpected updater fragment in ${file#"$ROOT_DIR"/}: $needle" >&2
-    exit 1
-  fi
-}
 
 if [[ ! -x "$UPDATER" ]]; then
   echo "scripts/update-widget.sh must exist and be executable" >&2
