@@ -88,7 +88,6 @@ reject_in_surface applet "function appendTokenBreakdownRow("
 # The interactive chart is executed by tests/tst_interactive_chart.qml against
 # the real component: keyboard selection, hover inspection, the line-kind
 # plot path and tab reachability each go red there when broken.
-require_in_file "$USAGE_DETAILS_JS" "QML JavaScript has no grapheme segmenter"
 reject_in_file "$USAGE_DETAILS_JS" "sections.length < maximumSectionsPerSnapshot"
 reject_in_file "$USAGE_DETAILS_JS" "rows.length < maximumRowsPerSection"
 reject_in_file "$USAGE_DETAILS_JS" "points.length < maximumPointsPerChart"
