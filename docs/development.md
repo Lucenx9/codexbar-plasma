@@ -1326,6 +1326,12 @@ runtime status, and result signals. The script URL is a local executable
 dependency, not a widget setting. Internal request state and timers remain
 inside the module.
 
+`tests/tst_visual_layout.qml` checks panel meter centering with spare width in
+both panel styles before and after resizing. It also clicks the real copy
+button, checks the emitted text, and observes the confirmation icon and tooltip
+through copied-state changes. Unicode preservation is covered through the public
+normalizer and usage-detail interfaces.
+
 The panel mirror check waits for a rendered frame before and after direction
 changes. Fixture cleanup also waits for the KDE style transition duration before
 QtTest destroys the temporary page, preserving warning failures during teardown.

@@ -327,6 +327,36 @@ TestCase {
         applet.creditsText = "";
     }
 
+    function test_panelMetersStayCenteredWithSpareWidth_data() {
+        return [{tag: "standard", minimal: false}, {tag: "minimal", minimal: true}];
+    }
+
+    function test_panelMetersStayCenteredWithSpareWidth(data) {
+        applet.minimalPanel = data.minimal;
+        applet.panelOrder = ["meters"];
+        applet.providerNameText = "";
+        applet.usageText = "";
+        var panel = createControl("CompactRepresentation", {applet: applet, width: 300, height: 44});
+        if (!panel)
+            return;
+        var meters = [];
+        findAllItems(panel, item => item.activeFocusOnTab && typeof item.activate === "function", meters);
+        compare(meters.length, 2);
+        var contentWidth;
+        for (var width of [300, 500]) {
+            panel.width = width;
+            waitForRendering(panel);
+            var left = Math.min.apply(null, meters.map(item => item.mapToItem(panel, 0, 0).x));
+            var right = Math.max.apply(null, meters.map(item => item.mapToItem(panel, item.width, 0).x));
+            verify(left > 0 && right < panel.width, "Meters must leave spare space on both sides");
+            verify(Math.abs(left - (panel.width - right)) < 1, "Meters must remain centered after resizing");
+            if (contentWidth === undefined)
+                contentWidth = right - left;
+            else
+                verify(Math.abs(right - left - contentWidth) < 1, "Spare width must not stretch the meters apart");
+        }
+    }
+
     function test_minimalPanelAppearance_data() {
         return [
             {tag: "small", extent: 32},
@@ -1082,6 +1112,24 @@ TestCase {
         var button = buttons[0];
         compare(hoverTip.parent, button);
         compare(copiedTip.parent, button);
+        button.forceActiveFocus(Qt.TabFocusReason);
+        tryCompare(hoverTip, "visible", true);
+        var requested = [];
+        row.copyRequested.connect(function(text) {
+            requested.push(text);
+            row.copied = true;
+        });
+        mouseClick(button);
+        compare(requested, ["session text"]);
+        tryCompare(button.icon, "name", "checkmark");
+        tryCompare(hoverTip, "visible", false);
+        tryCompare(copiedTip, "visible", true, 100);
+        row.copied = false;
+        tryCompare(button.icon, "name", "edit-copy");
+        tryCompare(copiedTip, "visible", false);
+        button.forceActiveFocus(Qt.TabFocusReason);
+        tryCompare(hoverTip, "visible", true);
+        testCase.forceActiveFocus();
     }
 
     // The standalone status dot carries its incident label in a tooltip, so

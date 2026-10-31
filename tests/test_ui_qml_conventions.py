@@ -6,7 +6,6 @@ import unittest
 from ui_regression_support import (
     Surface,
     code_contains,
-    copyable_value_qml,
     enclosing_element,
     plain_tool_tip_qml,
     root,
@@ -17,7 +16,6 @@ from ui_regression_support import (
 # component keeps these assertions meaningful instead of silently unhooking them.
 applet = Surface("applet", root)
 providers = Surface("providers", root)
-copyable_value_text = copyable_value_qml.read_text(encoding="utf-8")
 plain_tool_tip_text = plain_tool_tip_qml.read_text(encoding="utf-8")
 
 
@@ -55,26 +53,6 @@ class QmlConventionsTest(unittest.TestCase):
             raise AssertionError(
                 "PlainToolTip must default to the Plasma hover delay: Controls.ToolTip opens with no "
                 "delay of its own, so a pointer crossing the popup flashes every tooltip it passes"
-            )
-
-    def test_copyable_value_feedback(self):
-        if not code_contains(copyable_value_text, 'valueRow.copied ? "checkmark" : "edit-copy"'):
-            raise AssertionError("CopyableValue must provide immediate checkmark icon feedback when copied")
-
-        if not code_contains(copyable_value_text,
-                             "visible: (copyButton.hovered || copyButton.visualFocus) && !valueRow.copied"):
-            raise AssertionError(
-                "the copy button's hover/focus label must hide while the copied confirmation is "
-                "shown, so feedback gets its own visibility transition"
-            )
-        if not code_contains(copyable_value_text, "visible: valueRow.copied"):
-            raise AssertionError(
-                "the copied confirmation must ride its own visibility transition: flipping delay "
-                "on an already-visible tooltip would not restart the pending hover delay"
-            )
-        if not code_contains(copyable_value_text, "delay: 0"):
-            raise AssertionError(
-                "the copied confirmation must appear at once and outlive no hover delay"
             )
 
     def test_text_sizes_follow_theme_fonts(self):
