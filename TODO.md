@@ -13,8 +13,9 @@ Issues linked below preserve discussion; this file owns parity status.
 - Coverage: the [0.83.0 review](docs/research/2026-11-01-macos-parity-0.83.0.md)
   against Plasma `59d45ba` verifies the 111-provider registry with OpenDesign,
   the new inventory `authentication` record against the writers, the identified
-  Codex ledger schema 2 that Plasma's decoder rejects, and unchanged carried
-  blockers. Authenticated output remains unverified.
+  Codex ledger schema 2 that Plasma's decoder rejected at that commit, and
+  unchanged carried blockers. Schema 1/2 support was implemented after that
+  review. Authenticated output remains unverified.
 - Earlier reviews: each dated note in the
   [documentation index](docs/README.md#maintained-references) records its own
   release coverage, probes, and unverified cases. Shared payload structs retain

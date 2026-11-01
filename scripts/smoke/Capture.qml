@@ -1393,11 +1393,19 @@ Item {
                 "identified scope caption is missing");
             var estimate = findItem(popup, "identifiedTokensEstimate");
             var unpriced = findItem(popup, "identifiedTokensUnpriced");
-            verifyScenario(estimate && estimate.visible === (scenario === "identified-schema2"), "wrong estimate visibility");
+            verifyScenario(estimate && estimate.visible === (schema2 && scenario !== "identified-schema2-unpriced"), "wrong estimate visibility");
             verifyScenario(unpriced && unpriced.visible === (scenario === "identified-schema2-unpriced"), "wrong unpriced visibility");
             if (schema2) {
-                verifyScenario(value.apiEstimateUSD === (scenario === "identified-schema2" ? 0.0125 : null), "wrong CLI estimate");
-                verifyScenario(value.unpricedRequestCount === (scenario === "identified-schema2" ? 0 : 1), "wrong unpriced count");
+                var expectedPrice = scenario === "identified-schema2-subcent" ? 0.004
+                    : scenario === "identified-schema2-zero" ? 0 : scenario === "identified-schema2" ? 0.0125 : null;
+                verifyScenario(value.apiEstimateUSD === expectedPrice, "wrong CLI estimate");
+                verifyScenario(value.unpricedRequestCount === (expectedPrice === null ? 1 : 0), "wrong unpriced count");
+                if (scenario === "identified-schema2-subcent")
+                    verifyScenario(hasVisibleText(popup, i18n("API-price estimate: less than %1. Separate from spend totals.", applet.amountString(0.01, "USD"))),
+                        "a positive subcent estimate must not appear as zero");
+                if (scenario === "identified-schema2-zero")
+                    verifyScenario(hasVisibleText(popup, i18n("API-price estimate: %1. Separate from spend totals.", applet.amountString(0, "USD"))),
+                        "a known zero estimate must remain zero");
             }
             var section = findItem(popup, "identifiedTokensSection");
             verifyScenario(section !== null && section.mapToItem(popup, 0, 0).y < 200,

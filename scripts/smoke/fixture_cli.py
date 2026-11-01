@@ -35,6 +35,7 @@ SCENARIOS += ("percent-only-pace",)
 SCENARIOS += ("subscription-dates",)
 SCENARIOS += ("identified-local", "identified-partial", "identified-ssh-failure", "identified-only")
 SCENARIOS += ("identified-schema2", "identified-schema2-unpriced", "identified-schema-mismatch")
+SCENARIOS += ("identified-schema2-subcent", "identified-schema2-zero")
 
 SCENARIOS += ("providers-0740",)
 SCENARIOS += ("empty-providers", "usage-error", "usage-recovery", "cli-missing", "cli-setup", "cli-setup-unusable")
@@ -222,8 +223,9 @@ def response(args, scenario, now):
             if ledger["schemaVersion"] == 2:
                 result["reports"][0].update(source="local", collectedAt=now.isoformat())
                 result["reports"][1]["source"] = "ssh"
-                result["subtotal"].update(costUSD=0.0125 if scenario == "identified-schema2" else None,
-                                          unpricedRequestCount=0 if scenario == "identified-schema2" else 1)
+                price = {"identified-schema2": 0.0125, "identified-schema2-subcent": 0.004,
+                         "identified-schema2-zero": 0}.get(scenario)
+                result["subtotal"].update(costUSD=price, unpricedRequestCount=1 if price is None else 0)
             return result
         assert "--remote" not in args
         return ledger

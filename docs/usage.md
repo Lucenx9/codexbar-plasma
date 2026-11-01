@@ -652,7 +652,8 @@ the CLI's **API-price estimate**, displayed in USD with an explicit estimate
 label. It is an API-equivalent value of the identified requests, not measured
 account spend. If any accepted request has no price, the amount stays unavailable
 and the widget shows the CLI's unpriced-request count. Zero is displayed only
-when the CLI reports a known zero. Local-only ledgers and schema 1 results
+when the CLI reports a known zero; positive estimates below one cent display
+as less than $0.01. Local-only ledgers and schema 1 results
 supply no estimate; the widget never calculates prices from model metadata.
 Tokens and estimates remain separate from cost totals, charts, sharing,
 AI Insights, and quota data. The widget continues to support one optional SSH host.

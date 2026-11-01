@@ -4071,3 +4071,8 @@ msgstr "Estimation aux tarifs de l’API : %1. Distincte des dépenses totales."
 #: contents/ui/components/IdentifiedTokensSection.qml
 msgid "API-price estimate unavailable: %1 without a price."
 msgstr "Estimation aux tarifs de l’API indisponible : %1 sans tarif."
+
+#: contents/ui/components/IdentifiedTokensSection.qml scripts/smoke/Capture.qml
+#, kde-format
+msgid "API-price estimate: less than %1. Separate from spend totals."
+msgstr "Estimation aux tarifs de l’API : moins de %1. Distincte des dépenses totales."

@@ -667,7 +667,11 @@ msgstr ""
 msgid "No identified subtotal loaded."
 msgstr ""
 
-#: contents/ui/components/IdentifiedTokensSection.qml
+#: contents/ui/components/IdentifiedTokensSection.qml scripts/smoke/Capture.qml
+msgid "API-price estimate: less than %1. Separate from spend totals."
+msgstr ""
+
+#: contents/ui/components/IdentifiedTokensSection.qml scripts/smoke/Capture.qml
 msgid "API-price estimate: %1. Separate from spend totals."
 msgstr ""
 

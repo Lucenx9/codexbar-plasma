@@ -4065,3 +4065,8 @@ msgstr "Estimación a precios de la API: %1. Separada de los totales de gasto."
 #: contents/ui/components/IdentifiedTokensSection.qml
 msgid "API-price estimate unavailable: %1 without a price."
 msgstr "Estimación a precios de la API no disponible: %1 sin precio."
+
+#: contents/ui/components/IdentifiedTokensSection.qml scripts/smoke/Capture.qml
+#, kde-format
+msgid "API-price estimate: less than %1. Separate from spend totals."
+msgstr "Estimación a precios de la API: menos de %1. Separada de los totales de gasto."

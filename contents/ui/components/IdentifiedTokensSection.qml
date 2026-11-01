@@ -53,7 +53,9 @@ ColumnLayout {
         objectName: "identifiedTokensEstimate"
         visible: section.snapshot !== null && section.snapshot.apiEstimateUSD !== null
         text: section.snapshot && section.snapshot.apiEstimateUSD !== null
-            ? i18n("API-price estimate: %1. Separate from spend totals.", section.applet.amountString(section.snapshot.apiEstimateUSD, "USD")) : ""
+            ? (section.snapshot.apiEstimateUSD > 0 && section.snapshot.apiEstimateUSD < 0.01
+                ? i18n("API-price estimate: less than %1. Separate from spend totals.", section.applet.amountString(0.01, "USD"))
+                : i18n("API-price estimate: %1. Separate from spend totals.", section.applet.amountString(section.snapshot.apiEstimateUSD, "USD"))) : ""
         Layout.fillWidth: true
         wrapMode: Text.WordWrap
         opacity: section.applet.secondaryTextOpacity
