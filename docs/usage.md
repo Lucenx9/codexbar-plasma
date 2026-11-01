@@ -619,8 +619,8 @@ add a separate section to the global **Usage & Spend** tab. It is off by
 default and requires official `codexbar` 0.75.0 through 0.82.0 on each
 selected computer, plus GNU `timeout` on this computer. CodexBar 0.83.0 emits a
 schema 2 ledger that the widget does not read yet, so loads report an
-unsupported reply. With 0.83.0 on this computer, an older SSH host's data is
-rejected and only the local subtotal remains.
+unsupported reply. With 0.83.0 on this computer, the CLI also rejects an
+older SSH host's data; the widget reports an unsupported reply either way.
 [TODO](../TODO.md#plasma-native-work-with-verified-cli-contracts) tracks
 support. Choose its independent 1–365 day
 window in General. This window
