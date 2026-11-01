@@ -3,7 +3,7 @@
 FROM invent-registry.kde.org/neon/docker-images/plasma@sha256:0f4c2a0ea8f5067371f0104c6251b5ceb96ba6ebe45af0f186c7d7386712600e AS neon
 
 # Ubuntu 24.04 multi-platform index, resolved 2026-10-23; builds select Linux/amd64.
-FROM ubuntu:24.04@sha256:68ee22004a9109b44973313b02ff7b1de250f1de0f5ecb628d73f579aaff33ac
+FROM ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852
 LABEL org.opencontainers.image.source="https://github.com/Lucenx9/codexbar-plasma"
 ENV DEBIAN_FRONTEND=noninteractive LANG=C.UTF-8
 COPY --from=neon /etc/apt/keyrings/neon-archive-keyring.asc /etc/apt/keyrings/neon-archive-keyring.asc
