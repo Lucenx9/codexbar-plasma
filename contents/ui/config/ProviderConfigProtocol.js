@@ -3,6 +3,7 @@
 .import "../ProviderIdentity.js" as ProviderIdentity
 .import "../SafeText.js" as SafeText
 .import "ProviderDescriptor.js" as ProviderDescriptor
+.import "ProviderAuthentication.js" as ProviderAuthentication
 
 // Reads bounded CLI replies and applies the selected provider command contract.
 // QML retains localization, process state, selection, retries, and effects.
@@ -132,7 +133,9 @@ function normalizeProviderList(payload, fallbackTitleResolver) {
                 : fallbackTitle(fallbackTitleResolver, providerID),
             enabled: item.enabled === true,
             defaultEnabled: item.defaultEnabled === true,
-            descriptor: ProviderDescriptor.normalize(item.descriptor, fallbackTitleResolver)
+            descriptor: ProviderDescriptor.normalize(item.descriptor, fallbackTitleResolver),
+            authentication: ProviderAuthentication.normalize(
+                Guards.hasOwnKey(item, "authentication") ? item.authentication : undefined, providerID)
         })
     }
     return providers

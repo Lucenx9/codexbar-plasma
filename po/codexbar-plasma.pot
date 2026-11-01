@@ -3225,6 +3225,22 @@ msgid "Use provider login/source"
 msgstr ""
 
 #: contents/ui/configProviders.qml
+msgid "Environment variables"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Token accounts"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Account setup"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "CLI sign-in"
+msgstr ""
+
+#: contents/ui/configProviders.qml
 msgid "Source"
 msgstr ""
 
@@ -3274,6 +3290,10 @@ msgstr ""
 
 #: contents/ui/configProviders.qml
 msgid "%1 for %2"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Web"
 msgstr ""
 
 #: contents/ui/configProviders.qml
@@ -3338,18 +3358,14 @@ msgid ""
 msgstr ""
 
 #: contents/ui/configProviders.qml
-msgid "Web"
-msgstr ""
-
-#: contents/ui/configProviders.qml
 msgid "Choose a source"
 msgstr ""
 
 #: contents/ui/configProviders.qml
 msgid ""
-"Choose a source to save. CodexBar validates support for this provider; "
-"Automatic clears its saved override. The source override in Diagnostics "
-"takes precedence in the widget."
+"Choose a source to save. Automatic clears its saved override. Listed modes "
+"describe CLI configuration, not Linux availability. The source override in "
+"Diagnostics takes precedence in the widget."
 msgstr ""
 
 #: contents/ui/configProviders.qml

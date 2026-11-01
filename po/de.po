@@ -3803,10 +3803,10 @@ msgstr "Quelle auswählen"
 
 #: contents/ui/configProviders.qml
 msgid ""
-"Choose a source to save. CodexBar validates support for this provider; "
-"Automatic clears its saved override. The source override in Diagnostics "
-"takes precedence in the widget."
-msgstr "Wählen Sie eine Quelle zum Speichern. CodexBar prüft die Unterstützung für diesen Anbieter; Automatisch entfernt seine gespeicherte Vorgabe. Die Quellenvorgabe unter Diagnose hat im Widget Vorrang."
+"Choose a source to save. Automatic clears its saved override. Listed modes "
+"describe CLI configuration, not Linux availability. The source override in "
+"Diagnostics takes precedence in the widget."
+msgstr "Wählen Sie eine zu speichernde Quelle. Automatisch entfernt den gespeicherten Modus. Die aufgeführten Modi beschreiben die CLI-Konfiguration, nicht die Verfügbarkeit unter Linux. Die unter Diagnose festgelegte Quelle hat im Widget Vorrang."
 
 #: contents/ui/components/UsageWindowText.qml
 #, kde-format
@@ -4097,3 +4097,19 @@ msgstr "Schätzung zu API-Preisen nicht verfügbar: %1 ohne Preis."
 #, kde-format
 msgid "API-price estimate: less than %1. Separate from spend totals."
 msgstr "Schätzung zu API-Preisen: weniger als %1. Getrennt von den Gesamtausgaben."
+
+#: contents/ui/configProviders.qml
+msgid "Environment variables"
+msgstr "Umgebungsvariablen"
+
+#: contents/ui/configProviders.qml
+msgid "Token accounts"
+msgstr "Token-Konten"
+
+#: contents/ui/configProviders.qml
+msgid "Account setup"
+msgstr "Kontoeinrichtung"
+
+#: contents/ui/configProviders.qml
+msgid "CLI sign-in"
+msgstr "Anmeldung über die CLI"

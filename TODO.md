@@ -56,8 +56,9 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 
 - [ ] Enable generic settings and token-account editing through official
   descriptors and writes. Linux 0.83.0 still rejects `config providers
-  --descriptors`; its read-only `authentication` record (see Plasma-native
-  work) names source modes, key/cookie support, and environment variables,
+  --descriptors`; its read-only `authentication` record (see the
+  [provider settings guide](docs/usage.md#providers-and-accounts)) names source
+  modes, key/cookie support, and environment variables,
   not field writers. Fields without a writer, settable only through the
   environment the inventory lists: the Bifrost, Aixy, and llmman base URLs
   (`BIFROST_BASE_URL`, `AIXY_BASE_URL`, `LLMMAN_HOST`), the GitKraken
@@ -266,17 +267,6 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 
 ## Plasma-native work with verified CLI contracts
 
-- [ ] Read the 0.83.0 provider-inventory `authentication` record. It lists
-  each provider's `sourceModes` (sampled `set-source` writes accept exactly
-  these), `supportsConfigAPIKey` (matches `set-api-key` for all 111),
-  `supportsConfigCookieHeader` (false for Sakana and DeepSeek though
-  `set-cookie` accepts them), `environmentVariables`, `tokenAccounts` hints,
-  and Copilot's `loginCommand`; `ProviderSource.modes` offers all five modes
-  everywhere. Done when the selector offers only listed modes, key setup also
-  requires the flag, hints show, and older CLIs keep today's behavior. Modes
-  are not Linux availability (Helmcode `web`) and variables are not marked
-  required, so the curated key and cookie allowlists stay.
-  [Evidence](docs/research/2026-11-01-macos-parity-0.83.0.md#linux-cli-contract-changes).
 - [ ] Preserve and present optional detail-row severity. Official Linux CLI
   0.79.0 `plugins fetch` emits `severity: warning` from a synthetic plugin;
   the typed contract allows `normal`, `warning`, and `critical`, independently

@@ -128,6 +128,24 @@ TestCase {
         compare(ProviderConfigProtocol.maximumDiagnosticListItems, 64)
     }
 
+    function test_inventoryPreservesAuthenticationWithoutCredentials() {
+        var payload = [{provider: "copilot", enabled: true, authentication: {
+            sourceModes: ["api", "auto"], supportsConfigAPIKey: true,
+            supportsConfigCookieHeader: true, environmentVariables: ["COPILOT_API_TOKEN"],
+            tokenAccounts: {title: "GitHub accounts", setupHint: "Sign in with multiple GitHub accounts via OAuth."},
+            loginCommand: "codexbar config login --provider copilot", apiKey: "PRIVATE"
+        }}];
+        var result = ProviderConfigProtocol.response(JSON.stringify(payload), "", 0, "list");
+        compare(result.outcome, "success");
+        verify(result.value[0].authentication !== undefined);
+        compare(result.value[0].authentication.sourceModes, ["api", "auto"]);
+        compare(result.value[0].authentication.supportsConfigAPIKey, true);
+        compare(result.value[0].authentication.environmentVariables, ["COPILOT_API_TOKEN"]);
+        compare(result.value[0].authentication.tokenAccounts.title, "GitHub accounts");
+        compare(result.value[0].authentication.loginCommand, "codexbar config login --provider copilot");
+        verify(JSON.stringify(result).indexOf("PRIVATE") < 0);
+    }
+
     function test_providerListResultRequiresTheRevisionItStartedWith() {
         verify(ProviderConfigProtocol.providerListResultIsCurrent(
             { providerConfigRevision: 7 }, 7))

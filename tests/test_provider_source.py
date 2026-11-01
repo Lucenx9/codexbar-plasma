@@ -19,6 +19,7 @@ import "SOURCE_URL/config/ProviderConfigProtocol.js" as ProviderConfigProtocol
 import "SOURCE_URL/CommandLedger.js" as CommandLedger
 import "SOURCE_URL/Guards.js" as Guards
 import "SOURCE_URL/config/ProviderDescriptor.js" as ProviderDescriptor
+import "SOURCE_URL/ProviderIdentity.js" as ProviderIdentity
 TestCase {
     name: "ProviderSourceWrites"
     Component {
@@ -61,6 +62,8 @@ TestCase {
             function providerCliArgument(provider) { return provider; }
             function displayNameForProvider(provider) { return provider; }
             function providerTitle(provider) { return provider; }
+            function providerKey(provider) { return ProviderIdentity.resolveProviderKey(provider); }
+            function providerDiagnosticFor(provider) { return null; }
             function providerMapKey(provider) { return provider; }
             function updateProviderEnabled(provider, enabled) { writes++; }
             function bumpProviderConfigRevision() { revisions++; }
@@ -157,6 +160,49 @@ TestCase {
         page.setApiKey("future");
         verify(page.isPending("future"));
         verify(page.visualEnabled("future", true));
+    }
+    function test_inventoryCapabilitiesGateSourceAndKeyCommands() {
+        var page = createTemporaryObject(harness, this);
+        page.providers = ProviderConfigProtocol.normalizeProviderList([
+            {provider: "openrouter", authentication: {sourceModes: ["api", "auto"], supportsConfigAPIKey: false}},
+            {provider: "flora", authentication: {sourceModes: ["api", "auto"], supportsConfigAPIKey: true}},
+            {provider: "future", authentication: {sourceModes: ["api"], supportsConfigAPIKey: true}}
+        ]);
+        verify(!page.supportsApiKeySetup("openrouter"));
+        verify(!page.supportsApiKeySetup("flora"));
+        verify(!page.supportsApiKeySetup("future"));
+        page.setApiKey("openrouter");
+        page.setProviderSource("openrouter", "web");
+        compare(Object.keys(page.commands).length, 0);
+        page.setProviderSource("openrouter", "api");
+        compare(Object.keys(page.commands).length, 1);
+        page.retireAllConfigCommands();
+        page.providers = ProviderConfigProtocol.normalizeProviderList([
+            {provider: "openrouter", authentication: {supportsConfigAPIKey: true}},
+            {provider: "copilot"}
+        ]);
+        verify(page.supportsApiKeySetup("openrouter"));
+        verify(page.supportsApiKeySetup("copilot"));
+        page.setApiKey("openrouter");
+        compare(Object.keys(page.commands).length, 1);
+    }
+    function test_inventoryHintsAreReadOnlyAndUseTheSelectedExecutable() {
+        var page = createTemporaryObject(harness, this);
+        page.commandPath = "/tmp/custom cli";
+        page.providers = ProviderConfigProtocol.normalizeProviderList([{provider: "copilot", authentication: {
+            sourceModes: ["api", "auto"], supportsConfigAPIKey: true,
+            environmentVariables: ["COPILOT_API_TOKEN"],
+            tokenAccounts: {title: "GitHub accounts", setupHint: "Use multiple accounts"},
+            loginCommand: "codexbar config login --provider copilot"
+        }}]);
+        var rows = page.providerSettingsRows(page.providers[0]);
+        var values = rows.map(function(row) { return row.value; });
+        verify(values.indexOf("COPILOT_API_TOKEN") >= 0);
+        verify(values.indexOf("GitHub accounts") >= 0);
+        verify(values.indexOf("Use multiple accounts") >= 0);
+        verify(values.indexOf("codexbar config login --provider copilot") >= 0);
+        verify(page.providerCliCommandText(page.providers[0]).indexOf("'/tmp/custom cli' config login --provider copilot") >= 0);
+        compare(Object.keys(page.commands).length, 0);
     }
     function test_gateAndUnknownProvider() {
         var page = createTemporaryObject(harness, this);
@@ -354,7 +400,8 @@ class ProviderSourceTests(unittest.TestCase):
                  "promptDescriptorSecret", "runDescriptorAction", "isFieldPending",
                  "markFieldPending", "hasPendingFields",
                  "handleListResult", "shouldRetryProviderListWithoutDescriptors",
-                 "descriptorListUnsupportedMessage", "firstSelectableProvider")
+                 "descriptorListUnsupportedMessage", "firstSelectableProvider", "supportsApiKeySetup",
+                 "providerSettingsRows", "appendSettingsRow", "providerCliCommandText")
         functions = []
         for name in names:
             signature = re.search(r"function " + name + r"\([^)]*\)", source).group(0)

@@ -2,16 +2,27 @@
 .import "../Guards.js" as Guards
 .import "ProviderConfigProtocol.js" as Protocol
 .import "../ProviderIdentity.js" as Identity
+.import "ProviderAuthentication.js" as Authentication
 
-// These are command modes, not a claim that a provider supports each mode.
-// The released CLI owns provider-specific validation and persistence.
-var modes = ["auto", "api", "cli", "oauth", "web"]
+// Older inventories have no per-provider modes. The CLI still validates writes.
+var modes = Authentication.supportedSourceModes.slice()
 
-function planWrite(commandPath, provider, mode) {
+function availableModes(authentication) {
+    if (authentication === undefined || authentication === null) return modes.slice()
+    var result = []
+    var listed = Guards.hasOwnKey(authentication, "sourceModes") ? authentication.sourceModes : null
+    if (!Array.isArray(listed)) return result
+    for (var i = 0; i < Math.min(listed.length, Authentication.maximumListItems); i++) {
+        if (modes.indexOf(listed[i]) >= 0 && result.indexOf(listed[i]) < 0) result.push(listed[i])
+    }
+    return result
+}
+
+function planWrite(commandPath, provider, mode, authentication) {
     if (typeof commandPath !== "string" || commandPath.trim().length === 0
             || Protocol.boundedProviderID(provider) !== provider
             || typeof provider !== "string" || provider.length === 0
-            || modes.indexOf(mode) < 0) {
+            || availableModes(authentication).indexOf(mode) < 0) {
         return {ok: false}
     }
     return {

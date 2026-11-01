@@ -524,6 +524,15 @@ synchronized.
   retains the read-only roster's tolerant record projection and failed-exit
   precedence; `ProviderRoster.js` selects enabled identities from those records.
   JSON parsing errors are bounded and redacted before QML localizes them.
+  `ProviderAuthentication.js` projects the optional 0.83.0 inventory into bounded
+  source modes, writer flags, environment-variable names, redacted account hints
+  and the allowlisted read-only Copilot login hint. Missing metadata retains the
+  legacy setup behavior; malformed advertised capabilities cannot authorize
+  writes and never discard healthy provider records. No credentials or arbitrary
+  commands are retained. Hints use the shared conservative credential filter,
+  without assuming a minimum bearer-token length; a prose word after a credential
+  marker can also be hidden. The curated Linux key setup list remains authoritative
+  in addition to the advertised API-key flag.
   Direct QtTests exercise raw stdout, stderr, and exit codes through this shared
   interface; page tests retain effects, pending state, retries, and stale replies.
 - `contents/ui/controllers/ProviderRosterController.qml` owns the read-only
@@ -1802,7 +1811,10 @@ account records; this probe does not establish authenticated multi-account
 availability or add a Linux login-switching action.
 
 `config/ProviderSource.js` plans allowlisted source-mode writes and validates
-matching provider/source result records. The Providers page owns the CLI 0.73.0
+matching provider/source result records. Available modes come from normalized
+authentication metadata, with the five legacy modes only when that metadata is
+absent. The page maps combo-box indexes through that same per-provider list and
+clears an unsaved selection when the model changes. The Providers page owns the CLI 0.73.0
 capability gate, execution, deadlines, revision writes and
 diagnostic invalidation; `ProviderOperations.js` owns pending state and deferred
 reload decisions. `tests/tst_provider_source.qml` covers its pure boundary;
@@ -1810,6 +1822,11 @@ reload decisions. `tests/tst_provider_source.qml` covers its pure boundary;
 clearing, failure, cancellation, timeout, command retirement, selection changes,
 serialization of source writes with provider-list reloads, and exclusion while
 a descriptor field or action is pending for the same provider.
+`tst_provider_authentication.qml` covers malformed metadata, bounds, credential
+redaction, immutable projections, legacy fallback and the Copilot command
+allowlist. The `settings-providers-auth` and `settings-providers-auth-legacy`
+smoke scenarios execute an API source write with the new and legacy option
+orders, check the key gate and render the read-only hints.
 
 The widget expects a working `codexbar`. Probe the selected official version
 when investigating a contract; keep raw account output out of logs and commits.

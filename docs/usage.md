@@ -546,7 +546,7 @@ Provider-specific editable settings depend on the official CLI contract.
   docs/dashboard/login links.
 - The widget also has a renderer for the proposed
   [provider settings descriptor](cli-provider-settings-descriptor.md).
-  Scoped checks through CLI 0.82.0 still find no descriptors, so cookie, base
+  Scoped checks through CLI 0.83.0 still find no descriptors, so cookie, base
   URL, workspace/project, region, and other descriptor-backed editors remain
   unavailable. CLI 0.82.0 adds `codexbar config set-cookie --provider <id>
   --stdin` and `codexbar config clear-credential --provider <id>` for manual
@@ -555,9 +555,10 @@ Provider-specific editable settings depend on the official CLI contract.
   `codexbar config set-source --provider <id> --source <mode>`; `auto` clears
   the saved override. With CLI 0.73.0 or later, open **Providers → Settings and
   diagnostics**, choose a **Source mode**, and select **Save**. The choices
-  are Automatic, API, CLI, OAuth, and Web; CodexBar validates which modes
-  the provider supports. Unsupported choices show an error without confirming
-  a save. The selector starts at **Choose a source** because the provider
+  come from the provider's `authentication.sourceModes` inventory when available,
+  verified with official Linux CLI 0.83.0. Older inventories keep Automatic,
+  API, CLI, OAuth, and Web; CodexBar validates these legacy choices and reports
+  unsupported modes without confirming a save. The selector starts at **Choose a source** because the provider
   registry does not expose the saved mode; inspect redacted settings to
   request source details.
   Changes are saved immediately, independently of Apply and Cancel. A successful
@@ -565,6 +566,23 @@ Provider-specific editable settings depend on the official CLI contract.
   usage through the existing provider-config revision. The source override in Diagnostics
   still takes precedence globally for widget requests. Older or unrecognized
   CLI versions omit the editor.
+- With CLI 0.83.0 authentication metadata, API-key setup also requires the
+  provider's advertised key-writer flag. The existing curated Linux setup list
+  and version gates still apply: a key-writer flag alone does not make FLORA,
+  Future AGI, or an unknown provider's setup complete.
+  **Settings and diagnostics** shows environment variable names and token-account
+  setup hints without reading their configured values. These variables may be
+  optional; the inventory does not identify which are required. Copilot's
+  **CLI sign-in** is a read-only command hint, also listed under **CLI commands**
+  using the selected executable; the widget does not start a device-login flow.
+  Provider-supplied hints may remain in English and pass through the shared
+  credential-redaction filter. Missing authentication metadata
+  preserves the earlier setup behavior; malformed advertised capabilities do not
+  discard the provider but cannot authorize a key or source write.
+  Listed source modes describe CLI configuration, not Linux availability;
+  for example Helmcode still advertises Web despite its macOS-only fetch.
+
+  ![Synthetic provider authentication hints with the CLI source selector](codexbar-plasma-provider-authentication.png)
 - Gemini under the default Automatic source: CLI 0.77.0 through 0.80.0 on Linux
   rejects Auto for Gemini as a macOS-only web source, so signed-in Gemini users see an error
   where 0.76.0 worked. CLI 0.81.0 fixes this. With an affected CLI, update it, or open

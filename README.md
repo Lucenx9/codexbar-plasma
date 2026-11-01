@@ -131,6 +131,8 @@ After installing through any method:
 3. In widget settings, open **Providers** to enable providers and use their
    supported setup actions. For authentication that needs another tool, follow
    the linked upstream provider instructions.
+   With CLI 0.83.0, **Settings and diagnostics** also lists each provider's
+   source modes and read-only setup hints.
 
 The popup shows quotas when the CLI returns usage. Use **Panel** settings to
 change the compact display and **General** for refresh and privacy settings.
