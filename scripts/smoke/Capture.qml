@@ -1841,20 +1841,46 @@ Item {
                         && !authPage.supportsApiKeySetup("flora") && !authPage.supportsApiKeySetup("future-provider"),
                         "inventory API-key flags bypassed the curated Linux gates");
                     authBox.currentIndex = legacy ? 1 : 0;
-                    authSave.clicked();
+                    authPage.updateProviderEnabled("moonshot", true);
                     providerAuthenticationStep = 2;
                     return false;
                 }
                 if (providerAuthenticationStep === 2) {
+                    verifyScenario(authBox.currentIndex === (legacy ? 1 : 0),
+                        "an unrelated provider reply cleared the unsaved source choice");
+                    authSave.clicked();
+                    providerAuthenticationStep = 3;
+                    return false;
+                }
+                if (providerAuthenticationStep === 3) {
                     if (authPage.isPending("openrouter") || authPage.statusText.length === 0) return false;
                     verifyScenario(authPage.errorText.length === 0 && authBox.currentIndex === -1,
                         "the source writer did not use the selected inventory mode");
                     authPage.statusText = "";
-                    authPage.selectedProviderID = "copilot";
-                    providerAuthenticationStep = 3;
+                    authBox.currentIndex = legacy ? 1 : 0;
+                    authPage.selectedProviderID = "helmcode";
+                    providerAuthenticationStep = 4;
                     return false;
                 }
-                verifyScenario(authBox.count === (legacy ? 5 : 2), "provider selection retained another provider's modes");
+                var legacyModes = ["auto", "api", "cli", "oauth", "web"];
+                if (providerAuthenticationStep === 4) {
+                    verifyScenario(JSON.stringify(authPage.selectedProviderSourceModes)
+                        === JSON.stringify(legacy ? legacyModes : ["auto", "web"])
+                        && authBox.count === (legacy ? 5 : 2) && authBox.currentIndex === -1
+                        && authBox.textAt(0) === i18n("Automatic")
+                        && authBox.textAt(legacy ? 4 : 1) === i18n("Web"),
+                        "Helmcode selection retained another provider's mode values or unsaved choice");
+                    authBox.currentIndex = legacy ? 4 : 1;
+                    authPage.selectedProviderID = "copilot";
+                    providerAuthenticationStep = 5;
+                    return false;
+                }
+                verifyScenario(JSON.stringify(authPage.selectedProviderSourceModes)
+                    === JSON.stringify(legacy ? legacyModes : ["api", "auto"])
+                    && authBox.count === (legacy ? 5 : 2) && authBox.currentIndex === -1
+                    && authBox.textAt(legacy ? 1 : 0) === "API"
+                    && authBox.textAt(legacy ? 0 : 1) === i18n("Automatic"),
+                    "Copilot selection retained another provider's mode values or unsaved choice");
                 var hints = authPage.providerSettingsRows(authPage.selectedProvider).map(function(row) { return row.value; });
                 verifyScenario((hints.indexOf("COPILOT_API_TOKEN") >= 0) === !legacy
                     && (hints.indexOf("GitHub accounts") >= 0) === !legacy
