@@ -44,6 +44,7 @@ KCM.SimpleKCM {
             id: quotaWarningPercentSpin
             objectName: "quotaWarningPercentSpin"
             Kirigami.FormData.label: i18n("Quota warning (% used):")
+            Accessible.name: quotaWarningPercentSpin.Kirigami.FormData.label
             from: 1
             to: 99
             editable: true
@@ -68,6 +69,7 @@ KCM.SimpleKCM {
             id: quotaCriticalPercentSpin
             objectName: "quotaCriticalPercentSpin"
             Kirigami.FormData.label: i18n("Quota critical (% used):")
+            Accessible.name: quotaCriticalPercentSpin.Kirigami.FormData.label
             // Keeping the floor on the warning value makes the "critical is never
             // below warning" rule visible here instead of only correcting it at
             // runtime, where the widget would silently ignore the entered number.

@@ -10,6 +10,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Fixed
+
+- Give Settings number editors, selectors, the identified-token SSH host, and
+  the Ollama address their form labels as screen-reader names.
+
 ## 0.2.53 - 2026-10-30
 
 ### Added

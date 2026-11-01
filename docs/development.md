@@ -945,6 +945,10 @@ clipboard interoperability with every Wayland application or portal backend.
   exception path before the compatibility fallback.
   The desktop run of `tst_settings_pages.qml` also keeps Custom refresh visible
   while a typed interval passes through a preset prefix.
+- Give settings number editors, selectors and text fields an explicit
+  `Accessible.name` bound to their form label. `Kirigami.FormData.label` alone
+  does not name the input for screen readers. `tst_settings_pages.qml` checks
+  the focused production controls with the default and KDE desktop styles.
 - Prefer declarative bindings. Move repeated or expensive calculations into
   helpers or cached properties. Avoid heavy JavaScript in delegates, compact
   rendering, timers, and DataSource callbacks; profile before optimizing.

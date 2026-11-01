@@ -980,4 +980,41 @@ TestCase {
         compare(page.costHistoryRangeEditPending, false);
         compare(page.costHistoryMetricEditPending, false);
     }
+
+    function test_formInputsHaveAccessibleNames_data() {
+        return [
+            {tag: "refresh-preset", source: "configGeneral.qml", control: "refreshPresetCombo", label: "Usage refresh:"},
+            {tag: "refresh-seconds", source: "configGeneral.qml", control: "refreshIntervalSpin", label: "Custom interval (seconds):"},
+            {tag: "history-days", source: "configGeneral.qml", control: "costHistoryDaysSpin", label: "History window (days):"},
+            {tag: "identified-days", source: "configGeneral.qml", control: "identifiedDaysSpin", label: "Identified window (days):"},
+            {tag: "ssh-host", source: "configGeneral.qml", control: "identifiedSshHostField", label: "Optional SSH host:"},
+            {tag: "update-hours", source: "configGeneral.qml", control: "autoUpdateIntervalHoursSpin", label: "Check every (hours):"},
+            {tag: "panel-text", source: "configPanel.qml", control: "panelTextMode", label: "Text format:"},
+            {tag: "panel-quota", source: "configPanel.qml", control: "panelQuotaCombo", label: "Panel quota:"},
+            {tag: "quota-warning", source: "configNotifications.qml", control: "quotaWarningPercentSpin", label: "Quota warning (% used):"},
+            {tag: "quota-critical", source: "configNotifications.qml", control: "quotaCriticalPercentSpin", label: "Quota critical (% used):"},
+            {tag: "ollama-address", source: "configAiInsights.qml", control: "aiInsightsEndpointField", label: "Ollama address:"},
+            {tag: "insights-frequency", source: "configAiInsights.qml", control: "aiInsightsIntervalCombo", label: "Frequency:"}
+        ];
+    }
+
+    function test_formInputsHaveAccessibleNames(data) {
+        var properties = {};
+        if (data.source === "configGeneral.qml") {
+            properties = {cfg_refreshInterval: 370, cfg_costUsageEnabled: true,
+                cfg_identifiedTokensEnabled: true, cfg_updateChecksEnabled: true};
+        } else if (data.source === "configPanel.qml") {
+            properties = {additionalExpanded: true, advancedExpanded: true, cfg_showPercentInPanel: true};
+        } else if (data.source === "configAiInsights.qml") {
+            properties = {cfg_aiInsightsEnabled: true, cfg_aiInsightsProvider: "ollama"};
+        }
+        var page = createPage("../contents/ui/" + data.source, properties);
+        if (!page) return;
+        var control = findChild(page, data.control);
+        verify(control !== null);
+        wait(0);
+        control.forceActiveFocus(Qt.TabFocusReason);
+        verify(control.activeFocus);
+        compare(control.Accessible.name, data.label);
+    }
 }

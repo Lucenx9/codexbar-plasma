@@ -417,6 +417,7 @@ KCM.SimpleKCM {
                 objectName: "panelTextMode"
                 visible: showPercentCheck.checked
                 Kirigami.FormData.label: i18n("Text format:")
+                Accessible.name: displayModeCombo.Kirigami.FormData.label
                 textRole: "text"
                 valueRole: "value"
                 model: [
@@ -612,6 +613,7 @@ KCM.SimpleKCM {
                 id: panelQuotaCombo
                 objectName: "panelQuotaCombo"
                 Kirigami.FormData.label: i18n("Panel quota:")
+                Accessible.name: panelQuotaCombo.Kirigami.FormData.label
                 textRole: "text"
                 valueRole: "value"
                 model: [
