@@ -575,7 +575,8 @@ Provider-specific editable settings depend on the official CLI contract.
   optional; the inventory does not identify which are required. Copilot's
   **CLI sign-in** is a read-only command hint, also listed under **CLI commands**
   using the selected executable; the widget does not start a device-login flow.
-  Provider-supplied hints may remain in English. Missing authentication metadata
+  Provider-supplied hints may remain in English and pass through the shared
+  credential-redaction filter. Missing authentication metadata
   preserves the earlier setup behavior; malformed advertised capabilities do not
   discard the provider but cannot authorize a key or source write.
   Listed source modes describe CLI configuration, not Linux availability;

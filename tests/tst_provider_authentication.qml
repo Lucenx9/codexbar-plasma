@@ -80,6 +80,17 @@ TestCase {
         compare(auth.environmentVariables.length, 64);
         compare(auth.environmentVariables[63], "ENV_63");
     }
+    function test_hintsRedactOpaqueTokensWithoutAssumingTheirLength() {
+        var raw = metadata();
+        for (var token of ["x", "or", "and", "a.b", "short-token"]) {
+            raw.tokenAccounts.setupHint = "Use Bearer " + token + "; see the provider docs.";
+            compare(Authentication.normalize(raw, "future").tokenAccounts.setupHint,
+                "Use Bearer [redacted]; see the provider docs.");
+        }
+        raw.tokenAccounts.setupHint = "Paste a SuperGrok bearer or grok.com cookie. Open token file opens ~/.grok/auth.json.";
+        compare(Authentication.normalize(raw, "grok").tokenAccounts.setupHint,
+            "Paste a SuperGrok Bearer [redacted] grok.com cookie. Open token file opens ~/.grok/auth.json.");
+    }
     function test_loginHintAllowsOnlyTheReleasedCopilotCommand() {
         var raw = metadata();
         raw.loginCommand = "codexbar config login --provider copilot";

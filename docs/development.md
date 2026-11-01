@@ -529,7 +529,9 @@ synchronized.
   and the allowlisted read-only Copilot login hint. Missing metadata retains the
   legacy setup behavior; malformed advertised capabilities cannot authorize
   writes and never discard healthy provider records. No credentials or arbitrary
-  commands are retained. The curated Linux key setup list remains authoritative
+  commands are retained. Hints use the shared conservative credential filter,
+  without assuming a minimum bearer-token length; a prose word after a credential
+  marker can also be hidden. The curated Linux key setup list remains authoritative
   in addition to the advertised API-key flag.
   Direct QtTests exercise raw stdout, stderr, and exit codes through this shared
   interface; page tests retain effects, pending state, retries, and stale replies.
