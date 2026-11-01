@@ -76,8 +76,10 @@ replaced.
 - New implementable gap: accept identified ledger schema 2 (and its
   `costUSD` estimate, `unpricedRequestCount`, `source`, and several remote
   reports) or report a clear version mismatch instead of `unsupported`. The
-  usage guide claims 0.75.0 or later works; with 0.83.0 every successful load
-  fails. Mixed 0.82.0/0.83.0 hosts cannot merge at all.
+  usage guide and README claimed 0.75.0 or later works; with 0.83.0 every
+  successful load fails, and the guide now names 0.75.0 through 0.82.0. With
+  a 0.83.0 collector, a 0.82.0 SSH host's contribution is rejected while the
+  local subtotal remains available.
 - New implementable gap: read `authentication` from the existing provider
   inventory call to offer only the CLI's `sourceModes` in the source selector,
   gate key setup on `supportsConfigAPIKey`, and show `tokenAccounts.setupHint`
