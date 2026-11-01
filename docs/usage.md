@@ -616,13 +616,13 @@ while their tab is open.
 
 Enable **General → Usage history → Show identified Codex token subtotal** to
 add a separate section to the global **Usage & Spend** tab. It is off by
-default and requires official `codexbar` 0.75.0 through 0.82.0 on each
-selected computer, plus GNU `timeout` on this computer. CodexBar 0.83.0 emits a
-schema 2 ledger that the widget does not read yet, so loads report an
-unsupported reply. With 0.83.0 on this computer, the CLI also rejects an
-older SSH host's data; the widget reports an unsupported reply either way.
-[TODO](../TODO.md#plasma-native-work-with-verified-cli-contracts) tracks
-support. Choose its independent 1–365 day
+default and requires official `codexbar` 0.75.0 or later with identified-token
+schema 1 or 2, plus GNU `timeout` on this computer. Schema 1 was verified with
+0.75.0 through 0.82.0; schema 2 was verified with 0.83.0. Use the same supported
+CLI version on both computers for SSH collection: a 0.83.0 collector rejects
+an older host's schema 1 data, while the widget retains the available local
+subtotal with an SSH warning. Unknown or mixed ledger schemas get a distinct
+compatibility message. Choose its independent 1–365 day
 window in General. This window
 starts at midnight UTC and ends at the exact load time displayed in the result;
 it does not follow the cost chart's calendar periods or range selector.
@@ -647,8 +647,16 @@ hides the global tabs, including Usage & Spend.
 The subtotal covers identified requests found in the selected native Codex
 histories, **not account-wide usage**. The CLI deduplicates shared identities
 across sources. Input includes cached input and output includes reasoning;
-these breakdowns are not added again. Prices are unavailable. The number is
-kept separate from cost totals, charts, sharing, AI Insights, and quota data.
+these breakdowns are not added again. A schema 2 local + SSH result can include
+the CLI's **API-price estimate**, displayed in USD with an explicit estimate
+label. It is an API-equivalent value of the identified requests, not measured
+account spend. If any accepted request has no price, the amount stays unavailable
+and the widget shows the CLI's unpriced-request count. Zero is displayed only
+when the CLI reports a known zero; positive estimates below one cent display
+as less than $0.01. Local-only ledgers and schema 1 results
+supply no estimate; the widget never calculates prices from model metadata.
+Tokens and estimates remain separate from cost totals, charts, sharing,
+AI Insights, and quota data. The widget continues to support one optional SSH host.
 
 Unavailable local or SSH data leaves the other source's validated subtotal
 visible with a warning. Conflicting or excluded requests have a separate

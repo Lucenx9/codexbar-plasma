@@ -12,6 +12,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Load identified Codex token subtotals from CLI 0.83.0 schema 2 while retaining
+  schema 1 support. Show CLI API-price estimates separately from spend totals,
+  preserve available local data after SSH failures, and explain schema mismatches.
+
 - Give Settings number editors, selectors, the identified-token SSH host, and
   the Ollama address their form labels as screen-reader names. Selectors also
   announce their current choice as it changes.

@@ -37,7 +37,7 @@ and GNU gettext; see [Development](#development).
 | CLI release checks and managed installs | `python3` and GNU `timeout` |
 | AI Insights | `python3`, GNU `timeout`, and the `QtCore` QML module |
 | AI Insights keys for OpenRouter or OpenAI | Also `kdialog`, `secret-tool`, and a Secret Service provider such as KWallet |
-| Identified Codex token subtotals | CLI 0.75.0 through 0.82.0 and GNU `timeout` |
+| Identified Codex token subtotals | CLI 0.75.0 or later with identified-token schema 1 or 2, and GNU `timeout` |
 | Refresh as soon as the network connection returns | Qt 6.7 or later with the `QtNetwork` QML module |
 | SSH source for identified Codex tokens | Also the CLI on the remote computer and noninteractive SSH authentication with trusted host keys |
 

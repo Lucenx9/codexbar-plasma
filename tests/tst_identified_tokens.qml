@@ -17,6 +17,16 @@ TestCase {
             endUnixMs: endMs, records: rows || [row("a", 100), row("b", 200)],
             conflictingIDs: [], excludedCount: 0, partial: false};
     }
+    function ledger2(rows) {
+        var value = ledger(rows);
+        value.schemaVersion = 2;
+        value.records.forEach(function(record) {
+            record.model = "gpt-5";
+            record.pricingMode = "standard";
+            record.includedInPlan = false;
+        });
+        return value;
+    }
     function subtotal(tokens, requests) {
         return {kind: "identified-request-subtotal", totalTokens: tokens, requestCount: requests,
             conflictCount: 0, excludedCount: 0, partial: false, costUSD: null};
@@ -25,6 +35,18 @@ TestCase {
         return {reports: [{host: "local", ledger: ledger()},
             {host: "build@host", ledger: ledger([row("a", 100), row("c", 300)])}],
             subtotal: subtotal(630, 3), allSourcesAvailable: true, partial: false};
+    }
+    function remotePayload2() {
+        var value = remotePayload();
+        value.reports[0].ledger = ledger2();
+        value.reports[1].ledger = ledger2([row("a", 100), row("c", 300)]);
+        value.reports.forEach(function(report, index) {
+            report.source = index === 0 ? "local" : "ssh";
+            report.collectedAt = "2026-10-15T10:13:27Z";
+        });
+        value.subtotal.costUSD = 0.0125;
+        value.subtotal.unpricedRequestCount = 0;
+        return value;
     }
     function decode(payload, remote, exit) {
         return Identified.decode(JSON.stringify(payload), exit === undefined ? 0 : exit, plan(remote));
@@ -72,6 +94,34 @@ TestCase {
         verify(JSON.stringify(result).indexOf("a".repeat(64)) === -1);
         compare(JSON.stringify(value), before);
     }
+    function test_schema2LocalTokensDoNotInventPrices() {
+        var value = ledger2();
+        var before = JSON.stringify(value);
+        var result = decode(value);
+        compare(result.outcome, "data");
+        compare(result.snapshot.totalTokens, 320);
+        compare(result.snapshot.requestCount, 2);
+        compare(result.snapshot.apiEstimateUSD, null);
+        compare(result.snapshot.unpricedRequestCount, null);
+        verify(!/records|model|pricingMode|includedInPlan/.test(JSON.stringify(result)));
+        compare(JSON.stringify(value), before);
+    }
+    function test_schema2UsesOnlyTheCliEstimate_data() {
+        return [{tag: "priced", amount: 0.0125, unpriced: 0},
+            {tag: "zero", amount: 0, unpriced: 0},
+            {tag: "unknown", amount: null, unpriced: 1}];
+    }
+    function test_schema2UsesOnlyTheCliEstimate(data) {
+        var value = remotePayload2();
+        value.subtotal.costUSD = data.amount;
+        value.subtotal.unpricedRequestCount = data.unpriced;
+        var result = decode(value, "build@host");
+        compare(result.outcome, "data");
+        compare(result.snapshot.totalTokens, 630);
+        compare(result.snapshot.apiEstimateUSD, data.amount);
+        compare(result.snapshot.unpricedRequestCount, data.unpriced);
+        verify(!/records|reports|build@host|collectedAt|model|pricingMode/.test(JSON.stringify(result)));
+    }
     function test_zeroIsAvailableAndConflictsAreExcluded() {
         compare(decode(ledger([])).snapshot.totalTokens, 0);
         compare(decode(ledger([])).outcome, "data");
@@ -101,14 +151,13 @@ TestCase {
         verify(result.snapshot.requestsPartial);
     }
     function test_invalidLedgers_data() {
-        return ["schema", "provider", "start", "end", "timestamp", "cache", "reasoning", "negative",
+        return ["provider", "start", "end", "timestamp", "cache", "reasoning", "negative",
             "fractional", "coerced", "unsafe", "overflow", "sumOverflow", "duplicate", "duplicateConflict", "digest",
             "records", "conflicts", "excluded", "partial", "manyRecords", "manyConflicts"].map(function(tag) { return {tag: tag}; });
     }
     function test_invalidLedgers(data) {
         var value = ledger();
         switch (data.tag) {
-        case "schema": value.schemaVersion = 2; break;
         case "provider": value.provider = "claude"; break;
         case "start": value.startUnixMs++; break;
         case "end": value.endUnixMs++; break;
@@ -132,6 +181,73 @@ TestCase {
         case "manyConflicts": value.conflictingIDs = new Array(50001).fill("a".repeat(64)); break;
         }
         compare(decode(value).outcome, "unsupported");
+    }
+    function test_schemaMismatchIsDistinctFromMalformedData() {
+        var value = ledger();
+        value.schemaVersion = 3;
+        compare(decode(value).outcome, "schemaMismatch");
+        value = remotePayload2();
+        value.reports[1].ledger.schemaVersion = 3;
+        compare(decode(value, "build@host").outcome, "schemaMismatch");
+        value.reports[1].ledger = ledger();
+        compare(decode(value, "build@host").outcome, "schemaMismatch");
+    }
+    function test_schema2OptionalPricingMetadata() {
+        var value = ledger2();
+        value.records[0].model = null;
+        delete value.records[0].pricingMode;
+        delete value.records[1].model;
+        value.records[1].pricingMode = null;
+        value.records[1].includedInPlan = true;
+        compare(decode(value).outcome, "data");
+        value.records[0].pricingMode = "priority";
+        compare(decode(value).outcome, "data");
+    }
+    function test_invalidSchema2Fields_data() {
+        return ["model", "emptyModel", "longModel", "mode", "included", "missingIncluded",
+            "source", "collectedAt", "priceString", "priceNegative", "priceOverflow", "missingPrice",
+            "missingUnpriced", "negativeUnpriced", "fractionalUnpriced", "tooManyUnpriced", "pricedUnknown",
+            "unpricedWithoutUnknown"].map(function(tag) { return {tag: tag}; });
+    }
+    function test_invalidSchema2Fields(data) {
+        var value = remotePayload2();
+        var record = value.reports[0].ledger.records[0];
+        switch (data.tag) {
+        case "model": record.model = {}; break;
+        case "emptyModel": record.model = ""; break;
+        case "longModel": record.model = "x".repeat(1025); break;
+        case "mode": record.pricingMode = "fast"; break;
+        case "included": record.includedInPlan = 1; break;
+        case "missingIncluded": delete record.includedInPlan; break;
+        case "source": value.reports[1].source = "local"; break;
+        case "collectedAt": value.reports[0].collectedAt = "bad date"; break;
+        case "priceString": value.subtotal.costUSD = "0.5"; break;
+        case "priceNegative": value.subtotal.costUSD = -1; break;
+        case "priceOverflow": value.subtotal.costUSD = 9007199254740992; break;
+        case "missingPrice": delete value.subtotal.costUSD; break;
+        case "missingUnpriced": delete value.subtotal.unpricedRequestCount; break;
+        case "negativeUnpriced": value.subtotal.unpricedRequestCount = -1; break;
+        case "fractionalUnpriced": value.subtotal.unpricedRequestCount = 0.5; break;
+        case "tooManyUnpriced": value.subtotal.unpricedRequestCount = 4; break;
+        case "pricedUnknown": value.subtotal.unpricedRequestCount = 1; break;
+        case "unpricedWithoutUnknown": value.subtotal.costUSD = null; break;
+        }
+        compare(decode(value, "build@host").outcome, "unsupported");
+    }
+    function test_schema2RemoteFailureRetainsLocalTokensAndCliEstimate() {
+        var value = remotePayload2();
+        value.reports[1] = {host: "build@host", source: "ssh", error: "SECRET schema 2 SSH failure"};
+        value.allSourcesAvailable = false;
+        value.partial = true;
+        value.subtotal.totalTokens = 320;
+        value.subtotal.requestCount = 2;
+        var result = decode(value, "build@host", 1);
+        compare(result.outcome, "data");
+        compare(result.snapshot.totalTokens, 320);
+        compare(result.snapshot.apiEstimateUSD, 0.0125);
+        verify(result.snapshot.localAvailable && !result.snapshot.remoteAvailable);
+        verify(!result.snapshot.requestsPartial && result.snapshot.partial);
+        verify(JSON.stringify(result).indexOf("SECRET") === -1);
     }
     function test_cliOwnsRemoteDeduplicationAndConflicts() {
         var value = remotePayload();

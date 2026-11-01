@@ -639,7 +639,7 @@ KCM.SimpleKCM {
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            text: i18n("Manual loads in Usage & Spend only. Requires codexbar 0.75.0 or later. Prices are unavailable; this is not account-wide usage.")
+            text: i18n("Manual loads in Usage & Spend only. Requires codexbar 0.75.0 or later with identified-token schema 1 or 2. Any API-price estimate is separate from spend totals; this is not account-wide usage.")
             wrapMode: Text.WordWrap
             font: Kirigami.Theme.smallFont
             opacity: 0.7

@@ -3878,9 +3878,9 @@ msgstr "Aucune source sélectionnée n'a fourni de données Codex identifiées. 
 
 #: contents/ui/components/IdentifiedTokensSection.qml
 msgid ""
-"Could not load identified Codex data. Use codexbar 0.75.0 or later on each "
-"selected source."
-msgstr "Impossible de charger les données Codex identifiées. Utilisez codexbar 0.75.0 ou ultérieur sur chaque source sélectionnée."
+"Could not load identified Codex data. Check local history and use compatible "
+"codexbar versions on each selected source."
+msgstr "Impossible de charger les données Codex identifiées. Vérifiez l’historique local et utilisez des versions compatibles de codexbar sur chaque source sélectionnée."
 
 #: contents/ui/components/IdentifiedTokensSection.qml
 msgid "Identified Codex tokens"
@@ -3888,9 +3888,9 @@ msgstr "Jetons Codex identifiés"
 
 #: contents/ui/components/IdentifiedTokensSection.qml scripts/smoke/Capture.qml
 msgid ""
-"Manual subtotal of identified requests only. No prices; this is not account-"
-"wide usage."
-msgstr "Sous-total manuel des seules requêtes identifiées. Sans prix ; il ne représente pas l'utilisation globale du compte."
+"Manual subtotal of identified requests only. This is not account-wide usage "
+"or spend."
+msgstr "Sous-total manuel des seules requêtes identifiées. Il ne représente pas l’utilisation ou les dépenses totales du compte."
 
 #: contents/ui/components/IdentifiedTokensSection.qml
 msgid "%1 across %2"
@@ -3927,8 +3927,9 @@ msgstr "Les données locales sont indisponibles. Ce sous-total contient uniqueme
 #: contents/ui/components/IdentifiedTokensSection.qml
 msgid ""
 "SSH data is unavailable. This subtotal contains the available local data "
-"only."
-msgstr "Les données SSH sont indisponibles. Ce sous-total contient uniquement les données locales disponibles."
+"only. Check SSH and use the same supported codexbar version on both "
+"computers."
+msgstr "Données SSH indisponibles. Ce sous-total contient uniquement les données locales disponibles. Vérifiez SSH et utilisez la même version prise en charge de codexbar sur les deux ordinateurs."
 
 #: contents/ui/components/IdentifiedTokensSection.qml
 msgid "Some requests could not be included. This subtotal is partial."
@@ -3952,9 +3953,10 @@ msgstr "Afficher le sous-total des jetons Codex identifiés"
 
 #: contents/ui/configGeneral.qml
 msgid ""
-"Manual loads in Usage & Spend only. Requires codexbar 0.75.0 or later. "
-"Prices are unavailable; this is not account-wide usage."
-msgstr "Chargement manuel uniquement dans Utilisation et dépenses. Nécessite codexbar 0.75.0 ou ultérieur. Sans prix ; il ne représente pas l'utilisation globale du compte."
+"Manual loads in Usage & Spend only. Requires codexbar 0.75.0 or later with "
+"identified-token schema 1 or 2. Any API-price estimate is separate from "
+"spend totals; this is not account-wide usage."
+msgstr "Chargement manuel uniquement dans Utilisation et dépenses. Nécessite codexbar 0.75.0 ou ultérieur avec le schéma 1 ou 2 des jetons identifiés. Toute estimation aux tarifs de l’API reste distincte des dépenses totales ; il ne s’agit pas de l’utilisation totale du compte."
 
 #: contents/ui/configGeneral.qml
 msgid "Identified window (days):"
@@ -4055,3 +4057,22 @@ msgstr "Avertissement à partir de %1 %"
 #, kde-format
 msgid "Critical from %1%"
 msgstr "Critique à partir de %1 %"
+
+#: contents/ui/components/IdentifiedTokensSection.qml scripts/smoke/Capture.qml
+msgid ""
+"Unsupported identified-token schema. Use compatible codexbar versions on "
+"each selected source; this widget supports schemas 1 and 2."
+msgstr "Schéma des jetons identifiés non pris en charge. Utilisez des versions compatibles de codexbar sur chaque source sélectionnée ; ce widget prend en charge les schémas 1 et 2."
+
+#: contents/ui/components/IdentifiedTokensSection.qml
+msgid "API-price estimate: %1. Separate from spend totals."
+msgstr "Estimation aux tarifs de l’API : %1. Distincte des dépenses totales."
+
+#: contents/ui/components/IdentifiedTokensSection.qml
+msgid "API-price estimate unavailable: %1 without a price."
+msgstr "Estimation aux tarifs de l’API indisponible : %1 sans tarif."
+
+#: contents/ui/components/IdentifiedTokensSection.qml scripts/smoke/Capture.qml
+#, kde-format
+msgid "API-price estimate: less than %1. Separate from spend totals."
+msgstr "Estimation aux tarifs de l’API : moins de %1. Distincte des dépenses totales."

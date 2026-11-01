@@ -1362,8 +1362,10 @@ Item {
     function scenarioReady() {
         if (scenario.indexOf("identified-") === 0) {
             var popup = applet.fullRepresentationItem;
+            var schema2 = scenario.indexOf("identified-schema2") === 0;
+            var remote = scenario === "identified-ssh-failure" || schema2;
             if (!identifiedRequested) {
-                var button = findItem(popup, scenario === "identified-ssh-failure" ? "identifiedSshButton" : "identifiedLocalButton");
+                var button = findItem(popup, remote ? "identifiedSshButton" : "identifiedLocalButton");
                 if (!button || !button.visible || applet.costLoading) return false;
                 verifyScenario(applet.identifiedTokensSnapshot === null && !applet.identifiedTokensLoading,
                     "identified collection started without a manual action");
@@ -1372,15 +1374,39 @@ Item {
                 identifiedRequested = true;
                 return false;
             }
+            if (scenario === "identified-schema-mismatch") {
+                if (applet.identifiedTokensLoading || applet.identifiedTokensErrorKind.length === 0) return false;
+                verifyScenario(applet.identifiedTokensSnapshot === null && applet.identifiedTokensErrorKind === "schemaMismatch",
+                    "schema mismatch did not keep a distinct failure");
+                verifyScenario(hasVisibleText(popup, i18n("Unsupported identified-token schema. Use compatible codexbar versions on each selected source; this widget supports schemas 1 and 2.")),
+                    "schema mismatch guidance is missing");
+                return true;
+            }
             if (applet.identifiedTokensLoading || !applet.identifiedTokensSnapshot) return false;
             var value = applet.identifiedTokensSnapshot;
             verifyScenario(value.totalTokens === (scenario === "identified-partial" ? 210 : 320), "wrong identified subtotal");
-            verifyScenario(value.allSourcesAvailable === (scenario !== "identified-ssh-failure"), "wrong identified availability");
+            verifyScenario(value.allSourcesAvailable === !remote, "wrong identified availability");
             verifyScenario(value.requestsPartial === (scenario === "identified-partial"), "wrong identified request quality");
             verifyScenario(JSON.stringify(applet.tokenCosts) === costSnapshot && !applet.costLoading, "identified scan changed generic costs");
             verifyScenario(!/records|reports|build@host|costUSD/.test(JSON.stringify(value)), "identified result leaked wire data");
-            verifyScenario(hasVisibleText(popup, i18n("Manual subtotal of identified requests only. No prices; this is not account-wide usage.")),
+            verifyScenario(hasVisibleText(popup, i18n("Manual subtotal of identified requests only. This is not account-wide usage or spend.")),
                 "identified scope caption is missing");
+            var estimate = findItem(popup, "identifiedTokensEstimate");
+            var unpriced = findItem(popup, "identifiedTokensUnpriced");
+            verifyScenario(estimate && estimate.visible === (schema2 && scenario !== "identified-schema2-unpriced"), "wrong estimate visibility");
+            verifyScenario(unpriced && unpriced.visible === (scenario === "identified-schema2-unpriced"), "wrong unpriced visibility");
+            if (schema2) {
+                var expectedPrice = scenario === "identified-schema2-subcent" ? 0.004
+                    : scenario === "identified-schema2-zero" ? 0 : scenario === "identified-schema2" ? 0.0125 : null;
+                verifyScenario(value.apiEstimateUSD === expectedPrice, "wrong CLI estimate");
+                verifyScenario(value.unpricedRequestCount === (expectedPrice === null ? 1 : 0), "wrong unpriced count");
+                if (scenario === "identified-schema2-subcent")
+                    verifyScenario(hasVisibleText(popup, i18n("API-price estimate: less than %1. Separate from spend totals.", applet.amountString(0.01, "USD"))),
+                        "a positive subcent estimate must not appear as zero");
+                if (scenario === "identified-schema2-zero")
+                    verifyScenario(hasVisibleText(popup, i18n("API-price estimate: %1. Separate from spend totals.", applet.amountString(0, "USD"))),
+                        "a known zero estimate must remain zero");
+            }
             var section = findItem(popup, "identifiedTokensSection");
             verifyScenario(section !== null && section.mapToItem(popup, 0, 0).y < 200,
                 "identified section must stay near the top when generic costs are disabled");

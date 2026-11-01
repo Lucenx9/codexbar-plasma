@@ -157,12 +157,15 @@ synchronized.
   Settings changes
   retire outstanding requests and clear transient results. `IdentifiedTokens.js`
   validates the captured UTC window, bounded ledger/envelope and exit status,
-  then returns aggregate counts without request IDs, hosts or raw errors.
+  then returns aggregate counts and optional CLI API-price estimates without
+  request IDs, model metadata, hosts or raw errors. It accepts schemas 1 and 2,
+  reports schema incompatibility separately, and leaves pricing to the CLI.
   `IdentifiedTokensSection.qml` localizes the scope and independent availability
   and partial-request notices. Generic costs and sharing remain separate.
   Direct `tst_identified_tokens.qml`, process tests in
   `test_identified_tokens_context.py`, paired source-isolation tests and the
-  four `identified-*` smoke scenarios cover this path with synthetic data.
+  `identified-*` smoke scenarios cover this path with synthetic data, including
+  schema 2 estimates, unpriced requests and schema mismatch guidance.
 - `contents/ui/components/CostText.qml` localizes normalized token-cost snapshots,
   history labels, qualified cost values, count plurals, spend totals and legacy
   dashboard rows. It receives regional number formatting explicitly and takes
