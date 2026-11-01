@@ -594,7 +594,7 @@ TestCase {
         settingsToggle(page).expanded = true;
         function publish(authentication) {
             page.providers = ProviderConfigProtocol.normalizeProviderList([
-                {provider: "openrouter", authentication: authentication}]);
+                {provider: "openrouter", authentication: authentication}, {provider: "future", enabled: false}]);
             page.selectedProviderID = "openrouter";
         }
         publish({sourceModes: ["api", "auto"], supportsConfigAPIKey: true});
@@ -605,6 +605,10 @@ TestCase {
         compare(box.textAt(1), "Automatic");
         compare(box.currentIndex, -1);
         box.currentIndex = 1;
+        verify(save.enabled);
+        page.updateProviderEnabled("future", true);
+        wait(0);
+        compare(box.currentIndex, 1);
         verify(save.enabled);
         publish({sourceModes: ["api"], supportsConfigAPIKey: false});
         compare(box.count, 1);
