@@ -3,6 +3,7 @@ import QtQuick.Controls as Controls
 import QtTest
 import "../contents/ui/SafeText.js" as SafeText
 import "../contents/ui/ThemeContrast.js" as ThemeContrast
+import "../contents/ui/config/ProviderConfigProtocol.js" as ProviderConfigProtocol
 
 TestCase {
     id: testCase
@@ -592,8 +593,9 @@ TestCase {
         page.handleCliVersionResult("CodexBar 0.83.0", 0);
         settingsToggle(page).expanded = true;
         function publish(authentication) {
-            page.handleListResult({providerConfigRevision: page.cfg_providerConfigRevision},
-                JSON.stringify([{provider: "openrouter", authentication: authentication}]), "", 0);
+            page.providers = ProviderConfigProtocol.normalizeProviderList([
+                {provider: "openrouter", authentication: authentication}]);
+            page.selectedProviderID = "openrouter";
         }
         publish({sourceModes: ["api", "auto"], supportsConfigAPIKey: true});
         var box = findChild(page, "providerSourceBox");
