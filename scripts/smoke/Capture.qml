@@ -36,6 +36,7 @@ Item {
     property var displaySettingsPage
     property var providerSettingsPage
     property int settingsBehaviorStep: 0
+    property int providerAuthenticationStep: 0
     property int settingsCommandSerial: 0
     property var settingsCostSnapshot
     property var settingsProviderSnapshot
@@ -1819,6 +1820,47 @@ Item {
                     status: "available", version: "0.61.0", path: preview.page.cfg_commandPath,
                     manager: "managed", latest: "0.62.0", tag: "v0.62.0"})});
                 navigationVerified = true;
+            }
+            if (scenario.indexOf("settings-providers-auth") === 0) {
+                var authPage = preview.page;
+                var legacy = scenario === "settings-providers-auth-legacy";
+                if (authPage.providers.length !== 7 || !authPage.providerSourceSetupSupported) return false;
+                var authBox = findItem(authPage, "providerSourceBox");
+                var authSave = findItem(authPage, "providerSourceSaveButton");
+                if (providerAuthenticationStep === 0) {
+                    authPage.selectedProviderID = "openrouter";
+                    findItem(authPage, "providerSettingsToggle").expanded = true;
+                    providerAuthenticationStep = 1;
+                    return false;
+                }
+                if (providerAuthenticationStep === 1) {
+                    verifyScenario(authBox.count === (legacy ? 5 : 2) && authBox.currentIndex === -1,
+                        "inventory source choices or initial selection are incorrect");
+                    verifyScenario(authPage.supportsApiKeySetup("openrouter")
+                        && authPage.supportsApiKeySetup("moonshot") === legacy
+                        && !authPage.supportsApiKeySetup("flora") && !authPage.supportsApiKeySetup("future-provider"),
+                        "inventory API-key flags bypassed the curated Linux gates");
+                    authBox.currentIndex = legacy ? 1 : 0;
+                    authSave.clicked();
+                    providerAuthenticationStep = 2;
+                    return false;
+                }
+                if (providerAuthenticationStep === 2) {
+                    if (authPage.isPending("openrouter") || authPage.statusText.length === 0) return false;
+                    verifyScenario(authPage.errorText.length === 0 && authBox.currentIndex === -1,
+                        "the source writer did not use the selected inventory mode");
+                    authPage.statusText = "";
+                    authPage.selectedProviderID = "copilot";
+                    providerAuthenticationStep = 3;
+                    return false;
+                }
+                verifyScenario(authBox.count === (legacy ? 5 : 2), "provider selection retained another provider's modes");
+                var hints = authPage.providerSettingsRows(authPage.selectedProvider).map(function(row) { return row.value; });
+                verifyScenario((hints.indexOf("COPILOT_API_TOKEN") >= 0) === !legacy
+                    && (hints.indexOf("GitHub accounts") >= 0) === !legacy
+                    && (hints.indexOf("codexbar config login --provider copilot") >= 0) === !legacy,
+                    "read-only authentication hints are missing or fabricated for the legacy CLI");
+                return true;
             }
             if (scenario.indexOf("settings-providers") === 0) {
                 var providersPage = preview.page;

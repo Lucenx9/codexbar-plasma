@@ -16,6 +16,7 @@ SCENARIOS += ("settings-panel-scrolled",)
 SCENARIOS += ("settings-providers", "settings-providers-narrow", "settings-providers-error",
               "settings-general-narrow", "settings-popup-narrow", "settings-notifications-narrow",
               "settings-diagnostics-narrow", "settings-diagnostics-error")
+SCENARIOS += ("settings-providers-auth", "settings-providers-auth-legacy")
 SCENARIOS += ("readme-overview", "readme-spend", "readme-sessions", "readme-codex")
 SCENARIOS += ("readme-panel-standard", "readme-panel-minimal")
 SCENARIOS += ("panel-information", "panel-information-minimal", "panel-information-single")
@@ -149,14 +150,36 @@ def readme_cost(provider, days, now):
 
 
 def response(args, scenario, now):
-    """Only the read commands used by the applet are supported."""
+    """Synthetic reads and the source write used by authentication scenarios."""
     if args == ["config", "providers", "--descriptors", "--format", "json", "--json-only"]:
         raise ValueError("Unknown option --descriptors")
     if args == ["--version"]:
+        if scenario.startswith("settings-providers-auth"):
+            return "CodexBar " + ("0.82.0" if scenario.endswith("-legacy") else "0.83.0")
         if scenario.startswith("settings-providers"):
             return "CodexBar 0.73.0 (synthetic smoke fixture)"
         return "CodexBar 0.56.2 (synthetic smoke fixture)"
     if args == ["config", "providers", "--format", "json", "--json-only"]:
+        if scenario.startswith("settings-providers-auth"):
+            rows = [{"provider": key, "enabled": key in ("codex", "copilot", "openrouter")}
+                    for key in ("codex", "copilot", "openrouter", "moonshot", "flora", "helmcode", "future-provider")]
+            if not scenario.endswith("-legacy"):
+                for row in rows:
+                    key = row["provider"]
+                    row["authentication"] = dict(sourceModes=["api", "auto"], supportsConfigAPIKey=key != "moonshot",
+                                                 supportsConfigCookieHeader=False, environmentVariables=[])
+                rows[1]["authentication"].update(environmentVariables=["COPILOT_API_TOKEN"],
+                    supportsConfigCookieHeader=True,
+                    tokenAccounts=dict(title="GitHub accounts", setupHint="Sign in with multiple GitHub accounts via OAuth."),
+                    loginCommand="codexbar config login --provider copilot")
+                rows[2]["authentication"].update(environmentVariables=["OPENROUTER_API_KEY", "OPENROUTER_API_URL"],
+                    tokenAccounts=dict(title="API keys", setupHint="Store multiple OpenRouter API keys."))
+                rows[4]["authentication"]["environmentVariables"] = ["FLORA_API_KEY", "FLORA_WORKSPACE_ID"]
+                rows[0]["authentication"].update(sourceModes=["api", "auto", "cli", "oauth", "web"],
+                                                 supportsConfigAPIKey=False, supportsConfigCookieHeader=True)
+                rows[5]["authentication"].update(sourceModes=["auto", "web"], supportsConfigAPIKey=False,
+                                                 supportsConfigCookieHeader=True)
+            return rows
         if scenario == "empty-providers":
             return []
         if scenario in ("usage-error", "settings-providers-error"):
@@ -180,6 +203,9 @@ def response(args, scenario, now):
                 "jetbrains", "perplexity", "example-provider-with-an-unusually-long-identifier"))
             rows[0]["defaultEnabled"] = True
         return rows
+    if scenario.startswith("settings-providers-auth") and args[:2] == ["config", "set-source"]:
+        assert args == ["config", "set-source", "--provider", "openrouter", "--source", "api", "--format", "json", "--json-only"]
+        return {"provider": "openrouter", "enabled": True, "source": "api"}
     if args == ["diagnose", "--provider", "codex", "--format", "json", "--redact"]:
         return {"provider": "codex", "displayName": "Codex", "source": "cli", "sourceMode": "auto",
                 "auth": {"configured": True, "modes": ["oauth", "apiKey"]},

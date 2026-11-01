@@ -586,6 +586,35 @@ TestCase {
         verify(!box.visible);
     }
 
+    function test_inventoryModesReplaceLegacyChoicesAndResetSelection() {
+        var page = createProvidersPage();
+        if (!page) return;
+        page.handleCliVersionResult("CodexBar 0.83.0", 0);
+        settingsToggle(page).expanded = true;
+        function publish(authentication) {
+            page.handleListResult({providerConfigRevision: page.cfg_providerConfigRevision},
+                JSON.stringify([{provider: "openrouter", authentication: authentication}]), "", 0);
+        }
+        publish({sourceModes: ["api", "auto"], supportsConfigAPIKey: true});
+        var box = findChild(page, "providerSourceBox");
+        var save = findChild(page, "providerSourceSaveButton");
+        compare(box.count, 2);
+        compare(box.textAt(0), "API");
+        compare(box.textAt(1), "Automatic");
+        compare(box.currentIndex, -1);
+        box.currentIndex = 1;
+        verify(save.enabled);
+        publish({sourceModes: ["api"], supportsConfigAPIKey: false});
+        compare(box.count, 1);
+        compare(box.currentIndex, -1);
+        verify(!save.enabled && !page.supportsApiKeySetup("openrouter"));
+        publish(undefined);
+        compare(box.count, 5);
+        verify(page.supportsApiKeySetup("openrouter"));
+        publish({sourceModes: []});
+        verify(!box.visible);
+    }
+
     function optionsNoticeText(page) {
         var all = [];
         walkPageObjects(page, all);
