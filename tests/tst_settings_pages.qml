@@ -983,18 +983,18 @@ TestCase {
 
     function test_formInputsHaveAccessibleNames_data() {
         return [
-            {tag: "refresh-preset", source: "configGeneral.qml", control: "refreshPresetCombo", label: "Usage refresh:"},
+            {tag: "refresh-preset", source: "configGeneral.qml", control: "refreshPresetCombo", label: "Usage refresh:", combo: true},
             {tag: "refresh-seconds", source: "configGeneral.qml", control: "refreshIntervalSpin", label: "Custom interval (seconds):"},
             {tag: "history-days", source: "configGeneral.qml", control: "costHistoryDaysSpin", label: "History window (days):"},
             {tag: "identified-days", source: "configGeneral.qml", control: "identifiedDaysSpin", label: "Identified window (days):"},
             {tag: "ssh-host", source: "configGeneral.qml", control: "identifiedSshHostField", label: "Optional SSH host:"},
             {tag: "update-hours", source: "configGeneral.qml", control: "autoUpdateIntervalHoursSpin", label: "Check every (hours):"},
-            {tag: "panel-text", source: "configPanel.qml", control: "panelTextMode", label: "Text format:"},
-            {tag: "panel-quota", source: "configPanel.qml", control: "panelQuotaCombo", label: "Panel quota:"},
+            {tag: "panel-text", source: "configPanel.qml", control: "panelTextMode", label: "Text format:", combo: true},
+            {tag: "panel-quota", source: "configPanel.qml", control: "panelQuotaCombo", label: "Panel quota:", combo: true},
             {tag: "quota-warning", source: "configNotifications.qml", control: "quotaWarningPercentSpin", label: "Quota warning (% used):"},
             {tag: "quota-critical", source: "configNotifications.qml", control: "quotaCriticalPercentSpin", label: "Quota critical (% used):"},
             {tag: "ollama-address", source: "configAiInsights.qml", control: "aiInsightsEndpointField", label: "Ollama address:"},
-            {tag: "insights-frequency", source: "configAiInsights.qml", control: "aiInsightsIntervalCombo", label: "Frequency:"}
+            {tag: "insights-frequency", source: "configAiInsights.qml", control: "aiInsightsIntervalCombo", label: "Frequency:", combo: true}
         ];
     }
 
@@ -1015,6 +1015,17 @@ TestCase {
         wait(0);
         control.forceActiveFocus(Qt.TabFocusReason);
         verify(control.activeFocus);
-        compare(control.Accessible.name, data.label);
+        if (!data.combo) {
+            compare(control.Accessible.name, data.label);
+            return;
+        }
+        // A non-editable ComboBox has no accessible value, so its name must
+        // carry the selected item or screen readers lose the current choice.
+        verify(control.displayText.length > 0);
+        compare(control.Accessible.name, data.label + " " + control.displayText);
+        var previous = control.displayText;
+        control.currentIndex = (control.currentIndex + 1) % control.count;
+        verify(control.displayText !== previous);
+        compare(control.Accessible.name, data.label + " " + control.displayText);
     }
 }

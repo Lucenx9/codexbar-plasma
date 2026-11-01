@@ -503,7 +503,7 @@ KCM.SimpleKCM {
             id: intervalCombo
             objectName: "aiInsightsIntervalCombo"
             Kirigami.FormData.label: i18n("Frequency:")
-            Accessible.name: intervalCombo.Kirigami.FormData.label
+            Accessible.name: intervalCombo.Kirigami.FormData.label + " " + intervalCombo.displayText
             enabled: enabledCheck.checked
             textRole: "text"
             valueRole: "value"

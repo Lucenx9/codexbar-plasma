@@ -467,7 +467,7 @@ KCM.SimpleKCM {
             id: refreshPresetCombo
             objectName: "refreshPresetCombo"
             Kirigami.FormData.label: i18n("Usage refresh:")
-            Accessible.name: refreshPresetCombo.Kirigami.FormData.label
+            Accessible.name: refreshPresetCombo.Kirigami.FormData.label + " " + refreshPresetCombo.displayText
             textRole: "text"
             valueRole: "value"
             model: [

@@ -947,7 +947,9 @@ clipboard interoperability with every Wayland application or portal backend.
   while a typed interval passes through a preset prefix.
 - Give settings number editors, selectors and text fields an explicit
   `Accessible.name` bound to their form label. `Kirigami.FormData.label` alone
-  does not name the input for screen readers. `tst_settings_pages.qml` checks
+  does not name the input for screen readers. Non-editable combo boxes expose
+  no accessible value, so append their `displayText` to the label to keep the
+  selected item announced. `tst_settings_pages.qml` checks
   the focused production controls with the default and KDE desktop styles.
 - Prefer declarative bindings. Move repeated or expensive calculations into
   helpers or cached properties. Avoid heavy JavaScript in delegates, compact
