@@ -8,13 +8,13 @@ Issues linked below preserve discussion; this file owns parity status.
 
 ## Review baseline
 
-- Last release reviewed: [CodexBar 0.82.0](https://github.com/steipete/CodexBar/releases/tag/v0.82.0),
-  commit `7749f7b94ae8f1b84b9ffb2046643cec810f4078`, checked 2026-10-27.
-- Coverage: the [0.82.0 review](docs/research/2026-10-27-macos-parity-0.82.0.md)
-  against Plasma `3f67915` verifies the unchanged 110-provider registry, the new
-  `config set-cookie` and `clear-credential` writers, which providers' Linux
-  fetches read a manual cookie, and unchanged carried blockers. Custom-provider
-  routing was not reprobed. Authenticated output remains unverified.
+- Last release reviewed: [CodexBar 0.83.0](https://github.com/steipete/CodexBar/releases/tag/v0.83.0),
+  commit `348e2fa8d36ae8e452739ca07a79e83ab9d25e98`, checked 2026-11-01.
+- Coverage: the [0.83.0 review](docs/research/2026-11-01-macos-parity-0.83.0.md)
+  against Plasma `59d45ba` verifies the 111-provider registry with OpenDesign,
+  the new inventory `authentication` record against the writers, the identified
+  Codex ledger schema 2 that Plasma's decoder rejects, and unchanged carried
+  blockers. Authenticated output remains unverified.
 - Earlier reviews: each dated note in the
   [documentation index](docs/README.md#maintained-references) records its own
   release coverage, probes, and unverified cases. Shared payload structs retain
@@ -54,55 +54,41 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   [Future AGI](docs/research/2026-10-17-macos-parity-0.77.0.md#linux-cli-contract-changes).
 
 - [ ] Enable generic settings and token-account editing through official
-  descriptors and writes. Linux 0.79.0 still rejects `config providers
-  --descriptors` (106 records, same four keys); its provider records have no
-  descriptor. Manual cookies have the 0.82.0 `set-cookie` writer (see
-  Plasma-native work); Helmcode stays macOS-only even with one. 0.65.0 adds
-  three more cases. Charm Hyper stores a key, but its default source demands
-  web support on Linux, and it works only with `--source api` and Plasma now
-  supports a persistent per-provider source choice. Bifrost needs a gateway
-  base URL (`enterpriseHost`) with no CLI writer; the CLI reads `BIFROST_BASE_URL` from
-  the environment instead. The optional GitKraken organization ID has no writer
-  either, and neither has llmman's non-default base URL (`LLMMAN_HOST`, 0.66.0).
-  0.67.0 adds Raycast, cookie-only with a macOS-only web source; Aixy's
-  self-hosted base URL (`AIXY_BASE_URL`); and the opt-in LiteLLM model activity
-  (`LITELLM_MODEL_USAGE_ENABLED`) and Claude Admin workspace spend
-  (`ANTHROPIC_ADMIN_WORKSPACE_SPEND`), none of which has a writer.
-  The 0.77.0 Gemini web source runs on Linux only with a manual cookie and
-  `--source web`; its five-hour and weekly windows need window-based labels
-  instead of Plasma's static Gemini Pro/Flash/Flash Lite lanes before it is
-  exposed. Token accounts gain a `claudeConfigDirectory` for Claude local cost
-  with no writer.
-  0.74.0 adds Exa's API key ID (`EXA_API_KEY_ID`) and Cosmic AI's project ID
-  (`COSMIC_PROJECT_ID`): both providers store a key, then refuse to fetch
-  until that environment-only field is set, and `--workspace-id` is refused.
-  `--label` and `--workspace-id` remain z.ai-only: Linux 0.74.1 rejects
-  `set-api-key --provider clinepass --label` despite the release claim (#4305),
-  and labeled Kimi, Doubao, and OpenCode Go accounts remain blocked too.
-  0.78.0 adds Vercel personal budgets with a separate access token and Team
-  ID. Linux 0.79.0 reaches that strategy with environment values, but still
-  rejects `set-api-key --provider vercel --workspace-id` as z.ai-only and has
-  no writer for `VERCEL_ACCESS_TOKEN`. The existing gateway-key setup is separate.
-  Source persistence has the supported 0.73.0 `set-source` writer and
-  version-gated Plasma controls; generic source descriptors and other field
-  writers are absent.
-  0.61.0 adds an `azureOpenAIAPIVersion` config extension value with no
-  supported CLI writer, which the frontend must not reach by editing the config
-  file. Keep existing enable/disable, supported single-key setup, and link
-  fallbacks working.
+  descriptors and writes. Linux 0.83.0 still rejects `config providers
+  --descriptors`; its read-only `authentication` record (see Plasma-native
+  work) names source modes, key/cookie support, and environment variables,
+  not field writers. Fields without a writer, settable only through the
+  environment the inventory lists: the Bifrost, Aixy, and llmman base URLs
+  (`BIFROST_BASE_URL`, `AIXY_BASE_URL`, `LLMMAN_HOST`), the GitKraken
+  organization ID, LiteLLM model activity, Claude Admin workspace spend, Exa's
+  key ID, Cosmic AI's project ID, Vercel's access token and Team ID, and
+  Azure OpenAI's API version. Exa, Cosmic AI, and Vercel personal budgets
+  refuse to fetch without theirs. `--label` and `--workspace-id` remain
+  z.ai-only (ClinePass, Kimi, Doubao, OpenCode Go, and Vercel are refused).
+  Charm Hyper works only with `--source api`, which Plasma's source choice
+  covers; Helmcode's web source stays macOS-only even with a cookie. Vercel's
+  gateway-key setup is separate.
+  The Gemini web source needs window-based labels instead of Plasma's static
+  Pro/Flash/Flash Lite lanes before it is exposed. Token accounts gain a
+  `claudeConfigDirectory` with no writer. Manual cookies and source mode have
+  writers (Plasma-native work). Keep existing enable/disable, single-key setup,
+  and link fallbacks working; never edit the config file from the frontend.
   The [proposal](docs/cli-provider-settings-descriptor.md) covers source mode,
   keys/cookies, URLs, workspace/project, region, AWS profile/auth mode, and
   booleans. Remaining editors include token accounts, auth nuances,
   organization/team, metric, per-provider thresholds, and Fireworks multi-account
   slug editing. Done when the named controls have released generic contracts
-  and tested Plasma support. [Prior discussion #167](https://github.com/Lucenx9/codexbar-plasma/issues/167).
+  and tested Plasma support. Earlier evidence is in each indexed review;
+  [0.83.0 inventory](docs/research/2026-11-01-macos-parity-0.83.0.md#linux-cli-contract-changes);
+  [prior discussion #167](https://github.com/Lucenx9/codexbar-plasma/issues/167).
 
 ### Provider onboarding
 
 - [ ] Add CLI-described browser-cookie import, local-file setup, OAuth/device
-  flow, CLI-auth setup, and token-account actions. Linux 0.82.0 still has no
+  flow, CLI-auth setup, and token-account actions. Linux 0.83.0 still has no
   generic `config action` command (`set-api-key`, `set-source`, `set-cookie`,
-  and `clear-credential` are field writers; the `usage_updated` hook event
+  and `clear-credential` are field writers; the 0.83.0 inventory names only
+  Copilot's `loginCommand`; the `usage_updated` hook event
   is CLI automation surface, not a setup action). The Copilot-only `config login` is tracked as Plasma-native work
   below. Trae CN's signed-in dashboard source is macOS-only on Linux and joins
   the browser-import case here. Done when supported actions expose validated
@@ -154,7 +140,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Cursor cost
 
 - [ ] Show Cursor cost history through the generic Linux `cost` path. Linux
-  0.82.0 still rejects Cursor and lists Antigravity, Claude, Codex, Muse
+  0.83.0 still rejects Cursor and lists Antigravity, Claude, Codex, Muse
   Code, OpenCode Go, and Pi as supported; the 0.74.0 `cursor-agent` login
   (#4397) changes usage authentication only;
   the descriptor gate keeps the new cookie-source availability errors unreachable.
@@ -223,7 +209,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 - [ ] Offer display-currency selection and conversion through an official Linux
   contract. The 0.56.2 audit records no display-currency setter or descriptor;
   the scoped 0.57.0, 0.58.0, 0.60.4, 0.67.0, 0.69.0, 0.72.0, 0.73.0,
-  0.74.0, 0.74.1, 0.75.0, 0.76.0, 0.77.0, 0.80.0, 0.81.0, and 0.82.0 config probes expose neither,
+  0.74.0, 0.74.1, 0.75.0, 0.76.0, 0.77.0, 0.80.0, 0.81.0, 0.82.0, and 0.83.0 config probes expose neither,
   although macOS 0.67.0 adds twelve spend-estimate currencies. Plasma currently
   displays the CLI-emitted currency. Done when released settings and converted
   amounts define currency, rate provenance, and unavailable-conversion behavior,
@@ -257,14 +243,14 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Status components
 
 - [ ] Read service components from an official CLI field. The 0.79.0 Linux
-  `usage --status` record and the v0.82.0 `ProviderStatusPayload` source emit
+  `usage --status` record and the v0.83.0 `ProviderStatusPayload` source emit
   only `indicator`, `description`, `updatedAt`, and `url`, although the macOS
   app's `ProviderStatusComponent` model carries grouped components for Claude,
   Codex, and Augment. Plasma reads Claude and OpenAI components through
   `scripts/status-components.py` meanwhile. Done when a released CLI emits the
   component tree and the widget consumes it, removing the helper and covering
   every provider the CLI describes.
-  [Payload source](https://github.com/steipete/CodexBar/blob/v0.82.0/Sources/CodexBarCLI/CLIPayloads.swift).
+  [Payload source](https://github.com/steipete/CodexBar/blob/v0.83.0/Sources/CodexBarCLI/CLIPayloads.swift).
 
 ### Network error classification
 
@@ -279,6 +265,26 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 
 ## Plasma-native work with verified CLI contracts
 
+- [ ] Accept the identified Codex ledger schema 2. Official Linux CLI 0.83.0
+  emits `schemaVersion: 2` (records add `model`, `pricingMode`,
+  `includedInPlan`; the subtotal adds an API-price `costUSD` estimate and
+  `unpricedRequestCount`), and a 0.82.0 remote fails the merge.
+  `IdentifiedTokens.decode` requires schema 1 and a null `costUSD`, so every
+  0.83.0 load is `unsupported`. Done when schema 2 decodes with bounded checks,
+  any price is labeled an estimate apart from cost totals, a schema mismatch
+  gets a clear message, and fixture tests cover both schemas.
+  [Evidence](docs/research/2026-11-01-macos-parity-0.83.0.md#linux-cli-contract-changes).
+- [ ] Read the 0.83.0 provider-inventory `authentication` record. It lists
+  each provider's `sourceModes` (sampled `set-source` writes accept exactly
+  these), `supportsConfigAPIKey` (matches `set-api-key` for all 111),
+  `supportsConfigCookieHeader` (false for Sakana and DeepSeek though
+  `set-cookie` accepts them), `environmentVariables`, `tokenAccounts` hints,
+  and Copilot's `loginCommand`; `ProviderSource.modes` offers all five modes
+  everywhere. Done when the selector offers only listed modes, key setup also
+  requires the flag, hints show, and older CLIs keep today's behavior. Modes
+  are not Linux availability (Helmcode `web`) and variables are not marked
+  required, so the curated key and cookie allowlists stay.
+  [Evidence](docs/research/2026-11-01-macos-parity-0.83.0.md#linux-cli-contract-changes).
 - [ ] Preserve and present optional detail-row severity. Official Linux CLI
   0.79.0 `plugins fetch` emits `severity: warning` from a synthetic plugin;
   the typed contract allows `normal`, `warning`, and `critical`, independently
@@ -305,15 +311,16 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 - [ ] Offer manual-cookie setup and credential clearing. Official Linux CLI
   0.82.0 adds `config set-cookie --provider <id> (--cookie <h>|--stdin)
   [--no-enable]` and `config clear-credential --provider <id> [--api-key]
-  [--cookie]`; 0.81.0 rejects both. 49 providers accept a cookie; 21 were
-  probed. Under Auto, Claude, Claude Platform, Command Code, Cursor, Mistral,
-  Ollama, OpenCode Go, Parallel, Raycast, TinyApi, Trae CN, TypeSafe, and X
-  API reach their fetch; Gemini does only with `--source web`; Helmcode, Abacus
+  [--cookie]`; 0.81.0 rejects both. 0.83.0 accepts a cookie for 50 providers
+  (22 probed). Under Auto, Claude, Claude Platform, Command Code, Cursor,
+  Mistral, Ollama, OpenCode Go, OpenDesign, Parallel, Raycast, TinyApi, Trae
+  CN, TypeSafe, and X API reach their fetch; Gemini does only with `--source web`; Helmcode, Abacus
   AI, DeepSeek, Alibaba, and Manus stay macOS-only. Done when a version-gated
   action stores a cookie through the stdin prompt for a probe-backed
   allowlist, a clear action (any provider) removes stored credentials, no
   cookie reaches logs or diagnostics, and tests cover older CLIs and refusals.
-  [Evidence](docs/research/2026-10-27-macos-parity-0.82.0.md#linux-cli-contract-changes).
+  [Evidence](docs/research/2026-10-27-macos-parity-0.82.0.md#linux-cli-contract-changes);
+  [OpenDesign](docs/research/2026-11-01-macos-parity-0.83.0.md#linux-cli-contract-changes).
 - [ ] Offer Copilot GitHub device sign-in through
   `codexbar config login --provider copilot --json`. Official Linux CLI 0.80.0
   advertises the command, rejects other providers with an `args` error, and
@@ -379,6 +386,12 @@ These are unresolved Linux candidates, not confirmed missing features.
   30-day pace, and WorkBuddy resets. Done when emitted Linux output shows
   whether Plasma's generic paths suffice.
   [Limits](docs/research/2026-10-27-macos-parity-0.82.0.md#unverified-in-this-review).
+- [ ] Verify 0.83.0 authenticated output: OpenDesign quotas, MiniMax China,
+  Perplexity organization and WorkBuddy reward credits, LiteLLM team budgets,
+  z.ai CNY balances, Copilot monthly pace and ended subscriptions, AWS Bedrock
+  unavailable spend, and the Claude unavailable model breakdown. Done when
+  emitted Linux output shows whether Plasma's generic paths suffice.
+  [Limits](docs/research/2026-11-01-macos-parity-0.83.0.md#unverified-in-this-review).
 
 - [ ] Verify authenticated Claude Platform output from an official Linux CLI
   with a 0.82.0 `set-cookie` manual cookie. Confirm primary API credits,
@@ -413,44 +426,28 @@ These are unresolved Linux candidates, not confirmed missing features.
   frontend change only for a demonstrated mismatch; keep pricing in the CLI.
   [Verified scope and limits](docs/research/2026-10-15-codex-contracts-0.75.0.md#partial-priced-native-history).
 - [ ] Adopt `qmlformat` once it can format this tree readably. Measured at
-  6.11.2 on 2026-09-23. With wrapping disabled, its default, it joins wrapped
-  expressions into lines up to 2570 characters. Any `MaxColumnWidth` rewraps by
-  splitting inside comparisons and aligning continuations under the open
-  parenthesis, such as `incidentProvider` and `!== null` on separate lines; at
-  120 it still leaves 359 lines over the limit, up to 241 characters. The
-  earlier segfault at 140 or less was unbounded recursion on regular expression
-  literals wider than the limit; those literals are now built from strings, and
-  every file formats at 100 or more, while four test files still crash at 80.
+  6.11.2 on 2026-09-23: without wrapping it joins wrapped expressions into
+  lines up to 2570 characters; any `MaxColumnWidth` splits inside comparisons
+  and aligns continuations under the open parenthesis, and at 120 it still
+  leaves 359 lines over the limit. Four test files still crash at 80 (unbounded
+  recursion on wide regular-expression literals; others format at 100 or more).
   [QTBUG-131686](https://qt-project.atlassian.net/browse/QTBUG-131686) closed
-  for 6.11 with `// qmlformat off` comments only, which disable formatting
-  rather than keep line breaks. Rewrapping also breaks
-  `test_feature_parity.sh` and `test_process_lifecycle.sh`, which still match
-  source text literally. Provider metadata expectations now run through public
-  Qt/QML interfaces instead of parsing JavaScript tables, including CLI argument
-  overrides and required brand-color presence. Icon mapping, remaining wiring
-  checks and formatter readability blockers are still open. At that measurement,
-  CI ran 6.11.1 and no container runtime was available to compare its output.
-  Done when a release keeps or improves manual
-  expression line breaks, formats every file readably, and produces the same
-  output on the CI image.
-- [ ] Verify the 0.64.x Linux quota-window changes in official Linux output.
-  0.64.0 claims Linux omits synthetic or unmeasured quota and reports only
-  measured provider-specific windows (#3785); 0.64.1 claims each Antigravity
-  quota pool is listed once with its family label (#3799). Both would change
-  the window array the popup renders, and Plasma currently renders whatever
-  windows arrive. The probe account has no enabled provider returning quota, so
-  neither was observed. 0.73.0 also changes Kimi contradictory-window
-  reconciliation and its Monthly Total pool (#4306), Ollama Free monthly usage
-  (#4308), and JetBrains top-up credit/log quota fallback (#4287, #4288); include these providers in the
-  measured-window comparison. 0.69.0 adds grouped OAuth quotas with weekly-only
-  Starter allowances and explicit window cadence (#4084), still unmeasured.
-  Reproduce with a signed-in Antigravity account and one
-  other quota provider, then classify whether any normalization changes.
-  0.74.0 moves Ollama API-key mode to `/api/balance` with a monthly window
-  (#4399) and adds Qwen Cloud Team windows (#3711); include them too.
-  Cover the 0.73.0 consumer OAuth client change (#4293), the 0.71.0 per-account
-  private-session quotas (#4103), the 0.72.0 2.19.1 OAuth client-credentials
-  recovery (#4229), and the opt-in extra profile homes (#4177) in the same reproduction.
+  for 6.11 with `// qmlformat off` only. Rewrapping also breaks
+  `test_feature_parity.sh` and `test_process_lifecycle.sh`, whose icon-mapping
+  and wiring checks still match source text literally. CI then ran 6.11.1, unmeasured. Done when a release keeps or
+  improves manual expression line breaks, formats every file readably, and
+  produces the same output on the CI image.
+- [ ] Verify the 0.64.x Linux quota-window changes in official Linux output:
+  only measured provider-specific windows (#3785) and one Antigravity pool per
+  family label (#3799). Plasma renders whatever windows arrive; no probe
+  account returned quota. Include later window changes in the same signed-in
+  Antigravity reproduction: Kimi reconciliation and Monthly Total (#4306),
+  Ollama Free monthly and `/api/balance` windows (#4308, #4399), JetBrains
+  top-up/log fallback (#4287, #4288), grouped OAuth and weekly-only Starter
+  quotas (#4084), Qwen Cloud Team windows (#3711), the consumer OAuth client
+  (#4293), per-account private-session quotas (#4103), client-credentials
+  recovery (#4229), and extra profile homes (#4177). Done when each shape is
+  classified as needing a normalization change or not.
   [Unverified at 0.64.1](docs/research/2026-09-22-macos-parity-0.64.1.md#unverified-in-this-review);
   [0.69.0 addition](docs/research/2026-09-29-macos-parity-0.69.0.md#unverified-in-this-review);
   [0.72.0 shapes](docs/research/2026-10-05-macos-parity-0.72.0.md#unverified-in-this-review).
@@ -524,36 +521,29 @@ These are unresolved Linux candidates, not confirmed missing features.
   weekly, or monthly window (#3349). macOS 0.77.0 ranks Auto windows and the
   highest-usage icon by exhausted windows, then the shortest projected
   depletion before reset, then usage (#4491); Plasma's automatic provider
-  ranks by highest used percentage: `ProviderAutoSelect.bestIndex` skips
-  error-only entries (`OverviewProviders.isErrorOnly`) and breaks equal-usage
-  ties by incident severity (`NotificationMemo.severityRank`). The panel lane
-  order in `PanelDisplay.candidateRows` is primary, secondary, tertiary, with
-  exceptions: Factory puts secondary before primary; Perplexity with an
-  exhausted primary goes secondary, tertiary, primary; Cursor with an
-  exhausted primary prepends the providerCost row. Plasma already receives CLI
-  `paceOnTop`/`paceEtaSeconds`. Compare that rule using only CLI pace, never
-  a local projection. Accept a change only
+  ranks by highest used percentage (`ProviderAutoSelect.bestIndex`, skipping
+  error-only entries, ties by incident severity), and
+  `PanelDisplay.candidateRows` orders lanes primary, secondary, tertiary with
+  Factory, Perplexity, and Cursor exceptions. Plasma already receives CLI
+  `paceOnTop`/`paceEtaSeconds`; compare using only CLI pace, never a local
+  projection. Accept a change only
   after reproducing a useful difference with existing Linux fields.
   [Comparison](docs/research/2026-09-09-macos-parity-0.57.0.md#review-automatic-exhausted-quota-selection).
 - [ ] Verify account identity and stale-data behavior against the 0.56.3–0.57.0
   changes: same-email workspaces, measurement timestamps, and transient
   multi-account failures. Compare official Linux records with Plasma account
-  selection/cache tests before classifying a gap; retain CLI ownership of
-  credential matching and recovery. Generic failed-refresh retention and redacted
-  quota restoration are implemented; account identity and credential recovery
-  cases still need the named official CLI probes. At 0.60.4 the token-account
-  label helper preserves `accountID`, but the Claude usage payload still carries
-  no account email (`usage.identity` holds only `providerID`). The 0.76.0
-  release says Claude OAuth accounts now include email, and Plasma already
-  consumes `usage.identity.accountEmail`, but no authenticated Linux record was
-  observed. Verify the emitted shape and multi-account behavior before closing
-  this candidate. A scoped 0.76.0 source check shows Codex usage records use
-  `CodexVisibleAccount.menuDisplayName`, which includes workspace labels and
-  adds stable discriminators for collisions. A synthetic email-only record
-  without that top-level account label is insufficient evidence for changing
-  Plasma's selection keys. Authenticated Linux same-email workspace output
-  remains unverified.
-  [Projection source](https://github.com/steipete/CodexBar/blob/2d8b1409a1649dce60f3610ebe4eab52b92545de/Sources/CodexBarCore/Providers/Codex/CodexVisibleAccountProjection.swift);
+  selection/cache tests before classifying a gap; credential matching and
+  recovery stay CLI-owned. Failed-refresh retention and redacted quota
+  restoration are implemented. At 0.60.4 Claude `usage.identity` held only
+  `providerID`; 0.76.0 says Claude OAuth accounts include email, which Plasma
+  reads from `usage.identity.accountEmail`, but no authenticated Linux record
+  was observed. Codex usage labels come from
+  `CodexVisibleAccount.menuDisplayName` (workspace labels, collision
+  discriminators), and since 0.83.0 a saved custom account name replaces that
+  label (#4782); whether Linux applies it, and so changes Plasma's selection
+  keys, is unobserved. A synthetic email-only record is not enough evidence to
+  change selection keys.
+  [Projection source](https://github.com/steipete/CodexBar/blob/348e2fa8d36ae8e452739ca07a79e83ab9d25e98/Sources/CodexBarCore/Providers/Codex/CodexVisibleAccountProjection.swift);
   [usage source](https://github.com/steipete/CodexBar/blob/2d8b1409a1649dce60f3610ebe4eab52b92545de/Sources/CodexBarCLI/CLIUsageCommand.swift).
   [Release coverage](docs/research/2026-09-09-macos-parity-0.57.0.md#release-coverage).
 - [ ] Evaluate a panel Spend item for providers that report a spend budget.
@@ -573,7 +563,8 @@ These are unresolved Linux candidates, not confirmed missing features.
   display contract. Existing quota lanes and run-out forecasts are implemented.
   [Prior discussion #175](https://github.com/Lucenx9/codexbar-plasma/issues/175).
 - [ ] Decide whether reset-imminent notices add value beyond current quota, pace,
-  and completed-reset notices. Accept only quiet, opt-in, transition-based
+  and completed-reset notices. macOS 0.83.0 adds opt-in Codex reminders 24 h
+  and 1 h before a weekly reset with quota left (#4849); the CLI emits none. Accept only quiet, opt-in, transition-based
   behavior backed by official timing data; otherwise remove the candidate.
   [Prior discussion #176](https://github.com/Lucenx9/codexbar-plasma/issues/176).
 

@@ -616,8 +616,12 @@ while their tab is open.
 
 Enable **General → Usage history → Show identified Codex token subtotal** to
 add a separate section to the global **Usage & Spend** tab. It is off by
-default and requires official `codexbar` 0.75.0 or later on each selected
-computer, plus GNU `timeout` on this computer. Choose its independent 1–365 day
+default and requires official `codexbar` 0.75.0 through 0.82.0 on each
+selected computer, plus GNU `timeout` on this computer. CodexBar 0.83.0 emits a
+schema 2 ledger that the widget does not read yet, so loads report an
+unsupported reply; mixing 0.83.0 with an older SSH host also fails.
+[TODO](../TODO.md#plasma-native-work-with-verified-cli-contracts) tracks
+support. Choose its independent 1–365 day
 window in General. This window
 starts at midnight UTC and ends at the exact load time displayed in the result;
 it does not follow the cost chart's calendar periods or range selector.

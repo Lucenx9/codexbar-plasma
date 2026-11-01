@@ -159,6 +159,10 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
   `config set-cookie` and `clear-credential` writers, which providers accept a
   manual cookie and which still fail on Linux, and isolated carried-blocker
   checks.
+- [0.83.0 release review](research/2026-11-01-macos-parity-0.83.0.md): the
+  111-provider registry with OpenDesign, the inventory `authentication` record
+  checked against the writers, the identified Codex ledger schema 2 that the
+  widget rejects, and isolated carried-blocker checks.
 - [0.75.0 Codex contract verification](research/2026-10-15-codex-contracts-0.75.0.md):
   synthetic native partial-priced cost output, identified-request local/remote
   merge and failure semantics, authoritative reset-credit inventory, and the
