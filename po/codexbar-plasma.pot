@@ -2953,6 +2953,7 @@ msgid "Panel quota:"
 msgstr ""
 
 #: contents/ui/configPanel.qml contents/ui/configProviders.qml
+#: scripts/smoke/Capture.qml
 msgid "Automatic"
 msgstr ""
 
@@ -3292,7 +3293,7 @@ msgstr ""
 msgid "%1 for %2"
 msgstr ""
 
-#: contents/ui/configProviders.qml
+#: contents/ui/configProviders.qml scripts/smoke/Capture.qml
 msgid "Web"
 msgstr ""
 
