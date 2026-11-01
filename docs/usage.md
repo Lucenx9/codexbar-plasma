@@ -940,6 +940,11 @@ fields; track proposed extensions in the issue tracker.
   path has a screen-reader label and supports the form label's keyboard shortcut.
   Its field yields space to **Use PATH** in narrow dialogs with larger text,
   keeping the button and the form's explanations inside the page.
+  Number editors and selectors in General, Panel, Notifications and AI Insights,
+  the identified-token SSH host, and the Ollama address expose their form labels
+  to screen readers, including units for numeric settings. Selectors include
+  the current choice in their accessible name and update it when you change
+  the selection.
   Provider option controls and their Set/Save actions expose the field title
   to screen readers; Diagnostics override fields and output also have names.
   **Popup** and **Notifications** keep their text and controls still while the

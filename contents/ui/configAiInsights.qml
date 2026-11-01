@@ -332,6 +332,7 @@ KCM.SimpleKCM {
             id: endpointField
             objectName: "aiInsightsEndpointField"
             Kirigami.FormData.label: i18n("Ollama address:")
+            Accessible.name: endpointField.Kirigami.FormData.label
             visible: !page.cloudProvider
             enabled: enabledCheck.checked
             placeholderText: "http://localhost:11434"
@@ -502,6 +503,7 @@ KCM.SimpleKCM {
             id: intervalCombo
             objectName: "aiInsightsIntervalCombo"
             Kirigami.FormData.label: i18n("Frequency:")
+            Accessible.name: intervalCombo.Kirigami.FormData.label + " " + intervalCombo.displayText
             enabled: enabledCheck.checked
             textRole: "text"
             valueRole: "value"

@@ -467,6 +467,7 @@ KCM.SimpleKCM {
             id: refreshPresetCombo
             objectName: "refreshPresetCombo"
             Kirigami.FormData.label: i18n("Usage refresh:")
+            Accessible.name: refreshPresetCombo.Kirigami.FormData.label + " " + refreshPresetCombo.displayText
             textRole: "text"
             valueRole: "value"
             model: [
@@ -490,6 +491,7 @@ KCM.SimpleKCM {
             id: refreshIntervalSpin
             objectName: "refreshIntervalSpin"
             Kirigami.FormData.label: i18n("Custom interval (seconds):")
+            Accessible.name: refreshIntervalSpin.Kirigami.FormData.label
             from: 0
             to: 3600
             stepSize: 10
@@ -596,6 +598,7 @@ KCM.SimpleKCM {
             id: costHistoryDaysSpin
             objectName: "costHistoryDaysSpin"
             Kirigami.FormData.label: i18n("History window (days):")
+            Accessible.name: costHistoryDaysSpin.Kirigami.FormData.label
             from: 1
             to: 365
             editable: true
@@ -646,6 +649,7 @@ KCM.SimpleKCM {
             id: identifiedDaysSpin
             objectName: "identifiedDaysSpin"
             Kirigami.FormData.label: i18n("Identified window (days):")
+            Accessible.name: identifiedDaysSpin.Kirigami.FormData.label
             from: 1
             to: 365
             value: 30
@@ -670,6 +674,7 @@ KCM.SimpleKCM {
             id: identifiedSshHostField
             objectName: "identifiedSshHostField"
             Kirigami.FormData.label: i18n("Optional SSH host:")
+            Accessible.name: identifiedSshHostField.Kirigami.FormData.label
             placeholderText: i18n("SSH alias or user@host")
             maximumLength: 255
             enabled: identifiedTokensCheck.checked
@@ -704,6 +709,7 @@ KCM.SimpleKCM {
             id: autoUpdateIntervalHoursSpin
             objectName: "autoUpdateIntervalHoursSpin"
             Kirigami.FormData.label: i18n("Check every (hours):")
+            Accessible.name: autoUpdateIntervalHoursSpin.Kirigami.FormData.label
             from: 1
             to: 168
             editable: true
