@@ -950,7 +950,8 @@ clipboard interoperability with every Wayland application or portal backend.
   does not name the input for screen readers. Non-editable combo boxes expose
   no accessible value, so append their `displayText` to the label to keep the
   selected item announced. `tst_settings_pages.qml` checks
-  the focused production controls with the default and KDE desktop styles.
+  focused production controls and keyboard selection changes with the default
+  and KDE desktop styles.
 - Prefer declarative bindings. Move repeated or expensive calculations into
   helpers or cached properties. Avoid heavy JavaScript in delegates, compact
   rendering, timers, and DataSource callbacks; profile before optimizing.
