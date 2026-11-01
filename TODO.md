@@ -265,15 +265,6 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 
 ## Plasma-native work with verified CLI contracts
 
-- [ ] Accept the identified Codex ledger schema 2. Official Linux CLI 0.83.0
-  emits `schemaVersion: 2` (records add `model`, `pricingMode`,
-  `includedInPlan`; the subtotal adds an API-price `costUSD` estimate and
-  `unpricedRequestCount`), and a 0.82.0 remote fails the merge.
-  `IdentifiedTokens.decode` requires schema 1 and a null `costUSD`, so every
-  0.83.0 load is `unsupported`. Done when schema 2 decodes with bounded checks,
-  any price is labeled an estimate apart from cost totals, a schema mismatch
-  gets a clear message, and fixture tests cover both schemas.
-  [Evidence](docs/research/2026-11-01-macos-parity-0.83.0.md#linux-cli-contract-changes).
 - [ ] Read the 0.83.0 provider-inventory `authentication` record. It lists
   each provider's `sourceModes` (sampled `set-source` writes accept exactly
   these), `supportsConfigAPIKey` (matches `set-api-key` for all 111),

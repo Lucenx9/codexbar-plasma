@@ -181,7 +181,11 @@ UTC window, schema, safe integer counts, up to 50,000 records/conflict IDs per
 ledger, and the shared 4 MiB frontend JSON cap. This ceiling is deliberately
 stricter than the CLI's 32 MiB ledger transport limit; larger results are
 unavailable, never silently truncated. Duplicate ledger IDs and unsafe sums
-are rejected. Only aggregate counts leave the decoder.
+are rejected. Only aggregate counts and the optional CLI API-price estimate
+leave the decoder; request identities, model names and source metadata do not.
+Schemas 1 and 2 are accepted, with a separate compatibility outcome for unknown
+or mixed ledger schemas. Schema 2 validates optional model/pricing-mode fields
+and the required `includedInPlan` boolean without pricing requests locally.
 
 Successful local-only output is a ledger. Its subtotal sums input plus output
 for records outside `conflictingIDs`. With SSH, the CLI owns cross-source
@@ -192,6 +196,14 @@ subtotal can exclude requests. Availability and request completeness remain
 independent. With no available source, the CLI may omit `subtotal` rather than
 encode null. This was rechecked with the official 0.75.0 binary in an isolated
 missing-native-root fixture.
+
+For schema 2 envelopes, the CLI's `costUSD` becomes a separately labeled
+`apiEstimateUSD`, never a generic cost total. `unpricedRequestCount` must be
+a safe integer within the accepted request count. A non-null estimate must be
+finite and nonnegative, with no unpriced requests; a null estimate requires
+at least one. An empty known subtotal has a zero estimate. Bare local ledgers
+and schema 1 envelopes expose no estimate or unpriced count. The widget still
+requests at most one SSH host and rejects additional, unrequested reports.
 
 No prices are inferred and no account-wide coverage is claimed. The
 [controller](../contents/ui/controllers/IdentifiedTokensController.qml) starts
@@ -209,6 +221,22 @@ that both stop, including after settings changes or controller destruction.
 
 ## Pinned CLI evidence
 
+A scoped 2026-11-01 check used the official Linux CodexBar 0.83.0 glibc
+x86_64 archive, SHA-256
+`e278eb0a1b6d620b5c84c157dfb16860a82477af6ec7330b6b6fb5c7f2729b5b`,
+matching the [0.83.0 review](research/2026-11-01-macos-parity-0.83.0.md).
+Bubblewrap hid host homes, runtime files and temporary files, cleared the
+environment and disabled networking. A synthetic native request emitted a
+schema 2 local ledger with 1,100 tokens, `model: "gpt-5"`, `pricingMode: null`
+and an `includedInPlan` boolean. A synthetic SSH executable returning the same
+official ledger verified CLI deduplication to one request, `source` and
+`collectedAt` metadata, and an envelope with `costUSD: null` and
+`unpricedRequestCount: 1`. No authenticated data or real SSH was used.
+Nonzero price presentation is covered by synthetic QtTest and popup fixtures;
+the probe did not establish a nonzero estimate. The released
+[`CodexRequestSubtotal` contract](https://github.com/steipete/CodexBar/blob/348e2fa8d36ae8e452739ca07a79e83ab9d25e98/Sources/CodexBarCore/Providers/Codex/CodexRequestLedger.swift)
+defines its amount as an API-equivalent estimate over accepted requests.
+
 A scoped check on 2026-10-18 used official Linux CodexBar 0.76.0 (source commit
 `2d8b1409a1649dce60f3610ebe4eab52b92545de`), with home directories hidden,
 an empty environment, and networking disabled. The installed binary matched
@@ -224,8 +252,9 @@ confirms that native mixed priced/unpriced history retains its priced USD
 subtotal and every measured token count. Fully unpriced history omits costs
 instead of reporting zero. Existing normalization and sharing preserve both
 shapes, including their incomplete/estimated notice and privacy projection.
-The separate experimental identified-request local/SSH subtotal has no prices
-and is not consumed by the widget's generic cost path. A synthetic historical
+At that version, the separate experimental identified-request local/SSH subtotal
+had no prices. Schema 2 estimates remain outside the widget's generic cost path.
+A synthetic historical
 scanner-cache fixture also verifies known-model partial subtotals and their
 sharing notice. Imported incomplete rows remain unverified.
 

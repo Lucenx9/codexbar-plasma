@@ -637,10 +637,16 @@ msgid ""
 "SSH setup."
 msgstr ""
 
+#: contents/ui/components/IdentifiedTokensSection.qml scripts/smoke/Capture.qml
+msgid ""
+"Unsupported identified-token schema. Use compatible codexbar versions on "
+"each selected source; this widget supports schemas 1 and 2."
+msgstr ""
+
 #: contents/ui/components/IdentifiedTokensSection.qml
 msgid ""
-"Could not load identified Codex data. Use codexbar 0.75.0 or later on each "
-"selected source."
+"Could not load identified Codex data. Check local history and use compatible "
+"codexbar versions on each selected source."
 msgstr ""
 
 #: contents/ui/components/IdentifiedTokensSection.qml
@@ -649,8 +655,8 @@ msgstr ""
 
 #: contents/ui/components/IdentifiedTokensSection.qml scripts/smoke/Capture.qml
 msgid ""
-"Manual subtotal of identified requests only. No prices; this is not account-"
-"wide usage."
+"Manual subtotal of identified requests only. This is not account-wide usage "
+"or spend."
 msgstr ""
 
 #: contents/ui/components/IdentifiedTokensSection.qml
@@ -659,6 +665,14 @@ msgstr ""
 
 #: contents/ui/components/IdentifiedTokensSection.qml
 msgid "No identified subtotal loaded."
+msgstr ""
+
+#: contents/ui/components/IdentifiedTokensSection.qml
+msgid "API-price estimate: %1. Separate from spend totals."
+msgstr ""
+
+#: contents/ui/components/IdentifiedTokensSection.qml
+msgid "API-price estimate unavailable: %1 without a price."
 msgstr ""
 
 #: contents/ui/components/IdentifiedTokensSection.qml
@@ -688,7 +702,8 @@ msgstr ""
 #: contents/ui/components/IdentifiedTokensSection.qml
 msgid ""
 "SSH data is unavailable. This subtotal contains the available local data "
-"only."
+"only. Check SSH and use the same supported codexbar version on both "
+"computers."
 msgstr ""
 
 #: contents/ui/components/IdentifiedTokensSection.qml
@@ -2545,8 +2560,9 @@ msgstr ""
 
 #: contents/ui/configGeneral.qml
 msgid ""
-"Manual loads in Usage & Spend only. Requires codexbar 0.75.0 or later. "
-"Prices are unavailable; this is not account-wide usage."
+"Manual loads in Usage & Spend only. Requires codexbar 0.75.0 or later with "
+"identified-token schema 1 or 2. Any API-price estimate is separate from "
+"spend totals; this is not account-wide usage."
 msgstr ""
 
 #: contents/ui/configGeneral.qml

@@ -34,6 +34,7 @@ SCENARIOS += ("percent-only-usage", "percent-only-panel")
 SCENARIOS += ("percent-only-pace",)
 SCENARIOS += ("subscription-dates",)
 SCENARIOS += ("identified-local", "identified-partial", "identified-ssh-failure", "identified-only")
+SCENARIOS += ("identified-schema2", "identified-schema2-unpriced", "identified-schema-mismatch")
 
 SCENARIOS += ("providers-0740",)
 SCENARIOS += ("empty-providers", "usage-error", "usage-recovery", "cli-missing", "cli-setup", "cli-setup-unusable")
@@ -206,12 +207,24 @@ def response(args, scenario, now):
                                               for key, tokens in (("a", 100), ("b", 200))],
                       conflictingIDs=["a" * 64] if partial else [], excludedCount=2 if partial else 0,
                       partial=partial)
-        if scenario == "identified-ssh-failure":
+        if scenario.startswith("identified-schema2"):
+            ledger["schemaVersion"] = 2
+            for record in ledger["records"]:
+                record.update(model="gpt-5", pricingMode="standard", includedInPlan=False)
+        if scenario == "identified-schema-mismatch":
+            ledger["schemaVersion"] = 3
+        if scenario == "identified-ssh-failure" or scenario.startswith("identified-schema2"):
             assert args[args.index("--remote") + 1] == "build@host"
-            return dict(reports=[dict(host="local", ledger=ledger), dict(host="build@host", error="synthetic SSH failure")],
-                        subtotal=dict(kind="identified-request-subtotal", totalTokens=320, requestCount=2,
-                                      conflictCount=0, excludedCount=0, partial=False, costUSD=None),
-                        allSourcesAvailable=False, partial=True)
+            result = dict(reports=[dict(host="local", ledger=ledger), dict(host="build@host", error="synthetic SSH failure")],
+                          subtotal=dict(kind="identified-request-subtotal", totalTokens=320, requestCount=2,
+                                        conflictCount=0, excludedCount=0, partial=False, costUSD=None),
+                          allSourcesAvailable=False, partial=True)
+            if ledger["schemaVersion"] == 2:
+                result["reports"][0].update(source="local", collectedAt=now.isoformat())
+                result["reports"][1]["source"] = "ssh"
+                result["subtotal"].update(costUSD=0.0125 if scenario == "identified-schema2" else None,
+                                          unpricedRequestCount=0 if scenario == "identified-schema2" else 1)
+            return result
         assert "--remote" not in args
         return ledger
     # CLI 0.67.0 calendar periods: an English label and, for all history, the
@@ -349,7 +362,7 @@ def main():
         # kills the process group after capturing the loading/restored state.
         time.sleep(MAX_SCENARIO_TIMEOUT_SECONDS + 1)
     print(result if isinstance(result, str) else json.dumps(result))
-    if scenario == "identified-ssh-failure" and "--identified-only" in sys.argv:
+    if (scenario == "identified-ssh-failure" or scenario.startswith("identified-schema2")) and "--identified-only" in sys.argv:
         sys.exit(1)
 
 

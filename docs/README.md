@@ -35,7 +35,8 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
   the pinned Linux CLI evidence behind the popup, plus the separate manual
   identified Codex token subtotal and its decoder limits.
 - [Identified-token screenshot](codexbar-plasma-identified-tokens.png): synthetic
-  local subtotal retained after an SSH-source failure, used in the usage guide.
+  schema 2 local subtotal and separate API-price estimate retained after an
+  SSH-source failure, used in the usage guide.
 - [AI Insights](ai-insights.md): the optional insight card and analysis view, their
   boundary decision, allowlisted snapshot, private helper handoff, language selection, request and credential contracts,
   scheduling, and tests.

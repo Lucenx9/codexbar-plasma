@@ -54,6 +54,17 @@ TestCase {
         wait(200);
         completed(subject, 110);
     }
+    function test_schema2ActionAndSchemaMismatch() {
+        var subject = create("schema2");
+        verify(subject.request(false));
+        completed(subject, 110);
+        compare(subject.snapshot.apiEstimateUSD, null);
+        subject.commandPath = "FIXTURES/schema-mismatch";
+        verify(subject.request(false));
+        tryCompare(subject, "loading", false, 8000);
+        compare(subject.snapshot, null);
+        compare(subject.errorKind, "schemaMismatch");
+    }
     function test_quotedExecutableAndMissingTimeout() {
         var quoted = create("quoted ' CLI");
         verify(quoted.request(false));
@@ -186,6 +197,11 @@ ledger = dict(schemaVersion=1, provider="codex", startUnixMs=start, endUnixMs=en
                             outputTokens=10, cacheReadTokens=40)],
               conflictingIDs=[], excludedCount=1 if name == "partial" else 0,
               partial=name == "partial")
+if name == "schema2":
+    ledger["schemaVersion"] = 2
+    ledger["records"][0].update(model="gpt-5", pricingMode=None, includedInPlan=False)
+if name == "schema-mismatch":
+    ledger["schemaVersion"] = 3
 if name.startswith("slow"):
     time.sleep(1.5)
 if name == "local-failure":
@@ -226,7 +242,7 @@ class IdentifiedTokensContextTest(unittest.TestCase):
     def test_manual_controller(self):
         with tempfile.TemporaryDirectory(prefix="codexbar-identified-") as temporary:
             work = Path(temporary)
-            names = ("idle", "disabled", "local", "remote-failure", "partial", "local-failure",
+            names = ("idle", "disabled", "local", "remote-failure", "partial", "local-failure", "schema2", "schema-mismatch",
                      "slow-context", "slow-timeout", "slow-destroy", "invalid-host", "slow-replace",
                      "quoted ' CLI", "missing-tool", "recovered", "hang-tree", "hang-tree-retired", "hang-tree-destroyed")
             for name in names:

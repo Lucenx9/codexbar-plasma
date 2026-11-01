@@ -3899,9 +3899,9 @@ msgstr "Keine ausgewählte Quelle hat identifizierte Codex-Daten geliefert. Prü
 
 #: contents/ui/components/IdentifiedTokensSection.qml
 msgid ""
-"Could not load identified Codex data. Use codexbar 0.75.0 or later on each "
-"selected source."
-msgstr "Identifizierte Codex-Daten konnten nicht geladen werden. Verwenden Sie codexbar 0.75.0 oder neuer auf jeder ausgewählten Quelle."
+"Could not load identified Codex data. Check local history and use compatible "
+"codexbar versions on each selected source."
+msgstr "Identifizierte Codex-Daten konnten nicht geladen werden. Prüfen Sie den lokalen Verlauf und verwenden Sie kompatible codexbar-Versionen auf jeder ausgewählten Quelle."
 
 #: contents/ui/components/IdentifiedTokensSection.qml
 msgid "Identified Codex tokens"
@@ -3909,9 +3909,9 @@ msgstr "Identifizierte Codex-Token"
 
 #: contents/ui/components/IdentifiedTokensSection.qml scripts/smoke/Capture.qml
 msgid ""
-"Manual subtotal of identified requests only. No prices; this is not account-"
-"wide usage."
-msgstr "Manuelle Teilsumme nur identifizierter Anfragen. Ohne Preise; dies ist nicht die gesamte Kontonutzung."
+"Manual subtotal of identified requests only. This is not account-wide usage "
+"or spend."
+msgstr "Manuelle Zwischensumme ausschließlich identifizierter Anfragen. Sie entspricht nicht der gesamten Nutzung oder den gesamten Ausgaben des Kontos."
 
 #: contents/ui/components/IdentifiedTokensSection.qml
 msgid "%1 across %2"
@@ -3948,8 +3948,9 @@ msgstr "Lokale Daten sind nicht verfügbar. Diese Teilsumme enthält nur die ver
 #: contents/ui/components/IdentifiedTokensSection.qml
 msgid ""
 "SSH data is unavailable. This subtotal contains the available local data "
-"only."
-msgstr "SSH-Daten sind nicht verfügbar. Diese Teilsumme enthält nur die verfügbaren lokalen Daten."
+"only. Check SSH and use the same supported codexbar version on both "
+"computers."
+msgstr "SSH-Daten sind nicht verfügbar. Diese Zwischensumme enthält nur die verfügbaren lokalen Daten. Prüfen Sie SSH und verwenden Sie auf beiden Computern dieselbe unterstützte codexbar-Version."
 
 #: contents/ui/components/IdentifiedTokensSection.qml
 msgid "Some requests could not be included. This subtotal is partial."
@@ -3973,9 +3974,10 @@ msgstr "Teilsumme identifizierter Codex-Token anzeigen"
 
 #: contents/ui/configGeneral.qml
 msgid ""
-"Manual loads in Usage & Spend only. Requires codexbar 0.75.0 or later. "
-"Prices are unavailable; this is not account-wide usage."
-msgstr "Nur manuelles Laden unter Nutzung und Ausgaben. Erfordert codexbar 0.75.0 oder neuer. Ohne Preise; dies ist nicht die gesamte Kontonutzung."
+"Manual loads in Usage & Spend only. Requires codexbar 0.75.0 or later with "
+"identified-token schema 1 or 2. Any API-price estimate is separate from "
+"spend totals; this is not account-wide usage."
+msgstr "Manuelles Laden nur unter Nutzung und Ausgaben. Erfordert codexbar 0.75.0 oder neuer mit Schema 1 oder 2 für identifizierte Tokens. Etwaige Schätzungen zu API-Preisen bleiben von den Gesamtausgaben getrennt; dies entspricht nicht der gesamten Kontonutzung."
 
 #: contents/ui/configGeneral.qml
 msgid "Identified window (days):"
@@ -4076,3 +4078,17 @@ msgstr "Warnung ab %1 %"
 #, kde-format
 msgid "Critical from %1%"
 msgstr "Kritisch ab %1 %"
+
+#: contents/ui/components/IdentifiedTokensSection.qml scripts/smoke/Capture.qml
+msgid ""
+"Unsupported identified-token schema. Use compatible codexbar versions on "
+"each selected source; this widget supports schemas 1 and 2."
+msgstr "Nicht unterstütztes Schema für identifizierte Tokens. Verwenden Sie kompatible codexbar-Versionen auf jeder ausgewählten Quelle; dieses Widget unterstützt die Schemata 1 und 2."
+
+#: contents/ui/components/IdentifiedTokensSection.qml
+msgid "API-price estimate: %1. Separate from spend totals."
+msgstr "Schätzung zu API-Preisen: %1. Getrennt von den Gesamtausgaben."
+
+#: contents/ui/components/IdentifiedTokensSection.qml
+msgid "API-price estimate unavailable: %1 without a price."
+msgstr "Schätzung zu API-Preisen nicht verfügbar: %1 ohne Preis."

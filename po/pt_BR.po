@@ -3853,9 +3853,9 @@ msgstr "Nenhuma fonte selecionada forneceu dados identificados do Codex. Verifiq
 
 #: contents/ui/components/IdentifiedTokensSection.qml
 msgid ""
-"Could not load identified Codex data. Use codexbar 0.75.0 or later on each "
-"selected source."
-msgstr "Não foi possível carregar os dados identificados do Codex. Use codexbar 0.75.0 ou posterior em cada fonte selecionada."
+"Could not load identified Codex data. Check local history and use compatible "
+"codexbar versions on each selected source."
+msgstr "Não foi possível carregar os dados identificados do Codex. Verifique o histórico local e use versões compatíveis do codexbar em cada fonte selecionada."
 
 #: contents/ui/components/IdentifiedTokensSection.qml
 msgid "Identified Codex tokens"
@@ -3863,9 +3863,9 @@ msgstr "Tokens identificados do Codex"
 
 #: contents/ui/components/IdentifiedTokensSection.qml scripts/smoke/Capture.qml
 msgid ""
-"Manual subtotal of identified requests only. No prices; this is not account-"
-"wide usage."
-msgstr "Subtotal manual apenas das solicitações identificadas. Sem preços; não representa o uso total da conta."
+"Manual subtotal of identified requests only. This is not account-wide usage "
+"or spend."
+msgstr "Subtotal manual apenas das solicitações identificadas. Não representa o uso nem os gastos totais da conta."
 
 #: contents/ui/components/IdentifiedTokensSection.qml
 msgid "%1 across %2"
@@ -3902,8 +3902,9 @@ msgstr "Os dados locais estão indisponíveis. Este subtotal contém apenas os d
 #: contents/ui/components/IdentifiedTokensSection.qml
 msgid ""
 "SSH data is unavailable. This subtotal contains the available local data "
-"only."
-msgstr "Os dados SSH estão indisponíveis. Este subtotal contém apenas os dados locais disponíveis."
+"only. Check SSH and use the same supported codexbar version on both "
+"computers."
+msgstr "Os dados SSH estão indisponíveis. Este subtotal contém apenas os dados locais disponíveis. Verifique o SSH e use a mesma versão suportada do codexbar nos dois computadores."
 
 #: contents/ui/components/IdentifiedTokensSection.qml
 msgid "Some requests could not be included. This subtotal is partial."
@@ -3927,9 +3928,10 @@ msgstr "Mostrar o subtotal de tokens identificados do Codex"
 
 #: contents/ui/configGeneral.qml
 msgid ""
-"Manual loads in Usage & Spend only. Requires codexbar 0.75.0 or later. "
-"Prices are unavailable; this is not account-wide usage."
-msgstr "Carregamento manual apenas em Uso e gastos. Requer codexbar 0.75.0 ou posterior. Sem preços; não representa o uso total da conta."
+"Manual loads in Usage & Spend only. Requires codexbar 0.75.0 or later with "
+"identified-token schema 1 or 2. Any API-price estimate is separate from "
+"spend totals; this is not account-wide usage."
+msgstr "Carregamento manual apenas em Uso e gastos. Requer codexbar 0.75.0 ou posterior com esquema 1 ou 2 de tokens identificados. Qualquer estimativa a preços da API fica separada dos totais de gastos; não representa o uso total da conta."
 
 #: contents/ui/configGeneral.qml
 msgid "Identified window (days):"
@@ -4030,3 +4032,17 @@ msgstr "Aviso a partir de %1%"
 #, kde-format
 msgid "Critical from %1%"
 msgstr "Crítico a partir de %1%"
+
+#: contents/ui/components/IdentifiedTokensSection.qml scripts/smoke/Capture.qml
+msgid ""
+"Unsupported identified-token schema. Use compatible codexbar versions on "
+"each selected source; this widget supports schemas 1 and 2."
+msgstr "Esquema de tokens identificados não suportado. Use versões compatíveis do codexbar em cada fonte selecionada; este widget suporta os esquemas 1 e 2."
+
+#: contents/ui/components/IdentifiedTokensSection.qml
+msgid "API-price estimate: %1. Separate from spend totals."
+msgstr "Estimativa a preços da API: %1. Separada dos totais de gastos."
+
+#: contents/ui/components/IdentifiedTokensSection.qml
+msgid "API-price estimate unavailable: %1 without a price."
+msgstr "Estimativa a preços da API indisponível: %1 sem preço."
