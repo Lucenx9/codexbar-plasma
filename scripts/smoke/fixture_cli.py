@@ -16,6 +16,7 @@ SCENARIOS += ("settings-panel-scrolled",)
 SCENARIOS += ("settings-providers", "settings-providers-narrow", "settings-providers-error",
               "settings-general-narrow", "settings-popup-narrow", "settings-notifications-narrow",
               "settings-diagnostics-narrow", "settings-diagnostics-error")
+SCENARIOS += ("settings-providers-auth", "settings-providers-auth-legacy")
 SCENARIOS += ("readme-overview", "readme-spend", "readme-sessions", "readme-codex")
 SCENARIOS += ("readme-panel-standard", "readme-panel-minimal")
 SCENARIOS += ("panel-information", "panel-information-minimal", "panel-information-single")
@@ -34,6 +35,8 @@ SCENARIOS += ("percent-only-usage", "percent-only-panel")
 SCENARIOS += ("percent-only-pace",)
 SCENARIOS += ("subscription-dates",)
 SCENARIOS += ("identified-local", "identified-partial", "identified-ssh-failure", "identified-only")
+SCENARIOS += ("identified-schema2", "identified-schema2-unpriced", "identified-schema-mismatch")
+SCENARIOS += ("identified-schema2-subcent", "identified-schema2-zero")
 
 SCENARIOS += ("providers-0740",)
 SCENARIOS += ("empty-providers", "usage-error", "usage-recovery", "cli-missing", "cli-setup", "cli-setup-unusable")
@@ -147,14 +150,36 @@ def readme_cost(provider, days, now):
 
 
 def response(args, scenario, now):
-    """Only the read commands used by the applet are supported."""
+    """Synthetic reads and the source write used by authentication scenarios."""
     if args == ["config", "providers", "--descriptors", "--format", "json", "--json-only"]:
         raise ValueError("Unknown option --descriptors")
     if args == ["--version"]:
+        if scenario.startswith("settings-providers-auth"):
+            return "CodexBar " + ("0.82.0" if scenario.endswith("-legacy") else "0.83.0")
         if scenario.startswith("settings-providers"):
             return "CodexBar 0.73.0 (synthetic smoke fixture)"
         return "CodexBar 0.56.2 (synthetic smoke fixture)"
     if args == ["config", "providers", "--format", "json", "--json-only"]:
+        if scenario.startswith("settings-providers-auth"):
+            rows = [{"provider": key, "enabled": key in ("codex", "copilot", "openrouter")}
+                    for key in ("codex", "copilot", "openrouter", "moonshot", "flora", "helmcode", "future-provider")]
+            if not scenario.endswith("-legacy"):
+                for row in rows:
+                    key = row["provider"]
+                    row["authentication"] = dict(sourceModes=["api", "auto"], supportsConfigAPIKey=key != "moonshot",
+                                                 supportsConfigCookieHeader=False, environmentVariables=[])
+                rows[1]["authentication"].update(environmentVariables=["COPILOT_API_TOKEN"],
+                    supportsConfigCookieHeader=True,
+                    tokenAccounts=dict(title="GitHub accounts", setupHint="Sign in with multiple GitHub accounts via OAuth."),
+                    loginCommand="codexbar config login --provider copilot")
+                rows[2]["authentication"].update(environmentVariables=["OPENROUTER_API_KEY", "OPENROUTER_API_URL"],
+                    tokenAccounts=dict(title="API keys", setupHint="Store multiple OpenRouter API keys."))
+                rows[4]["authentication"]["environmentVariables"] = ["FLORA_API_KEY", "FLORA_WORKSPACE_ID"]
+                rows[0]["authentication"].update(sourceModes=["api", "auto", "cli", "oauth", "web"],
+                                                 supportsConfigAPIKey=False, supportsConfigCookieHeader=True)
+                rows[5]["authentication"].update(sourceModes=["auto", "web"], supportsConfigAPIKey=False,
+                                                 supportsConfigCookieHeader=True)
+            return rows
         if scenario == "empty-providers":
             return []
         if scenario in ("usage-error", "settings-providers-error"):
@@ -178,6 +203,9 @@ def response(args, scenario, now):
                 "jetbrains", "perplexity", "example-provider-with-an-unusually-long-identifier"))
             rows[0]["defaultEnabled"] = True
         return rows
+    if scenario.startswith("settings-providers-auth") and args[:2] == ["config", "set-source"]:
+        assert args == ["config", "set-source", "--provider", "openrouter", "--source", "api", "--format", "json", "--json-only"]
+        return {"provider": "openrouter", "enabled": True, "source": "api"}
     if args == ["diagnose", "--provider", "codex", "--format", "json", "--redact"]:
         return {"provider": "codex", "displayName": "Codex", "source": "cli", "sourceMode": "auto",
                 "auth": {"configured": True, "modes": ["oauth", "apiKey"]},
@@ -206,12 +234,25 @@ def response(args, scenario, now):
                                               for key, tokens in (("a", 100), ("b", 200))],
                       conflictingIDs=["a" * 64] if partial else [], excludedCount=2 if partial else 0,
                       partial=partial)
-        if scenario == "identified-ssh-failure":
+        if scenario.startswith("identified-schema2"):
+            ledger["schemaVersion"] = 2
+            for record in ledger["records"]:
+                record.update(model="gpt-5", pricingMode="standard", includedInPlan=False)
+        if scenario == "identified-schema-mismatch":
+            ledger["schemaVersion"] = 3
+        if scenario == "identified-ssh-failure" or scenario.startswith("identified-schema2"):
             assert args[args.index("--remote") + 1] == "build@host"
-            return dict(reports=[dict(host="local", ledger=ledger), dict(host="build@host", error="synthetic SSH failure")],
-                        subtotal=dict(kind="identified-request-subtotal", totalTokens=320, requestCount=2,
-                                      conflictCount=0, excludedCount=0, partial=False, costUSD=None),
-                        allSourcesAvailable=False, partial=True)
+            result = dict(reports=[dict(host="local", ledger=ledger), dict(host="build@host", error="synthetic SSH failure")],
+                          subtotal=dict(kind="identified-request-subtotal", totalTokens=320, requestCount=2,
+                                        conflictCount=0, excludedCount=0, partial=False, costUSD=None),
+                          allSourcesAvailable=False, partial=True)
+            if ledger["schemaVersion"] == 2:
+                result["reports"][0].update(source="local", collectedAt=now.isoformat())
+                result["reports"][1]["source"] = "ssh"
+                price = {"identified-schema2": 0.0125, "identified-schema2-subcent": 0.004,
+                         "identified-schema2-zero": 0}.get(scenario)
+                result["subtotal"].update(costUSD=price, unpricedRequestCount=1 if price is None else 0)
+            return result
         assert "--remote" not in args
         return ledger
     # CLI 0.67.0 calendar periods: an English label and, for all history, the
@@ -349,7 +390,7 @@ def main():
         # kills the process group after capturing the loading/restored state.
         time.sleep(MAX_SCENARIO_TIMEOUT_SECONDS + 1)
     print(result if isinstance(result, str) else json.dumps(result))
-    if scenario == "identified-ssh-failure" and "--identified-only" in sys.argv:
+    if (scenario == "identified-ssh-failure" or scenario.startswith("identified-schema2")) and "--identified-only" in sys.argv:
         sys.exit(1)
 
 

@@ -102,6 +102,8 @@ KCM.SimpleKCM {
     readonly property var visibleDisabledProviders: providerSettingsGroups.disabled
     readonly property int enabledCount: ProviderList.filteredProviders(providers, "", "enabled").length
     readonly property var selectedProvider: providerByID(selectedProviderID)
+    readonly property var selectedProviderSourceModes: ProviderSource.availableModes(
+        selectedProvider ? selectedProvider.authentication : null)
 
     // Qt.callLater coalesces this with the reload the cfg_commandPathChanged
     // handler queues when Plasma injects the stored command path during page
@@ -250,9 +252,12 @@ KCM.SimpleKCM {
         if (commandPath.length === 0 || isPending(providerID)) {
             return
         }
+        var item = providerByID(providerID)
+        if (item && item.authentication && item.authentication.supportsConfigAPIKey !== true) {
+            return
+        }
         errorText = ""
         statusText = ""
-        var item = providerByID(providerID)
         markPending(providerID, true, item ? item.enabled : false)
         var cliProviderID = providerCliArgument(providerID)
 
@@ -285,7 +290,8 @@ KCM.SimpleKCM {
                 || hasPendingFields(providerID)) {
             return
         }
-        var plan = ProviderSource.planWrite(commandPath, providerCliArgument(providerID), mode)
+        var plan = ProviderSource.planWrite(commandPath, providerCliArgument(providerID), mode,
+            providerByID(providerID).authentication)
         if (!plan.ok) {
             return
         }
@@ -852,6 +858,15 @@ KCM.SimpleKCM {
             label: i18n("API key setup"),
             value: supportsApiKeySetup(item.provider) ? i18n("Supported") : i18n("Use provider login/source")
         })
+        var authentication = item.authentication
+        if (authentication) {
+            appendSettingsRow(rows, i18n("Environment variables"), authentication.environmentVariables.join(", "))
+            if (authentication.tokenAccounts) {
+                appendSettingsRow(rows, i18n("Token accounts"), authentication.tokenAccounts.title)
+                appendSettingsRow(rows, i18n("Account setup"), authentication.tokenAccounts.setupHint)
+            }
+            appendSettingsRow(rows, i18n("CLI sign-in"), authentication.loginCommand)
+        }
 
         if (diagnostic) {
             appendSettingsRow(rows, i18n("Source"), diagnostic.source)
@@ -915,6 +930,9 @@ KCM.SimpleKCM {
         ]
         if (supportsApiKeySetup(providerID)) {
             lines.push("printf '%s' \"$API_KEY\" | " + shellQuote(commandPath) + " config set-api-key --provider " + shellQuote(cliProviderID) + " --stdin --format json --json-only")
+        }
+        if (item.authentication && item.authentication.loginCommand.length > 0) {
+            lines.push(shellQuote(commandPath) + " config login --provider copilot")
         }
         return lines.join("\n")
     }
@@ -1046,6 +1064,10 @@ KCM.SimpleKCM {
     }
 
     function supportsApiKeySetup(providerID) {
+        var item = providerByID(providerID)
+        if (item && item.authentication && item.authentication.supportsConfigAPIKey !== true) {
+            return false
+        }
         switch (providerKey(providerID)) {
         case "munito":
             return munitoApiKeySetupSupported
@@ -1099,6 +1121,12 @@ KCM.SimpleKCM {
         default:
             return false
         }
+    }
+
+    function sourceModeLabel(mode) {
+        if (mode === "auto") return i18n("Automatic")
+        if (mode === "web") return i18n("Web")
+        return {api: "API", cli: "CLI", oauth: "OAuth"}[mode] || ""
     }
 
     function providerDocsUrl(providerID) {
@@ -1509,7 +1537,7 @@ KCM.SimpleKCM {
                     ColumnLayout {
                         Layout.fillWidth: true
                         spacing: Kirigami.Units.smallSpacing
-                        visible: page.providerSourceSetupSupported
+                        visible: page.providerSourceSetupSupported && page.selectedProviderSourceModes.length > 0
 
                         Components.PlainControlsLabel {
                             text: i18n("Source mode")
@@ -1524,7 +1552,8 @@ KCM.SimpleKCM {
                                 id: providerSourceBox
                                 objectName: "providerSourceBox"
                                 Layout.fillWidth: true
-                                model: [i18n("Automatic"), "API", "CLI", "OAuth", i18n("Web")]
+                                model: page.selectedProviderSourceModes.map(function(mode) { return page.sourceModeLabel(mode) })
+                                onModelChanged: currentIndex = -1
                                 currentIndex: -1
                                 displayText: currentIndex < 0 ? i18n("Choose a source") : currentText
                                 Accessible.name: i18n("Source mode")
@@ -1545,13 +1574,13 @@ KCM.SimpleKCM {
                                     && !page.hasPendingFields(page.selectedProvider.provider)
                                 onClicked: if (page.selectedProvider) page.setProviderSource(
                                     page.selectedProvider.provider,
-                                    ProviderSource.modes[providerSourceBox.currentIndex])
+                                    page.selectedProviderSourceModes[providerSourceBox.currentIndex])
                             }
                         }
 
                         Components.PlainControlsLabel {
                             Layout.fillWidth: true
-                            text: i18n("Choose a source to save. CodexBar validates support for this provider; Automatic clears its saved override. The source override in Diagnostics takes precedence in the widget.")
+                            text: i18n("Choose a source to save. Automatic clears its saved override. Listed modes describe CLI configuration, not Linux availability. The source override in Diagnostics takes precedence in the widget.")
                             opacity: page.secondaryTextOpacity
                             font: Kirigami.Theme.smallFont
                             wrapMode: Text.WordWrap

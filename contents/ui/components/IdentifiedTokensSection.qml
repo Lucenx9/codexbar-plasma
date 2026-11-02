@@ -15,7 +15,8 @@ ColumnLayout {
         case "tooLarge": return i18n("codexbar response exceeded the supported size.");
         case "commandUnavailable": return i18n("Could not start identified-token collection. Check codexbar and GNU timeout.");
         case "unavailable": return i18n("No selected source supplied identified Codex data. Check local history and SSH setup.");
-        default: return i18n("Could not load identified Codex data. Use codexbar 0.75.0 or later on each selected source.");
+        case "schemaMismatch": return i18n("Unsupported identified-token schema. Use compatible codexbar versions on each selected source; this widget supports schemas 1 and 2.");
+        default: return i18n("Could not load identified Codex data. Check local history and use compatible codexbar versions on each selected source.");
         }
     }
 
@@ -30,7 +31,7 @@ ColumnLayout {
     }
 
     PlainPlasmaLabel {
-        text: i18n("Manual subtotal of identified requests only. No prices; this is not account-wide usage.")
+        text: i18n("Manual subtotal of identified requests only. This is not account-wide usage or spend.")
         Layout.fillWidth: true
         wrapMode: Text.WordWrap
         opacity: section.applet.secondaryTextOpacity
@@ -46,6 +47,29 @@ ColumnLayout {
         opacity: section.snapshot ? 1 : section.applet.secondaryTextOpacity
         Layout.fillWidth: true
         wrapMode: Text.WordWrap
+    }
+
+    PlainPlasmaLabel {
+        objectName: "identifiedTokensEstimate"
+        visible: section.snapshot !== null && section.snapshot.apiEstimateUSD !== null
+        text: section.snapshot && section.snapshot.apiEstimateUSD !== null
+            ? (section.snapshot.apiEstimateUSD > 0 && section.snapshot.apiEstimateUSD < 0.01
+                ? i18n("API-price estimate: less than %1. Separate from spend totals.", section.applet.amountString(0.01, "USD"))
+                : i18n("API-price estimate: %1. Separate from spend totals.", section.applet.amountString(section.snapshot.apiEstimateUSD, "USD"))) : ""
+        Layout.fillWidth: true
+        wrapMode: Text.WordWrap
+        opacity: section.applet.secondaryTextOpacity
+    }
+
+    PlainPlasmaLabel {
+        objectName: "identifiedTokensUnpriced"
+        visible: section.snapshot !== null && section.snapshot.unpricedRequestCount > 0
+        text: section.snapshot && section.snapshot.unpricedRequestCount > 0
+            ? i18n("API-price estimate unavailable: %1 without a price.",
+                section.applet.usageCountText(section.snapshot.unpricedRequestCount, "requests")) : ""
+        Layout.fillWidth: true
+        wrapMode: Text.WordWrap
+        opacity: section.applet.secondaryTextOpacity
     }
 
     PlainPlasmaLabel {
@@ -71,7 +95,7 @@ ColumnLayout {
         visible: section.snapshot !== null && !section.snapshot.allSourcesAvailable
         plainText: section.snapshot && !section.snapshot.localAvailable
             ? i18n("Local data is unavailable. This subtotal contains the available SSH data only.")
-            : i18n("SSH data is unavailable. This subtotal contains the available local data only.")
+            : i18n("SSH data is unavailable. This subtotal contains the available local data only. Check SSH and use the same supported codexbar version on both computers.")
         type: Kirigami.MessageType.Warning
         Layout.fillWidth: true
     }

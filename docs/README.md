@@ -35,7 +35,11 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
   the pinned Linux CLI evidence behind the popup, plus the separate manual
   identified Codex token subtotal and its decoder limits.
 - [Identified-token screenshot](codexbar-plasma-identified-tokens.png): synthetic
-  local subtotal retained after an SSH-source failure, used in the usage guide.
+  schema 2 local subtotal and separate API-price estimate retained after an
+  SSH-source failure, used in the usage guide.
+- [Provider authentication screenshot](codexbar-plasma-provider-authentication.png):
+  synthetic Copilot settings showing CLI-described authentication hints and
+  the per-provider source selector, used in the usage guide.
 - [AI Insights](ai-insights.md): the optional insight card and analysis view, their
   boundary decision, allowlisted snapshot, private helper handoff, language selection, request and credential contracts,
   scheduling, and tests.
@@ -159,6 +163,11 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
   `config set-cookie` and `clear-credential` writers, which providers accept a
   manual cookie and which still fail on Linux, and isolated carried-blocker
   checks.
+- [0.83.0 release review](research/2026-11-01-macos-parity-0.83.0.md): the
+  111-provider registry with OpenDesign, the inventory `authentication` record
+  checked against the writers, the identified Codex ledger schema 2 that the
+  reviewed widget rejected, and isolated carried-blocker checks. Schema 1/2
+  support was implemented after that review.
 - [0.75.0 Codex contract verification](research/2026-10-15-codex-contracts-0.75.0.md):
   synthetic native partial-priced cost output, identified-request local/remote
   merge and failure semantics, authoritative reset-credit inventory, and the

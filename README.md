@@ -37,7 +37,7 @@ and GNU gettext; see [Development](#development).
 | CLI release checks and managed installs | `python3` and GNU `timeout` |
 | AI Insights | `python3`, GNU `timeout`, and the `QtCore` QML module |
 | AI Insights keys for OpenRouter or OpenAI | Also `kdialog`, `secret-tool`, and a Secret Service provider such as KWallet |
-| Identified Codex token subtotals | CLI 0.75.0 or later and GNU `timeout` |
+| Identified Codex token subtotals | CLI 0.75.0 or later with identified-token schema 1 or 2, and GNU `timeout` |
 | Refresh as soon as the network connection returns | Qt 6.7 or later with the `QtNetwork` QML module |
 | SSH source for identified Codex tokens | Also the CLI on the remote computer and noninteractive SSH authentication with trusted host keys |
 
@@ -131,6 +131,8 @@ After installing through any method:
 3. In widget settings, open **Providers** to enable providers and use their
    supported setup actions. For authentication that needs another tool, follow
    the linked upstream provider instructions.
+   With CLI 0.83.0, **Settings and diagnostics** also lists each provider's
+   source modes and read-only setup hints.
 
 The popup shows quotas when the CLI returns usage. Use **Panel** settings to
 change the compact display and **General** for refresh and privacy settings.

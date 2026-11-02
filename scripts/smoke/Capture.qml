@@ -36,6 +36,7 @@ Item {
     property var displaySettingsPage
     property var providerSettingsPage
     property int settingsBehaviorStep: 0
+    property int providerAuthenticationStep: 0
     property int settingsCommandSerial: 0
     property var settingsCostSnapshot
     property var settingsProviderSnapshot
@@ -1362,8 +1363,10 @@ Item {
     function scenarioReady() {
         if (scenario.indexOf("identified-") === 0) {
             var popup = applet.fullRepresentationItem;
+            var schema2 = scenario.indexOf("identified-schema2") === 0;
+            var remote = scenario === "identified-ssh-failure" || schema2;
             if (!identifiedRequested) {
-                var button = findItem(popup, scenario === "identified-ssh-failure" ? "identifiedSshButton" : "identifiedLocalButton");
+                var button = findItem(popup, remote ? "identifiedSshButton" : "identifiedLocalButton");
                 if (!button || !button.visible || applet.costLoading) return false;
                 verifyScenario(applet.identifiedTokensSnapshot === null && !applet.identifiedTokensLoading,
                     "identified collection started without a manual action");
@@ -1372,15 +1375,39 @@ Item {
                 identifiedRequested = true;
                 return false;
             }
+            if (scenario === "identified-schema-mismatch") {
+                if (applet.identifiedTokensLoading || applet.identifiedTokensErrorKind.length === 0) return false;
+                verifyScenario(applet.identifiedTokensSnapshot === null && applet.identifiedTokensErrorKind === "schemaMismatch",
+                    "schema mismatch did not keep a distinct failure");
+                verifyScenario(hasVisibleText(popup, i18n("Unsupported identified-token schema. Use compatible codexbar versions on each selected source; this widget supports schemas 1 and 2.")),
+                    "schema mismatch guidance is missing");
+                return true;
+            }
             if (applet.identifiedTokensLoading || !applet.identifiedTokensSnapshot) return false;
             var value = applet.identifiedTokensSnapshot;
             verifyScenario(value.totalTokens === (scenario === "identified-partial" ? 210 : 320), "wrong identified subtotal");
-            verifyScenario(value.allSourcesAvailable === (scenario !== "identified-ssh-failure"), "wrong identified availability");
+            verifyScenario(value.allSourcesAvailable === !remote, "wrong identified availability");
             verifyScenario(value.requestsPartial === (scenario === "identified-partial"), "wrong identified request quality");
             verifyScenario(JSON.stringify(applet.tokenCosts) === costSnapshot && !applet.costLoading, "identified scan changed generic costs");
             verifyScenario(!/records|reports|build@host|costUSD/.test(JSON.stringify(value)), "identified result leaked wire data");
-            verifyScenario(hasVisibleText(popup, i18n("Manual subtotal of identified requests only. No prices; this is not account-wide usage.")),
+            verifyScenario(hasVisibleText(popup, i18n("Manual subtotal of identified requests only. This is not account-wide usage or spend.")),
                 "identified scope caption is missing");
+            var estimate = findItem(popup, "identifiedTokensEstimate");
+            var unpriced = findItem(popup, "identifiedTokensUnpriced");
+            verifyScenario(estimate && estimate.visible === (schema2 && scenario !== "identified-schema2-unpriced"), "wrong estimate visibility");
+            verifyScenario(unpriced && unpriced.visible === (scenario === "identified-schema2-unpriced"), "wrong unpriced visibility");
+            if (schema2) {
+                var expectedPrice = scenario === "identified-schema2-subcent" ? 0.004
+                    : scenario === "identified-schema2-zero" ? 0 : scenario === "identified-schema2" ? 0.0125 : null;
+                verifyScenario(value.apiEstimateUSD === expectedPrice, "wrong CLI estimate");
+                verifyScenario(value.unpricedRequestCount === (expectedPrice === null ? 1 : 0), "wrong unpriced count");
+                if (scenario === "identified-schema2-subcent")
+                    verifyScenario(hasVisibleText(popup, i18n("API-price estimate: less than %1. Separate from spend totals.", applet.amountString(0.01, "USD"))),
+                        "a positive subcent estimate must not appear as zero");
+                if (scenario === "identified-schema2-zero")
+                    verifyScenario(hasVisibleText(popup, i18n("API-price estimate: %1. Separate from spend totals.", applet.amountString(0, "USD"))),
+                        "a known zero estimate must remain zero");
+            }
             var section = findItem(popup, "identifiedTokensSection");
             verifyScenario(section !== null && section.mapToItem(popup, 0, 0).y < 200,
                 "identified section must stay near the top when generic costs are disabled");
@@ -1793,6 +1820,73 @@ Item {
                     status: "available", version: "0.61.0", path: preview.page.cfg_commandPath,
                     manager: "managed", latest: "0.62.0", tag: "v0.62.0"})});
                 navigationVerified = true;
+            }
+            if (scenario.indexOf("settings-providers-auth") === 0) {
+                var authPage = preview.page;
+                var legacy = scenario === "settings-providers-auth-legacy";
+                if (authPage.providers.length !== 7 || !authPage.providerSourceSetupSupported) return false;
+                var authBox = findItem(authPage, "providerSourceBox");
+                var authSave = findItem(authPage, "providerSourceSaveButton");
+                if (providerAuthenticationStep === 0) {
+                    authPage.selectedProviderID = "openrouter";
+                    findItem(authPage, "providerSettingsToggle").expanded = true;
+                    providerAuthenticationStep = 1;
+                    return false;
+                }
+                if (providerAuthenticationStep === 1) {
+                    verifyScenario(authBox.count === (legacy ? 5 : 2) && authBox.currentIndex === -1,
+                        "inventory source choices or initial selection are incorrect");
+                    verifyScenario(authPage.supportsApiKeySetup("openrouter")
+                        && authPage.supportsApiKeySetup("moonshot") === legacy
+                        && !authPage.supportsApiKeySetup("flora") && !authPage.supportsApiKeySetup("future-provider"),
+                        "inventory API-key flags bypassed the curated Linux gates");
+                    authBox.currentIndex = legacy ? 1 : 0;
+                    authPage.updateProviderEnabled("moonshot", true);
+                    providerAuthenticationStep = 2;
+                    return false;
+                }
+                if (providerAuthenticationStep === 2) {
+                    verifyScenario(authBox.currentIndex === (legacy ? 1 : 0),
+                        "an unrelated provider reply cleared the unsaved source choice");
+                    authSave.clicked();
+                    providerAuthenticationStep = 3;
+                    return false;
+                }
+                if (providerAuthenticationStep === 3) {
+                    if (authPage.isPending("openrouter") || authPage.statusText.length === 0) return false;
+                    verifyScenario(authPage.errorText.length === 0 && authBox.currentIndex === -1,
+                        "the source writer did not use the selected inventory mode");
+                    authPage.statusText = "";
+                    authBox.currentIndex = legacy ? 1 : 0;
+                    authPage.selectedProviderID = "helmcode";
+                    providerAuthenticationStep = 4;
+                    return false;
+                }
+                var legacyModes = ["auto", "api", "cli", "oauth", "web"];
+                if (providerAuthenticationStep === 4) {
+                    verifyScenario(JSON.stringify(authPage.selectedProviderSourceModes)
+                        === JSON.stringify(legacy ? legacyModes : ["auto", "web"])
+                        && authBox.count === (legacy ? 5 : 2) && authBox.currentIndex === -1
+                        && authBox.textAt(0) === i18n("Automatic")
+                        && authBox.textAt(legacy ? 4 : 1) === i18n("Web"),
+                        "Helmcode selection retained another provider's mode values or unsaved choice");
+                    authBox.currentIndex = legacy ? 4 : 1;
+                    authPage.selectedProviderID = "copilot";
+                    providerAuthenticationStep = 5;
+                    return false;
+                }
+                verifyScenario(JSON.stringify(authPage.selectedProviderSourceModes)
+                    === JSON.stringify(legacy ? legacyModes : ["api", "auto"])
+                    && authBox.count === (legacy ? 5 : 2) && authBox.currentIndex === -1
+                    && authBox.textAt(legacy ? 1 : 0) === "API"
+                    && authBox.textAt(legacy ? 0 : 1) === i18n("Automatic"),
+                    "Copilot selection retained another provider's mode values or unsaved choice");
+                var hints = authPage.providerSettingsRows(authPage.selectedProvider).map(function(row) { return row.value; });
+                verifyScenario((hints.indexOf("COPILOT_API_TOKEN") >= 0) === !legacy
+                    && (hints.indexOf("GitHub accounts") >= 0) === !legacy
+                    && (hints.indexOf("codexbar config login --provider copilot") >= 0) === !legacy,
+                    "read-only authentication hints are missing or fabricated for the legacy CLI");
+                return true;
             }
             if (scenario.indexOf("settings-providers") === 0) {
                 var providersPage = preview.page;
