@@ -78,7 +78,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     container:
-      image: ghcr.io/lucenx9/codexbar-plasma-ci-runtime@sha256:e27e4bf42b0af7ad993c027e3fb60145de391f2a076dea8ef1676846a234acbb
+      image: ghcr.io/lucenx9/codexbar-plasma-ci-runtime@sha256:106a4197fe23f22700fa068709fc4f93bb63f2fb2718d4a628e7d484d0d7b169
       credentials:
         username: ${{ github.actor }}
         password: ${{ github.token }}
@@ -107,7 +107,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     container:
-      image: ghcr.io/lucenx9/codexbar-plasma-ci-runtime@sha256:e27e4bf42b0af7ad993c027e3fb60145de391f2a076dea8ef1676846a234acbb
+      image: ghcr.io/lucenx9/codexbar-plasma-ci-runtime@sha256:106a4197fe23f22700fa068709fc4f93bb63f2fb2718d4a628e7d484d0d7b169
       credentials:
         username: ${{ github.actor }}
         password: ${{ github.token }}
