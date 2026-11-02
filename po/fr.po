@@ -4128,3 +4128,7 @@ msgstr "Clé API d’organisation pour %1. Les clés de projet ne sont pas prise
 #: contents/ui/configProviders.qml
 msgid "License key for %1. This key can authorize AI requests."
 msgstr "Clé de licence pour %1. Cette clé peut autoriser des requêtes IA."
+
+#: contents/ui/components/ProviderDetailSection.qml
+msgid "Warning"
+msgstr "Avertissement"

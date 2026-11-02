@@ -36,6 +36,10 @@ function optionalNumber(value) {
     return typeof value === "number" && isFinite(value) ? value : null
 }
 
+function optionalSeverity(value) {
+    return value === "normal" || value === "warning" || value === "critical" ? value : ""
+}
+
 // The CLI caps progress.used at total while the display value stays uncapped,
 // so the pair drives the meter and the display string is never parsed.
 function optionalProgress(value) {
@@ -84,6 +88,7 @@ function normalizeSections(rawSections) {
                 label: label,
                 value: value,
                 secondaryValue: optionalText(rawRow.secondaryValue),
+                severity: optionalSeverity(rawRow.severity),
                 usageValue: optionalNumber(rawRow.usageValue),
                 progress: optionalProgress(rawRow.progress)
             })

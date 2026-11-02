@@ -4149,3 +4149,7 @@ msgstr "Organisations-API-Schlüssel für %1. Projektschlüssel werden nicht unt
 #: contents/ui/configProviders.qml
 msgid "License key for %1. This key can authorize AI requests."
 msgstr "Lizenzschlüssel für %1. Dieser Schlüssel kann KI-Anfragen autorisieren."
+
+#: contents/ui/components/ProviderDetailSection.qml
+msgid "Warning"
+msgstr "Warnung"
