@@ -4113,3 +4113,39 @@ msgstr "Kontoeinrichtung"
 #: contents/ui/configProviders.qml
 msgid "CLI sign-in"
 msgstr "Anmeldung über die CLI"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Soniox"
+msgstr "Soniox"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "abliteration.ai"
+msgstr "abliteration.ai"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Chatbox AI"
+msgstr "Chatbox AI"
+
+#: contents/ui/configProviders.qml
+msgid "%1 license key saved"
+msgstr "Lizenzschlüssel für %1 gespeichert"
+
+#: contents/ui/configProviders.qml scripts/smoke/Capture.qml
+msgid "Set license key…"
+msgstr "Lizenzschlüssel festlegen…"
+
+#: contents/ui/configProviders.qml
+msgid "License key setup"
+msgstr "Lizenzschlüssel einrichten"
+
+#: contents/ui/configProviders.qml
+msgid "Key guidance"
+msgstr "Hinweise zum Schlüssel"
+
+#: contents/ui/configProviders.qml
+msgid "Organization API key for %1. Project keys are not supported."
+msgstr "Organisations-API-Schlüssel für %1. Projektschlüssel werden nicht unterstützt."
+
+#: contents/ui/configProviders.qml
+msgid "License key for %1. This key can authorize AI requests."
+msgstr "Lizenzschlüssel für %1. Dieser Schlüssel kann KI-Anfragen autorisieren."

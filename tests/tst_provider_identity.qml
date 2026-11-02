@@ -10,6 +10,14 @@ TestCase {
         "ai&": "aiand"
     })
 
+    function test_newKeyProvidersHaveDocumentation() {
+        for (var id of ["soniox", "abliteration", "chatbox"]) {
+            compare(ProviderIdentity.providerDocsUrl(id.toUpperCase()),
+                "https://github.com/steipete/CodexBar/blob/main/docs/" + id + ".md")
+            compare(ProviderIdentity.providerCliArgument(id), id)
+        }
+    }
+
     function test_resolvesOnlyOwnAliases() {
         compare(ProviderIdentity.providerKey("groqcloud", aliases), "groq")
         compare(ProviderIdentity.providerKey("ai&", aliases), "aiand")

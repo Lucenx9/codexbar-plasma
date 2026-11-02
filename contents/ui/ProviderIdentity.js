@@ -417,6 +417,9 @@ var providerStatusUrls = {
 
 // Paths under `documentationBaseUrl`.
 var providerDocsPaths = {
+    "soniox": "soniox.md",
+    "abliteration": "abliteration.md",
+    "chatbox": "chatbox.md",
     "abacus": "abacus.md",
     "aerostack": "aerostack.md",
     "aiand": "aiand.md",

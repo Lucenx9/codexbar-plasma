@@ -32,6 +32,7 @@ TestCase {
     }
     function displayNameForProvider(provider) { return provider; }
     function providerCliArgument(provider) { return provider; }
+    function providerKey(provider) { return provider.toLowerCase(); }
     function providerByID(provider) { return {provider: provider, enabled: false}; }
     function isPending(provider) { return false; }
     function isFieldPending(provider, field) { return false; }
@@ -59,6 +60,7 @@ TestCase {
             writeCommand: ["codexbar", "config", "set-api-key", "--provider", "codex", "--stdin"]});
         compare(errorText, "");
         compare(captured.length, 3);
+        for (var id of ["soniox", "abliteration", "chatbox"]) setApiKey(id);
         console.log("PROMPT_FIXTURE:" + JSON.stringify({production: production, commands: captured}));
     }
 }
@@ -110,7 +112,7 @@ class SecretPromptLifecycleTests(unittest.TestCase):
         source = providers.texts[page]
         providers.texts = {page: source}
         functions = []
-        for name in ("setApiKey", "promptDescriptorSecret", "shellQuote"):
+        for name in ("setApiKey", "apiKeyPrompt", "promptDescriptorSecret", "shellQuote"):
             signature = re.search(r"function " + name + r"\([^)]*\)", source).group(0)
             functions.append(signature + " {" + providers.function_body(name) + "}")
         properties = re.findall(
@@ -162,8 +164,26 @@ class SecretPromptLifecycleTests(unittest.TestCase):
         hostile_argv = json.loads((self.directory / "kdialog.argv").read_text())
         self.assertEqual(hostile_argv, ["--password", self.hostile_prompt])
 
+    def test_new_provider_prompts_use_stdin_and_correct_key_names(self):
+        for entry in self.fixture["commands"][3:]:
+            provider = entry["descriptor"]["provider"]
+            with self.subTest(provider=provider):
+                self.run_prompt(entry, "success")
+                argv = json.loads((self.directory / "codexbar.argv").read_text())
+                self.assertEqual(argv, ["config", "set-api-key", "--provider", provider,
+                                        "--stdin", "--format", "json", "--json-only"])
+                prompt = json.loads((self.directory / "kdialog.argv").read_text())[1]
+                if provider == "soniox":
+                    self.assertIn("Organization API key", prompt)
+                    self.assertIn("Project keys are not supported", prompt)
+                elif provider == "chatbox":
+                    self.assertIn("License key", prompt)
+                    self.assertIn("authorize AI requests", prompt)
+                else:
+                    self.assertEqual(prompt, "API key for abliteration")
+
     def test_generated_scripts_cancel_finish_and_leave_no_running_children(self):
-        for entry in self.fixture["commands"]:
+        for entry in self.fixture["commands"][:3]:
             for mode in ("cancel", "dialog-term", "dialog-kill", "late", "cli-term", "cli-kill"):
                 with self.subTest(kind=entry["descriptor"]["kind"], mode=mode):
                     self.run_prompt(entry, mode)
@@ -184,8 +204,8 @@ class SecretPromptLifecycleTests(unittest.TestCase):
                 self.assertIn(process.returncode, (124, 137), stderr)
             else:
                 self.assertEqual(process.returncode, 0, stderr)
-                self.assertEqual(json.loads(stdout), {"ok": True} if mode == "late" else {"cancelled": True})
-            self.assertEqual((self.directory / "received").exists(), mode == "late" or mode.startswith("cli-"))
+                self.assertEqual(json.loads(stdout), {"ok": True} if mode in ("late", "success") else {"cancelled": True})
+            self.assertEqual((self.directory / "received").exists(), mode in ("late", "success") or mode.startswith("cli-"))
             for marker in self.directory.glob("*.pid"):
                 status = Path("/proc") / marker.read_text() / "stat"
                 deadline = time.monotonic() + 2
@@ -232,6 +252,8 @@ TestCase {
     property string selectedProviderID: ""
     property bool providerDescriptorsUnavailable: false
     property bool fireworksSingleKeySetupSupported: false
+    property bool sonioxApiKeySetupSupported: false
+    property bool abliterationChatboxKeySetupSupported: false
     property bool munitoApiKeySetupSupported: false
     property bool commandCodeFalApiKeySetupSupported: false
     property bool providerSourceSetupSupported: false
@@ -882,7 +904,7 @@ WIRING_FUNCTIONS = (
     "descriptorHasField", "descriptorHasAction", "appendSettingsRow", "providerSettingsRows",
     "providerActionRows", "descriptorActionIcon", "providerCliCommandText",
     "providerDocsUrl", "providerDashboardUrl", "providerLoginUrl", "providerCliArgument",
-    "supportsApiKeySetup",
+    "supportsApiKeySetup", "apiKeyPrompt",
 )
 
 

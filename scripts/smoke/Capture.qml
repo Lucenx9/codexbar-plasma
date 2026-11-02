@@ -1821,6 +1821,25 @@ Item {
                     manager: "managed", latest: "0.62.0", tag: "v0.62.0"})});
                 navigationVerified = true;
             }
+            if (scenario.indexOf("settings-providers-keys") === 0) {
+                var keyPage = preview.page;
+                if (keyPage.providers.length !== 3 || !keyPage.abliterationChatboxKeySetupSupported) return false;
+                var target = scenario.endsWith("soniox") ? "soniox" : "chatbox";
+                if (!navigationVerified) {
+                    keyPage.selectedProviderID = target;
+                    findItem(keyPage, "providerSettingsToggle").expanded = true;
+                    navigationVerified = true;
+                    return false;
+                }
+                for (var keyID of ["soniox", "abliteration", "chatbox"]) {
+                    verifyScenario(keyPage.supportsApiKeySetup(keyID), "new key setup is missing for " + keyID);
+                    verifyScenario(keyPage.providerDocsUrl(keyID).endsWith("/" + keyID + ".md"), "missing key documentation");
+                }
+                verifyScenario(hasVisibleText(keyPage, target === "chatbox" ? i18n("Set license key…") : i18n("Set API key…")),
+                    "key action has incorrect wording");
+                verifyScenario(hasVisibleText(keyPage, keyPage.apiKeyPrompt(target)), "key guidance is not visible");
+                return true;
+            }
             if (scenario.indexOf("settings-providers-auth") === 0) {
                 var authPage = preview.page;
                 var legacy = scenario === "settings-providers-auth-legacy";

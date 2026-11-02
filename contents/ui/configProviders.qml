@@ -63,6 +63,8 @@ KCM.SimpleKCM {
     property string statusText: ""
     property bool providerDescriptorsUnavailable: false
     property bool fireworksSingleKeySetupSupported: false
+    property bool sonioxApiKeySetupSupported: false
+    property bool abliterationChatboxKeySetupSupported: false
     property bool munitoApiKeySetupSupported: false
     property bool commandCodeFalApiKeySetupSupported: false
     property bool providerSourceSetupSupported: false
@@ -120,6 +122,8 @@ KCM.SimpleKCM {
         selectedProviderID = ""
         providerDescriptorsUnavailable = false
         fireworksSingleKeySetupSupported = false
+        sonioxApiKeySetupSupported = false
+        abliterationChatboxKeySetupSupported = false
         munitoApiKeySetupSupported = false
         commandCodeFalApiKeySetupSupported = false
         providerSourceSetupSupported = false
@@ -261,7 +265,7 @@ KCM.SimpleKCM {
         markPending(providerID, true, item ? item.enabled : false)
         var cliProviderID = providerCliArgument(providerID)
 
-        var prompt = i18n("API key for %1", displayNameForProvider(providerID))
+        var prompt = apiKeyPrompt(providerID)
         var script = [
             "if ! command -v kdialog >/dev/null 2>&1; then printf '%s\\n' '{\"error\":{\"message\":\"kdialog is required to prompt for API keys.\"}}'; exit 1; fi",
             "if ! command -v timeout >/dev/null 2>&1 || ! timeout --kill-after=1s 1s true >/dev/null 2>&1; then printf '%s\\n' '{\"error\":{\"message\":\"GNU timeout is required to save API keys safely.\"}}'; exit 1; fi",
@@ -407,6 +411,8 @@ KCM.SimpleKCM {
             errorText = i18n("Loading providers timed out. Try again.")
         } else if (descriptor.kind === "version") {
             fireworksSingleKeySetupSupported = false
+            sonioxApiKeySetupSupported = false
+            abliterationChatboxKeySetupSupported = false
             munitoApiKeySetupSupported = false
             commandCodeFalApiKeySetupSupported = false
             providerSourceSetupSupported = false
@@ -461,6 +467,10 @@ KCM.SimpleKCM {
     function handleCliVersionResult(stdoutText, exitCode) {
         fireworksSingleKeySetupSupported = Number(exitCode) === 0
             && ProviderConfigProtocol.cliVersionAtLeast(stdoutText, 0, 54, 0)
+        sonioxApiKeySetupSupported = Number(exitCode) === 0
+            && ProviderConfigProtocol.cliVersionAtLeast(stdoutText, 0, 80, 0)
+        abliterationChatboxKeySetupSupported = Number(exitCode) === 0
+            && ProviderConfigProtocol.cliVersionAtLeast(stdoutText, 0, 81, 0)
         munitoApiKeySetupSupported = Number(exitCode) === 0
             && ProviderConfigProtocol.cliVersionAtLeast(stdoutText, 0, 77, 0)
         commandCodeFalApiKeySetupSupported = Number(exitCode) === 0
@@ -586,7 +596,9 @@ KCM.SimpleKCM {
         invalidateProviderDiagnostic(descriptor.provider)
         bumpProviderConfigRevision()
         errorText = ""
-        statusText = i18n("%1 API key saved", displayNameForProvider(descriptor.provider))
+        statusText = providerKey(descriptor.provider) === "chatbox"
+            ? i18n("%1 license key saved", displayNameForProvider(descriptor.provider))
+            : i18n("%1 API key saved", displayNameForProvider(descriptor.provider))
     }
 
     function handleDescriptorFieldResult(descriptor, stdoutText, stderrText, exitCode) {
@@ -810,7 +822,7 @@ KCM.SimpleKCM {
             })
         }
         if (supportsApiKeySetup(item.provider) && !descriptorHasField(item, "apiKey")) {
-            rows.push({ title: i18n("Set API key…"), icon: "password-show-off", action: "set-api-key", enabled: !isPending(item.provider) && !loading
+            rows.push({ title: providerKey(item.provider) === "chatbox" ? i18n("Set license key…") : i18n("Set API key…"), icon: "password-show-off", action: "set-api-key", enabled: !isPending(item.provider) && !loading
                 && !CommandLedger.hasKind(commands, "version") })
         }
         var docs = providerDocsUrl(item.provider)
@@ -855,9 +867,12 @@ KCM.SimpleKCM {
         rows.push({ label: i18n("State"), value: item.enabled ? i18n("Enabled") : i18n("Disabled") })
         rows.push({ label: i18n("CodexBar default"), value: item.defaultEnabled ? i18n("Enabled") : i18n("Disabled") })
         rows.push({
-            label: i18n("API key setup"),
+            label: providerKey(item.provider) === "chatbox" ? i18n("License key setup") : i18n("API key setup"),
             value: supportsApiKeySetup(item.provider) ? i18n("Supported") : i18n("Use provider login/source")
         })
+        if (providerKey(item.provider) === "soniox" || providerKey(item.provider) === "chatbox") {
+            appendSettingsRow(rows, i18n("Key guidance"), apiKeyPrompt(item.provider))
+        }
         var authentication = item.authentication
         if (authentication) {
             appendSettingsRow(rows, i18n("Environment variables"), authentication.environmentVariables.join(", "))
@@ -929,7 +944,9 @@ KCM.SimpleKCM {
             shellQuote(commandPath) + " config " + (item.enabled ? "disable" : "enable") + " --provider " + shellQuote(cliProviderID) + " --format json --json-only"
         ]
         if (supportsApiKeySetup(providerID)) {
-            lines.push("printf '%s' \"$API_KEY\" | " + shellQuote(commandPath) + " config set-api-key --provider " + shellQuote(cliProviderID) + " --stdin --format json --json-only")
+            var keyVariable = {soniox: "SONIOX_ORG_API_KEY", abliteration: "ABLITERATION_API_KEY",
+                chatbox: "CHATBOX_LICENSE_KEY"}[providerKey(providerID)] || "API_KEY"
+            lines.push("printf '%s' \"$" + keyVariable + "\" | " + shellQuote(commandPath) + " config set-api-key --provider " + shellQuote(cliProviderID) + " --stdin --format json --json-only")
         }
         if (item.authentication && item.authentication.loginCommand.length > 0) {
             lines.push(shellQuote(commandPath) + " config login --provider copilot")
@@ -1063,12 +1080,28 @@ KCM.SimpleKCM {
         return ProviderOperations.hasFieldOperations(operationState, providerMapKey(providerID))
     }
 
+    function apiKeyPrompt(providerID) {
+        var name = displayNameForProvider(providerID)
+        if (providerKey(providerID) === "soniox") {
+            return i18n("Organization API key for %1. Project keys are not supported.", name)
+        }
+        if (providerKey(providerID) === "chatbox") {
+            return i18n("License key for %1. This key can authorize AI requests.", name)
+        }
+        return i18n("API key for %1", name)
+    }
+
     function supportsApiKeySetup(providerID) {
         var item = providerByID(providerID)
         if (item && item.authentication && item.authentication.supportsConfigAPIKey !== true) {
             return false
         }
         switch (providerKey(providerID)) {
+        case "soniox":
+            return sonioxApiKeySetupSupported
+        case "abliteration":
+        case "chatbox":
+            return abliterationChatboxKeySetupSupported
         case "munito":
             return munitoApiKeySetupSupported
         case "fireworks":

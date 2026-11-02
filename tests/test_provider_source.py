@@ -29,6 +29,8 @@ TestCase {
             property string commandPath: "codexbar"
             property bool providerSourceSetupSupported: true
             property bool fireworksSingleKeySetupSupported: false
+            property bool sonioxApiKeySetupSupported: false
+            property bool abliterationChatboxKeySetupSupported: false
             property bool munitoApiKeySetupSupported: false
             property bool commandCodeFalApiKeySetupSupported: false
             property int configCommandTimeoutMs: 60000
@@ -151,6 +153,46 @@ TestCase {
         verify(!page.providerSourceSetupSupported);
         page.handleCliVersionResult("unknown", 1);
         verify(!page.fireworksSingleKeySetupSupported);
+    }
+    function test_newKeyVersionGatesAndMetadata() {
+        var page = createTemporaryObject(harness, this);
+        function expectSetup(soniox, others) {
+            compare(page.supportsApiKeySetup("soniox"), soniox);
+            compare(page.supportsApiKeySetup("SONIOX"), soniox);
+            compare(page.supportsApiKeySetup("abliteration"), others);
+            compare(page.supportsApiKeySetup("chatbox"), others);
+            compare(page.providerCliCommandText({provider: "chatbox"}).indexOf("--stdin") >= 0, others);
+        }
+        expectSetup(false, false);
+        for (var banner of ["CodexBar 0.79.0", "CodexBar 0.80.0-rc1", "unknown"]) {
+            page.handleCliVersionResult(banner, 0);
+            expectSetup(false, false);
+        }
+        page.handleCliVersionResult("CodexBar 0.80.0", 0);
+        expectSetup(true, false);
+        for (var banner of ["CodexBar 0.81.0", "CodexBar 0.83.0", "CodexBar 1.0.0"]) {
+            page.handleCliVersionResult(banner, 0);
+            expectSetup(true, true);
+        }
+        verify(page.providerCliCommandText({provider: "chatbox"}).indexOf("$CHATBOX_LICENSE_KEY") >= 0);
+        verify(page.providerCliCommandText({provider: "soniox"}).indexOf("$SONIOX_ORG_API_KEY") >= 0);
+        for (var id of ["soniox", "abliteration", "chatbox"]) {
+            page.providers = ProviderConfigProtocol.normalizeProviderList([
+                {provider: id, authentication: {supportsConfigAPIKey: false}}]);
+            verify(!page.supportsApiKeySetup(id));
+            page.providers = ProviderConfigProtocol.normalizeProviderList([
+                {provider: id, authentication: {supportsConfigAPIKey: true}}]);
+            verify(page.supportsApiKeySetup(id));
+            page.providers = ProviderConfigProtocol.normalizeProviderList([
+                {provider: id, authentication: []}]);
+            verify(!page.supportsApiKeySetup(id));
+            page.providers = [];
+        }
+        page.handleCliVersionResult("CodexBar 0.83.0", 1);
+        expectSetup(false, false);
+        page.handleCliVersionResult("CodexBar 0.83.0", 0);
+        page.handleConfigCommandTimeout({kind: "version"});
+        expectSetup(false, false);
     }
     function test_apiKeyPromptKeepsCurrentEnablement() {
         var page = createTemporaryObject(harness, this);
@@ -389,7 +431,7 @@ class ProviderSourceTests(unittest.TestCase):
     def test_source_writes_and_lifecycle(self):
         source = (ROOT / "contents/ui/configProviders.qml").read_text()
         surface = Surface("providers", ROOT)
-        names = ("setProviderSource", "handleSetSourceResult", "setApiKey", "visualEnabled",
+        names = ("setProviderSource", "handleSetSourceResult", "setApiKey", "apiKeyPrompt", "visualEnabled",
                  "retireProviderDiagnostic", "invalidateProviderDiagnostic",
                  "providerCommandFailureText", "handleCliVersionResult", "handleData",
                  "applySetSourceResult", "runReloadDeferredBySourceWrite",

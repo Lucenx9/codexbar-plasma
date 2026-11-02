@@ -19,7 +19,8 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
 - [Changelog](../CHANGELOG.md): notable widget changes by version and unreleased
   changes. Future GitHub release notes come from this file.
 - [Usage and settings](usage.md): panel and popup options, provider setup,
-  usage confidence, data freshness and quota cache limits, cost history,
+  Soniox organization-key and Chatbox license-key guidance, usage confidence,
+  data freshness and quota cache limits, cost history,
   notifications, and widget defaults.
 - [Development](development.md): QML ownership, regression checks, runtime
   verification, CI image maintenance and coverage gates, PR delivery and CI
@@ -37,6 +38,9 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
 - [Identified-token screenshot](codexbar-plasma-identified-tokens.png): synthetic
   schema 2 local subtotal and separate API-price estimate retained after an
   SSH-source failure, used in the usage guide.
+- [Chatbox key setup screenshot](codexbar-plasma-chatbox-key-setup.png):
+  synthetic license-key action, setup guidance and documentation link in
+  provider settings, used in the usage guide.
 - [Provider authentication screenshot](codexbar-plasma-provider-authentication.png):
   synthetic Copilot settings showing CLI-described authentication hints and
   the per-provider source selector, used in the usage guide.
@@ -154,11 +158,13 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
 - [0.80.0 release review](research/2026-10-23-macos-parity-0.80.0.md): the
   108-provider registry, Soniox key setup, the Copilot `config login` command,
   the verified musl Codex cost fix, the daily-target comparison, installer
-  compatibility, and isolated carried-blocker checks.
+  compatibility, and isolated carried-blocker checks. Soniox key setup was
+  implemented after that review.
 - [0.81.0 release review](research/2026-10-25-macos-parity-0.81.0.md): the
   110-provider registry, abliteration.ai and Chatbox AI key setup, the
   per-strategy Linux Auto gate with the fixed Gemini Auto regression, plugin
-  window titles, and isolated carried-blocker checks.
+  window titles, and isolated carried-blocker checks. The two new key setups
+  were implemented after that review.
 - [0.82.0 release review](research/2026-10-27-macos-parity-0.82.0.md): the
   `config set-cookie` and `clear-credential` writers, which providers accept a
   manual cookie and which still fail on Linux, and isolated carried-blocker
