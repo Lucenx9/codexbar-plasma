@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Window
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.plasmoid
-import "ThemeContrast.js" as ThemeContrast
+import "../../contents/ui/ThemeContrast.js" as ThemeContrast
 
 // Added only to a temporary copy of main.qml by smoke_popup.py.
 Item {
