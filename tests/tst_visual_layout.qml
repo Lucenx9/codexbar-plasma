@@ -1861,6 +1861,42 @@ TestCase {
         compare(hidden.visible, false);
     }
 
+    function test_detailSeverityPixelsFollowAccentAndKeepSymbolCutouts_data() {
+        return [{tag: "warning", severity: "warning"}, {tag: "critical", severity: "critical"}];
+    }
+
+    function test_detailSeverityPixelsFollowAccentAndKeepSymbolCutouts(data) {
+        var layout = createTemporaryQmlObject(
+            'import QtQuick; import QtQuick.Layouts; ColumnLayout { width: 240 }',
+            testCase, String(Qt.resolvedUrl("DetailSeverityPixelsTest.qml")));
+        var view = createControl("ProviderDetailSection", {
+            applet: applet, providerData: {provider: "codex"},
+            modelData: UsageDetails.normalizeSections([{rows: [
+                {label: "Metric", value: "1", severity: data.severity}
+            ]}])[0]
+        }, layout);
+        if (!view) return;
+        var icon = findChild(view, "detailSeverityIcon");
+        verify(icon !== null);
+        var accent = Qt.rgba(0.12, 0.56, 0.8, 1);
+        icon.color = accent;
+        verify(waitForRendering(icon));
+        var rendered;
+        tryVerify(function() {
+            rendered = grabImage(icon);
+            var solid = rendered.pixel(Math.floor(rendered.width / 2), Math.floor(rendered.height * 3 / 16));
+            return solid.a > 0.95 && ["r", "g", "b"].every(function(channel) {
+                return Math.abs(solid[channel] - accent[channel]) < 0.02;
+            });
+        }, 1000, "rendered icon ignores its accent color");
+        var cutoutY = data.severity === "warning" ? 7 : 8;
+        var cutout = rendered.pixel(Math.floor(rendered.width / 2), Math.floor(rendered.height * cutoutY / 16));
+        var background = rendered.pixel(0, 0);
+        for (var cutoutChannel of ["r", "g", "b", "a"])
+            verify(Math.abs(cutout[cutoutChannel] - background[cutoutChannel]) < 0.02,
+                "the severity symbol lost its transparent cutout");
+    }
+
     function test_detailSeverityIsAccessibleAndIndependentOfProgress_data() {
         var cases = [];
         for (var width of [240, 540]) {
@@ -1896,7 +1932,7 @@ TestCase {
         compare(value.text, "100%");
         compare(value.opacity, alert ? 1 : applet.valueTextOpacity);
         if (alert) {
-            compare(icon.source, data.severity === "critical" ? "dialog-error-symbolic" : "dialog-warning-symbolic");
+            compare(icon.critical, data.severity === "critical");
             compare(fill.color, icon.color);
             var label = findItem(view, function(item) { return item.text === "Metric"; });
             verify(label.x >= icon.x + icon.width);
