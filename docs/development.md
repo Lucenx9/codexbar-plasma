@@ -171,7 +171,7 @@ synchronized.
   localizes warning/critical descriptions and supplies theme-contrast icons,
   value colors and meter colors without deriving severity from progress.
   `tst_usage_details.qml`, the detail cases in `tst_visual_layout.qml`, and
-  `detail-severity` smoke coverage exercise normalization, accessible names,
+  `detail-severity` smoke coverage exercise normalization, accessible descriptions,
   narrow layouts, theme contrast and privacy toggling. Snapshot/view-model,
   privacy and quota-cache tests keep details out of private and retained views.
 - `contents/ui/components/CostText.qml` localizes normalized token-cost snapshots,
