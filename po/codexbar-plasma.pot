@@ -1132,6 +1132,15 @@ msgstr ""
 msgid "Hide the %1 section"
 msgstr ""
 
+#: contents/ui/components/ProviderDetailSection.qml contents/ui/main.qml
+#: scripts/smoke/Capture.qml
+msgid "Critical"
+msgstr ""
+
+#: contents/ui/components/ProviderDetailSection.qml scripts/smoke/Capture.qml
+msgid "Warning"
+msgstr ""
+
 #: contents/ui/components/ProviderDetailSection.qml
 msgid "Usage chart"
 msgstr ""
@@ -3896,10 +3905,6 @@ msgstr ""
 
 #: contents/ui/main.qml
 msgid "Status unknown"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Critical"
 msgstr ""
 
 #: contents/ui/main.qml

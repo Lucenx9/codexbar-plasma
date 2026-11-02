@@ -21,6 +21,10 @@ The CLI 0.56.2 JSON contracts provide the inputs for these translations:
   parse the English `summary` or recalculate the CLI forecast. A summary-only payload retains its
   bounded, redacted text as a compatibility fallback.
 
+The optional CLI detail-row severity uses typed `normal`, `warning`, and
+`critical` values. The widget localizes warning and critical descriptions;
+this does not translate provider row labels or values.
+
 Free-form incident descriptions, provider detail titles/rows/chart labels,
 extra-window titles, CLI lane titles for providers without a translated lane
 label, reset-description fallbacks, and CLI error messages can

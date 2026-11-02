@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Window
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.plasmoid
+import "ThemeContrast.js" as ThemeContrast
 
 // Added only to a temporary copy of main.qml by smoke_popup.py.
 Item {
@@ -12,6 +13,7 @@ Item {
     required property string scenario
     required property string imagePath
     property int subscriptionDatesStep: 0
+    property int detailSeverityPrivacyStep: 0
     property bool prepared: false
     property bool identifiedRequested: false
     property bool navigationVerified: false
@@ -1361,6 +1363,44 @@ Item {
     }
 
     function scenarioReady() {
+        if (scenario === "detail-severity") {
+            if (applet.loading || applet.selectedProviderID !== "codex") return false;
+            var severityIcons = [];
+            var detailValues = [];
+            (function collect(item) {
+                if (item.objectName === "detailSeverityIcon" && item.visible) severityIcons.push(item);
+                if (item.objectName === "detailValue" && item.visible) detailValues.push(item);
+                for (var child of item.children || []) collect(child);
+            })(applet.fullRepresentationItem);
+            if (detailSeverityPrivacyStep === 1) {
+                if (!applet.privacyMode) return false;
+                verifyScenario(severityIcons.length === 0, "privacy exposed detail severity");
+                verifyScenario(applet.providers[0].providerDetails[0].rows[2].severity === "critical",
+                    "privacy mutated the normalized severity");
+                applet.Plasmoid.configuration.privacyMode = false;
+                detailSeverityPrivacyStep = 2;
+                return false;
+            }
+            if (applet.privacyMode) return false;
+            verifyScenario(severityIcons.length === 2, "detail severity was dropped or inferred from progress");
+            verifyScenario(detailValues.some(function(item) { return item.Accessible.description === i18n("Warning"); })
+                && detailValues.some(function(item) { return item.Accessible.description === i18n("Critical"); }),
+                "detail severity is not localized for assistive technology");
+            for (var icon of severityIcons) {
+                verifyScenario(ThemeContrast.contrastRatio(icon.color, icon.Kirigami.Theme.backgroundColor) >= 3,
+                    "detail severity has insufficient theme contrast");
+            }
+            for (var value of detailValues.filter(function(item) { return item.Accessible.description.length > 0; })) {
+                verifyScenario(ThemeContrast.contrastRatio(value.color, value.Kirigami.Theme.backgroundColor) >= 4.5,
+                    "detail severity text has insufficient theme contrast");
+            }
+            if (detailSeverityPrivacyStep === 0) {
+                applet.Plasmoid.configuration.privacyMode = true;
+                detailSeverityPrivacyStep = 1;
+                return false;
+            }
+            return true;
+        }
         if (scenario.indexOf("identified-") === 0) {
             var popup = applet.fullRepresentationItem;
             var schema2 = scenario.indexOf("identified-schema2") === 0;
@@ -2549,7 +2589,7 @@ Item {
                     capture.applet.openProviderFromPanel("codex");
                 } else if (capture.scenario === "percent-only-usage" || capture.scenario === "percent-only-pace") {
                     capture.applet.openProviderFromPanel("claude");
-                } else if (capture.scenario === "subscription-dates" || capture.scenario === "estimated-usage" || capture.scenario === "popup-content" || capture.scenario === "popup-hidden-rows"
+                } else if (capture.scenario === "detail-severity" || capture.scenario === "subscription-dates" || capture.scenario === "estimated-usage" || capture.scenario === "popup-content" || capture.scenario === "popup-hidden-rows"
                         || capture.scenario === "popup-hidden-sections") {
                     capture.applet.openProviderFromPanel("codex");
                 } else if (capture.scenario.indexOf("privacy-") === 0) {

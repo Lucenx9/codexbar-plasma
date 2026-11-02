@@ -37,7 +37,8 @@ TestCase {
         var source = { provider: "codex", title: "confidential alias",
             account: "private@example.test", organization: "confidential", loginMethod: "confidential",
             source: "confidential file", version: "confidential", planText: "confidential team",
-            rows: [row], primaryRow: row, providerDetails: [{ value: "confidential detail" }],
+            rows: [row], primaryRow: row, providerDetails: [{title: "Details", rows: [
+                {label: "Private metric", value: "confidential detail", severity: "critical"}]}],
             usageDashboard: { summaryRows: [{ value: "confidential dashboard" }] },
             providerCost: { spendLine: "confidential billing period", percentUsed: 40 },
             tokenCost: cost(), credits: 14, status: "confidential incident", statusKnown: true,
@@ -53,6 +54,7 @@ TestCase {
         compare(result.statusSeverity, "minor")
         compare(result.error, "Details hidden")
         compare(result.providerDetails, [])
+        compare(source.providerDetails[0].rows[0].severity, "critical")
         compare(result.usageDashboard, null)
         compare(result.providerCost, { percentUsed: 40 })
         compare(result.primaryRow, result.rows[0])

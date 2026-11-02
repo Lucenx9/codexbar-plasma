@@ -267,14 +267,6 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 
 ## Plasma-native work with verified CLI contracts
 
-- [ ] Preserve and present optional detail-row severity. Official Linux CLI
-  0.79.0 `plugins fetch` emits `severity: warning` from a synthetic plugin;
-  the typed contract allows `normal`, `warning`, and `critical`, independently
-  of progress. `UsageDetails.normalizeSections` currently drops it. Done when
-  bounded normalization, theme/accessibility presentation, privacy/cache paths,
-  and direct QtTests preserve severity without inferring it from percentages.
-  [Evidence](docs/research/2026-10-21-macos-parity-0.79.0.md#linux-cli-contract-changes).
-
 - [ ] Offer manual-cookie setup and credential clearing. Official Linux CLI
   0.82.0 adds `config set-cookie --provider <id> (--cookie <h>|--stdin)
   [--no-enable]` and `config clear-credential --provider <id> [--api-key]

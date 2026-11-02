@@ -37,6 +37,19 @@ TestCase {
         result.rows.push({lane: "extra"})
         compare(display.rows.length, 1)
     }
+    function test_detailSeveritySurvivesSnapshotAndPresentation() {
+        var raw = {provider: "future", usage: {details: [{title: "Details", rows: [
+            {label: "Low usage", value: "1%", severity: "critical", progress: {used: 1, total: 100}}
+        ]}]}};
+        var before = JSON.stringify(raw);
+        var snapshot = Snapshot.normalize(raw, 1000);
+        var result = View.presented(snapshot, {rows: [], title: "Future", planText: "", status: ""});
+        compare(snapshot.providerDetails[0].rows[0].severity, "critical");
+        compare(result.providerDetails[0].rows[0].severity, "critical");
+        compare(result.providerDetails[0].rows[0].progress.fraction, 0.01);
+        compare(JSON.stringify(raw), before);
+    }
+
     function test_primaryRowIsNotInventedForSecondaryOnlyUsage() {
         var snapshot = Snapshot.normalize({provider: "future", usage: {}}, 1000)
         var result = View.presented(snapshot, {rows: [{lane: "secondary"}], title: "Future", planText: "", status: ""})

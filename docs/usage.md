@@ -296,6 +296,15 @@ work and upstream contract requirements.
   bar/line charts. A row that carries a valid `progress` used/total pair, such
   as a Bifrost budget, also draws a thin meter under its text; the meter fills
   at most to the total, and rows without a valid pair keep their text alone.
+  Optional CLI `warning` and `critical` severity adds a distinct themed icon
+  and colors the value and any meter. The icon tooltip and the value's
+  accessible description name the severity in the widget language. Severity
+  comes only from the CLI field, independently of progress; `normal`, absent,
+  and unknown values keep ordinary presentation. These details stay hidden in
+  privacy mode and are omitted from persisted quota caches and stale fallback.
+
+  ![Synthetic detail severity independent of progress](codexbar-plasma-detail-severity.png)
+
 - Usage rows take the widget's translated title for known providers. A
   provider without one uses the CLI's own English title from `rateWindowLabels`
   (such as `Memory`) instead of the generic `Session`, `Weekly`, or `Opus`;

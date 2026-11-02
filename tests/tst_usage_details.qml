@@ -5,6 +5,28 @@ import "../contents/ui/UsageDetails.js" as UsageDetails
 TestCase {
     name: "UsageDetails"
 
+    function test_preservesOnlyOfficialSeverityWithoutInferringFromProgress() {
+        var inputs = ["normal", "warning", "critical", undefined, null, "WARNING", "future", 1, true,
+            {}, ["warning"], {toString: function() { throw new Error("Do not coerce severity"); }}];
+        var rows = inputs.map(function(severity, index) {
+            return {label: "Row " + index, value: "100%", severity: severity,
+                progress: index === 1 ? null : {used: index === 2 ? 1 : 10, total: 10}};
+        });
+        var source = [{title: "Details", rows: rows}];
+        var before = JSON.stringify(source);
+        var result = UsageDetails.normalizeSections(source);
+        compare(result[0].rows.length, inputs.length);
+        for (var i = 0; i < inputs.length; i++) {
+            compare(result[0].rows[i].severity, i < 3 ? inputs[i] : "", "row " + i);
+        }
+        compare(result[0].rows[0].progress.fraction, 1);
+        compare(result[0].rows[1].progress, null);
+        compare(result[0].rows[2].progress.fraction, 0.1);
+        compare(result[0].rows[3].progress.fraction, 1);
+        compare(JSON.stringify(source), before);
+        compare(UsageDetails.normalizeSections(result), result);
+    }
+
     function test_normalizesOfficialRowAndBarChartContract() {
         var sections = UsageDetails.normalizeSections([
             {

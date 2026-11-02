@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import org.kde.plasma.components as PlasmaComponents
 import org.kde.kirigami as Kirigami
+import "../ThemeContrast.js" as ThemeContrast
 
 ColumnLayout {
     id: detailSection
@@ -76,6 +77,16 @@ ColumnLayout {
 
             required property var modelData
             readonly property var progress: detailEntry.modelData.progress || null
+            readonly property bool warning: modelData.severity === "warning"
+            readonly property bool critical: modelData.severity === "critical"
+            readonly property bool hasSeverity: warning || critical
+            readonly property string severityText: critical ? i18n("Critical") : warning ? i18n("Warning") : ""
+            readonly property color severityAccent: ThemeContrast.readableAccentColor(
+                critical ? Kirigami.Theme.negativeTextColor : Kirigami.Theme.neutralTextColor,
+                Kirigami.Theme.backgroundColor, Kirigami.Theme.textColor)
+            readonly property color severityColor: ThemeContrast.readableTextColor(
+                critical ? Kirigami.Theme.negativeTextColor : Kirigami.Theme.neutralTextColor,
+                Kirigami.Theme.backgroundColor)
 
             Layout.fillWidth: true
             spacing: Kirigami.Units.smallSpacing / 2
@@ -85,16 +96,41 @@ ColumnLayout {
 
                 Layout.fillWidth: true
                 implicitWidth: detailLabel.implicitWidth + Kirigami.Units.smallSpacing + detailValues.implicitWidth
-                implicitHeight: Math.max(detailLabel.implicitHeight, detailValues.implicitHeight)
+                    + (severityIcon.visible ? severityIcon.width + Kirigami.Units.smallSpacing : 0)
+                implicitHeight: Math.max(detailLabel.implicitHeight, detailValues.implicitHeight,
+                    severityIcon.visible ? severityIcon.height : 0)
+
+                Kirigami.Icon {
+                    id: severityIcon
+                    objectName: "detailSeverityIcon"
+                    visible: detailEntry.hasSeverity
+                    source: detailEntry.critical ? "dialog-error-symbolic" : "dialog-warning-symbolic"
+                    fallback: detailEntry.critical ? "dialog-error" : "dialog-warning"
+                    color: detailEntry.severityAccent
+                    width: Kirigami.Units.iconSizes.small
+                    height: width
+                    anchors.left: parent.left
+                    anchors.top: parent.top
+                    Accessible.ignored: true
+
+                    HoverHandler { id: severityHover }
+
+                    PlainToolTip {
+                        visible: severityHover.hovered
+                        plainText: detailEntry.severityText
+                    }
+                }
 
                 PlainPlasmaLabel {
                     id: detailLabel
 
                     text: detailEntry.modelData.label
                     opacity: detailSection.applet.secondaryTextOpacity
-                    anchors.left: parent.left
+                    anchors.left: severityIcon.visible ? severityIcon.right : parent.left
+                    anchors.leftMargin: severityIcon.visible ? Kirigami.Units.smallSpacing : 0
                     anchors.top: parent.top
-                    width: Math.max(0, parent.width - detailValues.width - Kirigami.Units.smallSpacing)
+                    width: Math.max(0, parent.width - detailValues.width - Kirigami.Units.smallSpacing
+                        - (severityIcon.visible ? severityIcon.width + Kirigami.Units.smallSpacing : 0))
                     elide: Text.ElideRight
 
                     HoverHandler { id: detailLabelHover }
@@ -116,8 +152,11 @@ ColumnLayout {
 
                     PlainPlasmaLabel {
                         id: detailValue
+                        objectName: "detailValue"
                         text: detailEntry.modelData.value
-                        opacity: detailSection.applet.valueTextOpacity
+                        Accessible.description: detailEntry.severityText
+                        color: detailEntry.hasSeverity ? detailEntry.severityColor : Kirigami.Theme.textColor
+                        opacity: detailEntry.hasSeverity ? 1 : detailSection.applet.valueTextOpacity
                         font.weight: Font.Medium
                         horizontalAlignment: Text.AlignRight
                         Layout.fillWidth: true
@@ -174,7 +213,7 @@ ColumnLayout {
                     width: fraction <= 0 ? 0 : Math.max(parent.height, parent.width * fraction)
                     height: parent.height
                     radius: parent.radius
-                    color: detailSection.accent
+                    color: detailEntry.hasSeverity ? detailEntry.severityAccent : detailSection.accent
                 }
             }
         }

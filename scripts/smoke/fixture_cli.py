@@ -34,6 +34,7 @@ SCENARIOS += ("usage-retention", "usage-cache-restart")
 SCENARIOS += ("estimated-usage", "estimated-panel", "unknown-panel")
 SCENARIOS += ("percent-only-usage", "percent-only-panel")
 SCENARIOS += ("percent-only-pace",)
+SCENARIOS += ("detail-severity",)
 SCENARIOS += ("subscription-dates",)
 SCENARIOS += ("identified-local", "identified-partial", "identified-ssh-failure", "identified-only")
 SCENARIOS += ("identified-schema2", "identified-schema2-unpriced", "identified-schema-mismatch")
@@ -67,6 +68,14 @@ def usage(provider, scenario, now):
                           "resetsAt": (now + timedelta(days=4)).isoformat()},
         },
     }
+    if scenario == "detail-severity" and provider == "codex":
+        snapshot["usage"]["details"] = [{"title": "API usage details", "rows": [
+            {"label": "Completed batch", "value": "100 / 100", "severity": "normal", "progress": {"used": 100, "total": 100}},
+            {"label": "Requests", "value": "1 / 100", "severity": "warning", "progress": {"used": 1, "total": 100}},
+            {"label": "Account action", "value": "Check account settings", "severity": "critical"},
+            {"label": "Imported rows", "value": "100 / 100", "progress": {"used": 100, "total": 100}},
+            {"label": "Future metadata", "value": "100 / 100", "severity": "future", "progress": {"used": 100, "total": 100}}
+        ]}]
     if scenario == "subscription-dates":
         snapshot["usage"].update(subscriptionRenewsAt="2026-11-01T08:30:00Z",
                                  subscriptionExpiresAt="2026-11-30T00:00:00Z",

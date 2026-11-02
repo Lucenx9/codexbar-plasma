@@ -1861,6 +1861,57 @@ TestCase {
         compare(hidden.visible, false);
     }
 
+    function test_detailSeverityIsAccessibleAndIndependentOfProgress_data() {
+        var cases = [];
+        for (var width of [240, 540]) {
+            for (var severity of ["normal", "warning", "critical", "future", ""]) {
+                cases.push({tag: severity + width, severity: severity, width: width});
+            }
+        }
+        return cases;
+    }
+
+    function test_detailSeverityIsAccessibleAndIndependentOfProgress(data) {
+        failOnWarning(/Qt Quick Layouts: Detected recursive rearrange/);
+        var layout = createTemporaryQmlObject(
+            'import QtQuick; import QtQuick.Layouts; ColumnLayout {}',
+            testCase, String(Qt.resolvedUrl("DetailSeverityTest.qml")));
+        layout.width = data.width;
+        var progress = data.severity === "warning" ? null : {used: data.severity === "critical" ? 1 : 10, total: 10};
+        var section = UsageDetails.normalizeSections([{
+            title: "Details", rows: [{label: "Metric", value: "100%", severity: data.severity, progress: progress}]
+        }])[0];
+        var view = createControl("ProviderDetailSection", {
+            applet: applet, providerData: {provider: "codex"}, modelData: section
+        }, layout);
+        if (!view) return;
+        tryCompare(view, "width", data.width);
+        var icon = findChild(view, "detailSeverityIcon");
+        var value = findChild(view, "detailValue");
+        var fill = findChild(view, "detailProgressFill");
+        var alert = data.severity === "warning" || data.severity === "critical";
+        verify(icon !== null && value !== null && fill !== null);
+        compare(icon.visible, alert);
+        compare(value.Accessible.description, data.severity === "warning" ? "Warning" : data.severity === "critical" ? "Critical" : "");
+        compare(value.text, "100%");
+        compare(value.opacity, alert ? 1 : applet.valueTextOpacity);
+        if (alert) {
+            compare(icon.source, data.severity === "critical" ? "dialog-error-symbolic" : "dialog-warning-symbolic");
+            compare(fill.color, icon.color);
+            var label = findItem(view, function(item) { return item.text === "Metric"; });
+            verify(label.x >= icon.x + icon.width);
+            verify(label.width >= 0);
+        } else {
+            compare(fill.color, view.accent);
+        }
+        compare(fill.fraction, progress === null ? 0 : progress.used / progress.total);
+        icon.parent.parent.modelData = UsageDetails.normalizeSections([{rows: [{label: "Metric", value: "1"}]}])[0].rows[0];
+        wait(0);
+        var cleared = findChild(view, "detailSeverityIcon");
+        verify(cleared !== null && !cleared.visible);
+        compare(findChild(view, "detailValue").Accessible.description, "");
+    }
+
     function test_providerDetailProgressMeterFollowsRowProgress_data() {
         return [
             { tag: "narrow", width: 240 },

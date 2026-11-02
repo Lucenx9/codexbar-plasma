@@ -12,6 +12,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Added
 
+- Show optional CLI warning and critical severity in provider detail rows with
+  themed icons, readable colors and localized accessible descriptions. Keep
+  severity independent of progress and preserve detail privacy/retention rules.
+
 - Secure key setup for Soniox with CLI 0.80.0 or later, and abliteration.ai
   and Chatbox AI with CLI 0.81.0 or later. Explain Soniox organization keys
   and Chatbox license keys in the prompt and provider settings, with setup

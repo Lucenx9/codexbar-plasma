@@ -166,6 +166,14 @@ synchronized.
   `test_identified_tokens_context.py`, paired source-isolation tests and the
   `identified-*` smoke scenarios cover this path with synthetic data, including
   schema 2 estimates, unpriced requests and schema mismatch guidance.
+- `UsageDetails.js` bounds detail sections and preserves only the CLI row
+  severities `normal`, `warning`, and `critical`. `ProviderDetailSection.qml`
+  localizes warning/critical descriptions and supplies theme-contrast icons,
+  value colors and meter colors without deriving severity from progress.
+  `tst_usage_details.qml`, the detail cases in `tst_visual_layout.qml`, and
+  `detail-severity` smoke coverage exercise normalization, accessible names,
+  narrow layouts, theme contrast and privacy toggling. Snapshot/view-model,
+  privacy and quota-cache tests keep details out of private and retained views.
 - `contents/ui/components/CostText.qml` localizes normalized token-cost snapshots,
   history labels, qualified cost values, count plurals, spend totals and legacy
   dashboard rows. It receives regional number formatting explicitly and takes

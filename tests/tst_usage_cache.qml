@@ -211,6 +211,24 @@ TestCase {
         compare(persisted[0].usage.primary.usedPercent, 0);
     }
 
+    function test_liveDetailSeverityIsNotRetainedOrPersisted() {
+        var item = snapshot("codex", 72);
+        item.providerDetails = [{title: "Details", rows: [
+            {label: "Private metric", value: "Private value", severity: "critical"}
+        ]}];
+        var live = Cache.reconcile([], [item], nowMs);
+        compare(live[0].providerDetails[0].rows[0].severity, "critical");
+        var encoded = Cache.encode(live, context, nowMs);
+        verify(encoded.length > 0);
+        verify(encoded.indexOf("severity") < 0);
+        verify(encoded.indexOf("Private metric") < 0);
+        var restored = Cache.decode(encoded, context, nowMs);
+        verify(restored[0].usage.details === undefined);
+        var stale = Cache.reconcile(live, [failed("codex")], nowMs + 60000);
+        compare(stale[0].providerDetails, []);
+        compare(live[0].providerDetails[0].rows[0].severity, "critical");
+    }
+
     function test_extraLaneQuotasSurviveRestart() {
         var extra = {
             lane: "extra",
