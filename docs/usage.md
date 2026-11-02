@@ -296,7 +296,7 @@ work and upstream contract requirements.
   bar/line charts. A row that carries a valid `progress` used/total pair, such
   as a Bifrost budget, also draws a thin meter under its text; the meter fills
   at most to the total, and rows without a valid pair keep their text alone.
-  Optional CLI `warning` and `critical` severity adds a distinct themed icon
+  Optional CLI `warning` and `critical` severity adds a distinct symbol colored by the theme
   and colors the value and any meter. The icon tooltip and the value's
   accessible description name the severity in the widget language. Severity
   comes only from the CLI field, independently of progress; `normal`, absent,

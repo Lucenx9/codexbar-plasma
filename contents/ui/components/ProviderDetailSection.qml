@@ -100,19 +100,54 @@ ColumnLayout {
                 implicitHeight: Math.max(detailLabel.implicitHeight, detailValues.implicitHeight,
                     severityIcon.visible ? severityIcon.height : 0)
 
-                Kirigami.Icon {
+                Canvas {
                     id: severityIcon
                     objectName: "detailSeverityIcon"
+                    property color color: detailEntry.severityAccent
+                    property bool critical: detailEntry.critical
                     visible: detailEntry.hasSeverity
-                    source: detailEntry.critical ? "dialog-error-symbolic" : "dialog-warning-symbolic"
-                    fallback: detailEntry.critical ? "dialog-error" : "dialog-warning"
-                    isMask: true
-                    color: detailEntry.severityAccent
                     width: Kirigami.Units.iconSizes.small
                     height: width
                     anchors.left: parent.left
                     anchors.top: parent.top
                     Accessible.ignored: true
+
+                    onColorChanged: requestPaint()
+                    onCriticalChanged: requestPaint()
+                    onWidthChanged: requestPaint()
+                    onHeightChanged: requestPaint()
+                    onVisibleChanged: if (visible) requestPaint()
+
+                    onPaint: {
+                        var ctx = getContext("2d")
+                        ctx.reset()
+                        ctx.clearRect(0, 0, width, height)
+                        ctx.scale(width / 16, height / 16)
+                        ctx.fillStyle = color
+                        ctx.beginPath()
+                        if (critical) {
+                            ctx.arc(8, 8, 7, 0, Math.PI * 2)
+                        } else {
+                            ctx.moveTo(8, 1)
+                            ctx.lineTo(15, 14)
+                            ctx.lineTo(1, 14)
+                            ctx.closePath()
+                        }
+                        ctx.fill()
+                        ctx.globalCompositeOperation = "destination-out"
+                        if (critical) {
+                            ctx.lineWidth = 2
+                            ctx.beginPath()
+                            ctx.moveTo(5, 5)
+                            ctx.lineTo(11, 11)
+                            ctx.moveTo(11, 5)
+                            ctx.lineTo(5, 11)
+                            ctx.stroke()
+                        } else {
+                            ctx.fillRect(7, 5, 2, 5)
+                            ctx.fillRect(7, 11, 2, 2)
+                        }
+                    }
 
                     HoverHandler { id: severityHover }
 
