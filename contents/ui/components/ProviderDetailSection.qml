@@ -106,6 +106,7 @@ ColumnLayout {
                     visible: detailEntry.hasSeverity
                     source: detailEntry.critical ? "dialog-error-symbolic" : "dialog-warning-symbolic"
                     fallback: detailEntry.critical ? "dialog-error" : "dialog-warning"
+                    isMask: true
                     color: detailEntry.severityAccent
                     width: Kirigami.Units.iconSizes.small
                     height: width
