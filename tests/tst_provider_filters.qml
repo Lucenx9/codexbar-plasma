@@ -136,7 +136,7 @@ TestCase {
         var page = createProvidersPage();
         if (!page) return;
         var ids = ["soniox", "abliteration", "chatbox"];
-        page.providers = ids.map(function(id) { return {provider: id, enabled: false}; });
+        page.providers = ids.map(function(id) { return {provider: id, displayName: id, enabled: false}; });
         page.handleCliVersionResult("CodexBar 0.83.0", 0);
         for (var id of ids) {
             var item = page.providerByID(id);

@@ -175,7 +175,7 @@ registry. Newer CLI providers use generic presentation where needed.
 Secure key setup also supports Soniox with CLI 0.80.0 or later, and
 abliteration.ai and Chatbox AI with CLI 0.81.0 or later. Soniox requires an
 organization API key; Chatbox requires a license key. See the
-[provider setup notes](docs/usage.md#providers-and-accounts).
+[provider setup notes](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/usage.md#providers-and-accounts).
 
 | Standard panel | Minimal panel |
 | --- | --- |
