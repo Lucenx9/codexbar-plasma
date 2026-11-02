@@ -1137,6 +1137,18 @@ msgid "Usage chart"
 msgstr ""
 
 #: contents/ui/components/ProviderNames.qml
+msgid "Soniox"
+msgstr ""
+
+#: contents/ui/components/ProviderNames.qml
+msgid "abliteration.ai"
+msgstr ""
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Chatbox AI"
+msgstr ""
+
+#: contents/ui/components/ProviderNames.qml
 msgid "Abacus AI"
 msgstr ""
 
@@ -2209,6 +2221,7 @@ msgid "Replace…"
 msgstr ""
 
 #: contents/ui/configAiInsights.qml contents/ui/configProviders.qml
+#: scripts/smoke/Capture.qml
 msgid "Set API key…"
 msgstr ""
 
@@ -3141,10 +3154,6 @@ msgid "codexbar did not return provider data."
 msgstr ""
 
 #: contents/ui/configProviders.qml
-msgid "API key for %1"
-msgstr ""
-
-#: contents/ui/configProviders.qml
 #: contents/ui/controllers/ProviderRosterController.qml
 msgid "Loading providers timed out. Try again."
 msgstr ""
@@ -3166,6 +3175,10 @@ msgid "%1 saved"
 msgstr ""
 
 #: contents/ui/configProviders.qml
+msgid "%1 license key saved"
+msgstr ""
+
+#: contents/ui/configProviders.qml
 msgid "%1 API key saved"
 msgstr ""
 
@@ -3175,6 +3188,10 @@ msgstr ""
 
 #: contents/ui/configProviders.qml
 msgid "%1 action completed"
+msgstr ""
+
+#: contents/ui/configProviders.qml scripts/smoke/Capture.qml
+msgid "Set license key…"
 msgstr ""
 
 #: contents/ui/configProviders.qml contents/ui/main.qml
@@ -3218,11 +3235,19 @@ msgid "API key setup"
 msgstr ""
 
 #: contents/ui/configProviders.qml
+msgid "License key setup"
+msgstr ""
+
+#: contents/ui/configProviders.qml
 msgid "Supported"
 msgstr ""
 
 #: contents/ui/configProviders.qml
 msgid "Use provider login/source"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Key guidance"
 msgstr ""
 
 #: contents/ui/configProviders.qml
@@ -3291,6 +3316,18 @@ msgstr ""
 
 #: contents/ui/configProviders.qml
 msgid "%1 for %2"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Organization API key for %1. Project keys are not supported."
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "License key for %1. This key can authorize AI requests."
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "API key for %1"
 msgstr ""
 
 #: contents/ui/configProviders.qml scripts/smoke/Capture.qml

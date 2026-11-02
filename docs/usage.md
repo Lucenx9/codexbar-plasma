@@ -608,6 +608,18 @@ Provider-specific editable settings depend on the official CLI contract.
   Future AGI has fallback metadata and links, but no key setup action: it
   requires both `FI_API_KEY` and `FI_SECRET_KEY`, and the second credential has
   no supported Linux writer.
+- Soniox offers single-key setup with CLI 0.80.0 or later. Use an organization
+  API key (`SONIOX_ORG_API_KEY`), not a project key.
+- abliteration.ai and Chatbox AI offer single-key setup with CLI 0.81.0 or
+  later. abliteration.ai uses `ABLITERATION_API_KEY`. Chatbox uses a
+  `CHATBOX_LICENSE_KEY`, not a provider API key: choose **Set license key…**.
+  That license key can authorize AI requests. The password prompt sends each
+  credential only through CLI stdin. The **Docs** action opens the provider's
+  CodexBar setup guide; **Settings and diagnostics** also shows Soniox and
+  Chatbox key guidance. Older or unrecognized CLI versions hide these actions;
+  an advertised key-writer flag must also allow them when metadata is present.
+  ![Synthetic Chatbox license-key setup and guidance](codexbar-plasma-chatbox-key-setup.png)
+
 - Claude Platform has its own fallback name, the shared Claude icon and brand
   color, and Console billing, login, status and documentation links. Its
   `claude-platform` alias resolves to `claudeplatform`, separately from Claude.

@@ -17,6 +17,7 @@ SCENARIOS += ("settings-providers", "settings-providers-narrow", "settings-provi
               "settings-general-narrow", "settings-popup-narrow", "settings-notifications-narrow",
               "settings-diagnostics-narrow", "settings-diagnostics-error")
 SCENARIOS += ("settings-providers-auth", "settings-providers-auth-legacy")
+SCENARIOS += ("settings-providers-keys-soniox", "settings-providers-keys-chatbox")
 SCENARIOS += ("readme-overview", "readme-spend", "readme-sessions", "readme-codex")
 SCENARIOS += ("readme-panel-standard", "readme-panel-minimal")
 SCENARIOS += ("panel-information", "panel-information-minimal", "panel-information-single")
@@ -154,12 +155,19 @@ def response(args, scenario, now):
     if args == ["config", "providers", "--descriptors", "--format", "json", "--json-only"]:
         raise ValueError("Unknown option --descriptors")
     if args == ["--version"]:
+        if scenario.startswith("settings-providers-keys"):
+            return "CodexBar 0.83.0"
         if scenario.startswith("settings-providers-auth"):
             return "CodexBar " + ("0.82.0" if scenario.endswith("-legacy") else "0.83.0")
         if scenario.startswith("settings-providers"):
             return "CodexBar 0.73.0 (synthetic smoke fixture)"
         return "CodexBar 0.56.2 (synthetic smoke fixture)"
     if args == ["config", "providers", "--format", "json", "--json-only"]:
+        if scenario.startswith("settings-providers-keys"):
+            return [{"provider": key, "enabled": False, "authentication": {
+                "sourceModes": ["api", "auto"], "supportsConfigAPIKey": True,
+                "supportsConfigCookieHeader": False, "environmentVariables": []}}
+                for key in ("soniox", "abliteration", "chatbox")]
         if scenario.startswith("settings-providers-auth"):
             rows = [{"provider": key, "enabled": key in ("codex", "copilot", "openrouter")}
                     for key in ("codex", "copilot", "openrouter", "moonshot", "flora", "helmcode", "future-provider")]

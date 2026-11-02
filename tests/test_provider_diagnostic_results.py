@@ -34,6 +34,7 @@ TestCase {
     property QtObject configSource: QtObject {
         function disconnectSource(source) {}
     }
+    function providerKey(provider) { return provider.toLowerCase(); }
     SOURCE_FUNCTIONS
     function i18n(text, first, second) { return text.replace("%1", first).replace("%2", second); }
     function displayNameForProvider(provider) { return provider; }

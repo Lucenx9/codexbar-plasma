@@ -1826,7 +1826,14 @@ a descriptor field or action is pending for the same provider.
 redaction, immutable projections, legacy fallback and the Copilot command
 allowlist. The `settings-providers-auth` and `settings-providers-auth-legacy`
 smoke scenarios execute an API source write with the new and legacy option
-orders, check the key gate and render the read-only hints.
+orders, check the key gate and render the read-only hints. The
+`settings-providers-keys-soniox` and `settings-providers-keys-chatbox` scenarios
+check all three setup gates and documentation links. Each checks its target
+action and visible guidance: Soniox organization keys or Chatbox license keys.
+The Chatbox scenario also checks its localized license-key label.
+`test_secret_prompt_lifecycle.py` executes
+each new provider prompt with synthetic dialog/CLI tools to verify the
+credential travels only through stdin.
 
 The widget expects a working `codexbar`. Probe the selected official version
 when investigating a contract; keep raw account output out of logs and commits.

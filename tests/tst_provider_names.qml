@@ -21,6 +21,9 @@ TestCase {
 
     function test_lateAddedProvidersHaveBundledFallbackTitles_data() {
         return [
+            { tag: "soniox", key: "soniox", title: "Soniox" },
+            { tag: "abliteration", key: "abliteration", title: "abliteration.ai" },
+            { tag: "chatbox", key: "chatbox", title: "Chatbox AI" },
             { tag: "futureagi", key: "futureagi", title: "Future AGI" },
             { tag: "munito", key: "munito", title: "Munito" },
             { tag: "claudeplatform", key: "claudeplatform", title: "Claude Platform" },

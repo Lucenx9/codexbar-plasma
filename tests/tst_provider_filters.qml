@@ -132,6 +132,28 @@ TestCase {
         }
     }
 
+    function test_newKeyActionsShowGuidanceAndDocumentation() {
+        var page = createProvidersPage();
+        if (!page) return;
+        var ids = ["soniox", "abliteration", "chatbox"];
+        page.providers = ids.map(function(id) { return {provider: id, displayName: id, enabled: false}; });
+        page.handleCliVersionResult("CodexBar 0.83.0", 0);
+        for (var id of ids) {
+            var item = page.providerByID(id);
+            var actions = page.providerActionRows(item);
+            compare(actions.filter(function(row) { return row.action === "set-api-key"; }).length, 1, id);
+            compare(actions.filter(function(row) { return row.action === "docs"; })[0].url,
+                "https://github.com/steipete/CodexBar/blob/main/docs/" + id + ".md");
+            compare(actions[0].title, id === "chatbox" ? "Set license key…" : "Set API key…");
+        }
+        var chatbox = page.providerByID("chatbox");
+        verify(page.providerSettingsRows(chatbox).some(function(row) { return row.label === "License key setup"; }));
+        verify(page.apiKeyPrompt("chatbox").indexOf("authorize AI requests") >= 0);
+        verify(page.apiKeyPrompt("soniox").indexOf("Project keys are not supported") >= 0);
+        page.handleCommandPathChanged();
+        for (var id of ids) compare(page.supportsApiKeySetup(id), false);
+    }
+
     function test_official077MunitoSetupFollowsCliVersionLifecycle() {
         var page = createProvidersPage();
         if (!page) return;

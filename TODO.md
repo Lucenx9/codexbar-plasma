@@ -275,21 +275,6 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   and direct QtTests preserve severity without inferring it from percentages.
   [Evidence](docs/research/2026-10-21-macos-parity-0.79.0.md#linux-cli-contract-changes).
 
-- [ ] Add Soniox to the single API-key setup. Official Linux CLI 0.80.0
-  accepts `config set-api-key --provider soniox --stdin`, enables the provider,
-  and reaches its network fetch; the key must be an organization API key
-  (`SONIOX_ORG_API_KEY`), not a project key. `supportsApiKeySetup` in
-  `configProviders.qml` omits `soniox`. Done when Soniox offers the existing
-  key setup with its organization-key guidance and docs link, covered by tests.
-  [Evidence](docs/research/2026-10-23-macos-parity-0.80.0.md#linux-cli-contract-changes).
-- [ ] Add abliteration.ai and Chatbox AI to the single API-key setup. Official
-  Linux CLI 0.81.0 accepts `config set-api-key --provider abliteration|chatbox
-  --stdin`, enables each provider, and reaches its network fetch.
-  `supportsApiKeySetup` in `configProviders.qml` omits both. Chatbox takes a
-  Chatbox License Key, not an API key, and that key can authorize AI requests.
-  Done when both offer the existing key setup, Chatbox with license-key wording
-  and its docs link, covered by tests.
-  [Evidence](docs/research/2026-10-25-macos-parity-0.81.0.md#linux-cli-contract-changes).
 - [ ] Offer manual-cookie setup and credential clearing. Official Linux CLI
   0.82.0 adds `config set-cookie --provider <id> (--cookie <h>|--stdin)
   [--no-enable]` and `config clear-credential --provider <id> [--api-key]

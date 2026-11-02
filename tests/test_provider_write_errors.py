@@ -30,6 +30,7 @@ TestCase {
                 return text.replace("%1", first).replace("%2", second);
             }
             function displayNameForProvider(provider) { return provider; }
+            function providerKey(provider) { return provider.toLowerCase(); }
             function markPending(provider, value) { pending = value; }
             function updateProviderEnabled(provider, value) { writes++; }
             function bumpProviderConfigRevision() { revisions++; }
@@ -78,6 +79,13 @@ TestCase {
         compare(togglePage.writes, 0);
         compare(togglePage.revisions, 0);
         compare(togglePage.errorText, "codex: codexbar did not return command data.");
+    }
+
+    function test_chatboxSaveUsesLicenseKeyWording() {
+        var page = createTemporaryObject(harness, this);
+        page.handleSetApiKeyResult({provider: "chatbox"}, "", "", 0);
+        compare(page.statusText, "chatbox license key saved");
+        compare(page.revisions, 1);
     }
 
     function test_invalidWritePayloadNamesCommandData() {
