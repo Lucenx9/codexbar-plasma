@@ -822,7 +822,7 @@ KCM.SimpleKCM {
             })
         }
         if (supportsApiKeySetup(item.provider) && !descriptorHasField(item, "apiKey")) {
-            rows.push({ title: providerKey(item.provider) === "chatbox" ? i18n("Set license key…") : i18n("Set API key…"), icon: "password-show-off", action: "set-api-key", enabled: !isPending(item.provider) && !loading
+            rows.push({ title: providerKey(item.provider) === "chatbox" ? i18n("Set license key…") : i18n("Set API key…"), icon: "document-encrypt", action: "set-api-key", enabled: !isPending(item.provider) && !loading
                 && !CommandLedger.hasKind(commands, "version") })
         }
         var docs = providerDocsUrl(item.provider)

@@ -43,7 +43,7 @@ ColumnLayout {
             objectName: "descriptorSecretButton"
             text: i18n("Set…")
             Accessible.name: i18n("Set %1", fieldRoot.modelData.title)
-            icon.name: "password-show-off"
+            icon.name: "document-encrypt"
             enabled: fieldRoot.providerAvailable && !fieldRoot.writePending
             onClicked: if (fieldRoot.providerAvailable) fieldRoot.secretPromptRequested(fieldRoot.modelData)
         }
