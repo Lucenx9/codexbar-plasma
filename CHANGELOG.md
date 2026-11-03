@@ -24,6 +24,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Show an encryption icon on provider "Set API key…", "Set license key…" and
+  descriptor "Set…" buttons instead of the hide-password glyph, matching the
+  AI Insights key button.
+
 - Use the CLI's provider authentication inventory to limit source choices and
   gate API-key setup, while preserving older CLI behavior and complete Linux
   setup checks. Show bounded account setup, environment-variable and Copilot

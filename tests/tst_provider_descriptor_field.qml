@@ -87,6 +87,14 @@ TestCase {
         compare(writes.count, 0);
     }
 
+    function test_secretButtonUsesKeyEntryIcon() {
+        var item = createField("secret");
+        if (!item) return;
+        // The reveal-toggle glyph means "hide the value"; setting a secret
+        // uses the same encryption icon as the AI Insights key button.
+        compare(findChild(item, "descriptorSecretButton").icon.name, "document-encrypt");
+    }
+
     function test_enumWriteResultRestoresBinding_data() {
         return [{tag: "saved", selectedIndex: 1}, {tag: "failed", selectedIndex: 0}];
     }
