@@ -141,6 +141,10 @@ function normalize(item, receivedAtMs) {
     var organization = Normalizer.firstValidAccountIdentity([identity.accountOrganization, usage.accountOrganization]);
     var loginMethod = Normalizer.firstValidAccountIdentity([identity.loginMethod, usage.loginMethod]);
     var error = Normalizer.isCliRecord(item.error) ? item.error : null;
+    // Only absence/null means success. A malformed error envelope must still
+    // retain prior quotas and lose to a healthy duplicate; QML supplies its
+    // generic failure text when the official nested message is unavailable.
+    var commandFailed = item.error !== undefined && item.error !== null;
     var errorMessage = error ? message(Normalizer.safeScalarText(error.message)) : "";
     var status = Normalizer.isCliRecord(item.status) ? item.status : null;
     var credits = Normalizer.isCliRecord(item.credits) ? item.credits : null;
@@ -152,7 +156,7 @@ function normalize(item, receivedAtMs) {
     var hasSupplementalUsage = providerDetails.length > 0 || dashboard !== null || codexCreditLimit !== null
         || subscriptionDates.length > 0;
     var placeholder = "";
-    if (rows.length === 0 && !hasSupplementalUsage && (!error || errorMessage === "Found sessions, but no rate limit events yet.")) {
+    if (rows.length === 0 && !hasSupplementalUsage && (!commandFailed || errorMessage === "Found sessions, but no rate limit events yet.")) {
         var hasIdentity = account.length > 0 || organization.length > 0 || loginMethod.length > 0;
         placeholder = ["antigravity", "doubao", "codex"].indexOf(providerID) >= 0 && hasIdentity
             && !usage.primary && !usage.secondary && !usage.tertiary ? "limitsUnavailable" : "noUsage";
@@ -188,7 +192,7 @@ function normalize(item, receivedAtMs) {
         statusUrl: status ? Normalizer.boundedDisplayText(status.url || "", 4096) : "",
         statusSeverity: Normalizer.statusSeverity(status),
         statusIncidentKey: Normalizer.boundedDisplayText(Normalizer.statusIncidentKey(status), 128),
-        commandFailed: error !== null, error: errorMessage, placeholder: placeholder,
+        commandFailed: commandFailed, error: errorMessage, placeholder: placeholder,
         usageReceivedAtMs: receivedAtMs,
         updatedAt: Normalizer.boundedDisplayText(usage.updatedAt || (credits ? credits.updatedAt : ""), 128)
     };

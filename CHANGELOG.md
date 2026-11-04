@@ -24,6 +24,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Preserve last-known quotas when a CLI usage response has a malformed error
+  field. Such records show the generic failure and cannot hide a healthy
+  duplicate provider or named account.
+
 - Show an encryption icon on provider "Set API key…", "Set license key…" and
   descriptor "Set…" buttons instead of the hide-password glyph, matching the
   AI Insights key button.
