@@ -194,6 +194,13 @@ TestCase {
 
     function test_errorWithoutDisplayableMessageRetainsQuota_data() {
         return [
+            {tag: "string-error", error: "Synthetic failure"},
+            {tag: "empty-string-error", error: ""},
+            {tag: "blank-string-error", error: "   "},
+            {tag: "array-error", error: [{toString: null}]},
+            {tag: "empty-array-error", error: []},
+            {tag: "boolean-error", error: false},
+            {tag: "number-error", error: 0},
             {tag: "missing-message", error: {code: 1, kind: "provider"}},
             {tag: "empty-message", error: {code: 1, message: ""}},
             {tag: "blank-message", error: {code: 1, message: "   "}},

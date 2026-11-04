@@ -53,6 +53,32 @@ TestCase {
         compare(result.items[0].provider, "claude");
     }
 
+    function test_malformedErrorCannotMaskHealthyDuplicate_data() {
+        return [{tag: "string", error: "Synthetic failure"},
+            {tag: "array", error: [{toString: null}]},
+            {tag: "boolean", error: false},
+            {tag: "number", error: 0}];
+    }
+
+    function test_malformedErrorCannotMaskHealthyDuplicate(data) {
+        var requests = [{provider: "", account: ""}, {provider: "codex", account: ""},
+            {provider: "codex", account: "Synthetic account"}];
+        for (var request of requests) {
+            for (var used of [0, 72]) {
+                var payload = [{provider: "codex", account: "Synthetic account", error: data.error}, healthy("codex", used)];
+                for (var reversed of [false, true]) {
+                    var result = UsageResponse.response(JSON.stringify(reversed ? payload.slice().reverse() : payload),
+                        "", request.provider, 123456, 0, request.account);
+                    compare(result.outcome, "success");
+                    compare(result.items.length, 1);
+                    verify(!result.items[0].commandFailed);
+                    compare(result.items[0].rows.length, 1);
+                    compare(result.items[0].rows[0].usedPercent, used);
+                }
+            }
+        }
+    }
+
     function test_allMalformedRecordsFail() {
         compare(UsageResponse.records([broken(), broken()], "", 1).outcome, "noProviders");
         compare(UsageResponse.records([broken(), broken()], "codex", 1).outcome, "invalidJson");
