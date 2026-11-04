@@ -899,6 +899,8 @@ fields; track proposed extensions in the issue tracker.
   too long for the widget's 256 KiB reader limit omits its trailing components.
   Malformed individual entries do not discard healthy components. An unreadable
   component status or an OpenAI component without a usable ID is shown as unknown.
+  An OpenAI group whose component list is missing or malformed also reads as
+  unknown, while other groups and components remain visible.
   The list is read when expanded,
   through `scripts/status-components.py`, because the official CLI reports only
   the overall status. Open Status Page at the end of the list opens the site;

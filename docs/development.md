@@ -349,7 +349,9 @@ synchronized.
   them. Component states use the page's scale (degraded, partial, major) and a
   separate translation context from the provider status pill. `tests/tst_status_components.qml`
   and `tests/test_status_components.py` cover validation and both feed formats
-  offline; `tests/tst_status_components_list.qml` covers long-name elision and
+  offline, including malformed OpenAI group collections through the helper's
+  JSON output. Such groups stay unknown without discarding healthy siblings.
+  `tests/tst_status_components_list.qml` covers long-name elision and
   keyboard toggling. `tests/test_usage_recovery.py` executes the popup navigation
   and status handlers together, covering cancellation on entering AI Insights,
   ignored late results, and a fresh fetch after returning. Replace the helper
