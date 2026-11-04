@@ -112,6 +112,41 @@ class StatusComponentsTests(unittest.TestCase):
         self.assertEqual([r["indicator"] for r in rows], ["unknown", "none", "critical"])
         self.assertEqual(rows[2]["children"][0]["indicator"], "critical")
 
+    def test_incidentio_malformed_affected_list_keeps_services_with_unknown_status(self):
+        for affected in (False, True, 0, 1, 1.5, "", "invalid", {},
+                         {"component_id": "api", "status": "full_outage"}):
+            with self.subTest(affected=affected):
+                raw = json.dumps({"summary": {
+                    "affected_components": affected,
+                    "structure": {"items": [
+                        {"group": {"name": "APIs", "components": [
+                            {"component_id": "api", "name": "API"}]}},
+                        {"component": {"component_id": "codex", "name": "Codex"}},
+                    ]},
+                }})
+                output = io.StringIO()
+                with patch.object(status, "fetch", return_value=raw.encode()), \
+                        patch.object(sys, "argv", ["status-components.py", "--provider", "openai"]), \
+                        redirect_stdout(output):
+                    status.main()
+                self.assertEqual(json.loads(output.getvalue()), {
+                    "status": "ok", "components": [
+                        {"name": "APIs", "indicator": "unknown", "children": [
+                            {"name": "API", "indicator": "unknown", "children": []}]},
+                        {"name": "Codex", "indicator": "unknown", "children": []},
+                    ],
+                })
+
+    def test_incidentio_absent_null_or_empty_affected_list_preserves_operational_status(self):
+        for summary in ({}, {"affected_components": None}, {"affected_components": []}):
+            with self.subTest(summary=summary):
+                raw = json.dumps({"summary": {**summary, "structure": {"items": [
+                    {"component": {"component_id": "codex", "name": "Codex"}},
+                ]}}})
+                self.assertEqual(status.parse("incidentio", raw), [
+                    {"name": "Codex", "indicator": "none", "children": []},
+                ])
+
     def test_incidentio_group_severity_includes_children_beyond_display_limit(self):
         components = [{"component_id": str(i), "name": "Component " + str(i)}
                       for i in range(status.MAXIMUM_COMPONENTS + 1)]

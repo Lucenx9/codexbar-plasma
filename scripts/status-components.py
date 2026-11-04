@@ -75,13 +75,18 @@ def parse_statuspage(payload):
 
 def parse_incidentio(payload):
     summary = payload["summary"]
+    affected = summary.get("affected_components")
+    # An unreadable collection cannot establish that unlisted services are healthy.
+    default_status = "operational" if affected is None or isinstance(affected, list) else None
+    if not isinstance(affected, list):
+        affected = []
     # As upstream, an affected entry without a status leaves the component operational.
-    statuses = {a["component_id"]: a["status"] for a in summary.get("affected_components") or []
+    statuses = {a["component_id"]: a["status"] for a in affected
                 if isinstance(a, dict) and isinstance(a.get("component_id"), str) and isinstance(a.get("status"), str)}
 
     def leaf(component):
         component_id = component.get("component_id")
-        state = statuses.get(component_id, "operational") if isinstance(component_id, str) and component_id else None
+        state = statuses.get(component_id, default_status) if isinstance(component_id, str) and component_id else None
         return row(name_text(component.get("name")), state)
 
     def visible(value):

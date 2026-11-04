@@ -901,6 +901,8 @@ fields; track proposed extensions in the issue tracker.
   component status or an OpenAI component without a usable ID is shown as unknown.
   An OpenAI group whose component list is missing or malformed also reads as
   unknown, while other groups and components remain visible.
+  If OpenAI's affected-component collection has an invalid type, service names
+  remain visible with unknown states instead of being reported as operational.
   The list is read when expanded,
   through `scripts/status-components.py`, because the official CLI reports only
   the overall status. Open Status Page at the end of the list opens the site;

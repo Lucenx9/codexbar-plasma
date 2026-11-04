@@ -351,6 +351,8 @@ synchronized.
   and `tests/test_status_components.py` cover validation and both feed formats
   offline, including malformed OpenAI group collections through the helper's
   JSON output. Such groups stay unknown without discarding healthy siblings.
+  A malformed affected-component collection preserves the service tree with
+  unknown states; absent, null, or empty collections retain the operational fallback.
   `tests/tst_status_components_list.qml` covers long-name elision and
   keyboard toggling. `tests/test_usage_recovery.py` executes the popup navigation
   and status handlers together, covering cancellation on entering AI Insights,
