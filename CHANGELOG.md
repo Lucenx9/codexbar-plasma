@@ -24,6 +24,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep OpenAI service names visible with unknown states when the feed's
+  affected-component collection is malformed, instead of hiding the list or
+  incorrectly reporting services as operational.
+
 - Keep valid OpenAI service components visible when another group's component
   list is malformed. Show that group's state as unknown instead of operational.
 
