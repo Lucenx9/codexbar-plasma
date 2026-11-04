@@ -24,6 +24,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep valid OpenAI service components visible when another group's component
+  list is malformed. Show that group's state as unknown instead of operational.
+
 - Preserve last-known quotas when a CLI usage response has a malformed error
   field. Such records show the generic failure and cannot hide a healthy
   duplicate provider or named account.

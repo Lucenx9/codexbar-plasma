@@ -93,7 +93,11 @@ def parse_incidentio(payload):
             continue
         group, component = item.get("group"), item.get("component")
         if visible(group):
-            leaves = [leaf(c) for c in group.get("components") or [] if visible(c)]
+            components = group.get("components")
+            if not isinstance(components, list):
+                rows.append(row(name_text(group["name"]), None))
+                continue
+            leaves = [leaf(c) for c in components if visible(c)]
             rows.append({"name": name_text(group["name"]), "indicator": worst(leaves),
                          "children": leaves[:MAXIMUM_COMPONENTS]})
         elif visible(component):

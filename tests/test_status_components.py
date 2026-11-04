@@ -77,6 +77,41 @@ class StatusComponentsTests(unittest.TestCase):
                 ], [{"component_id": "good", "status": "full_outage"}]))
                 self.assertEqual([r["indicator"] for r in rows], ["unknown", "critical"])
 
+    def test_incidentio_malformed_group_children_keep_healthy_components(self):
+        for children in (None, False, True, 0, 1, 1.5, "invalid", {},
+                         {"component_id": "bad", "name": "Not a list"}):
+            for reverse in (False, True):
+                with self.subTest(children=children, reverse=reverse):
+                    items = [
+                        {"group": {"name": "Unknown group", "components": children}},
+                        {"component": {"component_id": "good", "name": "Codex"}},
+                    ]
+                    if reverse:
+                        items.reverse()
+                    raw = incidentio(items, [{"component_id": "good", "status": "full_outage"}])
+                    output = io.StringIO()
+                    with patch.object(status, "fetch", return_value=raw.encode()), \
+                            patch.object(sys, "argv", ["status-components.py", "--provider", "openai"]), \
+                            redirect_stdout(output):
+                        status.main()
+                    expected = [
+                        {"name": "Unknown group", "indicator": "unknown", "children": []},
+                        {"name": "Codex", "indicator": "critical", "children": []},
+                    ]
+                    self.assertEqual(json.loads(output.getvalue()), {
+                        "status": "ok", "components": expected[::-1] if reverse else expected,
+                    })
+
+    def test_incidentio_missing_group_list_is_distinct_from_an_empty_list(self):
+        rows = status.parse("incidentio", incidentio([
+            {"group": {"name": "Missing list"}},
+            {"group": {"name": "Empty list", "components": []}},
+            {"group": {"name": "APIs", "components": [
+                {"component_id": "good", "name": "Codex"}]}},
+        ], [{"component_id": "good", "status": "full_outage"}]))
+        self.assertEqual([r["indicator"] for r in rows], ["unknown", "none", "critical"])
+        self.assertEqual(rows[2]["children"][0]["indicator"], "critical")
+
     def test_incidentio_group_severity_includes_children_beyond_display_limit(self):
         components = [{"component_id": str(i), "name": "Component " + str(i)}
                       for i in range(status.MAXIMUM_COMPONENTS + 1)]
