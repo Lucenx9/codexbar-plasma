@@ -2071,7 +2071,7 @@ TestCase {
             return;
         var percent = findItem(row, item => item.objectName === "usagePercentLabel");
         compare(percent.text, "57% left");
-        var label = findItem(row, item => item.text === longText);
+        var label = findItem(row, item => item.text === longText && item.visible);
         verify(label !== null);
         tryCompare(label, "truncated", true);
         var tips = [];
@@ -2097,9 +2097,7 @@ TestCase {
             return;
         // The reset label renders the row's own reset text, not the
         // provider's, so each meter keeps its own window.
-        var reset = findItem(row, function (item) {
-            return item.text === "Resets 12:00";
-        });
+        var reset = findItem(row, item => item.objectName === "usageResetLabel");
         verify(reset !== null);
         compare(reset.visible, true);
         var pace = findItem(row, function (item) {
@@ -2127,7 +2125,7 @@ TestCase {
         if (!row)
             return;
         var pace = findItem(row, item => item.objectName === "usagePaceLabel");
-        var reset = findItem(row, item => item.text === model.reset);
+        var reset = findItem(row, item => item.objectName === "usageResetLabel");
         var originalFontSize = pace.font.pointSize;
         pace.font.pointSize = originalFontSize * data.fontScale;
         reset.font.pointSize = originalFontSize * data.fontScale;
@@ -2164,6 +2162,131 @@ TestCase {
         compare(pace.visible, false);
         verify(reset.truncated);
         verify(reset.width <= row.width);
+    }
+
+    function test_providerResetPlacement_data() {
+        return [
+            {tag: "ltr", mirrored: false, scale: 1},
+            {tag: "rtl", mirrored: true, scale: 1},
+            {tag: "large-font", mirrored: false, scale: 2}
+        ];
+    }
+
+    function test_providerResetPlacement(data) {
+        failOnWarning(/Qt Quick Layouts: Detected recursive rearrange|Binding loop detected/);
+        var holder = createTemporaryQmlObject(
+            'import QtQuick; Item { LayoutMirroring.childrenInherit: true }', testCase);
+        holder.LayoutMirroring.enabled = data.mirrored;
+        var model = Object.assign({}, usageRowData(), {
+            lane: "primary", pace: "", reset: "Resets in 2 hours and 35 minutes"
+        });
+        var row = createUsageRow(model, 900 * data.scale, holder);
+        if (!row)
+            return;
+        var inline = findItem(row, item => item.objectName === "usageInlineResetLabel");
+        var metadata = findItem(row, item => item.objectName === "usageResetLabel");
+        var title = findItem(row, item => item.text === model.label);
+        var percent = findItem(row, item => item.objectName === "usagePercentLabel");
+        for (var label of [title, percent, inline, metadata])
+            label.font.pointSize *= data.scale;
+        tryCompare(inline, "visible", true);
+        verify(waitForPolish(row));
+        verify(!metadata.visible);
+        verify(inline.mapToItem(row, 0, 0).y < findItem(row, item => item.objectName === "usageBar").y);
+        var metrics = createTemporaryQmlObject(
+            'import QtQuick; import org.kde.kirigami as Kirigami; TextMetrics {'
+            + ' readonly property real band: Kirigami.Units.gridUnit }', testCase);
+        var fitWidth = 0;
+        for (var measured of [title, inline, percent]) {
+            metrics.font = measured.font;
+            metrics.text = measured.text;
+            fitWidth += Math.ceil(metrics.advanceWidth);
+            verify(!measured.truncated, "Inline quota text must fit without truncation");
+        }
+        var hide = findItem(row, item => item.objectName === "hideUsageRowButton");
+        fitWidth += hide.width + title.parent.spacing * 4;
+        row.width = fitWidth - 1;
+        tryCompare(inline, "visible", false);
+        row.width = fitWidth + metrics.band - 1;
+        verify(waitForPolish(row));
+        verify(!inline.visible, "Entering inline needs the full safety band");
+        row.width = fitWidth + metrics.band;
+        tryCompare(inline, "visible", true);
+        row.width = fitWidth;
+        verify(waitForPolish(row));
+        verify(inline.visible, "An inline reset stays in place while the full text fits");
+        for (var fitted of [title, inline, percent])
+            verify(!fitted.truncated, "The fit boundary must include every label and the hide action");
+        row.width = fitWidth - 1;
+        tryCompare(inline, "visible", false);
+        row.width = 900 * data.scale;
+        tryCompare(inline, "visible", true);
+        verify(waitForPolish(row));
+        var percentX = percent.mapToItem(row, 0, 0).x;
+        var percentWidth = percent.width;
+        verify(percentWidth > 0);
+        mouseMove(row, row.width / 2, 1);
+        verify(waitForPolish(row));
+        fuzzyCompare(percent.mapToItem(row, 0, 0).x, percentX, 1);
+        fuzzyCompare(percent.width, percentWidth, 1);
+        row.rowData = Object.assign({}, model, {reset: "Resets in 2 hours and 34 minutes"});
+        verify(waitForPolish(row));
+        verify(inline.visible);
+        fuzzyCompare(percent.mapToItem(row, 0, 0).x, percentX, 1);
+
+        row.width = 240;
+        tryCompare(inline, "visible", false);
+        verify(waitForPolish(row));
+        verify(metadata.visible);
+        verify(metadata.width <= row.width);
+        row.width = 900 * data.scale;
+        tryCompare(inline, "visible", true);
+        row.rowData = Object.assign({}, model, {pace: "On pace"});
+        tryCompare(inline, "visible", false);
+        verify(metadata.visible);
+        row.showPace = false;
+        tryCompare(inline, "visible", true);
+        row.showPace = true;
+        tryCompare(inline, "visible", false);
+        row.rowData = Object.assign({}, model, {summaryText: "Monthly allowance"});
+        verify(waitForPolish(row));
+        verify(!inline.visible);
+        verify(metadata.visible);
+        row.rowData = Object.assign({}, model, {reset: ""});
+        verify(waitForPolish(row));
+        verify(!inline.visible);
+        verify(!metadata.visible);
+    }
+
+    function test_thresholdTooltipUsesOnlyDrawnWarningMarkers() {
+        var row = createUsageRow(usageRowData(), 540);
+        if (!row)
+            return;
+        // A remaining meter mirrors 80% used to 20%; the wording must not mirror.
+        row.warningMarkers = [
+            {percent: 20, color: "orange", description: "Warning at 80% used"},
+            {percent: 0, color: "red", description: "Critical at 100% used"}
+        ];
+        var bar = findItem(row, item => item.objectName === "usageBar");
+        var tips = [];
+        findAllItems(row, item => item.objectName === "usageThresholdToolTip", tips);
+        compare(tips.length, 1);
+        var tip = tips[0];
+        compare(row.warningDescription, "Warning at 80% used");
+        verify(bar.Accessible.description.indexOf("Warning at 80% used") >= 0);
+        verify(!bar.activeFocusOnTab);
+        mouseMove(bar, bar.width / 2, bar.height / 2);
+        tryCompare(tip, "visible", true, tip.delay + 1000);
+        compare(tip.plainText, "Warning at 80% used");
+        mouseMove(bar, bar.width / 2, -1);
+        verify(tip.visible, "The thin meter must retain its tooltip just outside the track");
+        row.warningMarkers = [];
+        tryCompare(tip, "visible", false);
+        compare(row.warningDescription, "");
+        verify(bar.Accessible.description.indexOf("Warning") < 0);
+        // A pace tick alone never supplies warning-threshold text.
+        row.markerPercent = 50;
+        compare(row.warningDescription, "");
     }
 
     // The hide action stays out of sight until the row is hovered or the

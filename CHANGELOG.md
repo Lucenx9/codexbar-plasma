@@ -10,6 +10,15 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Changed
+
+- Make Overview quota percentages as readable as provider details, with more
+  space between cards and between provider identity and quotas. Keep provider
+  resets beside their quota titles when the text fits without a pace forecast
+  or summary. Provider tabs reveal their quota on hover and keyboard focus,
+  and meter tooltips explain warning thresholds as percent used. Optional
+  provider cost-quality notices now precede the totals they qualify.
+
 ### Added
 
 - Show optional CLI warning and critical severity in provider detail rows with

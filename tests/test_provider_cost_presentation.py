@@ -168,6 +168,8 @@ TestCase {
         property var hideRequests: []
         property bool quotaWarning: false
         property bool usageBarsShowUsed: false
+        property int quotaWarningPercent: 80
+        property int quotaCriticalPercent: 95
         property color brandColor: "blue"
         function hidePopupUsageRow(providerID, row) {
             hideRequests = hideRequests.concat([{provider: providerID, label: row.label}]);
@@ -253,6 +255,9 @@ TestCase {
         compare(row.warningMarkers.length, 1);
         compare(row.warningMarkers[0].percent, 20);
         compare(row.warningMarkers[0].color.a, 0.72);
+        compare(row.warningDescription, "Critical at 95% used");
+        applet.quotaCriticalPercent = 91;
+        compare(row.warningDescription, "Critical at 91% used");
         compare(row.resetText, "in 1d");
         compare(row.paceText, "Runs out now");
         mouseClick(hide);

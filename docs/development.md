@@ -1497,6 +1497,9 @@ activate the current provider without binding or lifecycle warnings.
 
 ## Popup smoke tests
 
+`tabs-icon-only` focuses a provider tab with text labels disabled and checks
+that its tooltip includes both the full name and the quota description.
+
 `tabs-overflow` checks the Overview subset count and keyboard tooltips for a
 long provider title, alongside navigation across the overflowing strip.
 It selects every production provider tab and returns to Overview, checking
@@ -1583,6 +1586,11 @@ state before using Qt's
 QML errors, recursive layout warnings, missing captures, early exits, and timeouts
 fail the command. Nested-layout QtTests also use `failOnWarning` and exercise
 provider details and project rows at narrow and normal popup widths.
+The quota-row tests exercise inline resets and their expanded fallback with
+RTL, large fonts, pace, summaries and missing resets. `UsageRowLayout.js` owns
+the pure safety-band transition so changing countdown text does not repeatedly
+move a reset. Marker tooltip tests keep used thresholds separate from mirrored
+remaining percentages and omit markers at either endpoint.
 `tests/fixtures/ProviderUiStress.js` supplies realistic long identifiers, Unicode,
 markup-like text, missing optional values, extreme budgets, and demo/empty/one/
 1,000-row states. `tst_visual_layout.qml` renders these detail fixtures at 240,

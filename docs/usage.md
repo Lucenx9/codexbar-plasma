@@ -182,9 +182,12 @@ work and upstream contract requirements.
   detail line, then each named quota with its reset; provider tabs describe
   the quota their underline draws, a last-known-usage note, and a refresh
   error that only dims the tab visually.
+- Provider-tab tooltips show the full provider name, the quota represented by
+  the underline, and any retained-data or refresh-error description on hover
+  or keyboard focus. Tab widths and selection highlighting stay unchanged.
 - Hovering or keyboard-focusing an Overview row whose title, detail line or
   quota caption is cut short in a narrow popup shows the full text in a
-  tooltip. Hovering a global or provider tab whose name is cut short, an
+  tooltip. Hovering a global tab whose name is cut short, an
   account button whose label is abbreviated in the middle, or a provider header
   title, account, or plan that is cut short, or a provider detail section title, row label or value
   that is cut short, shows the full displayed text in
@@ -194,18 +197,30 @@ work and upstream contract requirements.
   session metadata also reveal their full displayed text on hover when truncated.
   The AI Insights Back button stays within the popup and reveals a truncated
   destination on hover or keyboard focus.
-  Keyboard focus also reveals the name of a truncated or icon-only tab. Text that fits gets no tooltip.
+  Keyboard focus also reveals the name of a truncated or icon-only global tab.
+  Other text that fits gets no tooltip, apart from provider-tab quota descriptions.
 - Refresh, copy, share, hide and tab-scroll icon buttons show their action
   labels on keyboard focus as well as hover. The copy confirmation takes
   precedence over its action label.
   Usage-row hide actions appear immediately on hover or keyboard focus.
   Provider action rows keep their full native hover and focus outlines visible
   inside the scrollable popup.
-- Provider quota percentages use a slightly larger type size and align with
-  the end of their meters. Pace forecasts and reset metadata share a line when
+- Overview and provider quota percentages use the same slightly larger type
+  size and align with the end of their meters. Overview keeps more space
+  between provider cards and between each identity header and its first quota.
+  Without a pace forecast or summary, a reset appears beside its quota title
+  when the full text, percentage and reserved hide action fit with a safety
+  margin. Otherwise it stays below the meter. Small changes in the countdown
+  do not repeatedly move a fitting reset between the two positions.
+  Pace forecasts and reset metadata share a line when
   they fit; longer text or larger fonts put the reset on a separate line below
   the forecast. Long forecast words wrap inside the popup, and an abbreviated
   reset still reveals its full text on hover.
+- Hover a quota meter to identify its visible warning and critical markers.
+  The tooltip and accessible description express thresholds as percent used,
+  including when the meter shows percent left. Endpoint markers and disabled
+  markers have no description; pace markers keep their separate meaning.
+  No extra keyboard focus stops are added to the meter.
 - Overflowing popup tabs have separate scroll buttons and immediate keyboard
   focus reveal, so navigation never covers provider labels. A tab wider than the
   available area stays aligned at its start when focused or selected again.
@@ -852,7 +867,10 @@ and clipboard content remain under your control after closing the window.
   signals omitted projects and does not change provider or global totals.
 - Cost-trust notices appear as quiet footnotes with a small icon, like the
   other informational notes in Spend; errors with recovery actions keep the
-  standard message. They explain why a range is incomplete or estimated, including
+  standard message. In provider details, the optional notice precedes the
+  totals, after any cost error. The separate local-history explanation remains
+  after the chart and disclosure. Notices explain why a range is incomplete or
+  estimated, including
   how many requests the CLI excluded from the displayed totals because they
   lacked final usage. Closing a
   notice suppresses the same meaning for that provider or the aggregate Spend

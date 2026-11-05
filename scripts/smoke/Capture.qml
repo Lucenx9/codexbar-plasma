@@ -417,8 +417,11 @@ Item {
         verifyScenario(visited === 13, "not every global and provider tab is keyboard reachable");
         verifyScenario(previous.enabled && !next.enabled, "incorrect controls at end of strip");
         var focusedTip = findToolTip(lastFocused.parent);
-        verifyScenario(focusedTip !== null && focusedTip.plainText === lastFocused.parent.modelData.title,
-            "a truncated provider name lost its complete tooltip text");
+        var focusedProvider = lastFocused.parent.modelData;
+        verifyScenario(focusedTip !== null && focusedTip.plainText
+            === [focusedProvider.title, applet.switcherDescription(focusedProvider)]
+                .filter(function(part) { return part.length > 0; }).join("\n"),
+            "a provider tab lost its complete name or quota tooltip");
         navigationTooltip = focusedTip;
         var tabs = navigation.focusableTabs(lastFocused);
         providerTabWidths = tabs.filter(function(item) {
@@ -2182,6 +2185,25 @@ Item {
             }
             return true;
         }
+        if (scenario === "tabs-icon-only") {
+            if (!prepared || applet.loading || applet.providers.length === 0)
+                return false;
+            if (!navigationVerified) {
+                var iconNavigation = findItem(applet.fullRepresentationItem, "popupTabStrip");
+                var providerFocus = iconNavigation.focusableTabs(iconNavigation.selectedTab)
+                    .filter(function(item) { return item.parent && item.parent.modelData; })[0];
+                verifyScenario(providerFocus !== undefined, "icon-only provider tab is missing");
+                providerFocus.forceActiveFocus(Qt.TabFocusReason);
+                navigationTooltip = findToolTip(providerFocus.parent);
+                var iconProvider = providerFocus.parent.modelData;
+                verifyScenario(navigationTooltip !== null && navigationTooltip.plainText
+                    === [iconProvider.title, applet.switcherDescription(iconProvider)]
+                        .filter(function(part) { return part.length > 0; }).join("\n"),
+                    "icon-only tab lost its provider name or quota description");
+                navigationVerified = true;
+            }
+            return navigationTooltip.visible;
+        }
         if (scenario === "tabs-overflow") {
             if (!prepared || applet.providers.length !== 10)
                 return false;
@@ -2556,14 +2578,17 @@ Item {
                     capture.preparePanelAppearance();
                 } else if (capture.readmeScenario) {
                     popup.Window.window.width = 640;
-                    popup.Window.window.height = capture.scenario === "readme-overview"
-                        || capture.scenario === "readme-sessions" ? 480 : 660;
+                    popup.Window.window.height = capture.scenario === "readme-overview" ? 540
+                        : capture.scenario === "readme-sessions" ? 480 : 660;
                     if (capture.scenario === "readme-codex")
                         capture.applet.openProviderFromPanel("codex");
                     else
                         capture.applet.selectGlobalView(capture.scenario.substring("readme-".length));
                 } else if (capture.scenario === "loading") {
                     capture.verifyEmptyPanelRules();
+                } else if (capture.scenario === "tabs-icon-only") {
+                    capture.applet.Plasmoid.configuration.showPopupTabLabels = false;
+                    capture.applet.selectGlobalView("overview");
                 } else if (capture.scenario === "tabs-overflow") {
                     var providers = capture.applet.providers.slice();
                     for (var i = 0; i < 8; i++) {
