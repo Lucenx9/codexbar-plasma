@@ -46,7 +46,7 @@ class CostTest(unittest.TestCase):
 
     def test_token_cost_sections(self):
         token_cost_section_body = id_block(main_text, "tokenCostSection")
-        self.assertLess(token_cost_section_body.index("tokenCostSection.costErrorText"),
+        self.assertLess(token_cost_section_body.index("visible: tokenCostSection.costErrorText.length > 0"),
                         token_cost_section_body.index("Components.CostTrustNotice {"))
         self.assertLess(token_cost_section_body.index("Components.CostTrustNotice {"),
                         token_cost_section_body.index("id: costSummaryGrid"))

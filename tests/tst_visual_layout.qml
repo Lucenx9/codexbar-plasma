@@ -2193,6 +2193,35 @@ TestCase {
         verify(waitForPolish(row));
         verify(!metadata.visible);
         verify(inline.mapToItem(row, 0, 0).y < findItem(row, item => item.objectName === "usageBar").y);
+        var metrics = createTemporaryQmlObject(
+            'import QtQuick; import org.kde.kirigami as Kirigami; TextMetrics {'
+            + ' readonly property real band: Kirigami.Units.gridUnit }', testCase);
+        var fitWidth = 0;
+        for (var measured of [title, inline, percent]) {
+            metrics.font = measured.font;
+            metrics.text = measured.text;
+            fitWidth += Math.ceil(metrics.advanceWidth);
+            verify(!measured.truncated, "Inline quota text must fit without truncation");
+        }
+        var hide = findItem(row, item => item.objectName === "hideUsageRowButton");
+        fitWidth += hide.width + title.parent.spacing * 4;
+        row.width = fitWidth - 1;
+        tryCompare(inline, "visible", false);
+        row.width = fitWidth + metrics.band - 1;
+        verify(waitForPolish(row));
+        verify(!inline.visible, "Entering inline needs the full safety band");
+        row.width = fitWidth + metrics.band;
+        tryCompare(inline, "visible", true);
+        row.width = fitWidth;
+        verify(waitForPolish(row));
+        verify(inline.visible, "An inline reset stays in place while the full text fits");
+        for (var fitted of [title, inline, percent])
+            verify(!fitted.truncated, "The fit boundary must include every label and the hide action");
+        row.width = fitWidth - 1;
+        tryCompare(inline, "visible", false);
+        row.width = 900 * data.scale;
+        tryCompare(inline, "visible", true);
+        verify(waitForPolish(row));
         var percentX = percent.mapToItem(row, 0, 0).x;
         var percentWidth = percent.width;
         verify(percentWidth > 0);
