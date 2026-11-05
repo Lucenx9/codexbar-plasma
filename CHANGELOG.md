@@ -10,6 +10,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+## 0.2.54 - 2026-11-05
+
 ### Changed
 
 - Distinguish selected popup tabs with the theme focus tint, separate inline
@@ -31,9 +33,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   scrolls the grid and readout into view in shorter popups.
 
 - Show optional CLI warning and critical severity in provider detail rows with
-  symbols with theme colors, readable text and localized accessible
-  descriptions. Keep
-  severity independent of progress and preserve detail privacy/retention rules.
+  symbols in theme colors, readable text and localized accessible descriptions.
+  Keep severity independent of progress and preserve detail privacy/retention rules.
 
 - Secure key setup for Soniox with CLI 0.80.0 or later, and abliteration.ai
   and Chatbox AI with CLI 0.81.0 or later. Explain Soniox organization keys
@@ -69,6 +70,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Give Settings number editors, selectors, the identified-token SSH host, and
   the Ollama address their form labels as screen-reader names. Selectors also
   announce their current choice as it changes.
+
+[Full diff](https://github.com/Lucenx9/codexbar-plasma/compare/v0.2.53...v0.2.54)
 
 ## 0.2.53 - 2026-10-30
 
