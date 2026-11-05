@@ -743,6 +743,37 @@ class CostSectionTests(unittest.TestCase):
     }
     ''')
 
+    def test_small_numeric_fonts_preserve_theme(self):
+        self.run_fixture('''
+    function test_smallNumericFonts() {
+        var themeFont = Kirigami.Theme.smallFont;
+        var featuresBefore = JSON.stringify(themeFont.features);
+        var spend = createTemporaryObject(spendFactory, testCase, {width: 580, height: 780});
+        var provider = createTemporaryObject(providerFactory, testCase, {width: 580});
+        verify(waitForPolish(spend));
+        verify(waitForPolish(provider));
+        var labels = [findChild(spend, "spendProviderSecondary"),
+            findChild(spend, "heatmapReadout")];
+        var all = [];
+        walkTree(provider, all);
+        var tokens = all.filter(function(item) {
+            return item.text !== undefined && String(item.text).indexOf("tokens") >= 0
+                && item.font !== undefined && item.font.features.tnum === 1;
+        });
+        verify(tokens.length > 0);
+        labels = labels.concat(tokens);
+        for (var label of labels) {
+            verify(label !== null);
+            for (var property of ["pixelSize", "pointSize", "family", "weight",
+                    "italic", "styleName", "letterSpacing", "wordSpacing", "capitalization"])
+                compare(label.font[property], themeFont[property], property);
+            compare(label.font.features.tnum, 1);
+        }
+        compare(JSON.stringify(Kirigami.Theme.smallFont.features), featuresBefore,
+            "Numeric labels must not mutate the theme font");
+    }
+    ''')
+
     def test_heatmap_keyboard_inspection_and_refresh(self):
         self.run_fixture('''
     function test_heatmapKeyboard_data() {
@@ -752,17 +783,26 @@ class CostSectionTests(unittest.TestCase):
         failOnWarning(/Binding loop|recursive rearrange|TypeError|ReferenceError/);
         var originalPoints = spendPoints;
         var subject = createTemporaryObject(spendFactory, testCase, {
-            width: 580, height: 780, mirrored: data.mirrored
+            width: 580, height: 500, mirrored: data.mirrored
         });
         var grid = findChild(subject, "spendHeatmap");
         var readout = findChild(subject, "heatmapReadout");
         verify(grid !== null && readout !== null);
         verify(waitForPolish(subject));
+        verify(grid.activeFocusOnTab, "Measured days must be reachable through Tab");
         mouseMove(testCase, 0, 0);
+        var scroll = findChild(subject, "spendHistoryScroll");
+        var flick = scroll.contentItem;
+        flick.contentY = 0;
+        verify(readout.mapToItem(flick, 0, readout.height).y > flick.height,
+            "The short popup must initially clip the heatmap readout");
         grid.hoveredDay = "2026-09-01";
         grid.forceActiveFocus(Qt.TabFocusReason);
         tryCompare(grid, "visualFocus", true);
         compare(grid.hoveredDay, "");
+        verify(grid.mapToItem(flick, 0, 0).y >= -1);
+        verify(readout.mapToItem(flick, 0, readout.height).y <= flick.height + 1,
+            "Keyboard focus must reveal the heatmap and its readout");
         compare(grid.selectedDay, "2026-09-08");
         // Window reactivation need not carry a Tab focus reason.
         grid.forceActiveFocus(Qt.ActiveWindowFocusReason);

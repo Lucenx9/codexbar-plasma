@@ -1594,8 +1594,9 @@ move a reset, including the inline separator's width and spacing.
 seven-row grid; `tst_heatmap_navigation.qml` covers missing days, padding,
 mirrored columns and date identity. `test_cost_sections.py` dispatches keys
 through the production heatmap, checks its single Tab stop and immediate
-readout, and covers refresh, removed dates and range/metric changes without
-starting a scan. Marker tooltip tests keep used thresholds separate from mirrored
+readout, reveals the grid in a short popup, preserves the full small theme font
+for numeric labels, and covers refresh, removed dates and range/metric changes
+without starting a scan. Marker tooltip tests keep used thresholds separate from mirrored
 remaining percentages and omit markers at either endpoint.
 `tests/fixtures/ProviderUiStress.js` supplies realistic long identifiers, Unicode,
 markup-like text, missing optional values, extreme budgets, and demo/empty/one/

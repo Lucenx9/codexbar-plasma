@@ -454,8 +454,26 @@ ColumnLayout {
                             ? i18n("%1: %2", i18n("Activity heatmap"), readout) : i18n("Activity heatmap")
                         Accessible.description: i18n("Use the arrow keys to inspect chart points")
 
+                        function revealInHistoryScroll() {
+                            var flick = spendHistoryScroll.contentItem as Flickable
+                            if (!flick)
+                                return
+                            var top = mapToItem(flick.contentItem, 0, 0).y
+                            var bottom = heatmapReadout.mapToItem(flick.contentItem, 0, heatmapReadout.height).y
+                            var target = flick.contentY
+                            if (top < target)
+                                target = top
+                            else if (bottom > target + flick.height)
+                                target = Math.min(top, bottom - flick.height)
+                            flick.contentY = Math.max(0, Math.min(target,
+                                Math.max(0, flick.contentHeight - flick.height)))
+                        }
+
                         onActiveFocusChanged: {
-                            if (activeFocus) hoveredDay = ""
+                            if (activeFocus) {
+                                hoveredDay = ""
+                                revealInHistoryScroll()
+                            }
                             if (activeFocus && HeatmapNavigation.indexForDay(cells, selectedDay) < 0)
                                 selectedDay = HeatmapNavigation.nextDay(cells, "", "last", false)
                         }
@@ -632,12 +650,7 @@ ColumnLayout {
                     Layout.preferredHeight: implicitHeight
                     text: heatmapFocus.readout.length > 0 ? heatmapFocus.readout : " "
                     opacity: heatmapFocus.readout.length > 0 ? view.applet.secondaryTextOpacity : 0
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
-                    font.family: Kirigami.Theme.smallFont.family
-                    font.weight: Kirigami.Theme.smallFont.weight
-                    font.italic: Kirigami.Theme.smallFont.italic
-                    font.styleName: Kirigami.Theme.smallFont.styleName
-                    font.features: { "tnum": 1 }
+                    font: Qt.font(Object.assign({}, Kirigami.Theme.smallFont, { features: { "tnum": 1 } }))
                     elide: Text.ElideRight
                     Accessible.ignored: true
 
@@ -772,15 +785,10 @@ ColumnLayout {
                                 PlainPlasmaLabel {
                                     id: spendProviderSecondary
                                     objectName: "spendProviderSecondary"
-                                    font.features: { "tnum": 1 }
 
                                     text: view.applet.costHistoryShowsTokens
                                         ? spendProviderCard.costText : spendProviderCard.tokensText
-                                    font.pointSize: Kirigami.Theme.smallFont.pointSize
-                                    font.family: Kirigami.Theme.smallFont.family
-                                    font.weight: Kirigami.Theme.smallFont.weight
-                                    font.italic: Kirigami.Theme.smallFont.italic
-                                    font.styleName: Kirigami.Theme.smallFont.styleName
+                                    font: Qt.font(Object.assign({}, Kirigami.Theme.smallFont, { features: { "tnum": 1 } }))
                                     opacity: view.applet.secondaryTextOpacity
                                     Layout.fillWidth: true
                                     Layout.minimumWidth: 0

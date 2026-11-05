@@ -2206,6 +2206,7 @@ TestCase {
         var hide = findItem(row, item => item.objectName === "hideUsageRowButton");
         var separator = findItem(row, item => item.objectName === "usageResetSeparator");
         verify(separator !== null);
+        verify(separator.visible && separator.height > 0, "The inline reset separator must be drawn");
         fitWidth += hide.width + separator.width + title.parent.spacing * 5;
         row.width = fitWidth - 1;
         tryCompare(inline, "visible", false);

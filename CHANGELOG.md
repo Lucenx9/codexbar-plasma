@@ -27,7 +27,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 - Inspect the Usage & Spend heatmap with the keyboard through one Tab stop,
   arrow keys and Home/End. A stable readout shows the selected date and value;
-  refreshes preserve the date and unavailable days remain unselectable.
+  refreshes preserve the date and unavailable days remain unselectable. Focus
+  scrolls the grid and readout into view in shorter popups.
 
 - Show optional CLI warning and critical severity in provider detail rows with
   symbols with theme colors, readable text and localized accessible

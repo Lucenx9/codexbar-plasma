@@ -261,6 +261,7 @@ work and upstream contract requirements.
   same weekday (mirrored for RTL); Up/Down moves within the week. Missing days
   are skipped, and Home/End select the first/last visible measured day. A readout
   below the grid shows the inspected date and value without shifting the layout.
+  Keyboard focus scrolls the grid and readout into view when needed.
   Keyboard highlighting is immediate; mouse hover keeps its existing feedback.
   Selection follows the same date through refreshes and clears when the date
   leaves the grid or the range/metric changes. Inspection starts no history scan.
