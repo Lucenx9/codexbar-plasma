@@ -2295,7 +2295,9 @@ TestCase {
         var y = data.side === "above" ? -1 : data.side === "below" ? bar.height + 1 : bar.height / 2;
         mouseMove(bar, x, y);
         verify(tip.visible, "The thin meter must retain its tooltip just outside the track");
-        mouseMove(bar, bar.width / 2, -10);
+        mouseMove(bar,
+            data.side === "left" ? -10 : data.side === "right" ? bar.width + 10 : bar.width / 2,
+            data.side === "above" ? -10 : data.side === "below" ? bar.height + 10 : bar.height / 2);
         tryCompare(tip, "visible", false);
         mouseMove(bar, x, y);
         tryCompare(tip, "visible", true, tip.delay + 1000);
