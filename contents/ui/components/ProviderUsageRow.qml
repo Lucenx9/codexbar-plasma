@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.components as PlasmaComponents
+import "../UsageRowLayout.js" as UsageRowLayout
 
 ColumnLayout {
     id: usageRow
@@ -26,6 +27,28 @@ ColumnLayout {
         ? rowData.summaryText : ""
     // Match the copy action's compact target so the header keeps its height.
     readonly property real actionSize: Kirigami.Units.iconSizes.smallMedium + Kirigami.Units.smallSpacing
+    readonly property bool hasPaceOrSummary: summaryText.length > 0
+        || (showPace && rowData.pace.length > 0)
+    readonly property bool inlineResetEligible: !hasPaceOrSummary && resetText.length > 0
+    // TextMetrics stay independent of assigned label widths and visibility.
+    readonly property real resetSpareWidth: width - Math.ceil(usageTitleMetrics.advanceWidth)
+        - Math.ceil(usageResetMetrics.advanceWidth)
+        - (rowData.hasPercent ? Math.ceil(usagePercentMetrics.advanceWidth) : 0)
+        - (hideable ? actionSize : 0)
+        - usageTitleRow.spacing * (2 + (hideable ? 1 : 0) + (rowData.hasPercent ? 1 : 0))
+    property bool resetInline: false
+    readonly property string warningDescription: warningMarkers.filter(function(marker) {
+        return marker.percent > 0 && marker.percent < 100 && typeof marker.description === "string"
+    }).map(function(marker) { return marker.description }).join("\n")
+
+    onResetSpareWidthChanged: updateResetPlacement()
+    onInlineResetEligibleChanged: updateResetPlacement()
+    Component.onCompleted: updateResetPlacement()
+
+    function updateResetPlacement() {
+        resetInline = UsageRowLayout.nextInlineReset(resetInline, inlineResetEligible,
+            resetSpareWidth, Kirigami.Units.gridUnit)
+    }
 
     Layout.fillWidth: true
     spacing: Math.round(Kirigami.Units.smallSpacing / 1.5)
@@ -38,7 +61,27 @@ ColumnLayout {
         id: usageRowHover
     }
 
+    TextMetrics {
+        id: usageTitleMetrics
+        font: usageTitleLabel.font
+        text: usageRow.rowData.label
+    }
+
+    TextMetrics {
+        id: usageResetMetrics
+        font: usageInlineResetLabel.font
+        text: usageRow.resetText
+    }
+
+    TextMetrics {
+        id: usagePercentMetrics
+        font: usagePercentLabel.font
+        text: usageRow.percentText
+    }
+
     RowLayout {
+        id: usageTitleRow
+
         Layout.fillWidth: true
         spacing: Kirigami.Units.smallSpacing
 
@@ -48,6 +91,7 @@ ColumnLayout {
             text: usageRow.rowData.label
             font.weight: Font.DemiBold
             Layout.fillWidth: true
+            Layout.maximumWidth: usageRow.resetInline ? Math.ceil(implicitWidth) : Infinity
             elide: Text.ElideRight
 
             HoverHandler { id: usageTitleHover }
@@ -56,6 +100,29 @@ ColumnLayout {
                 visible: usageTitleLabel.truncated && usageTitleHover.hovered
                 plainText: usageTitleLabel.text
             }
+        }
+
+        PlainPlasmaLabel {
+            id: usageInlineResetLabel
+            objectName: "usageInlineResetLabel"
+
+            visible: usageRow.resetInline
+            text: usageRow.resetText
+            font: Kirigami.Theme.smallFont
+            opacity: usageRow.secondaryTextOpacity
+            elide: Text.ElideRight
+
+            HoverHandler { id: usageInlineResetHover }
+
+            PlainToolTip {
+                visible: usageInlineResetLabel.truncated && usageInlineResetHover.hovered
+                plainText: usageInlineResetLabel.text
+            }
+        }
+
+        Item {
+            visible: usageRow.resetInline
+            Layout.fillWidth: true
         }
 
         // Revealed on row hover; keyboard focus keeps it visible and reachable.
@@ -73,6 +140,7 @@ ColumnLayout {
             Layout.preferredWidth: usageRow.actionSize
             Layout.preferredHeight: usageRow.actionSize
             Accessible.name: i18n("Hide the %1 row", usageRow.rowData.label)
+            Accessible.description: usageRow.warningDescription
 
             PlainToolTip {
                 parent: hideUsageRowButton
@@ -106,6 +174,10 @@ ColumnLayout {
         radius: height / 2
         color: usageRow.withAlpha(Kirigami.Theme.textColor, 0.1)
         clip: true
+        Accessible.role: Accessible.ProgressBar
+        Accessible.name: usageRow.rowData.label
+        Accessible.description: [usageRow.percentText, usageRow.warningDescription]
+            .filter(function(part) { return part.length > 0 }).join("\n")
 
         Rectangle {
             width: usageRow.shownPercent <= 0
@@ -150,6 +222,17 @@ ColumnLayout {
                 markerColor: modelData.color
             }
         }
+
+        HoverHandler {
+            id: usageBarHover
+            margin: Kirigami.Units.smallSpacing
+        }
+
+        PlainToolTip {
+            objectName: "usageThresholdToolTip"
+            visible: usageRow.warningDescription.length > 0 && usageBarHover.hovered
+            plainText: usageRow.warningDescription
+        }
     }
 
     TextMetrics {
@@ -167,9 +250,7 @@ ColumnLayout {
         readonly property bool stacked: usagePaceLabel.visible && usageResetLabel.visible
             && usageMetadataMetrics.advanceWidth + columnSpacing > width
 
-        visible: usageRow.summaryText.length > 0
-            || (usageRow.showPace && usageRow.rowData.pace.length > 0)
-            || usageRow.resetText.length > 0
+        visible: usageRow.hasPaceOrSummary || (!usageRow.resetInline && usageRow.resetText.length > 0)
         Layout.fillWidth: true
         Layout.minimumWidth: 0
         columns: stacked ? 1 : 2
@@ -194,8 +275,9 @@ ColumnLayout {
 
         PlainPlasmaLabel {
             id: usageResetLabel
+            objectName: "usageResetLabel"
 
-            visible: usageRow.resetText.length > 0
+            visible: !usageRow.resetInline && usageRow.resetText.length > 0
             text: usageRow.resetText
             font: Kirigami.Theme.smallFont
             opacity: usageRow.secondaryTextOpacity

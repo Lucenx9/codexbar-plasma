@@ -133,6 +133,13 @@ ColumnLayout {
         wrapMode: Text.WordWrap
     }
 
+    Components.CostTrustNotice {
+        noticeScope: "provider:" + (tokenCostSection.providerData ? tokenCostSection.providerData.provider : "")
+        stateOwner: tokenCostSection.applet
+        presentationVisible: tokenCostSection.presentationVisible
+        summary: tokenCostSection.costTrustSummary
+    }
+
     GridLayout {
         id: costSummaryGrid
         objectName: "costSummaryGrid"
@@ -183,13 +190,6 @@ ColumnLayout {
                 }
             }
         }
-    }
-
-    Components.CostTrustNotice {
-        noticeScope: "provider:" + (tokenCostSection.providerData ? tokenCostSection.providerData.provider : "")
-        stateOwner: tokenCostSection.applet
-        presentationVisible: tokenCostSection.presentationVisible
-        summary: tokenCostSection.costTrustSummary
     }
 
     Components.InteractiveChart {

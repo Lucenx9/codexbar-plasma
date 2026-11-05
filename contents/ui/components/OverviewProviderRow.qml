@@ -114,8 +114,6 @@ Rectangle {
                 Layout.preferredHeight: Layout.preferredWidth
                 radius: overviewRow.applet.nestedSurfaceRadius
                 color: overviewRow.applet.withAlpha(overviewRow.accent, 0.1)
-                border.width: 1
-                border.color: overviewRow.applet.withAlpha(Kirigami.Theme.textColor, 0.1)
 
                 Kirigami.Icon {
                     anchors.centerIn: parent
@@ -175,11 +173,12 @@ Rectangle {
                 id: overviewMeter
 
                 required property var modelData
+                required property int index
                 readonly property bool captionTruncated: overviewMeterCaption.truncated
                     || overviewMeterReset.truncated
 
                 Layout.fillWidth: true
-                Layout.topMargin: Kirigami.Units.smallSpacing / 2
+                Layout.topMargin: index === 0 ? Kirigami.Units.largeSpacing : Kirigami.Units.smallSpacing / 2
                 spacing: Kirigami.Units.smallSpacing / 2
 
                 Item {
@@ -227,7 +226,7 @@ Rectangle {
                         anchors.right: parent.right
                         anchors.verticalCenter: parent.verticalCenter
                         text: overviewRow.applet.usagePercentText(overviewMeter.modelData)
-                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                        font.pointSize: Kirigami.Theme.defaultFont.pointSize * 1.15
                         font.weight: Font.DemiBold
                         horizontalAlignment: Text.AlignRight
                     }

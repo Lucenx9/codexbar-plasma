@@ -4153,3 +4153,13 @@ msgstr "Lizenzschlüssel für %1. Dieser Schlüssel kann KI-Anfragen autorisiere
 #: contents/ui/components/ProviderDetailSection.qml
 msgid "Warning"
 msgstr "Warnung"
+
+#: contents/ui/components/FullRepresentation.qml
+#, kde-format
+msgid "Warning at %1% used"
+msgstr "Warnung bei %1 % Verbrauch"
+
+#: contents/ui/components/FullRepresentation.qml
+#, kde-format
+msgid "Critical at %1% used"
+msgstr "Kritisch bei %1 % Verbrauch"

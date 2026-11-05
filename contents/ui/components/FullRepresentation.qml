@@ -34,7 +34,10 @@ Item {
                     Kirigami.Theme.backgroundColor))
             warningMarkers: fullRoot.applet.quotaWarningMarkers(rowData).map(function(marker) {
                 return { percent: marker.percent,
-                    color: fullRoot.applet.withAlpha(fullRoot.applet.statusBadgeColor(marker.severity), 0.72) }
+                    color: fullRoot.applet.withAlpha(fullRoot.applet.statusBadgeColor(marker.severity), 0.72),
+                    description: marker.severity === "minor"
+                        ? i18n("Warning at %1% used", fullRoot.applet.quotaWarningPercent.toLocaleString(Qt.locale(), 'f', 0))
+                        : i18n("Critical at %1% used", fullRoot.applet.quotaCriticalPercent.toLocaleString(Qt.locale(), 'f', 0)) }
             })
             meterTrackHeight: fullRoot.applet.meterTrackHeight
             secondaryTextOpacity: fullRoot.applet.secondaryTextOpacity
@@ -370,13 +373,13 @@ Item {
                         onClicked: providerTab.activate()
                     }
 
-                    // Labelled tabs are capped in width, so a long
-                    // provider name elides; hover or keyboard focus reveals it.
+                    // The underline has no numeric readout. Hover and keyboard
+                    // focus reveal the quota, retained-data state and errors.
                     PlainToolTip {
                         parent: providerTabMouse
-                        visible: (!applet.showPopupTabLabels || providerTabLabel.truncated)
-                            && (providerTabMouse.containsMouse || providerFocus.visualFocus)
-                        plainText: modelData.title
+                        visible: providerTabMouse.containsMouse || providerFocus.visualFocus
+                        plainText: [modelData.title, applet.switcherDescription(modelData)]
+                            .filter(function(part) { return part.length > 0 }).join("\n")
                     }
 
                     PlainPlasmaLabel {
@@ -729,7 +732,7 @@ Item {
                     width: Math.max(
                         0,
                         overviewScroll.availableWidth - Kirigami.Units.smallSpacing)
-                    spacing: Kirigami.Units.smallSpacing
+                    spacing: Kirigami.Units.largeSpacing
 
                     Item {
                         id: overviewErrorSlot

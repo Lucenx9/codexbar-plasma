@@ -4126,3 +4126,13 @@ msgstr "Clave de licencia para %1. Esta clave puede autorizar solicitudes de IA.
 #: contents/ui/components/ProviderDetailSection.qml
 msgid "Warning"
 msgstr "Advertencia"
+
+#: contents/ui/components/FullRepresentation.qml
+#, kde-format
+msgid "Warning at %1% used"
+msgstr "Aviso al %1 % de uso"
+
+#: contents/ui/components/FullRepresentation.qml
+#, kde-format
+msgid "Critical at %1% used"
+msgstr "Crítico al %1 % de uso"

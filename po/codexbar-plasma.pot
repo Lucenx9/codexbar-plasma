@@ -517,6 +517,16 @@ msgstr ""
 msgid "%1 %2"
 msgstr ""
 
+#: contents/ui/components/FullRepresentation.qml
+#, kde-format
+msgid "Warning at %1% used"
+msgstr ""
+
+#: contents/ui/components/FullRepresentation.qml
+#, kde-format
+msgid "Critical at %1% used"
+msgstr ""
+
 #: contents/ui/components/FullRepresentation.qml contents/ui/configGeneral.qml
 msgid "Retry"
 msgstr ""
