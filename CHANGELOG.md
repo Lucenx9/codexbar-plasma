@@ -10,6 +10,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Fixed
+
+- Keep quota-marker tooltips reachable just outside thin meter tracks. The
+  meter's paint clipping no longer cuts off its hover margin.
+
 ## 0.2.54 - 2026-11-05
 
 ### Changed
@@ -42,9 +47,6 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   documentation links and license-key labels for Chatbox.
 
 ### Fixed
-
-- Keep quota-marker tooltips reachable just outside thin meter tracks. The
-  meter's paint clipping no longer cuts off its hover margin.
 
 - Keep OpenAI service names visible with unknown states when the feed's
   affected-component collection is malformed, instead of hiding the list or
