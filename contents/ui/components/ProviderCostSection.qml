@@ -177,13 +177,14 @@ ColumnLayout {
                 }
                 PlainPlasmaLabel {
                     text: tokenCostSection.amountText(modelData.amounts, modelData.valueMode)
+                    font.features: { "tnum": 1 }
                     font.weight: Font.DemiBold
                     Layout.fillWidth: true
                     wrapMode: Text.Wrap
                 }
                 PlainPlasmaLabel {
                     text: tokenCostSection.tokensText(modelData.amounts)
-                    font: Kirigami.Theme.smallFont
+                    font: Qt.font(Object.assign({}, Kirigami.Theme.smallFont, { features: { "tnum": 1 } }))
                     opacity: tokenCostSection.applet.secondaryTextOpacity
                     Layout.fillWidth: true
                     wrapMode: Text.Wrap

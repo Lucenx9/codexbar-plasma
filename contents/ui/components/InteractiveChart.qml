@@ -134,6 +134,7 @@ ColumnLayout {
 
         PlainPlasmaLabel {
             id: chartPointValue
+            font.features: { "tnum": 1 }
 
             text: chart.readoutValid ? chart.pointDisplayValue(chart.points[chart.readoutIndex]) : ""
             Accessible.ignored: !chart.hasActivePoint

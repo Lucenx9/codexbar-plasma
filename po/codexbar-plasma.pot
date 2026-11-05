@@ -737,6 +737,7 @@ msgid "Load local + SSH subtotal"
 msgstr ""
 
 #: contents/ui/components/InteractiveChart.qml
+#: contents/ui/components/SpendView.qml
 msgid "Use the arrow keys to inspect chart points"
 msgstr ""
 

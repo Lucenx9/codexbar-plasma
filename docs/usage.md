@@ -206,8 +206,12 @@ work and upstream contract requirements.
   Provider action rows keep their full native hover and focus outlines visible
   inside the scrollable popup.
 - Overview and provider quota percentages use the same slightly larger type
-  size and align with the end of their meters. Overview keeps more space
-  between provider cards and between each identity header and its first quota.
+  size and align with the end of their meters. Quota percentages, cost summaries,
+  provider totals and chart readout values request tabular digits from the theme
+  font, keeping equal-length numbers stable when supported by that font.
+  A thin separator distinguishes an inline reset from its quota name.
+  Overview keeps more space between provider cards and between each identity
+  header and its first quota.
   Without a pace forecast or summary, a reset appears beside its quota title
   when the full text, percentage and reserved hide action fit with a safety
   margin. Otherwise it stays below the meter. Small changes in the countdown
@@ -227,7 +231,9 @@ work and upstream contract requirements.
 - Popup tabs follow the usual tab keyboard pattern: Left and Right move focus
   between tabs and wrap around at either end, Home and End jump to the first
   and last tab, and Enter or Space opens the focused tab.
-  Selecting a tab keeps its width stable, so neighbouring tabs stay in place.
+  Selected tabs use a tint of the theme focus color; the quota underline remains
+  a usage meter. Selecting a tab keeps its width stable, so neighbouring tabs
+  stay in place.
   Overview, Usage & Spend, Sessions and provider headers use the theme's smaller
   text for summary and update metadata beneath their titles.
 - Global **Usage & Spend** tab with a Cost/Tokens toggle, a range selector
@@ -251,6 +257,14 @@ work and upstream contract requirements.
   week. Measured zero remains a recorded
   day. It stays hidden for ranges that fill a single column. A **Less–More** key
   beside the heading shows the cell shades from the lowest to the highest daily value.
+  The heatmap is one keyboard Tab stop. Left/Right moves between weeks on the
+  same weekday (mirrored for RTL); Up/Down moves within the week. Missing days
+  are skipped, and Home/End select the first/last visible measured day. A readout
+  below the grid shows the inspected date and value without shifting the layout.
+  Keyboard focus scrolls the grid and readout into view when needed.
+  Keyboard highlighting is immediate; mouse hover keeps its existing feedback.
+  Selection follows the same date through refreshes and clears when the date
+  leaves the grid or the range/metric changes. Inspection starts no history scan.
   Provider totals and project groups follow the provider tab order.
   Cost or token sums that exceed the numeric range stay unavailable, with an
   empty heatmap cell for that day. Other dates and valid metrics remain visible.

@@ -35,7 +35,7 @@ ColumnLayout {
         - Math.ceil(usageResetMetrics.advanceWidth)
         - (rowData.hasPercent ? Math.ceil(usagePercentMetrics.advanceWidth) : 0)
         - (hideable ? actionSize : 0)
-        - usageTitleRow.spacing * (2 + (hideable ? 1 : 0) + (rowData.hasPercent ? 1 : 0))
+        - 1 - usageTitleRow.spacing * (3 + (hideable ? 1 : 0) + (rowData.hasPercent ? 1 : 0))
     property bool resetInline: false
     readonly property string warningDescription: warningMarkers.filter(function(marker) {
         return marker.percent > 0 && marker.percent < 100 && typeof marker.description === "string"
@@ -102,6 +102,15 @@ ColumnLayout {
             }
         }
 
+        Rectangle {
+            objectName: "usageResetSeparator"
+            visible: usageRow.resetInline
+            Layout.preferredWidth: 1
+            Layout.preferredHeight: Math.round(usageInlineResetLabel.implicitHeight * 0.75)
+            color: usageRow.withAlpha(Kirigami.Theme.textColor, 0.3)
+            Accessible.ignored: true
+        }
+
         PlainPlasmaLabel {
             id: usageInlineResetLabel
             objectName: "usageInlineResetLabel"
@@ -158,6 +167,7 @@ ColumnLayout {
             visible: usageRow.rowData.hasPercent
             text: usageRow.percentText
             font.pointSize: Kirigami.Theme.defaultFont.pointSize * 1.15
+            font.features: { "tnum": 1 }
             font.weight: Font.DemiBold
             horizontalAlignment: Text.AlignRight
             elide: Text.ElideRight
