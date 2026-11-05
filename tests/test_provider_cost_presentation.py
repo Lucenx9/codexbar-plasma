@@ -224,7 +224,7 @@ TestCase {
             usedPercent: 15, leftPercent: 85, pace: "On pace", resetsAt: "in 7d"};
         var row = createTemporaryObject(providerUsageDelegate, fullRoot, {modelData: model, width: 500});
         verify(row !== null);
-        var bar = findItem(row, "usageBar");
+        var fill = findItem(row, "usageBarFill");
         var percent = findItem(row, "usagePercentLabel");
         var hide = findItem(row, "hideUsageRowButton");
         compare(row.shownPercent, 85);
@@ -232,7 +232,7 @@ TestCase {
         compare(row.warningMarkers.length, 0);
         compare(row.meterColor, applet.brandColor);
         applet.brandColor = "green";
-        tryCompare(bar.children[0], "color", applet.brandColor);
+        tryCompare(fill, "color", applet.brandColor);
         applet.usageBarsShowUsed = true;
         compare(row.shownPercent, 15);
         verify(percent.text.indexOf("15") >= 0);
@@ -251,7 +251,7 @@ TestCase {
         compare(row.shownPercent, 2);
         verify(percent.text.indexOf("2") >= 0);
         compare(row.meterColor, Qt.rgba(1, 0, 0, 1));
-        tryCompare(bar.children[0], "color", row.meterColor);
+        tryCompare(fill, "color", row.meterColor);
         compare(row.warningMarkers.length, 1);
         compare(row.warningMarkers[0].percent, 20);
         compare(row.warningMarkers[0].color.a, 0.72);

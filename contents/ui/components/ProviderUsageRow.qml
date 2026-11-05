@@ -183,53 +183,60 @@ ColumnLayout {
         Layout.preferredHeight: usageRow.meterTrackHeight
         radius: height / 2
         color: usageRow.withAlpha(Kirigami.Theme.textColor, 0.1)
-        clip: true
         Accessible.role: Accessible.ProgressBar
         Accessible.name: usageRow.rowData.label
         Accessible.description: [usageRow.percentText, usageRow.warningDescription]
             .filter(function(part) { return part.length > 0 }).join("\n")
 
-        Rectangle {
-            width: usageRow.shownPercent <= 0
-                ? 0
-                : Math.max(parent.height, parent.width * usageRow.shownPercent / 100)
-            height: parent.height
-            radius: parent.radius
-            color: usageRow.meterColor
+        // Clip the paint separately: clipping the hover handler's parent also
+        // clips its margin, making thin tracks unnecessarily hard to target.
+        Item {
+            anchors.fill: parent
+            clip: true
 
-            Behavior on color {
-                ColorAnimation {
-                    duration: Kirigami.Units.longDuration
+            Rectangle {
+                objectName: "usageBarFill"
+                width: usageRow.shownPercent <= 0
+                    ? 0
+                    : Math.max(parent.height, parent.width * usageRow.shownPercent / 100)
+                height: parent.height
+                radius: usageBar.radius
+                color: usageRow.meterColor
+
+                Behavior on color {
+                    ColorAnimation {
+                        duration: Kirigami.Units.longDuration
+                    }
+                }
+
+                Behavior on width {
+                    NumberAnimation {
+                        duration: Kirigami.Units.longDuration
+                        easing.type: Easing.OutCubic
+                    }
                 }
             }
 
-            Behavior on width {
-                NumberAnimation {
-                    duration: Kirigami.Units.longDuration
-                    easing.type: Easing.OutCubic
-                }
+            MeterMarker {
+                objectName: "usagePaceMarker"
+                visible: usageRow.showPace && percent > 0 && percent < 100
+                percent: usageRow.markerPercent
+                markerColor: usageRow.rowData.paceOnTop
+                    ? usageRow.withAlpha(Kirigami.Theme.positiveTextColor, 0.9)
+                    : usageRow.withAlpha(Kirigami.Theme.negativeTextColor, 0.9)
             }
-        }
 
-        MeterMarker {
-            objectName: "usagePaceMarker"
-            visible: usageRow.showPace && percent > 0 && percent < 100
-            percent: usageRow.markerPercent
-            markerColor: usageRow.rowData.paceOnTop
-                ? usageRow.withAlpha(Kirigami.Theme.positiveTextColor, 0.9)
-                : usageRow.withAlpha(Kirigami.Theme.negativeTextColor, 0.9)
-        }
+            Repeater {
+                id: quotaWarningMarkerRepeater
 
-        Repeater {
-            id: quotaWarningMarkerRepeater
+                model: usageRow.warningMarkers
 
-            model: usageRow.warningMarkers
+                delegate: MeterMarker {
+                    required property var modelData
 
-            delegate: MeterMarker {
-                required property var modelData
-
-                percent: Number(modelData.percent) || 0
-                markerColor: modelData.color
+                    percent: Number(modelData.percent) || 0
+                    markerColor: modelData.color
+                }
             }
         }
 

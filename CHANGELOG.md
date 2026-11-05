@@ -42,6 +42,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep quota-marker tooltips reachable just outside thin meter tracks. The
+  meter's paint clipping no longer cuts off its hover margin.
+
 - Keep OpenAI service names visible with unknown states when the feed's
   affected-component collection is malformed, instead of hiding the list or
   incorrectly reporting services as operational.
