@@ -94,7 +94,7 @@ class PopupTabsTest(unittest.TestCase):
         provider_tabs_body = applet.id_block("providerTabsBar")
         for tabs_fragment in (
             "Layout.preferredHeight: Kirigami.Units.gridUnit * 2.35",
-            "applet.withAlpha(Kirigami.Theme.textColor, 0.1)",
+            "applet.withAlpha(Kirigami.Theme.focusColor, 0.18)",
             "anchors.bottomMargin: 2",
             "providerReadableColor(",
             "activeFocusOnTab: true",

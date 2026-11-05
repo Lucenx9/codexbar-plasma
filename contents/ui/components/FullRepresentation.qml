@@ -300,9 +300,9 @@ Item {
                     Layout.preferredHeight: providerTabsBar.tabHeight
                     radius: applet.roundedSurfaceRadius
                     color: providerTabMouse.pressed
-                        ? applet.withAlpha(Kirigami.Theme.focusColor, 0.1)
+                        ? applet.withAlpha(Kirigami.Theme.focusColor, 0.24)
                         : (selected
-                        ? applet.withAlpha(Kirigami.Theme.textColor, 0.1)
+                        ? applet.withAlpha(Kirigami.Theme.focusColor, 0.18)
                         : (keyboardFocusVisible
                         ? applet.withAlpha(Kirigami.Theme.focusColor, 0.06)
                         : (providerTabMouse.containsMouse ? applet.withAlpha(Kirigami.Theme.textColor, 0.05) : "transparent")

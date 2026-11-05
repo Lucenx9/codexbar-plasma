@@ -12,6 +12,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Distinguish selected popup tabs with the theme focus tint, separate inline
+  resets from quota names, and use tabular digits for quota percentages and
+  primary cost figures without shrinking the text.
+
 - Make Overview quota percentages as readable as provider details, with more
   space between cards and between provider identity and quotas. Keep provider
   resets beside their quota titles when the text fits without a pace forecast
@@ -20,6 +24,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   provider cost-quality notices now precede the totals they qualify.
 
 ### Added
+
+- Inspect the Usage & Spend heatmap with the keyboard through one Tab stop,
+  arrow keys and Home/End. A stable readout shows the selected date and value;
+  refreshes preserve the date and unavailable days remain unselectable.
 
 - Show optional CLI warning and critical severity in provider detail rows with
   symbols with theme colors, readable text and localized accessible

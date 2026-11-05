@@ -5,6 +5,7 @@ import org.kde.kirigami as Kirigami
 import org.kde.plasma.components as PlasmaComponents
 import "." as Components
 import "../CostPresentation.js" as CostPresentation
+import "../HeatmapNavigation.js" as HeatmapNavigation
 
 ColumnLayout {
     id: view
@@ -34,6 +35,8 @@ ColumnLayout {
     onSelectionScopeChanged: {
         if (!historyChart)
             return
+        heatmapFocus.selectedDay = ""
+        heatmapFocus.hoveredDay = ""
         daySelectionMemo = { points: historyChart.points, index: -1 }
         historyChart.selectedIndex = -1
         historyChart.hoveredIndex = -1
@@ -431,7 +434,53 @@ ColumnLayout {
                         }
                     }
 
-                    Item {
+                    Controls.Control {
+                        id: heatmapFocus
+                        objectName: "spendHeatmap"
+
+                        property string selectedDay: ""
+                        property string hoveredDay: ""
+                        readonly property var cells: heatmapGrid.cells
+                        readonly property int inspectedIndex: HeatmapNavigation.indexForDay(cells,
+                            hoveredDay.length > 0 ? hoveredDay : (activeFocus ? selectedDay : ""))
+                        readonly property var inspectedCell: inspectedIndex >= 0 ? cells[inspectedIndex] : null
+                        readonly property string readout: inspectedCell
+                            ? i18n("%1: %2", historyChart.pointLabel(inspectedCell), inspectedCell.displayValue) : ""
+
+                        activeFocusOnTab: HeatmapNavigation.nextDay(cells, "", "first", false).length > 0
+                        background: null
+                        Accessible.role: Accessible.Graphic
+                        Accessible.name: readout.length > 0
+                            ? i18n("%1: %2", i18n("Activity heatmap"), readout) : i18n("Activity heatmap")
+                        Accessible.description: i18n("Use the arrow keys to inspect chart points")
+
+                        onActiveFocusChanged: {
+                            if (activeFocus) hoveredDay = ""
+                            if (activeFocus && HeatmapNavigation.indexForDay(cells, selectedDay) < 0)
+                                selectedDay = HeatmapNavigation.nextDay(cells, "", "last", false)
+                        }
+                        onCellsChanged: {
+                            hoveredDay = ""
+                            if (HeatmapNavigation.indexForDay(cells, selectedDay) < 0)
+                                selectedDay = ""
+                        }
+                        Keys.onPressed: function(event) {
+                            var direction = ""
+                            switch (event.key) {
+                            case Qt.Key_Left: direction = "left"; break
+                            case Qt.Key_Right: direction = "right"; break
+                            case Qt.Key_Up: direction = "up"; break
+                            case Qt.Key_Down: direction = "down"; break
+                            case Qt.Key_Home: direction = "first"; break
+                            case Qt.Key_End: direction = "last"; break
+                            default: event.accepted = false; return
+                            }
+                            selectedDay = HeatmapNavigation.nextDay(cells, selectedDay,
+                                direction, LayoutMirroring.enabled)
+                            hoveredDay = ""
+                            event.accepted = true
+                        }
+
                         Layout.fillWidth: true
                         Layout.preferredHeight: 7 * heatmapGrid.cellHeight
                             + 6 * heatmapGrid.rowSpacing
@@ -475,6 +524,7 @@ ColumnLayout {
                                     id: heatmapCell
 
                                     required property var modelData
+                                    required property int index
 
                                     // Padding slots carry no day: they fill the
                                     // oldest corner of the block and stay out of
@@ -528,12 +578,14 @@ ColumnLayout {
                                         radius: parent.radius
                                         color: "transparent"
                                         border.width: 1
-                                        border.color: view.applet.withAlpha(
-                                            Kirigami.Theme.textColor, 0.4)
+                                        border.color: heatmapFocus.activeFocus && heatmapFocus.hoveredDay.length === 0
+                                            ? Kirigami.Theme.focusColor
+                                            : view.applet.withAlpha(Kirigami.Theme.textColor, 0.4)
                                         visible: heatmapCell.measured
-                                        opacity: heatmapMouse.containsMouse ? 1 : 0
+                                        opacity: heatmapCell.index === heatmapFocus.inspectedIndex ? 1 : 0
 
                                         Behavior on opacity {
+                                            enabled: !heatmapFocus.activeFocus
                                             NumberAnimation {
                                                 duration: Kirigami.Units.shortDuration
                                             }
@@ -546,6 +598,7 @@ ColumnLayout {
                                         // grid must not wait out a hover delay.
                                         delay: 0
                                         visible: heatmapMouse.containsMouse && heatmapCell.measured
+                                            && heatmapFocus.hoveredDay === heatmapCell.modelData.label
                                         plainText: heatmapCell.measured
                                             ? i18n("%1: %2", heatmapCell.dayLabel,
                                                 heatmapCell.modelData.displayValue)
@@ -559,10 +612,40 @@ ColumnLayout {
                                         hoverEnabled: true
                                         // A binding avoids Qt rejecting a bare zero enum literal.
                                         acceptedButtons: (0)
+                                        onEntered: if (heatmapCell.measured)
+                                            heatmapFocus.hoveredDay = heatmapCell.modelData.label
+                                        onPositionChanged: if (heatmapCell.measured)
+                                            heatmapFocus.hoveredDay = heatmapCell.modelData.label
+                                        onExited: if (heatmapCell.measured
+                                            && heatmapFocus.hoveredDay === heatmapCell.modelData.label)
+                                            heatmapFocus.hoveredDay = ""
                                     }
                                 }
                             }
                         }
+                    }
+                }
+                PlainPlasmaLabel {
+                    id: heatmapReadout
+                    objectName: "heatmapReadout"
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: implicitHeight
+                    text: heatmapFocus.readout.length > 0 ? heatmapFocus.readout : " "
+                    opacity: heatmapFocus.readout.length > 0 ? view.applet.secondaryTextOpacity : 0
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.family: Kirigami.Theme.smallFont.family
+                    font.weight: Kirigami.Theme.smallFont.weight
+                    font.italic: Kirigami.Theme.smallFont.italic
+                    font.styleName: Kirigami.Theme.smallFont.styleName
+                    font.features: { "tnum": 1 }
+                    elide: Text.ElideRight
+                    Accessible.ignored: true
+
+                    HoverHandler { id: heatmapReadoutHover }
+                    PlainToolTip {
+                        visible: heatmapReadout.truncated && heatmapFocus.readout.length > 0
+                            && (heatmapReadoutHover.hovered || heatmapFocus.activeFocus)
+                        plainText: heatmapFocus.readout
                     }
                 }
             }
@@ -675,6 +758,7 @@ ColumnLayout {
                                 PlainPlasmaLabel {
                                     id: spendProviderPrimary
                                     objectName: "spendProviderPrimary"
+                                    font.features: { "tnum": 1 }
 
                                     text: view.applet.costHistoryShowsTokens
                                         ? spendProviderCard.tokensText : spendProviderCard.costText
@@ -688,10 +772,15 @@ ColumnLayout {
                                 PlainPlasmaLabel {
                                     id: spendProviderSecondary
                                     objectName: "spendProviderSecondary"
+                                    font.features: { "tnum": 1 }
 
                                     text: view.applet.costHistoryShowsTokens
                                         ? spendProviderCard.costText : spendProviderCard.tokensText
-                                    font: Kirigami.Theme.smallFont
+                                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                    font.family: Kirigami.Theme.smallFont.family
+                                    font.weight: Kirigami.Theme.smallFont.weight
+                                    font.italic: Kirigami.Theme.smallFont.italic
+                                    font.styleName: Kirigami.Theme.smallFont.styleName
                                     opacity: view.applet.secondaryTextOpacity
                                     Layout.fillWidth: true
                                     Layout.minimumWidth: 0

@@ -1589,7 +1589,13 @@ provider details and project rows at narrow and normal popup widths.
 The quota-row tests exercise inline resets and their expanded fallback with
 RTL, large fonts, pace, summaries and missing resets. `UsageRowLayout.js` owns
 the pure safety-band transition so changing countdown text does not repeatedly
-move a reset. Marker tooltip tests keep used thresholds separate from mirrored
+move a reset, including the inline separator's width and spacing.
+`HeatmapNavigation.js` owns bounded, spatial navigation over the rendered
+seven-row grid; `tst_heatmap_navigation.qml` covers missing days, padding,
+mirrored columns and date identity. `test_cost_sections.py` dispatches keys
+through the production heatmap, checks its single Tab stop and immediate
+readout, and covers refresh, removed dates and range/metric changes without
+starting a scan. Marker tooltip tests keep used thresholds separate from mirrored
 remaining percentages and omit markers at either endpoint.
 `tests/fixtures/ProviderUiStress.js` supplies realistic long identifiers, Unicode,
 markup-like text, missing optional values, extreme budgets, and demo/empty/one/

@@ -2204,7 +2204,9 @@ TestCase {
             verify(!measured.truncated, "Inline quota text must fit without truncation");
         }
         var hide = findItem(row, item => item.objectName === "hideUsageRowButton");
-        fitWidth += hide.width + title.parent.spacing * 4;
+        var separator = findItem(row, item => item.objectName === "usageResetSeparator");
+        verify(separator !== null);
+        fitWidth += hide.width + separator.width + title.parent.spacing * 5;
         row.width = fitWidth - 1;
         tryCompare(inline, "visible", false);
         row.width = fitWidth + metrics.band - 1;

@@ -557,9 +557,9 @@ class CostTest(unittest.TestCase):
                 "the heatmap hover outline must not fade a border's own alpha: Qt treats a zero-alpha "
                 "pen as invalid and paints a zero-width border, snapping the cell fill out to the edge"
             )
-        if not code_contains(spend_view_text, "opacity: heatmapMouse.containsMouse ? 1 : 0"):
+        if not code_contains(spend_view_text, "opacity: heatmapCell.index === heatmapFocus.inspectedIndex ? 1 : 0"):
             raise AssertionError(
-                "SpendView activity heatmap cells must fade a dedicated hover outline overlay, so the "
+                "SpendView activity heatmap cells must use a dedicated inspection outline overlay, so the "
                 "painted fill geometry never depends on hover"
             )
 

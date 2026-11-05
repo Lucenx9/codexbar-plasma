@@ -189,7 +189,7 @@ Rectangle {
                         overviewMeterReset.implicitHeight, overviewMeterPercent.implicitHeight)
                     implicitWidth: overviewMeterCaption.implicitWidth
                         + overviewMeterReset.implicitWidth + overviewMeterPercent.implicitWidth
-                        + Kirigami.Units.smallSpacing * 2
+                        + Kirigami.Units.smallSpacing * 3 + 1
 
                     PlainPlasmaLabel {
                         id: overviewMeterCaption
@@ -205,6 +205,19 @@ Rectangle {
                         elide: Text.ElideRight
                     }
 
+                    Rectangle {
+                        id: overviewResetSeparator
+
+                        visible: overviewMeterReset.text.length > 0 && overviewMeterReset.width > 0
+                        anchors.left: overviewMeterCaption.right
+                        anchors.leftMargin: Kirigami.Units.smallSpacing
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 1
+                        height: Math.round(overviewMeterReset.implicitHeight * 0.75)
+                        color: overviewRow.applet.withAlpha(Kirigami.Theme.textColor, 0.3)
+                        Accessible.ignored: true
+                    }
+
                     PlainPlasmaLabel {
                         id: overviewMeterReset
 
@@ -212,11 +225,11 @@ Rectangle {
                         visible: text.length > 0
                         font: Kirigami.Theme.smallFont
                         opacity: overviewRow.applet.secondaryTextOpacity
-                        anchors.left: overviewMeterCaption.right
+                        anchors.left: overviewResetSeparator.right
                         anchors.leftMargin: Kirigami.Units.smallSpacing
                         anchors.verticalCenter: parent.verticalCenter
                         width: Math.max(0, parent.width - overviewMeterCaption.width
-                            - overviewMeterPercent.width - Kirigami.Units.smallSpacing * 2)
+                            - overviewMeterPercent.width - Kirigami.Units.smallSpacing * 3 - overviewResetSeparator.width)
                         elide: Text.ElideRight
                     }
 
@@ -227,6 +240,7 @@ Rectangle {
                         anchors.verticalCenter: parent.verticalCenter
                         text: overviewRow.applet.usagePercentText(overviewMeter.modelData)
                         font.pointSize: Kirigami.Theme.defaultFont.pointSize * 1.15
+                        font.features: { "tnum": 1 }
                         font.weight: Font.DemiBold
                         horizontalAlignment: Text.AlignRight
                     }
