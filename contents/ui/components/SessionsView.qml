@@ -223,6 +223,8 @@ ColumnLayout {
                     readonly property string activityText: sessionLabels.sessionActivityText(session, view.sessionClockMs)
                     readonly property color surfaceColor: Qt.tint(
                         Qt.tint(Kirigami.Theme.backgroundColor, color), focusSurface.color)
+                    readonly property color activeStateColor: ThemeContrast.readableAccentColor(
+                        Kirigami.Theme.positiveTextColor, surfaceColor, Kirigami.Theme.textColor, 4.5)
                     readonly property color accent: session.provider.length > 0
                         ? view.applet.providerReadableColor(
                             session.provider,
@@ -259,8 +261,8 @@ ColumnLayout {
                         color: sessionTitleValue.keyboardFocusVisible
                             ? view.applet.withAlpha(Kirigami.Theme.focusColor, 0.1) : "transparent"
                         border.width: sessionTitleValue.keyboardFocusVisible ? 1 : 0
-                        border.color: ThemeContrast.readableAccentColor(view.Kirigami.Theme.focusColor,
-                            sessionCard.surfaceColor, view.Kirigami.Theme.textColor)
+                        border.color: ThemeContrast.readableAccentColor(Kirigami.Theme.focusColor,
+                            sessionCard.surfaceColor, Kirigami.Theme.textColor)
                     }
 
                     HoverHandler {
@@ -330,8 +332,7 @@ ColumnLayout {
                                     width: Math.min(implicitWidth, parent.width * 0.4)
                                     text: sessionLabels.sessionStateText(sessionCard.session.state)
                                     color: sessionCard.activeSession
-                                        ? ThemeContrast.readableAccentColor(view.Kirigami.Theme.positiveTextColor,
-                                            sessionCard.surfaceColor, view.Kirigami.Theme.textColor, 4.5)
+                                        ? sessionCard.activeStateColor
                                         : Kirigami.Theme.textColor
                                     opacity: sessionCard.activeSession ? 1 : view.applet.secondaryTextOpacity
                                     font.pixelSize: sessionCard.session.state === "idle"
