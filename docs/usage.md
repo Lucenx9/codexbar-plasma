@@ -17,13 +17,20 @@ work and upstream contract requirements.
   healthy quota cannot pass for an alert; the provider icon keeps the brand
   color. The muted color keeps the capsule's contrast with the panel and is
   used only when it looks less like the warning colors than the brand does,
-  so a yellow brand beside a pale cream warning keeps its color. Any quota above zero keeps at least a round dot of fill, so an almost
-  exhausted quota stays distinct from an empty one.
+  so a yellow brand beside a pale cream warning keeps its color. Tiny positive
+  quotas keep at least one pixel of fill inside the outline, rather than a full round dot, so low
+  readings stay distinguishable from zero without resembling a quarter-full
+  meter. Every track has a visible outline; an exhausted remaining quota stays
+  empty with its critical outline.
 - Automatic panel meters show the primary quota above the secondary quota when
   both have percentages. A single available quota is centered vertically;
   absent quotas are omitted, while measured zero remains an empty track. If
   neither primary nor secondary has a percentage, the existing automatic
   preference supplies one available fallback quota.
+- Icons and quota tracks grow within bounded sizes as the panel gets thicker.
+  Provider groups have more space between them than between each icon and its
+  own quotas. In vertical panels, the icon sits above full-width quota tracks,
+  giving the percentages room to remain readable.
 - Provider meters work in horizontal and vertical panels. Names, usage text,
   and credit text remain horizontal-only. Click a provider's icon, capsules, or grouped text,
   or activate it with the keyboard, to open its detail tab. Hovering one
@@ -45,6 +52,12 @@ work and upstream contract requirements.
   text last. For a provider the widget has no icon for, the panel draws a
   generic icon shared with every other such provider, so there the name is the
   only identification and outlives the credit balance instead.
+- Panel text uses regular-weight, tabular numerals. If combined usage and pace
+  text still does not fit after dropping the name and credits, it falls back to
+  the complete usage percentage when on pace, or **Behind pace** when the
+  forecast calls for slower consumption. Pace-only text keeps the verdict
+  (**At pace** or **Behind pace**) before its expected percentage. The complete
+  reading remains available through accessible text and the tooltip.
 - Nothing that is dropped becomes unreachable. Accessible names keep the whole
   text, the panel tooltip reports each provider's quotas, incidents, and its
   credit balance while panel credits are enabled, and the popup keeps every
@@ -462,7 +475,8 @@ the account details, including a valid fallback supplied by the CLI.
 
 Failed usage refreshes keep the last valid quotas visible. Each retained provider
 shows **Last known usage** with the age of its measurement in the popup and panel
-tooltip; its panel icon and capsules are dimmed. Errors remain visible. A provider
+tooltip; its panel capsules are dimmed. The provider icon,
+confidence marker, and current incident badge remain readable. Errors remain visible. A provider
 error with an empty or malformed message, or a malformed non-object error field,
 shows a generic error and follows the same quota-retention rules. Only an absent
 or null error field means no error. A partial

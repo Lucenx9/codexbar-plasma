@@ -36,7 +36,8 @@ Item {
     readonly property var textCompositionWidths: [
         Math.ceil(firstCompositionMeasurer.implicitWidth),
         Math.ceil(secondCompositionMeasurer.implicitWidth),
-        Math.ceil(thirdCompositionMeasurer.implicitWidth)
+        Math.ceil(thirdCompositionMeasurer.implicitWidth),
+        Math.ceil(fourthCompositionMeasurer.implicitWidth)
     ].slice(0, textCompositions.length)
     readonly property string fullText: textCompositions.length > 0 ? textCompositions[0] : ""
     // What the row spends before any text, so the budget offers the label every
@@ -48,7 +49,7 @@ Item {
         ? Math.ceil(Kirigami.Units.smallSpacing * 1.5) + Kirigami.Units.smallSpacing : 0
     readonly property int meterRowWidth: hasProviderMeters
         ? meterProviders.length * meterWidth
-            + Math.max(0, meterProviders.length - 1) * Kirigami.Units.smallSpacing
+            + Math.max(0, meterProviders.length - 1) * providerSpacing
         : 0
     // A superset of showPrimaryIdentity: reserving the icon slot while it turns
     // out hidden costs the label a few pixels, never a clipped row.
@@ -66,7 +67,7 @@ Item {
         maximumCompactWidth - textSlotOffset
             - (hasProviderMeters ? Kirigami.Units.smallSpacing : 0)
             - (standaloneIdentityVisible
-                ? Kirigami.Units.iconSizes.smallMedium + Kirigami.Units.smallSpacing : 0))
+                ? meterIconSize + Kirigami.Units.smallSpacing : 0))
     readonly property int inlineTextIndex: PanelTextFit.fittedIndex(textCompositionWidths, inlineTextBudget)
     readonly property int textCompositionIndex: inlinePrimaryText
         ? inlineTextIndex
@@ -105,26 +106,35 @@ Item {
             && (meterProviders.length > 1 || !selectedProviderHasMeter))
     readonly property int compactExtent: Kirigami.Units.iconSizes.smallMedium
         + Kirigami.Units.smallSpacing * 2
-    readonly property int meterContentHeight: Math.max(0, height - Kirigami.Units.smallSpacing * 2)
-    readonly property int meterIconSize: Math.min(Kirigami.Units.iconSizes.small,
-        Math.max(12, verticalPanel ? width / 3 : meterContentHeight))
+    readonly property int meterContentHeight: Math.max(0,
+        (verticalPanel ? width : height) - Kirigami.Units.smallSpacing * 2)
+    // Use the same icon cell with and without quotas. Narrow vertical panels
+    // stack identity above the meters instead of crushing the quota scale.
+    readonly property int meterIconSize: Math.min(Kirigami.Units.iconSizes.medium,
+        Math.max(Kirigami.Units.iconSizes.small,
+            meterContentHeight < Kirigami.Units.iconSizes.smallMedium
+                ? Kirigami.Units.iconSizes.small
+                : (meterContentHeight < Kirigami.Units.iconSizes.medium
+                    ? Kirigami.Units.iconSizes.smallMedium : Kirigami.Units.iconSizes.medium)))
     readonly property int meterSpacing: Kirigami.Units.smallSpacing
-    // Minimum share of chroma removed from a capsule whose brand hue
-    // resembles a warning color. ThemeContrast.chromaReduction raises it for
-    // very saturated brands so what remains carries no hue to confuse.
+    readonly property int providerSpacing: Kirigami.Units.smallSpacing * 2
+    readonly property int quotaSpacing: Math.max(2, Math.round(meterIconSize / 10))
     readonly property real mutedMeterChromaReduction: 0.75
-    readonly property int meterBarHeight: Math.max(3, Math.min(6,
-        Math.round((verticalPanel ? compactExtent : meterContentHeight) / 4)))
+    readonly property int meterBarHeight: Math.max(3, Math.round(meterIconSize / 5))
     readonly property int meterBarWidth: verticalPanel
-        ? Math.max(8, Math.min(Kirigami.Units.iconSizes.smallMedium + meterSpacing,
-            width - meterIconSize - meterSpacing * 3))
-        : Kirigami.Units.iconSizes.smallMedium + meterSpacing
-    readonly property int meterWidth: meterIconSize + meterSpacing + meterBarWidth
-        + (verticalPanel ? 0 : meterSpacing)
-    readonly property int meterHeight: Math.max(compactExtent, meterBarHeight * 2 + meterSpacing * 3)
+        ? Math.max(8, Math.min(meterContentHeight, meterIconSize + meterSpacing))
+        : Math.max(Kirigami.Units.iconSizes.smallMedium, meterIconSize) + meterSpacing
+    readonly property int meterWidth: verticalPanel
+        ? Math.max(meterIconSize, meterBarWidth)
+        : meterIconSize + meterSpacing * 2 + meterBarWidth
+    readonly property int meterHeight: meterIconSize + meterSpacing * 3
+        + meterBarHeight * 2 + quotaSpacing
     readonly property int metersExtent: meterProviders.length * meterHeight
-        + Math.max(0, meterProviders.length - 1) * meterSpacing
-    readonly property int maximumCompactWidth: Kirigami.Units.gridUnit * 18
+        + Math.max(0, meterProviders.length - 1) * providerSpacing
+    // Taller panels may grow the glyphs without taking the text's minimum
+    // budget away. The width remains bounded for the four-provider roster.
+    readonly property int maximumCompactWidth: Kirigami.Units.gridUnit * 20
+        + meterProviders.length * Math.max(0, meterIconSize - Kirigami.Units.iconSizes.smallMedium) * 2
     readonly property int inlineTextWidth: Math.min(compositionWidth(inlineTextIndex),
         inlineTextBudget)
     readonly property int desiredWidth: verticalPanel
@@ -184,8 +194,8 @@ Item {
     // Measure outside the Loader so its layout-assigned width cannot feed back
     // into the label's preferred width and collapse the compact representation.
     // Every candidate composition gets its own measurer, so choosing one cannot
-    // feed its own width back into the choice. There are at most three: the
-    // full composition and one per surrendered segment. These are the same
+    // feed its own width back into the choice. There are at most four: the
+    // full composition, one per surrendered segment, and compact usage. These are the same
     // label type the panel renders, because shaped label widths and raw font
     // metrics disagree by a fraction of a pixel and a composition measured a
     // pixel short is elided by the renderer that was asked to make it fit.
@@ -193,7 +203,7 @@ Item {
         id: firstCompositionMeasurer
 
         visible: false
-        font.bold: !compactRoot.minimalStyle
+        font.features: { "tnum": 1 }
         text: compactRoot.textCompositions.length > 0 ? compactRoot.textCompositions[0] : ""
     }
 
@@ -201,7 +211,7 @@ Item {
         id: secondCompositionMeasurer
 
         visible: false
-        font.bold: !compactRoot.minimalStyle
+        font.features: { "tnum": 1 }
         text: compactRoot.textCompositions.length > 1 ? compactRoot.textCompositions[1] : ""
     }
 
@@ -209,8 +219,16 @@ Item {
         id: thirdCompositionMeasurer
 
         visible: false
-        font.bold: !compactRoot.minimalStyle
+        font.features: { "tnum": 1 }
         text: compactRoot.textCompositions.length > 2 ? compactRoot.textCompositions[2] : ""
+    }
+
+    PlainPlasmaLabel {
+        id: fourthCompositionMeasurer
+
+        visible: false
+        font.features: { "tnum": 1 }
+        text: compactRoot.textCompositions.length > 3 ? compactRoot.textCompositions[3] : ""
     }
 
     GridLayout {
@@ -257,14 +275,14 @@ Item {
                 Layout.preferredWidth: !elementVisible
                     ? 0
                     : (modelData === "identity"
-                    ? Kirigami.Units.iconSizes.smallMedium
+                    ? compactRoot.meterIconSize
                     : (modelData === "status"
                     ? Kirigami.Units.smallSpacing * 1.5
                     : (modelData === "meters"
                     ? (compactRoot.verticalPanel ? compactRoot.meterWidth
                         : compactRoot.meterProviders.length * compactRoot.meterWidth
                             + (compactRoot.inlinePrimaryText ? compactRoot.inlineTextWidth + compactRoot.meterSpacing : 0)
-                            + Math.max(0, compactRoot.meterProviders.length - 1) * Kirigami.Units.smallSpacing)
+                            + Math.max(0, compactRoot.meterProviders.length - 1) * compactRoot.providerSpacing)
                     : Math.max(Kirigami.Units.gridUnit * 2, compactRoot.primaryTextWidth))))
                 Layout.preferredHeight: compactRoot.verticalPanel
                     ? (modelData === "meters" ? compactRoot.metersExtent
@@ -336,20 +354,24 @@ Item {
                 : "codex"
 
             visible: compactRoot.showPrimaryIdentity
-            implicitWidth: Kirigami.Units.iconSizes.smallMedium
-            implicitHeight: Kirigami.Units.iconSizes.smallMedium
+            implicitWidth: compactRoot.meterIconSize
+            implicitHeight: compactRoot.meterIconSize
 
             Kirigami.Icon {
                 id: compactIdentityIcon
                 objectName: "panelIdentityIcon"
 
-                anchors.fill: parent
+                anchors.centerIn: parent
+                width: compactRoot.meterIconSize
+                height: width
                 source: compactRoot.applet.loading ? "view-refresh" : compactRoot.applet.providerIconSource(parent.compactProvider)
                 fallback: "view-statistics"
                 isMask: !compactRoot.applet.loading && (compactRoot.minimalStyle || compactRoot.applet.providerIconIsMask(parent.compactProvider))
                 color: compactRoot.applet.loading || compactRoot.minimalStyle
                     ? Kirigami.Theme.textColor
-                    : compactRoot.applet.providerReadableColor(parent.compactProvider, Kirigami.Theme.backgroundColor)
+                    : ThemeContrast.readableAccentColor(
+                        compactRoot.applet.providerReadableColor(parent.compactProvider, Kirigami.Theme.backgroundColor),
+                        Kirigami.Theme.backgroundColor, Kirigami.Theme.textColor, 4.5)
 
                 RotationAnimator {
                     target: compactIdentityIcon
@@ -373,7 +395,7 @@ Item {
                         && !compactRoot.applet.loading
                     anchors.top: parent.top
                     anchors.right: parent.right
-                    width: Math.round(Kirigami.Units.iconSizes.smallMedium / 3)
+                    width: Math.round(compactRoot.meterIconSize / 3)
                     height: width
                     radius: width / 2
                     color: compactRoot.selectedProvider
@@ -441,7 +463,7 @@ Item {
             text: compactRoot.primaryText
             Accessible.name: compactRoot.fullText
             elide: Text.ElideRight
-            font.bold: !compactRoot.minimalStyle
+            font.features: { "tnum": 1 }
             // The loader stretches this label to the full row height, so the
             // default top alignment would sit the text above the centred
             // provider icon beside it.
@@ -455,8 +477,8 @@ Item {
         GridLayout {
             columns: compactRoot.verticalPanel ? 1 : -1
             rows: compactRoot.verticalPanel ? -1 : 1
-            rowSpacing: compactRoot.meterSpacing
-            columnSpacing: compactRoot.meterSpacing
+            rowSpacing: compactRoot.providerSpacing
+            columnSpacing: compactRoot.providerSpacing
 
             Repeater {
                 model: compactRoot.meterProviders
@@ -521,6 +543,7 @@ Item {
                             compactMeterMouse.pressed ? 0.14 : (compactMeterMouse.containsMouse ? 0.07 : 0))
 
                         Behavior on color {
+                            enabled: compactRoot.animationsEnabled && !compactMeterMouse.pressed
                             ColorAnimation {
                                 duration: Kirigami.Units.shortDuration
                             }
@@ -536,18 +559,20 @@ Item {
                         border.color: Kirigami.Theme.focusColor
                     }
 
-                    RowLayout {
+                    GridLayout {
                         anchors.centerIn: parent
-                        spacing: compactRoot.meterSpacing
-                        opacity: compactMeter.modelData.usageStale === true ? 0.55 : 1
+                        columns: compactRoot.verticalPanel ? 1 : 3
+                        rowSpacing: compactRoot.meterSpacing
+                        columnSpacing: compactRoot.meterSpacing
 
                         Kirigami.Icon {
                             objectName: "panelProviderIcon"
                             source: compactRoot.applet.providerIconSource(compactMeter.modelData.provider)
                             fallback: "view-statistics"
                             isMask: compactRoot.minimalStyle || compactRoot.applet.providerIconIsMask(compactMeter.modelData.provider)
-                            color: compactMeter.accent
-                            Layout.alignment: Qt.AlignVCenter
+                            color: ThemeContrast.readableAccentColor(compactMeter.accent,
+                                Kirigami.Theme.backgroundColor, Kirigami.Theme.textColor, 4.5)
+                            Layout.alignment: Qt.AlignCenter
                             Layout.preferredWidth: compactRoot.meterIconSize
                             Layout.preferredHeight: compactRoot.meterIconSize
 
@@ -594,8 +619,9 @@ Item {
                         }
 
                         ColumnLayout {
-                            spacing: compactRoot.meterSpacing
-                            Layout.alignment: Qt.AlignVCenter
+                            spacing: compactRoot.quotaSpacing
+                            Layout.alignment: Qt.AlignCenter
+                            opacity: compactMeter.modelData.usageStale === true ? 0.55 : 1
 
                             Repeater {
                                 model: compactMeter.quotaRows
@@ -613,17 +639,21 @@ Item {
                                     radius: height / 2
                                     // The track remains identifiable at zero, including an
                                     // exhausted quota when displaying the remaining amount.
-                                    color: compactRoot.applet.withAlpha(meterColor, warning ? 0.32 : 0.18)
-                                    border.width: warning || meter === 0 ? 1 : 0
-                                    border.color: compactRoot.applet.withAlpha(meterColor, warning ? 0.9 : 0.45)
+                                    color: compactRoot.applet.withAlpha(meterColor, warning ? 0.18 : 0.08)
+                                    border.width: 1
+                                    border.color: warning ? meterColor
+                                        : ThemeContrast.readableAccentColor(
+                                            ThemeContrast.interpolateColor(Kirigami.Theme.backgroundColor,
+                                                Kirigami.Theme.textColor, 0.35),
+                                            Kirigami.Theme.backgroundColor, Kirigami.Theme.textColor)
                                     clip: true
 
                                     Rectangle {
                                         objectName: "panelMeterFill"
-                                        // Any amount above zero stays visible as at least a
-                                        // round dot, like the popup meters; zero stays empty.
+                                        // Tiny readings reach one pixel inside the outline, rather than
+                                        // a full-height dot that exaggerates their magnitude.
                                         width: quotaCapsule.meter > 0
-                                            ? Math.max(parent.height, parent.width * Math.min(100, quotaCapsule.meter) / 100)
+                                            ? Math.max(parent.border.width + 1, parent.width * Math.min(100, quotaCapsule.meter) / 100)
                                             : 0
                                         height: parent.height
                                         radius: Math.min(height / 2, width / 2)
@@ -657,7 +687,7 @@ Item {
                             Layout.maximumWidth: compactRoot.inlineTextWidth
                             Layout.alignment: Qt.AlignVCenter
                             elide: Text.ElideRight
-                            font.bold: !compactRoot.minimalStyle
+                            font.features: { "tnum": 1 }
                         }
                     }
 

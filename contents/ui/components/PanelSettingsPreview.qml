@@ -116,6 +116,11 @@ ColumnLayout {
         id: timeLabels
     }
 
+    PanelText {
+        id: panelTextLabels
+        usageBarsShowUsed: preview.usageBarsShowUsed
+    }
+
     QtObject {
         id: previewApplet
 
@@ -183,7 +188,8 @@ ColumnLayout {
             }
             var metric = preview.metricText(preview.previewModel.textRow);
             if (preview.configPage.cfg_showPercentInPanel && metric.length > 0) {
-                segments.push({ id: "usage", text: metric });
+                segments.push({ id: "usage", text: metric,
+                    compactText: panelTextLabels.compactDisplayText(preview.previewModel.textRow, preview.previewModel.mode) });
             }
             if (preview.configPage.cfg_showCreditsInPanel
                     && typeof provider.credits === "number"

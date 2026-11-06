@@ -95,6 +95,25 @@ TestCase {
         compare(liveText, "");
     }
 
+    function test_compactModesKeepUsedRemainingAndConfidenceMeaning() {
+        var row = {hasPercent: true, usedPercent: 43, leftPercent: 57,
+            pacePercent: 60, paceOnTop: false};
+        compare(presentation.compactDisplayText(row, "both"), "Behind pace");
+        compare(presentation.compactDisplayText(row, "pace"), "Behind pace");
+        row.paceOnTop = true;
+        compare(presentation.compactDisplayText(row, "both"), "43% used");
+        compare(presentation.compactDisplayText(row, "pace"), "At pace");
+        presentation.usageBarsShowUsed = false;
+        compare(presentation.compactDisplayText(row, "both"), "57% left");
+        compare(presentation.compactDisplayText(row, "pace"), "At pace");
+        row.hasPercent = false;
+        compare(presentation.compactDisplayText(row, "both"), "At pace");
+        row.dataConfidence = "estimated";
+        compare(presentation.compactDisplayText(row, "pace"), "");
+        compare(presentation.compactDisplayText(null, "both"), "");
+        compare(presentation.compactDisplayText(row, "resetTime"), "");
+    }
+
     function test_emptyRosterFallback_data() {
         return [
             {tag: "automatic", loading: false, selection: false, visible: true, expected: "CodexBar"},

@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Window
 import QtTest
+import org.kde.kirigami as Kirigami
 import "../contents/ui/components" as Components
 import "../contents/ui/CostPresentation.js" as CostPresentation
 import "../contents/ui/SafeText.js" as SafeText
@@ -36,6 +37,8 @@ TestCase {
         property int meterCount: 2
         property real firstQuota: 57
         property bool secondaryWarning: false
+        property bool quotaStale: false
+        property string quotaConfidence: "exact"
         property color brandAccent: Qt.rgba(0.2, 0.6, 0.7, 1)
         property bool loading: false
         property bool expanded: false
@@ -159,6 +162,8 @@ TestCase {
                     provider: "codex",
                     title: "Codex",
                     value: firstQuota,
+                    usageStale: quotaStale,
+                    dataConfidence: quotaConfidence,
                     hasIncident: incidentOnMeter,
                     statusKnown: true,
                     statusSeverity: "minor",
@@ -171,7 +176,7 @@ TestCase {
                 }
             ].concat(Array.from({length: Math.max(0, meterCount - 2)}, (_, index) => ({
                 provider: "example-" + index, title: "Example " + index, value: 25
-            })));
+            }))).slice(0, meterCount);
         }
         function compactProviders() {
             if (metersHidden) {
@@ -317,6 +322,8 @@ TestCase {
         applet.meterCount = 2;
         applet.firstQuota = 57;
         applet.secondaryWarning = false;
+        applet.quotaStale = false;
+        applet.quotaConfidence = "exact";
         applet.brandAccent = Qt.rgba(0.2, 0.6, 0.7, 1);
         applet.minimalPanel = false;
         applet.quotaWarning = false;
@@ -385,7 +392,7 @@ TestCase {
         applet.minimalPanel = true;
         tryCompare(panel, "minimalStyle", true);
         compare(panel.meterBarHeight, standardBarHeight);
-        verify(panel.meterIconSize <= 22);
+        verify(panel.meterIconSize <= 32);
         verify(panel.meterWidth >= 36);
         verify(icon.isMask);
         verify(icon.color.toString() !== brandColor);
@@ -720,7 +727,8 @@ TestCase {
         var fill = findItem(meter, item => item.objectName === "panelMeterFill");
         verify(track !== null && fill !== null);
         tryCompare(fill, "width", 0);
-        compare(track.color, Qt.rgba(1, 0.5, 0, 0.32));
+        compare(track.border.color, Qt.rgba(1, 0.5, 0, 1));
+        verify(track.border.width >= 1);
     }
 
     function test_capsulesKeepGeometryAndAccurateSmallFills() {
@@ -738,8 +746,8 @@ TestCase {
         meter = findItem(panel, item => item.modelData && item.modelData.provider === "codex");
         track = findItem(meter, item => item.objectName === "panelMeterTrack");
         fill = findItem(track, item => item.objectName === "panelMeterFill");
-        // A small non-zero quota stays visible as a round dot.
-        tryCompare(fill, "width", track.height);
+        // Tiny non-zero quotas stay visible without resembling a quarter-full track.
+        tryCompare(fill, "width", 2);
         applet.secondaryWarning = true;
         wait(0);
         verify(fill.color.toString() !== "#ff8000");
@@ -765,7 +773,7 @@ TestCase {
         var meter = findItem(panel, item => item.modelData && item.modelData.provider === "codex");
         var icon = findItem(meter, item => item.objectName === "panelProviderIcon");
         var fill = findItem(meter, item => item.objectName === "panelMeterFill");
-        compare(icon.color, applet.brandAccent);
+        verify(ThemeContrast.contrastRatio(icon.color, Kirigami.Theme.backgroundColor) >= 4.5);
         verify(!Qt.colorEqual(fill.color, applet.brandAccent));
         var muted = ThemeContrast.oklch(fill.color);
         verify(muted.chroma < ThemeContrast.minimumHueChroma);
@@ -1552,8 +1560,50 @@ TestCase {
         var meter = findItem(panel, item => item.activeFocusOnTab && typeof item.activate === "function");
         verify(meter !== null && meter.visible);
         var track = findItem(meter, item => item.objectName === "panelMeterTrack");
-        verify(track.width > 0);
+        verify(track.width >= 20, "Vertical quotas need enough travel to show magnitude");
+        verify(track.width >= track.height * 4);
+        var icon = findItem(meter, item => item.objectName === "panelProviderIcon");
+        verify(icon.mapToItem(meter, 0, icon.height).y <= track.mapToItem(meter, 0, 0).y);
         verify(track.mapToItem(panel, track.width, 0).x <= panel.width);
+    }
+
+    function test_staleQuotasDoNotDimCurrentIncidentOrConfidence() {
+        applet.quotaStale = true;
+        applet.quotaConfidence = "estimated";
+        var panel = createControl("CompactRepresentation", {applet: applet, height: 32});
+        if (!panel) return;
+        wait(0);
+        function opacityWithinPanel(item) {
+            var result = 1;
+            while (item && item !== panel) {
+                result *= item.opacity;
+                item = item.parent;
+            }
+            return result;
+        }
+        var badge = findItem(panel, item => item.objectName === "panelIncidentBadge" && item.visible);
+        var marker = findItem(panel, item => item.objectName === "panelConfidenceMarker" && item.visible);
+        var track = findItem(panel, item => item.objectName === "panelMeterTrack");
+        verify(badge !== null && marker !== null && track !== null);
+        compare(marker.text, "~");
+        compare(opacityWithinPanel(badge), 1);
+        compare(opacityWithinPanel(marker), 1);
+        verify(opacityWithinPanel(track) < 1);
+    }
+
+    function test_identityAndMeterScaleTogether() {
+        var panel = createControl("CompactRepresentation", {applet: applet, height: 24});
+        if (!panel) return;
+        wait(0);
+        var small = panel.meterIconSize;
+        panel.height = 48;
+        tryVerify(() => panel.meterIconSize > small);
+        var large = panel.meterIconSize;
+        applet.metersHidden = true;
+        wait(0);
+        var identity = findItem(panel, item => item.objectName === "panelIdentityIcon");
+        compare(identity.width, large);
+        compare(identity.height, large);
     }
 
     function test_providerMetersSupportKeyboardAndPointer(data) {

@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Window
+import QtTest
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.plasmoid
 
@@ -24,7 +25,7 @@ Item {
         parent: capture.applet.fullRepresentationItem
         z: 100
         width: capture.currentCase.vertical ? 100 : 440
-        height: capture.currentCase.vertical ? 240 : 100
+        height: capture.currentCase.vertical ? Math.max(240, panel.height + 32) : 100
         color: Kirigami.Theme.backgroundColor
 
         Loader {
@@ -45,13 +46,32 @@ Item {
         }
     }
 
+    TestCase {
+        id: input
+        when: false
+    }
+
+    function namedItem(item, name) {
+        if (item.objectName === name) return item;
+        for (var i = 0; i < item.children.length; i++) {
+            var found = namedItem(item.children[i], name);
+            if (found) return found;
+        }
+        return null;
+    }
+
     function nextCase() {
+        if (currentCase.interaction === "press")
+            input.mouseRelease(canvas, 0, 0);
+        input.mouseMove(canvas, 0, 0);
+        canvas.forceActiveFocus();
         caseIndex++;
         if (caseIndex >= cases.length) {
             console.log("SMOKE_CAPTURED:" + scenario);
             return;
         }
         currentCase = cases[caseIndex];
+        compactPanelItem.interactive = !!currentCase.interaction;
         var config = applet.Plasmoid.configuration;
         for (var key in currentCase.config)
             config[key] = currentCase.config[key];
@@ -67,6 +87,24 @@ Item {
             providers[0].rows[0].leftPercent = 0;
             providers[0].rows[1].usedPercent = 0;
             providers[0].rows[1].leftPercent = 100;
+        }
+        if (currentCase.edge === "tiny") {
+            providers[0].rows[0].usedPercent = 1;
+            providers[0].rows[0].leftPercent = 99;
+            providers[0].rows[1].usedPercent = 15;
+            providers[0].rows[1].leftPercent = 85;
+        }
+        if (currentCase.edge === "warning") {
+            var warningProvider = providers.length > 1 ? providers[1] : providers[0];
+            warningProvider.rows[0].usedPercent = 85;
+            warningProvider.rows[0].leftPercent = 15;
+        }
+        if (currentCase.edge === "stale-confidence-incident") {
+            providers[0].usageStale = true;
+            providers[0].hasIncident = true;
+            providers[0].statusKnown = true;
+            providers[0].statusSeverity = "minor";
+            providers[0].rows[0].dataConfidence = "estimated";
         }
         applet.providers = providers;
         applet.selectedProviderID = currentCase.selected || "codex";
@@ -112,6 +150,21 @@ Item {
     Timer {
         id: settle
         interval: 250
+        onTriggered: {
+            var meter = capture.namedItem(panel.item, "panelProviderMeter");
+            if (capture.currentCase.interaction === "focus")
+                meter.forceActiveFocus(Qt.TabFocusReason);
+            if (capture.currentCase.interaction === "hover" || capture.currentCase.interaction === "press")
+                input.mouseMove(meter, meter.width / 2, meter.height / 2);
+            if (capture.currentCase.interaction === "press")
+                input.mousePress(meter, meter.width / 2, meter.height / 2);
+            paint.restart();
+        }
+    }
+
+    Timer {
+        id: paint
+        interval: 50
         onTriggered: {
             var parts = [];
             capture.visibleParts(panel.item, parts);

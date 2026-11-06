@@ -48,7 +48,9 @@ function normalizedSegments(value) {
             continue;
         }
         seen[id] = true;
-        result.push({ id: id, text: text, identifying: entry.identifying === true });
+        result.push({ id: id, text: text, identifying: entry.identifying === true,
+            compactText: id === "usage"
+                ? SafeText.boundedDisplayText(entry.compactText, maximumSegmentLength) : "" });
     }
     return result;
 }
@@ -64,7 +66,8 @@ function surrenderOrder(segments) {
 
 // Progressively smaller compositions, widest first, each keeping the caller's
 // display order. One segment is surrendered per step, so a caller measuring
-// candidates gets at most one composition per known segment id. The empty composition is never offered: a label that cannot
+// candidates gets one composition per known segment id, plus an optional
+// compact usage reading. The empty composition is never offered: a label that cannot
 // fit even its most important segment is elided by the caller rather than
 // dropped, so an enabled segment never disappears without a trace.
 function compositions(value) {
@@ -86,6 +89,10 @@ function compositions(value) {
         }
         remaining = next;
         result.push(remaining);
+    }
+    if (remaining.length === 1 && remaining[0].compactText
+            && remaining[0].compactText !== remaining[0].text) {
+        result.push([{id: remaining[0].id, text: remaining[0].compactText}]);
     }
     return result;
 }

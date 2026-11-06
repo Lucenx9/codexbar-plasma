@@ -4152,6 +4152,14 @@ msgstr "Anbieteraktionen"
 msgid "Peak daily usage"
 msgstr "Höchste tägliche Nutzung"
 
+#: contents/ui/components/PanelText.qml
+msgid "Behind pace"
+msgstr "Zu schnell"
+
+#: contents/ui/components/PanelText.qml
+msgid "At pace"
+msgstr "Im Plan"
+
 #: contents/ui/components/PanelSettingsPreview.qml
 msgid "Example:"
 msgstr "Beispiel:"

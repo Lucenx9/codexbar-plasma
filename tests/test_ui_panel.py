@@ -152,8 +152,6 @@ class PanelTest(unittest.TestCase):
                     "panel meter selection must stay in the applet state owner; "
                     f"missing {panel_selection_fragment!r}"
                 )
-        if not code_contains(compact_representation_text, "readonly property int meterContentHeight: Math.max(0, height"):
-            raise AssertionError("panel meter geometry must derive from the compact representation height")
         if not code_contains(compact_representation_text, "compactRoot.meterProviders.length * compactRoot.meterWidth"):
             raise AssertionError("the meters element must reserve panel width from the shared meter width")
 
@@ -316,7 +314,8 @@ class PanelTest(unittest.TestCase):
         # metrics disagree with shaped label widths by a fraction of a pixel, which is
         # enough for the renderer to elide a composition that was picked to fit.
         composition_measurers = (
-            "firstCompositionMeasurer", "secondCompositionMeasurer", "thirdCompositionMeasurer")
+            "firstCompositionMeasurer", "secondCompositionMeasurer", "thirdCompositionMeasurer",
+            "fourthCompositionMeasurer")
         for measurer in composition_measurers:
             if (
                 f"id: {measurer}" not in compact_representation_text
@@ -326,8 +325,6 @@ class PanelTest(unittest.TestCase):
                     "compact panel text must round up an independent label measurement "
                     f"per candidate composition; missing {measurer!r}"
                 )
-        if not code_contains(compact_representation_text, "maximumCompactWidth: Kirigami.Units.gridUnit * 18"):
-            raise AssertionError("compact panel text must use a bounded wide cap")
         # Content the settings switched on is surrendered whole, never cut into a
         # fragment that reads as a different value.
         for fit_fragment in (

@@ -12,6 +12,14 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Refine panel provider groups with larger, contrast-adjusted icons, slimmer
+  outlined quota tracks, clearer spacing, and regular tabular text. Vertical
+  panels stack icons above readable quota tracks. Tiny readings no longer
+  appear quarter-full, and exhausted remaining quotas stay visibly empty.
+  Keep current incident and confidence markers readable beside stale quotas;
+  shorten crowded usage/pace text to complete readings. Normalize Gemini and
+  Grok artwork padding and render Gemini as a vector.
+
 - Simplify all seven settings pages: group update controls on demand, place
   provider selection beside its settings, make automatic Overview selection
   explicit, and lead Diagnostics with the CLI connection. Clarify the panel

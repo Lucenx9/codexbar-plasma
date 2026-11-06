@@ -335,7 +335,7 @@ TestCase {
     function test_iconFileNamesRefuseKeysThatCannotNameAnAsset() {
         compare(ProviderIdentity.providerIconFileName("codex"), "codex.svg")
         // The one provider whose asset name differs from its key.
-        compare(ProviderIdentity.providerIconFileName("gemini-cli"), "gemini-white.png")
+        compare(ProviderIdentity.providerIconFileName("gemini-cli"), "gemini.svg")
         compare(ProviderIdentity.providerIconFileName("../../etc/passwd"), "")
         // Dots pass the asset pattern, so only the explicit dotdot guard
         // refuses a parent traversal that stays inside the pattern.

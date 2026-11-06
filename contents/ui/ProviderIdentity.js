@@ -574,7 +574,7 @@ var providerIconFiles = {
     "fireworks": "fireworks.svg",
     "flora": "flora.svg",
     "futureagi": "futureagi.svg",
-    "gemini": "gemini-white.png",
+    "gemini": "gemini.svg",
     "gitkraken": "gitkraken.svg",
     "grok": "grok.svg",
     "groq": "groq.svg",

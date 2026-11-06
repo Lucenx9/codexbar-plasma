@@ -267,6 +267,12 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 
 ## Plasma-native work with verified CLI contracts
 
+- [ ] Refresh bundled provider identities for the official Linux CLI 0.83.0
+  registry. The live `make check-provider-icons` probe reports missing dedicated
+  mappings for `soniox`, `traecn`, `chatbox`, `abliteration`, and `opendesign`;
+  these currently use the generic fallback. Done when licensed artwork,
+  identity metadata, attribution, and registry checks cover all five. This is
+  independent of panel geometry and quota rendering.
 - [ ] Offer manual-cookie setup and credential clearing. Official Linux CLI
   0.82.0 adds `config set-cookie --provider <id> (--cookie <h>|--stdin)
   [--no-enable]` and `config clear-credential --provider <id> [--api-key]
