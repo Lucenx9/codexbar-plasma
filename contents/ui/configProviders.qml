@@ -108,10 +108,12 @@ KCM.SimpleKCM {
     readonly property var visibleDisabledProviders: providerSettingsGroups.disabled
     readonly property int enabledCount: ProviderList.filteredProviders(providers, "", "enabled").length
     readonly property var selectedProvider: providerByID(selectedProviderID)
-    // URL rows open a page; every other row runs a provider command.
+    // Widget-owned URL rows sit in the header toolbar. Descriptor actions,
+    // including open* ones, keep their plain-text button: their titles are
+    // untrusted CLI text and the toolbar's button/menu paths render rich text.
     readonly property var selectedProviderActionRows: providerActionRows(selectedProvider)
-    readonly property var selectedProviderLinkRows: selectedProviderActionRows.filter(function(row) { return !!row.url })
-    readonly property var selectedProviderCommandRows: selectedProviderActionRows.filter(function(row) { return !row.url })
+    readonly property var selectedProviderLinkRows: selectedProviderActionRows.filter(function(row) { return providerLinkKind(row) !== "" })
+    readonly property var selectedProviderCommandRows: selectedProviderActionRows.filter(function(row) { return providerLinkKind(row) === "" })
     readonly property var selectedProviderSourceModes: ProviderSource.availableModes(
         selectedProvider ? selectedProvider.authentication : null)
 
@@ -985,10 +987,14 @@ KCM.SimpleKCM {
         return rows
     }
 
-    function providerLinkRow(action) {
+    function providerLinkKind(row) {
+        return row && row.url ? row.action : ""
+    }
+
+    function providerLinkRow(kind) {
         var rows = selectedProviderLinkRows
         for (var i = 0; i < rows.length; i++) {
-            if (rows[i].action === action)
+            if (providerLinkKind(rows[i]) === kind)
                 return rows[i]
         }
         return null
@@ -1569,6 +1575,19 @@ KCM.SimpleKCM {
             }
         }
 
+        Components.PlainControlsLabel {
+            objectName: "providerImmediateChangesMessage"
+            Layout.fillWidth: true
+            Layout.leftMargin: Kirigami.Units.smallSpacing
+            Layout.rightMargin: Kirigami.Units.smallSpacing
+            Layout.bottomMargin: Kirigami.Units.smallSpacing
+            font: Kirigami.Theme.smallFont
+            opacity: page.secondaryTextOpacity
+            wrapMode: Text.WordWrap
+            visible: page.providers.length > 0
+            text: i18n("CodexBar saves provider changes immediately. Apply and Cancel affect widget settings only.")
+        }
+
         Components.PlainInlineMessage {
             id: providerErrorMessage
 
@@ -1617,26 +1636,16 @@ KCM.SimpleKCM {
         width: parent.width
         spacing: Kirigami.Units.smallSpacing
 
-        Components.PlainControlsLabel {
-            objectName: "providerImmediateChangesMessage"
-            Layout.fillWidth: true
-            Layout.margins: Kirigami.Units.smallSpacing
-            font: Kirigami.Theme.smallFont
-            opacity: page.secondaryTextOpacity
-            wrapMode: Text.WordWrap
-            visible: page.providers.length > 0
-            text: i18n("CodexBar saves provider changes immediately. Apply and Cancel affect widget settings only.")
-        }
-
         GridLayout {
             id: providerPanes
             Layout.fillWidth: true
             columns: page.width >= Kirigami.Units.gridUnit * 42 ? 2 : 1
             // Side by side, both panes fill the visible page so the list uses
-            // the window height instead of leaving empty space below it.
+            // the window height instead of leaving empty space below it. The
+            // panes are the first content item, so only the viewport is read.
             readonly property real paneHeight: columns === 2
                 ? Math.max(Kirigami.Units.gridUnit * 20,
-                    page.flickable.height - y - page.topPadding - page.bottomPadding)
+                    page.flickable.height - page.topPadding - page.bottomPadding)
                 : Kirigami.Units.gridUnit * 20
             columnSpacing: Kirigami.Units.largeSpacing
             rowSpacing: Kirigami.Units.largeSpacing
@@ -1648,7 +1657,12 @@ KCM.SimpleKCM {
                 Layout.alignment: Qt.AlignTop
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 16
                 Layout.maximumWidth: providerPanes.columns === 2 ? Kirigami.Units.gridUnit * 18 : Infinity
-                Layout.preferredHeight: providerPanes.paneHeight
+                // Expanded details may outgrow the viewport; the list follows
+                // them so both panes still end together while the page scrolls.
+                Layout.preferredHeight: providerPanes.columns === 2 && selectedProviderSurface.visible
+                    ? Math.max(providerPanes.paneHeight,
+                        selectedProviderSurface.implicitHeight + Kirigami.Units.smallSpacing)
+                    : providerPanes.paneHeight
                 contentWidth: availableWidth
                 clip: true
 
@@ -1854,6 +1868,7 @@ KCM.SimpleKCM {
                                 Kirigami.Action {
                                     readonly property var row: page.providerLinkRow("docs")
                                     text: row ? row.title : ""
+                                    enabled: row !== null && row.enabled
                                     icon.name: "help-contents"
                                     visible: row !== null
                                     onTriggered: page.performProviderAction(row)
@@ -1861,6 +1876,7 @@ KCM.SimpleKCM {
                                 Kirigami.Action {
                                     readonly property var row: page.providerLinkRow("dashboard")
                                     text: row ? row.title : ""
+                                    enabled: row !== null && row.enabled
                                     icon.name: "view-statistics"
                                     visible: row !== null
                                     onTriggered: page.performProviderAction(row)
@@ -1868,6 +1884,7 @@ KCM.SimpleKCM {
                                 Kirigami.Action {
                                     readonly property var row: page.providerLinkRow("login")
                                     text: row ? row.title : ""
+                                    enabled: row !== null && row.enabled
                                     icon.name: "internet-services"
                                     visible: row !== null
                                     onTriggered: page.performProviderAction(row)
