@@ -113,7 +113,7 @@ ColumnLayout {
 
                 objectName: "sessionsSummary"
                 text: [i18np("%1 local session", "%1 local sessions", view.applet.sessions.length),
-                    i18np("%1 active", "%1 active", view.activeSessionCount),
+                    i18ncp("Number of active local sessions", "%1 active", "%1 active", view.activeSessionCount),
                     view.applet.sessionsLastUpdatedText]
                     .filter(function(part) { return part.length > 0 })
                     .join(" \u00b7 ")
@@ -253,12 +253,14 @@ ColumnLayout {
 
                     Rectangle {
                         id: focusSurface
+                        objectName: "sessionFocusSurface"
                         anchors.fill: parent
                         radius: parent.radius
                         color: sessionTitleValue.keyboardFocusVisible
                             ? view.applet.withAlpha(Kirigami.Theme.focusColor, 0.1) : "transparent"
                         border.width: sessionTitleValue.keyboardFocusVisible ? 1 : 0
-                        border.color: Kirigami.Theme.focusColor
+                        border.color: ThemeContrast.readableAccentColor(view.Kirigami.Theme.focusColor,
+                            sessionCard.surfaceColor, view.Kirigami.Theme.textColor)
                     }
 
                     HoverHandler {

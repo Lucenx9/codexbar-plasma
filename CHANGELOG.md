@@ -14,7 +14,7 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 - Refine Sessions with a count of active sessions before the update time,
   smaller idle labels and clearer spacing between text lines. Keyboard focus
-  highlights the card and reveals a truncated title beside the copy action;
+  highlights the card and reveals a truncated title in the copy action's tooltip;
   accessible descriptions include session state and activity age. Active-state
   text keeps readable contrast in light and dark themes.
 

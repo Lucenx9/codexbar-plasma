@@ -288,7 +288,8 @@ TestCase {
         try {
             holder = Qt.createQmlObject('import QtQuick; import "../contents/ui/components" as Components; QtObject { property Component control: Component { Components.' + type
                 + ' { function i18n(text) { for (var i = 1; i < arguments.length; i++) text = text.replace("%" + i, String(arguments[i])); return text }'
-                + ' function i18np(one, many, count) { return (count === 1 ? one : many).replace("%1", count) } } } }', testCase, Qt.resolvedUrl("VisualLayoutTest.qml"));
+                + ' function i18np(one, many, count) { return (count === 1 ? one : many).replace("%1", count) }'
+                + ' function i18ncp(context, one, many, count) { return i18np(one, many, count) } } } }', testCase, Qt.resolvedUrl("VisualLayoutTest.qml"));
         } catch (error) {
             if (/module "org\.kde\.(kirigami|plasma\.components)" is not installed/.test(String(error))) {
                 skip("Visual layout checks need the optional KDE QML modules");
@@ -948,6 +949,8 @@ TestCase {
             + " focused=" + copyButton.parent.keyboardFocusVisible);
         var state = findItem(card, function(item) { return item.text === "Active"; });
         verify(ThemeContrast.contrastRatio(state.color, card.surfaceColor) >= 4.5);
+        var focusSurface = findChild(card, "sessionFocusSurface");
+        verify(ThemeContrast.contrastRatio(focusSurface.border.color, card.surfaceColor) >= 3);
         applet.privacyMode = true;
         tryCompare(copyButton, "visible", false);
         compare(String(card.surfaceColor), originalSurface);
