@@ -2086,12 +2086,15 @@ Item {
                 }
                 // The synthetic helper answers the local wallet lookup only;
                 // the wide scenario shows the longer stored-key row.
-                var keyExpected = scenario === "settings-ai-insights" ? "present" : "absent";
+                var keyExpected = scenario === "settings-ai-insights" || scenario === "settings-ai-insights-stored-narrow" ? "present" : "absent";
                 if (insightsPage.keyStatus !== keyExpected || insightsPage.busy)
                     return false;
                 var keyRow = findItem(insightsPage, "aiInsightsKeyRow");
                 verifyScenario(keyRow !== null && keyRow.width <= Kirigami.Units.gridUnit * 24 + 1,
                     "the API key row must stay within the form width so the form does not shift");
+                var keyPosition = keyRow.mapToItem(insightsPage, 0, 0);
+                verifyScenario(keyPosition.x >= 0 && keyPosition.x + keyRow.width <= insightsPage.width + 1,
+                    "the API key controls exceed the settings viewport");
                 if (scenario !== "settings-ai-insights")
                     return true;
                 // A long model list must open as a bounded, scrolling menu.

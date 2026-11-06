@@ -372,6 +372,8 @@ KCM.SimpleKCM {
             Controls.TextField {
                 id: commandPathField
                 objectName: "commandPathField"
+                onTextChanged: if (!activeFocus) cursorPosition = 0
+                onActiveFocusChanged: if (!activeFocus) cursorPosition = 0
                 Accessible.name: commandPathRow.Kirigami.FormData.label
                 Layout.fillWidth: true
                 placeholderText: "codexbar"
@@ -384,8 +386,6 @@ KCM.SimpleKCM {
                 onClicked: page.cfg_commandPath = page.cfg_commandPathDefault || "codexbar"
             }
         }
-
-
 
         Components.PlainControlsLabel {
             id: widgetVersionLabel
@@ -407,31 +407,22 @@ KCM.SimpleKCM {
             wrapMode: Text.WordWrap
         }
 
-        Components.PlainControlsLabel {
+        Controls.TextArea {
             id: resolvedCommandLabel
             objectName: "resolvedCommandLabel"
-
             Kirigami.FormData.label: i18n("Resolved command:")
-            // The configured value can be a bare name; this is the absolute
-            // path Plasma actually runs, which is what a bug report needs.
+            Accessible.name: i18n("Resolved command:")
+            // Unlike the configured name, this is the executable Plasma resolved.
             text: page.resolvedCommandPath.length > 0 ? page.resolvedCommandPath
                 : (page.environmentProbeFailed ? i18n("Not found") : i18n("Not checked"))
+            readOnly: true
+            selectByMouse: true
+            activeFocusOnTab: true
+            textFormat: TextEdit.PlainText
+            wrapMode: TextEdit.WrapAnywhere
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            elide: Text.ElideMiddle
-
-            HoverHandler {
-                id: resolvedCommandHover
-            }
-
-            // Middle elision hides the directories a bug report needs.
-            Components.PlainToolTip {
-                objectName: "resolvedCommandToolTip"
-                parent: resolvedCommandLabel
-                visible: resolvedCommandLabel.truncated && resolvedCommandHover.hovered
-                plainText: resolvedCommandLabel.text
-            }
         }
 
         Components.PlainControlsLabel {
@@ -547,7 +538,7 @@ KCM.SimpleKCM {
             Kirigami.FormData.label: i18n("Diagnostic provider:")
             Accessible.name: i18n("Diagnostic provider:")
             Layout.preferredWidth: Kirigami.Units.gridUnit * 18
-            placeholderText: i18n("All enabled providers")
+            placeholderText: i18n("All providers")
             maximumLength: 256
         }
 

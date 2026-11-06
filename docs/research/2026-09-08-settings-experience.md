@@ -194,3 +194,13 @@ columns and stack each key above its value when narrow. General update controls
 use compact column groups; the interval label and editor share a row on wide
 windows. Saved-insight empty state is text beside the Clear action, and the
 minimal panel preset remains a bordered action disabled when already applied.
+
+Closed update groups retain known available releases, in-progress status and
+errors; opening or closing them performs no check. Cloud sharing scope and
+immediate wallet-write behavior remain visible outside the detail disclosure.
+The resolved CLI executable wraps in a selectable read-only field, so a
+keyboard user can inspect and copy the exact path. The diagnostic provider hint
+says All providers, matching the unchanged explicit `--provider all` command;
+it does not describe the separate blank provider-override setting. The installed
+official Linux CLI 0.83.0 help lists `diagnose --provider <name|all>`; no diagnostic
+fetch was needed to verify that command spelling.

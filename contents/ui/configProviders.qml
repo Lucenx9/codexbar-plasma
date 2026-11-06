@@ -1362,11 +1362,11 @@ KCM.SimpleKCM {
             }
             Controls.TabButton {
                 baselineOffset: 0
-                text: i18n("Enabled")
+                text: i18nc("Provider group, plural", "Enabled")
             }
             Controls.TabButton {
                 baselineOffset: 0
-                text: i18n("Disabled")
+                text: i18nc("Provider group, plural", "Disabled")
             }
         }
 
@@ -1512,7 +1512,7 @@ KCM.SimpleKCM {
                         Layout.leftMargin: Kirigami.Units.smallSpacing
                         Layout.rightMargin: Kirigami.Units.smallSpacing
                         visible: page.filterScope === "all" && page.visibleEnabledProviders.length > 0
-                        text: i18n("Enabled")
+                        text: i18nc("Provider group, plural", "Enabled")
                         font: Kirigami.Theme.smallFont
                         opacity: page.secondaryTextOpacity
                     }
@@ -1531,7 +1531,7 @@ KCM.SimpleKCM {
                         Layout.rightMargin: Kirigami.Units.smallSpacing
                         Layout.topMargin: page.visibleEnabledProviders.length > 0 ? Kirigami.Units.largeSpacing : 0
                         visible: page.filterScope === "all" && page.visibleDisabledProviders.length > 0
-                        text: i18n("Disabled")
+                        text: i18nc("Provider group, plural", "Disabled")
                         font: Kirigami.Theme.smallFont
                         opacity: page.secondaryTextOpacity
                     }
@@ -1661,6 +1661,13 @@ KCM.SimpleKCM {
 
                             Components.PlainComboBox {
                                 id: providerSourceBox
+                                Accessible.description: i18n("Some sources are unavailable on Linux. The source override in Diagnostics takes precedence.")
+                                Components.PlainToolTip {
+                                    parent: providerSourceBox
+                                    plainText: providerSourceBox.Accessible.description
+                                    visible: providerSourceBox.hovered || providerSourceBox.visualFocus
+                                    delay: Kirigami.Units.toolTipDelay
+                                }
                                 objectName: "providerSourceBox"
                                 Layout.fillWidth: true
                                 model: page.selectedProviderSourceModes.map(function(mode) { return page.sourceModeLabel(mode) })
@@ -1691,7 +1698,7 @@ KCM.SimpleKCM {
 
                         Components.PlainControlsLabel {
                             Layout.fillWidth: true
-                            text: i18n("Choose a source to save. Automatic clears its saved override. Listed modes describe CLI configuration, not Linux availability. The source override in Diagnostics takes precedence in the widget.")
+                            text: i18n("Choose a source to save. Automatic restores the provider default.")
                             opacity: page.secondaryTextOpacity
                             font: Kirigami.Theme.smallFont
                             wrapMode: Text.WordWrap

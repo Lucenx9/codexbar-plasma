@@ -13,6 +13,7 @@ TestCase {
     height: 700
     visible: true
 
+    function i18nc(context, text) { return text; }
     function i18n(text) {
         return text;
     }
@@ -273,7 +274,7 @@ TestCase {
         });
         compare(buttons.length, 1);
         var tips = all.filter(function(item) {
-            return item.toString().indexOf("PlainToolTip") >= 0;
+            return item.toString().indexOf("PlainToolTip") >= 0 && item.parent === buttons[0];
         });
         compare(tips.length, 1);
         compare(tips[0].parent, buttons[0]);

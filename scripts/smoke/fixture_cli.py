@@ -45,7 +45,7 @@ SCENARIOS += ("identified-schema2-subcent", "identified-schema2-zero")
 SCENARIOS += ("providers-0740",)
 SCENARIOS += ("empty-providers", "usage-error", "usage-recovery", "cli-missing", "cli-setup", "cli-setup-unusable")
 SCENARIOS += ("ai-insights", "ai-insights-it", "ai-insights-mismatch", "ai-insights-error", "ai-insights-single",
-              "settings-ai-insights", "settings-ai-insights-narrow")
+              "settings-ai-insights", "settings-ai-insights-narrow", "settings-ai-insights-stored-narrow")
 MAX_SCENARIO_TIMEOUT_SECONDS = 120
 MATRIX_SCENARIOS = ("panel-matrix-one", "panel-matrix-four")
 

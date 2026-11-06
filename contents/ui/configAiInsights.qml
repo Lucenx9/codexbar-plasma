@@ -341,12 +341,15 @@ KCM.SimpleKCM {
 
         // Capped like the model row: a wider row would re-center the whole
         // form each time the provider changes.
-        RowLayout {
+        GridLayout {
+            columns: page.width < Kirigami.Units.gridUnit * 28 ? 1 : 2
             objectName: "aiInsightsKeyRow"
             Kirigami.FormData.label: i18n("API key:")
             visible: page.cloudProvider
             enabled: enabledCheck.checked && !page.busy
-            spacing: Kirigami.Units.smallSpacing
+            rowSpacing: Kirigami.Units.smallSpacing
+            columnSpacing: Kirigami.Units.smallSpacing
+            Layout.fillWidth: true
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
 
             Components.PlainControlsLabel {
@@ -360,18 +363,31 @@ KCM.SimpleKCM {
                 opacity: 0.7
             }
 
-            Controls.Button {
-                text: page.keyStatus === "present" ? i18n("Replace…") : i18n("Set API key…")
-                icon.name: "document-encrypt"
-                onClicked: page.run("set-key")
-            }
+            RowLayout {
+                spacing: Kirigami.Units.smallSpacing
+                Controls.Button {
+                    text: page.keyStatus === "present" ? i18n("Replace…") : i18n("Set API key…")
+                    icon.name: "document-encrypt"
+                    onClicked: page.run("set-key")
+                }
 
-            Controls.Button {
-                visible: page.keyStatus === "present"
-                text: i18n("Remove")
-                icon.name: "edit-delete"
-                onClicked: page.run("clear-key")
+                Controls.Button {
+                    visible: page.keyStatus === "present"
+                    text: i18n("Remove")
+                    icon.name: "edit-delete"
+                    onClicked: page.run("clear-key")
+                }
             }
+        }
+
+        Components.PlainControlsLabel {
+            visible: page.cloudProvider
+            text: i18n("API key changes take effect immediately.")
+            Layout.fillWidth: true
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            font: Kirigami.Theme.smallFont
+            opacity: 0.7
+            wrapMode: Text.WordWrap
         }
 
         // The model field yields width first, so a narrow dialog wraps the
@@ -500,6 +516,16 @@ KCM.SimpleKCM {
                     ? i18n("Requests are billed to your OpenAI API account. A ChatGPT subscription does not include API credits.")
                     : i18n("Requests are billed to your OpenRouter credits, at the price of the model you choose. Providers that may collect data are never used.")
             }
+        }
+
+        Components.PlainControlsLabel {
+            visible: page.cloudProvider
+            text: i18n("Sends aggregated usage only, without account names, emails, projects, paths, or prompts.")
+            Layout.fillWidth: true
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            font: Kirigami.Theme.smallFont
+            opacity: 0.7
+            wrapMode: Text.WordWrap
         }
 
         Components.DisclosureButton {

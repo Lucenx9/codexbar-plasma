@@ -2172,7 +2172,7 @@ msgstr ""
 "Active el estado de los servicios de los proveedores en General para recibir "
 "notificaciones de incidentes."
 
-#: contents/ui/configDiagnostics.qml contents/ui/configPanel.qml
+#: contents/ui/configPanel.qml
 msgid "All enabled providers"
 msgstr "Todos los proveedores activados"
 
@@ -2722,7 +2722,7 @@ msgstr "Recargar"
 msgid "Reload provider list"
 msgstr "Recargar lista de proveedores"
 
-#: contents/ui/configProviders.qml
+#: contents/ui/configDiagnostics.qml contents/ui/configProviders.qml
 msgid "All providers"
 msgstr "Todos los proveedores"
 
@@ -3101,6 +3101,7 @@ msgstr "No se ha podido analizar el JSON de actualización del widget: %1"
 msgid "A widget update is available."
 msgstr "Hay una actualización del widget disponible."
 
+#: contents/ui/configGeneral.qml
 #: contents/ui/controllers/WidgetUpdateController.qml
 msgid "Widget update %1 is available."
 msgstr "La actualización %1 del widget está disponible."
@@ -3767,13 +3768,6 @@ msgstr "Web"
 msgid "Choose a source"
 msgstr "Elija una fuente"
 
-#: contents/ui/configProviders.qml
-msgid ""
-"Choose a source to save. Automatic clears its saved override. Listed modes "
-"describe CLI configuration, not Linux availability. The source override in "
-"Diagnostics takes precedence in the widget."
-msgstr "Elija una fuente para guardar. Automático elimina el modo guardado. Los modos enumerados describen la configuración de la CLI, no la disponibilidad en Linux. La fuente establecida en Diagnóstico tiene prioridad en el widget."
-
 #, kde-format
 #: contents/ui/components/UsageWindowText.qml scripts/smoke/Capture.qml
 msgid "%1 (confidence unknown)"
@@ -4204,3 +4198,42 @@ msgid ""
 "This CodexBar version does not support editing other options for this "
 "provider."
 msgstr "Esta versión de CodexBar no permite editar otras opciones de este proveedor."
+
+#: contents/ui/configAiInsights.qml
+msgid "API key changes take effect immediately."
+msgstr "Los cambios de la clave API se aplican inmediatamente."
+
+#: contents/ui/configAiInsights.qml
+msgid ""
+"Sends aggregated usage only, without account names, emails, projects, paths, "
+"or prompts."
+msgstr "Envía solo datos de uso agregados, sin nombres de cuenta, correos, proyectos, rutas ni prompts."
+
+#: contents/ui/configGeneral.qml
+msgid "Widget update in progress…"
+msgstr "Actualización del widget en curso…"
+
+#: contents/ui/configGeneral.qml
+msgid ""
+"Requires daily CLI checks and Plasma notifications (Notifications page)."
+msgstr "Requiere comprobaciones diarias de la CLI y notificaciones de Plasma (página Notificaciones)."
+
+#: contents/ui/configProviders.qml
+msgctxt "Provider group, plural"
+msgid "Enabled"
+msgstr "Habilitados"
+
+#: contents/ui/configProviders.qml
+msgctxt "Provider group, plural"
+msgid "Disabled"
+msgstr "Deshabilitados"
+
+#: contents/ui/configProviders.qml
+msgid ""
+"Some sources are unavailable on Linux. The source override in Diagnostics "
+"takes precedence."
+msgstr "Algunas fuentes no están disponibles en Linux. La fuente seleccionada en Diagnóstico tiene prioridad."
+
+#: contents/ui/configProviders.qml
+msgid "Choose a source to save. Automatic restores the provider default."
+msgstr "Elija una fuente para guardar. Automático restaura la opción predeterminada del proveedor."

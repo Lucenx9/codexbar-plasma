@@ -337,48 +337,30 @@ TestCase {
         verify(resolvedCommandLabel.text !== "Not checked");
     }
 
-    // A middle-elided resolved path must stay readable on hover, and a path
-    // that fits must not grow a redundant tooltip.
-    function test_diagnosticsRevealsTruncatedResolvedPath() {
+    // The resolved executable is separate from a configured bare name and
+    // must remain fully available to keyboard selection at narrow widths.
+    function test_diagnosticsResolvedPathIsKeyboardSelectable() {
         var longPath = "/home/test/.local/share/codexbar-plasma/cli/releases/0.62.0/bin/codexbar";
-        var page = createPage("../contents/ui/configDiagnostics.qml", {
-            cfg_commandPath: longPath,
-            width: 240
-        });
-        if (!page)
-            return;
-
+        var page = createPage("../contents/ui/configDiagnostics.qml", {cfg_commandPath: longPath, width: 240});
+        if (!page) return;
         var versions = findChild(page, "cliVersionsController");
         versions.activeSource = "environment";
         versions.accept("environment", {
             "exit code": 0,
-            stdout: JSON.stringify({status: "local", version: "0.62.0",
-                path: longPath, manager: "managed"})
+            stdout: JSON.stringify({status: "local", version: "0.62.0", path: longPath, manager: "managed"})
         });
-        var label = findChild(page, "resolvedCommandLabel");
-        var tip = findChild(page, "resolvedCommandToolTip");
-        verify(label !== null && tip !== null);
-        compare(label.text, longPath);
-        tryVerify(function() { return label.truncated; });
-        compare(tip.plainText, longPath);
-        mouseMove(testCase, testCase.width - 1, testCase.height - 1);
-        wait(300);
-        mouseMove(label, label.width / 2, label.height / 2);
-        tryCompare(tip, "visible", true);
-        mouseMove(testCase, testCase.width - 1, testCase.height - 1);
-        tryCompare(tip, "visible", false);
-
-        versions.activeSource = "environment";
-        versions.accept("environment", {
-            "exit code": 0,
-            stdout: JSON.stringify({status: "local", version: "0.62.0",
-                path: "/usr/bin/codexbar", manager: "external"})
-        });
-        tryCompare(label, "text", "/usr/bin/codexbar");
-        tryVerify(function() { return !label.truncated; });
-        mouseMove(label, label.width / 2, label.height / 2);
-        wait(tip.delay + 100);
-        verify(!tip.visible);
+        var path = findChild(page, "resolvedCommandLabel");
+        verify(path !== null);
+        compare(path.text, longPath);
+        path.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_A, Qt.ControlModifier);
+        compare(path.selectedText, longPath);
+        keyClick(Qt.Key_Backspace);
+        compare(path.text, longPath);
+        verify(path.lineCount > 1);
+        var field = findChild(page, "commandPathField");
+        compare(field.cursorPosition, 0);
+        compare(page.cfg_commandPath, longPath);
     }
 
     function test_diagnosticsShowsSystemCliWhenItDiffers() {
@@ -727,7 +709,7 @@ TestCase {
         verify(!statusCheck.enabled);
     }
 
-    // A blank diagnostic provider means "all enabled providers": the page
+    // A blank diagnostic provider explicitly requests "all" providers: the page
     // must send the redacted diagnose command with a run nonce behind it.
     // /bin/echo settles the DataSource immediately, so the test observes the
     // issued command instead of the source text that built it.
@@ -918,6 +900,28 @@ TestCase {
 
     // The update status label renders the pending runtime status text, and
     // stays hidden while the status is empty.
+    function test_closedCliSectionKeepsReleaseAndFailureFeedback() {
+        var page = createPage("../contents/ui/configGeneral.qml");
+        if (!page) return;
+        var managed = findChild(page, "managedCliController");
+        managed.result = Object.assign({}, managed.result, {status: "ready", version: "0.61.0"});
+        var releases = findChild(page, "cliReleaseController");
+        var summary = findChild(page, "cliUpdatesSummary");
+        verify(summary.visible);
+        releases.result = Object.assign({}, releases.result, {status: "available", version: "0.61.0", latest: "0.62.0"});
+        releases.checked = true;
+        compare(summary.text, releases.statusText);
+        verify(summary.text.indexOf("0.62.0") >= 0);
+        var disclosure = findChild(page, "cliUpdatesDisclosure");
+        disclosure.expanded = true;
+        verify(!summary.visible);
+        disclosure.expanded = false;
+        compare(summary.text, releases.statusText);
+        managed.result = Object.assign({}, managed.result, {status: "network"});
+        compare(summary.text, managed.statusText);
+        compare(releases.activeSource, "");
+    }
+
     function test_updateStatusLabelShowsPendingStatus() {
         var page = createPage("../contents/ui/configGeneral.qml", {
             cfg_commandPath: "/usr/bin/codexbar",

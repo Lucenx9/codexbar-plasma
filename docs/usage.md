@@ -1188,12 +1188,13 @@ Update external copies with the original installation method; the widget does
 not run package managers or request privileges. The separate managed-copy option
 below downloads official binaries only after an explicit install action.
 
-**Diagnostics → Versions → Check versions** remains an offline probe. It reports
+**Diagnostics → CodexBar CLI → Check versions** remains an offline probe. It reports
 the widget version, installed CLI version, resolved command path, and installation
 guidance using the same local probe as the release checker. It also reports the
 PATH-resolved system CLI version whenever it differs from the selected command,
 so drift between a managed copy and a package-manager installation stays visible.
-Hovering a resolved command path that is shortened in the middle shows it in full.
+The resolved command path wraps in a read-only field and supports keyboard
+selection and copying. The editable command path shows its beginning when unfocused.
 Editing the command path clears the previous result. Prerelease or custom version
 strings are not silently treated as older stable versions. Network errors do not
 affect quota fetching or replace the installed version with a guessed value.
@@ -1371,8 +1372,9 @@ text. Provider names, model names, and units stay unchanged. An insight
 generated in another language, or with another provider, model, address, or
 privacy setting, is not shown as current; generating a new one is up to you.
 
-Cloud billing guidance stays visible in settings; **What is sent** expands the
-privacy details. **Saved insight** reads **None saved** when there is nothing to clear.
+Cloud billing guidance and a short description of transmitted data stay visible
+in settings; **What is sent** expands the detailed inventory. The API-key row
+notes that wallet changes take effect immediately. **Saved insight** reads **None saved** when there is nothing to clear.
 Only aggregated statistics leave the device when a cloud provider is selected:
 provider identifiers, quota percentages, window lengths, time to reset, CLI pace
 forecasts, service-incident severity, and last-week versus previous-week spend

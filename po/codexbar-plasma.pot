@@ -2269,6 +2269,10 @@ msgid "Remove"
 msgstr ""
 
 #: contents/ui/configAiInsights.qml
+msgid "API key changes take effect immediately."
+msgstr ""
+
+#: contents/ui/configAiInsights.qml
 msgid "Model:"
 msgstr ""
 
@@ -2308,6 +2312,12 @@ msgstr ""
 msgid ""
 "Requests are billed to your OpenRouter credits, at the price of the model "
 "you choose. Providers that may collect data are never used."
+msgstr ""
+
+#: contents/ui/configAiInsights.qml
+msgid ""
+"Sends aggregated usage only, without account names, emails, projects, paths, "
+"or prompts."
 msgstr ""
 
 #: contents/ui/configAiInsights.qml
@@ -2506,8 +2516,8 @@ msgstr ""
 msgid "Diagnostic provider:"
 msgstr ""
 
-#: contents/ui/configDiagnostics.qml contents/ui/configPanel.qml
-msgid "All enabled providers"
+#: contents/ui/configDiagnostics.qml contents/ui/configProviders.qml
+msgid "All providers"
 msgstr ""
 
 #: contents/ui/configDiagnostics.qml
@@ -2663,6 +2673,15 @@ msgid "Widget updates"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
+msgid "Widget update in progress…"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+#: contents/ui/controllers/WidgetUpdateController.qml
+msgid "Widget update %1 is available."
+msgstr ""
+
+#: contents/ui/configGeneral.qml
 msgid "Update checks are off"
 msgstr ""
 
@@ -2708,6 +2727,11 @@ msgstr ""
 
 #: contents/ui/configGeneral.qml
 msgid "Notify when a CLI release is available"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid ""
+"Requires daily CLI checks and Plasma notifications (Notifications page)."
 msgstr ""
 
 #: contents/ui/configGeneral.qml
@@ -2847,6 +2871,10 @@ msgstr ""
 #: contents/ui/configNotifications.qml
 msgid ""
 "Enable provider service status in General to receive incident notifications."
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "All enabled providers"
 msgstr ""
 
 #: contents/ui/configPanel.qml
@@ -3417,7 +3445,13 @@ msgid "Reload provider list"
 msgstr ""
 
 #: contents/ui/configProviders.qml
-msgid "All providers"
+msgctxt "Provider group, plural"
+msgid "Enabled"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgctxt "Provider group, plural"
+msgid "Disabled"
 msgstr ""
 
 #: contents/ui/configProviders.qml
@@ -3463,14 +3497,17 @@ msgid "%1 - enabled"
 msgstr ""
 
 #: contents/ui/configProviders.qml
+msgid ""
+"Some sources are unavailable on Linux. The source override in Diagnostics "
+"takes precedence."
+msgstr ""
+
+#: contents/ui/configProviders.qml
 msgid "Choose a source"
 msgstr ""
 
 #: contents/ui/configProviders.qml
-msgid ""
-"Choose a source to save. Automatic clears its saved override. Listed modes "
-"describe CLI configuration, not Linux availability. The source override in "
-"Diagnostics takes precedence in the widget."
+msgid "Choose a source to save. Automatic restores the provider default."
 msgstr ""
 
 #: contents/ui/configProviders.qml
@@ -3812,10 +3849,6 @@ msgstr ""
 
 #: contents/ui/controllers/WidgetUpdateController.qml
 msgid "A widget update is available."
-msgstr ""
-
-#: contents/ui/controllers/WidgetUpdateController.qml
-msgid "Widget update %1 is available."
 msgstr ""
 
 #: contents/ui/controllers/WidgetUpdateController.qml

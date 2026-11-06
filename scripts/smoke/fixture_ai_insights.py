@@ -26,7 +26,7 @@ def main():
         return
     snapshot_text = consume(args.request) if args.action == "generate" else ""
     if args.action == "key-status":
-        result = {"status": "present" if scenario == "settings-ai-insights" else "absent"}
+        result = {"status": "present" if scenario in ("settings-ai-insights", "settings-ai-insights-stored-narrow") else "absent"}
     elif args.action == "models":
         # Enough models to exercise the bounded model list.
         result = {"status": "ok", "key": "none", "models": [{"id": "fixture-model"}, {"id": "llama3.2:3b"}]
