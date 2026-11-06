@@ -1881,6 +1881,30 @@ Item {
                     preview.page.cfg_identifiedTokensEnabled = true;
                 }
                 navigationVerified = true;
+                return false;
+            }
+            if (scenario.indexOf("settings-general") === 0) {
+                var generalForm = findItem(preview.page, "generalSettingsForm");
+                verifyScenario(generalForm !== null, "General form must be available");
+                var formPosition = generalForm.mapToItem(preview.page, 0, 0);
+                verifyScenario(formPosition.x >= -1 && formPosition.x + generalForm.width <= preview.page.width + 1,
+                    "General form exceeds the settings viewport: " + formPosition.x + " + "
+                    + generalForm.width + " > " + preview.page.width);
+                var pendingLabels = [generalForm];
+                while (pendingLabels.length > 0) {
+                    var generalItem = pendingLabels.pop();
+                    if (!generalItem.visible) continue;
+                    if (generalItem.toString().indexOf("PlainControlsLabel") >= 0) {
+                        var labelPosition = generalItem.mapToItem(preview, 0, 0);
+                        verifyScenario(labelPosition.x >= -1 && labelPosition.x + generalItem.width <= preview.width + 1,
+                            "General text exceeds the viewport: " + generalItem.text + " ("
+                            + labelPosition.x + " + " + generalItem.width + " > " + preview.width + ")");
+                    }
+                    var generalChildren = generalItem.children || [];
+                    for (var childIndex = 0; childIndex < generalChildren.length; childIndex++)
+                        pendingLabels.push(generalChildren[childIndex]);
+                }
+
             }
             if (scenario.indexOf("settings-providers-keys") === 0) {
                 var keyPage = preview.page;

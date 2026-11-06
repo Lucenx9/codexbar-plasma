@@ -465,6 +465,7 @@ KCM.SimpleKCM {
     }
 
     Kirigami.FormLayout {
+        objectName: "generalSettingsForm"
         // Bound supporting text below so its implicit width cannot force the
         // whole form into narrow mode or push content past the viewport.
         Kirigami.Separator {
@@ -744,8 +745,10 @@ KCM.SimpleKCM {
             visible: widgetUpdatesDisclosure.expanded
             ColumnLayout {
                 Layout.fillWidth: true
-                Layout.leftMargin: page.mirrored ? 0 : Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing
-                Layout.rightMargin: page.mirrored ? Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing : 0
+                Layout.leftMargin: page.mirrored || page.width < Kirigami.Units.gridUnit * 28
+                    ? 0 : Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing
+                Layout.rightMargin: !page.mirrored || page.width < Kirigami.Units.gridUnit * 28
+                    ? 0 : Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing
                 spacing: Kirigami.Units.smallSpacing
                 Controls.CheckBox {
                     id: updateChecksEnabledCheck
@@ -908,8 +911,10 @@ KCM.SimpleKCM {
             visible: cliUpdatesDisclosure.expanded
             ColumnLayout {
                 Layout.fillWidth: true
-                Layout.leftMargin: page.mirrored ? 0 : Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing
-                Layout.rightMargin: page.mirrored ? Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing : 0
+                Layout.leftMargin: page.mirrored || page.width < Kirigami.Units.gridUnit * 28
+                    ? 0 : Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing
+                Layout.rightMargin: !page.mirrored || page.width < Kirigami.Units.gridUnit * 28
+                    ? 0 : Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing
                 spacing: Kirigami.Units.smallSpacing
                 Controls.CheckBox {
                     id: cliUpdateChecksEnabledCheck

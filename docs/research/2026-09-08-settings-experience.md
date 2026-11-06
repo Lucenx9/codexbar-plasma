@@ -191,7 +191,7 @@ states. Keep that distinction explicit when comparing screenshots.
 
 Provider inspection rows use a shared key width when there is room for two
 columns and stack each key above its value when narrow. General update controls
-use compact column groups; the interval label and editor share a row on wide
+use compact column groups, indented only when wide to preserve narrow text width; the interval label and editor share a row on wide
 windows. Saved-insight empty state is text beside the Clear action, and the
 minimal panel preset remains a bordered action disabled when already applied.
 

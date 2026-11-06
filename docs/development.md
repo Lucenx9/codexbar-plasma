@@ -1637,7 +1637,8 @@ QtTests additionally exercise pointer/keyboard activation and resizing.
 rendered quota capsules, and a 420-pixel layout with larger text and all additional
 information enabled. `settings-general-updates` and `settings-general-updates-narrow` expand both
 update groups and the optional identified subtotal, exercising the controls
-hidden in the resting General page. `settings-providers-default` captures the
+hidden in the resting General page. These captures also assert that visible
+help text stays inside the viewport, including after both groups expand. `settings-providers-default` captures the
 initial provider surface without expanding diagnostics.
 `settings-ai-insights-stored-narrow` exercises the stored-key status and both
 wallet actions at 420 pixels with larger text. The existing provider
