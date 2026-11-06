@@ -369,6 +369,29 @@ TestCase {
         compare(field.selectedText, longPath);
     }
 
+    function test_diagnosticsCommandPathTabNavigation_data() {
+        return [
+            {tag: "forward", key: Qt.Key_Tab, modifiers: Qt.NoModifier, forward: true},
+            {tag: "shift-tab", key: Qt.Key_Tab, modifiers: Qt.ShiftModifier, forward: false},
+            {tag: "backtab", key: Qt.Key_Backtab, modifiers: Qt.ShiftModifier, forward: false}
+        ];
+    }
+
+    function test_diagnosticsCommandPathTabNavigation(data) {
+        var configuredPath = "/opt/codexbar";
+        var page = createPage("../contents/ui/configDiagnostics.qml", {cfg_commandPath: configuredPath});
+        if (!page) return;
+        var field = findChild(page, "commandPathField");
+        field.forceActiveFocus(Qt.TabFocusReason);
+        field.cursorPosition = 5;
+        var next = field.nextItemInFocusChain(data.forward);
+        verify(next !== field);
+        keyClick(data.key, data.modifiers);
+        compare(page.cfg_commandPath, configuredPath);
+        verify(!field.activeFocus);
+        verify(next.activeFocus);
+    }
+
     function test_diagnosticsShowsSystemCliWhenItDiffers() {
         var page = createPage("../contents/ui/configDiagnostics.qml", {
             cfg_commandPath: "/home/test/.local/share/codexbar-plasma/cli/current/codexbar"

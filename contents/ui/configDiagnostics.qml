@@ -379,6 +379,15 @@ KCM.SimpleKCM {
                 // Wrapping reveals the whole path; Enter must not insert a new line.
                 Keys.onReturnPressed: function(event) { event.accepted = true }
                 Keys.onEnterPressed: function(event) { event.accepted = true }
+                Keys.onTabPressed: function(event) {
+                    var forward = !(event.modifiers & Qt.ShiftModifier)
+                    nextItemInFocusChain(forward).forceActiveFocus(forward ? Qt.TabFocusReason : Qt.BacktabFocusReason)
+                    event.accepted = true
+                }
+                Keys.onBacktabPressed: function(event) {
+                    nextItemInFocusChain(false).forceActiveFocus(Qt.BacktabFocusReason)
+                    event.accepted = true
+                }
                 Accessible.name: commandPathRow.Kirigami.FormData.label
                 Layout.fillWidth: true
                 placeholderText: "codexbar"
