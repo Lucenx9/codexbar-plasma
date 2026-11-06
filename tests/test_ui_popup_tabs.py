@@ -95,7 +95,7 @@ class PopupTabsTest(unittest.TestCase):
         for tabs_fragment in (
             "Layout.preferredHeight: Kirigami.Units.gridUnit * 2.35",
             "selected ? applet.withAlpha(Kirigami.Theme.focusColor, 0.18)",
-            "anchors.bottomMargin: 2",
+            'objectName: "providerTabQuotaGauge"',
             "providerReadableColor(",
             "activeFocusOnTab: true",
             "Accessible.role: Accessible.PageTab",
@@ -140,7 +140,7 @@ class PopupTabsTest(unittest.TestCase):
         ):
             if not code_contains(overview_tab_body, overview_tab_fragment):
                 raise AssertionError(f"the Overview tab must join the tab strip; missing {overview_tab_fragment!r}")
-        # A provider tab shows its quota as an underline and a failure as dimming; both
+        # A provider tab shows its quota as a gauge and a failure as dimming; both
         # must reach screen readers as text.
         if not code_contains(main_text, "Accessible.description: applet.switcherDescription(providerTab.modelData)"):
             raise AssertionError("provider tabs must describe their quota and error state to assistive tools")

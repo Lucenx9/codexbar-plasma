@@ -30,6 +30,11 @@ TestCase {
     function closeAiInsights() {}
 
     QtObject {
+        id: providerScroll
+        property string selectionKey: applet.selectedProviderID
+    }
+
+    QtObject {
         id: applet
         property var presentedProviders: []
         property var presentedOverviewProviders: []
@@ -91,7 +96,7 @@ TestCase {
 
         ColumnLayout {
             Layout.fillWidth: true
-            Repeater { PRODUCTION_ACTION_REPEATER }
+            ColumnLayout { PRODUCTION_ACTION_SECTION }
         }
     }
 
@@ -121,6 +126,7 @@ TestCase {
         applet.selectedProviderData = selected;
         applet.selectedProviderID = "codex";
         applet.lastPerformedAction = "";
+        providerActionsToggle.expanded = true;
     }
 
     function test_changedUsagePreservesKeyboardFocusAndUpdatesTheTab() {
@@ -167,6 +173,19 @@ TestCase {
         compare(providerActionRows.itemAt(1).modelData.title, "Refreshing\u2026");
     }
 
+    function test_actionsDisclosureOpensWithKeyboardAndClosesOnSelectionChange() {
+        providerActionsToggle.expanded = false;
+        providerActionsToggle.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Space);
+        compare(providerActionsToggle.expanded, true);
+        verify(providerActionRows.itemAt(0).visible);
+        applet.selectedProviderData = {provider: "codex", actions: actionsFor(false, "Refreshing")};
+        compare(providerActionsToggle.expanded, true);
+        applet.selectedProviderID = "claude";
+        compare(providerActionsToggle.expanded, false);
+        verify(!providerActionRows.itemAt(0).visible);
+    }
+
     function test_rosterChangesUpdateTheProviderActivatedByEachTab() {
         applet.presentedProviders = [provider("claude", "Claude", 30), provider("codex", "Codex", 40)];
         compare(providerTabRepeater.count, 2);
@@ -198,7 +217,7 @@ class ProviderTabRefreshTests(unittest.TestCase):
         qml = QML.replace("COMPONENTS_URL", (root / "contents/ui/components").as_uri())
         qml = qml.replace("PRODUCTION_REPEATER", applet.id_block("providerTabRepeater"))
         qml = qml.replace("PRODUCTION_OVERVIEW_REPEATER", applet.id_block("overviewProviderRepeater"))
-        qml = qml.replace("PRODUCTION_ACTION_REPEATER", applet.id_block("providerActionRows"))
+        qml = qml.replace("PRODUCTION_ACTION_SECTION", applet.id_block("providerActionsSection"))
         with tempfile.TemporaryDirectory(prefix="codexbar-provider-tabs-") as temporary:
             fixture = Path(temporary) / "tst_provider_tab_refresh.qml"
             fixture.write_text(qml, encoding="utf-8")

@@ -59,8 +59,8 @@ work and upstream contract requirements.
   quota choice, and visibility settings. Automatic meters gain the second quota
   without a new setting or additional CLI calls.
 - Provider tabs with usage bars, reset windows, account identity, status, and
-  credits. The tab surface marks the selected view; a provider tab's underline
-  is its automatic quota meter, never a selection mark.
+  credits. The tab surface marks the selected view; a provider tab's compact
+  vertical gauge shows its automatic quota independently of selection.
   The provider header and tab navigation stay visible while account choices,
   incident notices, errors, and usage details scroll below them. Switching
   provider or account starts the details at the top; refreshing the same account
@@ -180,11 +180,11 @@ work and upstream contract requirements.
   visible when the layout is mirrored for right-to-left languages.
 - Screen readers hear what the popup draws. Overview rows describe their
   detail line, then each named quota with its reset; provider tabs describe
-  the quota their underline draws, a last-known-usage note, and a refresh
+  the quota their gauge draws, a last-known-usage note, and a refresh
   error that only dims the tab visually. Sessions describe the optional session
   name, provider metadata, state and activity age in addition to the project title.
 - Provider-tab tooltips show the full provider name, the quota represented by
-  the underline, and any retained-data or refresh-error description on hover
+  the gauge, and any retained-data or refresh-error description on hover
   or keyboard focus. Tab widths and selection highlighting stay unchanged.
 - Hovering or keyboard-focusing an Overview row whose title, detail line or
   quota caption is cut short in a narrow popup shows the full text in a
@@ -206,8 +206,10 @@ work and upstream contract requirements.
   labels on keyboard focus as well as hover. The copy confirmation takes
   precedence over its action label.
   Usage-row hide actions appear immediately on hover or keyboard focus.
-  Provider action rows keep their full native hover and focus outlines visible
-  inside the scrollable popup.
+  **Provider actions** expands account management, provider links and widget
+  commands below the usage details. It starts collapsed and closes when the
+  provider or account changes. Expanded rows keep their full native hover and
+  focus outlines visible inside the scrollable popup.
 - Overview and provider quota percentages use the same slightly larger type
   size and align with the end of their meters. Quota percentages, cost summaries,
   provider totals and chart readout values request tabular digits from the theme
@@ -236,8 +238,8 @@ work and upstream contract requirements.
 - Popup tabs follow the usual tab keyboard pattern: Left and Right move focus
   between tabs and wrap around at either end, Home and End jump to the first
   and last tab, and Enter or Space opens the focused tab.
-  Selected tabs use a tint of the theme focus color; the quota underline remains
-  a usage meter. Selecting a tab keeps its width stable, so neighbouring tabs
+  Selected tabs use a tint of the theme focus color; the vertical quota gauge
+  remains a usage meter. Selecting a tab keeps its width stable, so neighbouring tabs
   stay in place.
   Overview, Usage & Spend, Sessions and provider headers use the theme's smaller
   text for summary and update metadata beneath their titles.
@@ -249,19 +251,23 @@ work and upstream contract requirements.
   chart point shows a vertical guide, including for zero values and entirely
   zero-valued series. Abbreviated point labels or values reveal their full text
   in a tooltip while hovering the plot or keeping keyboard focus there.
-  Keyboard inspection shows the readout immediately. These interactions also
-  apply to provider cost and detail charts.
+  Keyboard inspection shows the readout immediately. Cost charts show the peak
+  daily amount above the plot when no day is being inspected, giving the bars
+  a numeric scale at rest. These interactions also apply to provider cost and
+  detail charts; provider detail charts keep their existing readout behavior.
   Provider totals emphasize the selected Cost or Tokens metric, with the other
   figure on a smaller line beneath it. Missing amounts read as unavailable;
   measured zero stays zero. Long provider names and figures reveal their full
   text on hover. The heatmap groups the range into weekday
   rows, labelled with the system locale's short day names and starting on its
   first day of the week, so each weekday keeps its row as the range moves. Week
-  columns hold cells that widen up to a 2:1 tile, leaving empty cells for unavailable days in the loaded
-  calendar, including its first and last days, and for the rest of the newest
-  week. Measured zero remains a recorded
-  day. It stays hidden for ranges that fill a single column. A **Less–More** key
-  beside the heading shows the cell shades from the lowest to the highest daily value.
+  columns hold square cells. Outlined, untinted cells identify unavailable days
+  in the loaded calendar and padding at either end of the range. Measured zero
+  remains a tinted, recorded day. The heatmap stays hidden for ranges that fill
+  a single column. A **Less–More** key directly below the grid shows the cell
+  shades from the lowest to the highest daily value. For ranges up to five weeks,
+  a wide popup places provider totals beside the heatmap; longer ranges and
+  narrow popups stack them vertically.
   The heatmap is one keyboard Tab stop. Left/Right moves between weeks on the
   same weekday (mirrored for RTL); Up/Down moves within the week. Missing days
   are skipped, and Home/End select the first/last visible measured day. A readout

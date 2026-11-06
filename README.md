@@ -12,6 +12,8 @@ Available data and setup actions depend on the provider and the Linux CLI.
 ![Overview, Usage and Spend, Sessions, and a provider detail tab in the CodexBar popup](docs/codexbar-plasma-tour.gif)
 
 Breeze Dark with synthetic data. The widget follows your Plasma theme.
+Cost charts show the peak daily amount at rest; Provider actions expands
+account management and links below the usage details.
 
 ## Requirements
 

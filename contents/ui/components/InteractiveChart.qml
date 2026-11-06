@@ -14,6 +14,8 @@ ColumnLayout {
     property string kind: "bar"
     property string accessibleTitle: ""
     property string valueSuffix: ""
+    property bool showPeak: false
+    readonly property int peakIndex: showPeak ? ChartScale.maximumIndex(points) : -1
     // Owners that plot a long range can raise this; the default keeps the
     // inline provider detail charts at their existing size.
     property real plotHeight: Kirigami.Units.gridUnit * 3
@@ -103,12 +105,22 @@ ColumnLayout {
     }
 
     RowLayout {
+        id: chartReadout
         // Fading keeps the row from blinking as the pointer enters and leaves
         // the plot; the reserved height keeps the chart from shifting either way.
-        opacity: chart.hasActivePoint ? 1 : 0
+        opacity: chart.hasActivePoint || chart.peakIndex >= 0 ? 1 : 0
         Layout.fillWidth: true
         Layout.preferredHeight: chartReadoutFontMetrics.height
         spacing: Kirigami.Units.smallSpacing
+
+        HoverHandler { id: chartReadoutHover }
+
+        PlainToolTip {
+            visible: chartReadoutHover.hovered
+                && (chartPointLabel.truncated || chartPointValue.truncated)
+                && (chart.hasActivePoint || chart.peakIndex >= 0)
+            plainText: i18n("%1: %2", chartPointLabel.text, chartPointValue.text)
+        }
 
         Behavior on opacity {
             enabled: !plot.activeFocus
@@ -119,13 +131,17 @@ ColumnLayout {
 
         PlainPlasmaLabel {
             id: chartPointLabel
+            objectName: "chartPointLabel"
 
-            text: chart.readoutValid ? chart.pointLabel(chart.points[chart.readoutIndex]) : ""
+            text: chart.hasActivePoint && chart.readoutValid
+                ? chart.pointLabel(chart.points[chart.readoutIndex])
+                : chart.peakIndex >= 0 ? i18n("Peak daily usage")
+                : chart.readoutValid ? chart.pointLabel(chart.points[chart.readoutIndex]) : ""
             // The retained text outlives the fade, and a zero opacity does not
             // take an item out of the accessibility tree the way visibility
             // would. Without this a screen reader could still announce the last
             // point while the plot itself says to use the arrow keys.
-            Accessible.ignored: !chart.hasActivePoint
+            Accessible.ignored: !chart.hasActivePoint && chart.peakIndex < 0
             opacity: chart.applet.secondaryTextOpacity
             font.pixelSize: Kirigami.Theme.smallFont.pixelSize
             Layout.fillWidth: true
@@ -134,10 +150,14 @@ ColumnLayout {
 
         PlainPlasmaLabel {
             id: chartPointValue
+            objectName: "chartPointValue"
             font.features: { "tnum": 1 }
 
-            text: chart.readoutValid ? chart.pointDisplayValue(chart.points[chart.readoutIndex]) : ""
-            Accessible.ignored: !chart.hasActivePoint
+            text: chart.hasActivePoint && chart.readoutValid
+                ? chart.pointDisplayValue(chart.points[chart.readoutIndex])
+                : chart.peakIndex >= 0 ? chart.pointDisplayValue(chart.points[chart.peakIndex])
+                : chart.readoutValid ? chart.pointDisplayValue(chart.points[chart.readoutIndex]) : ""
+            Accessible.ignored: !chart.hasActivePoint && chart.peakIndex < 0
             font.weight: Font.DemiBold
             font.pixelSize: Kirigami.Theme.smallFont.pixelSize
             horizontalAlignment: Text.AlignRight

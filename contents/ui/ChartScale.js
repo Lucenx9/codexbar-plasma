@@ -11,6 +11,18 @@ function pointValue(point) {
 // properties, which can present them as non-Array list-likes.
 var maximumDomainPoints = 10000
 
+function maximumIndex(points) {
+    var length = points ? Number(points.length) : Number.NaN
+    if (!isFinite(length) || length < 1 || Math.floor(length) !== length)
+        return -1
+    var index = 0
+    for (var i = 1; i < Math.min(length, maximumDomainPoints); i++) {
+        if (pointValue(points[i]) > pointValue(points[index]))
+            index = i
+    }
+    return index
+}
+
 // Both signed detail points and nonnegative cost points arrive normalized.
 // Include zero so bar direction and line positions use the same domain.
 function domain(points) {

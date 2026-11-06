@@ -4170,3 +4170,11 @@ msgstr "Warnung bei %1 % Verbrauch"
 #, kde-format
 msgid "Critical at %1% used"
 msgstr "Kritisch bei %1 % Verbrauch"
+
+#: contents/ui/components/FullRepresentation.qml
+msgid "Provider actions"
+msgstr "Anbieteraktionen"
+
+#: contents/ui/components/InteractiveChart.qml
+msgid "Peak daily usage"
+msgstr "Höchste tägliche Nutzung"

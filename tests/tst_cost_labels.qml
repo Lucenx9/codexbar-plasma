@@ -235,7 +235,6 @@ TestCase {
             return row.label;
         }), [day("2026-09-25"), day("2026-09-24"), day("2026-09-23")]);
         compare(costLabels.costPeakLine(daily), "Peak: " + day("2026-09-24") + " - $4.00");
-        compare(costLabels.costSparklineSummary(daily), day("2026-09-25") + ": $2.00");
         compare(costLabels.costDayLabel("2026-09-24"), day("2026-09-24"));
         compare(costLabels.costDayLabel("Week 34"), "Week 34");
         compare(costLabels.costDayLabel("2026-02-30"), "2026-02-30");

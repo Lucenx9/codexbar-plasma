@@ -372,16 +372,11 @@ class CostSectionTests(unittest.TestCase):
         compare(fakeApplet.metricSet, "cost");
         verify(metricButtons[0].checked, "clicking the checked metric must not uncheck it");
         compare(charts[0].accessibleTitle, "Daily cost history");
-        // The latest-day line stays until a day is selected; the readout and
-        // drill-down heading then name that day, so the line would repeat it.
-        var summaries = all.filter(function(item) {
-            return item.objectName === "costSparklineSummaryLabel";
-        });
-        compare(summaries.length, 1);
-        verify(summaries[0].visible);
+        // A peak figure supplies scale without repeating the axis end date.
+        verify(charts[0].showPeak);
+        verify(charts[0].peakIndex >= 0);
         charts[0].selectedIndex = 0;
         compare(charts[0].selectedIndex, 0);
-        tryVerify(function() { return !summaries[0].visible; });
         fakeApplet.costHistoryShowsTokens = true;
         tryVerify(function() { return metricToggles[0].currentIndex === 1
                 && metricButtons[1].checked && !metricButtons[0].checked; });

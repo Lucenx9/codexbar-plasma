@@ -1503,6 +1503,11 @@ activate the current provider without binding or lifecycle warnings.
 
 ## Popup smoke tests
 
+`popup-content` also expands and collapses Provider actions, checking that its
+commands stay hidden initially and that the disclosure does not start a refresh.
+Cost-chart QtTests cover the resting peak, keyboard inspection, metric changes,
+measured zero and empty data.
+
 `tabs-icon-only` focuses a provider tab with text labels disabled and checks
 that its tooltip includes both the full name and the quota description.
 

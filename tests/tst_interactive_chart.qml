@@ -203,6 +203,34 @@ TestCase {
         compare(chart.pointLabel(null), "")
     }
 
+    function test_peakReadoutYieldsToInspectionAndUpdatesWithTheMetric() {
+        var chart = createChart({
+            applet: {secondaryTextOpacity: 0.7, canvasColor: function() { return "#000000" }},
+            width: 300, showPeak: true, accent: "blue",
+            points: [{label: "First", value: 2, displayValue: "$2"},
+                {label: "Second", value: 9, displayValue: "$9"}]
+        })
+        if (!chart)
+            return
+        var label = findChild(chart, "chartPointLabel")
+        var value = findChild(chart, "chartPointValue")
+        compare(label.text, "Peak daily usage")
+        compare(value.text, "$9")
+        var plot = chart.nextItemInFocusChain(true)
+        plot.forceActiveFocus(Qt.TabFocusReason)
+        keyClick(Qt.Key_Home)
+        compare(label.text, "First")
+        compare(value.text, "$2")
+        chart.selectedIndex = -1
+        compare(label.text, "Peak daily usage")
+        compare(value.text, "$9")
+        chart.points = [{label: "Zero", value: 0, displayValue: "0 tokens"}]
+        compare(value.text, "0 tokens")
+        chart.points = []
+        compare(chart.peakIndex, -1)
+        compare(value.text, "")
+    }
+
     function test_readoutPreservesNegativeDetailValues() {
         var chart = createChart({
             applet: {

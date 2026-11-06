@@ -373,7 +373,7 @@ Item {
                         onClicked: providerTab.activate()
                     }
 
-                    // The underline has no numeric readout. Hover and keyboard
+                    // The compact gauge has no numeric readout. Hover and keyboard
                     // focus reveal the quota, retained-data state and errors.
                     PlainToolTip {
                         parent: providerTabMouse
@@ -434,37 +434,24 @@ Item {
                             elide: Text.ElideRight
                             Layout.fillWidth: true
                         }
-                    }
-
-                    // The underline is a quota meter, never a selection
-                    // mark: the tab surface alone carries selection, so
-                    // a partly filled bar cannot read as a selected tab.
-                    Rectangle {
-                        visible: providerTab.meter >= 0
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.bottom: parent.bottom
-                        anchors.leftMargin: Kirigami.Units.smallSpacing
-                        anchors.rightMargin: Kirigami.Units.smallSpacing
-                        anchors.bottomMargin: 2
-                        height: 2
-                        radius: height / 2
-                        color: applet.withAlpha(Kirigami.Theme.textColor, 0.12)
-                        clip: true
 
                         Rectangle {
-                            width: providerTab.meter <= 0
-                                ? 0
-                                : Math.max(parent.height, parent.width * Math.max(0, Math.min(100, providerTab.meter)) / 100)
-                            height: parent.height
-                            radius: parent.radius
-                            color: providerTab.accent
+                            objectName: "providerTabQuotaGauge"
+                            visible: providerTab.meter >= 0
+                            Layout.preferredWidth: Kirigami.Units.smallSpacing
+                            Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                            radius: width / 2
+                            color: applet.withAlpha(Kirigami.Theme.textColor, 0.16)
+                            clip: true
+                            Accessible.ignored: true
 
-                            Behavior on width {
-                                NumberAnimation {
-                                    duration: Kirigami.Units.longDuration
-                                    easing.type: Easing.OutCubic
-                                }
+                            Rectangle {
+                                anchors.bottom: parent.bottom
+                                width: parent.width
+                                height: providerTab.meter <= 0 ? 0 : Math.max(parent.width,
+                                    parent.height * Math.max(0, Math.min(100, providerTab.meter)) / 100)
+                                radius: parent.radius
+                                color: providerTab.accent
                             }
                         }
                     }
@@ -1377,12 +1364,27 @@ Item {
                     }
 
                     ColumnLayout {
+                        id: providerActionsSection
                         visible: applet.presentedProviderData !== null
                         Layout.fillWidth: true
                         spacing: 0
 
                         Kirigami.Separator {
                             Layout.fillWidth: true
+                        }
+
+                        Components.DisclosureButton {
+                            id: providerActionsToggle
+                            objectName: "providerActionsToggle"
+                            plainText: i18n("Provider actions")
+                            onClicked: expanded = !expanded
+
+                            Connections {
+                                target: providerScroll
+                                function onSelectionKeyChanged() {
+                                    providerActionsToggle.expanded = false
+                                }
+                            }
                         }
 
                         Repeater {
@@ -1402,6 +1404,7 @@ Item {
                                     && applet.statusComponentsExpanded(applet.selectedProviderData)
 
                                 Layout.fillWidth: true
+                                visible: providerActionsToggle.expanded
                                 spacing: 0
 
                                 Kirigami.Separator {
@@ -1415,6 +1418,7 @@ Item {
 
                                 Controls.ItemDelegate {
                                     id: providerActionButton
+                                    objectName: "providerActionButton"
 
                                     Layout.fillWidth: true
                                     // Keep expanding native highlights inside the scroll clip.

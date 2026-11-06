@@ -12,6 +12,13 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Clarify popup navigation with compact vertical quota gauges beside provider
+  names, independently of tab selection. Emphasize cost summaries and show the
+  peak daily amount above resting cost charts. Group square heatmap cells with
+  their legend, distinguish unavailable days, and place provider totals beside
+  short ranges when the popup is wide enough. Keep account and link commands
+  available through a collapsed Provider actions disclosure.
+
 - Refine Sessions with a count of active sessions before the update time,
   smaller idle labels and clearer spacing between text lines. Keyboard focus
   highlights the card and reveals a truncated title in the copy action's tooltip;

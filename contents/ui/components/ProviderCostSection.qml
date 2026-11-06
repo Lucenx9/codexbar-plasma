@@ -177,6 +177,7 @@ ColumnLayout {
                 }
                 PlainPlasmaLabel {
                     text: tokenCostSection.amountText(modelData.amounts, modelData.valueMode)
+                    font.pointSize: Kirigami.Theme.defaultFont.pointSize * 1.4
                     font.features: { "tnum": 1 }
                     font.weight: Font.DemiBold
                     Layout.fillWidth: true
@@ -203,24 +204,9 @@ ColumnLayout {
         points: tokenCostSection.chartPoints
         accent: applet.providerReadableColor(providerData ? providerData.provider : "")
         kind: "bar"
+        showPeak: true
         accessibleTitle: tokenCostSection.costHistoryShowsTokens ? i18n("Daily token history") : i18n("Daily cost history")
         Layout.topMargin: Kirigami.Units.smallSpacing / 2
-    }
-
-    // The axis already dates both ends of the range and the summary grid
-    // names the window, so only the latest day's figure remains here. A
-    // selected day already shows its figure in the chart readout and the
-    // drill-down heading, so the line would only repeat it a third time.
-    PlainPlasmaLabel {
-        id: costSparklineSummaryLabel
-        objectName: "costSparklineSummaryLabel"
-
-        visible: tokenCostSection.chartPoints.length > 0 && tokenCostSection.selectedDay === null
-        text: tokenCostSection.tokenCost ? costLabels.costSparklineSummary(tokenCostSection.tokenCost.daily) : ""
-        font: Kirigami.Theme.smallFont
-        opacity: applet.secondaryTextOpacity
-        Layout.fillWidth: true
-        elide: Text.ElideRight
     }
 
     // A disclosure, not a primary action: a flat button keeps it from
