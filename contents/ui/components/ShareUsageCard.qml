@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
+import "../ThemeContrast.js" as ThemeContrast
 
 Rectangle {
     id: card
@@ -145,10 +146,12 @@ Rectangle {
                     model: shareBar.segments
                     Rectangle {
                         required property var modelData
+                        readonly property color brandColor: modelData.color
+                        objectName: "shareProviderSegment"
                         width: height + shareBar.available * modelData.share
                         height: shareBar.height
                         radius: height / 2
-                        color: modelData.color
+                        color: ThemeContrast.readableAccentColor(brandColor, card.color, card.ink)
                     }
                 }
             }
@@ -192,13 +195,16 @@ Rectangle {
                             radius: Kirigami.Units.cornerRadius * 1.5
                             color: card.withAlpha(card.ink, 0.04)
                             Rectangle {
+                                readonly property color brandColor: row.modelData.color
+                                objectName: "shareProviderIndicator"
                                 anchors.left: parent.left
                                 anchors.top: parent.top
                                 anchors.bottom: parent.bottom
                                 anchors.margins: Kirigami.Units.largeSpacing
                                 width: Kirigami.Units.smallSpacing / 2
                                 radius: width / 2
-                                color: row.modelData.color
+                                color: ThemeContrast.readableAccentColor(brandColor,
+                                    ThemeContrast.interpolateColor(card.color, card.ink, 0.04), card.ink)
                             }
                             PlainPlasmaLabel {
                                 id: badge

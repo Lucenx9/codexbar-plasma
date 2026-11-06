@@ -11,10 +11,13 @@ TestCase {
     })
 
     function test_registry083Identities() {
-        for (var id of ["soniox", "traecn", "chatbox", "abliteration", "opendesign"]) {
+        var dashboards = {soniox: "https://console.soniox.com", traecn: "https://www.trae.cn/dashboard#usage",
+            chatbox: "https://chatboxai.app", abliteration: "https://abliteration.ai",
+            opendesign: "https://open-design.ai/cloud/dashboard"}
+        for (var id of Object.keys(dashboards)) {
             compare(ProviderIdentity.providerIconFileName(id), id + ".svg")
             compare(ProviderIdentity.providerBrandColorChannels(id).length, 3)
-            verify(ProviderIdentity.providerDashboardUrl(id).indexOf("https://") === 0)
+            compare(ProviderIdentity.providerDashboardUrl(id), dashboards[id])
             verify(ProviderIdentity.providerDocsUrl(id).endsWith(id + ".md"))
         }
         compare(ProviderIdentity.resolveProviderKey("Trae-CN"), "traecn")

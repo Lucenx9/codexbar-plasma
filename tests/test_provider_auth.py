@@ -86,9 +86,10 @@ class ProviderAuthTests(unittest.TestCase):
                 "--action", action, "--provider", provider, "--title", "Sign in",
                 "--message", "Visit %1\nCode %2\nExpires in %3"]
 
-    def run_helper(self, events=(), mode="ok", action="login", value=""):
+    def run_helper(self, events=(), mode="ok", action="login", value="", request=""):
         self.root.joinpath('events').write_text(json.dumps(events))
-        result = subprocess.run(self.arguments(action), env={**self.env, "AUTH_MODE": mode},
+        arguments = self.arguments(action) + (["--request", request] if request else [])
+        result = subprocess.run(arguments, env={**self.env, "AUTH_MODE": mode},
                                 input=value, text=True, capture_output=True, timeout=10)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stderr, "")
@@ -293,11 +294,13 @@ P5Support.DataSource { engine: "executable"; connectedSources: []; interval: 0 }
         result = subprocess.run([*self.arguments('cancel-login'), '--request', request],
                                 env=self.env, capture_output=True, text=True, check=True)
         self.assertEqual(json.loads(result.stdout)['status'], 'cancelled')
+        self.assertEqual(self.run_helper([PENDING, .2, {'status':'authorized'}],
+                                         request=os.urandom(16).hex())['status'], 'ok')
+        self.root.joinpath('cli.pid').unlink()
         result = subprocess.run([*self.arguments(), '--request', request], env=self.env,
                                 capture_output=True, text=True, check=True)
         self.assertEqual(json.loads(result.stdout)['status'], 'cancelled')
         self.assertFalse(self.root.joinpath('cli.pid').exists())
-        self.assertEqual(self.run_helper([PENDING, .2, {'status':'authorized'}])['status'], 'ok')
 
 
 if __name__ == '__main__':

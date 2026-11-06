@@ -11,7 +11,9 @@ TestCase {
             verify(!Credentials.supportsCookie("claude", version, null));
             verify(!Credentials.supportsClear(version));
         }
-        for (var provider of Credentials.cookieProviders) {
+        for (var provider of ["claude", "claudeplatform", "commandcode", "cursor", "mistral",
+                              "ollama", "opencodego", "parallel", "raycast", "tinyapi",
+                              "traecn", "typesafe", "xapi"]) {
             verify(Credentials.supportsCookie(provider, "CodexBar 0.82.0", null));
             verify(Credentials.supportsCookie(provider, "CodexBar 0.83.0", {supportsConfigCookieHeader: true}));
             verify(!Credentials.supportsCookie(provider, "CodexBar 0.83.0", {supportsConfigCookieHeader: "true"}));

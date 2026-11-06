@@ -834,7 +834,9 @@ uses the Plasma colors and fonts and includes a small
 Totals include the loaded providers; at most eight provider rows and six models
 are shown, ranked by tokens, with omitted row counts. A colored bar under the
 totals and a percentage in each provider row show its share of tracked tokens;
-omitted providers leave the end of the bar uncolored. A nonzero share below 1%
+omitted providers leave the end of the bar uncolored. Provider indicators adjust
+their contrast against the card background in both the preview and exported image.
+A nonzero share below 1%
 reads `<1%`, and the bar is replaced by a plain divider when no provider
 reports tokens. Model rows without a token
 count are excluded from the ranking. Currencies remain separate. Unknown values

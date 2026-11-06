@@ -13,6 +13,7 @@ import QtTest
 import org.kde.kquickcontrolsaddons as KQuickControlsAddons
 import "COMPONENT_URL" as Components
 import "SHARE_URL" as ShareUsage
+import "CONTRAST_URL" as ThemeContrast
 TestCase {
     id: testCase
     name: "ShareUsageWindow"
@@ -72,6 +73,28 @@ TestCase {
         compare(window.feedback, "Could not save the image. Choose another location.");
         window.close();
     }
+    function test_darkProviderIndicatorsRemainVisibleInBothThemes() {
+        var window = createWindow();
+        var card = findChild(window, "shareUsageCard");
+        for (var background of ["#232629", "#eff0f1"]) {
+            card.color = background;
+            for (var brand of ["#1b1b1b", "#202020"]) {
+                var segment = findChild(card, "shareProviderSegment");
+                var indicator = findChild(card, "shareProviderIndicator");
+                verify(segment !== null && indicator !== null);
+                segment.modelData = {color: brand, share: 1};
+                indicator.parent.modelData = {color: brand, title: "Provider", detail: "100 tokens · USD 2", badge: "100%"};
+                verify(ThemeContrast.contrastRatio(segment.color, card.color) >= 3);
+                verify(ThemeContrast.contrastRatio(indicator.color,
+                    ThemeContrast.interpolateColor(card.color, card.ink, 0.04)) >= 3);
+                if (background === "#eff0f1") {
+                    compare(segment.color, brand);
+                    compare(indicator.color, brand);
+                }
+            }
+        }
+        window.close();
+    }
     function test_saveWhileCapturingFailsWithFeedback() {
         var window = createWindow();
         window.captureImage(false);
@@ -126,6 +149,7 @@ class ShareUsageWindowTests(unittest.TestCase):
             image = work / "shared image.png"
             source = QML.replace("COMPONENT_URL", (ROOT / "contents/ui/components").as_uri())
             source = source.replace("SHARE_URL", (ROOT / "contents/ui/ShareUsage.js").as_uri())
+            source = source.replace("CONTRAST_URL", (ROOT / "contents/ui/ThemeContrast.js").as_uri())
             source = source.replace("OUTPUT_URL", image.as_uri())
             source = source.replace("MISSING_URL", (work / "missing/image.png").as_uri())
             (work / "tst_export.qml").write_text(source)
