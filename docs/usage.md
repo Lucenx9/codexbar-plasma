@@ -210,7 +210,10 @@ work and upstream contract requirements.
   Usage-row hide actions appear immediately on hover or keyboard focus.
   **Provider actions** expands account management, provider links and widget
   commands below the usage details. It starts collapsed and closes when the
-  provider or account changes. Expanded rows keep their full native hover and
+  provider or account changes. Focus returns to its disclosure when a focused
+  action becomes hidden; focus on another visible control stays there.
+  Provider icons stay centered in icon-only tabs, including when their quota
+  gauge is visible. Expanded rows keep their full native hover and
   focus outlines visible inside the scrollable popup.
 - Overview and provider quota percentages use the same slightly larger type
   size and align with the end of their meters. Quota percentages, cost summaries,

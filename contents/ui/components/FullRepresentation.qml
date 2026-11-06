@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Window
 import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
@@ -396,6 +397,9 @@ Item {
 
                         anchors.fill: parent
                         anchors.margins: Kirigami.Units.smallSpacing
+                        anchors.rightMargin: applet.showPopupTabLabels && providerTabQuotaGauge.visible
+                            ? Kirigami.Units.smallSpacing * 2 + providerTabQuotaGauge.width
+                            : Kirigami.Units.smallSpacing
                         spacing: Kirigami.Units.smallSpacing
 
                         Item {
@@ -406,6 +410,8 @@ Item {
                         }
 
                         Kirigami.Icon {
+                            id: providerTabIcon
+                            objectName: "providerTabIcon"
                             source: applet.providerIconSource(modelData.provider)
                             fallback: "view-statistics"
                             isMask: applet.providerIconIsMask(modelData.provider)
@@ -434,26 +440,30 @@ Item {
                             elide: Text.ElideRight
                             Layout.fillWidth: true
                         }
+                    }
+
+                    Rectangle {
+                        id: providerTabQuotaGauge
+                        objectName: "providerTabQuotaGauge"
+                        visible: providerTab.meter >= 0
+                        anchors.right: parent.right
+                        anchors.rightMargin: Kirigami.Units.smallSpacing
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: Math.round(Kirigami.Units.gridUnit * 0.33)
+                        height: Kirigami.Units.iconSizes.small
+                        radius: width / 2
+                        color: applet.withAlpha(Kirigami.Theme.textColor, 0.55)
+                        clip: true
+                        Accessible.ignored: true
 
                         Rectangle {
-                            objectName: "providerTabQuotaGauge"
-                            visible: providerTab.meter >= 0
-                            Layout.preferredWidth: Math.round(Kirigami.Units.gridUnit * 0.33)
-                            Layout.preferredHeight: Kirigami.Units.iconSizes.small
-                            radius: width / 2
-                            color: applet.withAlpha(Kirigami.Theme.textColor, 0.55)
-                            clip: true
-                            Accessible.ignored: true
-
-                            Rectangle {
-                                objectName: "providerTabQuotaFill"
-                                anchors.bottom: parent.bottom
-                                width: parent.width
-                                height: providerTab.meter <= 0 ? 0 : Math.max(1,
-                                    Math.round(parent.height * Math.max(0, Math.min(100, providerTab.meter)) / 100))
-                                radius: parent.radius
-                                color: providerTab.accent
-                            }
+                            objectName: "providerTabQuotaFill"
+                            anchors.bottom: parent.bottom
+                            width: parent.width
+                            height: providerTab.meter <= 0 ? 0 : Math.max(1,
+                                Math.round(parent.height * Math.max(0, Math.min(100, providerTab.meter)) / 100))
+                            radius: parent.radius
+                            color: providerTab.accent
                         }
                     }
                 }
@@ -1370,6 +1380,21 @@ Item {
                         Layout.fillWidth: true
                         spacing: 0
 
+                        function collapseForSelection() {
+                            var window = providerActionsSection.Window.window
+                            var focused = window ? window.activeFocusItem : null
+                            var ancestor = focused
+                            while (ancestor && ancestor !== providerActionsToggle) {
+                                if (ancestor === providerActionsSection) {
+                                    providerActionsToggle.forceActiveFocus(focused.visualFocus
+                                        ? Qt.TabFocusReason : Qt.OtherFocusReason)
+                                    break
+                                }
+                                ancestor = ancestor.parent
+                            }
+                            providerActionsToggle.expanded = false
+                        }
+
                         Kirigami.Separator {
                             Layout.fillWidth: true
                         }
@@ -1383,7 +1408,7 @@ Item {
                             Connections {
                                 target: providerScroll
                                 function onSelectionKeyChanged() {
-                                    providerActionsToggle.expanded = false
+                                    providerActionsSection.collapseForSelection()
                                 }
                             }
                         }

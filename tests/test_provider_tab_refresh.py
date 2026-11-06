@@ -1,6 +1,7 @@
 """Exercise the production provider tabs, overview rows, and action rows while snapshots change."""
 
 import os
+import re
 from pathlib import Path
 import subprocess
 import tempfile
@@ -10,6 +11,7 @@ from ui_regression_support import Surface, root
 
 
 QML = '''import QtQuick
+import QtQuick.Window
 import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import QtTest
@@ -31,7 +33,7 @@ TestCase {
 
     QtObject {
         id: providerScroll
-        property string selectionKey: applet.selectedProviderID
+        PRODUCTION_SELECTION_KEY
     }
 
     QtObject {
@@ -43,6 +45,7 @@ TestCase {
         property var statusComponents: ({loading: false, failed: false, rows: []})
         property var statusComponentGroups: []
         property string selectedProviderID: "codex"
+        property string selectedAccount: ""
         property bool selectionInitialized: true
         property bool showPopupTabLabels: true
         property real roundedSurfaceRadius: 8
@@ -73,6 +76,8 @@ TestCase {
                 return candidate.provider === (item ? item.provider : "");
             });
         }
+        function selectedAccountForProvider() { return selectedAccount; }
+        function accountKey(item) { return item ? item.account || "" : ""; }
         function statusComponentsExpanded() { return false; }
         function toggleStatusComponentGroup() {}
         function actionRows(item) { return item && item.actions ? item.actions : []; }
@@ -125,6 +130,8 @@ TestCase {
         applet.presentedProviderData = selected;
         applet.selectedProviderData = selected;
         applet.selectedProviderID = "codex";
+        applet.selectedAccount = "";
+        applet.showPopupTabLabels = true;
         applet.lastPerformedAction = "";
         providerActionsToggle.expanded = true;
     }
@@ -181,22 +188,66 @@ TestCase {
         verify(providerActionRows.itemAt(0).visible);
         applet.selectedProviderData = {provider: "codex", actions: actionsFor(false, "Refreshing")};
         compare(providerActionsToggle.expanded, true);
+        applet.selectedProviderData = {provider: "claude", actions: actionsFor(true, "Refresh")};
         applet.selectedProviderID = "claude";
         compare(providerActionsToggle.expanded, false);
         verify(!providerActionRows.itemAt(0).visible);
     }
 
     function test_quotaGaugeKeepsSmallValuesProportional() {
-        for (var used of [0, 1, 12, 25, 43, 100]) {
+        for (var used of [-1, 0, 1, 12, 25, 43, 100]) {
             applet.presentedProviders = [provider("codex", "Codex", used), provider("claude", "Claude", used)];
             for (var index = 0; index < providerTabRepeater.count; index++) {
                 var tab = providerTabRepeater.itemAt(index);
                 var gauge = findChild(tab, "providerTabQuotaGauge");
                 var fill = findChild(tab, "providerTabQuotaFill");
                 verify(waitForPolish(gauge));
+                compare(gauge.visible, used >= 0);
+                if (used < 0)
+                    continue;
                 compare(fill.height, used === 0 ? 0 : Math.max(1, Math.round(gauge.height * used / 100)));
                 verify(gauge.width >= 5 && gauge.width <= 7);
             }
+        }
+    }
+
+    function test_iconOnlyTabsKeepIconsCenteredWithAndWithoutQuota() {
+        applet.showPopupTabLabels = false;
+        for (var used of [-1, 0, 43, 100]) {
+            applet.presentedProviders = [provider("codex", "Codex", used)];
+            var tab = providerTabRepeater.itemAt(0);
+            var icon = findChild(tab, "providerTabIcon");
+            tryVerify(function() { return tab.width > 0; });
+            verify(waitForPolish(tab));
+            fuzzyCompare(icon.mapToItem(tab, icon.width / 2, 0).x, tab.width / 2, 0.5);
+        }
+    }
+
+    function test_accountChangesCloseActionsAndPreserveVisibleFocus_data() {
+        return [
+            {tag: "selected-account-focused-action", identity: false, actionFocus: true},
+            {tag: "account-identity-focused-action", identity: true, actionFocus: true},
+            {tag: "selected-account-focused-tab", identity: false, actionFocus: false},
+            {tag: "account-identity-focused-tab", identity: true, actionFocus: false}
+        ];
+    }
+
+    function test_accountChangesCloseActionsAndPreserveVisibleFocus(data) {
+        var focused = data.actionFocus ? findChild(providerActionRows.itemAt(0), "providerActionButton")
+            : providerTabRepeater.itemAt(0).nextItemInFocusChain(true);
+        focused.forceActiveFocus(Qt.TabFocusReason);
+        verify(focused.activeFocus);
+        if (data.identity)
+            applet.selectedProviderData = {provider: "codex", account: "second-account", actions: actionsFor(true, "Refresh")};
+        else
+            applet.selectedAccount = "second-account";
+        compare(applet.selectedProviderID, "codex");
+        compare(providerActionsToggle.expanded, false);
+        if (data.actionFocus) {
+            verify(providerActionsToggle.activeFocus && providerActionsToggle.visible);
+            verify(providerActionsToggle.visualFocus);
+        } else {
+            verify(focused.activeFocus && focused.visible);
         }
     }
 
@@ -232,6 +283,10 @@ class ProviderTabRefreshTests(unittest.TestCase):
         qml = qml.replace("PRODUCTION_REPEATER", applet.id_block("providerTabRepeater"))
         qml = qml.replace("PRODUCTION_OVERVIEW_REPEATER", applet.id_block("overviewProviderRepeater"))
         qml = qml.replace("PRODUCTION_ACTION_SECTION", applet.id_block("providerActionsSection"))
+        selection_key = re.search(r"readonly property string selectionKey: JSON\.stringify\(\[[\s\S]*?\]\)",
+                                  applet.id_block("providerScroll"))
+        self.assertIsNotNone(selection_key)
+        qml = qml.replace("PRODUCTION_SELECTION_KEY", selection_key.group())
         with tempfile.TemporaryDirectory(prefix="codexbar-provider-tabs-") as temporary:
             fixture = Path(temporary) / "tst_provider_tab_refresh.qml"
             fixture.write_text(qml, encoding="utf-8")

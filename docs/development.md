@@ -1508,6 +1508,10 @@ commands stay hidden initially and that the disclosure does not start a refresh.
 Cost-chart QtTests cover the resting peak, keyboard inspection, metric changes,
 measured zero and empty data. Provider-tab refresh tests also exercise
 proportional gauge fills at zero, low and full quota percentages.
+They also check unavailable quotas, centered icon-only tabs, and disclosure
+focus recovery on account-only changes through the production selection key.
+Activity-layout checks cover square cells and the width and 7/8-day and
+35/36-day breakpoints, including changes in scrollbar visibility.
 
 `tabs-icon-only` focuses a provider tab with text labels disabled and checks
 that its tooltip includes both the full name and the quota description.

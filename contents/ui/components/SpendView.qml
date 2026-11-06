@@ -341,8 +341,13 @@ ColumnLayout {
 
             GridLayout {
                 id: activitySummary
+                objectName: "spendActivitySummary"
                 Layout.fillWidth: true
-                columns: width >= Kirigami.Units.gridUnit * 28
+                Layout.minimumWidth: 0
+                Layout.preferredWidth: 1
+                // The viewport stays stable when the grid's implicit size or
+                // scrollbar visibility changes at the layout breakpoint.
+                columns: view.width >= Kirigami.Units.gridUnit * 28
                     && view.heatmapDays.length > 7 && view.heatmapDays.length <= 35 ? 2 : 1
                 columnSpacing: Kirigami.Units.largeSpacing * 2
                 rowSpacing: Kirigami.Units.largeSpacing

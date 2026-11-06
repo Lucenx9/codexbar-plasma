@@ -27,6 +27,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep provider icons centered in icon-only popup tabs and return keyboard
+  focus to Provider actions when an account change collapses a focused action.
+  Keep the activity layout breakpoint independent of its own size hints.
+
 - Keep quota-marker tooltips reachable just outside thin meter tracks. The
   meter's paint clipping no longer cuts off its hover margin.
 
