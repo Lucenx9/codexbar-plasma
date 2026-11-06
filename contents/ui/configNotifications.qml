@@ -105,6 +105,7 @@ KCM.SimpleKCM {
                 id: colorScale
                 objectName: "quotaColorScale"
                 Layout.fillWidth: true
+                Layout.maximumWidth: Kirigami.Units.gridUnit * 10
                 Layout.preferredHeight: Kirigami.Units.smallSpacing * 2
                 radius: height / 2
                 Accessible.ignored: true

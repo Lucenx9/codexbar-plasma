@@ -159,8 +159,9 @@ with 13-point text. It applied the popup's visual language to settings:
 
 FormLayout does not forward `Layout` margins to its item containers, so
 indented dependent options sit inside a `ColumnLayout`. The KDE desktop style
-draws button text inside its style item, so disclosure summaries stay aligned
-with the button edge rather than an estimated text offset.
+draws button text inside its style item rather than exposing a QML label.
+Disclosure summaries use the theme icon size and spacing for their text inset,
+verified in both layout directions and in narrow Italian captures.
 
 
 ## Settings hierarchy and selection
@@ -187,3 +188,9 @@ highlight leaves each provider switch on the normal background for contrast.
 The ordinary provider and Diagnostics smoke scenarios intentionally expand
 redacted details and support preview. They are review states, not opening
 states. Keep that distinction explicit when comparing screenshots.
+
+Provider inspection rows use a shared key width when there is room for two
+columns and stack each key above its value when narrow. General update controls
+use compact column groups; the interval label and editor share a row on wide
+windows. Saved-insight empty state is text beside the Clear action, and the
+minimal panel preset remains a bordered action disabled when already applied.

@@ -543,10 +543,11 @@ KCM.SimpleKCM {
 
         Controls.TextField {
             id: diagnosticProviderField
+            objectName: "diagnosticProviderField"
             Kirigami.FormData.label: i18n("Diagnostic provider:")
             Accessible.name: i18n("Diagnostic provider:")
             Layout.preferredWidth: Kirigami.Units.gridUnit * 18
-            placeholderText: i18n("all")
+            placeholderText: i18n("All enabled providers")
             maximumLength: 256
         }
 
@@ -557,7 +558,7 @@ KCM.SimpleKCM {
 
             Controls.Button {
                 text: i18n("Run redacted diagnostics")
-                icon.name: "utilities-terminal"
+                icon.name: "utilities-terminal-symbolic"
                 enabled: !page.diagnosticRunning
                 onClicked: page.runDiagnostic()
             }

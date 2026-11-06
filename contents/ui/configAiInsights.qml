@@ -570,16 +570,23 @@ KCM.SimpleKCM {
             wrapMode: Text.WordWrap
         }
 
-        Controls.Button {
-            objectName: "aiInsightsClearButton"
+        RowLayout {
             Kirigami.FormData.label: i18n("Saved insight:")
-            text: page.cacheStored && !page.cacheCleared ? i18n("Clear") : i18n("None saved")
-            Accessible.name: i18n("Clear saved insight")
-            icon.name: "edit-clear-history"
-            enabled: page.cacheStored && !page.cacheCleared
-            onClicked: {
-                Plasmoid.configuration.aiInsightsCache = ""
-                page.cacheCleared = true
+            spacing: Kirigami.Units.smallSpacing
+            Components.PlainControlsLabel {
+                text: i18n("None saved")
+                visible: !page.cacheStored || page.cacheCleared
+            }
+            Controls.Button {
+                objectName: "aiInsightsClearButton"
+                text: i18n("Clear")
+                Accessible.name: i18n("Clear saved insight")
+                icon.name: "edit-clear-history"
+                enabled: page.cacheStored && !page.cacheCleared
+                onClicked: {
+                    Plasmoid.configuration.aiInsightsCache = ""
+                    page.cacheCleared = true
+                }
             }
         }
     }

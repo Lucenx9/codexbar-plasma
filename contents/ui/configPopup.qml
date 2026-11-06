@@ -309,6 +309,7 @@ KCM.SimpleKCM {
                 delegate: RowLayout {
                     required property var modelData
                     Layout.fillWidth: true
+                    Layout.maximumWidth: Kirigami.Units.gridUnit * 18
                     spacing: Kirigami.Units.smallSpacing
 
                     Kirigami.Icon {
@@ -368,6 +369,7 @@ KCM.SimpleKCM {
                         page.hiddenRowProviderTitle(modelData.provider), page.hiddenRowLabel(modelData))
 
                     Layout.fillWidth: true
+                    Layout.maximumWidth: Kirigami.Units.gridUnit * 18
                     spacing: Kirigami.Units.smallSpacing
 
                     Kirigami.Icon {
@@ -451,6 +453,7 @@ KCM.SimpleKCM {
                     onYChanged: page.revealFocusedOrderButton(upButton, downButton)
 
                     Layout.fillWidth: true
+                    Layout.maximumWidth: Kirigami.Units.gridUnit * 18
                     spacing: Kirigami.Units.smallSpacing
 
                     Components.PlainControlsLabel {

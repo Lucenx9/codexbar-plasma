@@ -736,4 +736,28 @@ TestCase {
         }
     }
 
+    function test_inspectionValuesAlignAndStackWhenNarrow() {
+        var page = createProvidersPage();
+        if (!page) return;
+        page.providers = [{provider: "codex", displayName: "Codex", enabled: true}];
+        page.selectedProviderID = "codex";
+        settingsToggle(page).expanded = true;
+        for (var width of [840, 420]) {
+            page.width = width;
+            wait(50);
+            var all = [];
+            walkPageObjects(page, all);
+            var values = all.filter(function(item) { return item.objectName === "providerSettingValue"; });
+            verify(values.length >= 3);
+            var firstX = values[0].mapToItem(page, 0, 0).x;
+            for (var value of values) {
+                fuzzyCompare(value.mapToItem(page, 0, 0).x, firstX, 1);
+                var label = findChild(value.parent, "providerSettingLabel");
+                verify(label !== null);
+                if (width === 840) verify(value.x >= label.x + label.width);
+                else verify(value.y >= label.y + label.height);
+            }
+        }
+    }
+
 }

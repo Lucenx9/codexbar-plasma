@@ -1906,10 +1906,6 @@ msgid "Diagnostic provider:"
 msgstr "Proveedor de diagnóstico:"
 
 #: contents/ui/configDiagnostics.qml
-msgid "all"
-msgstr "todos"
-
-#: contents/ui/configDiagnostics.qml
 msgid "Run redacted diagnostics"
 msgstr "Ejecutar diagnósticos con datos sensibles ocultos"
 
@@ -2176,7 +2172,7 @@ msgstr ""
 "Active el estado de los servicios de los proveedores en General para recibir "
 "notificaciones de incidentes."
 
-#: contents/ui/configPanel.qml
+#: contents/ui/configDiagnostics.qml contents/ui/configPanel.qml
 msgid "All enabled providers"
 msgstr "Todos los proveedores activados"
 
@@ -3763,12 +3759,6 @@ msgstr "Copiar informe"
 msgid "Report preview"
 msgstr "Vista previa del informe"
 
-#: contents/ui/configProviders.qml
-msgid ""
-"Other editable provider options require CodexBar descriptors, which this "
-"version does not expose."
-msgstr "Las demás opciones editables del proveedor requieren descriptores de CodexBar, que esta versión no ofrece."
-
 #: contents/ui/configProviders.qml scripts/smoke/Capture.qml
 msgid "Web"
 msgstr "Web"
@@ -4208,3 +4198,9 @@ msgstr "Los primeros %1 proveedores automáticamente"
 #: contents/ui/configPopup.qml
 msgid "Choose providers"
 msgstr "Elegir proveedores"
+
+#: contents/ui/configProviders.qml
+msgid ""
+"This CodexBar version does not support editing other options for this "
+"provider."
+msgstr "Esta versión de CodexBar no permite editar otras opciones de este proveedor."

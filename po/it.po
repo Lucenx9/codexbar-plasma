@@ -1871,7 +1871,7 @@ msgid ""
 "These options pin the widget to one provider or one source. Leave them blank "
 "to follow the providers enabled on the Providers page."
 msgstr ""
-"Queste opzioni limitano il widget a un solo provider o a una sola fonte. "
+"Queste opzioni limitano il widget a un solo provider o a una sola sorgente. "
 "Lasciale vuote per usare i provider abilitati nella pagina Provider."
 
 #: contents/ui/configDiagnostics.qml
@@ -1884,7 +1884,7 @@ msgstr "ID del provider (vuoto = tutti quelli abilitati)"
 
 #: contents/ui/configDiagnostics.qml
 msgid "Source:"
-msgstr "Fonte:"
+msgstr "Sorgente:"
 
 #: contents/ui/configDiagnostics.qml
 msgid "Provider default (blank)"
@@ -1908,10 +1908,6 @@ msgstr ""
 #: contents/ui/configDiagnostics.qml
 msgid "Diagnostic provider:"
 msgstr "Provider per la diagnostica:"
-
-#: contents/ui/configDiagnostics.qml
-msgid "all"
-msgstr "tutti"
 
 #: contents/ui/configDiagnostics.qml
 msgid "Run redacted diagnostics"
@@ -2180,7 +2176,7 @@ msgstr ""
 "Abilita lo stato dei servizi dei provider in Generali per ricevere notifiche "
 "sui disservizi."
 
-#: contents/ui/configPanel.qml
+#: contents/ui/configDiagnostics.qml contents/ui/configPanel.qml
 msgid "All enabled providers"
 msgstr "Tutti i provider abilitati"
 
@@ -2659,15 +2655,15 @@ msgstr "Supportata"
 
 #: contents/ui/configProviders.qml
 msgid "Use provider login/source"
-msgstr "Usa l'accesso o la fonte del provider"
+msgstr "Usa l'accesso o la sorgente del provider"
 
 #: contents/ui/configProviders.qml
 msgid "Source"
-msgstr "Fonte"
+msgstr "Sorgente"
 
 #: contents/ui/configProviders.qml
 msgid "Source mode"
-msgstr "Modalità della fonte"
+msgstr "Modalità della sorgente"
 
 #: contents/ui/configProviders.qml
 msgid "Auth modes"
@@ -2701,7 +2697,7 @@ msgstr "Chiavi delle impostazioni"
 msgid "Inspect redacted settings to view source and authentication details"
 msgstr ""
 "Esamina le impostazioni senza dati sensibili per vedere i dettagli sulla "
-"fonte e sull'autenticazione"
+"sorgente e sull'autenticazione"
 
 #: contents/ui/configProviders.qml
 msgid "%1 returned an unsupported descriptor command."
@@ -2778,7 +2774,7 @@ msgid ""
 "authentication details are available on request."
 msgstr ""
 "Le opzioni modificabili dei provider sono fornite da CodexBar. I dettagli "
-"sulla fonte e sull'autenticazione, privi di dati sensibili, sono disponibili "
+"sulla sorgente e sull'autenticazione, privi di dati sensibili, sono disponibili "
 "su richiesta."
 
 #: contents/ui/configProviders.qml
@@ -3761,12 +3757,6 @@ msgstr "Copia report"
 msgid "Report preview"
 msgstr "Anteprima del report"
 
-#: contents/ui/configProviders.qml
-msgid ""
-"Other editable provider options require CodexBar descriptors, which this "
-"version does not expose."
-msgstr "Le altre opzioni modificabili del provider richiedono i descrittori di CodexBar, che questa versione non espone."
-
 #: contents/ui/configProviders.qml scripts/smoke/Capture.qml
 msgid "Web"
 msgstr "Web"
@@ -4206,3 +4196,9 @@ msgstr "Primi %1 provider automaticamente"
 #: contents/ui/configPopup.qml
 msgid "Choose providers"
 msgstr "Scegli i provider"
+
+#: contents/ui/configProviders.qml
+msgid ""
+"This CodexBar version does not support editing other options for this "
+"provider."
+msgstr "Questa versione di CodexBar non consente di modificare altre opzioni per questo provider."

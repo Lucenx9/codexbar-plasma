@@ -14,6 +14,15 @@ import "general/ConfigValueSync.js" as ConfigValueSync
 KCM.SimpleKCM {
     id: page
 
+    readonly property Controls.ScrollView scrollView: contentItem as Controls.ScrollView
+
+    // Reserve the themed scrollbar width even when initial overflow disappears.
+    Binding {
+        target: page.scrollView
+        property: page.mirrored ? "leftPadding" : "rightPadding"
+        value: page.scrollView.Controls.ScrollBar.vertical.implicitWidth
+    }
+
     property string cfg_commandPath
     // cfg_*Default mirrors the schema default in contents/config/main.xml.
     // Plasma's configuration map also exposes a <key>Default entry, so the
@@ -712,6 +721,8 @@ KCM.SimpleKCM {
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             visible: !widgetUpdatesDisclosure.expanded
+            leftPadding: page.mirrored ? 0 : Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing
+            rightPadding: page.mirrored ? Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing : 0
             text: !page.cfg_updateChecksEnabled ? i18n("Update checks are off")
                 : page.cfg_autoUpdateEnabled ? i18n("Updates install automatically") : i18n("Update checks are on")
             font: Kirigami.Theme.smallFont
@@ -719,10 +730,10 @@ KCM.SimpleKCM {
             wrapMode: Text.WordWrap
         }
 
-        Kirigami.FormLayout {
-            wideMode: false
+        ColumnLayout {
+            spacing: Kirigami.Units.smallSpacing
             Layout.fillWidth: true
-            Layout.maximumWidth: widgetUpdatesDisclosure.expanded ? Infinity : 0
+            Layout.maximumWidth: widgetUpdatesDisclosure.expanded ? Kirigami.Units.gridUnit * 24 : 0
             visible: widgetUpdatesDisclosure.expanded
             Controls.CheckBox {
                 id: updateChecksEnabledCheck
@@ -731,28 +742,37 @@ KCM.SimpleKCM {
                 text: i18n("Check for widget updates")
             }
 
-            Controls.SpinBox {
-                id: autoUpdateIntervalHoursSpin
-                objectName: "autoUpdateIntervalHoursSpin"
-                Kirigami.FormData.label: i18n("Check every (hours):")
-                Accessible.name: autoUpdateIntervalHoursSpin.Kirigami.FormData.label
-                from: 1
-                to: 168
-                editable: true
-                enabled: updateChecksEnabledCheck.checked
-                valueFromText: function(text, locale) {
-                    try {
-                        var localized = Number.fromLocaleString(locale, text)
-                        if (isFinite(localized)) {
-                            return localized
-                        }
-                    } catch (error) {
-                        // Invalid locale text still needs the compatibility fallback.
-                    }
-                    var match = text.match(/\d+/)
-                    return match ? parseInt(match[0], 10) : value
+            GridLayout {
+                columns: page.width < Kirigami.Units.gridUnit * 28 ? 1 : 2
+                Layout.fillWidth: true
+                columnSpacing: Kirigami.Units.smallSpacing
+                rowSpacing: Kirigami.Units.smallSpacing
+                Components.PlainControlsLabel {
+                    text: autoUpdateIntervalHoursSpin.Kirigami.FormData.label
                 }
-                Layout.preferredWidth: Kirigami.Units.gridUnit * 10
+                Controls.SpinBox {
+                    id: autoUpdateIntervalHoursSpin
+                    objectName: "autoUpdateIntervalHoursSpin"
+                    Kirigami.FormData.label: i18n("Check every (hours):")
+                    Accessible.name: autoUpdateIntervalHoursSpin.Kirigami.FormData.label
+                    from: 1
+                    to: 168
+                    editable: true
+                    enabled: updateChecksEnabledCheck.checked
+                    valueFromText: function(text, locale) {
+                        try {
+                            var localized = Number.fromLocaleString(locale, text)
+                            if (isFinite(localized)) {
+                                return localized
+                            }
+                        } catch (error) {
+                            // Invalid locale text still needs the compatibility fallback.
+                        }
+                        var match = text.match(/\d+/)
+                        return match ? parseInt(match[0], 10) : value
+                    }
+                    Layout.preferredWidth: Kirigami.Units.gridUnit * 10
+                }
             }
 
             ColumnLayout {
@@ -852,16 +872,18 @@ KCM.SimpleKCM {
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             visible: !cliUpdatesDisclosure.expanded
+            leftPadding: page.mirrored ? 0 : Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing
+            rightPadding: page.mirrored ? Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing : 0
             text: managedCli.statusText
             font: Kirigami.Theme.smallFont
             opacity: 0.7
             wrapMode: Text.WordWrap
         }
 
-        Kirigami.FormLayout {
-            wideMode: false
+        ColumnLayout {
+            spacing: Kirigami.Units.smallSpacing
             Layout.fillWidth: true
-            Layout.maximumWidth: cliUpdatesDisclosure.expanded ? Infinity : 0
+            Layout.maximumWidth: cliUpdatesDisclosure.expanded ? Kirigami.Units.gridUnit * 24 : 0
             visible: cliUpdatesDisclosure.expanded
             Controls.CheckBox {
                 id: cliUpdateChecksEnabledCheck
@@ -953,6 +975,15 @@ KCM.SimpleKCM {
                 wrapMode: Text.WordWrap
             }
 
+            Components.PlainControlsLabel {
+                objectName: "managedCliStatusLabel"
+                text: managedCli.statusText
+                Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+                Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                wrapMode: Text.WordWrap
+            }
+
             RowLayout {
                 Controls.Button {
                     objectName: "installManagedCliButton"
@@ -1025,15 +1056,6 @@ KCM.SimpleKCM {
                         onClicked: page.managedInstallConfirming = false
                     }
                 }
-            }
-
-            Components.PlainControlsLabel {
-                objectName: "managedCliStatusLabel"
-                text: managedCli.statusText
-                Layout.fillWidth: true
-                Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-                Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-                wrapMode: Text.WordWrap
             }
 
             Controls.CheckBox {

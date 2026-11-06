@@ -644,13 +644,7 @@ TestCase {
     }
 
     function diagnosticProviderField(page) {
-        var all = [];
-        walkPageObjects(page, all);
-        for (var i = 0; i < all.length; i++) {
-            if (all[i].placeholderText === "all")
-                return all[i];
-        }
-        return null;
+        return findChild(page, "diagnosticProviderField");
     }
 
     // The master switch owns the detail toggles: turning it off must disable

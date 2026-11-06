@@ -1443,7 +1443,7 @@ KCM.SimpleKCM {
                 Layout.alignment: Qt.AlignTop
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 16
                 Layout.maximumWidth: providerPanes.columns === 2 ? Kirigami.Units.gridUnit * 18 : Infinity
-                Layout.preferredHeight: Kirigami.Units.gridUnit * (providerPanes.columns === 2 ? 28 : 14)
+                Layout.preferredHeight: Kirigami.Units.gridUnit * (providerPanes.columns === 2 ? 28 : 20)
                 contentWidth: availableWidth
                 clip: true
 
@@ -1743,7 +1743,7 @@ KCM.SimpleKCM {
                         Components.PlainControlsLabel {
                             Layout.fillWidth: true
                             text: page.providerDescriptorsUnavailable && page.providerSourceSetupSupported
-                                ? i18n("Other editable provider options require CodexBar descriptors, which this version does not expose.")
+                                ? i18n("This CodexBar version does not support editing other options for this provider.")
                                 : page.providerDescriptorsUnavailable
                                 ? i18n("This CodexBar version does not expose editable provider options. Enable/disable, supported API key setup, provider links, and redacted diagnostics remain available.")
                                 : i18n("Editable provider options come from CodexBar. Redacted source and authentication details are available on request.")
@@ -1816,6 +1816,7 @@ KCM.SimpleKCM {
                             model: page.providerSettingsRows(page.selectedProvider)
 
                             delegate: GridLayout {
+                                id: settingsRow
                                 columns: selectedProviderSurface.width < Kirigami.Units.gridUnit * 24 ? 1 : 2
                                 required property var modelData
 
@@ -1824,15 +1825,19 @@ KCM.SimpleKCM {
                                 columnSpacing: Kirigami.Units.smallSpacing
 
                                 Components.PlainControlsLabel {
+                                    objectName: "providerSettingLabel"
                                     text: modelData.label
                                     opacity: page.secondaryTextOpacity
-                                    Layout.preferredWidth: Kirigami.Units.gridUnit * 7
-                                    Layout.fillWidth: true
+                                    Layout.preferredWidth: Kirigami.Units.gridUnit * 8
+                                    Layout.minimumWidth: settingsRow.columns === 2 ? Kirigami.Units.gridUnit * 8 : 0
+                                    Layout.maximumWidth: settingsRow.columns === 2 ? Kirigami.Units.gridUnit * 8 : Infinity
+                                    Layout.fillWidth: settingsRow.columns === 1
                                     Layout.alignment: Qt.AlignTop
                                     wrapMode: Text.Wrap
                                 }
 
                                 Components.PlainControlsLabel {
+                                    objectName: "providerSettingValue"
                                     text: modelData.value
                                     Layout.fillWidth: true
                                     Layout.alignment: Qt.AlignTop

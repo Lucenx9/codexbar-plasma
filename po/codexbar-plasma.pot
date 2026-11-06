@@ -2369,11 +2369,11 @@ msgid "Saved insight:"
 msgstr ""
 
 #: contents/ui/configAiInsights.qml
-msgid "Clear"
+msgid "None saved"
 msgstr ""
 
 #: contents/ui/configAiInsights.qml
-msgid "None saved"
+msgid "Clear"
 msgstr ""
 
 #: contents/ui/configAiInsights.qml
@@ -2506,8 +2506,8 @@ msgstr ""
 msgid "Diagnostic provider:"
 msgstr ""
 
-#: contents/ui/configDiagnostics.qml
-msgid "all"
+#: contents/ui/configDiagnostics.qml contents/ui/configPanel.qml
+msgid "All enabled providers"
 msgstr ""
 
 #: contents/ui/configDiagnostics.qml
@@ -2847,10 +2847,6 @@ msgstr ""
 #: contents/ui/configNotifications.qml
 msgid ""
 "Enable provider service status in General to receive incident notifications."
-msgstr ""
-
-#: contents/ui/configPanel.qml
-msgid "All enabled providers"
 msgstr ""
 
 #: contents/ui/configPanel.qml
@@ -3487,8 +3483,8 @@ msgstr ""
 
 #: contents/ui/configProviders.qml
 msgid ""
-"Other editable provider options require CodexBar descriptors, which this "
-"version does not expose."
+"This CodexBar version does not support editing other options for this "
+"provider."
 msgstr ""
 
 #: contents/ui/configProviders.qml
