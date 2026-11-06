@@ -355,73 +355,7 @@ KCM.SimpleKCM {
 
     Kirigami.FormLayout {
         Kirigami.Separator {
-            Kirigami.FormData.label: i18n("Support report")
-            Kirigami.FormData.isSection: true
-        }
-        Components.PlainControlsLabel {
-            text: i18n("Collect an offline report to paste into an issue. Includes versions, CLI installation details, enabled provider IDs, the latest Diagnostics error and module checks. Filesystem paths and recognized credentials are omitted; review the preview before sharing.")
-            Layout.fillWidth: true
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            wrapMode: Text.WordWrap
-        }
-        Flow {
-            Layout.fillWidth: true
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            spacing: Kirigami.Units.smallSpacing
-            Controls.Button {
-                objectName: "collectSupportReportButton"
-                text: page.supportBusy ? i18n("Collecting…") : i18n("Collect support report")
-                icon.name: "view-refresh"
-                enabled: !page.supportBusy && !page.diagnosticRunning && !versions.busy && !systemVersions.busy
-                onClicked: page.collectSupportReport()
-            }
-            Controls.Button {
-                objectName: "copySupportReportButton"
-                text: page.supportCopied ? i18n("Copied") : i18n("Copy report")
-                icon.name: "edit-copy"
-                enabled: !page.supportBusy && page.supportTimestamp.length > 0
-                onClicked: page.copySupportReport()
-            }
-        }
-        Components.PlainInlineMessage {
-            plainText: page.supportError
-            type: Kirigami.MessageType.Warning
-            visible: page.supportError.length > 0
-            Layout.fillWidth: true
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-        }
-        Components.DisclosureButton {
-            id: supportPreviewDisclosure
-            objectName: "supportPreviewDisclosure"
-            plainText: i18n("Report preview")
-            expanded: false
-            visible: page.supportTimestamp.length > 0
-            onClicked: expanded = !expanded
-        }
-        Controls.ScrollView {
-            objectName: "supportReportScrollView"
-            // Kirigami FormLayout reads implicitHeight when sizing its row;
-            // preferredHeight alone leaves ScrollView at its full text height.
-            implicitHeight: Kirigami.Units.gridUnit * 14
-            clip: true
-            visible: supportPreviewDisclosure.visible && supportPreviewDisclosure.expanded
-            Layout.fillWidth: true
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            Layout.preferredHeight: Kirigami.Units.gridUnit * 14
-            Controls.TextArea {
-                objectName: "supportReportPreview"
-                text: page.supportReport
-                textFormat: TextEdit.PlainText
-                readOnly: true
-                selectByMouse: true
-                wrapMode: TextEdit.Wrap
-                Accessible.name: i18n("Report preview")
-            }
-        }
-        Kirigami.Separator {
-            Kirigami.FormData.label: i18n("Connection")
+            Kirigami.FormData.label: i18n("CodexBar CLI")
             Kirigami.FormData.isSection: true
         }
         RowLayout {
@@ -451,10 +385,7 @@ KCM.SimpleKCM {
             }
         }
 
-        Kirigami.Separator {
-            Kirigami.FormData.label: i18n("Versions")
-            Kirigami.FormData.isSection: true
-        }
+
 
         Components.PlainControlsLabel {
             id: widgetVersionLabel
@@ -540,6 +471,8 @@ KCM.SimpleKCM {
 
         Components.PlainControlsLabel {
             objectName: "cliInstallationLabel"
+            font: Kirigami.Theme.smallFont
+            opacity: 0.7
             text: versions.guidanceText
             visible: versions.checked && versions.result.path.length > 0
             Layout.fillWidth: true
@@ -549,7 +482,7 @@ KCM.SimpleKCM {
         }
 
         Components.PlainControlsLabel {
-            text: i18n("This checks installed versions only. Check upstream CLI releases in General / CLI updates.")
+            text: i18n("This checks installed versions only. Check upstream CLI releases in General / Updates / CodexBar CLI.")
             font: Kirigami.Theme.smallFont
             opacity: 0.7
             Layout.fillWidth: true
@@ -667,12 +600,13 @@ KCM.SimpleKCM {
         }
 
         Controls.ScrollView {
-            implicitHeight: Kirigami.Units.gridUnit * 16
+            implicitHeight: Kirigami.Units.gridUnit * (page.diagnosticOutput.length > 0 ? 12 : 4)
             clip: true
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            Layout.preferredHeight: Kirigami.Units.gridUnit * 16
+            Layout.preferredHeight: implicitHeight
+            Controls.ScrollBar.horizontal.policy: page.diagnosticOutput.length > 0 ? Controls.ScrollBar.AsNeeded : Controls.ScrollBar.AlwaysOff
 
             Controls.TextArea {
                 id: diagnosticOutputArea
@@ -682,8 +616,77 @@ KCM.SimpleKCM {
                 wrapMode: TextEdit.NoWrap
                 text: page.diagnosticOutput
                 font.family: "monospace"
-                placeholderText: i18n("Diagnostic output appears here.")
+                placeholderText: i18n("No output yet")
                 Accessible.name: i18n("Diagnostic output")
+            }
+        }
+
+        Kirigami.Separator {
+            Kirigami.FormData.label: i18n("Support report")
+            Kirigami.FormData.isSection: true
+        }
+        Components.PlainControlsLabel {
+            font: Kirigami.Theme.smallFont
+            opacity: 0.7
+            text: i18n("Collect an offline report to paste into an issue. Includes versions, CLI installation details, enabled provider IDs, the latest Diagnostics error and module checks. Filesystem paths and recognized credentials are omitted; review the preview before sharing.")
+            Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            wrapMode: Text.WordWrap
+        }
+        Flow {
+            Layout.fillWidth: true
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            spacing: Kirigami.Units.smallSpacing
+            Controls.Button {
+                objectName: "collectSupportReportButton"
+                text: page.supportBusy ? i18n("Collecting…") : i18n("Collect support report")
+                icon.name: "view-refresh"
+                enabled: !page.supportBusy && !page.diagnosticRunning && !versions.busy && !systemVersions.busy
+                onClicked: page.collectSupportReport()
+            }
+            Controls.Button {
+                objectName: "copySupportReportButton"
+                text: page.supportCopied ? i18n("Copied") : i18n("Copy report")
+                icon.name: "edit-copy"
+                enabled: !page.supportBusy && page.supportTimestamp.length > 0
+                onClicked: page.copySupportReport()
+            }
+        }
+        Components.PlainInlineMessage {
+            plainText: page.supportError
+            type: Kirigami.MessageType.Warning
+            visible: page.supportError.length > 0
+            Layout.fillWidth: true
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+        }
+        Components.DisclosureButton {
+            id: supportPreviewDisclosure
+            objectName: "supportPreviewDisclosure"
+            plainText: i18n("Report preview")
+            expanded: false
+            visible: page.supportTimestamp.length > 0
+            onClicked: expanded = !expanded
+        }
+        Controls.ScrollView {
+            objectName: "supportReportScrollView"
+            // Kirigami FormLayout reads implicitHeight when sizing its row;
+            // preferredHeight alone leaves ScrollView at its full text height.
+            implicitHeight: Kirigami.Units.gridUnit * 14
+            clip: true
+            visible: supportPreviewDisclosure.visible && supportPreviewDisclosure.expanded
+            Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            Layout.preferredHeight: Kirigami.Units.gridUnit * 14
+            Controls.TextArea {
+                objectName: "supportReportPreview"
+                text: page.supportReport
+                textFormat: TextEdit.PlainText
+                readOnly: true
+                selectByMouse: true
+                wrapMode: TextEdit.Wrap
+                Accessible.name: i18n("Report preview")
             }
         }
     }

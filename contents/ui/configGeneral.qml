@@ -639,7 +639,8 @@ KCM.SimpleKCM {
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            text: i18n("Manual loads in Usage & Spend only. Requires codexbar 0.75.0 or later with identified-token schema 1 or 2. Any API-price estimate is separate from spend totals; this is not account-wide usage.")
+            text: i18n("Load a separate Codex subtotal on request in Usage & Spend. It does not represent account-wide usage.")
+            visible: identifiedTokensCheck.checked
             wrapMode: Text.WordWrap
             font: Kirigami.Theme.smallFont
             opacity: 0.7
@@ -654,7 +655,7 @@ KCM.SimpleKCM {
             to: 365
             value: 30
             editable: true
-            enabled: identifiedTokensCheck.checked
+            visible: identifiedTokensCheck.checked
             valueFromText: function(text, locale) {
                 try {
                     var localized = Number.fromLocaleString(locale, text)
@@ -677,7 +678,7 @@ KCM.SimpleKCM {
             Accessible.name: identifiedSshHostField.Kirigami.FormData.label
             placeholderText: i18n("SSH alias or user@host")
             maximumLength: 255
-            enabled: identifiedTokensCheck.checked
+            visible: identifiedTokensCheck.checked
             Layout.fillWidth: true
         }
 
@@ -685,6 +686,7 @@ KCM.SimpleKCM {
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            visible: identifiedTokensCheck.checked
             text: identifiedSshHostField.text.length > 0 && !IdentifiedTokens.validHost(identifiedSshHostField.text)
                 ? i18n("Enter one SSH alias or user@host without spaces or command options.")
                 : i18n("SSH runs only with the separate local + SSH button. Configure authentication and trusted host keys beforehand; no SSH prompts are shown.")
@@ -697,316 +699,363 @@ KCM.SimpleKCM {
             Kirigami.FormData.label: i18n("Updates")
             Kirigami.FormData.isSection: true
         }
-
-        Controls.CheckBox {
-            id: updateChecksEnabledCheck
-            implicitWidth: 0
-            Layout.fillWidth: true
-            text: i18n("Check for widget updates")
+        Components.DisclosureButton {
+            id: widgetUpdatesDisclosure
+            objectName: "widgetUpdatesDisclosure"
+            plainText: i18n("Widget updates")
+            expanded: false
+            onClicked: expanded = !expanded
         }
 
-        Controls.SpinBox {
-            id: autoUpdateIntervalHoursSpin
-            objectName: "autoUpdateIntervalHoursSpin"
-            Kirigami.FormData.label: i18n("Check every (hours):")
-            Accessible.name: autoUpdateIntervalHoursSpin.Kirigami.FormData.label
-            from: 1
-            to: 168
-            editable: true
-            enabled: updateChecksEnabledCheck.checked
-            valueFromText: function(text, locale) {
-                try {
-                    var localized = Number.fromLocaleString(locale, text)
-                    if (isFinite(localized)) {
-                        return localized
-                    }
-                } catch (error) {
-                    // Invalid locale text still needs the compatibility fallback.
-                }
-                var match = text.match(/\d+/)
-                return match ? parseInt(match[0], 10) : value
-            }
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 10
+        Components.PlainControlsLabel {
+            Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            visible: !widgetUpdatesDisclosure.expanded
+            text: !page.cfg_updateChecksEnabled ? i18n("Update checks are off")
+                : page.cfg_autoUpdateEnabled ? i18n("Updates install automatically") : i18n("Update checks are on")
+            font: Kirigami.Theme.smallFont
+            opacity: 0.7
+            wrapMode: Text.WordWrap
         }
 
-        ColumnLayout {
+        Kirigami.FormLayout {
+            wideMode: false
             Layout.fillWidth: true
-            spacing: Kirigami.Units.smallSpacing
-
+            Layout.maximumWidth: widgetUpdatesDisclosure.expanded ? Infinity : 0
+            visible: widgetUpdatesDisclosure.expanded
             Controls.CheckBox {
-                id: updateNotificationsEnabledCheck
+                id: updateChecksEnabledCheck
                 implicitWidth: 0
                 Layout.fillWidth: true
-                Layout.leftMargin: Kirigami.Units.gridUnit
-                text: i18n("Notify when a widget update is available")
-                enabled: updateChecksEnabledCheck.checked && page.cfg_enableNotifications
+                text: i18n("Check for widget updates")
             }
 
-            Controls.CheckBox {
-                id: autoUpdateEnabledCheck
-                implicitWidth: 0
-                Layout.fillWidth: true
-                Layout.leftMargin: Kirigami.Units.gridUnit
-                text: i18n("Install widget updates automatically")
+            Controls.SpinBox {
+                id: autoUpdateIntervalHoursSpin
+                objectName: "autoUpdateIntervalHoursSpin"
+                Kirigami.FormData.label: i18n("Check every (hours):")
+                Accessible.name: autoUpdateIntervalHoursSpin.Kirigami.FormData.label
+                from: 1
+                to: 168
+                editable: true
                 enabled: updateChecksEnabledCheck.checked
+                valueFromText: function(text, locale) {
+                    try {
+                        var localized = Number.fromLocaleString(locale, text)
+                        if (isFinite(localized)) {
+                            return localized
+                        }
+                    } catch (error) {
+                        // Invalid locale text still needs the compatibility fallback.
+                    }
+                    var match = text.match(/\d+/)
+                    return match ? parseInt(match[0], 10) : value
+                }
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 10
             }
-        }
 
-        RowLayout {
-            Controls.Button {
-                objectName: "checkWidgetUpdateButton"
-                text: i18n("Check for widget updates now")
-                icon.name: "view-refresh"
-                enabled: !page.widgetUpdateBusy
-                onClicked: Plasmoid.configuration.widgetUpdateRequest = "check"
-            }
-            Controls.Button {
-                objectName: "installWidgetUpdateButton"
-                text: i18n("Install update %1", page.widgetUpdateAvailableVersion)
-                icon.name: "download"
-                visible: page.widgetUpdateAvailableVersion.length > 0
-                enabled: !page.widgetUpdateBusy
-                onClicked: Plasmoid.configuration.widgetUpdateRequest = "install"
-            }
-            Controls.BusyIndicator {
-                running: page.widgetUpdateBusy
-                opacity: running ? 1 : 0
-                Layout.preferredWidth: Kirigami.Units.iconSizes.small
-                Layout.preferredHeight: Kirigami.Units.iconSizes.small
-            }
-        }
-
-        Components.PlainControlsLabel {
-            id: lastUpdateCheckLabel
-
-            text: page.lastUpdateCheckText(autoUpdateLastCheck)
-            visible: updateChecksEnabledCheck.checked || autoUpdateLastCheck.length > 0
-            font: Kirigami.Theme.smallFont
-            opacity: 0.7
-            Layout.fillWidth: true
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            wrapMode: Text.WordWrap
-        }
-
-        Components.PlainControlsLabel {
-            id: lastUpdateStatusLabel
-
-            text: i18n("Last update status: %1", widgetUpdateLastStatus)
-            visible: widgetUpdateLastStatus.length > 0
-            font: Kirigami.Theme.smallFont
-            opacity: 0.7
-            Layout.fillWidth: true
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            wrapMode: Text.WordWrap
-        }
-
-        Components.PlainInlineMessage {
-            Layout.fillWidth: true
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            type: Kirigami.MessageType.Error
-            plainText: widgetUpdateLastError.slice(0, 500)
-            visible: widgetUpdateLastError.length > 0
-        }
-
-        Kirigami.Separator {
-            Kirigami.FormData.label: i18n("CLI updates")
-            Kirigami.FormData.isSection: true
-        }
-
-        Controls.CheckBox {
-            id: cliUpdateChecksEnabledCheck
-            implicitWidth: 0
-            Layout.fillWidth: true
-            text: i18n("Check upstream CLI releases daily")
-        }
-
-        ColumnLayout {
-            Layout.fillWidth: true
-
-            Controls.CheckBox {
-                id: cliUpdateNotificationsEnabledCheck
-                implicitWidth: 0
+            ColumnLayout {
                 Layout.fillWidth: true
-                Layout.leftMargin: Kirigami.Units.gridUnit
-                text: i18n("Notify when a CLI release is available")
-                enabled: cliUpdateChecksEnabledCheck.checked && page.cfg_enableNotifications
-            }
-        }
+                spacing: Kirigami.Units.smallSpacing
 
-        Components.PlainControlsLabel {
-            text: i18n("Checks GitHub for official releases. Update external installations through their original installation method.")
-            font: Kirigami.Theme.smallFont
-            opacity: 0.7
-            Layout.fillWidth: true
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            wrapMode: Text.WordWrap
-        }
+                Controls.CheckBox {
+                    id: updateNotificationsEnabledCheck
+                    implicitWidth: 0
+                    Layout.fillWidth: true
+                    Layout.leftMargin: Kirigami.Units.gridUnit
+                    text: i18n("Notify when a widget update is available")
+                    enabled: updateChecksEnabledCheck.checked && page.cfg_enableNotifications
+                }
 
-        RowLayout {
-            Controls.Button {
-                objectName: "checkCliReleaseButton"
-                text: i18n("Check CLI releases now")
-                icon.name: "view-refresh"
-                enabled: !cliUpdater.busy
-                onClicked: cliUpdater.checkNow()
-            }
-            Controls.BusyIndicator {
-                running: cliUpdater.busy
-                opacity: running ? 1 : 0
-                Layout.preferredWidth: Kirigami.Units.iconSizes.small
-                Layout.preferredHeight: Kirigami.Units.iconSizes.small
-            }
-        }
-
-        Components.PlainControlsLabel {
-            objectName: "cliReleaseStatusLabel"
-            text: cliUpdater.statusText
-            Layout.fillWidth: true
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            wrapMode: Text.WordWrap
-        }
-
-        Components.PlainControlsLabel {
-            text: cliUpdater.guidanceText
-            font: Kirigami.Theme.smallFont
-            opacity: 0.7
-            visible: cliUpdater.checked && cliUpdater.result.path.length > 0
-            Layout.fillWidth: true
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            wrapMode: Text.WordWrap
-        }
-
-        Controls.Button {
-            text: i18n("Open release page")
-            icon.name: "internet-services"
-            visible: cliUpdater.checked && cliUpdater.result.releaseUrl.length > 0
-            enabled: !cliUpdater.busy
-            onClicked: Qt.openUrlExternally(cliUpdater.result.releaseUrl)
-        }
-
-        Kirigami.Separator {
-            Kirigami.FormData.label: i18n("Managed CLI")
-            Kirigami.FormData.isSection: true
-        }
-
-        Components.PlainControlsLabel {
-            text: i18n("Install a private copy for this widget. System and package-manager installations remain available. Apply settings to use the selected copy.")
-            font: Kirigami.Theme.smallFont
-            opacity: 0.7
-            Layout.fillWidth: true
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            wrapMode: Text.WordWrap
-        }
-
-        RowLayout {
-            Controls.Button {
-                objectName: "installManagedCliButton"
-                text: managedCli.selected ? i18n("Update now")
-                    : managedCli.result.version.length > 0 ? i18n("Use managed CLI") : i18n("Install and select managed CLI")
-                icon.name: managedCli.selected ? "view-refresh"
-                    : managedCli.result.version.length > 0 ? "dialog-ok-apply" : "download"
-                enabled: !managedCli.busy && (managedCli.result.version.length > 0
-                    || page.installedCliProbeReady)
-                onClicked: {
-                    if (managedCli.selected) managedCli.run("update")
-                    else if (managedCli.result.version.length > 0) managedCli.run("install")
-                    else if (ManagedCli.needsInstallConfirmation(managedCli.result, {
-                            checked: installedCliProbe.checked,
-                            path: installedCliProbe.result.path, version: installedCliProbe.result.version
-                        })) page.managedInstallConfirming = true
-                    else managedCli.run("install")
+                Controls.CheckBox {
+                    id: autoUpdateEnabledCheck
+                    implicitWidth: 0
+                    Layout.fillWidth: true
+                    Layout.leftMargin: Kirigami.Units.gridUnit
+                    text: i18n("Install widget updates automatically")
+                    enabled: updateChecksEnabledCheck.checked
                 }
             }
-            Controls.BusyIndicator {
-                running: managedCli.busy || (managedCli.result.version.length === 0 && installedCliProbe.busy)
-                opacity: running ? 1 : 0
-                Layout.preferredWidth: Kirigami.Units.iconSizes.small
-                Layout.preferredHeight: Kirigami.Units.iconSizes.small
+
+            RowLayout {
+                Controls.Button {
+                    objectName: "checkWidgetUpdateButton"
+                    text: i18n("Check for widget updates now")
+                    icon.name: "view-refresh"
+                    enabled: !page.widgetUpdateBusy
+                    onClicked: Plasmoid.configuration.widgetUpdateRequest = "check"
+                }
+                Controls.Button {
+                    objectName: "installWidgetUpdateButton"
+                    text: i18n("Install update %1", page.widgetUpdateAvailableVersion)
+                    icon.name: "download"
+                    visible: page.widgetUpdateAvailableVersion.length > 0
+                    enabled: !page.widgetUpdateBusy
+                    onClicked: Plasmoid.configuration.widgetUpdateRequest = "install"
+                }
+                Controls.BusyIndicator {
+                    running: page.widgetUpdateBusy
+                    opacity: running ? 1 : 0
+                    Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                    Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                }
             }
-        }
 
-        Components.PlainControlsLabel {
-            visible: page.installedCliProbeFailed
-            text: i18n("Could not identify the installed CLI version.")
-            Layout.fillWidth: true
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            wrapMode: Text.WordWrap
-        }
-
-        Controls.Button {
-            objectName: "retryInstalledCliProbeButton"
-            visible: page.installedCliProbeFailed
-            text: i18n("Retry")
-            icon.name: "view-refresh"
-            enabled: !managedCli.busy && !installedCliProbe.busy
-            onClicked: installedCliProbe.checkNow()
-        }
-
-        ColumnLayout {
-            visible: page.managedInstallConfirming && !managedCli.busy
-                && !managedCli.selected && managedCli.result.version.length === 0
             Components.PlainControlsLabel {
-                objectName: "managedInstallConfirmLabel"
-                text: i18n("The selected %1 %2 keeps working outside the widget. Installing creates a second private copy and switches the widget to it; updates through the original method will no longer affect the widget.", installedCliProbe.result.path, installedCliProbe.result.version)
+                id: lastUpdateCheckLabel
+
+                text: page.lastUpdateCheckText(autoUpdateLastCheck)
+                visible: updateChecksEnabledCheck.checked || autoUpdateLastCheck.length > 0
+                font: Kirigami.Theme.smallFont
+                opacity: 0.7
                 Layout.fillWidth: true
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 24
                 Layout.maximumWidth: Kirigami.Units.gridUnit * 24
                 wrapMode: Text.WordWrap
             }
-            RowLayout {
-                Controls.Button {
-                    objectName: "confirmManagedInstallButton"
-                    text: i18n("Install second copy")
-                    enabled: !managedCli.busy
-                    onClicked: {
-                        page.managedInstallConfirming = false
-                        managedCli.run("install")
-                    }
-                }
-                Controls.Button {
-                    objectName: "cancelManagedInstallButton"
-                    text: i18n("Keep current CLI")
-                    onClicked: page.managedInstallConfirming = false
-                }
+
+            Components.PlainControlsLabel {
+                id: lastUpdateStatusLabel
+
+                text: i18n("Last update status: %1", widgetUpdateLastStatus)
+                visible: widgetUpdateLastStatus.length > 0
+                font: Kirigami.Theme.smallFont
+                opacity: 0.7
+                Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+                Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                wrapMode: Text.WordWrap
+            }
+
+            Components.PlainInlineMessage {
+                Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+                Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                type: Kirigami.MessageType.Error
+                plainText: widgetUpdateLastError.slice(0, 500)
+                visible: widgetUpdateLastError.length > 0
             }
         }
 
+
+        Components.DisclosureButton {
+            id: cliUpdatesDisclosure
+            objectName: "cliUpdatesDisclosure"
+            plainText: i18n("CodexBar CLI")
+            expanded: false
+            onClicked: expanded = !expanded
+        }
+
         Components.PlainControlsLabel {
-            objectName: "managedCliStatusLabel"
-            text: managedCli.statusText
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            visible: !cliUpdatesDisclosure.expanded
+            text: managedCli.statusText
+            font: Kirigami.Theme.smallFont
+            opacity: 0.7
             wrapMode: Text.WordWrap
         }
 
-        Controls.CheckBox {
-            objectName: "cliAutomaticUpdatesCheck"
-            implicitWidth: 0
+        Kirigami.FormLayout {
+            wideMode: false
             Layout.fillWidth: true
-            text: i18n("Automatically update the managed CLI daily")
-            checked: page.cfg_cliAutomaticUpdates
-            // Stays reachable while enabled so selecting another command cannot
-            // strand the setting on, leaving the helper to run with no effect.
-            enabled: (managedCli.selected || page.cfg_cliAutomaticUpdates) && !managedCli.busy
-            onToggled: page.cfg_cliAutomaticUpdates = checked
-        }
+            Layout.maximumWidth: cliUpdatesDisclosure.expanded ? Infinity : 0
+            visible: cliUpdatesDisclosure.expanded
+            Controls.CheckBox {
+                id: cliUpdateChecksEnabledCheck
+                implicitWidth: 0
+                Layout.fillWidth: true
+                text: i18n("Check upstream CLI releases daily")
+            }
 
-        Controls.Button {
-            objectName: "rollbackManagedCliButton"
-            text: i18n("Restore previous version (%1)", managedCli.result.previous)
-            icon.name: "edit-undo"
-            visible: managedCli.selected && managedCli.result.previous.length > 0
-            enabled: !managedCli.busy
-            onClicked: managedCli.run("rollback")
+            ColumnLayout {
+                Layout.fillWidth: true
+
+                Controls.CheckBox {
+                    id: cliUpdateNotificationsEnabledCheck
+                    implicitWidth: 0
+                    Layout.fillWidth: true
+                    Layout.leftMargin: Kirigami.Units.gridUnit
+                    text: i18n("Notify when a CLI release is available")
+                    enabled: cliUpdateChecksEnabledCheck.checked && page.cfg_enableNotifications
+                }
+            }
+
+            Components.PlainControlsLabel {
+                text: i18n("Checks GitHub for official releases. Update external installations through their original installation method.")
+                font: Kirigami.Theme.smallFont
+                opacity: 0.7
+                Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+                Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                wrapMode: Text.WordWrap
+            }
+
+            RowLayout {
+                Controls.Button {
+                    objectName: "checkCliReleaseButton"
+                    text: i18n("Check CLI releases now")
+                    icon.name: "view-refresh"
+                    enabled: !cliUpdater.busy
+                    onClicked: cliUpdater.checkNow()
+                }
+                Controls.BusyIndicator {
+                    running: cliUpdater.busy
+                    opacity: running ? 1 : 0
+                    Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                    Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                }
+            }
+
+            Components.PlainControlsLabel {
+                objectName: "cliReleaseStatusLabel"
+                text: cliUpdater.statusText
+                Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+                Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                wrapMode: Text.WordWrap
+            }
+
+            Components.PlainControlsLabel {
+                text: cliUpdater.guidanceText
+                font: Kirigami.Theme.smallFont
+                opacity: 0.7
+                visible: cliUpdater.checked && cliUpdater.result.path.length > 0
+                Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+                Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                wrapMode: Text.WordWrap
+            }
+
+            Controls.Button {
+                text: i18n("Open release page")
+                icon.name: "internet-services"
+                visible: cliUpdater.checked && cliUpdater.result.releaseUrl.length > 0
+                enabled: !cliUpdater.busy
+                onClicked: Qt.openUrlExternally(cliUpdater.result.releaseUrl)
+            }
+
+            Components.PlainControlsLabel {
+                text: i18n("Managed CLI")
+                font.weight: Font.DemiBold
+                Layout.topMargin: Kirigami.Units.largeSpacing
+            }
+
+            Components.PlainControlsLabel {
+                text: i18n("Install a private copy for this widget. System and package-manager installations remain available. Apply settings to use the selected copy.")
+                font: Kirigami.Theme.smallFont
+                opacity: 0.7
+                Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+                Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                wrapMode: Text.WordWrap
+            }
+
+            RowLayout {
+                Controls.Button {
+                    objectName: "installManagedCliButton"
+                    text: managedCli.selected ? i18n("Update now")
+                        : managedCli.result.version.length > 0 ? i18n("Use managed CLI") : i18n("Install and select managed CLI")
+                    icon.name: managedCli.selected ? "view-refresh"
+                        : managedCli.result.version.length > 0 ? "dialog-ok-apply" : "download"
+                    enabled: !managedCli.busy && (managedCli.result.version.length > 0
+                        || page.installedCliProbeReady)
+                    onClicked: {
+                        if (managedCli.selected) managedCli.run("update")
+                        else if (managedCli.result.version.length > 0) managedCli.run("install")
+                        else if (ManagedCli.needsInstallConfirmation(managedCli.result, {
+                                checked: installedCliProbe.checked,
+                                path: installedCliProbe.result.path, version: installedCliProbe.result.version
+                            })) page.managedInstallConfirming = true
+                        else managedCli.run("install")
+                    }
+                }
+                Controls.BusyIndicator {
+                    running: managedCli.busy || (managedCli.result.version.length === 0 && installedCliProbe.busy)
+                    opacity: running ? 1 : 0
+                    Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                    Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                }
+            }
+
+            Components.PlainControlsLabel {
+                visible: page.installedCliProbeFailed
+                text: i18n("Could not identify the installed CLI version.")
+                Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+                Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                wrapMode: Text.WordWrap
+            }
+
+            Controls.Button {
+                objectName: "retryInstalledCliProbeButton"
+                visible: page.installedCliProbeFailed
+                text: i18n("Retry")
+                icon.name: "view-refresh"
+                enabled: !managedCli.busy && !installedCliProbe.busy
+                onClicked: installedCliProbe.checkNow()
+            }
+
+            ColumnLayout {
+                visible: page.managedInstallConfirming && !managedCli.busy
+                    && !managedCli.selected && managedCli.result.version.length === 0
+                Components.PlainControlsLabel {
+                    objectName: "managedInstallConfirmLabel"
+                    text: i18n("The selected %1 %2 keeps working outside the widget. Installing creates a second private copy and switches the widget to it; updates through the original method will no longer affect the widget.", installedCliProbe.result.path, installedCliProbe.result.version)
+                    Layout.fillWidth: true
+                    Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+                    Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                    wrapMode: Text.WordWrap
+                }
+                RowLayout {
+                    Controls.Button {
+                        objectName: "confirmManagedInstallButton"
+                        text: i18n("Install second copy")
+                        enabled: !managedCli.busy
+                        onClicked: {
+                            page.managedInstallConfirming = false
+                            managedCli.run("install")
+                        }
+                    }
+                    Controls.Button {
+                        objectName: "cancelManagedInstallButton"
+                        text: i18n("Keep current CLI")
+                        onClicked: page.managedInstallConfirming = false
+                    }
+                }
+            }
+
+            Components.PlainControlsLabel {
+                objectName: "managedCliStatusLabel"
+                text: managedCli.statusText
+                Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+                Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                wrapMode: Text.WordWrap
+            }
+
+            Controls.CheckBox {
+                objectName: "cliAutomaticUpdatesCheck"
+                implicitWidth: 0
+                Layout.fillWidth: true
+                text: i18n("Automatically update the managed CLI daily")
+                checked: page.cfg_cliAutomaticUpdates
+                // Stays reachable while enabled so selecting another command cannot
+                // strand the setting on, leaving the helper to run with no effect.
+                enabled: (managedCli.selected || page.cfg_cliAutomaticUpdates) && !managedCli.busy
+                onToggled: page.cfg_cliAutomaticUpdates = checked
+            }
+
+            Controls.Button {
+                objectName: "rollbackManagedCliButton"
+                text: i18n("Restore previous version (%1)", managedCli.result.previous)
+                icon.name: "edit-undo"
+                visible: managedCli.selected && managedCli.result.previous.length > 0
+                enabled: !managedCli.busy
+                onClicked: managedCli.run("rollback")
+            }
         }
 
         Kirigami.Separator {

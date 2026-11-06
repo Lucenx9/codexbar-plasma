@@ -347,6 +347,13 @@ KCM.SimpleKCM {
             wrapMode: Text.WordWrap
         }
 
+        Components.PlainButton {
+            objectName: "minimalPanelPresetButton"
+            flat: true
+            plainText: i18n("Use monochrome icons and meters only")
+            onClicked: page.applyMinimalPanelPreset()
+        }
+
         Kirigami.Separator {
             Kirigami.FormData.label: i18n("Contents")
             Kirigami.FormData.isSection: true
@@ -473,11 +480,7 @@ KCM.SimpleKCM {
                 text: i18n("Credits")
             }
 
-            Components.PlainButton {
-                objectName: "minimalPanelPresetButton"
-                plainText: i18n("Use monochrome icons and meters only")
-                onClicked: page.applyMinimalPanelPreset()
-            }
+
         }
 
         Components.DisclosureButton {

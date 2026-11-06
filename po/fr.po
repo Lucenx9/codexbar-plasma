@@ -27,7 +27,7 @@ msgstr "Fournisseurs"
 msgid "Panel"
 msgstr "Panneau"
 
-#: contents/config/config.qml contents/ui/configPopup.qml
+#: contents/config/config.qml
 msgid "Popup"
 msgstr "Fenêtre contextuelle"
 
@@ -201,7 +201,10 @@ msgid "Open %1"
 msgstr "Ouvrir %1"
 
 #: contents/ui/components/CompactRepresentation.qml
+#: contents/ui/components/CostText.qml
 #: contents/ui/components/InteractiveChart.qml
+#: contents/ui/components/PanelText.qml
+#: contents/ui/components/ProviderCostDetails.qml
 #: contents/ui/components/SpendView.qml contents/ui/configPopup.qml
 #: contents/ui/configProviders.qml contents/ui/main.qml
 #: scripts/smoke/Capture.qml
@@ -214,6 +217,7 @@ msgstr "Copier la valeur"
 
 #: contents/ui/components/CopyableValue.qml
 #: contents/ui/components/ShareUsageWindow.qml
+#: contents/ui/configDiagnostics.qml
 msgid "Copied"
 msgstr "Copié"
 
@@ -303,7 +307,7 @@ msgid "For connection checks, open Diagnostics in widget settings."
 msgstr ""
 "Pour vérifier la connexion, ouvrez Diagnostic dans les paramètres du widget."
 
-#: contents/ui/components/FullRepresentation.qml
+#: contents/ui/components/FullRepresentation.qml contents/ui/configGeneral.qml
 msgid "Retry"
 msgstr "Réessayer"
 
@@ -329,11 +333,11 @@ msgstr "Utilisation et dépenses"
 msgid "Sessions"
 msgstr "Sessions"
 
-#: contents/ui/components/FullRepresentation.qml
+#: contents/ui/components/PopupTabStrip.qml
 msgid "Show previous tabs"
 msgstr "Afficher les onglets précédents"
 
-#: contents/ui/components/FullRepresentation.qml
+#: contents/ui/components/PopupTabStrip.qml
 msgid "Show more tabs"
 msgstr "Afficher plus d'onglets"
 
@@ -349,7 +353,7 @@ msgstr "CLI CodexBar introuvable"
 msgid "CodexBar CLI not found."
 msgstr "CLI CodexBar introuvable."
 
-#: contents/ui/components/FullRepresentation.qml
+#: contents/ui/components/FullRepresentation.qml scripts/smoke/Capture.qml
 msgid "Install and use CLI"
 msgstr "Installer et utiliser la CLI"
 
@@ -386,8 +390,8 @@ msgid "Restore %1"
 msgstr "Restaurer %1"
 
 #: contents/ui/components/FullRepresentation.qml
+#: contents/ui/components/ProviderCostDetails.qml
 #: contents/ui/components/RateWindowLabels.qml contents/ui/configPanel.qml
-#: contents/ui/main.qml
 msgid "Credits"
 msgstr "Crédits"
 
@@ -404,12 +408,12 @@ msgid "Usage dashboard"
 msgstr "Tableau de bord d'utilisation"
 
 #: contents/ui/components/InteractiveChart.qml
+#: contents/ui/components/SpendView.qml
 msgid "Use the arrow keys to inspect chart points"
 msgstr "Utilisez les touches fléchées pour examiner les points du graphique"
 
-#: contents/ui/components/OverviewProviderRow.qml
 #: contents/ui/components/PanelSettingsPreview.qml
-#: contents/ui/components/ProviderUsageRow.qml contents/ui/main.qml
+#: contents/ui/components/UsageWindowText.qml scripts/smoke/Capture.qml
 msgid "%1% %2"
 msgstr "%1 % %2"
 
@@ -453,35 +457,43 @@ msgstr "%"
 msgid "min"
 msgstr "min"
 
-#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
+#: contents/ui/components/PanelSettingsPreview.qml
+#: contents/ui/components/PanelText.qml
+#: contents/ui/components/UsageWindowText.qml
 msgid "left"
 msgstr "restants"
 
-#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
+#: contents/ui/components/PanelSettingsPreview.qml
+#: contents/ui/components/PanelText.qml
+#: contents/ui/components/UsageWindowText.qml scripts/smoke/Capture.qml
 msgid "used"
 msgstr "utilisés"
 
-#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
+#: contents/ui/components/PanelSettingsPreview.qml
+#: contents/ui/components/PanelText.qml
 msgid "%1% %2 at pace"
 msgstr "%1 % %2 au rythme prévu"
 
-#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
+#: contents/ui/components/PanelSettingsPreview.qml
+#: contents/ui/components/PanelText.qml
 msgid "%1% %2, behind pace"
 msgstr "%1 % %2, consommation trop élevée"
 
 #: contents/ui/components/PanelSettingsPreview.qml
+#: contents/ui/components/PanelText.qml
 #: contents/ui/components/ProviderCostSection.qml contents/ui/main.qml
 msgid "%1 - %2"
 msgstr "%1 - %2"
 
-#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
+#: contents/ui/components/PanelSettingsPreview.qml
+#: contents/ui/components/UsageWindowText.qml contents/ui/configGeneral.qml
 msgid "%1 minute"
 msgid_plural "%1 minutes"
 msgstr[0] "%1 minute"
 msgstr[1] "%1 minutes"
 
 #: contents/ui/components/PanelSettingsPreview.qml
-#: contents/ui/configGeneral.qml contents/ui/main.qml scripts/smoke/Capture.qml
+#: contents/ui/components/UsageWindowText.qml scripts/smoke/Capture.qml
 msgid "%1 hour"
 msgid_plural "%1 hours"
 msgstr[0] "%1 heure"
@@ -489,39 +501,45 @@ msgstr[1] "%1 heures"
 
 #: contents/ui/components/PanelSettingsPreview.qml
 #: contents/ui/components/ShareUsageWindow.qml
-#: contents/ui/components/SpendView.qml contents/ui/configGeneral.qml
-#: contents/ui/main.qml
+#: contents/ui/components/SpendView.qml
+#: contents/ui/components/UsageWindowText.qml
 msgid "%1 day"
 msgid_plural "%1 days"
 msgstr[0] "%1 jour"
 msgstr[1] "%1 jours"
 
-#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
+#: contents/ui/components/PanelSettingsPreview.qml
+#: contents/ui/components/UsageWindowText.qml
 msgid "Resets %1"
 msgstr "Réinitialisation %1"
 
-#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
+#: contents/ui/components/PanelSettingsPreview.qml
+#: contents/ui/components/UsageWindowText.qml
 msgid "%1 min"
 msgid_plural "%1 min"
 msgstr[0] "%1 min"
 msgstr[1] "%1 min"
 
-#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
+#: contents/ui/components/PanelSettingsPreview.qml
+#: contents/ui/components/UsageWindowText.qml
 msgid "%1h %2m"
 msgstr "%1 h %2 min"
 
-#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
+#: contents/ui/components/PanelSettingsPreview.qml
+#: contents/ui/components/UsageWindowText.qml
 msgid "%1h"
 msgid_plural "%1h"
 msgstr[0] "%1 h"
 msgstr[1] "%1 h"
 
-#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
+#: contents/ui/components/PanelSettingsPreview.qml
+#: contents/ui/components/UsageWindowText.qml
 msgid "%1d %2h"
 msgstr "%1 j %2 h"
 
-#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
 #, kde-format
+#: contents/ui/components/PanelSettingsPreview.qml
+#: contents/ui/components/UsageWindowText.qml
 msgid "%1d"
 msgid_plural "%1d"
 msgstr[0] "%1 j"
@@ -547,12 +565,13 @@ msgstr "Secondaire"
 msgid "Tertiary"
 msgstr "Tertiaire"
 
-#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
+#: contents/ui/components/PanelSettingsPreview.qml
 msgid "%1: %2% %3"
 msgstr "%1 : %2 % %3"
 
-#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
 #, kde-format
+#: contents/ui/components/PanelSettingsPreview.qml
+#: contents/ui/components/PanelText.qml
 msgid "%1cr"
 msgstr "%1 cr"
 
@@ -584,14 +603,16 @@ msgstr ""
 
 #: contents/ui/components/ProjectCostSection.qml
 #: contents/ui/components/ProviderCostSection.qml
-#: contents/ui/components/ShareUsageWindow.qml scripts/smoke/Capture.qml
+#: contents/ui/components/ShareUsageWindow.qml
+#: contents/ui/components/SpendView.qml scripts/smoke/Capture.qml
 msgid "Cost unavailable"
 msgstr "Coût indisponible"
 
+#: contents/ui/components/CostText.qml
 #: contents/ui/components/ProjectCostSection.qml
 #: contents/ui/components/ProviderCostSection.qml
-#: contents/ui/components/ShareUsageWindow.qml contents/ui/main.qml
-#: scripts/smoke/Capture.qml
+#: contents/ui/components/ShareUsageWindow.qml
+#: contents/ui/components/SpendView.qml scripts/smoke/Capture.qml
 msgid "Tokens unavailable"
 msgstr "Jetons indisponibles"
 
@@ -651,20 +672,19 @@ msgid_plural "%1 incomplete requests excluded"
 msgstr[0] "%1 requête incomplète exclue"
 msgstr[1] "%1 requêtes incomplètes exclues"
 
+#: contents/ui/components/CostMetricToggle.qml
+#: contents/ui/components/CostText.qml
 #: contents/ui/components/ProviderCostSection.qml
-#: contents/ui/components/RateWindowLabels.qml
-#: contents/ui/components/SpendView.qml contents/ui/main.qml
+#: contents/ui/components/RateWindowLabels.qml contents/ui/main.qml
 msgid "Cost"
 msgstr "Coût"
 
-#: contents/ui/components/ProviderCostSection.qml
+#: contents/ui/components/CostMetricToggle.qml
 #: contents/ui/components/RateWindowLabels.qml
-#: contents/ui/components/SpendView.qml
 msgid "Tokens"
 msgstr "Jetons"
 
-#: contents/ui/components/ProviderCostSection.qml
-#: contents/ui/components/SpendView.qml
+#: contents/ui/components/CostMetricToggle.qml
 msgid "History metric"
 msgstr "Mesure de l'historique"
 
@@ -677,6 +697,8 @@ msgstr "Une partie de l'historique local est indisponible : %1"
 msgid "Cost unavailable: %1"
 msgstr "Coût indisponible : %1"
 
+#: contents/ui/components/CostText.qml
+#: contents/ui/components/ProviderCostDetails.qml
 #: contents/ui/components/ProviderCostSection.qml contents/ui/main.qml
 msgid "Today"
 msgstr "Aujourd'hui"
@@ -855,7 +877,7 @@ msgstr "Deepgram"
 msgid "DeepInfra"
 msgstr "DeepInfra"
 
-#: contents/ui/components/ProviderNames.qml contents/ui/main.qml
+#: contents/ui/components/CostText.qml contents/ui/components/ProviderNames.qml
 msgid "DeepSeek"
 msgstr "DeepSeek"
 
@@ -967,7 +989,7 @@ msgstr "Manus"
 msgid "Xiaomi MiMo"
 msgstr "Xiaomi MiMo"
 
-#: contents/ui/components/ProviderNames.qml contents/ui/main.qml
+#: contents/ui/components/CostText.qml contents/ui/components/ProviderNames.qml
 msgid "MiniMax"
 msgstr "MiniMax"
 
@@ -1015,7 +1037,7 @@ msgstr "OpenCode"
 msgid "OpenCode Go"
 msgstr "OpenCode Go"
 
-#: contents/ui/components/ProviderNames.qml contents/ui/main.qml
+#: contents/ui/components/CostText.qml contents/ui/components/ProviderNames.qml
 msgid "OpenRouter"
 msgstr "OpenRouter"
 
@@ -1027,7 +1049,7 @@ msgstr "Perplexity"
 msgid "Pi"
 msgstr "Pi"
 
-#: contents/ui/components/ProviderNames.qml contents/ui/main.qml
+#: contents/ui/components/CostText.qml contents/ui/components/ProviderNames.qml
 msgid "Poe"
 msgstr "Poe"
 
@@ -1330,13 +1352,15 @@ msgstr ""
 msgid "Copy session name"
 msgstr "Copier le nom de la session"
 
+#: contents/ui/components/CostText.qml
 #: contents/ui/components/ShareUsageWindow.qml
-#: contents/ui/components/SpendView.qml contents/ui/main.qml
+#: contents/ui/components/SpendView.qml
 msgid "Month to date"
 msgstr "Mois en cours"
 
+#: contents/ui/components/CostText.qml
 #: contents/ui/components/ShareUsageWindow.qml
-#: contents/ui/components/SpendView.qml contents/ui/main.qml
+#: contents/ui/components/SpendView.qml
 msgid "All history"
 msgstr "Tout l'historique"
 
@@ -1433,6 +1457,7 @@ msgstr "Copier les statistiques"
 msgid "Save PNG…"
 msgstr "Enregistrer le PNG…"
 
+#: contents/ui/components/PlainNote.qml
 #: contents/ui/components/ShareUsageWindow.qml
 msgid "Close"
 msgstr "Fermer"
@@ -1640,6 +1665,7 @@ msgid "Replace…"
 msgstr "Remplacer…"
 
 #: contents/ui/configAiInsights.qml contents/ui/configProviders.qml
+#: scripts/smoke/Capture.qml
 msgid "Set API key…"
 msgstr "Définir la clé API…"
 
@@ -1782,12 +1808,9 @@ msgid "No diagnostic output."
 msgstr "Aucun résultat de diagnostic."
 
 #: contents/ui/configDiagnostics.qml contents/ui/configProviders.qml
+#: contents/ui/controllers/ProviderRosterController.qml
 msgid "codexbar exited with code %1"
 msgstr "codexbar s'est terminé avec le code %1"
-
-#: contents/ui/configDiagnostics.qml
-msgid "Connection"
-msgstr "Connexion"
 
 #: contents/ui/configDiagnostics.qml
 msgid "Command path:"
@@ -1798,14 +1821,11 @@ msgid "Use PATH"
 msgstr "Utiliser PATH"
 
 #: contents/ui/configDiagnostics.qml
-msgid "Versions"
-msgstr "Versions"
-
-#: contents/ui/configDiagnostics.qml
 msgid "CodexBar Plasma:"
 msgstr "CodexBar Plasma :"
 
-#: contents/ui/configDiagnostics.qml contents/ui/main.qml
+#: contents/ui/components/SessionLabels.qml contents/ui/configDiagnostics.qml
+#: contents/ui/main.qml
 msgid "Unknown"
 msgstr "Inconnu"
 
@@ -1830,11 +1850,11 @@ msgstr "Introuvable"
 msgid "System CLI (PATH):"
 msgstr "CLI système (PATH) :"
 
-#: contents/ui/configDiagnostics.qml contents/ui/main.qml
+#: contents/ui/components/CostText.qml contents/ui/configDiagnostics.qml
 msgid "%1 (%2)"
 msgstr "%1 (%2)"
 
-#: contents/ui/configDiagnostics.qml
+#: contents/ui/configDiagnostics.qml contents/ui/configGeneral.qml
 #: contents/ui/controllers/CliUpdateController.qml
 msgid "Could not identify the installed CLI version."
 msgstr "Impossible d’identifier la version installée de la CLI."
@@ -1842,14 +1862,6 @@ msgstr "Impossible d’identifier la version installée de la CLI."
 #: contents/ui/configDiagnostics.qml
 msgid "Check versions"
 msgstr "Vérifier les versions"
-
-#: contents/ui/configDiagnostics.qml
-msgid ""
-"This checks installed versions only. Check upstream CLI releases in "
-"General / CLI updates."
-msgstr ""
-"Cette vérification porte uniquement sur les versions installées. "
-"Consultez les versions de la CLI dans Général / Mises à jour de la CLI."
 
 #: contents/ui/configDiagnostics.qml
 msgid "Advanced provider override"
@@ -1909,10 +1921,6 @@ msgstr "Exécuter les diagnostics avec données sensibles masquées"
 #: contents/ui/configDiagnostics.qml
 msgid "List providers"
 msgstr "Lister les fournisseurs"
-
-#: contents/ui/configDiagnostics.qml
-msgid "Diagnostic output appears here."
-msgstr "Les résultats du diagnostic apparaissent ici."
 
 #: contents/ui/configGeneral.qml
 msgid "Last checked: never"
@@ -2020,10 +2028,6 @@ msgid "Last update status: %1"
 msgstr "Dernier état de mise à jour : %1"
 
 #: contents/ui/configGeneral.qml
-msgid "CLI updates"
-msgstr "Mises à jour de la CLI"
-
-#: contents/ui/configGeneral.qml
 msgid "Check upstream CLI releases daily"
 msgstr "Vérifier chaque jour les versions officielles de la CLI"
 
@@ -2043,11 +2047,12 @@ msgstr ""
 msgid "Check CLI releases now"
 msgstr "Vérifier les versions de la CLI maintenant"
 
-#: contents/ui/configGeneral.qml contents/ui/main.qml
+#: contents/ui/configGeneral.qml
+#: contents/ui/controllers/UpdateNotificationsController.qml
 msgid "Open release page"
 msgstr "Ouvrir la page de la version"
 
-#: contents/ui/configGeneral.qml scripts/smoke/Capture.qml
+#: contents/ui/configGeneral.qml
 msgid "Managed CLI"
 msgstr "CLI gérée"
 
@@ -2130,8 +2135,8 @@ msgstr "Avertissements de quota"
 msgid "Quota warning (% used):"
 msgstr "Avertissement de quota (% utilisé) :"
 
-#: contents/ui/configNotifications.qml contents/ui/main.qml
 #, kde-format
+#: contents/ui/components/ProviderCostDetails.qml
 msgid "%1% used"
 msgstr "%1 % utilisés"
 
@@ -2363,7 +2368,8 @@ msgstr "Quota, ordre et visibilité"
 msgid "Panel quota:"
 msgstr "Quota du panneau :"
 
-#: contents/ui/configPanel.qml
+#: contents/ui/configPanel.qml contents/ui/configProviders.qml
+#: scripts/smoke/Capture.qml
 msgid "Automatic"
 msgstr "Automatique"
 
@@ -2526,16 +2532,12 @@ msgstr[1] "Choisissez jusqu'à %1 fournisseurs"
 msgid "No enabled providers available for Overview."
 msgstr "Aucun fournisseur activé disponible pour la vue d'ensemble."
 
-#: contents/ui/configPopup.qml
-msgid "Use first %1 providers automatically"
-msgstr "Utiliser automatiquement les %1 premiers fournisseurs"
-
 #: contents/ui/configProviders.qml
 #: contents/ui/controllers/ProviderRosterController.qml
 msgid "Set the codexbar command path in Diagnostics."
 msgstr "Définissez le chemin de la commande codexbar dans Diagnostic."
 
-#: contents/ui/configProviders.qml
+#: contents/ui/configDiagnostics.qml contents/ui/configProviders.qml
 #: contents/ui/controllers/AccountsController.qml
 #: contents/ui/controllers/CostController.qml
 #: contents/ui/controllers/SessionsController.qml
@@ -2783,14 +2785,15 @@ msgstr ""
 msgid "Provider options"
 msgstr "Options du fournisseur"
 
-#: contents/ui/configProviders.qml
+#: contents/ui/config/ProviderDescriptorField.qml
 msgid "Not configured"
 msgstr "Non configuré"
 
-#: contents/ui/configProviders.qml
+#: contents/ui/config/ProviderDescriptorField.qml
 msgid "Set…"
 msgstr "Définir…"
 
+#: contents/ui/config/ProviderDescriptorField.qml
 #: contents/ui/configProviders.qml
 msgid "Save"
 msgstr "Enregistrer"
@@ -3109,7 +3112,8 @@ msgstr "Une mise à jour du widget est disponible."
 msgid "Widget update %1 is available."
 msgstr "La mise à jour %1 du widget est disponible."
 
-#: contents/ui/controllers/WidgetUpdateController.qml contents/ui/main.qml
+#: contents/ui/controllers/UpdateNotificationsController.qml
+#: contents/ui/controllers/WidgetUpdateController.qml
 msgid "Restart Plasma to apply the new widget version."
 msgstr "Redémarrez Plasma pour appliquer la nouvelle version du widget."
 
@@ -3160,39 +3164,39 @@ msgstr "Dernières données valides, à l’instant"
 msgid "Last known usage, %1 ago"
 msgstr "Dernières données valides, il y a %1"
 
-#: contents/ui/main.qml
+#: contents/ui/components/SessionLabels.qml
 msgid "Session %1"
 msgstr "Session %1"
 
-#: contents/ui/main.qml
+#: contents/ui/components/SessionLabels.qml
 msgid "Untitled session"
 msgstr "Session sans titre"
 
-#: contents/ui/main.qml
+#: contents/ui/components/SessionLabels.qml
 msgid "Active"
 msgstr "Active"
 
-#: contents/ui/main.qml
+#: contents/ui/components/SessionLabels.qml
 msgid "Idle"
 msgstr "Inactive"
 
-#: contents/ui/main.qml
+#: contents/ui/components/SessionLabels.qml
 msgid "Running"
 msgstr "En cours"
 
-#: contents/ui/main.qml
+#: contents/ui/components/SessionLabels.qml
 msgid "Working"
 msgstr "Au travail"
 
-#: contents/ui/main.qml
+#: contents/ui/components/SessionLabels.qml
 msgid "Command line"
 msgstr "Ligne de commande"
 
-#: contents/ui/main.qml
+#: contents/ui/components/SessionLabels.qml
 msgid "Desktop app"
 msgstr "Application de bureau"
 
-#: contents/ui/main.qml
+#: contents/ui/components/SessionLabels.qml
 msgid "IDE"
 msgstr "IDE"
 
@@ -3218,118 +3222,121 @@ msgid_plural "%1 days ago"
 msgstr[0] "Il y a %1 jour"
 msgstr[1] "Il y a %1 jours"
 
-#: contents/ui/main.qml
+#: contents/ui/components/CostText.qml
+#: contents/ui/components/ProviderCostDetails.qml
 msgid "Last 30 days"
 msgstr "30 derniers jours"
 
-#: contents/ui/main.qml
+#: contents/ui/components/CostText.qml
 msgid "Last %1 day"
 msgid_plural "Last %1 days"
 msgstr[0] "%1 dernier jour"
 msgstr[1] "%1 derniers jours"
 
-#: contents/ui/main.qml
+#: contents/ui/components/CostLabels.qml contents/ui/components/CostText.qml
 msgid "Latest"
 msgstr "Le plus récent"
 
-#: contents/ui/main.qml
+#: contents/ui/components/CostText.qml
 msgid "%1 subtotal"
 msgstr "Sous-total : %1"
 
-#: contents/ui/main.qml scripts/smoke/Capture.qml
+#: contents/ui/components/CostText.qml scripts/smoke/Capture.qml
 msgid "%1 total"
 msgstr "Total : %1"
 
-#: contents/ui/main.qml
+#: contents/ui/components/CostLabels.qml
 msgid "Total tokens"
 msgstr "Total de jetons"
 
-#: contents/ui/main.qml
+#: contents/ui/components/CostLabels.qml
 msgid "Input"
 msgstr "Entrée"
 
-#: contents/ui/main.qml
+#: contents/ui/components/CostLabels.qml
 msgid "Output"
 msgstr "Sortie"
 
-#: contents/ui/main.qml
+#: contents/ui/components/CostLabels.qml
 msgid "Cache read"
 msgstr "Lecture du cache"
 
-#: contents/ui/main.qml
+#: contents/ui/components/CostLabels.qml
 msgid "Cache write"
 msgstr "Écriture du cache"
 
-#: contents/ui/main.qml
+#: contents/ui/components/CostLabels.qml
 msgid "Peak: %1 - %2"
 msgstr "Pic : %1 - %2"
 
-#: contents/ui/main.qml
+#: contents/ui/components/CostLabels.qml
 msgid "Average/day: %1"
 msgstr "Moyenne/jour : %1"
 
-#: contents/ui/main.qml
+#: contents/ui/components/CostLabels.qml
 msgid "Average: %1 / 1M tokens"
 msgstr "Moyenne : %1 / 1 M de jetons"
 
-#: contents/ui/main.qml
+#: contents/ui/components/CostText.qml
 msgid "Codex dashboard"
 msgstr "Tableau de bord Codex"
 
-#: contents/ui/main.qml
+#: contents/ui/components/CostText.qml
 msgid "OpenAI API"
 msgstr "API OpenAI"
 
-#: contents/ui/main.qml
+#: contents/ui/components/CostText.qml
 msgid "Claude Admin"
 msgstr "Administration Claude"
 
-#: contents/ui/main.qml
+#: contents/ui/components/CostText.qml
 msgid "Z.ai"
 msgstr "Z.ai"
 
-#: contents/ui/main.qml
+#: contents/ui/components/CostText.qml
 msgid "Code review remaining"
 msgstr "Quota restant pour la revue de code"
 
-#: contents/ui/main.qml
+#: contents/ui/components/CostText.qml
 msgid "Credits remaining"
 msgstr "Crédits restants"
 
-#: contents/ui/main.qml
+#: contents/ui/components/CostText.qml
 msgid "Plan"
 msgstr "Offre"
 
-#: contents/ui/main.qml
+#: contents/ui/components/CostText.qml
 msgid "Signed in"
 msgstr "Connecté"
 
-#: contents/ui/main.qml
+#: contents/ui/components/CostText.qml
 msgid "7d"
 msgstr "7 j"
 
-#: contents/ui/main.qml
+#: contents/ui/components/CostText.qml
 msgid "30d"
 msgstr "30 j"
 
-#: contents/ui/main.qml
+#: contents/ui/components/CostText.qml
+#: contents/ui/components/ProviderCostDetails.qml
 msgid "This month"
 msgstr "Ce mois-ci"
 
-#: contents/ui/main.qml
+#: contents/ui/components/CostText.qml
 msgid "Top model"
 msgstr "Modèle principal"
 
-#: contents/ui/main.qml
+#: contents/ui/components/CostText.qml
 msgid "Usage mix"
 msgstr "Répartition de l'utilisation"
 
-#: contents/ui/main.qml
+#: contents/ui/components/CostText.qml
 msgid "Latest dashboard day"
 msgstr "Dernier jour du tableau de bord"
 
-#: contents/ui/main.qml
 #, kde-format
+#: contents/ui/components/CostText.qml
+#: contents/ui/components/ShareUsageWindow.qml
 msgid "%1%"
 msgstr "%1 %"
 
@@ -3365,53 +3372,53 @@ msgstr "Limites indisponibles"
 msgid "Extra"
 msgstr "Supplément"
 
-#: contents/ui/main.qml
+#: contents/ui/components/ProviderCostDetails.qml
 msgid "Extra usage"
 msgstr "Utilisation supplémentaire"
 
-#: contents/ui/main.qml
+#: contents/ui/components/ProviderCostDetails.qml
 msgid "Zen balance"
 msgstr "Solde Zen"
 
-#: contents/ui/main.qml
+#: contents/ui/components/ProviderCostDetails.qml
 msgid "Quota usage"
 msgstr "Utilisation du quota"
 
-#: contents/ui/main.qml
+#: contents/ui/components/ProviderCostDetails.qml
 msgid "API spend"
 msgstr "Dépenses API"
 
-#: contents/ui/main.qml
+#: contents/ui/components/ProviderCostDetails.qml
 msgid "Balance: %1"
 msgstr "Solde : %1"
 
-#: contents/ui/main.qml
+#: contents/ui/components/ProviderCostDetails.qml
 msgid "%1: %2 / %3"
 msgstr "%1 : %2 / %3"
 
-#: contents/ui/main.qml
+#: contents/ui/components/ProviderCostDetails.qml
 msgid "Your spend: %1"
 msgstr "Vos dépenses : %1"
 
-#: contents/ui/main.qml
+#: contents/ui/components/ProviderCostDetails.qml
 msgid "Reset credits"
 msgstr "Crédits de réinitialisation"
 
-#: contents/ui/main.qml
+#: contents/ui/components/ProviderCostDetails.qml
 msgid "%1 available"
 msgid_plural "%1 available"
 msgstr[0] "%1 disponible"
 msgstr[1] "%1 disponibles"
 
-#: contents/ui/main.qml
+#: contents/ui/components/ProviderCostDetails.qml
 msgid "Monthly credit limit"
 msgstr "Limite mensuelle de crédits"
 
-#: contents/ui/main.qml
+#: contents/ui/components/ProviderCostDetails.qml
 msgid "Used: %1, remaining: %2 of %3"
 msgstr "Utilisés : %1, restants : %2 sur %3"
 
-#: contents/ui/main.qml
+#: contents/ui/components/UsageWindowText.qml
 msgid "now"
 msgstr "maintenant"
 
@@ -3435,7 +3442,8 @@ msgstr "Maintenance"
 msgid "Status unknown"
 msgstr "État inconnu"
 
-#: contents/ui/main.qml
+#: contents/ui/components/ProviderDetailSection.qml contents/ui/main.qml
+#: scripts/smoke/Capture.qml
 msgid "Critical"
 msgstr "Critique"
 
@@ -3451,95 +3459,95 @@ msgstr "Incident"
 msgid "Maint."
 msgstr "Maint."
 
-#: contents/ui/main.qml
+#: contents/ui/components/UsageWindowText.qml
 msgid "On pace"
 msgstr "Rythme conforme"
 
-#: contents/ui/main.qml scripts/smoke/Capture.qml
 #, kde-format
+#: contents/ui/components/UsageWindowText.qml scripts/smoke/Capture.qml
 msgid "%1% in deficit"
 msgstr "%1 % au-delà des prévisions"
 
-#: contents/ui/main.qml
 #, kde-format
+#: contents/ui/components/UsageWindowText.qml
 msgid "%1% in reserve"
 msgstr "%1 % en réserve"
 
-#: contents/ui/main.qml scripts/smoke/Capture.qml
 #, kde-format
+#: contents/ui/components/UsageWindowText.qml scripts/smoke/Capture.qml
 msgid "Expected %1% used"
 msgstr "Utilisation prévue : %1 %"
 
-#: contents/ui/main.qml
+#: contents/ui/components/UsageWindowText.qml
 msgid "Lasts until reset"
 msgstr "Suffisant jusqu'à la réinitialisation"
 
-#: contents/ui/main.qml
+#: contents/ui/components/UsageWindowText.qml
 msgid "Runs out now"
 msgstr "Épuisement prévu maintenant"
 
-#: contents/ui/main.qml scripts/smoke/Capture.qml
+#: contents/ui/components/UsageWindowText.qml scripts/smoke/Capture.qml
 msgid "Runs out in %1"
 msgstr "Épuisement prévu dans %1"
 
-#: contents/ui/main.qml
+#: contents/ui/components/ProviderNotificationText.qml
 msgid "%1 status issue"
 msgstr "Incident de service chez %1"
 
-#: contents/ui/main.qml
+#: contents/ui/components/ProviderNotificationText.qml
 msgid "%1 is %2% used"
 msgstr "%1 est utilisé à %2 %"
 
-#: contents/ui/main.qml
+#: contents/ui/components/ProviderNotificationText.qml
 msgid "%1 quota critical"
 msgstr "Quota de %1 critique"
 
-#: contents/ui/main.qml
+#: contents/ui/components/ProviderNotificationText.qml
 msgid "%1 quota warning"
 msgstr "Avertissement de quota de %1"
 
-#: contents/ui/main.qml
+#: contents/ui/components/ProviderNotificationText.qml
 msgid "%1 pace warning"
 msgstr "Avertissement de rythme de %1"
 
-#: contents/ui/main.qml
+#: contents/ui/components/ProviderNotificationText.qml
 msgid "%1 may run out in %2"
 msgstr "%1 risque d'être épuisé dans %2"
 
-#: contents/ui/main.qml
+#: contents/ui/components/ProviderNotificationText.qml
 msgid "%1 limit reset"
 msgstr "Limite de %1 réinitialisée"
 
-#: contents/ui/main.qml
+#: contents/ui/components/ProviderNotificationText.qml
 msgid "%1 is back to %2% used"
 msgstr "%1 est revenu à %2 % d'utilisation"
 
-#: contents/ui/main.qml
+#: contents/ui/controllers/UpdateNotificationsController.qml
 msgid "Usage or status changed. Open CodexBar for details."
 msgstr ""
 "L'utilisation ou l'état a changé. Ouvrez CodexBar pour plus de détails."
 
-#: contents/ui/main.qml
+#: contents/ui/controllers/UpdateNotificationsController.qml
 msgid "CodexBar widget update available"
 msgstr "Mise à jour du widget CodexBar disponible"
 
-#: contents/ui/main.qml
+#: contents/ui/controllers/UpdateNotificationsController.qml
 msgid "Version %1 is available."
 msgstr "La version %1 est disponible."
 
-#: contents/ui/main.qml
+#: contents/ui/controllers/UpdateNotificationsController.qml
 msgid "A new widget version is available."
 msgstr "Une nouvelle version du widget est disponible."
 
-#: contents/ui/main.qml
+#: contents/ui/controllers/UpdateNotificationsController.qml
 msgid "CodexBar widget update installed"
 msgstr "Mise à jour du widget CodexBar installée"
 
-#: contents/ui/main.qml
+#: contents/ui/controllers/UpdateNotificationsController.qml
 msgid "Version %1 was installed. %2"
 msgstr "La version %1 a été installée. %2"
 
-#: contents/ui/main.qml
+#: contents/ui/controllers/UpdateNotificationsController.qml
 msgid "A widget update was installed. %1"
 msgstr "Une mise à jour du widget a été installée. %1"
 
@@ -3636,49 +3644,50 @@ msgctxt ""
 msgid "en"
 msgstr "fr"
 
-#: contents/ui/main.qml
+#: contents/ui/components/CostText.qml
+#: contents/ui/components/UsageWindowText.qml scripts/smoke/Capture.qml
 msgid "%1 (estimated)"
 msgstr "%1 (estimé)"
 
-#: contents/ui/main.qml
+#: contents/ui/components/CostText.qml
 msgid "%1 (partial)"
 msgstr "%1 (partiel)"
 
-#: contents/ui/main.qml
+#: contents/ui/components/CostText.qml
 msgid "%1 (approximate)"
 msgstr "%1 (approximatif)"
 
-#: contents/ui/main.qml
+#: contents/ui/components/CostText.qml
 msgid "%1 token"
 msgid_plural "%1 tokens"
 msgstr[0] "%1 jeton"
 msgstr[1] "%1 jetons"
 
-#: contents/ui/main.qml
+#: contents/ui/components/CostText.qml
 msgid "%1 tokens"
 msgstr "%1 jetons"
 
-#: contents/ui/main.qml
+#: contents/ui/components/CostText.qml
 msgid "%1 request"
 msgid_plural "%1 requests"
 msgstr[0] "%1 requête"
 msgstr[1] "%1 requêtes"
 
-#: contents/ui/main.qml
+#: contents/ui/components/CostText.qml
 msgid "%1 requests"
 msgstr "%1 requêtes"
 
-#: contents/ui/main.qml
+#: contents/ui/components/CostText.qml
 msgid "%1 point"
 msgid_plural "%1 points"
 msgstr[0] "%1 point"
 msgstr[1] "%1 points"
 
-#: contents/ui/main.qml
+#: contents/ui/components/CostText.qml
 msgid "%1 points"
 msgstr "%1 points"
 
-#: contents/ui/main.qml
+#: contents/ui/components/CostText.qml
 msgid ""
 "Local Antigravity history includes token totals. Dollar costs are "
 "unavailable."
@@ -3690,7 +3699,7 @@ msgstr ""
 msgid "Estimated from local Codex logs, independently of the account selected in the widget."
 msgstr "Estimation à partir des journaux locaux de Codex, indépendamment du compte sélectionné dans le widget."
 
-#: contents/ui/main.qml
+#: contents/ui/components/CostText.qml
 msgid "Estimated from local Claude logs."
 msgstr "Estimation à partir des journaux locaux de Claude."
 
@@ -3704,36 +3713,23 @@ msgid_plural "%1 providers"
 msgstr[0] "%1 fournisseur"
 msgstr[1] "%1 fournisseurs"
 
-#: contents/ui/main.qml
+#: contents/ui/components/PanelText.qml
 msgid "Loading"
 msgstr "Chargement"
 
-#: contents/ui/main.qml
+#: contents/ui/components/PanelText.qml
 msgid "Refreshing usage…"
 msgstr "Actualisation de l'utilisation…"
 
-#: contents/ui/main.qml
+#: contents/ui/controllers/UpdateNotificationsController.qml
 msgid "CodexBar CLI release available"
 msgstr "Version de la CLI CodexBar disponible"
 
-#: contents/ui/main.qml
+#: contents/ui/controllers/UpdateNotificationsController.qml
 msgid "Upstream CLI %1 is available. Update using your installation method."
 msgstr ""
 "La version officielle %1 de la CLI est disponible. Mettez à jour avec "
 "votre méthode d’installation."
-
-#~ msgid "Copy session details"
-#~ msgstr "Copier les détails de la session"
-
-#~ msgid "Since %1"
-#~ msgstr "Depuis %1"
-
-#~ msgid ""
-#~ "Checks GitHub for official releases. The widget does not install or "
-#~ "replace the CLI."
-#~ msgstr ""
-#~ "Consulte les versions officielles sur GitHub. Le widget n’installe ni ne "
-#~ "remplace le CLI."
 
 #: contents/ui/components/FullRepresentation.qml scripts/smoke/Capture.qml
 msgid "%2 of %1 provider"
@@ -3779,7 +3775,7 @@ msgid ""
 "version does not expose."
 msgstr "Les autres options modifiables du fournisseur nécessitent les descripteurs CodexBar, que cette version ne fournit pas."
 
-#: contents/ui/configProviders.qml
+#: contents/ui/configProviders.qml scripts/smoke/Capture.qml
 msgid "Web"
 msgstr "Web"
 
@@ -3794,12 +3790,12 @@ msgid ""
 "Diagnostics takes precedence in the widget."
 msgstr "Choisissez une source à enregistrer. Automatique efface le mode enregistré. Les modes proposés décrivent la configuration de la CLI, pas la disponibilité sous Linux. La source définie dans Diagnostic est prioritaire dans le widget."
 
-#: contents/ui/components/UsageWindowText.qml
 #, kde-format
+#: contents/ui/components/UsageWindowText.qml scripts/smoke/Capture.qml
 msgid "%1 (confidence unknown)"
 msgstr "%1 (fiabilité inconnue)"
 
-#: contents/ui/components/UsageWindowText.qml
+#: contents/ui/components/UsageWindowText.qml scripts/smoke/Capture.qml
 msgid "Estimated usage; not a measured account quota."
 msgstr "Utilisation estimée ; ce n’est pas un quota de compte mesuré."
 
@@ -3811,7 +3807,7 @@ msgstr "La fiabilité de l’utilisation est inconnue ; le quota du compte n’e
 msgid "Plan renews on %1"
 msgstr "Le forfait se renouvelle le %1"
 
-#: contents/ui/main.qml
+#: contents/ui/main.qml scripts/smoke/Capture.qml
 msgid "Plan expires on %1"
 msgstr "Le forfait expire le %1"
 
@@ -3959,13 +3955,6 @@ msgid "Show identified Codex token subtotal"
 msgstr "Afficher le sous-total des jetons Codex identifiés"
 
 #: contents/ui/configGeneral.qml
-msgid ""
-"Manual loads in Usage & Spend only. Requires codexbar 0.75.0 or later with "
-"identified-token schema 1 or 2. Any API-price estimate is separate from "
-"spend totals; this is not account-wide usage."
-msgstr "Chargement manuel uniquement dans Utilisation et dépenses. Nécessite codexbar 0.75.0 ou ultérieur avec le schéma 1 ou 2 des jetons identifiés. Toute estimation aux tarifs de l’API reste distincte des dépenses totales ; il ne s’agit pas de l’utilisation totale du compte."
-
-#: contents/ui/configGeneral.qml
 msgid "Identified window (days):"
 msgstr "Période identifiée (jours) :"
 
@@ -4055,13 +4044,13 @@ msgstr "La CLI gérée existante n’a pas pu être vérifiée. Choisissez une a
 msgid "Color preview:"
 msgstr "Aperçu des couleurs :"
 
-#: contents/ui/configNotifications.qml
 #, kde-format
+#: contents/ui/configNotifications.qml
 msgid "Warning from %1%"
 msgstr "Avertissement à partir de %1 %"
 
-#: contents/ui/configNotifications.qml
 #, kde-format
+#: contents/ui/configNotifications.qml
 msgid "Critical from %1%"
 msgstr "Critique à partir de %1 %"
 
@@ -4071,7 +4060,7 @@ msgid ""
 "each selected source; this widget supports schemas 1 and 2."
 msgstr "Schéma des jetons identifiés non pris en charge. Utilisez des versions compatibles de codexbar sur chaque source sélectionnée ; ce widget prend en charge les schémas 1 et 2."
 
-#: contents/ui/components/IdentifiedTokensSection.qml
+#: contents/ui/components/IdentifiedTokensSection.qml scripts/smoke/Capture.qml
 msgid "API-price estimate: %1. Separate from spend totals."
 msgstr "Estimation aux tarifs de l’API : %1. Distincte des dépenses totales."
 
@@ -4079,8 +4068,8 @@ msgstr "Estimation aux tarifs de l’API : %1. Distincte des dépenses totales."
 msgid "API-price estimate unavailable: %1 without a price."
 msgstr "Estimation aux tarifs de l’API indisponible : %1 sans tarif."
 
-#: contents/ui/components/IdentifiedTokensSection.qml scripts/smoke/Capture.qml
 #, kde-format
+#: contents/ui/components/IdentifiedTokensSection.qml scripts/smoke/Capture.qml
 msgid "API-price estimate: less than %1. Separate from spend totals."
 msgstr "Estimation aux tarifs de l’API : moins de %1. Distincte des dépenses totales."
 
@@ -4136,17 +4125,17 @@ msgstr "Clé API d’organisation pour %1. Les clés de projet ne sont pas prise
 msgid "License key for %1. This key can authorize AI requests."
 msgstr "Clé de licence pour %1. Cette clé peut autoriser des requêtes IA."
 
-#: contents/ui/components/ProviderDetailSection.qml
+#: contents/ui/components/ProviderDetailSection.qml scripts/smoke/Capture.qml
 msgid "Warning"
 msgstr "Avertissement"
 
-#: contents/ui/components/FullRepresentation.qml
 #, kde-format
+#: contents/ui/components/FullRepresentation.qml
 msgid "Warning at %1% used"
 msgstr "Avertissement à %1 % utilisés"
 
-#: contents/ui/components/FullRepresentation.qml
 #, kde-format
+#: contents/ui/components/FullRepresentation.qml
 msgid "Critical at %1% used"
 msgstr "Critique à %1 % utilisés"
 
@@ -4157,3 +4146,71 @@ msgstr "Actions du fournisseur"
 #: contents/ui/components/InteractiveChart.qml
 msgid "Peak daily usage"
 msgstr "Pic d’utilisation quotidien"
+
+#: contents/ui/components/PanelSettingsPreview.qml
+msgid "Example:"
+msgstr "Exemple :"
+
+#: contents/ui/configAiInsights.qml
+msgid "Type a model name"
+msgstr "Saisissez un nom de modèle"
+
+#: contents/ui/configAiInsights.qml
+msgid "Type a model name, or test the connection to list available models."
+msgstr "Saisissez un nom de modèle ou testez la connexion pour afficher les modèles disponibles."
+
+#: contents/ui/configAiInsights.qml
+msgid "What is sent"
+msgstr "Données envoyées"
+
+#: contents/ui/configAiInsights.qml
+msgid "None saved"
+msgstr "Aucune enregistrée"
+
+#: contents/ui/configDiagnostics.qml contents/ui/configGeneral.qml
+msgid "CodexBar CLI"
+msgstr "CLI CodexBar"
+
+#: contents/ui/configDiagnostics.qml
+msgid ""
+"This checks installed versions only. Check upstream CLI releases in "
+"General / Updates / CodexBar CLI."
+msgstr "Vérifie uniquement les versions installées. Recherchez les nouvelles versions de la CLI dans Général / Mises à jour / CLI CodexBar."
+
+#: contents/ui/configDiagnostics.qml
+msgid "No output yet"
+msgstr "Aucun résultat pour le moment"
+
+#: contents/ui/configGeneral.qml
+msgid ""
+"Load a separate Codex subtotal on request in Usage & Spend. It does not "
+"represent account-wide usage."
+msgstr "Chargez sur demande un sous-total Codex distinct dans Utilisation et dépenses. Il ne représente pas l’utilisation de tout le compte."
+
+#: contents/ui/configGeneral.qml
+msgid "Widget updates"
+msgstr "Mises à jour du widget"
+
+#: contents/ui/configGeneral.qml
+msgid "Update checks are off"
+msgstr "Recherche de mises à jour désactivée"
+
+#: contents/ui/configGeneral.qml
+msgid "Update checks are on"
+msgstr "Recherche de mises à jour activée"
+
+#: contents/ui/configGeneral.qml
+msgid "Updates install automatically"
+msgstr "Installation automatique des mises à jour"
+
+#: contents/ui/configPopup.qml
+msgid "Popup content"
+msgstr "Contenu de la fenêtre contextuelle"
+
+#: contents/ui/configPopup.qml
+msgid "First %1 providers automatically"
+msgstr "Les %1 premiers fournisseurs automatiquement"
+
+#: contents/ui/configPopup.qml
+msgid "Choose providers"
+msgstr "Choisir les fournisseurs"

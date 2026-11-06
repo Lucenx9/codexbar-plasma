@@ -162,3 +162,28 @@ indented dependent options sit inside a `ColumnLayout`. The KDE desktop style
 draws button text inside its style item, so disclosure summaries stay aligned
 with the button edge rather than an estimated text offset.
 
+
+## Settings hierarchy and selection
+
+The settings refinement against Plasma `2e25309d396f699bb77d31764c33752a4c160c04`
+keeps the seven native KCM pages, configuration keys and CLI action ownership.
+
+| Before | After | Why |
+| --- | --- | --- |
+| General exposed widget updates, CLI releases and private CLI management together with everyday preferences. | Two update disclosures retain their controls and show a resting status. Optional identified subtotal fields appear only while enabled. | Keep the common path short without clearing hidden values. |
+| Selecting a provider changed details above the list. | A bounded scrolling list precedes the detail surface, alongside it in wide windows and above it when narrow. Source selection remains visible. | Keep selection and its result close; focus reveals rows within the list. |
+| Automatic Overview selection looked like a manual selection with a disabled reset button. | Automatic and manual radio choices map to the existing empty/explicit/none values. | Make the saved selection mode visible without a migration. |
+| Panel's preview selector competed with its heading at narrow widths. | A labeled Example selector wraps under the full heading. The minimal preset sits under Appearance. | Distinguish sample data from preferences. |
+| Diagnostics led with support output. | CLI connection and versions come first; support remains last with an initially closed preview. Empty diagnostic output is compact. | Put the editable setting before troubleshooting tools. |
+| AI setup left an empty model field and mixed privacy details with billing. | Model-entry guidance, visible billing, expandable data details and an explicit empty saved-insight state. | Explain the next action while retaining cost and privacy information. |
+
+General disclosures do not create or destroy controllers. They change visibility
+only, so opening them does not start CLI actions or clear pending configuration.
+The provider source control retains its unknown initial selection; no saved
+source is inferred from an inventory of supported modes. Provider mutations
+still save immediately, independently of Plasma Apply/Cancel. The selection
+highlight leaves each provider switch on the normal background for contrast.
+
+The ordinary provider and Diagnostics smoke scenarios intentionally expand
+redacted details and support preview. They are review states, not opening
+states. Keep that distinction explicit when comparing screenshots.

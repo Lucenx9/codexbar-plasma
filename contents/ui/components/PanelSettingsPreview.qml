@@ -230,51 +230,59 @@ ColumnLayout {
         }
     }
 
-    RowLayout {
+    GridLayout {
         Layout.fillWidth: true
+        columns: preview.width < Kirigami.Units.gridUnit * 24 ? 1 : 2
 
         PlainControlsLabel {
             Layout.fillWidth: true
             text: i18n("Panel preview")
             font.bold: true
-            elide: Text.ElideRight
+            wrapMode: Text.WordWrap
         }
 
-        PlainComboBox {
-            id: scenarioCombo
-
-            objectName: "panelPreviewScenario"
-            model: [
-                {
-                    label: i18n("Normal"),
-                    value: "normal"
-                },
-                {
-                    label: i18n("Near limit"),
-                    value: "nearLimit"
-                },
-                {
-                    label: i18n("Service incident"),
-                    value: "incident"
-                },
-                {
-                    label: i18n("No data"),
-                    value: "missing"
-                }
-            ]
-            textRole: "label"
-            valueRole: "value"
-            currentIndex: Math.max(0, PanelPreview.scenarios.indexOf(preview.scenario))
-            onActivated: {
-                preview.scenario = currentValue
-                // A user selection overwrites the declarative currentIndex
-                // binding. Restore it so external scenario changes keep the
-                // selector aligned with the rendered preview.
-                currentIndex = Qt.binding(function() {
-                    return Math.max(0, PanelPreview.scenarios.indexOf(preview.scenario))
-                })
+        RowLayout {
+            PlainControlsLabel {
+                text: i18n("Example:")
+                font: Kirigami.Theme.smallFont
             }
-            Accessible.name: i18n("Preview scenario")
+
+            PlainComboBox {
+                id: scenarioCombo
+
+                objectName: "panelPreviewScenario"
+                model: [
+                    {
+                        label: i18n("Normal"),
+                        value: "normal"
+                    },
+                    {
+                        label: i18n("Near limit"),
+                        value: "nearLimit"
+                    },
+                    {
+                        label: i18n("Service incident"),
+                        value: "incident"
+                    },
+                    {
+                        label: i18n("No data"),
+                        value: "missing"
+                    }
+                ]
+                textRole: "label"
+                valueRole: "value"
+                currentIndex: Math.max(0, PanelPreview.scenarios.indexOf(preview.scenario))
+                onActivated: {
+                    preview.scenario = currentValue
+                    // A user selection overwrites the declarative currentIndex
+                    // binding. Restore it so external scenario changes keep the
+                    // selector aligned with the rendered preview.
+                    currentIndex = Qt.binding(function() {
+                        return Math.max(0, PanelPreview.scenarios.indexOf(preview.scenario))
+                    })
+                }
+                Accessible.name: i18n("Preview scenario")
+            }
         }
     }
 

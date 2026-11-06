@@ -243,7 +243,7 @@ KCM.SimpleKCM {
         }
 
         Kirigami.Separator {
-            Kirigami.FormData.label: i18n("Popup")
+            Kirigami.FormData.label: i18n("Popup content")
             Kirigami.FormData.isSection: true
         }
 
@@ -328,6 +328,7 @@ KCM.SimpleKCM {
 
                     Components.PlainButton {
                         objectName: "restoreProviderDetailSectionsButton"
+                        flat: true
                         plainText: i18n("Restore all")
                         icon.name: "view-visible"
                         Accessible.name: i18n("Restore all sections for %1", page.hiddenRowProviderTitle(modelData))
@@ -386,6 +387,7 @@ KCM.SimpleKCM {
 
                     Components.PlainButton {
                         objectName: "restoreHiddenUsageRowButton"
+                        flat: true
                         plainText: i18n("Restore")
                         icon.name: "view-visible"
                         Accessible.name: i18n("Restore %1", rowText)
@@ -450,6 +452,14 @@ KCM.SimpleKCM {
 
                     Layout.fillWidth: true
                     spacing: Kirigami.Units.smallSpacing
+
+                    Components.PlainControlsLabel {
+                        text: Number(index + 1).toLocaleString(Qt.locale(), 'f', 0)
+                        font: Kirigami.Theme.smallFont
+                        opacity: 0.7
+                        Layout.preferredWidth: Kirigami.Units.gridUnit
+                        Accessible.ignored: true
+                    }
 
                     Kirigami.Icon {
                         source: page.providerIconSource(modelData.provider)
@@ -536,6 +546,24 @@ KCM.SimpleKCM {
                 wrapMode: Text.WordWrap
             }
 
+            Controls.RadioButton {
+                objectName: "overviewAutomaticRadio"
+                implicitWidth: 0
+                Layout.fillWidth: true
+                text: i18n("First %1 providers automatically", page.maxOverviewProviders)
+                checked: !OverviewProviders.selectionActive(page.cfg_overviewProviderIDs)
+                onClicked: page.resetOverviewProvidersToAutomatic()
+            }
+
+            Controls.RadioButton {
+                objectName: "overviewCustomRadio"
+                implicitWidth: 0
+                Layout.fillWidth: true
+                text: i18n("Choose providers")
+                checked: OverviewProviders.selectionActive(page.cfg_overviewProviderIDs)
+                onClicked: page.cfg_overviewProviderIDs = OverviewProviders.selectionText(page.resolvedOverviewProviderIDs())
+            }
+
             Repeater {
                 model: page.orderedEnabledProviderRoster
 
@@ -550,7 +578,9 @@ KCM.SimpleKCM {
                     Kirigami.MnemonicData.label: SafeText.plainTextAsMnemonicRichText(modelData.displayName)
                     Accessible.name: modelData.displayName
                     checked: selected
-                    enabled: selected || page.selectedOverviewProviderCount() < page.maxOverviewProviders
+                    enabled: OverviewProviders.selectionActive(page.cfg_overviewProviderIDs)
+                        && (selected || page.selectedOverviewProviderCount() < page.maxOverviewProviders)
+                    Layout.leftMargin: Kirigami.Units.gridUnit
                     onClicked: {
                         page.toggleOverviewProvider(modelData.provider, checked)
                         // Clicking severs the binding on `checked`; restore it so the box reflects the
@@ -558,12 +588,6 @@ KCM.SimpleKCM {
                         checked = Qt.binding(function() { return selected })
                     }
                 }
-            }
-
-            Controls.Button {
-                text: i18n("Use first %1 providers automatically", page.maxOverviewProviders)
-                enabled: page.cfg_overviewProviderIDs.length > 0
-                onClicked: page.resetOverviewProvidersToAutomatic()
             }
         }
     }

@@ -1284,6 +1284,17 @@ KCM.SimpleKCM {
         if (!ancestor) {
             return
         }
+        var listAncestor = control
+        while (listAncestor && listAncestor !== providerListContent)
+            listAncestor = listAncestor.parent
+        if (listAncestor) {
+            var listPosition = providerListContent.mapFromItem(control, 0, 0)
+            var listFlickable = providerListScroll.contentItem
+            if (listPosition.y < listFlickable.contentY)
+                listFlickable.contentY = listPosition.y
+            else if (listPosition.y + control.height > listFlickable.contentY + listFlickable.height)
+                listFlickable.contentY = listPosition.y + control.height - listFlickable.height
+        }
         var position = page.flickable.contentItem.mapFromItem(control, 0, 0)
         page.ensureVisible(control, position.x - control.x, position.y - control.y)
     }
@@ -1407,164 +1418,231 @@ KCM.SimpleKCM {
         width: parent.width
         spacing: Kirigami.Units.smallSpacing
 
-        Components.PlainInlineMessage {
-            id: providerImmediateChangesMessage
-
+        Components.PlainControlsLabel {
+            objectName: "providerImmediateChangesMessage"
             Layout.fillWidth: true
-            Layout.leftMargin: Kirigami.Units.smallSpacing
-            Layout.rightMargin: Kirigami.Units.smallSpacing
-            type: Kirigami.MessageType.Information
+            Layout.margins: Kirigami.Units.smallSpacing
+            font: Kirigami.Theme.smallFont
+            opacity: page.secondaryTextOpacity
+            wrapMode: Text.WordWrap
             visible: page.providers.length > 0
-            plainText: i18n("CodexBar saves provider changes immediately. Apply and Cancel affect widget settings only.")
+            text: i18n("CodexBar saves provider changes immediately. Apply and Cancel affect widget settings only.")
         }
 
-        // The selected provider reads as one borderless surface, like the
-        // popup's provider tiles, instead of a run of separated rows.
-        Rectangle {
-            objectName: "selectedProviderSurface"
-
+        GridLayout {
+            id: providerPanes
             Layout.fillWidth: true
-            Layout.topMargin: Kirigami.Units.smallSpacing
-            Layout.leftMargin: Kirigami.Units.smallSpacing
-            Layout.rightMargin: Kirigami.Units.smallSpacing
-            implicitHeight: selectedProviderContent.implicitHeight + Kirigami.Units.largeSpacing * 2
-            radius: Kirigami.Units.cornerRadius
-            color: page.withAlpha(Kirigami.Theme.textColor, 0.035)
-            visible: page.selectedProvider !== null
+            columns: page.width >= Kirigami.Units.gridUnit * 42 ? 2 : 1
+            columnSpacing: Kirigami.Units.largeSpacing
+            rowSpacing: Kirigami.Units.largeSpacing
 
-            ColumnLayout {
-                id: selectedProviderContent
+            Controls.ScrollView {
+                id: providerListScroll
+                objectName: "providerListScroll"
+                Layout.fillWidth: true
+                Layout.alignment: Qt.AlignTop
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 16
+                Layout.maximumWidth: providerPanes.columns === 2 ? Kirigami.Units.gridUnit * 18 : Infinity
+                Layout.preferredHeight: Kirigami.Units.gridUnit * (providerPanes.columns === 2 ? 28 : 14)
+                contentWidth: availableWidth
+                clip: true
 
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.top: parent.top
-                anchors.margins: Kirigami.Units.largeSpacing
-                spacing: Kirigami.Units.smallSpacing
+                ColumnLayout {
+                    id: providerListContent
+                    width: providerListScroll.availableWidth
+                    spacing: Kirigami.Units.smallSpacing
+                    Item {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: Kirigami.Units.gridUnit * 8
+                        visible: page.loading && page.providers.length === 0
 
-                RowLayout {
-                    Layout.fillWidth: true
-                    Layout.bottomMargin: Kirigami.Units.smallSpacing
-                    spacing: Kirigami.Units.largeSpacing
-
-                    Rectangle {
-                        readonly property color accent: page.selectedProvider
-                            ? page.providerReadableColor(
-                                page.selectedProvider.provider,
-                                Kirigami.Theme.backgroundColor)
-                            : Kirigami.Theme.textColor
-
-                        Layout.alignment: Qt.AlignTop
-                        Layout.preferredWidth: Kirigami.Units.iconSizes.medium + Kirigami.Units.smallSpacing * 2
-                        Layout.preferredHeight: Layout.preferredWidth
-                        radius: Kirigami.Units.cornerRadius
-                        color: page.withAlpha(accent, 0.12)
-
-                        Kirigami.Icon {
+                        Controls.BusyIndicator {
                             anchors.centerIn: parent
-                            width: Kirigami.Units.iconSizes.medium
-                            height: Kirigami.Units.iconSizes.medium
-                            source: page.selectedProvider ? page.providerIconSource(page.selectedProvider.provider) : ""
-                            fallback: "view-statistics"
-                            isMask: true
-                            color: parent.accent
+                            running: parent.visible
                         }
                     }
 
                     ColumnLayout {
-                        Layout.fillWidth: true
-                        Layout.alignment: Qt.AlignVCenter
-                        spacing: 0
+                        id: providerListHeading
 
-                        Components.PlainHeading {
-                            text: page.selectedProvider ? page.selectedProvider.displayName : ""
-                            level: 4
+                        Layout.fillWidth: true
+                        Layout.leftMargin: Kirigami.Units.smallSpacing
+                        Layout.rightMargin: Kirigami.Units.smallSpacing
+                        spacing: Kirigami.Units.smallSpacing
+                        visible: page.providers.length > 0
+
+                        Components.PlainControlsLabel {
+                            text: i18n("Providers")
+                            font.weight: Font.DemiBold
                             Layout.fillWidth: true
                             elide: Text.ElideRight
                         }
 
                         Components.PlainControlsLabel {
-                            text: page.selectedProvider
-                                ? (page.selectedProvider.enabled ? i18n("%1 - enabled", page.selectedProvider.provider) : i18n("%1 - disabled", page.selectedProvider.provider))
-                                : ""
-                            opacity: page.secondaryTextOpacity
+                            text: page.filterText.trim().length > 0 || page.filterScope !== "all"
+                                ? i18np("%1 matching provider", "%1 matching providers", page.visibleProviders.length)
+                                : i18np("%1 provider enabled", "%1 providers enabled", page.enabledCount)
                             font: Kirigami.Theme.smallFont
-                            Layout.fillWidth: true
+                            opacity: page.secondaryTextOpacity
                             elide: Text.ElideRight
                         }
                     }
-                }
 
-                Flow {
-                    Layout.fillWidth: true
-                    spacing: Kirigami.Units.smallSpacing
-                    visible: page.providerActionRows(page.selectedProvider).length > 0
-
-                    Repeater {
-                        model: page.providerActionRows(page.selectedProvider)
-
-                        delegate: Controls.Button {
-                            required property var modelData
-
-                            text: SafeText.plainButtonText(modelData.title, contentItem !== null)
-                            Accessible.name: modelData.title
-                            icon.name: modelData.icon
-                            enabled: modelData.enabled
-                            onClicked: page.performProviderAction(modelData)
-                        }
-                    }
-                }
-
-                Flow {
-                    id: providerSettingsActions
-
-                    Layout.fillWidth: true
-                    spacing: Kirigami.Units.smallSpacing
-
-                    Components.DisclosureButton {
-                        id: providerSettingsToggle
-                        objectName: "providerSettingsToggle"
-
-                        plainText: i18n("Settings and diagnostics")
-                        expanded: false
-                        onClicked: expanded = !expanded
+                    Components.PlainPlaceholderMessage {
+                        Layout.fillWidth: true
+                        Layout.topMargin: Kirigami.Units.gridUnit * 2
+                        visible: !page.loading && page.providers.length === 0 && page.errorText.length === 0
+                        icon.name: "view-list-details"
+                        plainText: i18n("No providers reported")
+                        plainExplanation: i18n("codexbar did not return any providers.")
                     }
 
-                    Controls.BusyIndicator {
-                        running: page.selectedProvider !== null
-                            && page.providerDiagnosticLoadingFor(page.selectedProvider.provider)
-                        visible: running
-                        width: Kirigami.Units.iconSizes.small
-                        height: Kirigami.Units.iconSizes.small
+                    Components.PlainPlaceholderMessage {
+                        Layout.fillWidth: true
+                        Layout.topMargin: Kirigami.Units.gridUnit * 2
+                        visible: page.providers.length > 0 && page.visibleProviders.length === 0
+                        icon.name: "search"
+                        plainText: i18n("No matching providers")
+                        plainExplanation: i18n("Try another search or choose a different filter.")
+                        helpfulAction: clearProviderFiltersAction
                     }
-
-                    Controls.Button {
-                        text: i18n("Inspect redacted settings")
-                        icon.name: "view-refresh"
-                        visible: providerSettingsToggle.expanded
-                        enabled: page.selectedProvider
-                            && !page.isPending(page.selectedProvider.provider)
-                            && !page.providerDiagnosticLoadingFor(page.selectedProvider.provider)
-                        onClicked: if (page.selectedProvider) page.loadProviderSettings(page.selectedProvider.provider)
-                    }
-                }
-
-                ColumnLayout {
-                    id: providerSettingsDetails
-
-                    Layout.fillWidth: true
-                    spacing: Kirigami.Units.smallSpacing
-                    visible: providerSettingsToggle.expanded
 
                     Components.PlainControlsLabel {
                         Layout.fillWidth: true
-                        text: page.providerDescriptorsUnavailable && page.providerSourceSetupSupported
-                            ? i18n("Other editable provider options require CodexBar descriptors, which this version does not expose.")
-                            : page.providerDescriptorsUnavailable
-                            ? i18n("This CodexBar version does not expose editable provider options. Enable/disable, supported API key setup, provider links, and redacted diagnostics remain available.")
-                            : i18n("Editable provider options come from CodexBar. Redacted source and authentication details are available on request.")
-                        opacity: page.secondaryTextOpacity
+                        Layout.leftMargin: Kirigami.Units.smallSpacing
+                        Layout.rightMargin: Kirigami.Units.smallSpacing
+                        visible: page.filterScope === "all" && page.visibleEnabledProviders.length > 0
+                        text: i18n("Enabled")
                         font: Kirigami.Theme.smallFont
-                        wrapMode: Text.WordWrap
+                        opacity: page.secondaryTextOpacity
+                    }
+
+                    Repeater {
+                        model: page.visibleEnabledProviders
+
+                        delegate: Components.ProviderConfigRow {
+                            configPage: page
+                        }
+                    }
+
+                    Components.PlainControlsLabel {
+                        Layout.fillWidth: true
+                        Layout.leftMargin: Kirigami.Units.smallSpacing
+                        Layout.rightMargin: Kirigami.Units.smallSpacing
+                        Layout.topMargin: page.visibleEnabledProviders.length > 0 ? Kirigami.Units.largeSpacing : 0
+                        visible: page.filterScope === "all" && page.visibleDisabledProviders.length > 0
+                        text: i18n("Disabled")
+                        font: Kirigami.Theme.smallFont
+                        opacity: page.secondaryTextOpacity
+                    }
+
+                    Repeater {
+                        model: page.visibleDisabledProviders
+
+                        delegate: Components.ProviderConfigRow {
+                            configPage: page
+                        }
+                    }
+                }
+            }
+            // The selected provider reads as one borderless surface, like the
+            // popup's provider tiles, instead of a run of separated rows.
+            Rectangle {
+                id: selectedProviderSurface
+                objectName: "selectedProviderSurface"
+                Layout.alignment: Qt.AlignTop
+                Layout.minimumWidth: 0
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 26
+
+                Layout.fillWidth: true
+                Layout.topMargin: Kirigami.Units.smallSpacing
+                Layout.leftMargin: Kirigami.Units.smallSpacing
+                Layout.rightMargin: Kirigami.Units.smallSpacing
+                implicitHeight: selectedProviderContent.implicitHeight + Kirigami.Units.largeSpacing * 2
+                radius: Kirigami.Units.cornerRadius
+                color: page.withAlpha(Kirigami.Theme.textColor, 0.035)
+                visible: page.selectedProvider !== null
+
+                ColumnLayout {
+                    id: selectedProviderContent
+
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    anchors.margins: Kirigami.Units.largeSpacing
+                    spacing: Kirigami.Units.smallSpacing
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Layout.bottomMargin: Kirigami.Units.smallSpacing
+                        spacing: Kirigami.Units.largeSpacing
+
+                        Rectangle {
+                            readonly property color accent: page.selectedProvider
+                                ? page.providerReadableColor(
+                                    page.selectedProvider.provider,
+                                    Kirigami.Theme.backgroundColor)
+                                : Kirigami.Theme.textColor
+
+                            Layout.alignment: Qt.AlignTop
+                            Layout.preferredWidth: Kirigami.Units.iconSizes.medium + Kirigami.Units.smallSpacing * 2
+                            Layout.preferredHeight: Layout.preferredWidth
+                            radius: Kirigami.Units.cornerRadius
+                            color: page.withAlpha(accent, 0.12)
+
+                            Kirigami.Icon {
+                                anchors.centerIn: parent
+                                width: Kirigami.Units.iconSizes.medium
+                                height: Kirigami.Units.iconSizes.medium
+                                source: page.selectedProvider ? page.providerIconSource(page.selectedProvider.provider) : ""
+                                fallback: "view-statistics"
+                                isMask: true
+                                color: parent.accent
+                            }
+                        }
+
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            Layout.alignment: Qt.AlignVCenter
+                            spacing: 0
+
+                            Components.PlainHeading {
+                                text: page.selectedProvider ? page.selectedProvider.displayName : ""
+                                level: 4
+                                Layout.fillWidth: true
+                                elide: Text.ElideRight
+                            }
+
+                            Components.PlainControlsLabel {
+                                text: page.selectedProvider
+                                    ? (page.selectedProvider.enabled ? i18n("%1 - enabled", page.selectedProvider.provider) : i18n("%1 - disabled", page.selectedProvider.provider))
+                                    : ""
+                                opacity: page.secondaryTextOpacity
+                                font: Kirigami.Theme.smallFont
+                                Layout.fillWidth: true
+                                elide: Text.ElideRight
+                            }
+                        }
+                    }
+
+                    Flow {
+                        Layout.fillWidth: true
+                        spacing: Kirigami.Units.smallSpacing
+                        visible: page.providerActionRows(page.selectedProvider).length > 0
+
+                        Repeater {
+                            model: page.providerActionRows(page.selectedProvider)
+
+                            delegate: Controls.Button {
+                                required property var modelData
+
+                                text: SafeText.plainButtonText(modelData.title, contentItem !== null)
+                                Accessible.name: modelData.title
+                                icon.name: modelData.icon
+                                enabled: modelData.enabled
+                                onClicked: page.performProviderAction(modelData)
+                            }
+                        }
                     }
 
                     ColumnLayout {
@@ -1620,221 +1698,177 @@ KCM.SimpleKCM {
                         }
                     }
 
-                    Components.PlainInlineMessage {
+
+                    Flow {
+                        id: providerSettingsActions
+
                         Layout.fillWidth: true
-                        type: Kirigami.MessageType.Error
-                        plainText: page.selectedProvider
-                            ? page.providerDiagnosticErrorFor(page.selectedProvider.provider)
-                            : ""
-                        visible: plainText.length > 0
-                        showCloseButton: true
-                        onVisibleChanged: {
-                            // Kirigami's close button hides the banner imperatively,
-                            // severing the visible binding. Clear the stored error so
-                            // the dismissal sticks, then reinstall the binding so the
-                            // next diagnostic error still shows up. Collapsing the
-                            // parent details is not a dismissal of the error.
-                            if (!visible && providerSettingsToggle.expanded
-                                    && plainText.length > 0 && page.selectedProvider) {
-                                page.setProviderDiagnosticError(page.selectedProvider.provider, "")
-                                visible = Qt.binding(function() { return plainText.length > 0 })
-                            }
+                        spacing: Kirigami.Units.smallSpacing
+
+                        Components.DisclosureButton {
+                            id: providerSettingsToggle
+                            objectName: "providerSettingsToggle"
+
+                            plainText: i18n("Settings and diagnostics")
+                            expanded: false
+                            onClicked: expanded = !expanded
+                        }
+
+                        Controls.BusyIndicator {
+                            running: page.selectedProvider !== null
+                                && page.providerDiagnosticLoadingFor(page.selectedProvider.provider)
+                            visible: running
+                            width: Kirigami.Units.iconSizes.small
+                            height: Kirigami.Units.iconSizes.small
+                        }
+
+                        Controls.Button {
+                            text: i18n("Inspect redacted settings")
+                            icon.name: "view-refresh"
+                            visible: providerSettingsToggle.expanded
+                            enabled: page.selectedProvider
+                                && !page.isPending(page.selectedProvider.provider)
+                                && !page.providerDiagnosticLoadingFor(page.selectedProvider.provider)
+                            onClicked: if (page.selectedProvider) page.loadProviderSettings(page.selectedProvider.provider)
                         }
                     }
 
                     ColumnLayout {
+                        id: providerSettingsDetails
+
                         Layout.fillWidth: true
                         spacing: Kirigami.Units.smallSpacing
-                        visible: page.descriptorFieldRows(page.selectedProvider).length > 0
+                        visible: providerSettingsToggle.expanded
 
                         Components.PlainControlsLabel {
-                            text: i18n("Provider options")
-                            font.weight: Font.DemiBold
                             Layout.fillWidth: true
-                            elide: Text.ElideRight
+                            text: page.providerDescriptorsUnavailable && page.providerSourceSetupSupported
+                                ? i18n("Other editable provider options require CodexBar descriptors, which this version does not expose.")
+                                : page.providerDescriptorsUnavailable
+                                ? i18n("This CodexBar version does not expose editable provider options. Enable/disable, supported API key setup, provider links, and redacted diagnostics remain available.")
+                                : i18n("Editable provider options come from CodexBar. Redacted source and authentication details are available on request.")
+                            opacity: page.secondaryTextOpacity
+                            font: Kirigami.Theme.smallFont
+                            wrapMode: Text.WordWrap
+                        }
+
+                        Components.PlainInlineMessage {
+                            Layout.fillWidth: true
+                            type: Kirigami.MessageType.Error
+                            plainText: page.selectedProvider
+                                ? page.providerDiagnosticErrorFor(page.selectedProvider.provider)
+                                : ""
+                            visible: plainText.length > 0
+                            showCloseButton: true
+                            onVisibleChanged: {
+                                // Kirigami's close button hides the banner imperatively,
+                                // severing the visible binding. Clear the stored error so
+                                // the dismissal sticks, then reinstall the binding so the
+                                // next diagnostic error still shows up. Collapsing the
+                                // parent details is not a dismissal of the error.
+                                if (!visible && providerSettingsToggle.expanded
+                                        && plainText.length > 0 && page.selectedProvider) {
+                                    page.setProviderDiagnosticError(page.selectedProvider.provider, "")
+                                    visible = Qt.binding(function() { return plainText.length > 0 })
+                                }
+                            }
+                        }
+
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: Kirigami.Units.smallSpacing
+                            visible: page.descriptorFieldRows(page.selectedProvider).length > 0
+
+                            Components.PlainControlsLabel {
+                                text: i18n("Provider options")
+                                font.weight: Font.DemiBold
+                                Layout.fillWidth: true
+                                elide: Text.ElideRight
+                            }
+
+                            Repeater {
+                                model: page.descriptorFieldRows(page.selectedProvider)
+
+                                delegate: ProviderConfig.ProviderDescriptorField {
+                                    providerAvailable: page.selectedProvider !== null
+                                    writePending: page.selectedProvider !== null
+                                        && (page.isPending(page.selectedProvider.provider)
+                                            || page.isFieldPending(page.selectedProvider.provider, modelData.id))
+                                    secondaryTextOpacity: page.secondaryTextOpacity
+                                    onWriteRequested: function(field, value) {
+                                        if (page.selectedProvider)
+                                            page.writeDescriptorField(page.selectedProvider.provider, field, value)
+                                    }
+                                    onEnumWriteRequested: function(field, optionIndex) {
+                                        if (page.selectedProvider)
+                                            page.writeDescriptorField(page.selectedProvider.provider, field,
+                                                page.optionIDAt(field.options, optionIndex))
+                                    }
+                                    onSecretPromptRequested: function(field) {
+                                        if (page.selectedProvider)
+                                            page.promptDescriptorSecret(page.selectedProvider.provider, field)
+                                    }
+                                }
+                            }
                         }
 
                         Repeater {
-                            model: page.descriptorFieldRows(page.selectedProvider)
+                            model: page.providerSettingsRows(page.selectedProvider)
 
-                            delegate: ProviderConfig.ProviderDescriptorField {
-                                providerAvailable: page.selectedProvider !== null
-                                writePending: page.selectedProvider !== null
-                                    && (page.isPending(page.selectedProvider.provider)
-                                        || page.isFieldPending(page.selectedProvider.provider, modelData.id))
-                                secondaryTextOpacity: page.secondaryTextOpacity
-                                onWriteRequested: function(field, value) {
-                                    if (page.selectedProvider)
-                                        page.writeDescriptorField(page.selectedProvider.provider, field, value)
+                            delegate: GridLayout {
+                                columns: selectedProviderSurface.width < Kirigami.Units.gridUnit * 24 ? 1 : 2
+                                required property var modelData
+
+                                Layout.fillWidth: true
+                                rowSpacing: Kirigami.Units.smallSpacing
+                                columnSpacing: Kirigami.Units.smallSpacing
+
+                                Components.PlainControlsLabel {
+                                    text: modelData.label
+                                    opacity: page.secondaryTextOpacity
+                                    Layout.preferredWidth: Kirigami.Units.gridUnit * 7
+                                    Layout.fillWidth: true
+                                    Layout.alignment: Qt.AlignTop
+                                    wrapMode: Text.Wrap
                                 }
-                                onEnumWriteRequested: function(field, optionIndex) {
-                                    if (page.selectedProvider)
-                                        page.writeDescriptorField(page.selectedProvider.provider, field,
-                                            page.optionIDAt(field.options, optionIndex))
-                                }
-                                onSecretPromptRequested: function(field) {
-                                    if (page.selectedProvider)
-                                        page.promptDescriptorSecret(page.selectedProvider.provider, field)
+
+                                Components.PlainControlsLabel {
+                                    text: modelData.value
+                                    Layout.fillWidth: true
+                                    Layout.alignment: Qt.AlignTop
+                                    wrapMode: Text.Wrap
                                 }
                             }
                         }
-                    }
 
-                    Repeater {
-                        model: page.providerSettingsRows(page.selectedProvider)
+                        Components.DisclosureButton {
+                            id: providerCliCommandsToggle
 
-                        delegate: RowLayout {
-                            required property var modelData
+                            plainText: i18n("CLI commands")
+                            expanded: false
+                            onClicked: expanded = !expanded
+                            Layout.alignment: Qt.AlignLeft
+                        }
+
+                        Controls.ScrollView {
+                            id: providerCliCommandsView
 
                             Layout.fillWidth: true
-                            spacing: Kirigami.Units.smallSpacing
+                            Layout.preferredHeight: Kirigami.Units.gridUnit * 5
+                            visible: providerCliCommandsToggle.expanded
 
-                            Components.PlainControlsLabel {
-                                text: modelData.label
-                                opacity: page.secondaryTextOpacity
-                                Layout.preferredWidth: Kirigami.Units.gridUnit * 7
-                                Layout.alignment: Qt.AlignTop
-                                wrapMode: Text.Wrap
+                            Controls.TextArea {
+                                readOnly: true
+                                selectByMouse: true
+                                wrapMode: TextEdit.NoWrap
+                                text: page.providerCliCommandText(page.selectedProvider)
+                                font.family: "monospace"
                             }
-
-                            Components.PlainControlsLabel {
-                                text: modelData.value
-                                Layout.fillWidth: true
-                                Layout.alignment: Qt.AlignTop
-                                wrapMode: Text.Wrap
-                            }
-                        }
-                    }
-
-                    Components.DisclosureButton {
-                        id: providerCliCommandsToggle
-
-                        plainText: i18n("CLI commands")
-                        expanded: false
-                        onClicked: expanded = !expanded
-                        Layout.alignment: Qt.AlignLeft
-                    }
-
-                    Controls.ScrollView {
-                        id: providerCliCommandsView
-
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: Kirigami.Units.gridUnit * 5
-                        visible: providerCliCommandsToggle.expanded
-
-                        Controls.TextArea {
-                            readOnly: true
-                            selectByMouse: true
-                            wrapMode: TextEdit.NoWrap
-                            text: page.providerCliCommandText(page.selectedProvider)
-                            font.family: "monospace"
                         }
                     }
                 }
             }
-        }
 
-        Item {
-            Layout.fillWidth: true
-            Layout.preferredHeight: Kirigami.Units.gridUnit * 8
-            visible: page.loading && page.providers.length === 0
-
-            Controls.BusyIndicator {
-                anchors.centerIn: parent
-                running: parent.visible
-            }
-        }
-
-        Kirigami.Separator {
-            id: providerListSeparator
-
-            Layout.fillWidth: true
-            Layout.leftMargin: Kirigami.Units.smallSpacing
-            Layout.rightMargin: Kirigami.Units.smallSpacing
-            Layout.topMargin: Kirigami.Units.smallSpacing
-            visible: page.providers.length > 0
-        }
-
-        RowLayout {
-            id: providerListHeading
-
-            Layout.fillWidth: true
-            Layout.leftMargin: Kirigami.Units.smallSpacing
-            Layout.rightMargin: Kirigami.Units.smallSpacing
-            spacing: Kirigami.Units.smallSpacing
-            visible: page.providers.length > 0
-
-            Components.PlainControlsLabel {
-                text: i18n("Providers")
-                font.weight: Font.DemiBold
-                Layout.fillWidth: true
-                elide: Text.ElideRight
-            }
-
-            Components.PlainControlsLabel {
-                text: page.filterText.trim().length > 0 || page.filterScope !== "all"
-                    ? i18np("%1 matching provider", "%1 matching providers", page.visibleProviders.length)
-                    : i18np("%1 provider enabled", "%1 providers enabled", page.enabledCount)
-                font: Kirigami.Theme.smallFont
-                opacity: page.secondaryTextOpacity
-                elide: Text.ElideRight
-            }
-        }
-
-        Components.PlainPlaceholderMessage {
-            Layout.fillWidth: true
-            Layout.topMargin: Kirigami.Units.gridUnit * 2
-            visible: !page.loading && page.providers.length === 0 && page.errorText.length === 0
-            icon.name: "view-list-details"
-            plainText: i18n("No providers reported")
-            plainExplanation: i18n("codexbar did not return any providers.")
-        }
-
-        Components.PlainPlaceholderMessage {
-            Layout.fillWidth: true
-            Layout.topMargin: Kirigami.Units.gridUnit * 2
-            visible: page.providers.length > 0 && page.visibleProviders.length === 0
-            icon.name: "search"
-            plainText: i18n("No matching providers")
-            plainExplanation: i18n("Try another search or choose a different filter.")
-            helpfulAction: clearProviderFiltersAction
-        }
-
-        Components.PlainControlsLabel {
-            Layout.fillWidth: true
-            Layout.leftMargin: Kirigami.Units.smallSpacing
-            Layout.rightMargin: Kirigami.Units.smallSpacing
-            visible: page.filterScope === "all" && page.visibleEnabledProviders.length > 0
-            text: i18n("Enabled")
-            font: Kirigami.Theme.smallFont
-            opacity: page.secondaryTextOpacity
-        }
-
-        Repeater {
-            model: page.visibleEnabledProviders
-
-            delegate: Components.ProviderConfigRow {
-                configPage: page
-            }
-        }
-
-        Components.PlainControlsLabel {
-            Layout.fillWidth: true
-            Layout.leftMargin: Kirigami.Units.smallSpacing
-            Layout.rightMargin: Kirigami.Units.smallSpacing
-            Layout.topMargin: page.visibleEnabledProviders.length > 0 ? Kirigami.Units.largeSpacing : 0
-            visible: page.filterScope === "all" && page.visibleDisabledProviders.length > 0
-            text: i18n("Disabled")
-            font: Kirigami.Theme.smallFont
-            opacity: page.secondaryTextOpacity
-        }
-
-        Repeater {
-            model: page.visibleDisabledProviders
-
-            delegate: Components.ProviderConfigRow {
-                configPage: page
-            }
         }
     }
 }

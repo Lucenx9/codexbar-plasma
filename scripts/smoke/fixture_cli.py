@@ -12,6 +12,7 @@ SCENARIOS = ("normal", "tabs-overflow", "provider-settings", "provider-header", 
              "project-costs", "project-tokens", "project-range", "project-long-text",
              "localization-it", "localization-fr", "localization-de", "localization-es", "localization-pt_BR")
 SCENARIOS += ("settings-general", "settings-panel", "settings-panel-information", "settings-panel-advanced", "settings-panel-narrow", "settings-popup", "settings-notifications", "settings-diagnostics")
+SCENARIOS += ("settings-general-updates", "settings-general-updates-narrow", "settings-providers-default")
 SCENARIOS += ("settings-panel-scrolled",)
 SCENARIOS += ("settings-providers", "settings-providers-narrow", "settings-providers-error",
               "settings-general-narrow", "settings-popup-narrow", "settings-notifications-narrow",

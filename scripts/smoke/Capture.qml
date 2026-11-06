@@ -1875,6 +1875,11 @@ Item {
                 releaseChecker.accept("synthetic-release", {"exit code": 0, stdout: JSON.stringify({
                     status: "available", version: "0.61.0", path: preview.page.cfg_commandPath,
                     manager: "managed", latest: "0.62.0", tag: "v0.62.0"})});
+                if (scenario.indexOf("settings-general-updates") === 0) {
+                    findItem(preview.page, "widgetUpdatesDisclosure").clicked();
+                    findItem(preview.page, "cliUpdatesDisclosure").clicked();
+                    preview.page.cfg_identifiedTokensEnabled = true;
+                }
                 navigationVerified = true;
             }
             if (scenario.indexOf("settings-providers-keys") === 0) {
@@ -1976,6 +1981,8 @@ Item {
                 verifyScenario(sourceBox !== null && sourceSave !== null
                     && sourceBox.currentIndex === -1 && !sourceSave.enabled,
                     "Provider source selection must start without claiming a saved value");
+                if (scenario === "settings-providers-default")
+                    return true;
                 if (!navigationVerified) {
                     var settingsToggle = findItem(providersPage, "providerSettingsToggle");
                     verifyScenario(settingsToggle !== null, "Providers must expose the provider settings toggle");
@@ -2003,7 +2010,7 @@ Item {
                 verifyScenario(versions !== null, "Diagnostics must expose the local versions controller");
                 versions.activeSource = "synthetic-versions";
                 versions.accept("synthetic-versions", {"exit code": 0, stdout: JSON.stringify({
-                    status: "local", version: "0.61.0",
+                    status: "local", version: "0.73.0",
                     path: "/home/demo/.local/share/codexbar-plasma/cli/current/codexbar", manager: "managed"})});
                 if (scenario === "settings-diagnostics-error") {
                     preview.page.diagnosticOutput = JSON.stringify([{provider: "codex", source: "cli",

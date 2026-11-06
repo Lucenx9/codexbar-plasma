@@ -134,6 +134,7 @@ TestCase {
     function test_installWithWorkingExternalCliAsksForConfirmation() {
         var page = createPage("../contents/ui/configGeneral.qml", {cfg_commandPath: "/usr/bin/codexbar"});
         if (!page) return;
+        findChild(page, "cliUpdatesDisclosure").clicked();
         var managed = findChild(page, "managedCliController");
         managed.activeAction = "status";
         managed.activeSource = "synthetic";
@@ -841,6 +842,8 @@ TestCase {
         });
         if (!page)
             return;
+        findChild(page, "widgetUpdatesDisclosure").clicked();
+        wait(0);
         var cases = [
             {label: "Fetch provider service status", key: "cfg_includeStatus"},
             {label: "Load local usage and spend history", key: "cfg_costUsageEnabled"},
@@ -1010,6 +1013,8 @@ TestCase {
         }
         var page = createPage("../contents/ui/" + data.source, properties);
         if (!page) return;
+        if (data.control === "autoUpdateIntervalHoursSpin")
+            findChild(page, "widgetUpdatesDisclosure").clicked();
         var control = findChild(page, data.control);
         verify(control !== null);
         wait(0);
@@ -1021,4 +1026,30 @@ TestCase {
             compare(control.Accessible.name, data.nextLabel);
         }
     }
+    function test_optionalSettingsRevealWithoutLosingValues() {
+        var page = createPage("../contents/ui/configGeneral.qml", {
+            cfg_identifiedTokensEnabled: false, cfg_identifiedTokensHistoryDays: 17,
+            cfg_identifiedTokensSshHost: "build@host", cfg_autoUpdateIntervalHours: 48
+        });
+        if (!page) return;
+        var widget = findChild(page, "widgetUpdatesDisclosure");
+        var cli = findChild(page, "cliUpdatesDisclosure");
+        var days = findChild(page, "identifiedDaysSpin");
+        verify(!widget.expanded && !cli.expanded && !days.visible);
+        widget.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Space);
+        verify(widget.expanded);
+        verify(findChild(page, "autoUpdateIntervalHoursSpin").visible);
+        keyClick(Qt.Key_Space);
+        verify(!widget.expanded);
+        compare(page.cfg_autoUpdateIntervalHours, 48);
+        page.cfg_identifiedTokensEnabled = true;
+        verify(days.visible);
+        compare(days.value, 17);
+        compare(findChild(page, "identifiedSshHostField").text, "build@host");
+        page.cfg_identifiedTokensEnabled = false;
+        compare(page.cfg_identifiedTokensHistoryDays, 17);
+        compare(page.cfg_identifiedTokensSshHost, "build@host");
+    }
+
 }

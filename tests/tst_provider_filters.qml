@@ -372,8 +372,8 @@ TestCase {
         compare(inspect.length, 1);
         verify(inspect[0].visible);
         var immediate = all.filter(function(item) {
-            return item.plainText !== undefined
-                && String(item.plainText).indexOf("CodexBar saves provider changes immediately") === 0;
+            return item.text !== undefined
+                && String(item.text).indexOf("CodexBar saves provider changes immediately") === 0;
         });
         verify(immediate.length >= 1);
         var cli = all.filter(function(item) {
@@ -702,4 +702,38 @@ TestCase {
         var readable = page.providerReadableColor("replicate", background);
         verify(ThemeContrast.contrastRatio(readable, background) >= 3);
     }
+    function test_providerPanesKeepSelectionAndKeyboardReachable() {
+        var page = createProvidersPage();
+        if (!page) return;
+        page.providers = Array.from({length: 20}, function(_, i) {
+            return {provider: "example" + i, displayName: "Example provider " + i, enabled: true};
+        });
+        page.selectedProviderID = "example0";
+        for (var width of [840, 420]) {
+            page.width = width;
+            wait(50);
+            var list = findChild(page, "providerListScroll");
+            var detail = findChild(page, "selectedProviderSurface");
+            verify(list.width > 0 && detail.width > 0);
+            var listPos = list.mapToItem(page, 0, 0);
+            var detailPos = detail.mapToItem(page, 0, 0);
+            if (width === 840) verify(detailPos.x > listPos.x + list.width);
+            else verify(detailPos.y >= listPos.y + list.height);
+            verify(detailPos.x + detail.width <= page.width);
+            var all = [];
+            walkPageObjects(page, all);
+            var last = all.filter(function(item) {
+                return item.providerData && item.providerData.provider === "example19";
+            })[0];
+            verify(last !== undefined);
+            last.forceActiveFocus(Qt.TabFocusReason);
+            keyClick(Qt.Key_Space);
+            compare(page.selectedProviderID, "example19");
+            var rowPos = last.mapToItem(list, 0, 0);
+            verify(rowPos.y >= -1 && rowPos.y + last.height <= list.height + 1);
+            verify(!settingsToggle(page).expanded);
+            findChild(page, "providerSearchField").forceActiveFocus();
+        }
+    }
+
 }
