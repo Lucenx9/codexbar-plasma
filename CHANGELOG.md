@@ -38,6 +38,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   guidance from expandable privacy details. Preserve existing settings and
   keyboard navigation, with updated translations in all five languages.
 
+- Let Provider settings use the full window height, with the provider list and
+  details ending together. Keep details at a readable width in wide windows,
+  place docs, dashboard and account links beside the provider name with an
+  overflow menu, and list credential clearing after the setup actions.
+
 - Clarify popup navigation with compact vertical quota gauges beside provider
   names, independently of tab selection. Emphasize cost summaries and show the
   peak daily amount above resting cost charts. Group square heatmap cells with

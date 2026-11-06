@@ -718,8 +718,10 @@ TestCase {
             verify(list.width > 0 && detail.width > 0);
             var listPos = list.mapToItem(page, 0, 0);
             var detailPos = detail.mapToItem(page, 0, 0);
-            if (width === 840) verify(detailPos.x > listPos.x + list.width);
-            else verify(detailPos.y >= listPos.y + list.height);
+            if (width === 840) {
+                verify(detailPos.x > listPos.x + list.width);
+                fuzzyCompare(detailPos.y + detail.height, listPos.y + list.height, 1);
+            } else verify(detailPos.y >= listPos.y + list.height);
             verify(detailPos.x + detail.width <= page.width);
             var all = [];
             walkPageObjects(page, all);
@@ -735,6 +737,32 @@ TestCase {
             verify(!settingsToggle(page).expanded);
             findChild(page, "providerSearchField").forceActiveFocus();
         }
+    }
+
+    function test_providerPaneBottomsAlignWithExpandedDetails() {
+        var page = createProvidersPage();
+        if (!page) return;
+        page.providers = [{provider: "codex", displayName: "Codex", enabled: true}];
+        page.selectedProviderID = "codex";
+        page.width = 840;
+        page.height = 300;
+        settingsToggle(page).expanded = true;
+        wait(50);
+        var list = findChild(page, "providerListScroll");
+        var detail = findChild(page, "selectedProviderSurface");
+        verify(detail.height > page.flickable.height);
+        fuzzyCompare(list.mapToItem(page, 0, list.height).y, detail.mapToItem(page, 0, detail.height).y, 1);
+    }
+
+    function test_descriptorActionsStayPlainTextCommands() {
+        var page = createProvidersPage();
+        if (!page) return;
+        page.providers = [{provider: "codex", displayName: "Codex", enabled: true, descriptor: {actions: [
+            {id: "openDashboard", title: "Usage dashboard"}, {id: "refreshSession", title: "Refresh session"}]}}];
+        page.selectedProviderID = "codex";
+        compare(page.providerLinkRow("dashboard"), null);
+        var commands = page.selectedProviderCommandRows.map(function(row) { return row.title; });
+        verify(commands.indexOf("Refresh session") >= 0 && commands.indexOf("Usage dashboard") >= 0);
     }
 
     function test_inspectionValuesAlignAndStackWhenNarrow() {
@@ -782,6 +810,14 @@ TestCase {
         verify(actions("claude").indexOf("set-cookie") >= 0);
         verify(actions("helmcode").indexOf("set-cookie") < 0);
         verify(actions("future-provider").indexOf("clear-credential") >= 0);
+        // Links move to the header toolbar; clearing follows every setup command.
+        page.selectedProviderID = "copilot";
+        var commandActions = page.selectedProviderCommandRows.map(function(row) { return row.action; });
+        compare(commandActions[commandActions.length - 1], "clear-credential");
+        verify(commandActions.indexOf("device-login") >= 0 && commandActions.indexOf("docs") < 0);
+        verify(page.selectedProviderLinkRows.every(function(row) { return row.url.length > 0; }));
+        compare(page.providerLinkRow("docs").action, "docs");
+        compare(page.providerLinkRow("missing"), null);
         page.handleCliVersionResult("CodexBar 0.83.0", 1);
         verify(actions("copilot").indexOf("device-login") < 0);
         compare(Object.keys(page.commands).length, 0);
