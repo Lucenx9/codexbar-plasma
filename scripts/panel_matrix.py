@@ -37,6 +37,11 @@ def matrix_cases(vertical=False):
         for flags in itertools.product((False, True), repeat=4):
             add(style + "-" + "".join(str(int(flag)) for flag in flags),
                 dict(zip(CONTENTS, flags)) | {"panelStyle": style})
+    for style in ("standard", "minimal"):
+        for edge in ("tiny", "warning", "stale-confidence-incident"):
+            add(style + "-" + edge, {"panelStyle": style}, edge=edge)
+        for interaction in ("hover", "press", "focus"):
+            add(style + "-" + interaction, {"panelStyle": style}, interaction=interaction)
     if vertical:
         return cases
     all_text = {key: True for key in CONTENTS}

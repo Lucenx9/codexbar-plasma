@@ -937,6 +937,14 @@ msgid "Example data. Panel changes appear here before you apply them."
 msgstr ""
 
 #: contents/ui/components/PanelText.qml
+msgid "At pace"
+msgstr ""
+
+#: contents/ui/components/PanelText.qml
+msgid "Behind pace"
+msgstr ""
+
+#: contents/ui/components/PanelText.qml
 msgid "Loading"
 msgstr ""
 

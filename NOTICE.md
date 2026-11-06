@@ -37,6 +37,9 @@ It is licensed under Creative Commons Attribution 4.0 International (CC BY
 https://creativecommons.org/licenses/by/4.0/
 SVG Stack's license policy: https://svgstack.com/page/license
 
+The Gemini mark is redrawn as a vector with optical sizing; the Grok mark
+uses matching view-box padding.
+
 Some provider icons use vendors' official brand marks. Brand names and marks
 remain subject to their owners' rights; neither their use nor the upstream
 credit implies affiliation with or endorsement of this widget.

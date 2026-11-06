@@ -58,7 +58,17 @@ QtObject {
             : i18n("%1% %2, behind pace", Math.round(shownPace), suffix)
     }
 
-    function segments(item, visible, selectionActive, display, iconIdentifies) {
+    function compactDisplayText(row, mode) {
+        var hasPace = (mode === "pace" || mode === "both") && paceText(row).length > 0
+        // The actionable pace verdict outlives its expected percentage. In
+        // combined mode an over-budget forecast also outlives the usage figure.
+        if (hasPace && (mode === "pace" || !row.paceOnTop || percentText(row).length === 0)) {
+            return row.paceOnTop ? i18n("At pace") : i18n("Behind pace")
+        }
+        return mode === "both" ? percentText(row) : ""
+    }
+
+    function segments(item, visible, selectionActive, display, iconIdentifies, compactDisplay) {
         return PanelText.segments(item, visible, selectionActive, {
             showProvider: root.showProvider,
             showPercent: root.showPercent,
@@ -67,6 +77,7 @@ QtObject {
         }, {
             fallback: root.loading ? i18n("Loading") : "CodexBar",
             display: display,
+            compactDisplay: compactDisplay,
             credits: item && root.showCredits && item.credits !== null
                 ? i18n("%1cr", CostPresentation.formatCount(root.numberFormat, item.credits)) : ""
         })

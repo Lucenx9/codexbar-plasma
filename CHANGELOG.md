@@ -12,6 +12,14 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Refine panel provider groups with larger, contrast-adjusted icons, slimmer
+  outlined quota tracks, clearer spacing, and regular tabular text. Vertical
+  panels stack icons above readable quota tracks. Tiny readings no longer
+  appear quarter-full, and exhausted remaining quotas stay visibly empty.
+  Keep current incident and confidence markers readable beside stale quotas;
+  shorten crowded usage/pace text to complete readings. Normalize Gemini and
+  Grok artwork padding and render Gemini as a vector.
+
 - Clarify popup navigation with compact vertical quota gauges beside provider
   names, independently of tab selection. Emphasize cost summaries and show the
   peak daily amount above resting cost charts. Group square heatmap cells with

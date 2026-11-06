@@ -1838,7 +1838,8 @@ PlasmoidItem {
             PanelRules.matches(panelVisibilityRules.text, row, panelClockMs),
             PanelProviders.selectionActive(panelProviderIDsRaw),
             item ? menuBarDisplayText(item) : "",
-            item ? providerIconIdentifies(item.provider) : false)
+            item ? providerIconIdentifies(item.provider) : false,
+            panelText.compactDisplayText(row, menuBarDisplayMode))
     }
 
     function compactText() {

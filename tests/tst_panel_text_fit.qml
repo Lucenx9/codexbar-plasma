@@ -130,6 +130,28 @@ TestCase {
         compare(PanelTextFit.fullText(null), "")
     }
 
+    function test_compactUsageIsOfferedOnlyAfterWholeSegments() {
+        var input = [
+            {id: "name", text: "Codex", compactText: "C"},
+            {id: "usage", text: "43% used - 30% used, behind pace", compactText: "43% used"},
+            {id: "credits", text: "125cr"}
+        ];
+        var before = JSON.stringify(input);
+        compare(PanelTextFit.segmentTexts(input), [
+            "Codex 43% used - 30% used, behind pace 125cr",
+            "43% used - 30% used, behind pace 125cr",
+            "43% used - 30% used, behind pace", "43% used"
+        ]);
+        compare(PanelTextFit.fullText(input), "Codex 43% used - 30% used, behind pace 125cr");
+        compare(JSON.stringify(input), before);
+        for (var compact of [null, undefined, "", "   ", "43% used"]) {
+            compare(PanelTextFit.segmentTexts([{id: "usage", text: "43% used", compactText: compact}]), ["43% used"]);
+        }
+        var bounded = PanelTextFit.segmentTexts([{id: "usage", text: "Full", compactText: "x".repeat(5000)}]);
+        verify(bounded[1].length <= PanelTextFit.maximumSegmentLength);
+        compare(PanelTextFit.segmentTexts([{id: "name", text: "Full name", compactText: "Name"}]), ["Full name"]);
+    }
+
     function test_textsIgnoresMalformedCompositionLists() {
         compare(PanelTextFit.texts(null).length, 0)
         compare(PanelTextFit.texts([[], null]), ["", ""])

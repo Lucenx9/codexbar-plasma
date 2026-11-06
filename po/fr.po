@@ -4157,3 +4157,11 @@ msgstr "Actions du fournisseur"
 #: contents/ui/components/InteractiveChart.qml
 msgid "Peak daily usage"
 msgstr "Pic d’utilisation quotidien"
+
+#: contents/ui/components/PanelText.qml
+msgid "Behind pace"
+msgstr "Rythme élevé"
+
+#: contents/ui/components/PanelText.qml
+msgid "At pace"
+msgstr "Rythme correct"
