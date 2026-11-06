@@ -10,8 +10,9 @@ ColumnLayout {
     required property var applet
     required property var providerCosts
     readonly property var projectData: CostPresentation.projectRows(providerCosts, applet.costHistoryShowsTokens)
+    readonly property bool hasContent: projectData.rows.length > 0 || projectData.truncated
 
-    visible: projectData.rows.length > 0 || projectData.truncated
+    visible: hasContent
     Layout.fillWidth: true
     spacing: Kirigami.Units.smallSpacing
 

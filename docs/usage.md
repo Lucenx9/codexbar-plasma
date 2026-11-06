@@ -819,7 +819,8 @@ and clipboard content remain under your control after closing the window.
   overage, z.ai BigModel CN balance, and Cursor Grok Bot usage, use the existing
   generic detail, provider-cost, and extra-window paths.
 - A compact provider summary compares today with the selected period. Expand
-  details for period models, history, and projects; cost warnings remain visible,
+  details for period models, history, and projects. Providers without project
+  data reserve no project space below the history; cost warnings remain visible,
   including when a failed refresh keeps the previous cost snapshot. A successful
   refresh clears the error. Today comes from the day of the last cost scan, so a
   snapshot scanned before midnight shows today as unavailable until a scan from

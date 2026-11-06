@@ -1602,6 +1602,9 @@ state before using Qt's
 QML errors, recursive layout warnings, missing captures, early exits, and timeouts
 fail the command. Nested-layout QtTests also use `failOnWarning` and exercise
 provider details and project rows at narrow and normal popup widths.
+`test_cost_sections.py` checks that expanded provider history has no trailing
+project space when project data is absent or empty, including provider changes,
+both metrics, collapsed details, and truncation-only project notices.
 The quota-row tests exercise inline resets and their expanded fallback with
 RTL, large fonts, pace, summaries and missing resets. `UsageRowLayout.js` owns
 the pure safety-band transition so changing countdown text does not repeatedly

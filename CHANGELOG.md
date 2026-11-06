@@ -27,6 +27,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Remove the empty project container below expanded provider cost history when
+  no project breakdown is available, while retaining reported project rows and
+  truncation notices.
+
 - Keep provider icons centered in icon-only popup tabs and return keyboard
   focus to Provider actions when an account change collapses a focused action.
   Keep the activity layout breakpoint independent of its own size hints.
