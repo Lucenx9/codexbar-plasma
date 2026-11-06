@@ -195,7 +195,7 @@ TestCase {
         var all = [];
         walkPageObjects(page, all);
         var fields = all.filter(function(item) {
-            return item instanceof Controls.TextField && item.text === "/opt/codexbar";
+            return item instanceof Controls.TextArea && item.text === "/opt/codexbar";
         });
         compare(fields.length, 1);
         compare(fields[0].Accessible.name, "Command path:");
@@ -359,8 +359,14 @@ TestCase {
         compare(path.text, longPath);
         verify(path.lineCount > 1);
         var field = findChild(page, "commandPathField");
-        compare(field.cursorPosition, 0);
+        verify(field.lineCount > 1);
+        field.forceActiveFocus(Qt.TabFocusReason);
+        field.cursorPosition = field.length;
+        keyClick(Qt.Key_Return);
+        keyClick(Qt.Key_Enter);
         compare(page.cfg_commandPath, longPath);
+        keyClick(Qt.Key_A, Qt.ControlModifier);
+        compare(field.selectedText, longPath);
     }
 
     function test_diagnosticsShowsSystemCliWhenItDiffers() {

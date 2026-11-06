@@ -204,3 +204,7 @@ says All providers, matching the unchanged explicit `--provider all` command;
 it does not describe the separate blank provider-override setting. The installed
 official Linux CLI 0.83.0 help lists `diagnose --provider <name|all>`; no diagnostic
 fetch was needed to verify that command spelling.
+
+The configured command also uses a wrapping editor, preventing a truncated
+value from looking like a complete executable path. Enter does not insert a
+line break; existing command validation and pending-save semantics are unchanged.

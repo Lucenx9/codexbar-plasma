@@ -369,11 +369,16 @@ KCM.SimpleKCM {
             // this row to keep its trailing action inside the viewport.
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
 
-            Controls.TextField {
+            Controls.TextArea {
                 id: commandPathField
                 objectName: "commandPathField"
-                onTextChanged: if (!activeFocus) cursorPosition = 0
-                onActiveFocusChanged: if (!activeFocus) cursorPosition = 0
+                implicitWidth: Kirigami.Units.gridUnit * 10
+                selectByMouse: true
+                textFormat: TextEdit.PlainText
+                wrapMode: TextEdit.WrapAnywhere
+                // Wrapping reveals the whole path; Enter must not insert a new line.
+                Keys.onReturnPressed: function(event) { event.accepted = true }
+                Keys.onEnterPressed: function(event) { event.accepted = true }
                 Accessible.name: commandPathRow.Kirigami.FormData.label
                 Layout.fillWidth: true
                 placeholderText: "codexbar"

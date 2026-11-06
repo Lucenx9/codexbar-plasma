@@ -1194,7 +1194,8 @@ guidance using the same local probe as the release checker. It also reports the
 PATH-resolved system CLI version whenever it differs from the selected command,
 so drift between a managed copy and a package-manager installation stays visible.
 The resolved command path wraps in a read-only field and supports keyboard
-selection and copying. The editable command path shows its beginning when unfocused.
+selection and copying. The editable command path also wraps to show its full value; Enter does not
+insert a new line.
 Editing the command path clears the previous result. Prerelease or custom version
 strings are not silently treated as older stable versions. Network errors do not
 affect quota fetching or replace the installed version with a guessed value.
