@@ -186,6 +186,20 @@ TestCase {
         verify(!providerActionRows.itemAt(0).visible);
     }
 
+    function test_quotaGaugeKeepsSmallValuesProportional() {
+        for (var used of [0, 1, 12, 25, 43, 100]) {
+            applet.presentedProviders = [provider("codex", "Codex", used), provider("claude", "Claude", used)];
+            for (var index = 0; index < providerTabRepeater.count; index++) {
+                var tab = providerTabRepeater.itemAt(index);
+                var gauge = findChild(tab, "providerTabQuotaGauge");
+                var fill = findChild(tab, "providerTabQuotaFill");
+                verify(waitForPolish(gauge));
+                compare(fill.height, used === 0 ? 0 : Math.max(1, Math.round(gauge.height * used / 100)));
+                verify(gauge.width >= 5 && gauge.width <= 7);
+            }
+        }
+    }
+
     function test_rosterChangesUpdateTheProviderActivatedByEachTab() {
         applet.presentedProviders = [provider("claude", "Claude", 30), provider("codex", "Codex", 40)];
         compare(providerTabRepeater.count, 2);

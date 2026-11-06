@@ -438,18 +438,19 @@ Item {
                         Rectangle {
                             objectName: "providerTabQuotaGauge"
                             visible: providerTab.meter >= 0
-                            Layout.preferredWidth: Kirigami.Units.smallSpacing
+                            Layout.preferredWidth: Math.round(Kirigami.Units.gridUnit * 0.33)
                             Layout.preferredHeight: Kirigami.Units.iconSizes.small
                             radius: width / 2
-                            color: applet.withAlpha(Kirigami.Theme.textColor, 0.16)
+                            color: applet.withAlpha(Kirigami.Theme.textColor, 0.55)
                             clip: true
                             Accessible.ignored: true
 
                             Rectangle {
+                                objectName: "providerTabQuotaFill"
                                 anchors.bottom: parent.bottom
                                 width: parent.width
-                                height: providerTab.meter <= 0 ? 0 : Math.max(parent.width,
-                                    parent.height * Math.max(0, Math.min(100, providerTab.meter)) / 100)
+                                height: providerTab.meter <= 0 ? 0 : Math.max(1,
+                                    Math.round(parent.height * Math.max(0, Math.min(100, providerTab.meter)) / 100))
                                 radius: parent.radius
                                 color: providerTab.accent
                             }
