@@ -13,6 +13,7 @@ from ui_regression_support import Surface, root
 QML = '''import QtQuick
 import QtQuick.Window
 import QtQuick.Controls as Controls
+import QtQuick.Templates as Templates
 import QtQuick.Layouts
 import QtTest
 import org.kde.kirigami as Kirigami

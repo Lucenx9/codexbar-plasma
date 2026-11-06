@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Window
 import QtQuick.Controls as Controls
+import QtQuick.Templates as Templates
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.components as PlasmaComponents
@@ -1383,10 +1384,11 @@ Item {
                         function collapseForSelection() {
                             var window = providerActionsSection.Window.window
                             var focused = window ? window.activeFocusItem : null
+                            var control = focused as Templates.Control
                             var ancestor = focused
                             while (ancestor && ancestor !== providerActionsToggle) {
                                 if (ancestor === providerActionsSection) {
-                                    providerActionsToggle.forceActiveFocus(focused.visualFocus
+                                    providerActionsToggle.forceActiveFocus(control && control.visualFocus
                                         ? Qt.TabFocusReason : Qt.OtherFocusReason)
                                     break
                                 }
