@@ -635,13 +635,10 @@ ColumnLayout {
         }
     }
 
-    ColumnLayout {
-        visible: tokenCostSection.detailsExpanded
-        Layout.fillWidth: true
-        Components.ProjectCostSection {
-            applet: tokenCostSection.applet
-            providerCosts: tokenCostSection.tokenCost ? [tokenCostSection.tokenCost] : []
-        }
+    Components.ProjectCostSection {
+        visible: tokenCostSection.detailsExpanded && hasContent
+        applet: tokenCostSection.applet
+        providerCosts: tokenCostSection.tokenCost ? [tokenCostSection.tokenCost] : []
     }
 
     PlainPlasmaLabel {

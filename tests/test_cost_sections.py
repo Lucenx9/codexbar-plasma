@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts/lib"))
 
 QML_TEMPLATE = '''import QtQuick
+import QtQuick.Window
 import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import QtTest
@@ -170,6 +171,30 @@ TestCase {
         }
     }
     Component {
+        id: providerScrollFactory
+        PlasmaComponents.ScrollView {
+            id: providerScroll
+            width: 580
+            height: 500
+            contentWidth: availableWidth
+            clip: true
+            PlasmaComponents.ScrollBar.horizontal.policy: PlasmaComponents.ScrollBar.AlwaysOff
+            ColumnLayout {
+                width: providerScroll.availableWidth - Kirigami.Units.smallSpacing
+                function i18n() { return testCase.i18n.apply(testCase, arguments); }
+                function i18np(one, many, count) { return testCase.i18np(one, many, count); }
+                function i18nc() { return testCase.i18nc.apply(testCase, arguments); }
+                Components.ProviderCostSection {
+                    applet: fakeApplet
+                    providerData: testCase.providerData
+                }
+                Components.DisclosureButton {
+                    plainText: "Provider actions"
+                }
+            }
+        }
+    }
+    Component {
         id: spendFactory
         ColumnLayout {
             property bool mirrored: false
@@ -212,6 +237,66 @@ TestCase {
 
 
 class CostSectionTests(unittest.TestCase):
+    def test_provider_history_has_no_empty_project_tail(self):
+        self.run_fixture('''
+    function test_noEmptyProjectTail_data() {
+        return [
+            {tag: "wide-cost", width: 580, tokens: false},
+            {tag: "narrow-cost", width: 240, tokens: false},
+            {tag: "wide-tokens", width: 580, tokens: true},
+            {tag: "narrow-tokens", width: 240, tokens: true}
+        ];
+    }
+    function test_noEmptyProjectTail(options) {
+        failOnWarning(/.*/);
+        fakeApplet.costHistoryShowsTokens = options.tokens;
+        testCase.providerData = {provider: "claude", tokenCost: null};
+        var subject = createTemporaryObject(providerScrollFactory, testCase, {width: options.width});
+        verify(subject !== null);
+        verify(waitForPolish(testCase.Window.window));
+        var section = findChild(subject, "providerLocalCostSection");
+        var all = [];
+        walkTree(section, all);
+        var history = all.filter(function(item) {
+            return item.peakLine !== undefined && item.rows !== undefined;
+        })[0];
+        verify(history !== undefined);
+        var projectSection = findChild(subject, "projectCostSection");
+        var base = testCase.providerTokenCost;
+        var projects = {rows: [
+            {label: "Example project", cost: 12, tokens: 100, currency: "USD"}
+        ], truncated: false};
+        for (var data of [
+            {provider: "claude", projects: undefined},
+            {provider: "codex", projects: projects},
+            {provider: "claude", projects: undefined},
+            {provider: "antigravity", projects: undefined},
+            {provider: "codex", projects: {rows: [], truncated: false}},
+            {provider: "future-provider", projects: {rows: [], truncated: true}},
+            {provider: "future-provider", projects: projects}
+        ]) {
+            testCase.providerData = {provider: data.provider,
+                tokenCost: Object.assign({}, base, {provider: data.provider, projects: data.projects})};
+            verify(waitForPolish(testCase.Window.window));
+            verify(!projectSection.visible, "Projects must stay hidden while details are collapsed");
+            section.detailsExpanded = true;
+            verify(waitForPolish(testCase.Window.window));
+            var hasProjects = data.projects !== undefined
+                && (data.projects.rows.length > 0 || data.projects.truncated);
+            compare(projectSection.visible, hasProjects);
+            if (!hasProjects) {
+                var tail = section.height - history.mapToItem(section, 0, history.height).y;
+                fuzzyCompare(tail, 0, 0.5, "Empty space below cost history");
+            } else {
+                verify(projectSection.height > 0);
+                verify(projectSection.mapToItem(section, 0, 0).y >= history.y + history.height);
+            }
+            section.detailsExpanded = false;
+            verify(waitForPolish(testCase.Window.window));
+        }
+    }
+    ''')
+
     def test_spend_provider_totals_follow_metric_and_fit(self):
         self.run_fixture('''
     function test_spendProviderTotalsFollowMetricAndFit() {
