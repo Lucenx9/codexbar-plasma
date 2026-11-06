@@ -3366,15 +3366,15 @@ msgid "Set cookie…"
 msgstr ""
 
 #: contents/ui/configProviders.qml
-msgid "Clear stored credentials…"
-msgstr ""
-
-#: contents/ui/configProviders.qml
 msgid "Sign in with GitHub…"
 msgstr ""
 
 #: contents/ui/configProviders.qml
 msgid "Cancel sign-in"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Clear stored credentials…"
 msgstr ""
 
 #: contents/ui/configProviders.qml contents/ui/main.qml

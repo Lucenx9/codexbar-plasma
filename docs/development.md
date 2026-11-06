@@ -1680,6 +1680,10 @@ update groups and the optional identified subtotal, exercising the controls
 hidden in the resting General page. These captures also assert that visible
 help text stays inside the viewport, including after both groups expand. `settings-providers-default` captures the
 initial provider surface without expanding diagnostics.
+Wide provider captures use a fixed 900-pixel viewport because side-by-side
+panes fill the visible page. `settings-providers-wide` renders 1440 pixels and
+checks that both panes end together without scrolling and that the details keep
+their readable maximum width.
 `settings-ai-insights-stored-narrow` exercises the stored-key status and both
 wallet actions at 420 pixels with larger text. The existing provider
 captures deliberately expand it for inspection. Provider-list QtTests also

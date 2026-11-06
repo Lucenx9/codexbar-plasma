@@ -78,8 +78,13 @@ Item {
         sourceComponent: SettingsPreview {
             applet: capture.applet
             // Narrow variants also use 13-point text, staged by smoke_popup.py.
-            width: /-narrow$/.test(capture.scenario) ? 420 : 840
-            viewportHeight: capture.scenario === "settings-panel-scrolled" ? 500 : 0
+            width: /-narrow$/.test(capture.scenario) ? 420
+                : capture.scenario === "settings-providers-wide" ? 1440 : 840
+            // Side-by-side provider panes fill the viewport, so they need a
+            // fixed height instead of one derived from their own content.
+            viewportHeight: capture.scenario === "settings-panel-scrolled" ? 500
+                : capture.scenario.indexOf("settings-providers") === 0
+                    && !/-narrow$/.test(capture.scenario) ? 900 : 0
             pageSource: capture.settingsPageSource(capture.scenario)
         }
     }
@@ -2007,6 +2012,22 @@ Item {
                     "Provider source selection must start without claiming a saved value");
                 if (scenario === "settings-providers-default")
                     return true;
+                if (scenario === "settings-providers-wide") {
+                    var providerList = findItem(providersPage, "providerListScroll");
+                    var providerDetail = findItem(providersPage, "selectedProviderSurface");
+                    if (!providerDetail.visible) {
+                        providersPage.selectedProviderID = "codex";
+                        return false;
+                    }
+                    var listBottom = providerList.mapToItem(providersPage, 0, providerList.height).y;
+                    var detailBottom = providerDetail.mapToItem(providersPage, 0, providerDetail.height).y;
+                    verifyScenario(Math.abs(listBottom - detailBottom) <= 1
+                        && providersPage.flickable.contentHeight <= providersPage.flickable.height + 1,
+                        "Side-by-side provider panes must share the visible page height without scrolling");
+                    verifyScenario(providerDetail.width <= Kirigami.Units.gridUnit * 44 + 1,
+                        "Provider details must keep a readable width in wide windows");
+                    return true;
+                }
                 if (!navigationVerified) {
                     var settingsToggle = findItem(providersPage, "providerSettingsToggle");
                     verifyScenario(settingsToggle !== null, "Providers must expose the provider settings toggle");

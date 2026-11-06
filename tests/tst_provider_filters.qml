@@ -718,8 +718,10 @@ TestCase {
             verify(list.width > 0 && detail.width > 0);
             var listPos = list.mapToItem(page, 0, 0);
             var detailPos = detail.mapToItem(page, 0, 0);
-            if (width === 840) verify(detailPos.x > listPos.x + list.width);
-            else verify(detailPos.y >= listPos.y + list.height);
+            if (width === 840) {
+                verify(detailPos.x > listPos.x + list.width);
+                fuzzyCompare(detailPos.y + detail.height, listPos.y + list.height, 1);
+            } else verify(detailPos.y >= listPos.y + list.height);
             verify(detailPos.x + detail.width <= page.width);
             var all = [];
             walkPageObjects(page, all);
@@ -782,6 +784,14 @@ TestCase {
         verify(actions("claude").indexOf("set-cookie") >= 0);
         verify(actions("helmcode").indexOf("set-cookie") < 0);
         verify(actions("future-provider").indexOf("clear-credential") >= 0);
+        // Links move to the header toolbar; clearing follows every setup command.
+        page.selectedProviderID = "copilot";
+        var commandActions = page.selectedProviderCommandRows.map(function(row) { return row.action; });
+        compare(commandActions[commandActions.length - 1], "clear-credential");
+        verify(commandActions.indexOf("device-login") >= 0 && commandActions.indexOf("docs") < 0);
+        verify(page.selectedProviderLinkRows.every(function(row) { return row.url.length > 0; }));
+        compare(page.providerLinkRow("docs").action, "docs");
+        compare(page.providerLinkRow("missing"), null);
         page.handleCliVersionResult("CodexBar 0.83.0", 1);
         verify(actions("copilot").indexOf("device-login") < 0);
         compare(Object.keys(page.commands).length, 0);

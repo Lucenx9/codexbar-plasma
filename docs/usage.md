@@ -621,7 +621,11 @@ Provider-specific editable settings depend on the official CLI contract.
 - Provider docs, dashboards, login/account links, and redacted diagnostics.
   The selected provider's links, settings and diagnostics share one surface
   beside the scrollable provider list in wide windows, and below it in narrow
-  windows. Source selection stays visible; **Settings and diagnostics** starts
+  windows. Side by side, both panes fill the visible page height, and the
+  details keep a readable maximum width in wide windows. Docs, dashboard and
+  account links sit beside the provider name and move into an overflow menu when
+  space runs out. Setup actions follow on their own row, with credential
+  clearing last. Source selection stays visible; **Settings and diagnostics** starts
   collapsed. Provider switches remain on the page background, separate from the
   selected-row highlight, so their state is readable in both themes.
 - With the official CLI 0.56.2 verified by this repository, the Providers page

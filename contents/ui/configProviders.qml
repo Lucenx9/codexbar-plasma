@@ -108,6 +108,10 @@ KCM.SimpleKCM {
     readonly property var visibleDisabledProviders: providerSettingsGroups.disabled
     readonly property int enabledCount: ProviderList.filteredProviders(providers, "", "enabled").length
     readonly property var selectedProvider: providerByID(selectedProviderID)
+    // URL rows open a page; every other row runs a provider command.
+    readonly property var selectedProviderActionRows: providerActionRows(selectedProvider)
+    readonly property var selectedProviderLinkRows: selectedProviderActionRows.filter(function(row) { return !!row.url })
+    readonly property var selectedProviderCommandRows: selectedProviderActionRows.filter(function(row) { return !row.url })
     readonly property var selectedProviderSourceModes: ProviderSource.availableModes(
         selectedProvider ? selectedProvider.authentication : null)
 
@@ -956,14 +960,15 @@ KCM.SimpleKCM {
         if (ProviderCredentials.supportsCookie(item.provider, credentialCliVersion, item.authentication)) {
             rows.push({title: i18n("Set cookie…"), icon: "document-encrypt", action: "set-cookie", enabled: canWrite})
         }
-        if (ProviderCredentials.supportsClear(credentialCliVersion)) {
-            rows.push({title: i18n("Clear stored credentials…"), icon: "edit-clear", action: "clear-credential", enabled: canWrite})
-        }
         if (ProviderCredentials.supportsLogin(item.provider, credentialCliVersion)) {
             rows.push({title: i18n("Sign in with GitHub…"), icon: "dialog-password", action: "device-login", enabled: canWrite})
             if (deviceLoginActive()) {
                 rows.push({title: i18n("Cancel sign-in"), icon: "dialog-cancel", action: "cancel-login", enabled: true})
             }
+        }
+        // The destructive action follows every setup action.
+        if (ProviderCredentials.supportsClear(credentialCliVersion)) {
+            rows.push({title: i18n("Clear stored credentials…"), icon: "edit-clear", action: "clear-credential", enabled: canWrite})
         }
         var docs = providerDocsUrl(item.provider)
         if (docs.length > 0) {
@@ -978,6 +983,15 @@ KCM.SimpleKCM {
             rows.push({ title: item.enabled ? i18n("Account") : i18n("Login"), icon: "internet-services", action: "login", url: login, enabled: true })
         }
         return rows
+    }
+
+    function providerLinkRow(action) {
+        var rows = selectedProviderLinkRows
+        for (var i = 0; i < rows.length; i++) {
+            if (rows[i].action === action)
+                return rows[i]
+        }
+        return null
     }
 
     function descriptorActionIcon(action) {
@@ -1618,6 +1632,12 @@ KCM.SimpleKCM {
             id: providerPanes
             Layout.fillWidth: true
             columns: page.width >= Kirigami.Units.gridUnit * 42 ? 2 : 1
+            // Side by side, both panes fill the visible page so the list uses
+            // the window height instead of leaving empty space below it.
+            readonly property real paneHeight: columns === 2
+                ? Math.max(Kirigami.Units.gridUnit * 20,
+                    page.flickable.height - y - page.topPadding - page.bottomPadding)
+                : Kirigami.Units.gridUnit * 20
             columnSpacing: Kirigami.Units.largeSpacing
             rowSpacing: Kirigami.Units.largeSpacing
 
@@ -1628,7 +1648,7 @@ KCM.SimpleKCM {
                 Layout.alignment: Qt.AlignTop
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 16
                 Layout.maximumWidth: providerPanes.columns === 2 ? Kirigami.Units.gridUnit * 18 : Infinity
-                Layout.preferredHeight: Kirigami.Units.gridUnit * (providerPanes.columns === 2 ? 28 : 20)
+                Layout.preferredHeight: providerPanes.paneHeight
                 contentWidth: availableWidth
                 clip: true
 
@@ -1647,7 +1667,7 @@ KCM.SimpleKCM {
                         }
                     }
 
-                    ColumnLayout {
+                    RowLayout {
                         id: providerListHeading
 
                         Layout.fillWidth: true
@@ -1659,11 +1679,15 @@ KCM.SimpleKCM {
                         Components.PlainControlsLabel {
                             text: i18n("Providers")
                             font.weight: Font.DemiBold
+                            Layout.alignment: Qt.AlignBaseline
                             Layout.fillWidth: true
                             elide: Text.ElideRight
                         }
 
                         Components.PlainControlsLabel {
+                            Layout.alignment: Qt.AlignBaseline
+                            Layout.fillWidth: true
+                            horizontalAlignment: Text.AlignRight
                             text: page.filterText.trim().length > 0 || page.filterScope !== "all"
                                 ? i18np("%1 matching provider", "%1 matching providers", page.visibleProviders.length)
                                 : i18np("%1 provider enabled", "%1 providers enabled", page.enabledCount)
@@ -1738,12 +1762,15 @@ KCM.SimpleKCM {
                 Layout.alignment: Qt.AlignTop
                 Layout.minimumWidth: 0
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 26
+                // A readable measure: controls and help text stop growing on wide windows.
+                Layout.maximumWidth: Kirigami.Units.gridUnit * 44
 
                 Layout.fillWidth: true
                 Layout.topMargin: Kirigami.Units.smallSpacing
                 Layout.leftMargin: Kirigami.Units.smallSpacing
                 Layout.rightMargin: Kirigami.Units.smallSpacing
-                implicitHeight: selectedProviderContent.implicitHeight + Kirigami.Units.largeSpacing * 2
+                implicitHeight: Math.max(selectedProviderContent.implicitHeight + Kirigami.Units.largeSpacing * 2,
+                    providerPanes.columns === 2 ? providerPanes.paneHeight - Kirigami.Units.smallSpacing : 0)
                 radius: Kirigami.Units.cornerRadius
                 color: page.withAlpha(Kirigami.Theme.textColor, 0.035)
                 visible: page.selectedProvider !== null
@@ -1758,8 +1785,9 @@ KCM.SimpleKCM {
                     spacing: Kirigami.Units.smallSpacing
 
                     RowLayout {
+                        id: selectedProviderHeader
+
                         Layout.fillWidth: true
-                        Layout.bottomMargin: Kirigami.Units.smallSpacing
                         spacing: Kirigami.Units.largeSpacing
 
                         Rectangle {
@@ -1769,8 +1797,8 @@ KCM.SimpleKCM {
                                     Kirigami.Theme.backgroundColor)
                                 : Kirigami.Theme.textColor
 
-                            Layout.alignment: Qt.AlignTop
-                            Layout.preferredWidth: Kirigami.Units.iconSizes.medium + Kirigami.Units.smallSpacing * 2
+                            Layout.alignment: Qt.AlignVCenter
+                            Layout.preferredWidth: Kirigami.Units.iconSizes.medium + Kirigami.Units.largeSpacing * 2
                             Layout.preferredHeight: Layout.preferredWidth
                             radius: Kirigami.Units.cornerRadius
                             color: page.withAlpha(accent, 0.12)
@@ -1788,12 +1816,14 @@ KCM.SimpleKCM {
 
                         ColumnLayout {
                             Layout.fillWidth: true
+                            // The provider identity keeps its text; links overflow first.
+                            Layout.minimumWidth: Math.min(implicitWidth, Kirigami.Units.gridUnit * 10)
                             Layout.alignment: Qt.AlignVCenter
                             spacing: 0
 
                             Components.PlainHeading {
                                 text: page.selectedProvider ? page.selectedProvider.displayName : ""
-                                level: 4
+                                level: 2
                                 Layout.fillWidth: true
                                 elide: Text.ElideRight
                             }
@@ -1803,20 +1833,64 @@ KCM.SimpleKCM {
                                     ? (page.selectedProvider.enabled ? i18n("%1 - enabled", page.selectedProvider.provider) : i18n("%1 - disabled", page.selectedProvider.provider))
                                     : ""
                                 opacity: page.secondaryTextOpacity
-                                font: Kirigami.Theme.smallFont
                                 Layout.fillWidth: true
                                 elide: Text.ElideRight
                             }
                         }
+
+                        // Links leave the settings, so they read as quiet toolbar
+                        // buttons and collapse into an overflow menu when narrow.
+                        Kirigami.ActionToolBar {
+                            id: providerLinkToolBar
+                            objectName: "providerLinkToolBar"
+
+                            Layout.alignment: Qt.AlignVCenter
+                            Layout.fillWidth: true
+                            Layout.preferredWidth: maximumContentWidth
+                            Layout.maximumWidth: maximumContentWidth
+                            alignment: Qt.AlignRight
+                            visible: page.selectedProviderLinkRows.length > 0
+                            actions: [
+                                Kirigami.Action {
+                                    readonly property var row: page.providerLinkRow("docs")
+                                    text: row ? row.title : ""
+                                    icon.name: "help-contents"
+                                    visible: row !== null
+                                    onTriggered: page.performProviderAction(row)
+                                },
+                                Kirigami.Action {
+                                    readonly property var row: page.providerLinkRow("dashboard")
+                                    text: row ? row.title : ""
+                                    icon.name: "view-statistics"
+                                    visible: row !== null
+                                    onTriggered: page.performProviderAction(row)
+                                },
+                                Kirigami.Action {
+                                    readonly property var row: page.providerLinkRow("login")
+                                    text: row ? row.title : ""
+                                    icon.name: "internet-services"
+                                    visible: row !== null
+                                    onTriggered: page.performProviderAction(row)
+                                }
+                            ]
+                        }
+                    }
+
+                    Kirigami.Separator {
+                        Layout.fillWidth: true
+                        Layout.topMargin: Kirigami.Units.smallSpacing
+                        Layout.bottomMargin: Kirigami.Units.smallSpacing
                     }
 
                     Flow {
+                        id: providerCommandActions
+                        objectName: "providerCommandActions"
                         Layout.fillWidth: true
                         spacing: Kirigami.Units.smallSpacing
-                        visible: page.providerActionRows(page.selectedProvider).length > 0
+                        visible: page.selectedProviderCommandRows.length > 0
 
                         Repeater {
-                            model: page.providerActionRows(page.selectedProvider)
+                            model: page.selectedProviderCommandRows
 
                             delegate: Controls.Button {
                                 required property var modelData
@@ -1832,6 +1906,7 @@ KCM.SimpleKCM {
 
                     ColumnLayout {
                         Layout.fillWidth: true
+                        Layout.topMargin: providerCommandActions.visible ? Kirigami.Units.largeSpacing : 0
                         spacing: Kirigami.Units.smallSpacing
                         visible: page.providerSourceSetupSupported && page.selectedProviderSourceModes.length > 0
 
