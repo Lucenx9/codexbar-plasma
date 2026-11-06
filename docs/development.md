@@ -1635,7 +1635,16 @@ QtTests additionally exercise pointer/keyboard activation and resizing.
 `settings-panel`, `settings-panel-information`, `settings-panel-advanced`, and
 `settings-panel-narrow` verify pending preview changes, collapsed/expanded controls,
 rendered quota capsules, and a 420-pixel layout with larger text and all additional
-information enabled. Every settings page has a capture, and each `-narrow`
+information enabled. `settings-general-updates` and `settings-general-updates-narrow` expand both
+update groups and the optional identified subtotal, exercising the controls
+hidden in the resting General page. These captures also assert that visible
+help text stays inside the viewport, including after both groups expand. `settings-providers-default` captures the
+initial provider surface without expanding diagnostics.
+`settings-ai-insights-stored-narrow` exercises the stored-key status and both
+wallet actions at 420 pixels with larger text. The existing provider
+captures deliberately expand it for inspection. Provider-list QtTests also
+verify wide/stacked placement and keyboard access to rows beyond the viewport.
+Every settings page has a capture, and each `-narrow`
 variant renders at 420 pixels with 13-point text. `settings-providers` lists a
 twelve-provider synthetic roster with the longest bundled title and an unknown
 ID, then selects a provider and shows its redacted fixture diagnostics.

@@ -52,7 +52,7 @@ work and upstream contract requirements.
 
   ![Optional usage text beside its provider's quota capsules](codexbar-plasma-panel-information.png)
 
-- **Use monochrome icons and meters only** in **Additional information** selects
+- **Use monochrome icons and meters only** in **Panel → Appearance** selects
   Minimal and enables provider meters, including with a single
   provider, and hides panel names, usage text and credits. The style selector
   changes appearance alone. Existing installations keep their style, explicit
@@ -326,7 +326,10 @@ work and upstream contract requirements.
   preserving hover and keyboard focus at the same list position. A changed
   session count recreates the cards. Ages use the current clock after each scan.
 - Overview providers can be limited to a chosen set of up to 3 providers, or
-  left automatic (the first 3 eligible providers). The checkboxes recognize
+  left automatic (the first 3 eligible providers). **Popup → Overview providers**
+  makes this choice explicit: **First 3 providers automatically** follows the
+  order, while **Choose providers** enables the individual checkboxes. Switching
+  to manual selection starts from the currently selected providers. The checkboxes recognize
   provider aliases and mixed-case IDs, like the panel provider selection.
   Disabled providers keep their saved selection without occupying one of the
   three slots. If more than three selected providers become available again,
@@ -534,7 +537,7 @@ identities as usual and keeps the last-known indication visible.
 ## Providers and accounts
 
 If Plasma cannot run the CLI, the popup keeps its installation guidance visible
-when switching to Usage & Spend or Sessions. Open **General → Managed CLI** in
+when switching to Usage & Spend or Sessions. Open **General → Updates → CodexBar CLI → Managed CLI** in
 widget settings to install and select a private CLI, then **Apply**. For an
 existing installation, use **Diagnostics** to set the absolute executable path.
 
@@ -603,7 +606,10 @@ Provider-specific editable settings depend on the official CLI contract.
   default-account buttons reveals their labels in tooltips.
 - Provider docs, dashboards, login/account links, and redacted diagnostics.
   The selected provider's links, settings and diagnostics share one surface
-  above the provider list; **Settings and diagnostics** starts collapsed.
+  beside the scrollable provider list in wide windows, and below it in narrow
+  windows. Source selection stays visible; **Settings and diagnostics** starts
+  collapsed. Provider switches remain on the page background, separate from the
+  selected-row highlight, so their state is readable in both themes.
 - With the official CLI 0.56.2 verified by this repository, the Providers page
   offers enable/disable, supported single API key setup, CLI command hints, and
   docs/dashboard/login links.
@@ -993,8 +999,14 @@ fields; track proposed extensions in the issue tracker.
 - Seven settings pages: **General**, **Providers**, **Panel**, **Popup**,
   **Notifications**, **AI Insights (Beta)**, and **Diagnostics**. CLI path and provider/source overrides
   sit beside redacted diagnostics; quota thresholds sit beside their alerts.
-  **Popup** lists hidden usage rows under **Popup** and groups provider order
+  **Popup** lists hidden usage rows under **Popup content** and groups provider order
   and Overview providers under **Providers**;
+  **General → Updates** groups widget and CLI management behind separate
+  disclosures, with their current status visible while closed. Optional identified
+  Codex subtotal fields appear when that option is enabled; hiding them keeps
+  their values. **Diagnostics** starts with the command path and installed
+  versions under **CodexBar CLI**, followed by overrides, diagnostics and support.
+  Empty diagnostic output uses a compact area that grows after a result arrives.
   **Diagnostics** runs redacted diagnostics from its **Provider diagnostics**
   section. The provider lists in **Popup** and **Panel** settings require a
   successful CLI process. Failed loads show the CLI error or exit code even
@@ -1075,7 +1087,7 @@ fields; track proposed extensions in the issue tracker.
 - **Panel** starts with the preview, side-by-side Standard/Minimal choices, and
   provider meters. Text and controls keep their horizontal position as the page
   opens. **Additional information** contains the selected provider's
-  name, usage text, credit balance, and the monochrome preset. Its closed summary
+  name, usage text, and credit balance. The monochrome preset sits in **Appearance**. Its closed summary
   lists enabled information. Text format appears only when usage text is enabled;
   hiding controls preserves their selected values. These additions work in
   horizontal panels; meters also work in vertical panels. With several panel
@@ -1087,6 +1099,7 @@ fields; track proposed extensions in the issue tracker.
   configured conditions, and automatic selection even while collapsed. Opening
   or closing it never changes saved or pending preferences.
 - A live **Panel** preview uses example data and the actual panel renderer.
+  Its **Example** selector wraps beneath the heading in narrow windows.
   Try normal usage, near-limit usage, a service incident, or missing data before
   applying changes. It stays above the scrolling options, including quota,
   order, and visibility controls. The preview never fetches usage or changes
@@ -1120,7 +1133,7 @@ fields; track proposed extensions in the issue tracker.
 - Configurable order for the provider identity, service status, usage text, and
   provider meters shown in the panel.
 - Check for widget updates, notify, and install widget updates automatically
-  by default. In **General → Updates**, clear **Install widget updates
+  by default. In **General → Updates → Widget updates**, clear **Install widget updates
   automatically** and apply to opt out. Existing instances without a saved
   value adopt the new default; explicitly saved choices are kept. Plasma may
   have omitted the previous off setting because it matched the old default.
@@ -1152,7 +1165,7 @@ fields; track proposed extensions in the issue tracker.
 
 ### CLI release checks and installed versions
 
-In **General → CLI updates**, **Check CLI releases now** compares the selected
+In **General → Updates → CodexBar CLI**, **Check CLI releases now** compares the selected
 executable's `--version` with the latest stable official GitHub release. The
 manual check works even when daily checks are disabled. Daily checks are opt-in,
 run independently of quota refreshes, and retry failures after one hour.
@@ -1175,12 +1188,14 @@ Update external copies with the original installation method; the widget does
 not run package managers or request privileges. The separate managed-copy option
 below downloads official binaries only after an explicit install action.
 
-**Diagnostics → Versions → Check versions** remains an offline probe. It reports
+**Diagnostics → CodexBar CLI → Check versions** remains an offline probe. It reports
 the widget version, installed CLI version, resolved command path, and installation
 guidance using the same local probe as the release checker. It also reports the
 PATH-resolved system CLI version whenever it differs from the selected command,
 so drift between a managed copy and a package-manager installation stays visible.
-Hovering a resolved command path that is shortened in the middle shows it in full.
+The resolved command path wraps in a read-only field and supports keyboard
+selection and copying. The editable command path also wraps to show its full value; Enter does not
+insert a new line.
 Editing the command path clears the previous result. Prerelease or custom version
 strings are not silently treated as older stable versions. Network errors do not
 affect quota fetching or replace the installed version with a guessed value.
@@ -1208,7 +1223,7 @@ selected, and usage is not refreshed. The popup explains that verification
 failed and points to **Settings → Diagnostics** to choose another CLI.
 Preparation does not repair a damaged existing copy automatically.
 
-**General → Managed CLI → Install and select managed CLI** installs the latest
+**General → Updates → CodexBar CLI → Managed CLI → Install and select managed CLI** installs the latest
 stable official Linux release under `$XDG_DATA_HOME/codexbar-plasma/cli`, falling
 back to `~/.local/share/codexbar-plasma/cli`. The base data directory is resolved
 before installation, preserving symbolic-link targets and returning a command
@@ -1298,7 +1313,7 @@ wallet or contacting the selected AI service. Turning the feature off cancels
 the handoff and requests cleanup. Crash leftovers remain private and are removed
 on a later generation after five minutes.
 
-Enable it in **AI Insights** settings, choose a provider and a model, and use
+Enable it in **AI Insights** settings, choose a provider and type a model name, or use
 **Test connection** to check the service and list available models. It sends
 no generation request, so it also says whether the chosen model is in that list
 rather than claiming it will answer; OpenRouter's Zero Data Retention routing is
@@ -1358,6 +1373,9 @@ text. Provider names, model names, and units stay unchanged. An insight
 generated in another language, or with another provider, model, address, or
 privacy setting, is not shown as current; generating a new one is up to you.
 
+Cloud billing guidance and a short description of transmitted data stay visible
+in settings; **What is sent** expands the detailed inventory. The API-key row
+notes that wallet changes take effect immediately. **Saved insight** reads **None saved** when there is nothing to clear.
 Only aggregated statistics leave the device when a cloud provider is selected:
 provider identifiers, quota percentages, window lengths, time to reset, CLI pace
 forecasts, service-incident severity, and last-week versus previous-week spend

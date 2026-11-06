@@ -12,6 +12,7 @@ SCENARIOS = ("normal", "tabs-overflow", "provider-settings", "provider-header", 
              "project-costs", "project-tokens", "project-range", "project-long-text",
              "localization-it", "localization-fr", "localization-de", "localization-es", "localization-pt_BR")
 SCENARIOS += ("settings-general", "settings-panel", "settings-panel-information", "settings-panel-advanced", "settings-panel-narrow", "settings-popup", "settings-notifications", "settings-diagnostics")
+SCENARIOS += ("settings-general-updates", "settings-general-updates-narrow", "settings-providers-default")
 SCENARIOS += ("settings-panel-scrolled",)
 SCENARIOS += ("settings-providers", "settings-providers-narrow", "settings-providers-error",
               "settings-general-narrow", "settings-popup-narrow", "settings-notifications-narrow",
@@ -44,7 +45,7 @@ SCENARIOS += ("identified-schema2-subcent", "identified-schema2-zero")
 SCENARIOS += ("providers-0740",)
 SCENARIOS += ("empty-providers", "usage-error", "usage-recovery", "cli-missing", "cli-setup", "cli-setup-unusable")
 SCENARIOS += ("ai-insights", "ai-insights-it", "ai-insights-mismatch", "ai-insights-error", "ai-insights-single",
-              "settings-ai-insights", "settings-ai-insights-narrow")
+              "settings-ai-insights", "settings-ai-insights-narrow", "settings-ai-insights-stored-narrow")
 MAX_SCENARIO_TIMEOUT_SECONDS = 120
 MATRIX_SCENARIOS = ("panel-matrix-one", "panel-matrix-four")
 

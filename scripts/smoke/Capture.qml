@@ -1875,7 +1875,36 @@ Item {
                 releaseChecker.accept("synthetic-release", {"exit code": 0, stdout: JSON.stringify({
                     status: "available", version: "0.61.0", path: preview.page.cfg_commandPath,
                     manager: "managed", latest: "0.62.0", tag: "v0.62.0"})});
+                if (scenario.indexOf("settings-general-updates") === 0) {
+                    findItem(preview.page, "widgetUpdatesDisclosure").clicked();
+                    findItem(preview.page, "cliUpdatesDisclosure").clicked();
+                    preview.page.cfg_identifiedTokensEnabled = true;
+                }
                 navigationVerified = true;
+                return false;
+            }
+            if (scenario.indexOf("settings-general") === 0) {
+                var generalForm = findItem(preview.page, "generalSettingsForm");
+                verifyScenario(generalForm !== null, "General form must be available");
+                var formPosition = generalForm.mapToItem(preview.page, 0, 0);
+                verifyScenario(formPosition.x >= -1 && formPosition.x + generalForm.width <= preview.page.width + 1,
+                    "General form exceeds the settings viewport: " + formPosition.x + " + "
+                    + generalForm.width + " > " + preview.page.width);
+                var pendingLabels = [generalForm];
+                while (pendingLabels.length > 0) {
+                    var generalItem = pendingLabels.pop();
+                    if (!generalItem.visible) continue;
+                    if (generalItem.toString().indexOf("PlainControlsLabel") >= 0) {
+                        var labelPosition = generalItem.mapToItem(preview, 0, 0);
+                        verifyScenario(labelPosition.x >= -1 && labelPosition.x + generalItem.width <= preview.width + 1,
+                            "General text exceeds the viewport: " + generalItem.text + " ("
+                            + labelPosition.x + " + " + generalItem.width + " > " + preview.width + ")");
+                    }
+                    var generalChildren = generalItem.children || [];
+                    for (var childIndex = 0; childIndex < generalChildren.length; childIndex++)
+                        pendingLabels.push(generalChildren[childIndex]);
+                }
+
             }
             if (scenario.indexOf("settings-providers-keys") === 0) {
                 var keyPage = preview.page;
@@ -1976,6 +2005,8 @@ Item {
                 verifyScenario(sourceBox !== null && sourceSave !== null
                     && sourceBox.currentIndex === -1 && !sourceSave.enabled,
                     "Provider source selection must start without claiming a saved value");
+                if (scenario === "settings-providers-default")
+                    return true;
                 if (!navigationVerified) {
                     var settingsToggle = findItem(providersPage, "providerSettingsToggle");
                     verifyScenario(settingsToggle !== null, "Providers must expose the provider settings toggle");
@@ -2003,7 +2034,7 @@ Item {
                 verifyScenario(versions !== null, "Diagnostics must expose the local versions controller");
                 versions.activeSource = "synthetic-versions";
                 versions.accept("synthetic-versions", {"exit code": 0, stdout: JSON.stringify({
-                    status: "local", version: "0.61.0",
+                    status: "local", version: "0.73.0",
                     path: "/home/demo/.local/share/codexbar-plasma/cli/current/codexbar", manager: "managed"})});
                 if (scenario === "settings-diagnostics-error") {
                     preview.page.diagnosticOutput = JSON.stringify([{provider: "codex", source: "cli",
@@ -2079,12 +2110,15 @@ Item {
                 }
                 // The synthetic helper answers the local wallet lookup only;
                 // the wide scenario shows the longer stored-key row.
-                var keyExpected = scenario === "settings-ai-insights" ? "present" : "absent";
+                var keyExpected = scenario === "settings-ai-insights" || scenario === "settings-ai-insights-stored-narrow" ? "present" : "absent";
                 if (insightsPage.keyStatus !== keyExpected || insightsPage.busy)
                     return false;
                 var keyRow = findItem(insightsPage, "aiInsightsKeyRow");
                 verifyScenario(keyRow !== null && keyRow.width <= Kirigami.Units.gridUnit * 24 + 1,
                     "the API key row must stay within the form width so the form does not shift");
+                var keyPosition = keyRow.mapToItem(insightsPage, 0, 0);
+                verifyScenario(keyPosition.x >= 0 && keyPosition.x + keyRow.width <= insightsPage.width + 1,
+                    "the API key controls exceed the settings viewport");
                 if (scenario !== "settings-ai-insights")
                     return true;
                 // A long model list must open as a bounded, scrolling menu.

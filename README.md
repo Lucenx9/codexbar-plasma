@@ -93,7 +93,7 @@ bash -o pipefail -c 'curl -fsSL --connect-timeout 10 --max-time 30 --max-filesiz
 ```
 
 Add `--with-cli` after `--no-input`, inside the quotes, to install or reuse the
-private CLI too. To select the prepared copy, use **General → Managed CLI →
+private CLI too. To select the prepared copy, use **General → Updates → CodexBar CLI → Managed CLI →
 Use managed CLI** in widget settings, then **Apply**.
 A CLI preparation failure leaves the widget installed and returns a nonzero status.
 
@@ -237,8 +237,8 @@ and recovery details, see
 [update settings](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/usage.md#settings).
 
 CLI updates are separate. Update a system or package-manager CLI through its
-original installation method. **General → CLI updates** can check for official
-releases; daily checks are off by default. **General → Managed CLI** can update
+original installation method. **General → Updates → CodexBar CLI** can check for official
+releases; daily checks are off by default. **General → Updates → CodexBar CLI → Managed CLI** can update
 or restore the private copy. Its automatic daily updates are also off by default.
 See [CLI release checks](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/usage.md#cli-release-checks-and-installed-versions)
 and [managed CLI settings](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/usage.md#managed-cli).

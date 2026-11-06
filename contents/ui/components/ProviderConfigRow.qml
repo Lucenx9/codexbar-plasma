@@ -54,6 +54,18 @@ Controls.ItemDelegate {
         plainText: providerTitle.text + "\n" + providerSubtitle.text
     }
 
+    background: Rectangle {
+        anchors.fill: parent
+        anchors.leftMargin: providerRow.mirrored ? enabledSwitch.width + providerRow.spacing * 2 : 0
+        anchors.rightMargin: providerRow.mirrored ? 0 : enabledSwitch.width + providerRow.spacing * 2
+        radius: Kirigami.Units.cornerRadius
+        color: providerRow.highlighted ? Kirigami.Theme.highlightColor
+            : providerRow.hovered || providerRow.visualFocus
+                ? providerRow.withAlpha(Kirigami.Theme.textColor, 0.08) : "transparent"
+        border.width: providerRow.visualFocus ? 1 : 0
+        border.color: Kirigami.Theme.focusColor
+    }
+
     contentItem: RowLayout {
         spacing: Kirigami.Units.largeSpacing
 

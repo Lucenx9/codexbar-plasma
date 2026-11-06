@@ -232,4 +232,39 @@ TestCase {
             compare(moveTips[i].plainText, moveTips[i].parent.Accessible.name);
         }
     }
+    function test_explicitOverviewModePreservesAutomaticContract() {
+        var page = createPage({cfg_overviewProviderIDs: "  "});
+        if (!page) return;
+        var controller = waitForRosterSettled(page);
+        controller.providerRosterError = "";
+        controller.enabledProviderRoster = [
+            {provider: "codex", displayName: "Codex"},
+            {provider: "claude", displayName: "Claude"}
+        ];
+        wait(0);
+        var automatic = findChild(page, "overviewAutomaticRadio");
+        var custom = findChild(page, "overviewCustomRadio");
+        verify(automatic.checked && !custom.checked);
+        verify(!providerCheck(page, "Codex").enabled);
+        custom.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Space);
+        compare(page.cfg_overviewProviderIDs, "codex,claude");
+        verify(custom.checked && !automatic.checked);
+        var codex = providerCheck(page, "Codex");
+        verify(codex.enabled);
+        codex.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Space);
+        compare(page.cfg_overviewProviderIDs, "claude");
+        automatic.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Space);
+        compare(page.cfg_overviewProviderIDs, "");
+        verify(!providerCheck(page, "Codex").enabled);
+        verify(providerCheck(page, "Codex").checked);
+        controller.enabledProviderRoster = [];
+        custom.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Space);
+        compare(page.cfg_overviewProviderIDs, OverviewProviders.noneValue);
+        verify(custom.checked);
+    }
+
 }

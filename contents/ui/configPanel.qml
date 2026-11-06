@@ -347,6 +347,15 @@ KCM.SimpleKCM {
             wrapMode: Text.WordWrap
         }
 
+        Components.PlainButton {
+            objectName: "minimalPanelPresetButton"
+            icon.name: "color-management"
+            enabled: page.cfg_panelStyle !== "minimal" || page.cfg_showProviderInPanel
+                || page.cfg_showPercentInPanel || page.cfg_showCreditsInPanel || !page.cfg_showMultiProviderInPanel
+            plainText: i18n("Use monochrome icons and meters only")
+            onClicked: page.applyMinimalPanelPreset()
+        }
+
         Kirigami.Separator {
             Kirigami.FormData.label: i18n("Contents")
             Kirigami.FormData.isSection: true
@@ -374,6 +383,8 @@ KCM.SimpleKCM {
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             text: page.additionalSummary
+            leftPadding: page.mirrored ? 0 : Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing
+            rightPadding: page.mirrored ? Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing : 0
             visible: !page.additionalExpanded
             font: Kirigami.Theme.smallFont
             opacity: 0.7
@@ -473,11 +484,7 @@ KCM.SimpleKCM {
                 text: i18n("Credits")
             }
 
-            Components.PlainButton {
-                objectName: "minimalPanelPresetButton"
-                plainText: i18n("Use monochrome icons and meters only")
-                onClicked: page.applyMinimalPanelPreset()
-            }
+
         }
 
         Components.DisclosureButton {
@@ -496,6 +503,8 @@ KCM.SimpleKCM {
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             text: page.providersSummary
+            leftPadding: page.mirrored ? 0 : Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing
+            rightPadding: page.mirrored ? Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing : 0
             visible: !page.providersExpanded
             font: Kirigami.Theme.smallFont
             opacity: 0.7
@@ -575,10 +584,6 @@ KCM.SimpleKCM {
             }
         }
 
-        Kirigami.Separator {
-            Kirigami.FormData.isSection: true
-        }
-
         Components.DisclosureButton {
             id: advancedButton
             objectName: "panelAdvancedButton"
@@ -596,6 +601,8 @@ KCM.SimpleKCM {
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             text: page.advancedSummary
+            leftPadding: page.mirrored ? 0 : Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing
+            rightPadding: page.mirrored ? Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing : 0
             font: Kirigami.Theme.smallFont
             opacity: 0.7
             wrapMode: Text.WordWrap
