@@ -70,6 +70,15 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Added
 
+- Bundle dedicated Soniox, Trae CN, Chatbox AI, abliteration.ai, and OpenDesign
+  icons and identity metadata, covering the official CLI 0.83.0 registry.
+- Offer secure manual-cookie setup for 14 verified Linux providers and
+  confirmation before clearing stored keys/cookies with CLI 0.82.0 or later.
+  OpenDesign requires 0.83.0; Gemini remains excluded pending Web quota verification.
+- Add on-demand Copilot GitHub device sign-in with CLI 0.80.0 or later,
+  a private native dialog, cancellation, expiry and conflict handling. Keep
+  API-key setup available and refresh usage after successful setup.
+
 - Inspect the Usage & Spend heatmap with the keyboard through one Tab stop,
   arrow keys and Home/End. A stable readout shows the selected date and value;
   refreshes preserve the date and unavailable days remain unselectable. Focus

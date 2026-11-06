@@ -13,6 +13,7 @@ from qml_surfaces import Surface
 
 QML = r'''import QtQuick
 import QtTest
+import "SOURCE_URL/config/ProviderCredentials.js" as ProviderCredentials
 import "SOURCE_URL/config/ProviderSource.js" as ProviderSource
 import "SOURCE_URL/config/ProviderOperations.js" as ProviderOperations
 import "SOURCE_URL/config/ProviderConfigProtocol.js" as ProviderConfigProtocol
@@ -28,6 +29,8 @@ TestCase {
             id: page
             property string commandPath: "codexbar"
             property bool providerSourceSetupSupported: true
+            property string credentialCliVersion: ""
+            property url credentialScriptUrl: "file:///tmp/provider-auth.py"
             property bool fireworksSingleKeySetupSupported: false
             property bool sonioxApiKeySetupSupported: false
             property bool abliterationChatboxKeySetupSupported: false
@@ -56,6 +59,14 @@ TestCase {
             property QtObject configSource: QtObject {
                 function connectSource(source) {}
                 function disconnectSource(source) {}
+            }
+            property QtObject credentialCancelSource: QtObject {
+                property var requests: []
+                function connectSource(source) { requests = requests.concat([source]); }
+            }
+            function cancelCredentialRequest(descriptor) {
+                if (descriptor.kind === "credential" && descriptor.action === "login")
+                    credentialCancelSource.connectSource("--request " + descriptor.requestID);
             }
             SOURCE_FUNCTIONS
             function i18n(text, first, second) {
@@ -410,6 +421,119 @@ TestCase {
         compare(Object.keys(page.commands).length, 0);
         verify(!page.loading);
     }
+    function credentialPage() {
+        var page = createTemporaryObject(harness, this);
+        page.providers = [{provider: "copilot", enabled: false}, {provider: "claude", enabled: false},
+            {provider: "future", enabled: true}, {provider: "helmcode", enabled: false}];
+        page.credentialCliVersion = "CodexBar 0.83.0";
+        return page;
+    }
+    function test_credentialActionsRejectOldCliRefusedProvidersAndBusyState() {
+        var page = credentialPage();
+        page.credentialCliVersion = "CodexBar 0.79.0";
+        page.startDeviceLogin("copilot");
+        page.clearCredentials("future");
+        page.setCookie("claude");
+        compare(Object.keys(page.commands).length, 0);
+        page.credentialCliVersion = "CodexBar 0.83.0";
+        page.startDeviceLogin("claude");
+        page.setCookie("helmcode");
+        page.clearCredentials("unknown");
+        compare(Object.keys(page.commands).length, 0);
+        page.loading = true;
+        page.startDeviceLogin("copilot");
+        compare(Object.keys(page.commands).length, 0);
+        page.loading = false;
+        page.startDeviceLogin("copilot");
+        verify(page.deviceLoginActive());
+        compare(Object.keys(page.commands).length, 1);
+        page.startDeviceLogin("copilot");
+        page.clearCredentials("copilot");
+        page.setProviderSource("copilot", "auto");
+        compare(Object.keys(page.commands).length, 1);
+        page.cancelDeviceLogin();
+        compare(page.credentialCancelSource.requests.length, 1);
+        verify(page.credentialCancelSource.requests[0].indexOf("--request") >= 0);
+        verify(!page.isPending("copilot"));
+        compare(Object.keys(page.commands).length, 0);
+    }
+    function test_credentialCompletionInvalidatesDiagnosticsAndRefreshes() {
+        for (var action of ["login", "set-cookie", "clear-credential"]) {
+            var page = credentialPage();
+            var provider = action === "set-cookie" ? "claude" : "copilot";
+            if (action === "set-cookie") page.setCookie(provider);
+            else if (action === "login") page.startDeviceLogin(provider);
+            else page.clearCredentials(provider);
+            var source = Object.keys(page.commands)[0];
+            verify(source !== undefined);
+            verify(page.isPending(provider));
+            page.handleData(source, JSON.stringify({status:"ok", provider:provider, enabled:true}), "", 0);
+            verify(!page.isPending(provider));
+            compare(page.revisions, 1);
+            compare(page.diagnosticsCleared, 1);
+            compare(page.writes, action === "clear-credential" ? 0 : 1);
+            verify(page.loading);
+            page.retireAllConfigCommands();
+        }
+    }
+    function test_credentialCancelTimeoutAndStaleRepliesCannotCommit() {
+        var page = credentialPage();
+        page.startDeviceLogin("copilot");
+        var source = Object.keys(page.commands)[0];
+        page.cancelDeviceLogin();
+        page.startDeviceLogin("copilot");
+        var newer = Object.keys(page.commands)[0];
+        page.handleData(source, '{"status":"ok","provider":"copilot"}', "", 0);
+        verify(page.isPending("copilot"));
+        compare(page.revisions, 0);
+        page.handleData(newer, '{"status":"conflict","provider":"copilot"}', "", 0);
+        verify(page.errorText.indexOf("changed during sign-in") >= 0);
+        verify(!page.isPending("copilot"));
+        page.setCookie("claude");
+        source = Object.keys(page.commands)[0];
+        page.handleData(source, '{"cancelled":true}', "", 0);
+        compare(page.revisions, 0);
+        verify(!page.isPending("claude"));
+        page.setCookie("claude");
+        source = Object.keys(page.commands)[0];
+        page.expireConfigCommands(Date.now() + 1000000);
+        page.handleData(source, '{"status":"ok","provider":"claude","enabled":true}', "", 0);
+        compare(page.revisions, 0);
+        verify(!page.isPending("claude"));
+        page.startDeviceLogin("copilot");
+        source = Object.keys(page.commands)[0];
+        page.retireAllConfigCommands();
+        page.handleData(source, '{"status":"ok","provider":"copilot"}', "", 0);
+        compare(page.revisions, 0);
+        compare(page.credentialCancelSource.requests.length, 2);
+    }
+    function test_reloadDuringLoginKeepsLoginActive() {
+        var page = credentialPage();
+        page.startDeviceLogin("copilot");
+        page.reload();
+        verify(page.loading);
+        verify(!page.operationState.reloadDeferred);
+        verify(page.deviceLoginActive());
+        verify(page.isPending("copilot"));
+        compare(Object.keys(page.commands).length, 3);
+        page.cancelDeviceLogin();
+        compare(Object.keys(page.commands).length, 2);
+        page.retireAllConfigCommands();
+    }
+    function test_reloadWaitsForCredentialPromptAndPreservesRefusal() {
+        var page = credentialPage();
+        page.setCookie("claude");
+        var source = Object.keys(page.commands)[0];
+        page.reload();
+        compare(Object.keys(page.commands).length, 1);
+        verify(page.operationState.reloadDeferred);
+        page.handleData(source, '{"status":"failed","provider":"claude"}', "private raw stderr", 0);
+        verify(page.loading);
+        verify(page.errorText.indexOf("command failed") >= 0);
+        verify(page.errorText.indexOf("private") < 0);
+        compare(page.revisions, 0);
+        page.retireAllConfigCommands();
+    }
     function test_sourceWriteBlocksOnlyItsProvidersDescriptorWrites() {
         var page = createTemporaryObject(harness, this);
         start(page, "api");
@@ -431,7 +555,9 @@ class ProviderSourceTests(unittest.TestCase):
     def test_source_writes_and_lifecycle(self):
         source = (ROOT / "contents/ui/configProviders.qml").read_text()
         surface = Surface("providers", ROOT)
-        names = ("setProviderSource", "handleSetSourceResult", "setApiKey", "apiKeyPrompt", "visualEnabled",
+        names = ("hasCredentialWrite", "credentialWriteAllowed", "setCookie", "clearCredentials",
+                 "startDeviceLogin", "startCredentialCommand", "cancelDeviceLogin", "deviceLoginActive",
+                 "handleCredentialResult", "setProviderSource", "handleSetSourceResult", "setApiKey", "apiKeyPrompt", "visualEnabled",
                  "retireProviderDiagnostic", "invalidateProviderDiagnostic",
                  "providerCommandFailureText", "handleCliVersionResult", "handleData",
                  "applySetSourceResult", "runReloadDeferredBySourceWrite",

@@ -56,6 +56,8 @@ var documentationBaseUrl = "https://github.com/steipete/CodexBar/blob/main/docs/
 
 // CLI aliases and historical spellings, mapped to the canonical provider key.
 var providerAliases = {
+    "trae-cn": "traecn",
+    "open-design": "opendesign",
     "11labs": "elevenlabs",
     "abacus-ai": "abacus",
     "abacusai": "abacus",
@@ -150,6 +152,11 @@ var providerCliArguments = {
 // Brand colours as red/green/blue channels in 0..1. Providers with no entry fall
 // back to the theme highlight, which is the caller's decision to make.
 var providerBrandChannels = {
+    "soniox": [37 / 255, 55 / 255, 114 / 255],
+    "traecn": [77 / 255, 124 / 255, 254 / 255],
+    "chatbox": [34 / 255, 139 / 255, 230 / 255],
+    "abliteration": [27 / 255, 27 / 255, 27 / 255],
+    "opendesign": [32 / 255, 32 / 255, 32 / 255],
     "abacus": [56 / 255, 189 / 255, 248 / 255],
     "aerostack": [99 / 255, 102 / 255, 241 / 255],
     "aiand": [226 / 255, 92 / 255, 43 / 255],
@@ -257,6 +264,11 @@ var providerBrandChannels = {
 }
 
 var providerDashboardUrls = {
+    "soniox": "https://console.soniox.com",
+    "traecn": "https://www.trae.cn/dashboard#usage",
+    "chatbox": "https://chatboxai.app",
+    "abliteration": "https://abliteration.ai",
+    "opendesign": "https://open-design.ai/cloud/dashboard",
     "abacus": "https://apps.abacus.ai/chatllm/admin/compute-points-usage",
     "aerostack": "https://app.aerostack.dev/settings/billing",
     "aiand": "https://console.aiand.com",
@@ -359,6 +371,8 @@ var providerDashboardUrls = {
 }
 
 var providerLoginUrls = {
+    "traecn": "https://www.trae.cn/dashboard",
+    "opendesign": "https://open-design.ai/cloud/login",
     "claude": "https://claude.ai",
     "claudeplatform": "https://platform.claude.com/",
     "codex": "https://chatgpt.com",
@@ -381,6 +395,7 @@ var providerLoginUrls = {
 }
 
 var providerStatusUrls = {
+    "soniox": "https://status.soniox.com",
     "alibaba": "https://status.aliyun.com",
     "alibabatokenplan": "https://status.aliyun.com",
     "antigravity": "https://www.google.com/appsstatus/dashboard/products/npdyhgECDJ6tB66MxXyo/history",
@@ -417,6 +432,8 @@ var providerStatusUrls = {
 
 // Paths under `documentationBaseUrl`.
 var providerDocsPaths = {
+    "traecn": "traecn.md",
+    "opendesign": "opendesign.md",
     "soniox": "soniox.md",
     "abliteration": "abliteration.md",
     "chatbox": "chatbox.md",
@@ -534,6 +551,11 @@ var providerDocsPaths = {
 // Only bundled assets belong here. A missing local URL does not trigger
 // Kirigami.Icon's theme fallback, so unknown providers must return no file.
 var providerIconFiles = {
+    "soniox": "soniox.svg",
+    "traecn": "traecn.svg",
+    "chatbox": "chatbox.svg",
+    "abliteration": "abliteration.svg",
+    "opendesign": "opendesign.svg",
     "abacus": "abacus.svg",
     "aerostack": "aerostack.svg",
     "aiand": "aiand.svg",

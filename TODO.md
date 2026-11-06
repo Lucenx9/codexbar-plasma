@@ -70,10 +70,13 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   Charm Hyper works only with `--source api`, which Plasma's source choice
   covers; Helmcode's web source stays macOS-only even with a cookie. Vercel's
   gateway-key setup is separate.
-  The Gemini web source needs window-based labels instead of Plasma's static
-  Pro/Flash/Flash Lite lanes before it is exposed. Token accounts gain a
+  The Gemini web source needs verified window-based labels instead of Plasma's
+  static Pro/Flash/Flash Lite lanes before its cookie button is exposed.
+  It stays excluded from the manual-cookie allowlist even though Linux CLI
+  0.83.0 reaches the Web fetch with a synthetic cookie. Token accounts gain a
   `claudeConfigDirectory` with no writer. Manual cookies and source mode have
-  writers (Plasma-native work). Keep existing enable/disable, single-key setup,
+  writers and Plasma setup for the verified Linux allowlist. Keep existing
+  enable/disable, single-key setup,
   and link fallbacks working; never edit the config file from the frontend.
   The [proposal](docs/cli-provider-settings-descriptor.md) covers source mode,
   keys/cookies, URLs, workspace/project, region, AWS profile/auth mode, and
@@ -91,9 +94,11 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   generic `config action` command (`set-api-key`, `set-source`, `set-cookie`,
   and `clear-credential` are field writers; the 0.83.0 inventory names only
   Copilot's `loginCommand`; the `usage_updated` hook event
-  is CLI automation surface, not a setup action). The Copilot-only `config login` is tracked as Plasma-native work
-  below. Trae CN's signed-in dashboard source is macOS-only on Linux and joins
-  the browser-import case here. Done when supported actions expose validated
+  is CLI automation surface, not a setup action). The Copilot-only `config login`
+  has a version-gated Plasma action; generic provider login actions remain
+  blocked. Trae CN browser import remains macOS-only; its manual-cookie setup
+  is available through the supported writer. Done when supported actions expose
+  validated
   prompts/results and handle cancellation, failure, and stale responses in
   Plasma. Preserve current key/link setup. [Prior discussion #168](https://github.com/Lucenx9/codexbar-plasma/issues/168).
 
@@ -264,42 +269,6 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   unresolved-host failure in `NetworkState.js` to add a localized headline.
   Done when a released CLI emits a typed network kind (for example offline,
   timeout, DNS or TLS) and the widget reads it instead of the message.
-
-## Plasma-native work with verified CLI contracts
-
-- [ ] Refresh bundled provider identities for the official Linux CLI 0.83.0
-  registry. The live `make check-provider-icons` probe reports missing dedicated
-  mappings for `soniox`, `traecn`, `chatbox`, `abliteration`, and `opendesign`;
-  these currently use the generic fallback. Done when licensed artwork,
-  identity metadata, attribution, and registry checks cover all five. This is
-  independent of panel geometry and quota rendering.
-- [ ] Offer manual-cookie setup and credential clearing. Official Linux CLI
-  0.82.0 adds `config set-cookie --provider <id> (--cookie <h>|--stdin)
-  [--no-enable]` and `config clear-credential --provider <id> [--api-key]
-  [--cookie]`; 0.81.0 rejects both. 0.83.0 accepts a cookie for 50 providers
-  (22 probed). Under Auto, Claude, Claude Platform, Command Code, Cursor,
-  Mistral, Ollama, OpenCode Go, OpenDesign, Parallel, Raycast, TinyApi, Trae
-  CN, TypeSafe, and X API reach their fetch; Gemini does only with `--source web`; Helmcode, Abacus
-  AI, DeepSeek, Alibaba, and Manus stay macOS-only. Done when a version-gated
-  action stores a cookie through the stdin prompt for a probe-backed
-  allowlist, a clear action (any provider) removes stored credentials, no
-  cookie reaches logs or diagnostics, and tests cover older CLIs and refusals.
-  [Evidence](docs/research/2026-10-27-macos-parity-0.82.0.md#linux-cli-contract-changes);
-  [OpenDesign](docs/research/2026-11-01-macos-parity-0.83.0.md#linux-cli-contract-changes).
-- [ ] Offer Copilot GitHub device sign-in through
-  `codexbar config login --provider copilot --json`. Official Linux CLI 0.80.0
-  advertises the command, rejects other providers with an `args` error, and
-  prints a `failed` JSON event offline. The release-tag source defines
-  token-free `authorization_pending` (verification URI, user code, expiry),
-  `authorized`, and `failed` events, signal cancellation, and a
-  config-changed conflict error. Done when Plasma starts the command only on
-  request, shows the URI and code without logging them, handles cancel,
-  failure, expiry, and stale replies, refreshes Copilot afterwards, keeps the
-  existing key setup, and is tested with fixture event streams. Gate the action
-  on the existing bounded CLI version probe, or an equivalent advertised
-  capability, so it stays hidden below 0.80.0, with an older-version
-  regression test.
-  [Evidence](docs/research/2026-10-23-macos-parity-0.80.0.md#linux-cli-contract-changes).
 
 ## Verify before accepting implementation work
 

@@ -36,6 +36,8 @@ and GNU gettext; see [Development](#development).
 | Usage sharing, file picker, and image clipboard | `QtQuick.Dialogs` and KDE Declarative's `org.kde.kquickcontrolsaddons` QML modules |
 | Terminate hung background CLI reads and bound writes after a secret prompt | GNU `timeout` |
 | Offline support reports and service status components | `python3` and GNU `timeout` |
+| Manual cookies and credential clearing | CLI 0.82.0 or later (0.83.0 for OpenDesign), `python3`, GNU `timeout`; `kdialog` for cookies |
+| Copilot GitHub device sign-in | CLI 0.80.0 or later, `python3`, GNU `timeout`, and `kdialog` |
 | CLI release checks and managed installs | `python3` and GNU `timeout` |
 | AI Insights | `python3`, GNU `timeout`, and the `QtCore` QML module |
 | AI Insights keys for OpenRouter or OpenAI | Also `kdialog`, `secret-tool`, and a Secret Service provider such as KWallet |
@@ -173,8 +175,11 @@ For private CLI selection, updates, and rollback, see
 - English, Italian, French, German, Spanish, and Brazilian Portuguese, selected
   through your Plasma language preferences.
 
-Bundled names and icons cover all 106 providers in the official CLI 0.77.0
-registry. Newer CLI providers use generic presentation where needed.
+Bundled names and icons cover all 111 providers in the official CLI 0.83.0
+registry, including Soniox, Trae CN, Chatbox AI, abliteration.ai, and OpenDesign.
+Newer CLI providers use generic presentation where needed. Provider settings
+offer secure manual-cookie setup for 14 verified Linux providers, stored-key/cookie
+clearing, and on-demand Copilot GitHub sign-in; see [provider setup](docs/usage.md#providers-and-accounts).
 Secure key setup also supports Soniox with CLI 0.80.0 or later, and
 abliteration.ai and Chatbox AI with CLI 0.81.0 or later. Soniox requires an
 organization API key; Chatbox requires a license key. See the

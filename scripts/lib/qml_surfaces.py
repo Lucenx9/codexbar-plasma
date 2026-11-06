@@ -47,6 +47,7 @@ SURFACES: dict[str, tuple[str, ...]] = {
     ),
     "providers": (
         "contents/ui/configProviders.qml",
+        "contents/ui/credential/*.qml",
         # Planned home for the extracted provider-config backend and descriptor code.
         "contents/ui/config/*.qml",
         "contents/ui/config/*.js",
@@ -86,6 +87,7 @@ SURFACES: dict[str, tuple[str, ...]] = {
         "contents/config/config.qml",
         "contents/ui/main.qml",
         "contents/ui/config*.qml",
+        "contents/ui/credential/*.qml",
         "contents/ui/*.js",
         "contents/ui/components/*.qml",
         "contents/ui/controllers/*.qml",

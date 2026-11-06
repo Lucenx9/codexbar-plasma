@@ -14,6 +14,8 @@ QtObject {
     // it. Unknown and future providers degrade to their capitalized key.
     function titleForKey(key, privateFallback) {
         var names = {
+            "traecn": i18n("Trae CN"),
+            "opendesign": i18n("OpenDesign"),
             "soniox": i18n("Soniox"),
             "abliteration": i18n("abliteration.ai"),
             "chatbox": i18n("Chatbox AI"),

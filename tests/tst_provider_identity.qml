@@ -10,6 +10,18 @@ TestCase {
         "ai&": "aiand"
     })
 
+    function test_registry083Identities() {
+        for (var id of ["soniox", "traecn", "chatbox", "abliteration", "opendesign"]) {
+            compare(ProviderIdentity.providerIconFileName(id), id + ".svg")
+            compare(ProviderIdentity.providerBrandColorChannels(id).length, 3)
+            verify(ProviderIdentity.providerDashboardUrl(id).indexOf("https://") === 0)
+            verify(ProviderIdentity.providerDocsUrl(id).endsWith(id + ".md"))
+        }
+        compare(ProviderIdentity.resolveProviderKey("Trae-CN"), "traecn")
+        compare(ProviderIdentity.resolveProviderKey("open-design"), "opendesign")
+        compare(ProviderIdentity.providerIconFileName("open-design"), "opendesign.svg")
+    }
+
     function test_newKeyProvidersHaveDocumentation() {
         for (var id of ["soniox", "abliteration", "chatbox"]) {
             compare(ProviderIdentity.providerDocsUrl(id.toUpperCase()),

@@ -629,12 +629,10 @@ Provider-specific editable settings depend on the official CLI contract.
   docs/dashboard/login links.
 - The widget also has a renderer for the proposed
   [provider settings descriptor](cli-provider-settings-descriptor.md).
-  Scoped checks through CLI 0.83.0 still find no descriptors, so cookie, base
-  URL, workspace/project, region, and other descriptor-backed editors remain
-  unavailable. CLI 0.82.0 adds `codexbar config set-cookie --provider <id>
-  --stdin` and `codexbar config clear-credential --provider <id>` for manual
-  cookies and stored keys; the widget does not offer them yet, so run them in
-  a terminal. CLI 0.73.0 separately supports persistent source writes through
+  Scoped checks through CLI 0.83.0 still find no descriptors, so base URL,
+  workspace/project, region, and other descriptor-backed editors remain
+  unavailable. Manual cookies and credential clearing use the separate
+  released commands described below. CLI 0.73.0 separately supports persistent source writes through
   `codexbar config set-source --provider <id> --source <mode>`; `auto` clears
   the saved override. With CLI 0.73.0 or later, open **Providers → Settings and
   diagnostics**, choose a **Source mode**, and select **Save**. The choices
@@ -656,8 +654,8 @@ Provider-specific editable settings depend on the official CLI contract.
   **Settings and diagnostics** shows environment variable names and token-account
   setup hints without reading their configured values. These variables may be
   optional; the inventory does not identify which are required. Copilot's
-  **CLI sign-in** is a read-only command hint, also listed under **CLI commands**
-  using the selected executable; the widget does not start a device-login flow.
+  **CLI sign-in** hint is also listed under **CLI commands** using the selected
+  executable. **Sign in with GitHub…** starts the device-login flow described below.
   Provider-supplied hints may remain in English and pass through the shared
   credential-redaction filter. Missing authentication metadata
   preserves the earlier setup behavior; malformed advertised capabilities do not
@@ -675,8 +673,9 @@ Provider-specific editable settings depend on the official CLI contract.
 - Single API-key setup for Tavily, Linkup, Aerostack, Sail Research, and Sofya
   uses the official Linux CLI writer verified at 0.74.0. Exa and Cosmic AI have
   metadata and dashboard links, but their additional key/project IDs have no
-  supported writer. TinyApi and X API are web-only on macOS. Those four expose
-  no unsupported key action; the missing Linux setup remains tracked in TODO.
+  supported writer. TinyApi and X API support the manual-cookie setup below, not a single
+  API key. Those four expose no unsupported key action; the remaining setup
+  requirements stay tracked in TODO.
 - Generic API key setup for Fireworks, when the selected CLI reports version
   0.54.0 or later and can discover the account slug from the key.
 - Single API-key setup for Command Code and fal appears when the selected CLI
@@ -684,8 +683,7 @@ Provider-specific editable settings depend on the official CLI contract.
   stdin. Command Code's Automatic source selects API when a key is configured;
   fal needs a key with billing read access. FLORA and Parallel have metadata
   and links, but no key setup action. FLORA also needs a workspace ID with no
-  supported Linux writer, and Parallel needs a manual cookie (CLI 0.82.0
-  `config set-cookie`).
+  supported Linux writer, and Parallel uses **Set cookie…** with CLI 0.82.0 or later.
 - Munito offers single API-key setup with CLI 0.77.0 or later, using the
   secure stdin prompt. Use an admin key with Read account data permission.
   Future AGI has fallback metadata and links, but no key setup action: it
@@ -706,11 +704,38 @@ Provider-specific editable settings depend on the official CLI contract.
 - Claude Platform has its own fallback name, the shared Claude icon and brand
   color, and Console billing, login, status and documentation links. Its
   `claude-platform` alias resolves to `claudeplatform`, separately from Claude.
-  The widget has no cookie setup action for it; with CLI 0.82.0 or later, store
-  a manual Console cookie with `config set-cookie` in a terminal. Opening the
-  login page does not configure CLI authentication.
-- Fallback names, icons, and documentation links for all 106 providers in the
-  official CodexBar 0.77.0 registry, plus colors, links, and aliases where
+  With CLI 0.82.0 or later, **Set cookie…** stores a manual Console cookie.
+  Opening the login page alone does not configure CLI authentication.
+- **Set cookie…** uses `config set-cookie --stdin` with CLI 0.82.0 or later
+  for Claude, Claude Platform, Command Code, Cursor, Mistral, Ollama, OpenCode
+  Go, Parallel, Raycast, TinyApi, Trae CN, TypeSafe, and X API. OpenDesign
+  requires CLI 0.83.0. The native password prompt sends the cookie only over
+  stdin; no cookie enters QML, command arguments, logs, or displayed errors.
+  Saving enables the provider and selects its manual-cookie mode. Existing
+  saved source choices and the global Diagnostics source override still apply.
+  Gemini remains excluded until its Web quota labels are verified; other
+  unverified providers and macOS-only fetches have no cookie button.
+- **Clear stored credentials…** appears for any listed provider with CLI
+  0.82.0 or later. Confirm to remove its stored API key and manual cookie.
+  It preserves enablement, source choices, environment variables and token
+  accounts. In particular, it does not sign out a Copilot token account.
+  Both credential actions invalidate old diagnostics and refresh usage on
+  success; cancellation and refusal preserve the previous data.
+- **Sign in with GitHub…** appears for Copilot with CLI 0.80.0 or later,
+  alongside **Set API key…**. It starts only when selected, running the
+  official `config login --provider copilot --json` command. A KDE dialog
+  shows a selectable verification address, code, and expiry; copy the address
+  into your browser and enter the code. Pressing OK dismisses the dialog while
+  sign-in continues in settings. **Cancel sign-in**, closing the dialog with its
+  window close button, closing settings,
+  changing provider, or changing the executable stops the request. Expiry,
+  failure and a concurrent CodexBar configuration change allow a fresh attempt.
+  URI and code stay out of logs, command arguments, files and Plasma's command
+  cache. Success refreshes Copilot; late replies cannot replace a newer request.
+  This flow requires `python3`, GNU `timeout` and `kdialog`; no browser opens
+  automatically. See [credential command contracts](provider-credentials.md).
+- Fallback names, icons, and documentation links for all 111 providers in the
+  official CodexBar 0.83.0 registry, plus colors, links, and aliases where
   upstream defines them; fork-only provider assets, and those for providers a
   later CLI retired, remain available for compatibility.
   Providers without bundled artwork use the theme's generic statistics icon

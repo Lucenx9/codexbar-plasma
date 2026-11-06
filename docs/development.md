@@ -526,7 +526,7 @@ synchronized.
   modules live in `contents/ui/config/`. `ProviderOperations.js` owns immutable
   pending-operation state: provider locks and optimistic enablement, field/action
   locks, diagnostic loading, and deferred reload decisions. Reloads wait for all
-  source writes; when released they preserve the current write error through the
+  source and credential writes; when released they preserve the current write error through the
   roster refresh. QML supplies ledger activity and localized messages, executes
   the reload intent, and resets this ephemeral state when retiring commands.
   `tst_provider_operations.qml` directly exercises these transitions; the source
@@ -541,7 +541,7 @@ synchronized.
   JSON parsing errors are bounded and redacted before QML localizes them.
   `ProviderAuthentication.js` projects the optional 0.83.0 inventory into bounded
   source modes, writer flags, environment-variable names, redacted account hints
-  and the allowlisted read-only Copilot login hint. Missing metadata retains the
+  and the allowlisted Copilot login hint. Missing metadata retains the
   legacy setup behavior; malformed advertised capabilities cannot authorize
   writes and never discard healthy provider records. No credentials or arbitrary
   commands are retained. Hints use the shared conservative credential filter,
@@ -722,6 +722,46 @@ inside the page's prompt script. Its enum selection restores the saved-value bin
 after a started write completes; rejected requests preserve the choice for retry.
 Direct interaction tests in `tests/tst_provider_descriptor_field.qml` cover these
 transitions, boolean binding restoration, numeric zero and control availability.
+
+### Provider credential commands
+
+`config/ProviderCredentials.js` owns version gates, the probe-backed Linux cookie
+allowlist, quoted helper commands and bounded semantic results. The Providers
+page owns prompts, nonces, pending locks, confirmation, command retirement,
+configuration revisions and diagnostics invalidation. Cookie values enter only
+`promptDescriptorSecret`'s shell process and the official writer through stdin.
+`ProviderDescriptor.js` refuses credential writers through non-secret fields.
+
+`scripts/provider-auth.py` is a transport adapter for released CLI commands,
+not an authentication implementation: it never reads config, fetches provider
+endpoints or receives a GitHub token. It drains bounded JSON, suppresses raw
+stderr and projects write results to semantic records. For Copilot it consumes
+newline-delimited CLI events while a native `kdialog --textbox -`
+shows the pending URI/code. This bridge is necessary because Plasma's executable
+engine publishes stdout only when a process exits. QML supplies localized dialog
+text and starts the supervised command through `Guards.supervisedShellCommand`.
+Disconnecting a cached executable source does not stop its process immediately.
+Cancellation sends a credential-free request marker through a short-lived
+DataSource owned by the `credential/LoginCancellation.qml` singleton, so page
+destruction cannot kill the cancellation writer or invalidate its cleanup handlers. The helper checks the marker and its timeout parent,
+signals the CLI on cancel or expiry, and reaps both CLI and dialog process groups.
+Markers live in a private temporary directory and expire after 20 minutes;
+no event file or persistent service is created. The page ignores retired replies
+and clears transient state on executable changes and destruction. The dialog
+window close button cancels; OK dismisses it and continues waiting in settings.
+Successful login bumps the existing provider-config revision to refresh usage.
+
+Run `make check-python-test_provider_auth check-python-test_provider_source`
+and the direct `tst_provider_credentials.qml` QtTest while editing. The auth
+adapter tests execute synthetic CLI streams, including split writes, bad shapes,
+refusal, cancellation, expiry, conflicts and loss of the engine parent. A real
+Plasma executable-engine test destroys the request owner and verifies both
+synthetic CLI and dialog processes stop. Page tests
+cover old CLI versions, locks, refresh/diagnostic invalidation and stale replies;
+`tests/tst_provider_filters.qml` checks actual action visibility with Plasma modules.
+Run `make check` and `make package` before delivery: the helper is a package input.
+The [credential contract](provider-credentials.md) pins official CLI evidence and
+records the Gemini exclusion. Never test credentials against the user's config.
 
 ## Usage sharing
 

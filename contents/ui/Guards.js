@@ -101,3 +101,11 @@ function isCommandPathFailure(exitCode) {
     return isFinite(code)
         && (code === commandNotFoundExitCode || code === commandNotExecutableExitCode)
 }
+
+// A direct timeout parent lets the helper detect engine process destruction.
+// Disconnect alone may retain a cached engine source, so login also has an
+// explicit cancellation request owned by the page.
+function supervisedShellCommand(command, timeoutSeconds, killAfterSeconds) {
+    return "sh -c " + shellQuote("exec timeout --kill-after="
+        + shellQuote(killAfterSeconds + "s") + " " + shellQuote(timeoutSeconds + "s") + " " + command)
+}
