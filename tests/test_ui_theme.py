@@ -60,18 +60,8 @@ class ThemeTest(unittest.TestCase):
                     f"non-text contrast; missing {contrast_fragment!r}"
                 )
 
-        shared_readable_accent_body = function_body(theme_contrast_text, "readableAccentColor")
-        for contrast_fragment in (
-            "contrastRatio(accent, background) >= minimumNonTextContrastRatio",
-            "interpolateColor(accent, themeTextColor, step / 10)",
-            "contrastRatio(candidate, background) >= minimumNonTextContrastRatio",
-            "maximumContrastColor(background)",
-        ):
-            if not code_contains(shared_readable_accent_body, contrast_fragment):
-                raise AssertionError(
-                    "ThemeContrast.readableAccentColor must preserve hue while enforcing "
-                    f"non-text contrast; missing {contrast_fragment!r}"
-                )
+        # tst_theme_contrast.qml verifies the pure helper's default accent and
+        # explicit text contrast targets; keep these checks on QML wiring.
 
         provider_readable_body = function_body(main_text, "providerReadableColor")
         if not code_contains(provider_readable_body, "readableAccentColor("):

@@ -9,6 +9,10 @@ QtObject {
     required property var applet
     readonly property bool privacyMode: applet.privacyMode
 
+    function isActiveSession(state) {
+        return state === "active" || state === "running" || state === "working"
+    }
+
     function sessionTitle(item, index) {
         if (root.privacyMode) {
             return i18n("Session %1", (index >= 0 ? index : 0) + 1)

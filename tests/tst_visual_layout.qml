@@ -6,6 +6,7 @@ import "../contents/ui/CostPresentation.js" as CostPresentation
 import "../contents/ui/SafeText.js" as SafeText
 import "../contents/ui/ThemeContrast.js" as ThemeContrast
 import "../contents/ui/UsageDetails.js" as UsageDetails
+import "../contents/ui/PrivacyPresentation.js" as PrivacyPresentation
 import "fixtures/ProviderUiStress.js" as ProviderUiStress
 
 TestCase {
@@ -44,7 +45,9 @@ TestCase {
         property real secondaryTextOpacity: 0.7
         property real valueTextOpacity: 0.85
         property var sessions: []
-        readonly property var presentedSessions: sessions
+        readonly property var presentedSessions: sessions.map(function(item) {
+            return PrivacyPresentation.session(item, privacyMode);
+        })
         property bool sessionsLoading: false
         property string sessionsLastUpdatedText: ""
         property string sessionsErrorText: "Loading sessions timed out. Try again."
@@ -285,7 +288,7 @@ TestCase {
         try {
             holder = Qt.createQmlObject('import QtQuick; import "../contents/ui/components" as Components; QtObject { property Component control: Component { Components.' + type
                 + ' { function i18n(text) { for (var i = 1; i < arguments.length; i++) text = text.replace("%" + i, String(arguments[i])); return text }'
-                + ' function i18np(one, many, count) { return count === 1 ? one : many } } } }', testCase, Qt.resolvedUrl("VisualLayoutTest.qml"));
+                + ' function i18np(one, many, count) { return (count === 1 ? one : many).replace("%1", count) } } } }', testCase, Qt.resolvedUrl("VisualLayoutTest.qml"));
         } catch (error) {
             if (/module "org\.kde\.(kirigami|plasma\.components)" is not installed/.test(String(error))) {
                 skip("Visual layout checks need the optional KDE QML modules");
@@ -304,6 +307,7 @@ TestCase {
 
     function init() {
         applet.sessions = [];
+        applet.sessionsLastUpdatedText = "";
         applet.privacyMode = false;
         applet.expanded = false;
         applet.openedProvider = "";
@@ -872,7 +876,6 @@ TestCase {
         var gap = firstButton.mapToItem(view, 0, 0).x - title.mapToItem(view, title.width, 0).x;
         verify(gap >= 0 && gap < 16, "copy action drifted away from the title: " + gap);
 
-        var theme = Qt.createQmlObject('import QtQuick; import org.kde.kirigami as Kirigami; Item { readonly property color positive: Kirigami.Theme.positiveTextColor }', view);
         var active = findItem(view, function (item) {
             return item.visible && item.text === data.label;
         });
@@ -880,9 +883,76 @@ TestCase {
             return item.visible && item.text === "Idle";
         });
         verify(active !== null && idle !== null);
-        compare(active.color, theme.positive);
+        var card = findChild(view, "sessionCard");
+        verify(ThemeContrast.contrastRatio(active.color, card.surfaceColor) >= 4.5);
         verify(active.color !== applet.brandAccent);
         compare(idle.opacity, applet.secondaryTextOpacity);
+    }
+
+    function test_sessionSummaryCountsKnownActiveStates() {
+        applet.sessionsErrorText = "";
+        applet.sessionsLastUpdatedText = "Updated 18:58";
+        applet.sessions = ["active", "running", "working", "idle", "unknown", "future-state"].map(function(state) {
+            return {provider: "codex", projectName: "Private project", sessionName: "", host: "",
+                state: state, source: "cli", activityMs: 1};
+        });
+        var view = createControl("SessionsView", {applet: applet, width: 320, height: 300});
+        if (!view) return;
+        var summary = findChild(view, "sessionsSummary");
+        compare(view.activeSessionCount, 3);
+        compare(summary.text, "6 local sessions · 3 active · Updated 18:58");
+        applet.privacyMode = true;
+        compare(view.activeSessionCount, 3);
+        verify(summary.text.indexOf("Private project") < 0);
+        applet.sessions = [applet.sessions[3]];
+        compare(summary.text, "1 local session · 0 active · Updated 18:58");
+        applet.sessions = [];
+        compare(summary.text, "0 local sessions · 0 active · Updated 18:58");
+        applet.sessionsLastUpdatedText = "";
+    }
+
+    function test_sessionKeyboardFocusRevealsLiteralTitleAndStateDescription() {
+        failOnWarning(/Binding loop|recursive rearrange/);
+        testCase.forceActiveFocus();
+        applet.sessionsErrorText = "";
+        var title = Array(8).join("Project <tag> & review ");
+        applet.sessions = [{provider: "codex", projectName: title, sessionName: "Distinct session",
+            host: "", state: "active", source: "cli", activityMs: Date.now()}];
+        var view = createControl("SessionsView", {applet: applet, width: 240, height: 180});
+        if (!view) return;
+        waitForRendering(view);
+        testCase.forceActiveFocus();
+        var card = findChild(view, "sessionCard");
+        compare(card.Accessible.description, "Distinct session · codex · Command line · Active · Just now");
+        var copyButton = findItem(view, function(item) {
+            return item.visible && item.icon !== undefined && item.icon.name === "edit-copy";
+        });
+        copyButton.forceActiveFocus(Qt.MouseFocusReason);
+        tryCompare(copyButton, "visualFocus", false);
+        wait(0);
+        var originalSurface = String(card.surfaceColor);
+        var tips = [];
+        findAllItems(copyButton, function(item) { return item.plainText !== undefined; }, tips);
+        var tip = tips.filter(function(item) { return item.plainText === "Copy session name"; })[0];
+        verify(tip !== undefined);
+        tip.delay = 0;
+        copyButton.focus = false;
+        tryCompare(copyButton, "activeFocus", false);
+        copyButton.forceActiveFocus(Qt.TabFocusReason);
+        tryCompare(copyButton, "visualFocus", true);
+        tryCompare(tip, "visible", true);
+        compare(tip.plainText, "Copy session name\n" + title);
+        compare(tip.text, SafeText.plainTextAsRichText(tip.plainText));
+        verify(String(card.surfaceColor) !== originalSurface,
+            "before=" + originalSurface + " after=" + card.surfaceColor + " card=" + card.title
+            + " focused=" + copyButton.parent.keyboardFocusVisible);
+        var state = findItem(card, function(item) { return item.text === "Active"; });
+        verify(ThemeContrast.contrastRatio(state.color, card.surfaceColor) >= 4.5);
+        applet.privacyMode = true;
+        tryCompare(copyButton, "visible", false);
+        compare(String(card.surfaceColor), originalSurface);
+        verify(card.Accessible.description.indexOf("Distinct session") < 0);
+        verify(card.Accessible.description.indexOf("Project") < 0);
     }
 
     function test_sessionRowsReserveSpaceIndependently_data() {

@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.components as PlasmaComponents
 import "." as Components
+import "../ThemeContrast.js" as ThemeContrast
 
 ColumnLayout {
     id: view
@@ -13,6 +14,9 @@ ColumnLayout {
     readonly property alias labels: sessionLabels
     property string copiedValueKey: ""
     property double sessionClockMs: Date.now()
+    readonly property int activeSessionCount: applet.presentedSessions.filter(function(session) {
+        return sessionLabels.isActiveSession(session.state)
+    }).length
 
     Layout.fillWidth: true
     Layout.fillHeight: true
@@ -107,8 +111,10 @@ ColumnLayout {
             Components.PlainPlasmaLabel {
                 id: sessionsMetaLabel
 
-                text: [view.applet.sessionsLastUpdatedText,
-                    i18np("%1 local session", "%1 local sessions", view.applet.sessions.length)]
+                objectName: "sessionsSummary"
+                text: [i18np("%1 local session", "%1 local sessions", view.applet.sessions.length),
+                    i18np("%1 active", "%1 active", view.activeSessionCount),
+                    view.applet.sessionsLastUpdatedText]
                     .filter(function(part) { return part.length > 0 })
                     .join(" \u00b7 ")
                 font: Kirigami.Theme.smallFont
@@ -202,18 +208,21 @@ ColumnLayout {
 
                 delegate: Rectangle {
                     id: sessionCard
+                    objectName: "sessionCard"
 
                     required property int index
                     // A count model's modelData is the card's index.
                     required property var modelData
                     readonly property var session: view.applet.presentedSessions[modelData]
 
-                    readonly property bool activeSession: session.state === "active"
-                        || session.state === "running" || session.state === "working"
+                    readonly property bool activeSession: sessionLabels.isActiveSession(session.state)
                     readonly property string title: sessionLabels.sessionTitle(session, index)
                     readonly property string subtitle: sessionLabels.sessionSubtitle(
                         session, view.applet.sessionHostsVary)
                     readonly property string titleCopyKey: "title:" + index
+                    readonly property string activityText: sessionLabels.sessionActivityText(session, view.sessionClockMs)
+                    readonly property color surfaceColor: Qt.tint(
+                        Qt.tint(Kirigami.Theme.backgroundColor, color), focusSurface.color)
                     readonly property color accent: session.provider.length > 0
                         ? view.applet.providerReadableColor(
                             session.provider,
@@ -238,7 +247,19 @@ ColumnLayout {
 
                     Accessible.role: Accessible.ListItem
                     Accessible.name: title
-                    Accessible.description: subtitle
+                    Accessible.description: [session.sessionName !== title ? session.sessionName : "",
+                        subtitle, sessionLabels.sessionStateText(session.state), activityText]
+                        .filter(function(part) { return part.length > 0 }).join(" \u00b7 ")
+
+                    Rectangle {
+                        id: focusSurface
+                        anchors.fill: parent
+                        radius: parent.radius
+                        color: sessionTitleValue.keyboardFocusVisible
+                            ? view.applet.withAlpha(Kirigami.Theme.focusColor, 0.1) : "transparent"
+                        border.width: sessionTitleValue.keyboardFocusVisible ? 1 : 0
+                        border.color: Kirigami.Theme.focusColor
+                    }
 
                     HoverHandler {
                         id: sessionCardHover
@@ -271,7 +292,7 @@ ColumnLayout {
 
                         ColumnLayout {
                             Layout.fillWidth: true
-                            spacing: 0
+                            spacing: Kirigami.Units.smallSpacing / 2
 
                             Item {
                                 id: sessionTitleRow
@@ -292,6 +313,7 @@ ColumnLayout {
                                     copyAccessibleName: i18n("Copy session name")
                                     copyEnabled: !view.applet.privacyMode
                                     copyRevealed: sessionCardHover.hovered
+                                    showTruncatedTextOnFocus: true
                                     copied: view.copiedValueKey === sessionCard.titleCopyKey
                                     onCopyRequested: function(text) {
                                         view.copySessionValue(text, sessionCard.titleCopyKey)
@@ -306,8 +328,12 @@ ColumnLayout {
                                     width: Math.min(implicitWidth, parent.width * 0.4)
                                     text: sessionLabels.sessionStateText(sessionCard.session.state)
                                     color: sessionCard.activeSession
-                                        ? Kirigami.Theme.positiveTextColor : Kirigami.Theme.textColor
+                                        ? ThemeContrast.readableAccentColor(view.Kirigami.Theme.positiveTextColor,
+                                            sessionCard.surfaceColor, view.Kirigami.Theme.textColor, 4.5)
+                                        : Kirigami.Theme.textColor
                                     opacity: sessionCard.activeSession ? 1 : view.applet.secondaryTextOpacity
+                                    font.pixelSize: sessionCard.session.state === "idle"
+                                        ? Kirigami.Theme.smallFont.pixelSize : Kirigami.Theme.defaultFont.pixelSize
                                     font.weight: sessionCard.activeSession ? Font.DemiBold : Font.Normal
                                     horizontalAlignment: Text.AlignRight
                                     elide: Text.ElideRight
@@ -378,7 +404,7 @@ ColumnLayout {
                                     anchors.right: parent.right
                                     anchors.verticalCenter: parent.verticalCenter
                                     width: Math.min(implicitWidth, parent.width * 0.5)
-                                    text: sessionLabels.sessionActivityText(sessionCard.session, view.sessionClockMs)
+                                    text: sessionCard.activityText
                                     opacity: view.applet.secondaryTextOpacity
                                     font: Kirigami.Theme.smallFont
                                     horizontalAlignment: Text.AlignRight

@@ -780,6 +780,12 @@ clipboard interoperability with every Wayland application or portal backend.
   Repeater counts sessions so same-size rescans rebind existing cards in place,
   keeping hover and keyboard focus at the same index. Count changes recreate
   the cards. Each scan resynchronizes the clock used for relative ages.
+  `SessionLabels.isActiveSession()` shares the active/running/working predicate
+  between the header count and each card. The card's keyboard focus surface is
+  separate from its animated hover background; state text uses their composited
+  color with a 4.5:1 contrast target. Other accent callers retain the default 3:1
+  target. `CopyableValue.showTruncatedTextOnFocus` opts Sessions into a combined
+  action/title tooltip without changing other copy controls or adding Tab stops.
 - `PanelRules.js` evaluates displayed quotas without effects. Automatic capsules
   use `PanelDisplay.meterRows` in primary/secondary order, and either displayed
   quota can satisfy the provider meter condition. Direct missing quotas stay omitted; `runOut` depends on `paceWarningActive`. Panel visibility,
