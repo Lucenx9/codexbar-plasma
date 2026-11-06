@@ -25,6 +25,10 @@ TestCase {
         return (count === 1 ? singular : plural).replace("%1", count);
     }
 
+    function i18ncp(context, singular, plural, count) {
+        return i18np(singular, plural, count);
+    }
+
     QtObject {
         id: applet
         property bool privacyMode: false

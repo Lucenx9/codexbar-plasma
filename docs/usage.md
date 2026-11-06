@@ -181,7 +181,8 @@ work and upstream contract requirements.
 - Screen readers hear what the popup draws. Overview rows describe their
   detail line, then each named quota with its reset; provider tabs describe
   the quota their underline draws, a last-known-usage note, and a refresh
-  error that only dims the tab visually.
+  error that only dims the tab visually. Sessions describe the optional session
+  name, provider metadata, state and activity age in addition to the project title.
 - Provider-tab tooltips show the full provider name, the quota represented by
   the underline, and any retained-data or refresh-error description on hover
   or keyboard focus. Tab widths and selection highlighting stay unchanged.
@@ -195,6 +196,8 @@ work and upstream contract requirements.
   and units also reveal their full displayed text on hover when truncated.
   Overview, Usage & Spend and Sessions header summaries, session names and
   session metadata also reveal their full displayed text on hover when truncated.
+  A truncated Sessions title also appears with the copy action label when its
+  copy button has keyboard focus; the containing card shows a focus outline.
   The AI Insights Back button stays within the popup and reveals a truncated
   destination on hover or keyboard focus.
   Keyboard focus also reveals the name of a truncated or icon-only global tab.
@@ -293,12 +296,20 @@ work and upstream contract requirements.
   entries do not discard readable sessions. Only a successful empty scan clears
   the list.
   The Sessions refresh button can retry immediately; changing the CLI command
-  clears the retry cooldown. Each card shows the project, a state marked with
-  the theme's positive color while active, the provider (or `OMP` for an OMP
+  clears the retry cooldown. The header shows the local-session total and the
+  active count before the last successful update time. Active includes the CLI's
+  `active`, `running`, and `working` states; zero remains explicit. Counts describe
+  the retained, bounded snapshot, not an independent census of the machine.
+  Each card shows the project, a state marked with
+  the theme's positive color while active (adjusted to keep readable text contrast
+  against the card), the provider (or `OMP` for an OMP
   Pi-family session), and the source. The host name appears only when sessions
   come from more than one host. Hovering a card reveals a copy action beside
   its title. Names and states share the first line; provider metadata and activity
   age share a separate line, so a long age does not shorten the name above it.
+  Idle states use the smaller theme font, and a small gap separates text lines.
+  The optional session name keeps the normal font so sessions in one project
+  remain distinguishable. Card padding and session ordering stay unchanged.
   Long states and ages stay within the card and reveal their full text on hover.
   Rescans with an unchanged session count update cards in place,
   preserving hover and keyboard focus at the same list position. A changed

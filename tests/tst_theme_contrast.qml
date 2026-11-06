@@ -61,6 +61,27 @@ TestCase {
         verify(result.r < accent.r)
     }
 
+    function test_positiveTextKeepsItsMeaningAndTextContrast_data() {
+        return [
+            {tag: "breeze-light", background: "#e7e8e9", text: "#232629", positive: "#27ae60", preserved: false},
+            {tag: "breeze-dark", background: "#282b2e", text: "#fcfcfc", positive: "#27ae60", preserved: true},
+            {tag: "focused-light", background: "#d7e1e8", text: "#232629", positive: "#27ae60", preserved: false},
+            {tag: "poor-theme-text", background: "#777777", text: "#888888", positive: "#999999", preserved: false}
+        ]
+    }
+
+    function test_positiveTextKeepsItsMeaningAndTextContrast(data) {
+        var background = Qt.tint(data.background, "transparent")
+        var preferred = Qt.tint(data.positive, "transparent")
+        var result = ThemeContrast.readableAccentColor(preferred, background,
+            Qt.tint(data.text, "transparent"), 4.5)
+        verify(ThemeContrast.contrastRatio(result, background) >= 4.5)
+        if (data.preserved)
+            compare(result, preferred)
+        if (data.tag === "breeze-light" || data.tag === "focused-light")
+            verify(result.g > result.r && result.g > result.b, "the positive text lost its green hue")
+    }
+
     function test_lightensVeryDarkBrandColorOnDarkTheme() {
         var accent = Qt.rgba(0.08, 0.08, 0.08, 1)
         var background = Qt.rgba(0.06, 0.06, 0.08, 1)

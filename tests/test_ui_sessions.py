@@ -169,7 +169,8 @@ class SessionsTest(unittest.TestCase):
         for session_clock_fragment in (
             "property double sessionClockMs: Date.now()",
             "id: sessionAgeTimer",
-            "sessionActivityText(sessionCard.session, view.sessionClockMs)",
+            "sessionActivityText(session, view.sessionClockMs)",
+            "text: sessionCard.activityText",
         ):
             if not code_contains(sessions_view_text, session_clock_fragment):
                 raise AssertionError(

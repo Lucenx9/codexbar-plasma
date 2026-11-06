@@ -55,14 +55,15 @@ function readableTextColor(preferred, background) {
         : maximumContrastColor(background)
 }
 
-function readableAccentColor(accent, background, themeTextColor) {
-    if (contrastRatio(accent, background) >= minimumNonTextContrastRatio) {
+function readableAccentColor(accent, background, themeTextColor, minimumRatio) {
+    var targetRatio = minimumRatio === undefined ? minimumNonTextContrastRatio : minimumRatio
+    if (contrastRatio(accent, background) >= targetRatio) {
         return accent
     }
 
     for (var step = 1; step <= 10; step++) {
         var candidate = interpolateColor(accent, themeTextColor, step / 10)
-        if (contrastRatio(candidate, background) >= minimumNonTextContrastRatio) {
+        if (contrastRatio(candidate, background) >= targetRatio) {
             return candidate
         }
     }

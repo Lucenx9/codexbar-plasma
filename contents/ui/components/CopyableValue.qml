@@ -16,6 +16,8 @@ RowLayout {
     // Owners reveal the action on row hover; keyboard focus and the copied
     // confirmation still force it visible so it stays reachable without a mouse.
     property bool copyRevealed: true
+    property bool showTruncatedTextOnFocus: false
+    readonly property bool keyboardFocusVisible: copyEnabled && copyButton.visualFocus
     // The default tool button is far taller than the single line it annotates,
     // which inflates every row that carries one. Keep it just big enough to
     // stay a comfortable pointer target.
@@ -48,6 +50,7 @@ RowLayout {
         PlainToolTip {
             parent: valueLabel
             visible: valueLabel.truncated && valueHover.hovered && !valueRow.copied
+                && !(valueRow.showTruncatedTextOnFocus && valueRow.keyboardFocusVisible)
             plainText: valueLabel.text
         }
     }
@@ -70,7 +73,8 @@ RowLayout {
             parent: copyButton
             // A hover label for the button; it keeps the shared delay.
             visible: (copyButton.hovered || copyButton.visualFocus) && !valueRow.copied
-            plainText: valueRow.copyAccessibleName
+            plainText: valueRow.showTruncatedTextOnFocus && copyButton.visualFocus && valueLabel.truncated
+                ? valueRow.copyAccessibleName + "\n" + valueRow.text : valueRow.copyAccessibleName
         }
 
         PlainToolTip {
@@ -87,6 +91,7 @@ RowLayout {
         onClicked: valueRow.copyRequested(valueRow.text)
 
         Behavior on opacity {
+            enabled: !(valueRow.showTruncatedTextOnFocus && copyButton.visualFocus)
             NumberAnimation {
                 duration: Kirigami.Units.shortDuration
             }

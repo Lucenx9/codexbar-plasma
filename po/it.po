@@ -1307,6 +1307,13 @@ msgstr[0] "%1 sessione locale"
 msgstr[1] "%1 sessioni locali"
 
 #: contents/ui/components/SessionsView.qml
+msgctxt "Number of active local sessions"
+msgid "%1 active"
+msgid_plural "%1 active"
+msgstr[0] "%1 attiva"
+msgstr[1] "%1 attive"
+
+#: contents/ui/components/SessionsView.qml
 msgid "Refresh sessions"
 msgstr "Aggiorna le sessioni"
 
