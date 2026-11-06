@@ -12,14 +12,6 @@ QtObject {
     required property bool showsTokens
     required property var tokenCountText
 
-    function costSparklineSummary(points) {
-        var summary = CostPresentation.sparklineSummary(root.numberFormat, points, root.showsTokens)
-        if (!summary) {
-            return ""
-        }
-        return i18n("%1: %2", summary.label.length > 0 ? root.costDayLabel(summary.label) : i18n("Latest"), summary.value)
-    }
-
     function costBreakdownRows(tokenCost) {
         if (!tokenCost || !tokenCost.totals) {
             return []

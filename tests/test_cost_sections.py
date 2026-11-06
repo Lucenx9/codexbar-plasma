@@ -372,16 +372,11 @@ class CostSectionTests(unittest.TestCase):
         compare(fakeApplet.metricSet, "cost");
         verify(metricButtons[0].checked, "clicking the checked metric must not uncheck it");
         compare(charts[0].accessibleTitle, "Daily cost history");
-        // The latest-day line stays until a day is selected; the readout and
-        // drill-down heading then name that day, so the line would repeat it.
-        var summaries = all.filter(function(item) {
-            return item.objectName === "costSparklineSummaryLabel";
-        });
-        compare(summaries.length, 1);
-        verify(summaries[0].visible);
+        // A peak figure supplies scale without repeating the axis end date.
+        verify(charts[0].showPeak);
+        verify(charts[0].peakIndex >= 0);
         charts[0].selectedIndex = 0;
         compare(charts[0].selectedIndex, 0);
-        tryVerify(function() { return !summaries[0].visible; });
         fakeApplet.costHistoryShowsTokens = true;
         tryVerify(function() { return metricToggles[0].currentIndex === 1
                 && metricButtons[1].checked && !metricButtons[0].checked; });
@@ -731,8 +726,7 @@ class CostSectionTests(unittest.TestCase):
             });
             compare(rowLabel.length, 1, cells[c].modelData.label);
             compare(rowLabel[0].text, expected, cells[c].modelData.label);
-            // Cells stay tiles: never stretched into bars across the section.
-            verify(cells[c].width <= cells[c].height * 2 + 0.5, cells[c].modelData.label);
+            fuzzyCompare(cells[c].width, cells[c].height, 0.5, cells[c].modelData.label);
         }
         all = [];
         walkTree(subject, all);
@@ -740,6 +734,37 @@ class CostSectionTests(unittest.TestCase):
             return item.toString().indexOf("PlainToolTip") >= 0;
         });
         verify(tips.length >= 1);
+    }
+    ''')
+
+    def test_activity_layout_breakpoints(self):
+        self.run_fixture('''
+    function test_activityLayoutBreakpoints_data() {
+        var cases = [];
+        for (var days of [7, 8, 35, 36]) {
+            for (var offset of [-1, 0, 1])
+                cases.push({tag: days + "-days-width-" + offset, days: days, offset: offset});
+        }
+        return cases;
+    }
+    function test_activityLayoutBreakpoints(data) {
+        var points = [];
+        for (var i = 0; i < data.days; i++) {
+            var date = new Date(Date.UTC(2026, 8, i + 1)).toISOString().slice(0, 10);
+            points.push({label: date, value: 1, displayValue: "$1"});
+        }
+        spendPoints = points;
+        var subject = createTemporaryObject(spendFactory, testCase, {
+            width: Kirigami.Units.gridUnit * 28 + data.offset, height: 780});
+        var summary = findChild(subject, "spendActivitySummary");
+        verify(summary !== null);
+        verify(waitForPolish(subject));
+        var columns = data.days >= 8 && data.days <= 35 && data.offset >= 0 ? 2 : 1;
+        compare(summary.columns, columns);
+        // Height and scrollbar changes must not feed back into the breakpoint.
+        subject.height = 240;
+        verify(waitForPolish(subject));
+        compare(summary.columns, columns);
     }
     ''')
 

@@ -57,7 +57,7 @@ class CostTest(unittest.TestCase):
         if not code_contains(token_cost_section_body, "supportsLocalCost"):
             raise AssertionError("tokenCostSection must scope global cost errors to supported providers")
         if "points: tokenCostSection.chartPoints" not in token_cost_section_body \
-                or token_cost_section_body.count("tokenCostSection.chartPoints.length > 0") < 2:
+                or token_cost_section_body.count("tokenCostSection.chartPoints.length > 0") < 1:
             raise AssertionError(
                 "provider cost charts must use the points available for the selected metric"
             )
@@ -300,13 +300,6 @@ class CostTest(unittest.TestCase):
                 raise AssertionError(f"provider detail line charts must use {helper_name}")
 
     def test_cost_hierarchy_and_selection(self):
-        for summary_id, summary_fragment in (
-            ("costSparklineSummaryLabel", "font: Kirigami.Theme.smallFont"),
-        ):
-            summary_body = id_block(main_text, summary_id)
-            if not code_contains(summary_body, summary_fragment):
-                raise AssertionError(f"{summary_id} must preserve the intended cost hierarchy")
-
         cost_summary_body = applet.id_block("costSummaryGrid")
         for fragment in (
             "columns: 2",
@@ -402,7 +395,7 @@ class CostTest(unittest.TestCase):
         if "visible: chart.activeIndex" in interactive_chart_text:
             raise AssertionError("InteractiveChart must reserve readout space while pointer state changes")
 
-        if not code_contains(interactive_chart_text, "opacity: chart.hasActivePoint ? 1 : 0"):
+        if not code_contains(interactive_chart_text, "opacity: chart.hasActivePoint || chart.peakIndex >= 0 ? 1 : 0"):
             raise AssertionError("the chart readout must fade with the active point instead of blinking")
         if not code_contains(interactive_chart_text, "onActiveIndexChanged: if (activeIndex >= 0 && activeIndex < pointCount)"):
             raise AssertionError(

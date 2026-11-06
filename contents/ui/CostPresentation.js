@@ -381,28 +381,6 @@ function costDayIndexAfterRefresh(previousPoints, selectedIndex, points) {
     return uniqueCostDayIndex(points, previous.label)
 }
 
-// The newest plotted point, as a label and an already-formatted value. Returns
-// null when there is nothing to summarise; the caller joins the two words.
-function sparklineSummary(fmt, points, showsTokens) {
-    if (!Array.isArray(points) || points.length === 0) {
-        return null
-    }
-    var last = null
-    for (var i = points.length - 1; i >= 0; i--) {
-        if (hasMetricValue(points[i], showsTokens)) {
-            last = points[i]
-            break
-        }
-    }
-    if (!last) {
-        return null
-    }
-    return {
-        label: last.label && last.label.length > 0 ? last.label : "",
-        value: metricText(fmt, metricValue(last, showsTokens), last.currency, showsTokens)
-    }
-}
-
 // `entries` is an ordered list of `{ label, tokens }`. Rows with no positive
 // token count are dropped rather than printed as zero.
 function breakdownRows(entries, fmt) {

@@ -991,6 +991,19 @@ Item {
             var costs = applet.tokenCosts;
             var memo = applet.notificationMemo;
             var serial = usageLifecycle.commandRunSerial;
+            var actions = findItem(popup, "providerActionsToggle");
+            var actionButtons = namedItems(popup, "providerActionButton");
+            verifyScenario(actions && !actions.expanded && actionButtons.length > 0
+                && actionButtons.every(function(button) { return !button.visible; }),
+                "provider actions must start collapsed");
+            actions.clicked();
+            verifyScenario(actions.expanded
+                && actionButtons.every(function(button) { return button.visible; }),
+                "provider actions did not expand");
+            actions.clicked();
+            verifyScenario(!actions.expanded
+                && actionButtons.every(function(button) { return !button.visible; }),
+                "provider actions did not collapse");
             config.showPopupPace = false;
             config.showPopupCredits = false;
             config.showPopupProviderDetails = false;

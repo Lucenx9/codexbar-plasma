@@ -204,7 +204,7 @@ msgid "Open %1"
 msgstr ""
 
 #: contents/ui/components/CompactRepresentation.qml
-#: contents/ui/components/CostLabels.qml contents/ui/components/CostText.qml
+#: contents/ui/components/CostText.qml
 #: contents/ui/components/InteractiveChart.qml
 #: contents/ui/components/PanelText.qml
 #: contents/ui/components/ProviderCostDetails.qml
@@ -222,10 +222,6 @@ msgstr ""
 #: contents/ui/components/ShareUsageWindow.qml
 #: contents/ui/configDiagnostics.qml
 msgid "Copied"
-msgstr ""
-
-#: contents/ui/components/CostLabels.qml contents/ui/components/CostText.qml
-msgid "Latest"
 msgstr ""
 
 #: contents/ui/components/CostLabels.qml
@@ -246,6 +242,10 @@ msgstr ""
 
 #: contents/ui/components/CostLabels.qml
 msgid "Cache write"
+msgstr ""
+
+#: contents/ui/components/CostLabels.qml contents/ui/components/CostText.qml
+msgid "Latest"
 msgstr ""
 
 #: contents/ui/components/CostLabels.qml
@@ -622,6 +622,10 @@ msgstr ""
 msgid "Usage dashboard"
 msgstr ""
 
+#: contents/ui/components/FullRepresentation.qml
+msgid "Provider actions"
+msgstr ""
+
 #: contents/ui/components/IdentifiedTokensSection.qml
 msgid "Loading identified tokens timed out. Try again."
 msgstr ""
@@ -734,6 +738,10 @@ msgstr ""
 
 #: contents/ui/components/IdentifiedTokensSection.qml
 msgid "Load local + SSH subtotal"
+msgstr ""
+
+#: contents/ui/components/InteractiveChart.qml
+msgid "Peak daily usage"
 msgstr ""
 
 #: contents/ui/components/InteractiveChart.qml

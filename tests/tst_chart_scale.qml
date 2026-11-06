@@ -5,6 +5,18 @@ import "../contents/ui/ChartScale.js" as ChartScale
 TestCase {
     name: "ChartScale"
 
+    function test_maximumIndexKeepsZeroAndBoundsUntrustedLengths() {
+        compare(ChartScale.maximumIndex([]), -1)
+        compare(ChartScale.maximumIndex(null), -1)
+        for (var length of [-1, 0, 1.5, Infinity, NaN])
+            compare(ChartScale.maximumIndex({length: length}), -1)
+        compare(ChartScale.maximumIndex([{value: 0}, {value: 0}]), 0)
+        compare(ChartScale.maximumIndex([{value: -3}, {value: 9}, {value: 2}]), 1)
+        compare(ChartScale.maximumIndex([{value: 2}, {value: 9}, {value: 9}]), 1)
+        compare(ChartScale.maximumIndex({length: 1e12, 9999: {value: 7},
+            10000: {value: 10}}), 9999)
+    }
+
     function test_signedBarsStartAtZeroAndExtendInTheirOwnDirection() {
         var domain = ChartScale.domain([
             {

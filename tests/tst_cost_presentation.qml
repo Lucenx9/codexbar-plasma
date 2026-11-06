@@ -575,21 +575,6 @@ TestCase {
         compare(oversized[0].label.length, 120)
     }
 
-    function test_sparklineSummaryReportsTheNewestPoint() {
-        var points = [dailyPoint("Mon", 5, 900), dailyPoint("Tue", 2, 4000)]
-        compare(CostPresentation.sparklineSummary(fmt, points, false).label, "Tue")
-        compare(CostPresentation.sparklineSummary(fmt, points, false).value, "$2.00")
-        compare(CostPresentation.sparklineSummary(fmt, points, true).value, "4K")
-        compare(CostPresentation.sparklineSummary(fmt, [], false), null)
-    }
-
-    function test_sparklineSummaryHidesUnavailableCostButKeepsTokens() {
-        var points = [dailyPoint("Mon", null, 250)]
-
-        compare(CostPresentation.sparklineSummary(fmt, points, false), null)
-        compare(CostPresentation.sparklineSummary(fmt, points, true).value, "250")
-    }
-
     function test_breakdownRowsDropZeroAndMissingCounts() {
         var rows = CostPresentation.breakdownRows([
             { label: "Total", tokens: 1500 },
@@ -783,7 +768,6 @@ TestCase {
         compare(CostPresentation.chartPoints(fmt, "invalid", false).length, 0)
         compare(CostPresentation.sparklineMax(null, false), 0)
         compare(CostPresentation.sparklineMax("invalid", false), 0)
-        compare(CostPresentation.sparklineSummary(fmt, "invalid", false), null)
     }
 
     function test_averageDailyValueAndPeakPointSurviveNonArrayInputs() {

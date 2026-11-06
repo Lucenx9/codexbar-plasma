@@ -1,5 +1,7 @@
 import QtQuick
+import QtQuick.Window
 import QtQuick.Controls as Controls
+import QtQuick.Templates as Templates
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.components as PlasmaComponents
@@ -373,7 +375,7 @@ Item {
                         onClicked: providerTab.activate()
                     }
 
-                    // The underline has no numeric readout. Hover and keyboard
+                    // The compact gauge has no numeric readout. Hover and keyboard
                     // focus reveal the quota, retained-data state and errors.
                     PlainToolTip {
                         parent: providerTabMouse
@@ -396,6 +398,9 @@ Item {
 
                         anchors.fill: parent
                         anchors.margins: Kirigami.Units.smallSpacing
+                        anchors.rightMargin: applet.showPopupTabLabels && providerTabQuotaGauge.visible
+                            ? Kirigami.Units.smallSpacing * 2 + providerTabQuotaGauge.width
+                            : Kirigami.Units.smallSpacing
                         spacing: Kirigami.Units.smallSpacing
 
                         Item {
@@ -406,6 +411,8 @@ Item {
                         }
 
                         Kirigami.Icon {
+                            id: providerTabIcon
+                            objectName: "providerTabIcon"
                             source: applet.providerIconSource(modelData.provider)
                             fallback: "view-statistics"
                             isMask: applet.providerIconIsMask(modelData.provider)
@@ -436,36 +443,28 @@ Item {
                         }
                     }
 
-                    // The underline is a quota meter, never a selection
-                    // mark: the tab surface alone carries selection, so
-                    // a partly filled bar cannot read as a selected tab.
                     Rectangle {
+                        id: providerTabQuotaGauge
+                        objectName: "providerTabQuotaGauge"
                         visible: providerTab.meter >= 0
-                        anchors.left: parent.left
                         anchors.right: parent.right
-                        anchors.bottom: parent.bottom
-                        anchors.leftMargin: Kirigami.Units.smallSpacing
                         anchors.rightMargin: Kirigami.Units.smallSpacing
-                        anchors.bottomMargin: 2
-                        height: 2
-                        radius: height / 2
-                        color: applet.withAlpha(Kirigami.Theme.textColor, 0.12)
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: Math.round(Kirigami.Units.gridUnit * 0.33)
+                        height: Kirigami.Units.iconSizes.small
+                        radius: width / 2
+                        color: applet.withAlpha(Kirigami.Theme.textColor, 0.55)
                         clip: true
+                        Accessible.ignored: true
 
                         Rectangle {
-                            width: providerTab.meter <= 0
-                                ? 0
-                                : Math.max(parent.height, parent.width * Math.max(0, Math.min(100, providerTab.meter)) / 100)
-                            height: parent.height
+                            objectName: "providerTabQuotaFill"
+                            anchors.bottom: parent.bottom
+                            width: parent.width
+                            height: providerTab.meter <= 0 ? 0 : Math.max(1,
+                                Math.round(parent.height * Math.max(0, Math.min(100, providerTab.meter)) / 100))
                             radius: parent.radius
                             color: providerTab.accent
-
-                            Behavior on width {
-                                NumberAnimation {
-                                    duration: Kirigami.Units.longDuration
-                                    easing.type: Easing.OutCubic
-                                }
-                            }
                         }
                     }
                 }
@@ -1377,12 +1376,43 @@ Item {
                     }
 
                     ColumnLayout {
+                        id: providerActionsSection
                         visible: applet.presentedProviderData !== null
                         Layout.fillWidth: true
                         spacing: 0
 
+                        function collapseForSelection() {
+                            var window = providerActionsSection.Window.window
+                            var focused = window ? window.activeFocusItem : null
+                            var control = focused as Templates.Control
+                            var ancestor = focused
+                            while (ancestor && ancestor !== providerActionsToggle) {
+                                if (ancestor === providerActionsSection) {
+                                    providerActionsToggle.forceActiveFocus(control && control.visualFocus
+                                        ? Qt.TabFocusReason : Qt.OtherFocusReason)
+                                    break
+                                }
+                                ancestor = ancestor.parent
+                            }
+                            providerActionsToggle.expanded = false
+                        }
+
                         Kirigami.Separator {
                             Layout.fillWidth: true
+                        }
+
+                        Components.DisclosureButton {
+                            id: providerActionsToggle
+                            objectName: "providerActionsToggle"
+                            plainText: i18n("Provider actions")
+                            onClicked: expanded = !expanded
+
+                            Connections {
+                                target: providerScroll
+                                function onSelectionKeyChanged() {
+                                    providerActionsSection.collapseForSelection()
+                                }
+                            }
                         }
 
                         Repeater {
@@ -1402,6 +1432,7 @@ Item {
                                     && applet.statusComponentsExpanded(applet.selectedProviderData)
 
                                 Layout.fillWidth: true
+                                visible: providerActionsToggle.expanded
                                 spacing: 0
 
                                 Kirigami.Separator {
@@ -1415,6 +1446,7 @@ Item {
 
                                 Controls.ItemDelegate {
                                     id: providerActionButton
+                                    objectName: "providerActionButton"
 
                                     Layout.fillWidth: true
                                     // Keep expanding native highlights inside the scroll clip.

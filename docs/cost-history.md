@@ -1,6 +1,8 @@
 # Cost history and daily models
 
-The provider popup shows Today and the selected period side by side. History,
+The provider popup shows Today and the selected period side by side with
+emphasized amounts. Its chart shows the peak daily amount above the plot until
+a day is inspected, without repeating the latest date beneath the axis. History,
 period models, and projects expand on demand. Cost errors and pricing notices
 remain visible when the details are collapsed, including refresh errors beside
 retained values. A successful refresh clears the error.
