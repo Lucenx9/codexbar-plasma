@@ -22,7 +22,7 @@ msgstr ""
 msgid "Panel"
 msgstr ""
 
-#: contents/config/config.qml contents/ui/configPopup.qml
+#: contents/config/config.qml
 msgid "Popup"
 msgstr ""
 
@@ -914,6 +914,10 @@ msgstr ""
 
 #: contents/ui/components/PanelSettingsPreview.qml
 msgid "Panel preview"
+msgstr ""
+
+#: contents/ui/components/PanelSettingsPreview.qml
+msgid "Example:"
 msgstr ""
 
 #: contents/ui/components/PanelSettingsPreview.qml
@@ -2273,7 +2277,19 @@ msgid "Remove"
 msgstr ""
 
 #: contents/ui/configAiInsights.qml
+msgid "API key changes take effect immediately."
+msgstr ""
+
+#: contents/ui/configAiInsights.qml
 msgid "Model:"
+msgstr ""
+
+#: contents/ui/configAiInsights.qml
+msgid "Type a model name"
+msgstr ""
+
+#: contents/ui/configAiInsights.qml
+msgid "Type a model name, or test the connection to list available models."
 msgstr ""
 
 #: contents/ui/configAiInsights.qml
@@ -2296,6 +2312,28 @@ msgstr ""
 
 #: contents/ui/configAiInsights.qml
 msgid ""
+"Requests are billed to your OpenAI API account. A ChatGPT subscription does "
+"not include API credits."
+msgstr ""
+
+#: contents/ui/configAiInsights.qml
+msgid ""
+"Requests are billed to your OpenRouter credits, at the price of the model "
+"you choose. Providers that may collect data are never used."
+msgstr ""
+
+#: contents/ui/configAiInsights.qml
+msgid ""
+"Sends aggregated usage only, without account names, emails, projects, paths, "
+"or prompts."
+msgstr ""
+
+#: contents/ui/configAiInsights.qml
+msgid "What is sent"
+msgstr ""
+
+#: contents/ui/configAiInsights.qml
+msgid ""
 "Generation uses the Ollama service on this computer. Usage statistics stay "
 "on this device."
 msgstr ""
@@ -2311,18 +2349,6 @@ msgid ""
 "Only aggregated usage statistics are sent to %1: quotas, reset times, pace "
 "forecasts, and weekly spending and tokens per provider. Never account names, "
 "emails, projects, file paths, or prompts."
-msgstr ""
-
-#: contents/ui/configAiInsights.qml
-msgid ""
-"Requests are billed to your OpenAI API account. A ChatGPT subscription does "
-"not include API credits."
-msgstr ""
-
-#: contents/ui/configAiInsights.qml
-msgid ""
-"Requests are billed to your OpenRouter credits, at the price of the model "
-"you choose. Providers that may collect data are never used."
 msgstr ""
 
 #: contents/ui/configAiInsights.qml
@@ -2358,6 +2384,10 @@ msgstr ""
 
 #: contents/ui/configAiInsights.qml
 msgid "Saved insight:"
+msgstr ""
+
+#: contents/ui/configAiInsights.qml
+msgid "None saved"
 msgstr ""
 
 #: contents/ui/configAiInsights.qml
@@ -2401,36 +2431,8 @@ msgstr ""
 msgid "codexbar command failed."
 msgstr ""
 
-#: contents/ui/configDiagnostics.qml
-msgid "Support report"
-msgstr ""
-
-#: contents/ui/configDiagnostics.qml
-msgid ""
-"Collect an offline report to paste into an issue. Includes versions, CLI "
-"installation details, enabled provider IDs, the latest Diagnostics error and "
-"module checks. Filesystem paths and recognized credentials are omitted; "
-"review the preview before sharing."
-msgstr ""
-
-#: contents/ui/configDiagnostics.qml
-msgid "Collect support report"
-msgstr ""
-
-#: contents/ui/configDiagnostics.qml
-msgid "Collecting…"
-msgstr ""
-
-#: contents/ui/configDiagnostics.qml
-msgid "Copy report"
-msgstr ""
-
-#: contents/ui/configDiagnostics.qml
-msgid "Report preview"
-msgstr ""
-
-#: contents/ui/configDiagnostics.qml
-msgid "Connection"
+#: contents/ui/configDiagnostics.qml contents/ui/configGeneral.qml
+msgid "CodexBar CLI"
 msgstr ""
 
 #: contents/ui/configDiagnostics.qml
@@ -2439,10 +2441,6 @@ msgstr ""
 
 #: contents/ui/configDiagnostics.qml
 msgid "Use PATH"
-msgstr ""
-
-#: contents/ui/configDiagnostics.qml
-msgid "Versions"
 msgstr ""
 
 #: contents/ui/configDiagnostics.qml
@@ -2482,7 +2480,7 @@ msgstr ""
 #: contents/ui/configDiagnostics.qml
 msgid ""
 "This checks installed versions only. Check upstream CLI releases in "
-"General / CLI updates."
+"General / Updates / CodexBar CLI."
 msgstr ""
 
 #: contents/ui/configDiagnostics.qml
@@ -2526,8 +2524,8 @@ msgstr ""
 msgid "Diagnostic provider:"
 msgstr ""
 
-#: contents/ui/configDiagnostics.qml
-msgid "all"
+#: contents/ui/configDiagnostics.qml contents/ui/configProviders.qml
+msgid "All providers"
 msgstr ""
 
 #: contents/ui/configDiagnostics.qml
@@ -2539,11 +2537,39 @@ msgid "List providers"
 msgstr ""
 
 #: contents/ui/configDiagnostics.qml
-msgid "Diagnostic output appears here."
+msgid "No output yet"
 msgstr ""
 
 #: contents/ui/configDiagnostics.qml
 msgid "Diagnostic output"
+msgstr ""
+
+#: contents/ui/configDiagnostics.qml
+msgid "Support report"
+msgstr ""
+
+#: contents/ui/configDiagnostics.qml
+msgid ""
+"Collect an offline report to paste into an issue. Includes versions, CLI "
+"installation details, enabled provider IDs, the latest Diagnostics error and "
+"module checks. Filesystem paths and recognized credentials are omitted; "
+"review the preview before sharing."
+msgstr ""
+
+#: contents/ui/configDiagnostics.qml
+msgid "Collect support report"
+msgstr ""
+
+#: contents/ui/configDiagnostics.qml
+msgid "Collecting…"
+msgstr ""
+
+#: contents/ui/configDiagnostics.qml
+msgid "Copy report"
+msgstr ""
+
+#: contents/ui/configDiagnostics.qml
+msgid "Report preview"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
@@ -2620,9 +2646,8 @@ msgstr ""
 
 #: contents/ui/configGeneral.qml
 msgid ""
-"Manual loads in Usage & Spend only. Requires codexbar 0.75.0 or later with "
-"identified-token schema 1 or 2. Any API-price estimate is separate from "
-"spend totals; this is not account-wide usage."
+"Load a separate Codex subtotal on request in Usage & Spend. It does not "
+"represent account-wide usage."
 msgstr ""
 
 #: contents/ui/configGeneral.qml
@@ -2649,6 +2674,31 @@ msgstr ""
 
 #: contents/ui/configGeneral.qml
 msgid "Updates"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Widget updates"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Widget update in progress…"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+#: contents/ui/controllers/WidgetUpdateController.qml
+msgid "Widget update %1 is available."
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Update checks are off"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Update checks are on"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Updates install automatically"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
@@ -2680,15 +2730,16 @@ msgid "Last update status: %1"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
-msgid "CLI updates"
-msgstr ""
-
-#: contents/ui/configGeneral.qml
 msgid "Check upstream CLI releases daily"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
 msgid "Notify when a CLI release is available"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid ""
+"Requires daily CLI checks and Plasma notifications (Notifications page)."
 msgstr ""
 
 #: contents/ui/configGeneral.qml
@@ -2784,10 +2835,6 @@ msgid "Quota critical (% used):"
 msgstr ""
 
 #: contents/ui/configNotifications.qml
-msgid "Thresholds also set warning colors and markers on usage meters."
-msgstr ""
-
-#: contents/ui/configNotifications.qml
 msgid "Color preview:"
 msgstr ""
 
@@ -2799,6 +2846,10 @@ msgstr ""
 #: contents/ui/configNotifications.qml
 #, kde-format
 msgid "Critical from %1%"
+msgstr ""
+
+#: contents/ui/configNotifications.qml
+msgid "Thresholds also set warning colors and markers on usage meters."
 msgstr ""
 
 #: contents/ui/configNotifications.qml
@@ -2911,6 +2962,10 @@ msgid "Quota capsules keep their warning colors in both styles."
 msgstr ""
 
 #: contents/ui/configPanel.qml
+msgid "Use monochrome icons and meters only"
+msgstr ""
+
+#: contents/ui/configPanel.qml
 msgid "Contents"
 msgstr ""
 
@@ -2972,10 +3027,6 @@ msgstr ""
 
 #: contents/ui/configPanel.qml
 msgid "Appears only when the quota is forecast to run out before reset."
-msgstr ""
-
-#: contents/ui/configPanel.qml
-msgid "Use monochrome icons and meters only"
 msgstr ""
 
 #: contents/ui/configPanel.qml
@@ -3085,6 +3136,10 @@ msgid "Show quota warnings on usage meters"
 msgstr ""
 
 #: contents/ui/configPopup.qml
+msgid "Popup content"
+msgstr ""
+
+#: contents/ui/configPopup.qml
 msgid "Show pace forecasts"
 msgstr ""
 
@@ -3157,7 +3212,11 @@ msgid "No enabled providers available for Overview."
 msgstr ""
 
 #: contents/ui/configPopup.qml
-msgid "Use first %1 providers automatically"
+msgid "First %1 providers automatically"
+msgstr ""
+
+#: contents/ui/configPopup.qml
+msgid "Choose providers"
 msgstr ""
 
 #: contents/ui/configProviders.qml
@@ -3394,67 +3453,19 @@ msgid "Reload provider list"
 msgstr ""
 
 #: contents/ui/configProviders.qml
-msgid "All providers"
+msgctxt "Provider group, plural"
+msgid "Enabled"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgctxt "Provider group, plural"
+msgid "Disabled"
 msgstr ""
 
 #: contents/ui/configProviders.qml
 msgid ""
 "CodexBar saves provider changes immediately. Apply and Cancel affect widget "
 "settings only."
-msgstr ""
-
-#: contents/ui/configProviders.qml
-msgid "%1 - disabled"
-msgstr ""
-
-#: contents/ui/configProviders.qml
-msgid "%1 - enabled"
-msgstr ""
-
-#: contents/ui/configProviders.qml
-msgid "Settings and diagnostics"
-msgstr ""
-
-#: contents/ui/configProviders.qml
-msgid "Inspect redacted settings"
-msgstr ""
-
-#: contents/ui/configProviders.qml
-msgid ""
-"Other editable provider options require CodexBar descriptors, which this "
-"version does not expose."
-msgstr ""
-
-#: contents/ui/configProviders.qml
-msgid ""
-"This CodexBar version does not expose editable provider options. Enable/"
-"disable, supported API key setup, provider links, and redacted diagnostics "
-"remain available."
-msgstr ""
-
-#: contents/ui/configProviders.qml
-msgid ""
-"Editable provider options come from CodexBar. Redacted source and "
-"authentication details are available on request."
-msgstr ""
-
-#: contents/ui/configProviders.qml
-msgid "Choose a source"
-msgstr ""
-
-#: contents/ui/configProviders.qml
-msgid ""
-"Choose a source to save. Automatic clears its saved override. Listed modes "
-"describe CLI configuration, not Linux availability. The source override in "
-"Diagnostics takes precedence in the widget."
-msgstr ""
-
-#: contents/ui/configProviders.qml
-msgid "Provider options"
-msgstr ""
-
-#: contents/ui/configProviders.qml
-msgid "CLI commands"
 msgstr ""
 
 #: contents/ui/configProviders.qml
@@ -3483,6 +3494,63 @@ msgstr ""
 
 #: contents/ui/configProviders.qml
 msgid "Try another search or choose a different filter."
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "%1 - disabled"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "%1 - enabled"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid ""
+"Some sources are unavailable on Linux. The source override in Diagnostics "
+"takes precedence."
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Choose a source"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Choose a source to save. Automatic restores the provider default."
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Settings and diagnostics"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Inspect redacted settings"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid ""
+"This CodexBar version does not support editing other options for this "
+"provider."
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid ""
+"This CodexBar version does not expose editable provider options. Enable/"
+"disable, supported API key setup, provider links, and redacted diagnostics "
+"remain available."
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid ""
+"Editable provider options come from CodexBar. Redacted source and "
+"authentication details are available on request."
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Provider options"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "CLI commands"
 msgstr ""
 
 #: contents/ui/controllers/AccountsController.qml
@@ -3789,10 +3857,6 @@ msgstr ""
 
 #: contents/ui/controllers/WidgetUpdateController.qml
 msgid "A widget update is available."
-msgstr ""
-
-#: contents/ui/controllers/WidgetUpdateController.qml
-msgid "Widget update %1 is available."
 msgstr ""
 
 #: contents/ui/controllers/WidgetUpdateController.qml

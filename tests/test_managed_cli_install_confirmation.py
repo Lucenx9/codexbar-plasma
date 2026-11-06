@@ -36,6 +36,7 @@ TestCase {
             width: testCase.width, height: testCase.height, cfg_commandPath: command
         });
         verify(page !== null);
+        findChild(page, "cliUpdatesDisclosure").clicked();
         var managed = findChild(page, "managedCliController");
         // All managed actions are synthetic, including a mistakenly started install.
         managed.scriptUrl = "MANAGED_URL";

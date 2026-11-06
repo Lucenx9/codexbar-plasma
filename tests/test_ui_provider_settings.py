@@ -188,19 +188,17 @@ class ProviderSettingsTest(unittest.TestCase):
                     f"missing {heading_fragment!r}"
                 )
 
-        provider_list_separator_body = id_block(providers_text, "providerListSeparator")
-        if not code_contains(provider_list_separator_body, "Layout.fillWidth: true"):
-            raise AssertionError("The provider list boundary must span the available width")
-
         ordered_provider_fragments = (
-            "id: providerCliCommandsView",
-            "id: providerListSeparator",
             "id: providerListHeading",
             "delegate: Components.ProviderConfigRow",
+            'objectName: "selectedProviderSurface"',
+            'objectName: "providerSourceBox"',
+            "id: providerSettingsToggle",
+            "id: providerCliCommandsView",
         )
         ordered_provider_indexes = [providers_text.index(fragment) for fragment in ordered_provider_fragments]
-        if ordered_provider_indexes != sorted(ordered_provider_indexes):
-            raise AssertionError("Provider details, list boundary, heading, and rows must keep their visual order")
+        self.assertEqual(ordered_provider_indexes, sorted(ordered_provider_indexes),
+                         "Provider selection must precede settings, with diagnostics last")
 
     def test_reload_and_invalidation(self):
         if not code_contains(providers_text, "onCfg_commandPathChanged: handleCommandPathChanged()"):

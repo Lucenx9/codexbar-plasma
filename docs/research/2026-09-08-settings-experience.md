@@ -159,6 +159,52 @@ with 13-point text. It applied the popup's visual language to settings:
 
 FormLayout does not forward `Layout` margins to its item containers, so
 indented dependent options sit inside a `ColumnLayout`. The KDE desktop style
-draws button text inside its style item, so disclosure summaries stay aligned
-with the button edge rather than an estimated text offset.
+draws button text inside its style item rather than exposing a QML label.
+Disclosure summaries use the theme icon size and spacing for their text inset,
+verified in both layout directions and in narrow Italian captures.
 
+
+## Settings hierarchy and selection
+
+The settings refinement against Plasma `2e25309d396f699bb77d31764c33752a4c160c04`
+keeps the seven native KCM pages, configuration keys and CLI action ownership.
+
+| Before | After | Why |
+| --- | --- | --- |
+| General exposed widget updates, CLI releases and private CLI management together with everyday preferences. | Two update disclosures retain their controls and show a resting status. Optional identified subtotal fields appear only while enabled. | Keep the common path short without clearing hidden values. |
+| Selecting a provider changed details above the list. | A bounded scrolling list precedes the detail surface, alongside it in wide windows and above it when narrow. Source selection remains visible. | Keep selection and its result close; focus reveals rows within the list. |
+| Automatic Overview selection looked like a manual selection with a disabled reset button. | Automatic and manual radio choices map to the existing empty/explicit/none values. | Make the saved selection mode visible without a migration. |
+| Panel's preview selector competed with its heading at narrow widths. | A labeled Example selector wraps under the full heading. The minimal preset sits under Appearance. | Distinguish sample data from preferences. |
+| Diagnostics led with support output. | CLI connection and versions come first; support remains last with an initially closed preview. Empty diagnostic output is compact. | Put the editable setting before troubleshooting tools. |
+| AI setup left an empty model field and mixed privacy details with billing. | Model-entry guidance, visible billing, expandable data details and an explicit empty saved-insight state. | Explain the next action while retaining cost and privacy information. |
+
+General disclosures do not create or destroy controllers. They change visibility
+only, so opening them does not start CLI actions or clear pending configuration.
+The provider source control retains its unknown initial selection; no saved
+source is inferred from an inventory of supported modes. Provider mutations
+still save immediately, independently of Plasma Apply/Cancel. The selection
+highlight leaves each provider switch on the normal background for contrast.
+
+The ordinary provider and Diagnostics smoke scenarios intentionally expand
+redacted details and support preview. They are review states, not opening
+states. Keep that distinction explicit when comparing screenshots.
+
+Provider inspection rows use a shared key width when there is room for two
+columns and stack each key above its value when narrow. General update controls
+use compact column groups, indented only when wide to preserve narrow text width; the interval label and editor share a row on wide
+windows. Saved-insight empty state is text beside the Clear action, and the
+minimal panel preset remains a bordered action disabled when already applied.
+
+Closed update groups retain known available releases, in-progress status and
+errors; opening or closing them performs no check. Cloud sharing scope and
+immediate wallet-write behavior remain visible outside the detail disclosure.
+The resolved CLI executable wraps in a selectable read-only field, so a
+keyboard user can inspect and copy the exact path. The diagnostic provider hint
+says All providers, matching the unchanged explicit `--provider all` command;
+it does not describe the separate blank provider-override setting. The installed
+official Linux CLI 0.83.0 help lists `diagnose --provider <name|all>`; no diagnostic
+fetch was needed to verify that command spelling.
+
+The configured command also uses a wrapping editor, preventing a truncated
+value from looking like a complete executable path. Enter does not insert a
+line break; existing command validation and pending-save semantics are unchanged.

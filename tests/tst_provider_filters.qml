@@ -13,6 +13,7 @@ TestCase {
     height: 700
     visible: true
 
+    function i18nc(context, text) { return text; }
     function i18n(text) {
         return text;
     }
@@ -273,7 +274,7 @@ TestCase {
         });
         compare(buttons.length, 1);
         var tips = all.filter(function(item) {
-            return item.toString().indexOf("PlainToolTip") >= 0;
+            return item.toString().indexOf("PlainToolTip") >= 0 && item.parent === buttons[0];
         });
         compare(tips.length, 1);
         compare(tips[0].parent, buttons[0]);
@@ -372,8 +373,8 @@ TestCase {
         compare(inspect.length, 1);
         verify(inspect[0].visible);
         var immediate = all.filter(function(item) {
-            return item.plainText !== undefined
-                && String(item.plainText).indexOf("CodexBar saves provider changes immediately") === 0;
+            return item.text !== undefined
+                && String(item.text).indexOf("CodexBar saves provider changes immediately") === 0;
         });
         verify(immediate.length >= 1);
         var cli = all.filter(function(item) {
@@ -702,4 +703,62 @@ TestCase {
         var readable = page.providerReadableColor("replicate", background);
         verify(ThemeContrast.contrastRatio(readable, background) >= 3);
     }
+    function test_providerPanesKeepSelectionAndKeyboardReachable() {
+        var page = createProvidersPage();
+        if (!page) return;
+        page.providers = Array.from({length: 20}, function(_, i) {
+            return {provider: "example" + i, displayName: "Example provider " + i, enabled: true};
+        });
+        page.selectedProviderID = "example0";
+        for (var width of [840, 420]) {
+            page.width = width;
+            wait(50);
+            var list = findChild(page, "providerListScroll");
+            var detail = findChild(page, "selectedProviderSurface");
+            verify(list.width > 0 && detail.width > 0);
+            var listPos = list.mapToItem(page, 0, 0);
+            var detailPos = detail.mapToItem(page, 0, 0);
+            if (width === 840) verify(detailPos.x > listPos.x + list.width);
+            else verify(detailPos.y >= listPos.y + list.height);
+            verify(detailPos.x + detail.width <= page.width);
+            var all = [];
+            walkPageObjects(page, all);
+            var last = all.filter(function(item) {
+                return item.providerData && item.providerData.provider === "example19";
+            })[0];
+            verify(last !== undefined);
+            last.forceActiveFocus(Qt.TabFocusReason);
+            keyClick(Qt.Key_Space);
+            compare(page.selectedProviderID, "example19");
+            var rowPos = last.mapToItem(list, 0, 0);
+            verify(rowPos.y >= -1 && rowPos.y + last.height <= list.height + 1);
+            verify(!settingsToggle(page).expanded);
+            findChild(page, "providerSearchField").forceActiveFocus();
+        }
+    }
+
+    function test_inspectionValuesAlignAndStackWhenNarrow() {
+        var page = createProvidersPage();
+        if (!page) return;
+        page.providers = [{provider: "codex", displayName: "Codex", enabled: true}];
+        page.selectedProviderID = "codex";
+        settingsToggle(page).expanded = true;
+        for (var width of [840, 420]) {
+            page.width = width;
+            wait(50);
+            var all = [];
+            walkPageObjects(page, all);
+            var values = all.filter(function(item) { return item.objectName === "providerSettingValue"; });
+            verify(values.length >= 3);
+            var firstX = values[0].mapToItem(page, 0, 0).x;
+            for (var value of values) {
+                fuzzyCompare(value.mapToItem(page, 0, 0).x, firstX, 1);
+                var label = findChild(value.parent, "providerSettingLabel");
+                verify(label !== null);
+                if (width === 840) verify(value.x >= label.x + label.width);
+                else verify(value.y >= label.y + label.height);
+            }
+        }
+    }
+
 }

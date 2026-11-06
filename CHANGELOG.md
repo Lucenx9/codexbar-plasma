@@ -20,6 +20,13 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   shorten crowded usage/pace text to complete readings. Normalize Gemini and
   Grok artwork padding and render Gemini as a vector.
 
+- Simplify all seven settings pages: group update controls on demand, place
+  provider selection beside its settings, make automatic Overview selection
+  explicit, and lead Diagnostics with the CLI connection. Clarify the panel
+  preview, keep its heading readable in narrow windows, and separate AI billing
+  guidance from expandable privacy details. Preserve existing settings and
+  keyboard navigation, with updated translations in all five languages.
+
 - Clarify popup navigation with compact vertical quota gauges beside provider
   names, independently of tab selection. Emphasize cost summaries and show the
   peak daily amount above resting cost charts. Group square heatmap cells with

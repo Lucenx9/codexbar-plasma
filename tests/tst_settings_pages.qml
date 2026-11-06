@@ -134,6 +134,7 @@ TestCase {
     function test_installWithWorkingExternalCliAsksForConfirmation() {
         var page = createPage("../contents/ui/configGeneral.qml", {cfg_commandPath: "/usr/bin/codexbar"});
         if (!page) return;
+        findChild(page, "cliUpdatesDisclosure").clicked();
         var managed = findChild(page, "managedCliController");
         managed.activeAction = "status";
         managed.activeSource = "synthetic";
@@ -194,7 +195,7 @@ TestCase {
         var all = [];
         walkPageObjects(page, all);
         var fields = all.filter(function(item) {
-            return item instanceof Controls.TextField && item.text === "/opt/codexbar";
+            return item instanceof Controls.TextArea && item.text === "/opt/codexbar";
         });
         compare(fields.length, 1);
         compare(fields[0].Accessible.name, "Command path:");
@@ -336,48 +337,59 @@ TestCase {
         verify(resolvedCommandLabel.text !== "Not checked");
     }
 
-    // A middle-elided resolved path must stay readable on hover, and a path
-    // that fits must not grow a redundant tooltip.
-    function test_diagnosticsRevealsTruncatedResolvedPath() {
+    // The resolved executable is separate from a configured bare name and
+    // must remain fully available to keyboard selection at narrow widths.
+    function test_diagnosticsResolvedPathIsKeyboardSelectable() {
         var longPath = "/home/test/.local/share/codexbar-plasma/cli/releases/0.62.0/bin/codexbar";
-        var page = createPage("../contents/ui/configDiagnostics.qml", {
-            cfg_commandPath: longPath,
-            width: 240
-        });
-        if (!page)
-            return;
-
+        var page = createPage("../contents/ui/configDiagnostics.qml", {cfg_commandPath: longPath, width: 240});
+        if (!page) return;
         var versions = findChild(page, "cliVersionsController");
         versions.activeSource = "environment";
         versions.accept("environment", {
             "exit code": 0,
-            stdout: JSON.stringify({status: "local", version: "0.62.0",
-                path: longPath, manager: "managed"})
+            stdout: JSON.stringify({status: "local", version: "0.62.0", path: longPath, manager: "managed"})
         });
-        var label = findChild(page, "resolvedCommandLabel");
-        var tip = findChild(page, "resolvedCommandToolTip");
-        verify(label !== null && tip !== null);
-        compare(label.text, longPath);
-        tryVerify(function() { return label.truncated; });
-        compare(tip.plainText, longPath);
-        mouseMove(testCase, testCase.width - 1, testCase.height - 1);
-        wait(300);
-        mouseMove(label, label.width / 2, label.height / 2);
-        tryCompare(tip, "visible", true);
-        mouseMove(testCase, testCase.width - 1, testCase.height - 1);
-        tryCompare(tip, "visible", false);
+        var path = findChild(page, "resolvedCommandLabel");
+        verify(path !== null);
+        compare(path.text, longPath);
+        path.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_A, Qt.ControlModifier);
+        compare(path.selectedText, longPath);
+        keyClick(Qt.Key_Backspace);
+        compare(path.text, longPath);
+        verify(path.lineCount > 1);
+        var field = findChild(page, "commandPathField");
+        verify(field.lineCount > 1);
+        field.forceActiveFocus(Qt.TabFocusReason);
+        field.cursorPosition = field.length;
+        keyClick(Qt.Key_Return);
+        keyClick(Qt.Key_Enter);
+        compare(page.cfg_commandPath, longPath);
+        keyClick(Qt.Key_A, Qt.ControlModifier);
+        compare(field.selectedText, longPath);
+    }
 
-        versions.activeSource = "environment";
-        versions.accept("environment", {
-            "exit code": 0,
-            stdout: JSON.stringify({status: "local", version: "0.62.0",
-                path: "/usr/bin/codexbar", manager: "external"})
-        });
-        tryCompare(label, "text", "/usr/bin/codexbar");
-        tryVerify(function() { return !label.truncated; });
-        mouseMove(label, label.width / 2, label.height / 2);
-        wait(tip.delay + 100);
-        verify(!tip.visible);
+    function test_diagnosticsCommandPathTabNavigation_data() {
+        return [
+            {tag: "forward", key: Qt.Key_Tab, modifiers: Qt.NoModifier, forward: true},
+            {tag: "shift-tab", key: Qt.Key_Tab, modifiers: Qt.ShiftModifier, forward: false},
+            {tag: "backtab", key: Qt.Key_Backtab, modifiers: Qt.ShiftModifier, forward: false}
+        ];
+    }
+
+    function test_diagnosticsCommandPathTabNavigation(data) {
+        var configuredPath = "/opt/codexbar";
+        var page = createPage("../contents/ui/configDiagnostics.qml", {cfg_commandPath: configuredPath});
+        if (!page) return;
+        var field = findChild(page, "commandPathField");
+        field.forceActiveFocus(Qt.TabFocusReason);
+        field.cursorPosition = 5;
+        var next = field.nextItemInFocusChain(data.forward);
+        verify(next !== field);
+        keyClick(data.key, data.modifiers);
+        compare(page.cfg_commandPath, configuredPath);
+        verify(!field.activeFocus);
+        verify(next.activeFocus);
     }
 
     function test_diagnosticsShowsSystemCliWhenItDiffers() {
@@ -643,13 +655,7 @@ TestCase {
     }
 
     function diagnosticProviderField(page) {
-        var all = [];
-        walkPageObjects(page, all);
-        for (var i = 0; i < all.length; i++) {
-            if (all[i].placeholderText === "all")
-                return all[i];
-        }
-        return null;
+        return findChild(page, "diagnosticProviderField");
     }
 
     // The master switch owns the detail toggles: turning it off must disable
@@ -732,7 +738,7 @@ TestCase {
         verify(!statusCheck.enabled);
     }
 
-    // A blank diagnostic provider means "all enabled providers": the page
+    // A blank diagnostic provider explicitly requests "all" providers: the page
     // must send the redacted diagnose command with a run nonce behind it.
     // /bin/echo settles the DataSource immediately, so the test observes the
     // issued command instead of the source text that built it.
@@ -841,6 +847,8 @@ TestCase {
         });
         if (!page)
             return;
+        findChild(page, "widgetUpdatesDisclosure").clicked();
+        wait(0);
         var cases = [
             {label: "Fetch provider service status", key: "cfg_includeStatus"},
             {label: "Load local usage and spend history", key: "cfg_costUsageEnabled"},
@@ -921,6 +929,28 @@ TestCase {
 
     // The update status label renders the pending runtime status text, and
     // stays hidden while the status is empty.
+    function test_closedCliSectionKeepsReleaseAndFailureFeedback() {
+        var page = createPage("../contents/ui/configGeneral.qml");
+        if (!page) return;
+        var managed = findChild(page, "managedCliController");
+        managed.result = Object.assign({}, managed.result, {status: "ready", version: "0.61.0"});
+        var releases = findChild(page, "cliReleaseController");
+        var summary = findChild(page, "cliUpdatesSummary");
+        verify(summary.visible);
+        releases.result = Object.assign({}, releases.result, {status: "available", version: "0.61.0", latest: "0.62.0"});
+        releases.checked = true;
+        compare(summary.text, releases.statusText);
+        verify(summary.text.indexOf("0.62.0") >= 0);
+        var disclosure = findChild(page, "cliUpdatesDisclosure");
+        disclosure.expanded = true;
+        verify(!summary.visible);
+        disclosure.expanded = false;
+        compare(summary.text, releases.statusText);
+        managed.result = Object.assign({}, managed.result, {status: "network"});
+        compare(summary.text, managed.statusText);
+        compare(releases.activeSource, "");
+    }
+
     function test_updateStatusLabelShowsPendingStatus() {
         var page = createPage("../contents/ui/configGeneral.qml", {
             cfg_commandPath: "/usr/bin/codexbar",
@@ -1010,6 +1040,8 @@ TestCase {
         }
         var page = createPage("../contents/ui/" + data.source, properties);
         if (!page) return;
+        if (data.control === "autoUpdateIntervalHoursSpin")
+            findChild(page, "widgetUpdatesDisclosure").clicked();
         var control = findChild(page, data.control);
         verify(control !== null);
         wait(0);
@@ -1021,4 +1053,30 @@ TestCase {
             compare(control.Accessible.name, data.nextLabel);
         }
     }
+    function test_optionalSettingsRevealWithoutLosingValues() {
+        var page = createPage("../contents/ui/configGeneral.qml", {
+            cfg_identifiedTokensEnabled: false, cfg_identifiedTokensHistoryDays: 17,
+            cfg_identifiedTokensSshHost: "build@host", cfg_autoUpdateIntervalHours: 48
+        });
+        if (!page) return;
+        var widget = findChild(page, "widgetUpdatesDisclosure");
+        var cli = findChild(page, "cliUpdatesDisclosure");
+        var days = findChild(page, "identifiedDaysSpin");
+        verify(!widget.expanded && !cli.expanded && !days.visible);
+        widget.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Space);
+        verify(widget.expanded);
+        verify(findChild(page, "autoUpdateIntervalHoursSpin").visible);
+        keyClick(Qt.Key_Space);
+        verify(!widget.expanded);
+        compare(page.cfg_autoUpdateIntervalHours, 48);
+        page.cfg_identifiedTokensEnabled = true;
+        verify(days.visible);
+        compare(days.value, 17);
+        compare(findChild(page, "identifiedSshHostField").text, "build@host");
+        page.cfg_identifiedTokensEnabled = false;
+        compare(page.cfg_identifiedTokensHistoryDays, 17);
+        compare(page.cfg_identifiedTokensSshHost, "build@host");
+    }
+
 }

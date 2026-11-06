@@ -175,18 +175,18 @@ class SettingsPagesTest(unittest.TestCase):
         assert_form_sections(
             general_text,
             "configGeneral.qml",
-            ("Refresh", "Privacy", "Usage history", "Updates", "CLI updates", "Defaults"),
+            ("Refresh", "Privacy", "Usage history", "Updates", "Defaults"),
         )
         assert_form_sections(
             popup_text,
             "configPopup.qml",
-            ("Usage details", "Popup"),
+            ("Usage details", "Popup content"),
         )
 
         assert_form_sections(panel_surface.text, "configPanel.qml", ("Appearance", "Contents", "Panel visibility"))
         assert_form_sections(notifications_surface.text, "configNotifications.qml", ("Quota warnings", "Notifications"))
         assert_form_sections(diagnostics_text, "configDiagnostics.qml",
-                             ("Support report", "Connection", "Versions", "Advanced provider override"))
+                             ("Support report", "CodexBar CLI", "Advanced provider override"))
 
     def test_diagnostics_versions_summary(self):
         # The environment summary is what a bug report needs: the widget and CLI
