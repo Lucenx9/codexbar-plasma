@@ -221,6 +221,8 @@ work and upstream contract requirements.
   the forecast. Long forecast words wrap inside the popup, and an abbreviated
   reset still reveals its full text on hover.
 - Hover a quota meter to identify its visible warning and critical markers.
+  A small margin around the track also activates the tooltip, making thin
+  meters easier to target.
   The tooltip and accessible description express thresholds as percent used,
   including when the meter shows percent left. Endpoint markers and disabled
   markers have no description; pace markers keep their separate meaning.

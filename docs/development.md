@@ -1597,7 +1597,9 @@ through the production heatmap, checks its single Tab stop and immediate
 readout, reveals the grid in a short popup, preserves the full small theme font
 for numeric labels, and covers refresh, removed dates and range/metric changes
 without starting a scan. Marker tooltip tests keep used thresholds separate from mirrored
-remaining percentages and omit markers at either endpoint.
+remaining percentages and omit markers at either endpoint. They exercise hover
+entry and exit on all four sides of a thin track; keep paint clipping inside
+the meter so it cannot cut off the hover handler's margin.
 `tests/fixtures/ProviderUiStress.js` supplies realistic long identifiers, Unicode,
 markup-like text, missing optional values, extreme budgets, and demo/empty/one/
 1,000-row states. `tst_visual_layout.qml` renders these detail fixtures at 240,

@@ -2261,10 +2261,20 @@ TestCase {
         verify(!metadata.visible);
     }
 
-    function test_thresholdTooltipUsesOnlyDrawnWarningMarkers() {
+    function test_thresholdTooltipUsesOnlyDrawnWarningMarkers_data() {
+        return [
+            {tag: "above", side: "above"},
+            {tag: "below", side: "below"},
+            {tag: "left", side: "left"},
+            {tag: "right", side: "right"}
+        ];
+    }
+
+    function test_thresholdTooltipUsesOnlyDrawnWarningMarkers(data) {
         var row = createUsageRow(usageRowData(), 540);
         if (!row)
             return;
+        row.x = 10;
         // A remaining meter mirrors 80% used to 20%; the wording must not mirror.
         row.warningMarkers = [
             {percent: 20, color: "orange", description: "Warning at 80% used"},
@@ -2281,8 +2291,16 @@ TestCase {
         mouseMove(bar, bar.width / 2, bar.height / 2);
         tryCompare(tip, "visible", true, tip.delay + 1000);
         compare(tip.plainText, "Warning at 80% used");
-        mouseMove(bar, bar.width / 2, -1);
+        var x = data.side === "left" ? -1 : data.side === "right" ? bar.width + 1 : bar.width / 2;
+        var y = data.side === "above" ? -1 : data.side === "below" ? bar.height + 1 : bar.height / 2;
+        mouseMove(bar, x, y);
         verify(tip.visible, "The thin meter must retain its tooltip just outside the track");
+        mouseMove(bar,
+            data.side === "left" ? -10 : data.side === "right" ? bar.width + 10 : bar.width / 2,
+            data.side === "above" ? -10 : data.side === "below" ? bar.height + 10 : bar.height / 2);
+        tryCompare(tip, "visible", false);
+        mouseMove(bar, x, y);
+        tryCompare(tip, "visible", true, tip.delay + 1000);
         row.warningMarkers = [];
         tryCompare(tip, "visible", false);
         compare(row.warningDescription, "");
