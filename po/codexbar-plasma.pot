@@ -1177,6 +1177,14 @@ msgid "Usage chart"
 msgstr ""
 
 #: contents/ui/components/ProviderNames.qml
+msgid "Trae CN"
+msgstr ""
+
+#: contents/ui/components/ProviderNames.qml
+msgid "OpenDesign"
+msgstr ""
+
+#: contents/ui/components/ProviderNames.qml
 msgid "Soniox"
 msgstr ""
 
@@ -3256,6 +3264,63 @@ msgid "codexbar did not return provider data."
 msgstr ""
 
 #: contents/ui/configProviders.qml
+msgid "Cookie header"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Sign in to GitHub Copilot"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid ""
+"Open this address in your browser:\n"
+"%1\n"
+"\n"
+"Enter this code:\n"
+"%2\n"
+"\n"
+"The code expires in %3 seconds. Press OK after entering it to continue "
+"waiting in settings. Use Cancel sign-in in settings to cancel."
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Sign-in cancelled."
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Copilot sign-in completed."
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "%1 cookie saved"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "%1 stored credentials cleared"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Operation cancelled."
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Sign-in expired. Try again."
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "CodexBar configuration changed during sign-in. Try again."
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid ""
+"Credential setup could not start. Check python3, kdialog and GNU timeout."
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "%1 command failed. Try again."
+msgstr ""
+
+#: contents/ui/configProviders.qml
 #: contents/ui/controllers/ProviderRosterController.qml
 msgid "Loading providers timed out. Try again."
 msgstr ""
@@ -3294,6 +3359,22 @@ msgstr ""
 
 #: contents/ui/configProviders.qml scripts/smoke/Capture.qml
 msgid "Set license key…"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Set cookie…"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Clear stored credentials…"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Sign in with GitHub…"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Cancel sign-in"
 msgstr ""
 
 #: contents/ui/configProviders.qml contents/ui/main.qml
@@ -3434,6 +3515,17 @@ msgstr ""
 
 #: contents/ui/configProviders.qml scripts/smoke/Capture.qml
 msgid "Web"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Clear stored credentials?"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid ""
+"Remove the API key and manual cookie stored by CodexBar for %1? Token "
+"accounts, environment variables, source settings and enablement are "
+"unchanged."
 msgstr ""
 
 #: contents/ui/configProviders.qml

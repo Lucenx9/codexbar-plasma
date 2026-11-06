@@ -29,6 +29,13 @@ https://github.com/steipete/CodexBar/tree/v0.77.0/Sources/CodexBar/Resources
 They use the same retained MIT notice:
 https://github.com/steipete/CodexBar/blob/v0.77.0/LICENSE
 
+The Soniox, Trae CN, Chatbox AI, abliteration.ai, and OpenDesign icons are
+copied unchanged from CodexBar v0.83.0, commit
+348e2fa8d36ae8e452739ca07a79e83ab9d25e98:
+https://github.com/steipete/CodexBar/tree/v0.83.0/Sources/CodexBar/Resources
+They use the same retained MIT notice:
+https://github.com/steipete/CodexBar/blob/v0.83.0/LICENSE
+
 The Poe provider icon (contents/icons/providers/poe.svg) is adapted from
 "Poe App Logo" by SVG Stack for theme coloring:
 https://svgstack.com/icon/poe-app-logo-3748

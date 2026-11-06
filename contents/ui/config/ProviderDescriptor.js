@@ -127,7 +127,7 @@ function planFieldWrite(field, value, commandPath) {
     if (field.kind === "secret") {
         return rejectedPlan("secretRequiresPrompt")
     }
-    if (isApiKeyCommand(field.writeCommand)) {
+    if (isCredentialCommand(field.writeCommand)) {
         return rejectedPlan("unsupportedCommand")
     }
     // The writeCommand has no other value channel: without the placeholder the
@@ -171,10 +171,10 @@ function commandTokensContainToken(commandTokens, expectedToken) {
     return false
 }
 
-// set-api-key stores a credential, so only a secret field, which writes through
+// Credential writers store a secret, so only a secret field, which writes through
 // stdin, may use it. Any other kind would put the typed key in the command line.
-function isApiKeyCommand(commandTokens) {
-    return String(commandTokens[2]) === "set-api-key"
+function isCredentialCommand(commandTokens) {
+    return ["set-api-key", "set-cookie"].indexOf(String(commandTokens[2])) >= 0
 }
 
 function fieldCommandMatchesKind(kind, commandTokens) {
@@ -182,7 +182,7 @@ function fieldCommandMatchesKind(kind, commandTokens) {
         return commandTokensContainToken(commandTokens, "--stdin")
             && !commandTokensContainValue(commandTokens)
     }
-    return !isApiKeyCommand(commandTokens) && commandTokensContainValue(commandTokens)
+    return !isCredentialCommand(commandTokens) && commandTokensContainValue(commandTokens)
 }
 
 function planAction(action, commandPath) {
@@ -281,7 +281,7 @@ function isAllowedCommand(commandTokens, purpose) {
 
     var subcommand = String(commandTokens[2])
     if (purpose === "field") {
-        return subcommand === "set" || subcommand === "set-api-key"
+        return subcommand === "set" || subcommand === "set-api-key" || subcommand === "set-cookie"
     }
     if (purpose === "action") {
         return subcommand === "action"

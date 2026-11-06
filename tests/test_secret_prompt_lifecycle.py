@@ -19,9 +19,12 @@ QML = '''import QtQuick
 import QtTest
 import "SOURCE_URL/Guards.js" as Guards
 import "SOURCE_URL/config/ProviderDescriptor.js" as ProviderDescriptor
+import "SOURCE_URL/config/ProviderCredentials.js" as ProviderCredentials
 TestCase {
     name: "SecretPromptCommands"
     property string commandPath: CLI_PATH
+    property string credentialCliVersion: "CodexBar 0.83.0"
+    property url credentialScriptUrl: HELPER_URL
     property string errorText: ""
     property string statusText: ""
     property var captured: []
@@ -34,6 +37,8 @@ TestCase {
     function providerCliArgument(provider) { return provider; }
     function providerKey(provider) { return provider.toLowerCase(); }
     function providerByID(provider) { return {provider: provider, enabled: false}; }
+    function credentialWriteAllowed(provider) { return true; }
+    function retireProviderDiagnostic(provider) {}
     function isPending(provider) { return false; }
     function isFieldPending(provider, field) { return false; }
     function markPending(provider, pending, desired) {}
@@ -61,6 +66,8 @@ TestCase {
         compare(errorText, "");
         compare(captured.length, 3);
         for (var id of ["soniox", "abliteration", "chatbox"]) setApiKey(id);
+        promptDescriptorSecret("claude", {id:"cookieHeader", title:"Cookie header", kind:"secret",
+            writeCommand:["codexbar", "config", "set-cookie", "--provider", "claude", "--stdin"]});
         console.log("PROMPT_FIXTURE:" + JSON.stringify({production: production, commands: captured}));
     }
 }
@@ -93,7 +100,7 @@ else:
         time.sleep(30)
     if mode == "late":
         time.sleep(2)
-    print(json.dumps({"ok": True}))
+    print(json.dumps({"provider":"claude", "enabled":True} if "set-cookie" in sys.argv else {"ok": True}))
 '''
 
 
@@ -118,6 +125,7 @@ class SecretPromptLifecycleTests(unittest.TestCase):
         properties = re.findall(
             r"^    readonly property int configSecret\w+:.*(?:\n[ \t]{8,}\S.*)*", source, re.MULTILINE)
         qml = QML.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
+        qml = qml.replace("HELPER_URL", json.dumps((ROOT / "scripts/provider-auth.py").as_uri()))
         qml = qml.replace("CLI_PATH", json.dumps(str(cls.directory / "codexbar")))
         hostile = 'x"; touch "' + str(cls.directory / "PWNED") + '"; echo "y'
         qml = qml.replace("HOSTILE_TITLE", json.dumps(hostile))
@@ -165,7 +173,7 @@ class SecretPromptLifecycleTests(unittest.TestCase):
         self.assertEqual(hostile_argv, ["--password", self.hostile_prompt])
 
     def test_new_provider_prompts_use_stdin_and_correct_key_names(self):
-        for entry in self.fixture["commands"][3:]:
+        for entry in self.fixture["commands"][3:6]:
             provider = entry["descriptor"]["provider"]
             with self.subTest(provider=provider):
                 self.run_prompt(entry, "success")
@@ -181,6 +189,15 @@ class SecretPromptLifecycleTests(unittest.TestCase):
                     self.assertIn("authorize AI requests", prompt)
                 else:
                     self.assertEqual(prompt, "API key for abliteration")
+
+    def test_cookie_prompt_passes_secret_only_through_stdin(self):
+        entry = self.fixture["commands"][-1]
+        self.assertEqual(entry["descriptor"]["kind"], "credential")
+        self.assertEqual(entry["descriptor"]["action"], "set-cookie")
+        for mode in ("success", "cancel", "cli-term", "cli-kill"):
+            self.run_prompt(entry, mode)
+        argv = json.loads((self.directory / "codexbar.argv").read_text())
+        self.assertEqual(argv, ["config", "set-cookie", "--provider", "claude", "--format", "json", "--json-only", "--stdin"])
 
     def test_generated_scripts_cancel_finish_and_leave_no_running_children(self):
         for entry in self.fixture["commands"][:3]:
@@ -204,7 +221,8 @@ class SecretPromptLifecycleTests(unittest.TestCase):
                 self.assertIn(process.returncode, (124, 137), stderr)
             else:
                 self.assertEqual(process.returncode, 0, stderr)
-                self.assertEqual(json.loads(stdout), {"ok": True} if mode in ("late", "success") else {"cancelled": True})
+                expected = {"status":"ok", "provider":"claude", "enabled":True} if entry["descriptor"]["kind"] == "credential" else {"ok":True}
+                self.assertEqual(json.loads(stdout), expected if mode in ("late", "success") else {"cancelled": True})
             self.assertEqual((self.directory / "received").exists(), mode in ("late", "success") or mode.startswith("cli-"))
             for marker in self.directory.glob("*.pid"):
                 status = Path("/proc") / marker.read_text() / "stat"
@@ -240,6 +258,7 @@ import "SOURCE_URL/SafeText.js" as SafeText
 import "SOURCE_URL/CommandLedger.js" as CommandLedger
 import "SOURCE_URL/config/ProviderDescriptor.js" as ProviderDescriptor
 import "SOURCE_URL/config/ProviderConfigProtocol.js" as ProviderConfigProtocol
+import "SOURCE_URL/config/ProviderCredentials.js" as ProviderCredentials
 TestCase {
     name: "ProviderCommandWiring"
     property string commandPath: "codexbar"
@@ -257,6 +276,7 @@ TestCase {
     property bool munitoApiKeySetupSupported: false
     property bool commandCodeFalApiKeySetupSupported: false
     property bool providerSourceSetupSupported: false
+    property string credentialCliVersion: ""
     property var operationState: ProviderOperations.initialState()
     property var commands: ({})
     property int cfg_providerConfigRevision: 0
@@ -886,6 +906,7 @@ TestCase {
 '''
 
 WIRING_FUNCTIONS = (
+    "hasCredentialWrite", "hasPendingFields", "deviceLoginActive",
     "runCommand", "disconnectCommandsByKind", "expireConfigCommands",
     "hasTimedConfigCommands", "handleConfigCommandTimeout",
     "reload", "runProviderListCommand",

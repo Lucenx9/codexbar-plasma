@@ -10,6 +10,21 @@ TestCase {
         "ai&": "aiand"
     })
 
+    function test_registry083Identities() {
+        var dashboards = {soniox: "https://console.soniox.com", traecn: "https://www.trae.cn/dashboard#usage",
+            chatbox: "https://chatboxai.app", abliteration: "https://abliteration.ai",
+            opendesign: "https://open-design.ai/cloud/dashboard"}
+        for (var id of Object.keys(dashboards)) {
+            compare(ProviderIdentity.providerIconFileName(id), id + ".svg")
+            compare(ProviderIdentity.providerBrandColorChannels(id).length, 3)
+            compare(ProviderIdentity.providerDashboardUrl(id), dashboards[id])
+            verify(ProviderIdentity.providerDocsUrl(id).endsWith(id + ".md"))
+        }
+        compare(ProviderIdentity.resolveProviderKey("Trae-CN"), "traecn")
+        compare(ProviderIdentity.resolveProviderKey("open-design"), "opendesign")
+        compare(ProviderIdentity.providerIconFileName("open-design"), "opendesign.svg")
+    }
+
     function test_newKeyProvidersHaveDocumentation() {
         for (var id of ["soniox", "abliteration", "chatbox"]) {
             compare(ProviderIdentity.providerDocsUrl(id.toUpperCase()),

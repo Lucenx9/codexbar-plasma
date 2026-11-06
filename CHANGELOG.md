@@ -10,6 +10,17 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Added
+
+- Bundle dedicated Soniox, Trae CN, Chatbox AI, abliteration.ai, and OpenDesign
+  icons and identity metadata, covering the official CLI 0.83.0 registry.
+- Offer secure manual-cookie setup for 14 verified Linux providers and
+  confirmation before clearing stored keys/cookies with CLI 0.82.0 or later.
+  OpenDesign requires 0.83.0; Gemini remains excluded pending Web quota verification.
+- Add on-demand Copilot GitHub device sign-in with CLI 0.80.0 or later,
+  a private native dialog, cancellation, expiry and conflict handling. Keep
+  API-key setup available and refresh usage after successful setup.
+
 ### Changed
 
 - Refine panel provider groups with larger, contrast-adjusted icons, slimmer
@@ -41,6 +52,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   text keeps readable contrast in light and dark themes.
 
 ### Fixed
+
+- Keep dark provider indicators readable in usage-sharing previews and exported
+  images, including abliteration.ai and OpenDesign, while preserving brand colors
+  where they already have sufficient contrast.
 
 - Remove the empty project container below expanded provider cost history when
   no project breakdown is available, while retaining reported project rows and

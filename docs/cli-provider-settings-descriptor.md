@@ -23,6 +23,10 @@ fields with only environment fallbacks and no writer.
 The scoped [0.74.1 review](research/2026-10-14-macos-parity-0.74.1.md)
 rechecks descriptor/action absence and the ClinePass labeled-write restriction;
 registry and command help are unchanged.
+Scoped checks through 0.83.0 still find no descriptors. Plasma separately
+offers [manual cookies, credential clearing and Copilot device sign-in](provider-credentials.md)
+through released, version-gated commands; these do not establish a generic
+descriptor or action contract.
 All command examples and payloads below describe the proposed contract.
 
 This document defines the CLI contract Plasma needs before it can render real
@@ -31,7 +35,8 @@ QML.
 
 The Plasma widget consumes this contract when the upstream `codexbar` CLI
 exposes it. If a descriptor is absent or unsupported, Plasma keeps enable/disable,
-supported single-key setup, docs/dashboard/login links, redacted diagnostics, and
+supported single-key/cookie setup, credential clearing, Copilot sign-in,
+docs/dashboard/login links, redacted diagnostics, and
 CLI command hints available.
 
 ## Command
@@ -216,8 +221,8 @@ Rules for Plasma:
 - Use `writeCommand` and action `command` exactly as arrays of argv-like
   tokens; quote each token when using Plasma's executable data source.
 - Reject descriptor commands unless they start with `codexbar config` and use
-  an allowed local subcommand: `set`/`set-api-key` for fields, `action` for
-  actions. Only a `secret` field may use `set-api-key`: it stores a
+  an allowed local subcommand: `set`/`set-api-key`/`set-cookie` for fields, `action` for
+  actions. Only a `secret` field may use `set-api-key` or `set-cookie`: each stores a
   credential, and any other kind would put the typed value in the command line.
 - Open descriptor-returned URLs only when they are HTTPS URLs of at most 2048
   characters.

@@ -761,4 +761,30 @@ TestCase {
         }
     }
 
+    function test_credentialActionVisibilityByVersionAndRegistry() {
+        var page = createProvidersPage();
+        if (!page) return;
+        page.providers = ProviderConfigProtocol.response(JSON.stringify([
+            {provider:"copilot", enabled:false}, {provider:"claude", enabled:false},
+            {provider:"future-provider", enabled:false}, {provider:"helmcode", enabled:false}]), "", 0, "list", page.providerTitle).value;
+        function actions(provider) {
+            return page.providerActionRows(page.providerByID(provider)).map(function(row) { return row.action; });
+        }
+        page.handleCliVersionResult("CodexBar 0.79.0", 0);
+        verify(actions("copilot").indexOf("device-login") < 0);
+        verify(actions("claude").indexOf("set-cookie") < 0);
+        verify(actions("future-provider").indexOf("clear-credential") < 0);
+        page.handleCliVersionResult("CodexBar 0.80.0", 0);
+        verify(actions("copilot").indexOf("device-login") >= 0);
+        verify(actions("copilot").indexOf("set-api-key") >= 0);
+        verify(actions("claude").indexOf("device-login") < 0);
+        page.handleCliVersionResult("CodexBar 0.82.0", 0);
+        verify(actions("claude").indexOf("set-cookie") >= 0);
+        verify(actions("helmcode").indexOf("set-cookie") < 0);
+        verify(actions("future-provider").indexOf("clear-credential") >= 0);
+        page.handleCliVersionResult("CodexBar 0.83.0", 1);
+        verify(actions("copilot").indexOf("device-login") < 0);
+        compare(Object.keys(page.commands).length, 0);
+    }
+
 }

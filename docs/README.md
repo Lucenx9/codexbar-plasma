@@ -30,6 +30,8 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
   for a widget release, from changelog reconciliation to the verified tag run.
 - [Parity review skill](../.claude/skills/parity-review/SKILL.md): agent command
   sequence for an upstream release review, including the isolated CLI probe.
+- [Provider credential commands](provider-credentials.md): version gates, verified
+  cookie allowlist, clear semantics, Copilot event bridge and regression coverage.
 - [Provider settings descriptor](cli-provider-settings-descriptor.md): proposed
   upstream CLI contract for generic settings. It is not a shipped contract.
 - [Cost history](cost-history.md): daily model data, selection behavior, and
@@ -42,11 +44,11 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
   normal, warning and critical detail rows with independent progress, used in
   the usage guide.
 - [Chatbox key setup screenshot](codexbar-plasma-chatbox-key-setup.png):
-  synthetic license-key action, setup guidance and documentation link in
+  synthetic license-key and credential-clear actions, setup guidance and documentation link in
   provider settings, used in the usage guide.
 - [Provider authentication screenshot](codexbar-plasma-provider-authentication.png):
-  synthetic Copilot settings showing CLI-described authentication hints and
-  the per-provider source selector, used in the usage guide.
+  synthetic Copilot settings showing device sign-in, credential clearing,
+  CLI-described authentication hints and the per-provider source selector, used in the usage guide.
 - [AI Insights](ai-insights.md): the optional insight card and analysis view, their
   boundary decision, allowlisted snapshot, private helper handoff, language selection, request and credential contracts,
   scheduling, and tests.

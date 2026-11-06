@@ -14,11 +14,13 @@ import "ProviderOrder.js" as ProviderOrder
 import "SafeText.js" as SafeText
 import "ThemeContrast.js" as ThemeContrast
 import "config" as ProviderConfig
+import "credential" as Credential
 import "config/ProviderConfigProtocol.js" as ProviderConfigProtocol
 import "config/ProviderDescriptor.js" as ProviderDescriptor
 import "config/ProviderList.js" as ProviderList
 import "config/ProviderOperations.js" as ProviderOperations
 import "config/ProviderSource.js" as ProviderSource
+import "config/ProviderCredentials.js" as ProviderCredentials
 
 KCM.SimpleKCM {
     id: page
@@ -68,6 +70,8 @@ KCM.SimpleKCM {
     property bool munitoApiKeySetupSupported: false
     property bool commandCodeFalApiKeySetupSupported: false
     property bool providerSourceSetupSupported: false
+    property string credentialCliVersion: ""
+    readonly property url credentialScriptUrl: Qt.resolvedUrl("../../scripts/provider-auth.py")
     property var operationState: ProviderOperations.initialState()
     // running command source -> descriptor { kind, provider, desiredEnabled, fieldID, actionID }
     property var commands: ({})
@@ -112,7 +116,11 @@ KCM.SimpleKCM {
     // creation, so opening the page spawns one CLI list command, not two.
     Component.onCompleted: Qt.callLater(reload)
     onCfg_commandPathChanged: handleCommandPathChanged()
-    onSelectedProviderIDChanged: providerSourceBox.currentIndex = -1
+    onSelectedProviderIDChanged: {
+        providerSourceBox.currentIndex = -1
+        cancelDeviceLogin()
+    }
+    Component.onDestruction: retireAllConfigCommands()
 
     function handleCommandPathChanged() {
         retireAllConfigCommands()
@@ -127,12 +135,13 @@ KCM.SimpleKCM {
         munitoApiKeySetupSupported = false
         commandCodeFalApiKeySetupSupported = false
         providerSourceSetupSupported = false
+        credentialCliVersion = ""
         Qt.callLater(reload)
     }
 
     function reload(preserveMessages, retainedErrorText) {
         var decision = ProviderOperations.reloadRequested(operationState,
-            CommandLedger.hasKind(commands, "setSource"), preserveMessages, retainedErrorText)
+            hasCredentialWrite() || CommandLedger.hasKind(commands, "setSource"), preserveMessages, retainedErrorText)
         operationState = decision.state
         if (!decision.reload) {
             return
@@ -289,6 +298,110 @@ KCM.SimpleKCM {
         })
     }
 
+    function hasCredentialWrite() {
+        var sources = CommandLedger.sourcesOfKind(commands, "credential")
+        for (var i = 0; i < sources.length; i++) {
+            if (CommandLedger.find(commands, sources[i]).action !== "login") return true
+        }
+        return false
+    }
+
+    function credentialWriteAllowed(providerID) {
+        return !loading && commandPath.length > 0 && providerByID(providerID)
+            && !isPending(providerID) && !hasPendingFields(providerID)
+            && !CommandLedger.hasKind(commands, "version")
+    }
+
+    function setCookie(providerID) {
+        if (!credentialWriteAllowed(providerID)
+                || !ProviderCredentials.supportsCookie(providerID, credentialCliVersion, providerByID(providerID).authentication)) return
+        promptDescriptorSecret(providerID, {id: "cookieHeader", kind: "secret", title: i18n("Cookie header"),
+            writeCommand: ["codexbar", "config", "set-cookie", "--provider", providerCliArgument(providerID), "--stdin"]})
+    }
+
+    function clearCredentials(providerID) {
+        if (!credentialWriteAllowed(providerID) || !ProviderCredentials.supportsClear(credentialCliVersion)) return
+        startCredentialCommand(providerID, "clear-credential")
+    }
+
+    function startDeviceLogin(providerID) {
+        if (!credentialWriteAllowed(providerID) || !ProviderCredentials.supportsLogin(providerID, credentialCliVersion)) return
+        startCredentialCommand(providerID, "login")
+    }
+
+    function startCredentialCommand(providerID, action) {
+        var command = ProviderCredentials.helperCommand(credentialScriptUrl, commandPath, action, providerCliArgument(providerID))
+        if (!command) return
+        var requestID = ""
+        if (action === "login") {
+            requestID = Date.now().toString(16) + Math.random().toString(16).slice(2) + Math.random().toString(16).slice(2)
+            command += " --request " + shellQuote(requestID) + " --supervised --title " + shellQuote(i18n("Sign in to GitHub Copilot"))
+                + " --message " + shellQuote(i18n("Open this address in your browser:\n%1\n\nEnter this code:\n%2\n\nThe code expires in %3 seconds. Press OK after entering it to continue waiting in settings. Use Cancel sign-in in settings to cancel.", "%1", "%2", "%3"))
+        }
+        retireProviderDiagnostic(providerID)
+        errorText = ""
+        statusText = ""
+        markPending(providerID, true, providerByID(providerID).enabled)
+        runCommand(command, {kind: "credential", action: action, provider: providerID, requestID: requestID,
+            timeoutMs: action === "login" ? 970000 : configCommandTimeoutMs})
+    }
+
+    function deviceLoginActive() {
+        var sources = CommandLedger.sourcesOfKind(commands, "credential")
+        for (var i = 0; i < sources.length; i++) {
+            if (CommandLedger.find(commands, sources[i]).action === "login") return true
+        }
+        return false
+    }
+
+    function cancelDeviceLogin() {
+        var sources = CommandLedger.sourcesOfKind(commands, "credential")
+        for (var i = 0; i < sources.length; i++) {
+            var source = sources[i]
+            var descriptor = CommandLedger.find(commands, source)
+            if (descriptor.action !== "login") continue
+            commands = CommandLedger.closed(commands, source)
+            cancelCredentialRequest(descriptor)
+            configSource.disconnectSource(source)
+            markPending(descriptor.provider, false)
+            statusText = i18n("Sign-in cancelled.")
+        }
+        runReloadDeferredBySourceWrite()
+    }
+
+    function cancelCredentialRequest(descriptor) {
+        if (descriptor.kind !== "credential" || descriptor.action !== "login" || !descriptor.requestID) return
+        var command = ProviderCredentials.helperCommand(credentialScriptUrl,
+            descriptor.commandPathSignature, "cancel-login", "copilot")
+            + " --request " + shellQuote(descriptor.requestID)
+        return Credential.LoginCancellation.run(Guards.boundedShellCommand(command, 5, 1, true))
+    }
+
+    function handleCredentialResult(descriptor, stdoutText, exitCode) {
+        markPending(descriptor.provider, false)
+        var result = ProviderCredentials.result(stdoutText, exitCode, providerCliArgument(descriptor.provider), descriptor.action)
+        if (result.status === "ok") {
+            if (descriptor.action !== "clear-credential") {
+                updateProviderEnabled(descriptor.provider, descriptor.action === "login" || result.enabled)
+            }
+            invalidateProviderDiagnostic(descriptor.provider)
+            bumpProviderConfigRevision()
+            errorText = ""
+            statusText = descriptor.action === "login" ? i18n("Copilot sign-in completed.")
+                : descriptor.action === "set-cookie" ? i18n("%1 cookie saved", displayNameForProvider(descriptor.provider))
+                : i18n("%1 stored credentials cleared", displayNameForProvider(descriptor.provider))
+            reload(true)
+        } else if (result.status === "cancelled") {
+            statusText = i18n("Operation cancelled.")
+        } else {
+            errorText = result.status === "expired" ? i18n("Sign-in expired. Try again.")
+                : result.status === "conflict" ? i18n("CodexBar configuration changed during sign-in. Try again.")
+                : result.status === "unavailable" ? i18n("Credential setup could not start. Check python3, kdialog and GNU timeout.")
+                : i18n("%1 command failed. Try again.", displayNameForProvider(descriptor.provider))
+        }
+        runReloadDeferredBySourceWrite()
+    }
+
     function setProviderSource(providerID, mode) {
         if (loading || !providerSourceSetupSupported || !providerByID(providerID) || isPending(providerID)
                 || hasPendingFields(providerID)) {
@@ -347,6 +460,7 @@ KCM.SimpleKCM {
     function retireAllConfigCommands() {
         for (var sourceName in commands) {
             if (hasOwnKey(commands, sourceName)) {
+                cancelCredentialRequest(commands[sourceName])
                 configSource.disconnectSource(sourceName)
             }
         }
@@ -357,7 +471,7 @@ KCM.SimpleKCM {
 
     function runReloadDeferredBySourceWrite() {
         var decision = ProviderOperations.deferredReload(operationState,
-            CommandLedger.hasKind(commands, "setSource"), errorText)
+            hasCredentialWrite() || CommandLedger.hasKind(commands, "setSource"), errorText)
         operationState = decision.state
         if (decision.reload) {
             reload(decision.preserveMessages, decision.retainedErrorText)
@@ -377,7 +491,9 @@ KCM.SimpleKCM {
         }
         nextDescriptor.deadlineMs = Date.now() + timeoutMs
         // Retiring a DataSource does not stop the CLI or its descendants.
-        var bounded = Guards.boundedShellCommand(command, timeoutMs / 1000 + 2, 1, true)
+        var bounded = descriptor.kind === "credential" && descriptor.action === "login"
+            ? Guards.supervisedShellCommand(command, timeoutMs / 1000, 3)
+            : Guards.boundedShellCommand(command, timeoutMs / 1000 + 2, 1, true)
         var sourceName = CommandLedger.withRunNonce(bounded, commandRunSerial, Date.now() + "-" + Math.random())
         commands = CommandLedger.opened(commands, sourceName, nextDescriptor)
         configSource.connectSource(sourceName)
@@ -416,12 +532,18 @@ KCM.SimpleKCM {
             munitoApiKeySetupSupported = false
             commandCodeFalApiKeySetupSupported = false
             providerSourceSetupSupported = false
+            credentialCliVersion = ""
         } else if (descriptor.kind === "diagnose") {
             setProviderDiagnosticLoading(descriptor.provider, false)
             setProviderDiagnosticError(descriptor.provider, i18n("Loading provider diagnostics timed out. Try again."))
         } else if (descriptor.kind === "toggle") {
             markPending(descriptor.provider, false)
             errorText = i18n("%1 command timed out. Try again.", displayNameForProvider(descriptor.provider))
+        } else if (descriptor.kind === "credential") {
+            cancelCredentialRequest(descriptor)
+            markPending(descriptor.provider, false)
+            errorText = i18n("%1 command timed out. Try again.", displayNameForProvider(descriptor.provider))
+            runReloadDeferredBySourceWrite()
         } else if (descriptor.kind === "setApiKey" || descriptor.kind === "setSource") {
             markPending(descriptor.provider, false)
             errorText = i18n("%1 command timed out. Try again.", displayNameForProvider(descriptor.provider))
@@ -445,7 +567,9 @@ KCM.SimpleKCM {
             return
         }
 
-        if (descriptor.kind === "list") {
+        if (descriptor.kind === "credential") {
+            handleCredentialResult(descriptor, stdoutText, exitCode)
+        } else if (descriptor.kind === "list") {
             handleListResult(descriptor, stdoutText, stderrText, exitCode)
         } else if (descriptor.kind === "version") {
             handleCliVersionResult(stdoutText, exitCode)
@@ -465,6 +589,8 @@ KCM.SimpleKCM {
     }
 
     function handleCliVersionResult(stdoutText, exitCode) {
+        credentialCliVersion = Guards.exitCode(exitCode) === 0
+            && ProviderConfigProtocol.cliVersionAtLeast(stdoutText, 0, 0, 0) ? stdoutText : ""
         fireworksSingleKeySetupSupported = Number(exitCode) === 0
             && ProviderConfigProtocol.cliVersionAtLeast(stdoutText, 0, 54, 0)
         sonioxApiKeySetupSupported = Number(exitCode) === 0
@@ -825,6 +951,20 @@ KCM.SimpleKCM {
             rows.push({ title: providerKey(item.provider) === "chatbox" ? i18n("Set license key…") : i18n("Set API key…"), icon: "document-encrypt", action: "set-api-key", enabled: !isPending(item.provider) && !loading
                 && !CommandLedger.hasKind(commands, "version") })
         }
+        var canWrite = !loading && !isPending(item.provider) && !hasPendingFields(item.provider)
+            && !CommandLedger.hasKind(commands, "version")
+        if (ProviderCredentials.supportsCookie(item.provider, credentialCliVersion, item.authentication)) {
+            rows.push({title: i18n("Set cookie…"), icon: "document-encrypt", action: "set-cookie", enabled: canWrite})
+        }
+        if (ProviderCredentials.supportsClear(credentialCliVersion)) {
+            rows.push({title: i18n("Clear stored credentials…"), icon: "edit-clear", action: "clear-credential", enabled: canWrite})
+        }
+        if (ProviderCredentials.supportsLogin(item.provider, credentialCliVersion)) {
+            rows.push({title: i18n("Sign in with GitHub…"), icon: "dialog-password", action: "device-login", enabled: canWrite})
+            if (deviceLoginActive()) {
+                rows.push({title: i18n("Cancel sign-in"), icon: "dialog-cancel", action: "cancel-login", enabled: true})
+            }
+        }
         var docs = providerDocsUrl(item.provider)
         if (docs.length > 0) {
             rows.push({ title: i18n("Docs"), icon: "help-contents", action: "docs", url: docs, enabled: true })
@@ -958,6 +1098,24 @@ KCM.SimpleKCM {
         if (!row || !selectedProvider) {
             return
         }
+        if (row.action === "set-cookie") {
+            setCookie(selectedProvider.provider)
+            return
+        }
+        if (row.action === "clear-credential") {
+            clearCredentialDialog.providerID = selectedProvider.provider
+            clearCredentialDialog.commandSignature = commandPath
+            clearCredentialDialog.open()
+            return
+        }
+        if (row.action === "device-login") {
+            startDeviceLogin(selectedProvider.provider)
+            return
+        }
+        if (row.action === "cancel-login") {
+            cancelDeviceLogin()
+            return
+        }
         if (row.action === "descriptor-action") {
             runDescriptorAction(selectedProvider.provider, row.descriptorAction)
             return
@@ -1005,6 +1163,9 @@ KCM.SimpleKCM {
                 || isFieldPending(providerID, field.id)) {
             return
         }
+        var cookie = field.writeCommand[2] === "set-cookie"
+        if (cookie && (!credentialWriteAllowed(providerID)
+                || !ProviderCredentials.supportsCookie(providerID, credentialCliVersion, providerByID(providerID).authentication))) return
         var plan = ProviderDescriptor.planSecretPrompt(field, commandPath)
         if (!plan.ok) {
             errorText = i18n("%1 returned an unsupported descriptor command.", displayNameForProvider(providerID))
@@ -1012,7 +1173,13 @@ KCM.SimpleKCM {
         }
         errorText = ""
         statusText = ""
-        markFieldPending(providerID, field.id, true)
+        if (cookie) {
+            retireProviderDiagnostic(providerID)
+            markPending(providerID, true, providerByID(providerID).enabled)
+            plan.commandLine = ProviderCredentials.helperCommand(credentialScriptUrl, commandPath, "set-cookie", providerCliArgument(providerID))
+        } else {
+            markFieldPending(providerID, field.id, true)
+        }
         var prompt = i18n("%1 for %2", field.title, displayNameForProvider(providerID))
         var boundedDialogCommand = "timeout --kill-after="
             + shellQuote(configSecretPromptDialogKillAfterSeconds + "s") + " "
@@ -1032,7 +1199,8 @@ KCM.SimpleKCM {
         ].join("; ")
         var command = ["sh", "-c", shellQuote(script), "_", shellQuote(prompt)].join(" ")
         runCommand(command, {
-            kind: "descriptorField",
+            kind: cookie ? "credential" : "descriptorField",
+            action: cookie ? "set-cookie" : "",
             provider: providerID,
             fieldID: field.id,
             timeoutMs: configSecretPromptTimeoutMs
@@ -1239,6 +1407,23 @@ KCM.SimpleKCM {
         running: page.hasTimedConfigCommands()
         triggeredOnStart: false
         onTriggered: page.expireConfigCommands(Date.now())
+    }
+
+    Controls.Dialog {
+        id: clearCredentialDialog
+        property string providerID: ""
+        property string commandSignature: ""
+        title: i18n("Clear stored credentials?")
+        width: Math.min(page.width - Kirigami.Units.largeSpacing * 2, Kirigami.Units.gridUnit * 26)
+        modal: true
+        standardButtons: Controls.Dialog.Ok | Controls.Dialog.Cancel
+        onAccepted: {
+            if (commandSignature === page.commandPath) page.clearCredentials(providerID)
+        }
+        contentItem: Components.PlainControlsLabel {
+            text: i18n("Remove the API key and manual cookie stored by CodexBar for %1? Token accounts, environment variables, source settings and enablement are unchanged.", page.displayNameForProvider(clearCredentialDialog.providerID))
+            wrapMode: Text.WordWrap
+        }
     }
 
     Components.ProviderNames {

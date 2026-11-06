@@ -4251,3 +4251,93 @@ msgstr "Certaines sources ne sont pas disponibles sous Linux. Le choix de source
 #: contents/ui/configProviders.qml
 msgid "Choose a source to save. Automatic restores the provider default."
 msgstr "Choisissez une source à enregistrer. Automatique rétablit le choix par défaut du fournisseur."
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Trae CN"
+msgstr "Trae CN"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "OpenDesign"
+msgstr "OpenDesign"
+
+#: contents/ui/configProviders.qml
+msgid "Cookie header"
+msgstr "En-tête Cookie"
+
+#: contents/ui/configProviders.qml
+msgid "Sign in to GitHub Copilot"
+msgstr "Se connecter à GitHub Copilot"
+
+#: contents/ui/configProviders.qml
+msgid "Cancel sign-in"
+msgstr "Annuler la connexion"
+
+#: contents/ui/configProviders.qml
+msgid ""
+"Open this address in your browser:\n"
+"%1\n"
+"\n"
+"Enter this code:\n"
+"%2\n"
+"\n"
+"The code expires in %3 seconds. Press OK after entering it to continue waiting in settings. Use Cancel sign-in in settings to cancel."
+msgstr "Ouvrez cette adresse dans le navigateur :\n%1\n\nSaisissez ce code :\n%2\n\nLe code expire dans %3 secondes. Après la saisie, appuyez sur OK pour continuer à attendre dans les paramètres. Utilisez Annuler la connexion dans les paramètres pour annuler."
+
+#: contents/ui/configProviders.qml
+msgid "Sign-in cancelled."
+msgstr "Connexion annulée."
+
+#: contents/ui/configProviders.qml
+msgid "Copilot sign-in completed."
+msgstr "Connexion à Copilot terminée."
+
+#: contents/ui/configProviders.qml
+msgid "%1 cookie saved"
+msgstr "Cookie de %1 enregistré"
+
+#: contents/ui/configProviders.qml
+msgid "%1 stored credentials cleared"
+msgstr "Identifiants enregistrés de %1 supprimés"
+
+#: contents/ui/configProviders.qml
+msgid "Operation cancelled."
+msgstr "Opération annulée."
+
+#: contents/ui/configProviders.qml
+msgid "Sign-in expired. Try again."
+msgstr "La connexion a expiré. Réessayez."
+
+#: contents/ui/configProviders.qml
+msgid "CodexBar configuration changed during sign-in. Try again."
+msgstr "La configuration de CodexBar a changé pendant la connexion. Réessayez."
+
+#: contents/ui/configProviders.qml
+msgid "Credential setup could not start. Check python3, kdialog and GNU timeout."
+msgstr "La configuration des identifiants n’a pas pu démarrer. Vérifiez python3, kdialog et GNU timeout."
+
+#: contents/ui/configProviders.qml
+msgid "%1 command failed. Try again."
+msgstr "La commande de %1 a échoué. Réessayez."
+
+#: contents/ui/configProviders.qml
+msgid "Set cookie…"
+msgstr "Définir le cookie…"
+
+#: contents/ui/configProviders.qml
+msgid "Clear stored credentials…"
+msgstr "Supprimer les identifiants enregistrés…"
+
+#: contents/ui/configProviders.qml
+msgid "Sign in with GitHub…"
+msgstr "Se connecter avec GitHub…"
+
+#: contents/ui/configProviders.qml
+msgid "Clear stored credentials?"
+msgstr "Supprimer les identifiants enregistrés ?"
+
+#: contents/ui/configProviders.qml
+msgid ""
+"Remove the API key and manual cookie stored by CodexBar for %1? Token "
+"accounts, environment variables, source settings and enablement are "
+"unchanged."
+msgstr "Supprimer la clé API et le cookie manuel enregistrés par CodexBar pour %1 ? Les comptes avec jetons, les variables d’environnement, les paramètres de source et l’état d’activation restent inchangés."
