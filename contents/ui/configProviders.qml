@@ -1287,9 +1287,9 @@ KCM.SimpleKCM {
         var listAncestor = control
         while (listAncestor && listAncestor !== providerListContent)
             listAncestor = listAncestor.parent
-        if (listAncestor) {
+        var listFlickable = providerListScroll.contentItem as Flickable
+        if (listAncestor && listFlickable) {
             var listPosition = providerListContent.mapFromItem(control, 0, 0)
-            var listFlickable = providerListScroll.contentItem
             if (listPosition.y < listFlickable.contentY)
                 listFlickable.contentY = listPosition.y
             else if (listPosition.y + control.height > listFlickable.contentY + listFlickable.height)
