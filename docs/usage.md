@@ -834,6 +834,8 @@ It uses the selected history range and freezes the currently loaded data until
 reopened. It does not start another CLI scan. Refresh history first for a newer
 snapshot; the creation timestamp is not a measurement timestamp.
 
+![Synthetic usage-sharing window with export controls](codexbar-plasma-share-window.png)
+
 **Copy image** places image data on the clipboard, **Copy statistics** copies the
 same aggregate figures as plain text, and **Save PNG…** opens the platform save
 picker with overwrite confirmation. Saving supports local PNG files. The image
