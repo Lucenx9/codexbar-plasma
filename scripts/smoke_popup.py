@@ -88,6 +88,7 @@ def apply_palette(work, theme):
 
 
 def stage_applet(work, scenario, image_path, theme=None):
+    """Stage an isolated applet and synthetic capture fixture without changing sources."""
     package = work / "data/plasma/plasmoids" / APPLET_ID
     package.mkdir(parents=True)
     shutil.copytree(ROOT / "contents", package / "contents")

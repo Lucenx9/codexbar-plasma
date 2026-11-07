@@ -170,7 +170,7 @@ TestCase {
         fuzzyCompare(window.footer.height, footerHeight, 0.5);
         window.feedback = Array(15).join("A long export failure with recovery guidance. ");
         wait(50);
-        verify(feedback.height > 20, "Long feedback must wrap");
+        verify(feedback.lineCount > 1, "Long feedback must wrap");
         window.close();
     }
     function test_footerKeyboardOrderAndCopy() {
