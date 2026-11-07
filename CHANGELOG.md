@@ -55,10 +55,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   peak daily amount above resting cost charts. Group square heatmap cells with
   their legend, distinguish unavailable days, and place provider totals beside
   short ranges when the popup is wide enough. Keep account and link commands
-  available through a collapsed Provider actions disclosure.
+  available through a collapsed Provider actions disclosure. Place the local-log
+  source note directly below the provider cost chart it qualifies.
 
 - Refine Sessions with a count of active sessions before the update time,
-  smaller idle labels and clearer spacing between text lines. Keyboard focus
+  smaller labels for idle and other inactive states, and clearer spacing between
+  text lines. Keyboard focus
   highlights the card and reveals a truncated title in the copy action's tooltip;
   accessible descriptions include session state and activity age. Active-state
   text keeps readable contrast in light and dark themes.
