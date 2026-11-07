@@ -4179,8 +4179,8 @@ msgid "Popup content"
 msgstr "Conteúdo da janela pop-up"
 
 #: contents/ui/configPopup.qml
-msgid "First %1 providers automatically"
-msgstr "Os primeiros %1 provedores automaticamente"
+msgid "Automatic: first %1 providers"
+msgstr "Automático: primeiros %1 provedores"
 
 #: contents/ui/configPopup.qml
 msgid "Choose providers"
@@ -4320,3 +4320,23 @@ msgid ""
 "accounts, environment variables, source settings and enablement are "
 "unchanged."
 msgstr "Remover a chave de API e o cookie manual salvos pelo CodexBar para %1? As contas com tokens, variáveis de ambiente, configurações de fonte e o estado de ativação permanecem inalterados."
+
+#: contents/ui/configPopup.qml
+msgid "Follows the provider order above."
+msgstr "Segue a ordem de provedores acima."
+
+#: contents/ui/configPopup.qml
+msgid "%1 section"
+msgid_plural "%1 sections"
+msgstr[0] "%1 seção"
+msgstr[1] "%1 seções"
+
+#: contents/ui/configPopup.qml
+msgid "%1 usage row"
+msgid_plural "%1 usage rows"
+msgstr[0] "%1 linha de uso"
+msgstr[1] "%1 linhas de uso"
+
+#: contents/ui/configPopup.qml
+msgid "%1, %2"
+msgstr "%1, %2"

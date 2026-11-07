@@ -148,6 +148,13 @@ TestCase {
         verify(texts.indexOf("Claude: Extra window opus-weekly") >= 0, texts.join("|"));
         var buttons = all.filter(function(item) { return item.objectName === "restoreHiddenUsageRowButton"; });
         compare(buttons.length, 2);
+        var disclosure = findChild(page, "hiddenItemsDisclosure");
+        verify(!disclosure.expanded);
+        verify(!buttons[0].visible);
+        disclosure.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Space);
+        verify(disclosure.expanded);
+        verify(buttons[0].visible);
         compare(buttons[0].Accessible.name, "Restore Codex CLI: Weekly");
         buttons[0].forceActiveFocus(Qt.TabFocusReason);
         keyClick(Qt.Key_Space);
@@ -245,12 +252,16 @@ TestCase {
         var automatic = findChild(page, "overviewAutomaticRadio");
         var custom = findChild(page, "overviewCustomRadio");
         verify(automatic.checked && !custom.checked);
+        verify(!providerCheck(page, "Codex").visible);
+        verify(findChild(page, "overviewAutomaticHint").visible);
         verify(!providerCheck(page, "Codex").enabled);
         custom.forceActiveFocus(Qt.TabFocusReason);
         keyClick(Qt.Key_Space);
         compare(page.cfg_overviewProviderIDs, "codex,claude");
         verify(custom.checked && !automatic.checked);
         var codex = providerCheck(page, "Codex");
+        verify(codex.visible);
+        verify(!findChild(page, "overviewAutomaticHint").visible);
         verify(codex.enabled);
         codex.forceActiveFocus(Qt.TabFocusReason);
         keyClick(Qt.Key_Space);
@@ -258,6 +269,7 @@ TestCase {
         automatic.forceActiveFocus(Qt.TabFocusReason);
         keyClick(Qt.Key_Space);
         compare(page.cfg_overviewProviderIDs, "");
+        verify(!providerCheck(page, "Codex").visible);
         verify(!providerCheck(page, "Codex").enabled);
         verify(providerCheck(page, "Codex").checked);
         controller.enabledProviderRoster = [];
@@ -265,6 +277,37 @@ TestCase {
         keyClick(Qt.Key_Space);
         compare(page.cfg_overviewProviderIDs, OverviewProviders.noneValue);
         verify(custom.checked);
+    }
+
+    function test_hiddenItemsDisclosureKeepsPendingRestores() {
+        var page = createPage({cfg_popupHiddenUsageRows: JSON.stringify([
+            {provider: "codex", row: "secondary"},
+            {provider: "claude", row: "primary"}
+        ])});
+        if (!page) return;
+        waitForRosterSettled(page);
+        var disclosure = findChild(page, "hiddenItemsDisclosure");
+        verify(!disclosure.expanded);
+        compare(disclosure.plainText, "0 sections, 2 usage rows");
+        var original = page.cfg_popupHiddenUsageRows;
+        disclosure.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Space);
+        compare(page.cfg_popupHiddenUsageRows, original);
+        var restore = findChild(page, "restoreHiddenUsageRowButton");
+        restore.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Space);
+        var pending = page.cfg_popupHiddenUsageRows;
+        compare(JSON.parse(pending).length, 1);
+        compare(disclosure.plainText, "0 sections, 1 usage row");
+        disclosure.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Space);
+        verify(!disclosure.expanded);
+        verify(disclosure.activeFocus);
+        compare(page.cfg_popupHiddenUsageRows, pending);
+        keyClick(Qt.Key_Space);
+        verify(disclosure.expanded);
+        compare(page.cfg_popupHiddenUsageRows, pending);
+        verify(findChild(page, "restoreHiddenUsageRowButton").visible);
     }
 
 }

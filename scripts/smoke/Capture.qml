@@ -2107,14 +2107,26 @@ Item {
                     {provider: "claude", section: "v1:" + Qt.md5("Generic details")}
                 ]);
                 preview.page.cfg_popupHiddenDetailSections = savedSections;
+                var hiddenDisclosure = findItem(preview.page, "hiddenItemsDisclosure");
+                verifyScenario(hiddenDisclosure !== null && !hiddenDisclosure.expanded,
+                    "hidden item restore actions must start collapsed");
                 var restoreAll = findItem(preview.page, "restoreProviderDetailSectionsButton");
                 verifyScenario(restoreAll !== null, "hidden provider sections have no restore action");
+                verifyScenario(!restoreAll.visible, "collapsed hidden items expose restore actions");
+                hiddenDisclosure.clicked();
+                verifyScenario(restoreAll.visible && preview.page.cfg_popupHiddenDetailSections === savedSections,
+                    "expanding hidden items must reveal actions without changing pending values");
                 restoreAll.clicked();
                 verifyScenario(preview.page.hiddenDetailProviders.length === 1
                     && preview.page.hiddenDetailProviders[0] === "claude",
                     "restore all did not clear only the chosen provider");
                 verifyScenario(applet.Plasmoid.configuration.popupHiddenDetailSections === "",
                     "settings restore saved before Apply");
+                var pendingSections = preview.page.cfg_popupHiddenDetailSections;
+                hiddenDisclosure.clicked();
+                verifyScenario(!hiddenDisclosure.expanded
+                    && preview.page.cfg_popupHiddenDetailSections === pendingSections,
+                    "collapsing hidden items lost a pending restore");
                 preview.page.cfg_popupHiddenDetailSections = savedSections;
                 navigationVerified = true;
                 return false;
