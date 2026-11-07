@@ -74,6 +74,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Polish the Providers settings page: end the selected provider's highlight
+  before its switch, tighten stacked diagnostic label/value pairs, and offer a
+  centered **Reload** when the provider list cannot load, including after the
+  error is dismissed.
+
 - Show chart focus outlines only for keyboard navigation, while keeping mouse
   day selection and arrow-key inspection available.
 

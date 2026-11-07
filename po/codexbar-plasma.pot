@@ -3533,11 +3533,11 @@ msgid "Clear filters"
 msgstr ""
 
 #: contents/ui/configProviders.qml
-msgid "Search providers"
+msgid "Reload"
 msgstr ""
 
 #: contents/ui/configProviders.qml
-msgid "Reload"
+msgid "Search providers"
 msgstr ""
 
 #: contents/ui/configProviders.qml
@@ -3578,6 +3578,10 @@ msgstr ""
 
 #: contents/ui/configProviders.qml
 msgid "codexbar did not return any providers."
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/controllers/UsageController.qml
+msgid "Could not load CodexBar provider configuration."
 msgstr ""
 
 #: contents/ui/configProviders.qml
@@ -3869,10 +3873,6 @@ msgstr ""
 
 #: contents/ui/controllers/UsageController.qml
 msgid "Could not parse codexbar JSON: %1"
-msgstr ""
-
-#: contents/ui/controllers/UsageController.qml
-msgid "Could not load CodexBar provider configuration."
 msgstr ""
 
 #: contents/ui/controllers/WidgetUpdateController.qml

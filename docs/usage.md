@@ -565,7 +565,8 @@ widget settings to install and select a private CLI, then **Apply**. For an
 existing installation, use **Diagnostics** to set the absolute executable path.
 
 A failed provider-list refresh in settings keeps the last loaded list and shows
-an error. A successful empty list clears it.
+an error. When no list has loaded, the page also offers **Reload**, which stays
+after the error is dismissed. A successful empty list clears it.
 Reloading the same CLI keeps known setup controls visible while its version is
 checked again. API key setup waits until that check and the list reload finish.
 Provider settings diagnostics also keep their last successful result and show
