@@ -284,8 +284,12 @@ Item {
                     // tab reads as one unit and keeps its provider hue.
                     readonly property real identityOpacity: selected ? 1.0 : 0.72
                     readonly property color identityColor: applet.withAlpha(accent, identityOpacity)
-                    readonly property real gaugeWidth: Math.max(5, Math.round(Kirigami.Units.gridUnit * 0.28))
                     readonly property real gaugeGap: Math.round(Kirigami.Units.smallSpacing * 0.75)
+                    readonly property real gaugeHeight: Math.max(3, Math.round(Kirigami.Units.gridUnit * 0.16))
+                    // Raise the icon by half the bar so icon and bar are centered
+                    // together; a tab without a quota centers its icon. Labels
+                    // stay on the same line as the global tab labels.
+                    readonly property real gaugeShift: meter >= 0 ? (gaugeGap + gaugeHeight) / 2 : 0
 
                     function activate() {
                         fullRoot.closeAiInsights(false, false)
@@ -304,12 +308,7 @@ Item {
                             Kirigami.Units.gridUnit * 7,
                             Math.max(Kirigami.Units.gridUnit * 4.2,
                                 Math.ceil(providerTabLabelSizing.implicitWidth) + Kirigami.Units.gridUnit * 2.2))
-                        // Small fonts shrink the strip but not the icon, so
-                        // widen the tab until the gauge beside the centered
-                        // icon still fits inside it.
-                        : Math.max(providerTabsBar.tabHeight,
-                            Kirigami.Units.iconSizes.small
-                                + 2 * (gaugeGap + gaugeWidth + Kirigami.Units.smallSpacing / 2))
+                        : providerTabsBar.tabHeight
                     Layout.preferredHeight: providerTabsBar.tabHeight
                     radius: applet.roundedSurfaceRadius
                     color: providerTabMouse.pressed
@@ -408,11 +407,13 @@ Item {
                         id: providerTabContent
 
                         anchors.fill: parent
-                        anchors.margins: Kirigami.Units.smallSpacing
-                        anchors.rightMargin: applet.showPopupTabLabels && providerTabQuotaGauge.visible
-                            ? Kirigami.Units.smallSpacing * 2 + providerTabQuotaGauge.width
-                            : Kirigami.Units.smallSpacing
-                        spacing: Kirigami.Units.smallSpacing
+                        anchors.leftMargin: Kirigami.Units.smallSpacing
+                        anchors.rightMargin: Kirigami.Units.smallSpacing
+                        // Rows center vertically, so the full height only gives the
+                        // raised icon room in short strips without moving labels.
+                        // Spacing around the empty centering spacers would push
+                        // the icon off-center in narrow icon-only tabs.
+                        spacing: applet.showPopupTabLabels ? Kirigami.Units.smallSpacing : 0
 
                         Item {
                             id: providerTabLeadingSpacer
@@ -430,6 +431,7 @@ Item {
                             color: providerTab.identityColor
                             Layout.preferredWidth: Kirigami.Units.iconSizes.small
                             Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                            Layout.bottomMargin: providerTab.gaugeShift * 2
                         }
 
                         Item {
@@ -441,6 +443,7 @@ Item {
 
                         PlainPlasmaLabel {
                             id: providerTabLabel
+                            objectName: "providerTabLabel"
 
                             visible: applet.showPopupTabLabels
                             text: modelData.title
@@ -455,35 +458,36 @@ Item {
                         id: providerTabQuotaGauge
                         objectName: "providerTabQuotaGauge"
                         visible: providerTab.meter >= 0
-                        // Icon-only tabs keep the icon centered and hang the
-                        // gauge a small gap beside it.
+                        // A short bar under the icon, as wide as the icon and
+                        // centered with it. It stays inside the tab, so it reads
+                        // as a per-provider meter rather than a selection underline.
                         // Anchors mirror with the layout in RTL locales.
-                        anchors.right: parent.right
-                        anchors.rightMargin: applet.showPopupTabLabels
-                            ? Kirigami.Units.smallSpacing
-                            : Math.round((parent.width - Kirigami.Units.iconSizes.small) / 2
-                                - providerTab.gaugeGap - width)
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: providerTab.gaugeWidth
-                        height: Kirigami.Units.iconSizes.small
-                        radius: width / 2
-                        // A faint provider-tinted track with a hairline outline,
-                        // matching the panel quota tracks, so the gauge stays
-                        // legible at zero without outweighing the icon.
+                        anchors.left: parent.left
+                        anchors.leftMargin: applet.showPopupTabLabels
+                            ? providerTabContent.anchors.leftMargin
+                            : Math.round((parent.width - width) / 2)
+                        anchors.top: parent.top
+                        // Short strips from small fonts keep the bar inside the tab.
+                        anchors.topMargin: Math.min(
+                            Math.round((parent.height + Kirigami.Units.iconSizes.small) / 2
+                                - providerTab.gaugeShift + providerTab.gaugeGap),
+                            Math.floor(parent.height - height - 1))
+                        width: Kirigami.Units.iconSizes.small
+                        height: providerTab.gaugeHeight
+                        radius: height / 2
+                        // A provider-tinted track keeps the scale visible at zero.
                         // withAlpha replaces alpha, so scale by the tab's
                         // identity opacity for an empty gauge to dim as well.
-                        color: applet.withAlpha(providerTab.accent, 0.12 * providerTab.identityOpacity)
-                        border.width: 1
-                        border.color: applet.withAlpha(providerTab.accent, 0.5 * providerTab.identityOpacity)
+                        color: applet.withAlpha(providerTab.accent, 0.25 * providerTab.identityOpacity)
                         clip: true
                         Accessible.ignored: true
 
                         Rectangle {
                             objectName: "providerTabQuotaFill"
-                            anchors.bottom: parent.bottom
-                            width: parent.width
-                            height: providerTab.meter <= 0 ? 0 : Math.max(1,
-                                Math.round(parent.height * Math.max(0, Math.min(100, providerTab.meter)) / 100))
+                            anchors.left: parent.left
+                            height: parent.height
+                            width: providerTab.meter <= 0 ? 0 : Math.max(1,
+                                Math.round(parent.width * Math.max(0, Math.min(100, providerTab.meter)) / 100))
                             radius: parent.radius
                             color: providerTab.identityColor
                         }

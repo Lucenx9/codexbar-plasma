@@ -43,8 +43,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   place docs, dashboard and account links beside the provider name with an
   overflow menu, and list credential clearing after the setup actions.
 
-- Clarify popup navigation with compact vertical quota gauges beside provider
-  names, independently of tab selection. Emphasize cost summaries and show the
+- Clarify popup navigation with compact quota gauges under provider
+  icons, independently of tab selection. Emphasize cost summaries and show the
   peak daily amount above resting cost charts. Group square heatmap cells with
   their legend, distinguish unavailable days, and place provider totals beside
   short ranges when the popup is wide enough. Keep account and link commands
@@ -73,10 +73,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Keep quota-marker tooltips reachable just outside thin meter tracks. The
   meter's paint clipping no longer cuts off its hover margin.
 
-- Refine popup provider tabs: quota gauges use a slimmer, faint provider-tinted
-  track instead of a bright gray bar, keep a clear gap beside the centered icon
-  in icon-only tabs, and dim together with the icon on unselected tabs, including
-  empty gauges. Icon-only tabs widen with small fonts so the gauge stays inside.
+- Move popup provider-tab quota gauges from a bright gray pill beside the icon to
+  a short, faint provider-tinted bar under it, centered together with the icon.
+  Unselected tabs dim icon and gauge together, including empty gauges. Icon-only
+  tabs keep their icons centered with small fonts.
 
 ## 0.2.54 - 2026-11-05
 
