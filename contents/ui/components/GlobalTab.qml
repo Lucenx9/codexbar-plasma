@@ -137,7 +137,9 @@ Rectangle {
 
         anchors.fill: parent
         anchors.margins: Kirigami.Units.smallSpacing
-        spacing: Kirigami.Units.smallSpacing
+        // Spacing around the empty centering spacers would push the icon
+        // off-center in narrow icon-only tabs.
+        spacing: tab.showLabel ? Kirigami.Units.smallSpacing : 0
 
         Item {
             id: globalTabLeadingSpacer

@@ -72,11 +72,11 @@ work and upstream contract requirements.
   quota choice, and visibility settings. Automatic meters gain the second quota
   without a new setting or additional CLI calls.
 - Provider tabs with usage bars, reset windows, account identity, status, and
-  credits. The tab surface marks the selected view; a provider tab's compact
-  vertical gauge shows its automatic quota independently of selection. Its faint,
-  outlined track establishes the scale; small nonzero readings stay proportional and
-  measured zero leaves the track empty. Icon-only tabs keep the provider icon
-  centered with the gauge beside it, and unselected tabs dim icon and gauge together.
+  credits. The tab surface marks the selected view; a short gauge under a provider
+  tab's icon shows its automatic quota independently of selection. Its faint track
+  establishes the scale; small nonzero readings stay proportional and measured zero
+  leaves the track empty. Icon and gauge are centered together, and unselected tabs
+  dim them together.
   The provider header and tab navigation stay visible while account choices,
   incident notices, errors, and usage details scroll below them. Switching
   provider or account starts the details at the top; refreshing the same account
@@ -257,8 +257,8 @@ work and upstream contract requirements.
 - Popup tabs follow the usual tab keyboard pattern: Left and Right move focus
   between tabs and wrap around at either end, Home and End jump to the first
   and last tab, and Enter or Space opens the focused tab.
-  Selected tabs use a tint of the theme focus color; the vertical quota gauge
-  remains a usage meter. Selecting a tab keeps its width stable, so neighbouring tabs
+  Selected tabs use a tint of the theme focus color; the quota gauge under the
+  icon remains a usage meter. Selecting a tab keeps its width stable, so neighbouring tabs
   stay in place.
   Overview, Usage & Spend, Sessions and provider headers use the theme's smaller
   text for summary and update metadata beneath their titles.

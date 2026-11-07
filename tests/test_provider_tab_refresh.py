@@ -207,8 +207,10 @@ TestCase {
                 compare(gauge.visible, used >= 0);
                 if (used < 0)
                     continue;
-                compare(fill.height, used === 0 ? 0 : Math.max(1, Math.round(gauge.height * used / 100)));
-                verify(gauge.width >= 5 && gauge.width <= 7);
+                compare(fill.width, used === 0 ? 0 : Math.max(1, Math.round(gauge.width * used / 100)));
+                compare(fill.height, gauge.height);
+                compare(gauge.width, Kirigami.Units.iconSizes.small);
+                verify(gauge.height >= 3 && gauge.height <= 4);
             }
         }
     }
@@ -225,26 +227,52 @@ TestCase {
         }
     }
 
-    function test_iconOnlyGaugeStaysBesideIconInsideShortStrips() {
-        applet.showPopupTabLabels = false;
-        applet.presentedProviders = [provider("codex", "Codex", 43), provider("claude", "Claude", 0)];
-        // A small font shrinks the strip; the icon keeps its theme size.
-        for (var stripHeight of [Kirigami.Units.gridUnit * 2.35, Kirigami.Units.iconSizes.small + 6]) {
+    function test_gaugeCentersWithIconInsideTab_data() {
+        return [
+            {tag: "icon-only", labels: false},
+            {tag: "labels", labels: true}
+        ];
+    }
+
+    function test_gaugeCentersWithIconInsideTab(data) {
+        applet.showPopupTabLabels = data.labels;
+        applet.presentedProviders = [provider("codex", "Codex", 43), provider("claude", "Claude", 0),
+            provider("pi", "Pi", -1)];
+        // Small fonts shrink the strip while the icon keeps its theme size;
+        // the shortest strip leaves no room for a gap and only bounds the bar.
+        var small = Kirigami.Units.iconSizes.small;
+        for (var stripHeight of [Kirigami.Units.gridUnit * 2.35, small + 12, small + 6]) {
+            var roomy = stripHeight >= small + 12;
             providerTabsBar.implicitHeight = stripHeight;
             tryVerify(function() { return Math.abs(providerTabsBar.height - stripHeight) <= 1; });
             for (var index = 0; index < providerTabRepeater.count; index++) {
                 var tab = providerTabRepeater.itemAt(index);
                 var icon = findChild(tab, "providerTabIcon");
                 var gauge = findChild(tab, "providerTabQuotaGauge");
-                // Wait until the resized strip has laid the tab out again.
-                tryVerify(function() {
-                    return Math.abs(icon.mapToItem(tab, icon.width / 2, 0).x - tab.width / 2) <= 0.5
-                        && tab.height === providerTabsBar.tabHeight;
-                });
-                var iconRight = icon.mapToItem(tab, icon.width, 0).x;
-                var gaugeLeft = gauge.mapToItem(tab, 0, 0).x;
-                verify(gaugeLeft >= iconRight + 1, "gauge overlaps icon at strip height " + stripHeight);
-                verify(gaugeLeft + gauge.width <= tab.width, "gauge leaves tab at strip height " + stripHeight);
+                tryVerify(function() { return tab.height === providerTabsBar.tabHeight; });
+                verify(waitForPolish(tab));
+                var iconTop = icon.mapToItem(tab, 0, 0).y;
+                var iconCenterX = icon.mapToItem(tab, icon.width / 2, 0).x;
+                var where = data.tag + " at strip height " + stripHeight + ", tab " + index;
+                if (!data.labels && roomy)
+                    fuzzyCompare(iconCenterX, tab.width / 2, 0.5);
+                if (data.labels && roomy) {
+                    // Titles stay on the global tab labels' line.
+                    var label = findChild(tab, "providerTabLabel");
+                    fuzzyCompare(label.mapToItem(tab, 0, label.height / 2).y, tab.height / 2, 0.5);
+                }
+                if (!gauge.visible) {
+                    if (roomy)
+                        fuzzyCompare(iconTop + icon.height / 2, tab.height / 2, 1);
+                    continue;
+                }
+                var gaugeTop = gauge.mapToItem(tab, 0, 0).y;
+                verify(gaugeTop >= 0 && gaugeTop + gauge.height <= tab.height - 1, "gauge leaves tab: " + where);
+                if (roomy) {
+                    fuzzyCompare(gauge.mapToItem(tab, gauge.width / 2, 0).x, iconCenterX, 0.5);
+                    verify(gaugeTop >= iconTop + icon.height + 1, "gauge overlaps icon: " + where);
+                    fuzzyCompare((iconTop + gaugeTop + gauge.height) / 2, tab.height / 2, 1);
+                }
             }
         }
     }

@@ -80,11 +80,14 @@ class PopupTabsTest(unittest.TestCase):
             ),
         ):
             tab_content_body = applet.id_block(tab_content_id)
+            # Spacing around the hidden spacers would push the icon off-center.
+            spacing = f"spacing: {condition[1:]} ? Kirigami.Units.smallSpacing : 0"
             for centered_icon_fragment in (
                 f"id: {leading_spacer_id}",
                 f"id: {trailing_spacer_id}",
                 f"visible: {condition}",
                 f"Layout.fillWidth: {condition}",
+                spacing,
             ):
                 if not code_contains(tab_content_body, centered_icon_fragment):
                     raise AssertionError(
@@ -238,8 +241,7 @@ class PopupTabsTest(unittest.TestCase):
             and code_contains(id_block(main_text, "providerTabIcon"), "color: providerTab.identityColor")
             and code_contains(fill_body, "objectName: \"providerTabQuotaFill\"")
             and code_contains(fill_body, "color: providerTab.identityColor")
-            and code_contains(fill_body, "0.12 * providerTab.identityOpacity")
-            and code_contains(fill_body, "0.5 * providerTab.identityOpacity")
+            and code_contains(fill_body, "0.25 * providerTab.identityOpacity")
         ):
             raise AssertionError(
                 "unselected provider tabs must dim their icon while keeping the provider "
