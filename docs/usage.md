@@ -336,7 +336,8 @@ work and upstream contract requirements.
   come from more than one host. Hovering a card reveals a copy action beside
   its title. Names and states share the first line; provider metadata and activity
   age share a separate line, so a long age does not shorten the name above it.
-  Idle states use the smaller theme font, and a small gap separates text lines.
+  Idle and other inactive states use the smaller theme font, and a small gap
+  separates text lines.
   The optional session name keeps the normal font so sessions in one project
   remain distinguishable. Card padding and session ordering stay unchanged.
   Long states and ages stay within the card and reveal their full text on hover.
