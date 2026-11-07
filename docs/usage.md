@@ -1062,8 +1062,8 @@ fields; track proposed extensions in the issue tracker.
 - Seven settings pages: **General**, **Providers**, **Panel**, **Popup**,
   **Notifications**, **AI Insights (Beta)**, and **Diagnostics**. CLI path and provider/source overrides
   sit beside redacted diagnostics; quota thresholds sit beside their alerts.
-  **Popup** lists hidden usage rows under **Popup content** and groups provider order
-  and Overview providers under **Providers**;
+  **Popup** lists hidden detail sections and usage rows under **Hidden items** and
+  groups provider order and Overview providers under **Providers**;
   **General → Updates** groups widget and CLI management behind separate
   disclosures, with their current status visible while closed. Optional identified
   Codex subtotal fields appear when that option is enabled; hiding them keeps

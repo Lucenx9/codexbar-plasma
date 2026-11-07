@@ -3168,6 +3168,10 @@ msgid "Show provider changelog links"
 msgstr ""
 
 #: contents/ui/configPopup.qml
+msgid "Hidden items"
+msgstr ""
+
+#: contents/ui/configPopup.qml
 msgid "Hidden detail sections:"
 msgstr ""
 
@@ -3210,12 +3214,6 @@ msgid "Overview providers:"
 msgstr ""
 
 #: contents/ui/configPopup.qml
-msgid "Choose up to %1 provider"
-msgid_plural "Choose up to %1 providers"
-msgstr[0] ""
-msgstr[1] ""
-
-#: contents/ui/configPopup.qml
 msgid "No enabled providers available for Overview."
 msgstr ""
 
@@ -3226,6 +3224,12 @@ msgstr ""
 #: contents/ui/configPopup.qml
 msgid "Choose providers"
 msgstr ""
+
+#: contents/ui/configPopup.qml
+msgid "Choose up to %1 provider"
+msgid_plural "Choose up to %1 providers"
+msgstr[0] ""
+msgstr[1] ""
 
 #: contents/ui/configProviders.qml
 #: contents/ui/controllers/ProviderRosterController.qml
