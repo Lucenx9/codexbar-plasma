@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Window
 import QtTest
 
 TestCase {
@@ -361,13 +362,16 @@ TestCase {
         verify(waitForRendering(chart))
         var edgeX = chart.x - 1
         var edgeY = Math.round(focusTarget.mapToItem(this, 0, focusTarget.height / 2).y)
-        var restingEdge = grabImage(this).pixel(edgeX, edgeY)
+        var frame = grabImage(this)
+        var pixelX = Math.floor((edgeX + 0.5) * Screen.devicePixelRatio)
+        var pixelY = Math.floor((edgeY + 0.5) * Screen.devicePixelRatio)
+        var restingEdge = frame.pixel(pixelX, pixelY)
 
         mouseClick(focusTarget, focusTarget.width / 4, focusTarget.height / 2)
         verify(focusTarget.activeFocus)
         compare(chart.selectedIndex, 0)
         verify(waitForRendering(chart))
-        compare(grabImage(this).pixel(edgeX, edgeY), restingEdge,
+        compare(grabImage(this).pixel(pixelX, pixelY), restingEdge,
             "Mouse selection must not draw the keyboard focus outline")
         keyClick(Qt.Key_Right)
         compare(chart.selectedIndex, 1)
@@ -376,17 +380,17 @@ TestCase {
         keyClick(Qt.Key_Tab)
         verify(focusTarget.activeFocus)
         verify(waitForRendering(chart))
-        verify(grabImage(this).pixel(edgeX, edgeY) !== restingEdge,
+        verify(grabImage(this).pixel(pixelX, pixelY) !== restingEdge,
             "Tab focus must keep a visible outline")
 
         mouseClick(focusTarget, focusTarget.width / 4, focusTarget.height / 2)
         verify(focusTarget.activeFocus)
         verify(waitForRendering(chart))
-        compare(grabImage(this).pixel(edgeX, edgeY), restingEdge,
+        compare(grabImage(this).pixel(pixelX, pixelY), restingEdge,
             "Clicking a keyboard-focused chart must hide its outline")
         chart.forceActiveFocus()
         focusTarget.forceActiveFocus(Qt.ActiveWindowFocusReason)
-        compare(grabImage(this).pixel(edgeX, edgeY), restingEdge,
+        compare(grabImage(this).pixel(pixelX, pixelY), restingEdge,
             "Window reactivation must not turn mouse focus into keyboard focus")
     }
 
