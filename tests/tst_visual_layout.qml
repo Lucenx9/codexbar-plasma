@@ -1687,7 +1687,7 @@ TestCase {
             return typeof item.requestPaint === "function";
         });
         verify(plot !== null);
-        plot.forceActiveFocus(Qt.TabFocusReason);
+        chart.nextItemInFocusChain(true).forceActiveFocus(Qt.TabFocusReason);
         keyClick(Qt.Key_End);
         compare(chart.selectedIndex, 1);
         wait(0);
@@ -1731,7 +1731,7 @@ TestCase {
         var plot = findItem(chart, item => typeof item.requestPaint === "function");
         verify(plot !== null);
         if (data.keyboard) {
-            plot.forceActiveFocus(Qt.TabFocusReason);
+            chart.nextItemInFocusChain(true).forceActiveFocus(Qt.TabFocusReason);
             keyClick(Qt.Key_Home);
         } else {
             mouseMove(plot, plot.width / 2, plot.height / 2);

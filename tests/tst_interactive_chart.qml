@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Window
 import QtTest
 
 TestCase {
@@ -71,14 +72,15 @@ TestCase {
         if (!chart)
             return
         failOnWarning(/.*/)
-        var plot = chart.nextItemInFocusChain(true)
+        var focusTarget = chart.nextItemInFocusChain(true)
+        var plot = focusTarget.parent
         var paints = createTemporaryObject(paintSpyComponent, this, {target: plot})
         tryCompare(plot, "available", true)
         tryVerify(function() { return paints.count > 0 })
         compare(plot.getContext("2d").getImageData(data.x, 0, 1, 1).data[3], 0)
         paints.clear()
         if (data.keyboard) {
-            plot.forceActiveFocus(Qt.TabFocusReason)
+            focusTarget.forceActiveFocus(Qt.TabFocusReason)
             keyClick(Qt.Key_End)
         } else {
             mouseMove(plot, data.x, plot.height / 2)
@@ -109,7 +111,8 @@ TestCase {
         })
         if (!chart)
             return
-        var plot = chart.nextItemInFocusChain(true)
+        var focusTarget = chart.nextItemInFocusChain(true)
+        var plot = focusTarget.parent
         verify(waitForRendering(chart))
         // The peak is at y=2; x=0 is outside both bars and line markers.
         // Read the actual canvas so a missing guide cannot pass on geometry alone.
@@ -130,7 +133,8 @@ TestCase {
         if (!chart)
             return
         chart.setThemeTextColor("#ff0000")
-        var plot = chart.nextItemInFocusChain(true)
+        var focusTarget = chart.nextItemInFocusChain(true)
+        var plot = focusTarget.parent
         var paints = createTemporaryObject(paintSpyComponent, this, {target: plot})
         tryCompare(plot, "available", true)
         tryVerify(function() { return paints.count > 0 })
@@ -157,14 +161,15 @@ TestCase {
         if (!chart)
             return
         failOnWarning(/.*/)
-        var plot = chart.nextItemInFocusChain(true)
+        var focusTarget = chart.nextItemInFocusChain(true)
+        var plot = focusTarget.parent
         verify(typeof plot.requestPaint === "function")
         verify(waitForRendering(chart))
         var initialY = plot.y
         var initialHeight = chart.implicitHeight
         compare(chart.readoutIndex, -1)
         if (data.keyboard) {
-            plot.forceActiveFocus(Qt.TabFocusReason)
+            focusTarget.forceActiveFocus(Qt.TabFocusReason)
             keyClick(Qt.Key_Home)
         } else {
             mouseMove(plot, plot.width / 2, plot.height / 2)
@@ -216,8 +221,8 @@ TestCase {
         var value = findChild(chart, "chartPointValue")
         compare(label.text, "Peak daily usage")
         compare(value.text, "$9")
-        var plot = chart.nextItemInFocusChain(true)
-        plot.forceActiveFocus(Qt.TabFocusReason)
+        var focusTarget = chart.nextItemInFocusChain(true)
+        focusTarget.forceActiveFocus(Qt.TabFocusReason)
         keyClick(Qt.Key_Home)
         compare(label.text, "First")
         compare(value.text, "$2")
@@ -293,9 +298,10 @@ TestCase {
         compare(chart.pointCount, 1)
         chart.selectedIndex = 0
         chart.hoveredIndex = 0
-        var plot = chart.nextItemInFocusChain(true)
+        var focusTarget = chart.nextItemInFocusChain(true)
+        var plot = focusTarget.parent
         verify(typeof plot.requestPaint === "function")
-        plot.forceActiveFocus(Qt.TabFocusReason)
+        focusTarget.forceActiveFocus(Qt.TabFocusReason)
         chart.points = data.value
         compare(chart.selectedIndex, -1)
         compare(chart.hoveredIndex, -1)
@@ -339,6 +345,55 @@ TestCase {
         compare(opacities.indexOf(0.78), -1)
     }
 
+    function test_mouseFocusDoesNotDrawKeyboardOutline() {
+        var chart = createChart({
+            applet: { secondaryTextOpacity: 0.7, canvasColor: function() { return "#000000" } },
+            x: 10, y: 10, width: 300,
+            points: [{ label: "First", value: 1 }, { label: "Last", value: 2 }],
+            accessibleTitle: "Daily history",
+            accent: "blue"
+        })
+        if (!chart)
+            return
+        failOnWarning(/.*/)
+        var focusTarget = chart.nextItemInFocusChain(true)
+        compare(focusTarget.Accessible.role, Accessible.Graphic)
+        compare(focusTarget.Accessible.name, "Daily history")
+        verify(waitForRendering(chart))
+        var edgeX = chart.x - 1
+        var edgeY = Math.round(focusTarget.mapToItem(this, 0, focusTarget.height / 2).y)
+        var frame = grabImage(this)
+        var pixelX = Math.floor((edgeX + 0.5) * Screen.devicePixelRatio)
+        var pixelY = Math.floor((edgeY + 0.5) * Screen.devicePixelRatio)
+        var restingEdge = frame.pixel(pixelX, pixelY)
+
+        mouseClick(focusTarget, focusTarget.width / 4, focusTarget.height / 2)
+        verify(focusTarget.activeFocus)
+        compare(chart.selectedIndex, 0)
+        verify(waitForRendering(chart))
+        compare(grabImage(this).pixel(pixelX, pixelY), restingEdge,
+            "Mouse selection must not draw the keyboard focus outline")
+        keyClick(Qt.Key_Right)
+        compare(chart.selectedIndex, 1)
+
+        chart.forceActiveFocus()
+        keyClick(Qt.Key_Tab)
+        verify(focusTarget.activeFocus)
+        verify(waitForRendering(chart))
+        verify(grabImage(this).pixel(pixelX, pixelY) !== restingEdge,
+            "Tab focus must keep a visible outline")
+
+        mouseClick(focusTarget, focusTarget.width / 4, focusTarget.height / 2)
+        verify(focusTarget.activeFocus)
+        verify(waitForRendering(chart))
+        compare(grabImage(this).pixel(pixelX, pixelY), restingEdge,
+            "Clicking a keyboard-focused chart must hide its outline")
+        chart.forceActiveFocus()
+        focusTarget.forceActiveFocus(Qt.ActiveWindowFocusReason)
+        compare(grabImage(this).pixel(pixelX, pixelY), restingEdge,
+            "Window reactivation must not turn mouse focus into keyboard focus")
+    }
+
     // The plot stays in the tab chain so keyboard inspection needs no mouse.
     function test_plotIsReachableByTab() {
         var chart = createChart({
@@ -350,14 +405,15 @@ TestCase {
         if (!chart)
             return
         failOnWarning(/.*/)
-        var plot = chart.nextItemInFocusChain(true)
+        var focusTarget = chart.nextItemInFocusChain(true)
+        var plot = focusTarget.parent
         verify(typeof plot.requestPaint === "function")
         verify(waitForRendering(chart))
-        verify(!plot.activeFocus)
+        verify(!focusTarget.activeFocus)
         chart.forceActiveFocus()
         verify(chart.activeFocus)
         keyClick(Qt.Key_Tab)
-        verify(plot.activeFocus)
+        verify(focusTarget.activeFocus)
     }
 
     function test_keyboardSelectionOverridesStationaryPointer_data() {
@@ -386,11 +442,12 @@ TestCase {
         })
         if (!chart)
             return
-        var plot = chart.nextItemInFocusChain(true)
+        var focusTarget = chart.nextItemInFocusChain(true)
+        var plot = focusTarget.parent
         verify(typeof plot.requestPaint === "function")
         mouseMove(plot, (data.hovered + 0.5) * plot.width / 3, plot.height / 2)
         compare(chart.activeIndex, data.hovered)
-        plot.forceActiveFocus(Qt.TabFocusReason)
+        focusTarget.forceActiveFocus(Qt.TabFocusReason)
         keyClick(data.key)
         compare(chart.selectedIndex, data.selected)
         compare(chart.activeIndex, data.selected)

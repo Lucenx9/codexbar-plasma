@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import "../ChartScale.js" as ChartScale
@@ -123,7 +124,7 @@ ColumnLayout {
         }
 
         Behavior on opacity {
-            enabled: !plot.activeFocus
+            enabled: !plotFocus.activeFocus
             NumberAnimation {
                 duration: Kirigami.Units.shortDuration
             }
@@ -171,24 +172,53 @@ ColumnLayout {
 
         Layout.fillWidth: true
         Layout.preferredHeight: chart.plotHeight
-        activeFocusOnTab: true
 
-        // Arrow keys inspect points, so tab focus needs a visible ring.
-        Rectangle {
+        // Qt's visualFocus distinguishes keyboard entry from mouse selection.
+        Controls.Control {
+            id: plotFocus
+
             anchors.fill: parent
-            anchors.margins: -1
-            color: "transparent"
-            radius: Kirigami.Units.cornerRadius / 2
-            border.width: plot.activeFocus ? 1 : 0
-            border.color: Kirigami.Theme.focusColor
-        }
+            activeFocusOnTab: true
+            background: Rectangle {
+                anchors.fill: parent
+                anchors.margins: -1
+                color: "transparent"
+                radius: Kirigami.Units.cornerRadius / 2
+                border.width: plotFocus.visualFocus ? 1 : 0
+                border.color: Kirigami.Theme.focusColor
+            }
 
-        Accessible.role: Accessible.Graphic
-        Accessible.name: chart.accessibleTitle
-        Accessible.description: chart.hasActivePoint
-            ? i18n("%1: %2", chart.pointLabel(chart.points[chart.activeIndex]),
-                chart.pointDisplayValue(chart.points[chart.activeIndex]))
-            : i18n("Use the arrow keys to inspect chart points")
+            Accessible.role: Accessible.Graphic
+            Accessible.name: chart.accessibleTitle
+            Accessible.description: chart.hasActivePoint
+                ? i18n("%1: %2", chart.pointLabel(chart.points[chart.activeIndex]),
+                    chart.pointDisplayValue(chart.points[chart.activeIndex]))
+                : i18n("Use the arrow keys to inspect chart points")
+
+            Keys.onPressed: function(event) {
+                switch (event.key) {
+                case Qt.Key_Left:
+                    chart.moveSelection(-1)
+                    event.accepted = true
+                    break
+                case Qt.Key_Right:
+                    chart.moveSelection(1)
+                    event.accepted = true
+                    break
+                case Qt.Key_Home:
+                    chart.selectedIndex = chart.pointCount > 0 ? 0 : -1
+                    event.accepted = true
+                    break
+                case Qt.Key_End:
+                    chart.selectedIndex = chart.pointCount - 1
+                    event.accepted = true
+                    break
+                default:
+                    return
+                }
+                chart.hoveredIndex = -1
+            }
+        }
 
         onWidthChanged: requestPaint()
         onHeightChanged: requestPaint()
@@ -211,30 +241,6 @@ ColumnLayout {
             function onSelectedIndexChanged() { plot.requestPaint() }
             function onHoveredIndexChanged() { plot.requestPaint() }
             function onGuideColorChanged() { plot.requestPaint() }
-        }
-
-        Keys.onPressed: function(event) {
-            switch (event.key) {
-            case Qt.Key_Left:
-                chart.moveSelection(-1)
-                event.accepted = true
-                break
-            case Qt.Key_Right:
-                chart.moveSelection(1)
-                event.accepted = true
-                break
-            case Qt.Key_Home:
-                chart.selectedIndex = chart.pointCount > 0 ? 0 : -1
-                event.accepted = true
-                break
-            case Qt.Key_End:
-                chart.selectedIndex = chart.pointCount - 1
-                event.accepted = true
-                break
-            default:
-                return
-            }
-            chart.hoveredIndex = -1
         }
 
         onPaint: {
@@ -346,7 +352,9 @@ ColumnLayout {
             }
             onExited: chart.hoveredIndex = -1
             onClicked: function(mouse) {
-                plot.forceActiveFocus(Qt.MouseFocusReason)
+                // An already focused control receives no new focus-in event.
+                plotFocus.focusReason = Qt.MouseFocusReason
+                plotFocus.forceActiveFocus(Qt.MouseFocusReason)
                 chart.selectedIndex = chart.indexAt(mouse.x)
             }
         }
@@ -355,7 +363,7 @@ ColumnLayout {
             parent: plot
             visible: chart.hasActivePoint
                 && (chartPointLabel.truncated || chartPointValue.truncated)
-                && (plotMouse.containsMouse || plot.activeFocus)
+                && (plotMouse.containsMouse || plotFocus.activeFocus)
             plainText: chart.hasActivePoint
                 ? i18n("%1: %2", chart.pointLabel(chart.points[chart.activeIndex]),
                     chart.pointDisplayValue(chart.points[chart.activeIndex])) : ""

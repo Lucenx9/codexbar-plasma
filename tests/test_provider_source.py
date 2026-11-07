@@ -46,6 +46,7 @@ TestCase {
             property var commands: ({})
             property var operationState: ProviderOperations.initialState()
             property bool loading: false
+            property bool providerListFailed: false
             property bool providerDescriptorsUnavailable: false
             property var providers: [{provider: "codex", enabled: false}, {provider: "future", enabled: true}]
             property string selectedProviderID: "codex"

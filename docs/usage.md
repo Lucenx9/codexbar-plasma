@@ -274,10 +274,13 @@ work and upstream contract requirements.
   chart point shows a vertical guide, including for zero values and entirely
   zero-valued series. Abbreviated point labels or values reveal their full text
   in a tooltip while hovering the plot or keeping keyboard focus there.
-  Keyboard inspection shows the readout immediately. Cost charts show the peak
-  daily amount above the plot when no day is being inspected, giving the bars
-  a numeric scale at rest. These interactions also apply to provider cost and
-  detail charts; provider detail charts keep their existing readout behavior.
+  Keyboard inspection shows the readout immediately. Charts show a focus
+  outline when reached with Tab or Shift+Tab; clicking a chart selects a day
+  without the outline and still allows arrow-key inspection.
+  Cost charts show the peak daily amount above the plot when no day is being
+  inspected, giving the bars a numeric scale at rest. These interactions also
+  apply to provider cost and detail charts; provider detail charts keep their
+  existing readout behavior.
   Provider totals emphasize the selected Cost or Tokens metric, with the other
   figure on a smaller line beneath it. Missing amounts read as unavailable;
   measured zero stays zero. Long provider names and figures reveal their full
@@ -562,7 +565,8 @@ widget settings to install and select a private CLI, then **Apply**. For an
 existing installation, use **Diagnostics** to set the absolute executable path.
 
 A failed provider-list refresh in settings keeps the last loaded list and shows
-an error. A successful empty list clears it.
+an error. When no list has loaded, the page also offers **Reload**, which stays
+after the error is dismissed. A successful empty list clears it.
 Reloading the same CLI keeps known setup controls visible while its version is
 checked again. API key setup waits until that check and the list reload finish.
 Provider settings diagnostics also keep their last successful result and show

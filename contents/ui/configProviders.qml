@@ -61,6 +61,9 @@ KCM.SimpleKCM {
     property string filterText: ""
     readonly property string filterScope: ["all", "enabled", "disabled"][providerFilterBar.currentIndex] || "all"
     property bool loading: false
+    // Survives dismissing the error banner, so an empty failed list keeps its
+    // recovery placeholder instead of claiming the CLI reported no providers.
+    property bool providerListFailed: false
     property string errorText: ""
     property string statusText: ""
     property bool providerDescriptorsUnavailable: false
@@ -157,6 +160,7 @@ KCM.SimpleKCM {
         if (commandPath.length === 0) {
             errorText = i18n("Set the codexbar command path in Diagnostics.")
             providers = []
+            providerListFailed = true
             loading = false
             return
         }
@@ -530,6 +534,7 @@ KCM.SimpleKCM {
     function handleConfigCommandTimeout(descriptor) {
         if (descriptor.kind === "list") {
             loading = false
+            providerListFailed = true
             errorText = i18n("Loading providers timed out. Try again.")
         } else if (descriptor.kind === "version") {
             fireworksSingleKeySetupSupported = false
@@ -658,10 +663,12 @@ KCM.SimpleKCM {
             return page.providerTitle(identifier)
         })
         if (result.outcome !== "success") {
+            providerListFailed = true
             errorText = providerCommandFailureText(result, "list")
             return
         }
         var next = result.value
+        providerListFailed = false
         providers = next
         if (!providerByID(selectedProviderID)) {
             selectedProviderID = firstSelectableProvider(next)
@@ -1478,6 +1485,14 @@ KCM.SimpleKCM {
         onTriggered: page.clearProviderFilters()
     }
 
+    Kirigami.Action {
+        id: reloadProvidersAction
+        text: i18n("Reload")
+        icon.name: "view-refresh"
+        enabled: reloadProvidersButton.enabled
+        onTriggered: page.reload()
+    }
+
     // Unlike FormLayout, a plain ColumnLayout does not reveal focused controls
     // in its enclosing ScrollablePage. Keep provider rows and their switches visible.
     function revealFocusedProviderControl() {
@@ -1656,7 +1671,9 @@ KCM.SimpleKCM {
                 Layout.fillWidth: true
                 Layout.alignment: Qt.AlignTop
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 16
-                Layout.maximumWidth: providerPanes.columns === 2 ? Kirigami.Units.gridUnit * 18 : Infinity
+                // Without a details pane, empty and failure states center on the page.
+                Layout.maximumWidth: providerPanes.columns === 2 && selectedProviderSurface.visible
+                    ? Kirigami.Units.gridUnit * 18 : Infinity
                 // Expanded details may outgrow the viewport; the list follows
                 // them so both panes still end together while the page scrolls.
                 Layout.preferredHeight: providerPanes.columns === 2 && selectedProviderSurface.visible
@@ -1714,10 +1731,21 @@ KCM.SimpleKCM {
                     Components.PlainPlaceholderMessage {
                         Layout.fillWidth: true
                         Layout.topMargin: Kirigami.Units.gridUnit * 2
-                        visible: !page.loading && page.providers.length === 0 && page.errorText.length === 0
+                        visible: !page.loading && page.providers.length === 0
+                            && !page.providerListFailed && page.errorText.length === 0
                         icon.name: "view-list-details"
                         plainText: i18n("No providers reported")
                         plainExplanation: i18n("codexbar did not return any providers.")
+                    }
+
+                    Components.PlainPlaceholderMessage {
+                        objectName: "providerListFailedMessage"
+                        Layout.fillWidth: true
+                        Layout.topMargin: Kirigami.Units.gridUnit * 2
+                        visible: !page.loading && page.providers.length === 0 && page.providerListFailed
+                        icon.name: "dialog-error"
+                        plainText: i18n("Could not load CodexBar provider configuration.")
+                        helpfulAction: reloadProvidersAction
                     }
 
                     Components.PlainPlaceholderMessage {
@@ -2105,7 +2133,10 @@ KCM.SimpleKCM {
                                 required property var modelData
 
                                 Layout.fillWidth: true
-                                rowSpacing: Kirigami.Units.smallSpacing
+                                // Stacked, the label binds to its value and a
+                                // wider gap separates the pairs.
+                                Layout.bottomMargin: columns === 1 ? Kirigami.Units.smallSpacing : 0
+                                rowSpacing: 0
                                 columnSpacing: Kirigami.Units.smallSpacing
 
                                 Components.PlainControlsLabel {
