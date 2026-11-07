@@ -175,11 +175,12 @@ ColumnLayout {
         Components.PlainComboBox {
             id: rangeCombo
 
+            Layout.minimumHeight: metricToggle.implicitHeight
             textRole: "text"
             valueRole: "value"
             model: view.rangeOptions(view.applet.costHistoryDays)
             currentIndex: view.rangeIndex(model, view.applet.costHistoryDays, view.applet.costHistoryPeriod)
-            Accessible.name: i18n("History range")
+            Accessible.name: i18n("%1: %2", i18n("History range"), displayText)
             onActivated: function(index) {
                 var value = rangeCombo.valueAt(index)
                 if (typeof value === "string") {

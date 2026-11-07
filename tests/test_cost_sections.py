@@ -729,14 +729,18 @@ class CostSectionTests(unittest.TestCase):
         });
         compare(ranges.length, 1);
         compare(ranges[0].currentIndex, 1);
+        compare(ranges[0].Accessible.name, "History range: 30 days");
         ranges[0].activated(3);
         compare(fakeApplet.periodSet, "month-to-date");
         compare(ranges[0].currentText, "Month to date");
+        compare(ranges[0].Accessible.name, "History range: Month to date");
         ranges[0].activated(0);
         compare(fakeApplet.daysSet, "7");
         compare(ranges[0].currentText, "7 days");
+        compare(ranges[0].Accessible.name, "History range: 7 days");
         fakeApplet.costHistoryPeriod = "all";
         compare(ranges[0].currentText, "All history");
+        compare(ranges[0].Accessible.name, "History range: All history");
         fakeApplet.setCostHistoryDays(30);
         var historyMsgs = all.filter(function(item) {
             return item.plainText !== undefined

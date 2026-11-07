@@ -232,8 +232,9 @@ work and upstream contract requirements.
 - Overview and provider quota percentages use the same slightly larger type
   size and align with the end of their meters. Quota names, inline resets and
   percentages share a text baseline. Quota percentages, cost summaries,
-  provider totals and chart readout values request tabular digits from the theme
-  font, keeping equal-length numbers stable when supported by that font.
+  provider totals, project amounts and chart readout values request tabular
+  digits from the theme font, keeping equal-length numbers stable when supported
+  by that font.
   A thin separator distinguishes an inline reset from its quota name.
   Overview keeps more space between provider cards, with a compact gap between
   each identity header and its first quota.
@@ -265,7 +266,9 @@ work and upstream contract requirements.
   text for summary and update metadata beneath their titles.
 - Global **Usage & Spend** tab with a Cost/Tokens toggle, a range selector
   (7, 30, or 90 days, **Month to date**, or **All history**), interactive daily chart, activity heatmap, and provider totals that
-  keep different currencies separate. Chart and heatmap dates use the system
+  keep different currencies separate. The range selector matches the metric
+  toggle's minimum height and includes its current value in its accessible name.
+  Chart and heatmap dates use the system
   locale's short date format. Chart guide lines follow theme text-color changes
   while the popup stays open. Hovering or using the arrow keys to inspect a
   chart point shows a vertical guide, including for zero values and entirely
