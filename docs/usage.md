@@ -274,10 +274,13 @@ work and upstream contract requirements.
   chart point shows a vertical guide, including for zero values and entirely
   zero-valued series. Abbreviated point labels or values reveal their full text
   in a tooltip while hovering the plot or keeping keyboard focus there.
-  Keyboard inspection shows the readout immediately. Cost charts show the peak
-  daily amount above the plot when no day is being inspected, giving the bars
-  a numeric scale at rest. These interactions also apply to provider cost and
-  detail charts; provider detail charts keep their existing readout behavior.
+  Keyboard inspection shows the readout immediately. Charts show a focus
+  outline when reached with Tab or Shift+Tab; clicking a chart selects a day
+  without the outline and still allows arrow-key inspection.
+  Cost charts show the peak daily amount above the plot when no day is being
+  inspected, giving the bars a numeric scale at rest. These interactions also
+  apply to provider cost and detail charts; provider detail charts keep their
+  existing readout behavior.
   Provider totals emphasize the selected Cost or Tokens metric, with the other
   figure on a smaller line beneath it. Missing amounts read as unavailable;
   measured zero stays zero. Long provider names and figures reveal their full

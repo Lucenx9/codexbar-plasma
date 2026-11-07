@@ -74,6 +74,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Show chart focus outlines only for keyboard navigation, while keeping mouse
+  day selection and arrow-key inspection available.
+
 - Keep dark provider indicators readable in usage-sharing previews and exported
   images, including abliteration.ai and OpenDesign, while preserving brand colors
   where they already have sufficient contrast.
