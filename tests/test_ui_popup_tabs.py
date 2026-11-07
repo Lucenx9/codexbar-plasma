@@ -230,9 +230,16 @@ class PopupTabsTest(unittest.TestCase):
         provider_tab_body = id_block(main_text, "providerTab")
         if "visible: providerTab.meter >= 0" not in provider_tab_body:
             raise AssertionError("providerTab must draw its underline only as a quota meter")
+        fill_body = id_block(main_text, "providerTabQuotaGauge")
         if not (
-            code_contains(provider_tab_body, "readonly property color identityColor: selected ? accent")
-            and code_contains(provider_tab_body, "color: providerTab.identityColor")
+            code_contains(provider_tab_body, "readonly property real identityOpacity: selected ? 1.0 : 0.72")
+            and code_contains(provider_tab_body,
+                              "readonly property color identityColor: applet.withAlpha(accent, identityOpacity)")
+            and code_contains(id_block(main_text, "providerTabIcon"), "color: providerTab.identityColor")
+            and code_contains(fill_body, "objectName: \"providerTabQuotaFill\"")
+            and code_contains(fill_body, "color: providerTab.identityColor")
+            and code_contains(fill_body, "0.12 * providerTab.identityOpacity")
+            and code_contains(fill_body, "0.5 * providerTab.identityOpacity")
         ):
             raise AssertionError(
                 "unselected provider tabs must dim their icon while keeping the provider "

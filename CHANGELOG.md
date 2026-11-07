@@ -75,7 +75,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 - Refine popup provider tabs: quota gauges use a slimmer, faint provider-tinted
   track instead of a bright gray bar, keep a clear gap beside the centered icon
-  in icon-only tabs, and dim together with the icon on unselected tabs.
+  in icon-only tabs, and dim together with the icon on unselected tabs, including
+  empty gauges. Icon-only tabs widen with small fonts so the gauge stays inside.
 
 ## 0.2.54 - 2026-11-05
 

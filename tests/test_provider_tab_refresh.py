@@ -133,6 +133,7 @@ TestCase {
         applet.selectedProviderID = "codex";
         applet.selectedAccount = "";
         applet.showPopupTabLabels = true;
+        providerTabsBar.implicitHeight = Kirigami.Units.gridUnit * 2.35;
         applet.lastPerformedAction = "";
         providerActionsToggle.expanded = true;
     }
@@ -221,6 +222,30 @@ TestCase {
             tryVerify(function() { return tab.width > 0; });
             verify(waitForPolish(tab));
             fuzzyCompare(icon.mapToItem(tab, icon.width / 2, 0).x, tab.width / 2, 0.5);
+        }
+    }
+
+    function test_iconOnlyGaugeStaysBesideIconInsideShortStrips() {
+        applet.showPopupTabLabels = false;
+        applet.presentedProviders = [provider("codex", "Codex", 43), provider("claude", "Claude", 0)];
+        // A small font shrinks the strip; the icon keeps its theme size.
+        for (var stripHeight of [Kirigami.Units.gridUnit * 2.35, Kirigami.Units.iconSizes.small + 6]) {
+            providerTabsBar.implicitHeight = stripHeight;
+            tryVerify(function() { return Math.abs(providerTabsBar.height - stripHeight) <= 1; });
+            for (var index = 0; index < providerTabRepeater.count; index++) {
+                var tab = providerTabRepeater.itemAt(index);
+                var icon = findChild(tab, "providerTabIcon");
+                var gauge = findChild(tab, "providerTabQuotaGauge");
+                // Wait until the resized strip has laid the tab out again.
+                tryVerify(function() {
+                    return Math.abs(icon.mapToItem(tab, icon.width / 2, 0).x - tab.width / 2) <= 0.5
+                        && tab.height === providerTabsBar.tabHeight;
+                });
+                var iconRight = icon.mapToItem(tab, icon.width, 0).x;
+                var gaugeLeft = gauge.mapToItem(tab, 0, 0).x;
+                verify(gaugeLeft >= iconRight + 1, "gauge overlaps icon at strip height " + stripHeight);
+                verify(gaugeLeft + gauge.width <= tab.width, "gauge leaves tab at strip height " + stripHeight);
+            }
         }
     }
 

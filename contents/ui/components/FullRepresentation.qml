@@ -282,9 +282,10 @@ Item {
                         : applet.withAlpha(Kirigami.Theme.textColor, 0.72)
                     // Icon and gauge dim together on unselected tabs so each
                     // tab reads as one unit and keeps its provider hue.
-                    readonly property color identityColor: selected
-                        ? accent
-                        : applet.withAlpha(accent, 0.72)
+                    readonly property real identityOpacity: selected ? 1.0 : 0.72
+                    readonly property color identityColor: applet.withAlpha(accent, identityOpacity)
+                    readonly property real gaugeWidth: Math.max(5, Math.round(Kirigami.Units.gridUnit * 0.28))
+                    readonly property real gaugeGap: Math.round(Kirigami.Units.smallSpacing * 0.75)
 
                     function activate() {
                         fullRoot.closeAiInsights(false, false)
@@ -303,7 +304,12 @@ Item {
                             Kirigami.Units.gridUnit * 7,
                             Math.max(Kirigami.Units.gridUnit * 4.2,
                                 Math.ceil(providerTabLabelSizing.implicitWidth) + Kirigami.Units.gridUnit * 2.2))
-                        : providerTabsBar.tabHeight
+                        // Small fonts shrink the strip but not the icon, so
+                        // widen the tab until the gauge beside the centered
+                        // icon still fits inside it.
+                        : Math.max(providerTabsBar.tabHeight,
+                            Kirigami.Units.iconSizes.small
+                                + 2 * (gaugeGap + gaugeWidth + Kirigami.Units.smallSpacing / 2))
                     Layout.preferredHeight: providerTabsBar.tabHeight
                     radius: applet.roundedSurfaceRadius
                     color: providerTabMouse.pressed
@@ -456,17 +462,19 @@ Item {
                         anchors.rightMargin: applet.showPopupTabLabels
                             ? Kirigami.Units.smallSpacing
                             : Math.round((parent.width - Kirigami.Units.iconSizes.small) / 2
-                                - Kirigami.Units.smallSpacing * 0.75 - width)
+                                - providerTab.gaugeGap - width)
                         anchors.verticalCenter: parent.verticalCenter
-                        width: Math.max(5, Math.round(Kirigami.Units.gridUnit * 0.28))
+                        width: providerTab.gaugeWidth
                         height: Kirigami.Units.iconSizes.small
                         radius: width / 2
                         // A faint provider-tinted track with a hairline outline,
                         // matching the panel quota tracks, so the gauge stays
                         // legible at zero without outweighing the icon.
-                        color: applet.withAlpha(providerTab.accent, 0.12)
+                        // withAlpha replaces alpha, so scale by the tab's
+                        // identity opacity for an empty gauge to dim as well.
+                        color: applet.withAlpha(providerTab.accent, 0.12 * providerTab.identityOpacity)
                         border.width: 1
-                        border.color: applet.withAlpha(providerTab.identityColor, 0.5)
+                        border.color: applet.withAlpha(providerTab.accent, 0.5 * providerTab.identityOpacity)
                         clip: true
                         Accessible.ignored: true
 
