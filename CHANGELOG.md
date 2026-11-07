@@ -54,6 +54,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   place docs, dashboard and account links beside the provider name with an
   overflow menu, and list credential clearing after the setup actions.
 
+- Show the All days reset beside a selected day's provider cost details as a
+  flat calendar action, so it no longer outweighs the figures it qualifies.
+
 - Clarify popup navigation with compact quota gauges under provider
   icons, independently of tab selection. Emphasize cost summaries and show the
   peak daily amount above resting cost charts. Group square heatmap cells with

@@ -462,6 +462,17 @@ class CostSectionTests(unittest.TestCase):
         verify(charts[0].peakIndex >= 0);
         charts[0].selectedIndex = 0;
         compare(charts[0].selectedIndex, 0);
+        // The day reset is a flat inline action that clears the selection.
+        var allDays = all.filter(function(item) {
+            return item.objectName === "costAllDaysButton";
+        });
+        compare(allDays.length, 1);
+        tryVerify(function() { return allDays[0].visible; });
+        verify(allDays[0].flat);
+        mouseClick(allDays[0]);
+        tryVerify(function() { return charts[0].selectedIndex === -1; });
+        verify(!allDays[0].visible);
+        charts[0].selectedIndex = 0;
         fakeApplet.costHistoryShowsTokens = true;
         tryVerify(function() { return metricToggles[0].currentIndex === 1
                 && metricButtons[1].checked && !metricButtons[0].checked; });

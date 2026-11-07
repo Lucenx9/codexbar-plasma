@@ -266,7 +266,12 @@ ColumnLayout {
                 wrapMode: Text.Wrap
             }
 
+            // A secondary reset beside the heading, flat like the popup's
+            // other inline row actions so it does not outweigh the figures.
             Components.PlainButton {
+                objectName: "costAllDaysButton"
+                flat: true
+                icon.name: "view-calendar-symbolic"
                 plainText: i18n("All days")
                 visible: tokenCostSection.selectedDay !== null
                 onClicked: {
