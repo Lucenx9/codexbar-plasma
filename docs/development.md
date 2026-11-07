@@ -1146,6 +1146,11 @@ rewraps differently breaks them. `qmlformat` recurses without bound on a
 regular expression literal wider than `MaxColumnWidth`, so build long patterns
 from strings with `new RegExp(...)` or match plain substrings instead.
 
+The desktop-style QtTest run also checks provider reset countdowns, inline-reset
+fit boundaries, and pace/reset wrapping. It covers mirrored layouts, fractional
+font sizes, and enlarged text so fractional label widths cannot silently elide
+a fitting countdown.
+
 The `check-runtime` and `smoke-runtime` jobs pin a prebuilt Linux/amd64
 Ubuntu 24.04/Neon toolchain by digest. [The image recipe](../ci/Dockerfile)
 copies only the signed Neon repository configuration, archive key, CA bundle

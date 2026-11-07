@@ -93,6 +93,7 @@ ColumnLayout {
             Layout.alignment: Qt.AlignBaseline
             Layout.fillWidth: true
             Layout.maximumWidth: usageRow.resetInline ? Math.ceil(implicitWidth) : Infinity
+            Layout.minimumWidth: usageRow.resetInline ? Math.ceil(implicitWidth) : 0
             elide: Text.ElideRight
 
             HoverHandler { id: usageTitleHover }
@@ -307,8 +308,9 @@ ColumnLayout {
             Layout.alignment: Qt.AlignBaseline
             Layout.fillWidth: true
             Layout.minimumWidth: 0
+            // Keep fractional glyph widths when the layout snaps to whole pixels.
             Layout.maximumWidth: usageMetadataLayout.stacked || !usagePaceLabel.visible
-                ? Infinity : implicitWidth
+                ? Infinity : Math.ceil(implicitWidth)
 
             HoverHandler { id: usageResetHover }
 
