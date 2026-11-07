@@ -185,8 +185,12 @@ Rectangle {
                     id: overviewMeterHeader
 
                     Layout.fillWidth: true
-                    implicitHeight: Math.max(overviewMeterCaption.implicitHeight,
-                        overviewMeterReset.implicitHeight, overviewMeterPercent.implicitHeight)
+                    baselineOffset: Math.max(overviewMeterCaption.baselineOffset,
+                        overviewMeterReset.baselineOffset, overviewMeterPercent.baselineOffset)
+                    implicitHeight: baselineOffset + Math.max(
+                        overviewMeterCaption.implicitHeight - overviewMeterCaption.baselineOffset,
+                        overviewMeterReset.implicitHeight - overviewMeterReset.baselineOffset,
+                        overviewMeterPercent.implicitHeight - overviewMeterPercent.baselineOffset)
                     implicitWidth: overviewMeterCaption.implicitWidth
                         + overviewMeterReset.implicitWidth + overviewMeterPercent.implicitWidth
                         + Kirigami.Units.smallSpacing * 3 + 1
@@ -199,7 +203,7 @@ Rectangle {
                         font.weight: Font.DemiBold
                         opacity: overviewRow.applet.valueTextOpacity
                         anchors.left: parent.left
-                        anchors.baseline: overviewMeterPercent.baseline
+                        anchors.baseline: parent.baseline
                         width: Math.min(implicitWidth, Math.max(0,
                             parent.width - overviewMeterPercent.width - Kirigami.Units.smallSpacing))
                         elide: Text.ElideRight
@@ -227,7 +231,7 @@ Rectangle {
                         opacity: overviewRow.applet.secondaryTextOpacity
                         anchors.left: overviewResetSeparator.right
                         anchors.leftMargin: Kirigami.Units.smallSpacing
-                        anchors.baseline: overviewMeterPercent.baseline
+                        anchors.baseline: parent.baseline
                         width: Math.max(0, parent.width - overviewMeterCaption.width
                             - overviewMeterPercent.width - Kirigami.Units.smallSpacing * 3 - overviewResetSeparator.width)
                         elide: Text.ElideRight
@@ -237,7 +241,7 @@ Rectangle {
                         id: overviewMeterPercent
 
                         anchors.right: parent.right
-                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.baseline: parent.baseline
                         text: overviewRow.applet.usagePercentText(overviewMeter.modelData)
                         font.pointSize: Kirigami.Theme.defaultFont.pointSize * 1.15
                         font.features: { "tnum": 1 }
