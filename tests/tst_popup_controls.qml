@@ -288,6 +288,46 @@ TestCase {
         }
     }
 
+    function test_overviewQuotaFontsStayInsideTheirHeader_data() {
+        return [
+            {tag: "large-caption", caption: 60, reset: 60, percent: 20},
+            {tag: "large-percent", caption: 20, reset: 20, percent: 60},
+            {tag: "large-reset", caption: 12, reset: 54, percent: 20}
+        ];
+    }
+
+    function test_overviewQuotaFontsStayInsideTheirHeader(data) {
+        failOnWarning(/Binding loop|recursive rearrange/);
+        var row = createControl("OverviewProviderRow", {
+            applet: applet, width: 540,
+            modelData: Object.assign({}, provider, {testRows: [
+                {label: "Session", hasPercent: true, leftPercent: 57, reset: "in 2h"}
+            ]})
+        });
+        if (!row) return;
+        waitForRendering(row);
+        var caption = findText(row, "Session");
+        var reset = findText(row, "Resets in 2h");
+        var percent = findText(row, "57% left");
+        caption.font = Qt.font({family: caption.font.family, pixelSize: data.caption});
+        reset.font = Qt.font({family: reset.font.family, pixelSize: data.reset});
+        percent.font = Qt.font({family: percent.font.family, pixelSize: data.percent});
+        wait(0);
+        verify(waitForPolish(row));
+        var header = caption.parent;
+        tryCompare(header, "height", header.implicitHeight);
+        for (var label of [caption, reset, percent]) {
+            verify(label.y >= -0.5, "Quota text extends above its header");
+            verify(label.y + label.height <= header.height + 0.5,
+                "Quota text extends below its header: " + JSON.stringify({
+                    y: label.y, height: label.height, implicitHeight: label.implicitHeight,
+                    baseline: label.baselineOffset, headerHeight: header.height,
+                    headerImplicitHeight: header.implicitHeight}));
+            fuzzyCompare(label.y + label.baselineOffset,
+                percent.y + percent.baselineOffset, 0.5);
+        }
+    }
+
     // The meters and resets are only visual; the row's accessible description
     // must follow the drawn order: detail line, then each named window.
     function test_overviewDescribesItsQuotaToAssistiveTools() {

@@ -90,6 +90,7 @@ ColumnLayout {
 
             text: usageRow.rowData.label
             font.weight: Font.DemiBold
+            Layout.alignment: Qt.AlignBaseline
             Layout.fillWidth: true
             Layout.maximumWidth: usageRow.resetInline ? Math.ceil(implicitWidth) : Infinity
             elide: Text.ElideRight
@@ -119,6 +120,7 @@ ColumnLayout {
             text: usageRow.resetText
             font: Kirigami.Theme.smallFont
             opacity: usageRow.secondaryTextOpacity
+            Layout.alignment: Qt.AlignBaseline
             elide: Text.ElideRight
 
             HoverHandler { id: usageInlineResetHover }
@@ -169,6 +171,7 @@ ColumnLayout {
             font.pointSize: Kirigami.Theme.defaultFont.pointSize * 1.15
             font.features: { "tnum": 1 }
             font.weight: Font.DemiBold
+            Layout.alignment: Qt.AlignBaseline
             horizontalAlignment: Text.AlignRight
             elide: Text.ElideRight
         }

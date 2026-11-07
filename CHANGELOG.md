@@ -23,6 +23,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Align popup quota names, inline resets and percentages on a shared text
+  baseline, and tighten the gap above the first quota in Overview cards.
+
 - Refine panel provider groups with larger, contrast-adjusted icons, slimmer
   outlined quota tracks, clearer spacing, and regular tabular text. Vertical
   panels stack icons above readable quota tracks. Tiny readings no longer
