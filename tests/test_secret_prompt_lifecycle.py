@@ -265,6 +265,7 @@ TestCase {
     property string errorText: ""
     property string statusText: ""
     property bool loading: false
+    property bool providerListFailed: false
     property var providers: []
     property var providerDiagnostics: ({})
     property var providerDiagnosticErrors: ({})

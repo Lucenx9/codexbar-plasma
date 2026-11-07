@@ -1999,8 +1999,16 @@ Item {
             }
             if (scenario.indexOf("settings-providers") === 0) {
                 var providersPage = preview.page;
-                if (scenario === "settings-providers-error")
-                    return providersPage.errorText.length > 0 && providersPage.providers.length === 0;
+                if (scenario === "settings-providers-error") {
+                    if (providersPage.errorText.length === 0 || providersPage.providers.length !== 0
+                            || providersPage.loading)
+                        return false;
+                    var failedMessage = findItem(providersPage, "providerListFailedMessage");
+                    verifyScenario(failedMessage !== null && failedMessage.visible
+                        && failedMessage.helpfulAction !== null && failedMessage.helpfulAction.enabled,
+                        "A failed provider list must offer an enabled Reload placeholder");
+                    return true;
+                }
                 if (providersPage.providers.length !== 12)
                     return false;
                 if (!providersPage.providerSourceSetupSupported)

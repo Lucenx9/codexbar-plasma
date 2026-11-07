@@ -1707,7 +1707,7 @@ ID, then selects a provider and shows its redacted fixture diagnostics.
 providers introduced in CLI 0.74.0, offers API-key setup only for the five
 complete Linux flows, and captures Aerostack selected in the provider settings.
 `settings-providers-error` and `settings-diagnostics-error` capture failed CLI
-responses. `panel-information`, `panel-information-minimal`, and
+responses; the provider capture also requires an enabled Reload placeholder. `panel-information`, `panel-information-minimal`, and
 `panel-information-single` capture grouped text at a 24-pixel panel height, including
 selection of the second provider. QtTests exercise style selection, disclosure,
 retained hidden values, defaults, custom order and filtered-meter fallbacks,

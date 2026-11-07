@@ -109,6 +109,25 @@ class ProviderSettingsTest(unittest.TestCase):
                 "descriptor support must be confirmed only after a valid provider list is published"
             )
 
+    def test_failed_empty_list_keeps_recovery_placeholder(self):
+        # Dismissing the error banner clears errorText; the failure placeholder
+        # must not depend on it, or the page claims the CLI reported no providers.
+        provider_list_result_body = function_body(providers_text, "handleListResult")
+        for fragment in ("providerListFailed = true", "providerListFailed = false"):
+            if not code_contains(provider_list_result_body, fragment):
+                raise AssertionError(f"handleListResult must track list failure; missing {fragment!r}")
+        if not code_contains(function_body(providers_text, "handleConfigCommandTimeout"),
+                             "providerListFailed = true"):
+            raise AssertionError("a provider list timeout must keep the recovery placeholder")
+        match = re.search(r'objectName: "providerListFailedMessage"(.*?)\n\s*\}', providers_text, re.S)
+        if not match:
+            raise AssertionError("missing providerListFailedMessage placeholder")
+        block = match.group(1)
+        if "errorText" in block or "helpfulAction: reloadProvidersAction" not in block:
+            raise AssertionError(
+                "the failed-list placeholder must survive banner dismissal and offer Reload"
+            )
+
     def test_descriptor_fields(self):
         providers_surface.reject(
             "Provider-specific editing stays in the CodexBar CLI until it exposes a stable settings descriptor",

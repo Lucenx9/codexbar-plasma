@@ -56,8 +56,12 @@ Controls.ItemDelegate {
 
     background: Rectangle {
         anchors.fill: parent
-        anchors.leftMargin: providerRow.mirrored ? enabledSwitch.width + providerRow.spacing * 2 : 0
-        anchors.rightMargin: providerRow.mirrored ? 0 : enabledSwitch.width + providerRow.spacing * 2
+        // The selection ends before the switch so its checked color keeps
+        // contrast; include the delegate padding the switch sits inside.
+        readonly property real switchInset: enabledSwitch.width + Kirigami.Units.smallSpacing
+            + (providerRow.mirrored ? providerRow.leftPadding : providerRow.rightPadding)
+        anchors.leftMargin: providerRow.mirrored ? switchInset : 0
+        anchors.rightMargin: providerRow.mirrored ? 0 : switchInset
         radius: Kirigami.Units.cornerRadius
         color: providerRow.highlighted ? Kirigami.Theme.highlightColor
             : providerRow.hovered || providerRow.visualFocus
