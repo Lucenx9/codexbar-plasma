@@ -335,8 +335,8 @@ ColumnLayout {
                                         ? sessionCard.activeStateColor
                                         : Kirigami.Theme.textColor
                                     opacity: sessionCard.activeSession ? 1 : view.applet.secondaryTextOpacity
-                                    font.pixelSize: sessionCard.session.state === "idle"
-                                        ? Kirigami.Theme.smallFont.pixelSize : Kirigami.Theme.defaultFont.pixelSize
+                                    font.pixelSize: sessionCard.activeSession
+                                        ? Kirigami.Theme.defaultFont.pixelSize : Kirigami.Theme.smallFont.pixelSize
                                     font.weight: sessionCard.activeSession ? Font.DemiBold : Font.Normal
                                     horizontalAlignment: Text.AlignRight
                                     elide: Text.ElideRight

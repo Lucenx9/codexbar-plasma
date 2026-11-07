@@ -336,7 +336,8 @@ work and upstream contract requirements.
   come from more than one host. Hovering a card reveals a copy action beside
   its title. Names and states share the first line; provider metadata and activity
   age share a separate line, so a long age does not shorten the name above it.
-  Idle states use the smaller theme font, and a small gap separates text lines.
+  Idle and other inactive states use the smaller theme font, and a small gap
+  separates text lines.
   The optional session name keeps the normal font so sessions in one project
   remain distinguishable. Card padding and session ordering stay unchanged.
   Long states and ages stay within the card and reveal their full text on hover.
@@ -834,11 +835,19 @@ It uses the selected history range and freezes the currently loaded data until
 reopened. It does not start another CLI scan. Refresh history first for a newer
 snapshot; the creation timestamp is not a measurement timestamp.
 
+![Synthetic usage-sharing window with export controls](codexbar-plasma-share-window.png)
+
 **Copy image** places image data on the clipboard, **Copy statistics** copies the
 same aggregate figures as plain text, and **Save PNG…** opens the platform save
 picker with overwrite confirmation. Saving supports local PNG files. The image
 uses the Plasma colors and fonts and includes a small
 `github.com/Lucenx9/codexbar-plasma` attribution in its footer.
+
+**Copy image** is emphasized beside the other export actions; **Close** stays
+separate at the trailing edge. The groups adapt to narrow windows and longer
+labels, with full text available on hover or keyboard focus when abbreviated.
+Short copy/save confirmations appear above the actions without resizing the
+preview; longer error messages can wrap there.
 
 Totals include the loaded providers; at most eight provider rows and six models
 are shown, ranked by tokens, with omitted row counts. A colored bar under the

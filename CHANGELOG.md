@@ -23,6 +23,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Clarify the usage-sharing window's actions: emphasize Copy image, group
+  export commands separately from Close, and keep short copy/save feedback
+  from resizing the preview. Long labels adapt to narrow windows.
+
 - Match the height of the Usage & Spend range selector to its metric switch,
   announce its selected range to screen readers, and use tabular digits for
   project cost and token amounts.
@@ -58,10 +62,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   peak daily amount above resting cost charts. Group square heatmap cells with
   their legend, distinguish unavailable days, and place provider totals beside
   short ranges when the popup is wide enough. Keep account and link commands
-  available through a collapsed Provider actions disclosure.
+  available through a collapsed Provider actions disclosure. Place the local-log
+  source note directly below the provider cost chart it qualifies.
 
 - Refine Sessions with a count of active sessions before the update time,
-  smaller idle labels and clearer spacing between text lines. Keyboard focus
+  smaller labels for idle and other inactive states, and clearer spacing between
+  text lines. Keyboard focus
   highlights the card and reveals a truncated title in the copy action's tooltip;
   accessible descriptions include session state and activity age. Active-state
   text keeps readable contrast in light and dark themes.

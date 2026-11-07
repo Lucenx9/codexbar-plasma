@@ -209,6 +209,18 @@ ColumnLayout {
         Layout.topMargin: Kirigami.Units.smallSpacing / 2
     }
 
+    // The source note qualifies the figures above, so it stays beside them
+    // rather than after the disclosure and the details it reveals.
+    PlainPlasmaLabel {
+        visible: tokenCostSection.tokenCost && tokenCostSection.tokenCost.hintLine.length > 0 ? true : false
+        text: tokenCostSection.tokenCost ? tokenCostSection.tokenCost.hintLine : ""
+        font: Kirigami.Theme.smallFont
+        opacity: applet.secondaryTextOpacity
+        Layout.fillWidth: true
+        Layout.topMargin: Kirigami.Units.smallSpacing / 2
+        wrapMode: Text.WordWrap
+    }
+
     // A disclosure, not a primary action: a flat button keeps it from
     // outweighing the figures it reveals.
     Components.DisclosureButton {
@@ -644,14 +656,5 @@ ColumnLayout {
         visible: tokenCostSection.detailsExpanded && hasContent
         applet: tokenCostSection.applet
         providerCosts: tokenCostSection.tokenCost ? [tokenCostSection.tokenCost] : []
-    }
-
-    PlainPlasmaLabel {
-        visible: tokenCostSection.tokenCost && tokenCostSection.tokenCost.hintLine.length > 0 ? true : false
-        text: tokenCostSection.tokenCost ? tokenCostSection.tokenCost.hintLine : ""
-        font: Kirigami.Theme.smallFont
-        opacity: applet.secondaryTextOpacity
-        Layout.fillWidth: true
-        wrapMode: Text.WordWrap
     }
 }

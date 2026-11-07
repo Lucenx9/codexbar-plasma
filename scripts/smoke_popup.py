@@ -88,9 +88,25 @@ def apply_palette(work, theme):
 
 
 def stage_applet(work, scenario, image_path, theme=None):
+    """Stage an isolated applet and synthetic capture fixture without changing sources."""
     package = work / "data/plasma/plasmoids" / APPLET_ID
     package.mkdir(parents=True)
     shutil.copytree(ROOT / "contents", package / "contents")
+    if scenario.startswith("share-usage"):
+        # Native window roots lack a QML engine on some supported Qt versions.
+        # Capture a QML-owned background containing the unchanged content/footer.
+        share_path = package / "contents/ui/components/ShareUsageWindow.qml"
+        share_source = share_path.read_text()
+        share_path.write_text(share_source.replace(
+            "id: window\n", """id: window
+    background: Rectangle {
+        color: window.color
+        Component.onCompleted: {
+            window.contentItem.parent = this;
+            window.footer.parent = this;
+        }
+    }
+""", 1))
     metadata = json.loads((ROOT / "metadata.json").read_text())
     metadata["KPlugin"].update(Id=APPLET_ID, Name="CodexBar smoke test")
     (package / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
