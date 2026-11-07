@@ -230,7 +230,10 @@ class PopupTabsTest(unittest.TestCase):
         provider_tab_body = id_block(main_text, "providerTab")
         if "visible: providerTab.meter >= 0" not in provider_tab_body:
             raise AssertionError("providerTab must draw its underline only as a quota meter")
-        if not code_contains(provider_tab_body, "color: providerTab.selected ? providerTab.accent"):
+        if not (
+            code_contains(provider_tab_body, "readonly property color identityColor: selected ? accent")
+            and code_contains(provider_tab_body, "color: providerTab.identityColor")
+        ):
             raise AssertionError(
                 "unselected provider tabs must dim their icon while keeping the provider "
                 "hue, so selection reads the same way as on the global tabs"

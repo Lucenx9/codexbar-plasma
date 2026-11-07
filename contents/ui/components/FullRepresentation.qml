@@ -280,6 +280,11 @@ Item {
                     readonly property color foreground: selected
                         ? Kirigami.Theme.textColor
                         : applet.withAlpha(Kirigami.Theme.textColor, 0.72)
+                    // Icon and gauge dim together on unselected tabs so each
+                    // tab reads as one unit and keeps its provider hue.
+                    readonly property color identityColor: selected
+                        ? accent
+                        : applet.withAlpha(accent, 0.72)
 
                     function activate() {
                         fullRoot.closeAiInsights(false, false)
@@ -416,10 +421,7 @@ Item {
                             source: applet.providerIconSource(modelData.provider)
                             fallback: "view-statistics"
                             isMask: applet.providerIconIsMask(modelData.provider)
-                            // Unselected tabs dim but keep their hue, so the
-                            // provider stays recognizable while selection
-                            // reads the same way as on the global tabs.
-                            color: providerTab.selected ? providerTab.accent : applet.withAlpha(providerTab.accent, 0.6)
+                            color: providerTab.identityColor
                             Layout.preferredWidth: Kirigami.Units.iconSizes.small
                             Layout.preferredHeight: Kirigami.Units.iconSizes.small
                         }
@@ -447,13 +449,24 @@ Item {
                         id: providerTabQuotaGauge
                         objectName: "providerTabQuotaGauge"
                         visible: providerTab.meter >= 0
+                        // Icon-only tabs keep the icon centered and hang the
+                        // gauge a small gap beside it.
+                        // Anchors mirror with the layout in RTL locales.
                         anchors.right: parent.right
-                        anchors.rightMargin: Kirigami.Units.smallSpacing
+                        anchors.rightMargin: applet.showPopupTabLabels
+                            ? Kirigami.Units.smallSpacing
+                            : Math.round((parent.width - Kirigami.Units.iconSizes.small) / 2
+                                - Kirigami.Units.smallSpacing * 0.75 - width)
                         anchors.verticalCenter: parent.verticalCenter
-                        width: Math.round(Kirigami.Units.gridUnit * 0.33)
+                        width: Math.max(5, Math.round(Kirigami.Units.gridUnit * 0.28))
                         height: Kirigami.Units.iconSizes.small
                         radius: width / 2
-                        color: applet.withAlpha(Kirigami.Theme.textColor, 0.55)
+                        // A faint provider-tinted track with a hairline outline,
+                        // matching the panel quota tracks, so the gauge stays
+                        // legible at zero without outweighing the icon.
+                        color: applet.withAlpha(providerTab.accent, 0.12)
+                        border.width: 1
+                        border.color: applet.withAlpha(providerTab.identityColor, 0.5)
                         clip: true
                         Accessible.ignored: true
 
@@ -464,7 +477,7 @@ Item {
                             height: providerTab.meter <= 0 ? 0 : Math.max(1,
                                 Math.round(parent.height * Math.max(0, Math.min(100, providerTab.meter)) / 100))
                             radius: parent.radius
-                            color: providerTab.accent
+                            color: providerTab.identityColor
                         }
                     }
                 }
