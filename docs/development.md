@@ -792,8 +792,12 @@ Plasma modules.
 currencies, overflow, text redaction, range matching, and URL restrictions.
 `tests/test_share_usage.py` exercises the production window offscreen, checks
 clipboard image MIME data and a real PNG file, save failure, close-during-capture,
-and privacy invalidation. `share-usage` and `share-usage-narrow` smoke scenarios
-capture the card inside Plasma with synthetic data. These checks do not establish
+privacy invalidation, footer grouping with narrow/RTL/enlarged labels, stable
+short feedback and keyboard navigation. `share-usage` and `share-usage-narrow` smoke scenarios
+capture both the card and the complete sharing window inside Plasma with
+synthetic data. The additional `share-usage-window.png` and
+`share-usage-narrow-window.png` captures include the footer; the isolated fixture
+paints the same native background that item captures otherwise omit. These checks do not establish
 clipboard interoperability with every Wayland application or portal backend.
 
 ## Behavioral contracts to preserve

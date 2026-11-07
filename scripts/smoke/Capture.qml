@@ -2559,6 +2559,31 @@ Item {
         return applet.overviewSelected;
     }
 
+    function captureItem(item) {
+        console.log("SMOKE_CAPTURE_START:" + capture.scenario);
+        var accepted = item.grabToImage(function (result) {
+            if (result.saveToFile(capture.imagePath))
+                console.log("SMOKE_CAPTURED:" + capture.scenario);
+            else
+                console.error("SMOKE_FAILED: could not save popup screenshot");
+        });
+        if (!accepted)
+            console.error("SMOKE_FAILED: could not capture popup");
+    }
+
+    function captureShareWindow(card) {
+        var surface = capture.applet.shareUsageWindow.contentItem.parent;
+        var accepted = surface.grabToImage(function (result) {
+            if (!result.saveToFile(capture.imagePath.replace(/\.png$/, "-window.png"))) {
+                console.error("SMOKE_FAILED: could not save share window screenshot");
+                return;
+            }
+            capture.captureItem(card);
+        });
+        if (!accepted)
+            console.error("SMOKE_FAILED: could not capture share window");
+    }
+
     function findItem(item, name) {
         if (item.objectName === name)
             return item;
@@ -2784,17 +2809,12 @@ Item {
                 : capture.scenario === "panel-rules" || capture.panelAppearanceScenario || capture.panelDefaultsScenario
                 ? panelPreview.item : (capture.scenario === "provider-settings" || capture.scenario === "providers-0740"
                     ? providerSettingsPreview.item : capture.applet.fullRepresentationItem);
-            if (capture.scenario.indexOf("share-usage") === 0)
+            if (capture.scenario.indexOf("share-usage") === 0) {
                 popup = capture.findItem(capture.applet.shareUsageWindow.contentItem, "shareUsageCard");
-            console.log("SMOKE_CAPTURE_START:" + capture.scenario);
-            var accepted = popup.grabToImage(function (result) {
-                if (result.saveToFile(capture.imagePath))
-                    console.log("SMOKE_CAPTURED:" + capture.scenario);
-                else
-                    console.error("SMOKE_FAILED: could not save popup screenshot");
-            });
-            if (!accepted)
-                console.error("SMOKE_FAILED: could not capture popup");
+                capture.captureShareWindow(popup);
+                return;
+            }
+            capture.captureItem(popup);
         }
     }
 }
