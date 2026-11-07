@@ -63,6 +63,7 @@ ColumnLayout {
 
                 PlainPlasmaLabel {
                     text: section.valueText(modelData)
+                    font.features: { "tnum": 1 }
                     opacity: section.applet.valueTextOpacity
                     Layout.fillWidth: true
                     Layout.preferredWidth: 45

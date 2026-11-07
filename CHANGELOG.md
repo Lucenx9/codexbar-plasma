@@ -23,6 +23,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Match the height of the Usage & Spend range selector to its metric switch,
+  announce its selected range to screen readers, and use tabular digits for
+  project cost and token amounts.
+
 - Align popup quota names, inline resets and percentages on a shared text
   baseline, and tighten the gap above the first quota in Overview cards.
 
