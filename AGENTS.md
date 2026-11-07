@@ -24,6 +24,9 @@ Here, plugin, widget, plasmoid, and applet all mean the Plasma frontend.
 Read these references before changing the corresponding area. Follow their
 relevant sections; ordinary links here are on-demand reading, not bulk imports.
 
+- For panel, popup, or settings UI changes and design reviews, read
+  [Design](DESIGN.md) before planning or editing. Apply its visual, interaction,
+  and accessibility criteria.
 - For QML, JavaScript, configuration, tests, packaging, or runtime diagnosis, read
   [Development](docs/development.md). Then read the owning implementation, config
   schema, and nearest regression check before editing.

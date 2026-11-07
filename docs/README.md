@@ -9,6 +9,9 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
 
 ## Maintained references
 
+- [Design direction](../DESIGN.md): reference sources, Plasma-native visual
+  roles, panel/popup/settings composition, interaction states, and UI review
+  criteria. It guides future changes without changing supported behavior.
 - [Linux parity TODO](../TODO.md): open Plasma work, official CLI blockers, and
   the last reviewed upstream release. Agents update it with each release.
 

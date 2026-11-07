@@ -983,6 +983,11 @@ clipboard interoperability with every Wayland application or portal backend.
 
 ## QML conventions
 
+For visual and interaction changes, follow the [design guide](../DESIGN.md)
+alongside these implementation rules. It defines reference priorities, shared
+visual roles, surface composition, and review criteria; the usage guide remains
+the source for supported behavior.
+
 - Use `PlasmaComponents` for panel/popup controls and Kirigami/Qt Quick Controls
   in settings. Use `ContainmentItem` only for containment/panel/desktop code,
   not this applet's root.
