@@ -113,6 +113,86 @@ TestCase {
         compare(window.feedback, "Copied");
         window.close();
     }
+    function test_footerLayout_data() {
+        return [
+            {tag: "wide", width: 936, large: false, rtl: false},
+            {tag: "narrow", width: 420, large: false, rtl: false},
+            {tag: "narrow-rtl", width: 420, large: false, rtl: true},
+            {tag: "large-long-labels", width: 420, large: true, rtl: false}
+        ];
+    }
+    function test_footerLayout(data) {
+        var window = createWindow();
+        window.width = data.width;
+        window.footer.LayoutMirroring.enabled = data.rtl;
+        window.footer.LayoutMirroring.childrenInherit = true;
+        var image = findChild(window, "shareCopyImageButton");
+        var statistics = findChild(window, "shareCopyStatisticsButton");
+        var save = findChild(window, "shareSaveImageButton");
+        var close = findChild(window, "shareCloseButton");
+        var group = findChild(window, "shareExportActions");
+        var feedback = findChild(window, "shareFeedbackLabel");
+        verify(image !== null && statistics !== null && save !== null && close !== null);
+        verify(group !== null && feedback !== null);
+        verify(image.highlighted);
+        verify(!statistics.highlighted && !save.highlighted && !close.highlighted);
+        if (data.large) {
+            image.text = "Copy the complete usage image to the clipboard";
+            statistics.text = "Copy the complete aggregate usage statistics";
+            save.text = "Save the complete usage image as a PNG file";
+            for (var button of [image, statistics, save, close])
+                button.font = Qt.font({family: button.font.family, pixelSize: 28});
+        }
+        wait(50);
+        for (var button of [image, statistics, save, close]) {
+            var point = button.mapToItem(window.footer, 0, 0);
+            verify(point.x >= -0.5 && point.y >= -0.5);
+            verify(point.x + button.width <= window.footer.width + 0.5,
+                "Export action exceeds footer width");
+            verify(point.y + button.height <= window.footer.height + 0.5);
+        }
+        if (!data.large) {
+            var groupEdge = group.mapToItem(window.footer, data.rtl ? 0 : group.width, 0).x;
+            var closeEdge = close.mapToItem(window.footer, data.rtl ? close.width : 0, 0).x;
+            verify(data.rtl ? closeEdge < groupEdge : groupEdge < closeEdge,
+                "Close must be separate from the export actions");
+        }
+        var footerHeight = window.footer.height;
+        var viewportHeight = window.contentItem.height;
+        verify(feedback.Accessible.ignored);
+        window.feedback = "Copied";
+        wait(50);
+        fuzzyCompare(window.footer.height, footerHeight, 0.5);
+        fuzzyCompare(window.contentItem.height, viewportHeight, 0.5);
+        verify(!feedback.Accessible.ignored);
+        window.feedback = "";
+        wait(50);
+        fuzzyCompare(window.footer.height, footerHeight, 0.5);
+        window.feedback = Array(15).join("A long export failure with recovery guidance. ");
+        wait(50);
+        verify(feedback.lineCount > 1, "Long feedback must wrap");
+        window.close();
+    }
+    function test_footerKeyboardOrderAndCopy() {
+        var window = createWindow();
+        window.requestActivate();
+        var image = findChild(window, "shareCopyImageButton");
+        var statistics = findChild(window, "shareCopyStatisticsButton");
+        var save = findChild(window, "shareSaveImageButton");
+        var close = findChild(window, "shareCloseButton");
+        image.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Tab);
+        tryCompare(statistics, "activeFocus", true);
+        keyClick(Qt.Key_Space);
+        compare(clipboard.content, window.statisticsText);
+        compare(window.feedback, "Copied");
+        keyClick(Qt.Key_Tab);
+        tryCompare(save, "activeFocus", true);
+        keyClick(Qt.Key_Tab);
+        tryCompare(close, "activeFocus", true);
+        keyClick(Qt.Key_Space);
+        tryCompare(window, "visible", false);
+    }
     function test_closeRetiresCapture() {
         var window = createWindow();
         window.captureImage(false);

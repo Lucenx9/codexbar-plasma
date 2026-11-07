@@ -194,39 +194,107 @@ Controls.ApplicationWindow {
     footer: Controls.ToolBar {
         padding: Kirigami.Units.largeSpacing
         contentItem: ColumnLayout {
+            spacing: Kirigami.Units.smallSpacing
+
+            FontMetrics {
+                id: feedbackMetrics
+                font: feedbackLabel.font
+            }
+
             PlainPlasmaLabel {
+                id: feedbackLabel
+                objectName: "shareFeedbackLabel"
+
                 text: window.feedback
-                visible: text.length > 0
+                opacity: text.length > 0 ? 1 : 0
                 wrapMode: Text.Wrap
                 Layout.fillWidth: true
+                Layout.minimumHeight: Math.ceil(feedbackMetrics.height)
                 Accessible.role: Accessible.AlertMessage
+                Accessible.ignored: text.length === 0
             }
-            Flow {
+
+            GridLayout {
+                id: actionGroups
+
                 Layout.fillWidth: true
-                spacing: Kirigami.Units.smallSpacing
-                Controls.Button {
-                    text: i18n("Copy image")
-                    icon.name: "edit-copy"
-                    enabled: !window.capturing && !saveDialog.visible
-                    onClicked: window.captureImage(false)
-                }
-                Controls.Button {
-                    objectName: "shareCopyStatisticsButton"
-                    enabled: !window.capturing && !saveDialog.visible
-                    text: i18n("Copy statistics")
-                    icon.name: "edit-copy"
-                    onClicked: {
-                        clipboard.content = window.statisticsText;
-                        window.feedback = i18n("Copied");
+                columns: width >= Math.max(copyImageButton.implicitWidth,
+                    copyStatisticsButton.implicitWidth, saveImageButton.implicitWidth)
+                    + closeButton.implicitWidth + columnSpacing ? 2 : 1
+                columnSpacing: Kirigami.Units.largeSpacing
+                rowSpacing: Kirigami.Units.smallSpacing
+
+                Flow {
+                    id: exportActions
+                    objectName: "shareExportActions"
+
+                    Layout.fillWidth: true
+                    Layout.minimumWidth: 0
+                    Layout.preferredWidth: 1
+                    spacing: Kirigami.Units.smallSpacing
+
+                    Controls.Button {
+                        id: copyImageButton
+                        objectName: "shareCopyImageButton"
+
+                        width: Math.min(implicitWidth, exportActions.width)
+                        text: i18n("Copy image")
+                        font.weight: Font.DemiBold
+                        icon.name: "edit-copy"
+                        highlighted: true
+                        enabled: !window.capturing && !saveDialog.visible
+                        onClicked: window.captureImage(false)
+
+                        PlainToolTip {
+                            visible: window.visible && copyImageButton.width < copyImageButton.implicitWidth
+                                && (copyImageButton.hovered || copyImageButton.visualFocus)
+                            plainText: copyImageButton.text
+                        }
+                    }
+
+                    Controls.Button {
+                        id: copyStatisticsButton
+                        objectName: "shareCopyStatisticsButton"
+
+                        width: Math.min(implicitWidth, exportActions.width)
+                        enabled: !window.capturing && !saveDialog.visible
+                        text: i18n("Copy statistics")
+                        icon.name: "edit-copy"
+                        onClicked: {
+                            clipboard.content = window.statisticsText;
+                            window.feedback = i18n("Copied");
+                        }
+
+                        PlainToolTip {
+                            visible: window.visible && copyStatisticsButton.width < copyStatisticsButton.implicitWidth
+                                && (copyStatisticsButton.hovered || copyStatisticsButton.visualFocus)
+                            plainText: copyStatisticsButton.text
+                        }
+                    }
+
+                    Controls.Button {
+                        id: saveImageButton
+                        objectName: "shareSaveImageButton"
+
+                        width: Math.min(implicitWidth, exportActions.width)
+                        text: i18n("Save PNG…")
+                        icon.name: "document-save-as"
+                        enabled: !window.capturing && !saveDialog.visible
+                        onClicked: window.captureImage(true)
+
+                        PlainToolTip {
+                            visible: window.visible && saveImageButton.width < saveImageButton.implicitWidth
+                                && (saveImageButton.hovered || saveImageButton.visualFocus)
+                            plainText: saveImageButton.text
+                        }
                     }
                 }
+
                 Controls.Button {
-                    text: i18n("Save PNG…")
-                    icon.name: "document-save-as"
-                    enabled: !window.capturing && !saveDialog.visible
-                    onClicked: window.captureImage(true)
-                }
-                Controls.Button {
+                    id: closeButton
+                    objectName: "shareCloseButton"
+
+                    Layout.alignment: (mirrored ? Qt.AlignLeft : Qt.AlignRight) | Qt.AlignBottom
                     text: i18n("Close")
                     icon.name: "window-close"
                     onClicked: window.close()

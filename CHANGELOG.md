@@ -23,6 +23,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Clarify the usage-sharing window's actions: emphasize Copy image, group
+  export commands separately from Close, and keep short copy/save feedback
+  from resizing the preview. Long labels adapt to narrow windows.
+
 - Match the height of the Usage & Spend range selector to its metric switch,
   announce its selected range to screen readers, and use tabular digits for
   project cost and token amounts.
