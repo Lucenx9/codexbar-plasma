@@ -797,7 +797,9 @@ short feedback and keyboard navigation. `share-usage` and `share-usage-narrow` s
 capture both the card and the complete sharing window inside Plasma with
 synthetic data. The additional `share-usage-window.png` and
 `share-usage-narrow-window.png` captures include the footer; the isolated fixture
-paints the same native background that item captures otherwise omit. These checks do not establish
+paints the same native background that item captures otherwise omit. It parents
+the content and footer inside that QML-owned background because native window
+roots lack a QML engine on some supported Qt versions. These checks do not establish
 clipboard interoperability with every Wayland application or portal backend.
 
 ## Behavioral contracts to preserve

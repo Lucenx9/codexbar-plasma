@@ -92,12 +92,20 @@ def stage_applet(work, scenario, image_path, theme=None):
     package.mkdir(parents=True)
     shutil.copytree(ROOT / "contents", package / "contents")
     if scenario.startswith("share-usage"):
-        # Item captures omit QQuickWindow's clear color. Paint the identical
-        # native surface in the fixture so the full-window PNG is opaque.
+        # Native window roots lack a QML engine on some supported Qt versions.
+        # Capture a QML-owned background containing the unchanged content/footer.
         share_path = package / "contents/ui/components/ShareUsageWindow.qml"
         share_source = share_path.read_text()
         share_path.write_text(share_source.replace(
-            "id: window\n", "id: window\n    background: Rectangle { color: window.color }\n", 1))
+            "id: window\n", """id: window
+    background: Rectangle {
+        color: window.color
+        Component.onCompleted: {
+            window.contentItem.parent = this;
+            window.footer.parent = this;
+        }
+    }
+""", 1))
     metadata = json.loads((ROOT / "metadata.json").read_text())
     metadata["KPlugin"].update(Id=APPLET_ID, Name="CodexBar smoke test")
     (package / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")

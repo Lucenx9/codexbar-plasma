@@ -2572,7 +2572,7 @@ Item {
     }
 
     function captureShareWindow(card) {
-        var surface = capture.applet.shareUsageWindow.contentItem.parent;
+        var surface = capture.applet.shareUsageWindow.background;
         var accepted = surface.grabToImage(function (result) {
             if (!result.saveToFile(capture.imagePath.replace(/\.png$/, "-window.png"))) {
                 console.error("SMOKE_FAILED: could not save share window screenshot");
