@@ -3160,16 +3160,62 @@ msgid "Show provider details and charts"
 msgstr ""
 
 #: contents/ui/configPopup.qml
-msgid "Show text labels in the tab bar"
-msgstr ""
-
-#: contents/ui/configPopup.qml
 msgid "Show provider changelog links"
 msgstr ""
 
 #: contents/ui/configPopup.qml
+msgid "Show text labels in the tab bar"
+msgstr ""
+
+#: contents/ui/configPopup.qml
+msgid "Provider order:"
+msgstr ""
+
+#: contents/ui/configPopup.qml
+msgid "Overview providers:"
+msgstr ""
+
+#: contents/ui/configPopup.qml
+msgid "No enabled providers available for Overview."
+msgstr ""
+
+#: contents/ui/configPopup.qml
+msgid "Automatic: first %1 providers"
+msgstr ""
+
+#: contents/ui/configPopup.qml
+msgid "Choose providers"
+msgstr ""
+
+#: contents/ui/configPopup.qml
+msgid "Follows the provider order above."
+msgstr ""
+
+#: contents/ui/configPopup.qml
+msgid "Choose up to %1 provider"
+msgid_plural "Choose up to %1 providers"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/configPopup.qml
 msgid "Hidden items"
 msgstr ""
+
+#: contents/ui/configPopup.qml
+msgid "%1, %2"
+msgstr ""
+
+#: contents/ui/configPopup.qml
+msgid "%1 section"
+msgid_plural "%1 sections"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/configPopup.qml
+msgid "%1 usage row"
+msgid_plural "%1 usage rows"
+msgstr[0] ""
+msgstr[1] ""
 
 #: contents/ui/configPopup.qml
 msgid "Hidden detail sections:"
@@ -3204,32 +3250,6 @@ msgstr ""
 #: contents/ui/configPopup.qml
 msgid "Hidden rows stay out of the popup's provider tabs only."
 msgstr ""
-
-#: contents/ui/configPopup.qml
-msgid "Provider order:"
-msgstr ""
-
-#: contents/ui/configPopup.qml
-msgid "Overview providers:"
-msgstr ""
-
-#: contents/ui/configPopup.qml
-msgid "No enabled providers available for Overview."
-msgstr ""
-
-#: contents/ui/configPopup.qml
-msgid "First %1 providers automatically"
-msgstr ""
-
-#: contents/ui/configPopup.qml
-msgid "Choose providers"
-msgstr ""
-
-#: contents/ui/configPopup.qml
-msgid "Choose up to %1 provider"
-msgid_plural "Choose up to %1 providers"
-msgstr[0] ""
-msgstr[1] ""
 
 #: contents/ui/configProviders.qml
 #: contents/ui/controllers/ProviderRosterController.qml

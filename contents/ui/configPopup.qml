@@ -272,13 +272,6 @@ KCM.SimpleKCM {
         }
 
         Controls.CheckBox {
-            id: showPopupTabLabelsCheck
-            implicitWidth: 0
-            Layout.fillWidth: true
-            text: i18n("Show text labels in the tab bar")
-        }
-
-        Controls.CheckBox {
             id: showProviderChangelogsCheck
             implicitWidth: 0
             Layout.fillWidth: true
@@ -286,127 +279,15 @@ KCM.SimpleKCM {
         }
 
         Kirigami.Separator {
-            Kirigami.FormData.label: i18n("Hidden items")
-            Kirigami.FormData.isSection: true
-        }
-
-        ColumnLayout {
-            objectName: "hiddenDetailSectionsSettings"
-            Kirigami.FormData.label: i18n("Hidden detail sections:")
-            Kirigami.FormData.labelAlignment: Qt.AlignTop
-            Layout.fillWidth: true
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            spacing: Kirigami.Units.smallSpacing
-
-            Components.PlainControlsLabel {
-                Layout.fillWidth: true
-                text: page.hiddenDetailProviders.length === 0
-                    ? i18n("None. Hide a titled section with its button in the popup.")
-                    : i18n("Restore individual sections in the popup, or all sections for a provider here.")
-                font: Kirigami.Theme.smallFont
-                opacity: 0.7
-                wrapMode: Text.WordWrap
-            }
-
-            Repeater {
-                model: page.hiddenDetailProviders
-                delegate: RowLayout {
-                    required property var modelData
-                    Layout.fillWidth: true
-                    Layout.maximumWidth: Kirigami.Units.gridUnit * 18
-                    spacing: Kirigami.Units.smallSpacing
-
-                    Kirigami.Icon {
-                        source: page.providerIconSource(modelData)
-                        fallback: "view-statistics"
-                        isMask: true
-                        color: Kirigami.Theme.textColor
-                        Layout.preferredWidth: Kirigami.Units.iconSizes.small
-                        Layout.preferredHeight: Kirigami.Units.iconSizes.small
-                    }
-
-                    Components.PlainControlsLabel {
-                        text: page.hiddenRowProviderTitle(modelData)
-                        Layout.fillWidth: true
-                        elide: Text.ElideRight
-                    }
-
-                    Components.PlainButton {
-                        objectName: "restoreProviderDetailSectionsButton"
-                        flat: true
-                        plainText: i18n("Restore all")
-                        icon.name: "view-visible"
-                        Accessible.name: i18n("Restore all sections for %1", page.hiddenRowProviderTitle(modelData))
-                        onClicked: page.restoreProviderDetailSections(modelData)
-                    }
-                }
-            }
-        }
-
-        ColumnLayout {
-            id: hiddenUsageRowsSection
-            objectName: "hiddenUsageRowsSection"
-
-            Kirigami.FormData.label: i18n("Hidden usage rows:")
-            Kirigami.FormData.labelAlignment: Qt.AlignTop
-            Layout.fillWidth: true
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            spacing: Kirigami.Units.smallSpacing
-
-            Components.PlainControlsLabel {
-                Layout.fillWidth: true
-                text: page.hiddenUsageRows.length === 0
-                    ? i18n("None. Hide a usage row with its button in the popup.")
-                    : i18n("Hidden rows stay out of the popup's provider tabs only.")
-                font: Kirigami.Theme.smallFont
-                opacity: 0.7
-                wrapMode: Text.WordWrap
-            }
-
-            Repeater {
-                model: page.hiddenUsageRows
-
-                delegate: RowLayout {
-                    required property var modelData
-                    readonly property string rowText: i18n("%1: %2",
-                        page.hiddenRowProviderTitle(modelData.provider), page.hiddenRowLabel(modelData))
-
-                    Layout.fillWidth: true
-                    Layout.maximumWidth: Kirigami.Units.gridUnit * 18
-                    spacing: Kirigami.Units.smallSpacing
-
-                    Kirigami.Icon {
-                        source: page.providerIconSource(modelData.provider)
-                        fallback: "view-statistics"
-                        isMask: true
-                        color: Kirigami.Theme.textColor
-                        Layout.preferredWidth: Kirigami.Units.iconSizes.small
-                        Layout.preferredHeight: Kirigami.Units.iconSizes.small
-                    }
-
-                    Components.PlainControlsLabel {
-                        text: rowText
-                        Layout.fillWidth: true
-                        elide: Text.ElideRight
-                    }
-
-                    Components.PlainButton {
-                        objectName: "restoreHiddenUsageRowButton"
-                        flat: true
-                        plainText: i18n("Restore")
-                        icon.name: "view-visible"
-                        Accessible.name: i18n("Restore %1", rowText)
-                        onClicked: page.restoreHiddenUsageRow(modelData)
-                    }
-                }
-            }
-        }
-
-        Kirigami.Separator {
             Kirigami.FormData.label: i18n("Providers")
             Kirigami.FormData.isSection: true
+        }
+
+        Controls.CheckBox {
+            id: showPopupTabLabelsCheck
+            implicitWidth: 0
+            Layout.fillWidth: true
+            text: i18n("Show text labels in the tab bar")
         }
 
         ColumnLayout {
@@ -552,7 +433,7 @@ KCM.SimpleKCM {
                 objectName: "overviewAutomaticRadio"
                 implicitWidth: 0
                 Layout.fillWidth: true
-                text: i18n("First %1 providers automatically", page.maxOverviewProviders)
+                text: i18n("Automatic: first %1 providers", page.maxOverviewProviders)
                 checked: !OverviewProviders.selectionActive(page.cfg_overviewProviderIDs)
                 onClicked: page.resetOverviewProvidersToAutomatic()
             }
@@ -566,10 +447,23 @@ KCM.SimpleKCM {
                 onClicked: page.cfg_overviewProviderIDs = OverviewProviders.selectionText(page.resolvedOverviewProviderIDs())
             }
 
+            Components.PlainControlsLabel {
+                objectName: "overviewAutomaticHint"
+                Layout.fillWidth: true
+                visible: !OverviewProviders.selectionActive(page.cfg_overviewProviderIDs)
+                text: i18n("Follows the provider order above.")
+                font: Kirigami.Theme.smallFont
+                opacity: 0.7
+                leftPadding: page.mirrored ? 0 : overviewAutomaticRadio.indicator.width + overviewAutomaticRadio.spacing
+                rightPadding: page.mirrored ? overviewAutomaticRadio.indicator.width + overviewAutomaticRadio.spacing : 0
+                wrapMode: Text.WordWrap
+            }
+
             // The cap applies to the custom list, so it introduces those boxes.
             Components.PlainControlsLabel {
                 Layout.fillWidth: true
                 Layout.leftMargin: Kirigami.Units.gridUnit
+                visible: OverviewProviders.selectionActive(page.cfg_overviewProviderIDs)
                 text: i18np("Choose up to %1 provider", "Choose up to %1 providers", page.maxOverviewProviders)
                 font: Kirigami.Theme.smallFont
                 opacity: 0.7
@@ -584,6 +478,7 @@ KCM.SimpleKCM {
                     Layout.fillWidth: true
                     required property var modelData
 
+                    visible: OverviewProviders.selectionActive(page.cfg_overviewProviderIDs)
                     readonly property bool selected: page.overviewProviderSelected(modelData.provider)
 
                     text: SafeText.plainTextAsRichText(modelData.displayName)
@@ -598,6 +493,162 @@ KCM.SimpleKCM {
                         // Clicking severs the binding on `checked`; restore it so the box reflects the
                         // actual selection (e.g. when a click is rejected by the max-providers cap).
                         checked = Qt.binding(function() { return selected })
+                    }
+                }
+            }
+        }
+
+        Kirigami.Separator {
+            Kirigami.FormData.label: i18n("Hidden items")
+            Kirigami.FormData.isSection: true
+        }
+
+        Components.DisclosureButton {
+            id: hiddenItemsDisclosure
+            objectName: "hiddenItemsDisclosure"
+            Layout.alignment: page.mirrored ? Qt.AlignRight : Qt.AlignLeft
+            plainText: i18n("%1, %2",
+                i18np("%1 section", "%1 sections", page.hiddenDetailSections.length),
+                i18np("%1 usage row", "%1 usage rows", page.hiddenUsageRows.length))
+            Accessible.description: i18n("Hidden items")
+            onClicked: {
+                forceActiveFocus(visualFocus ? Qt.TabFocusReason : Qt.MouseFocusReason)
+                expanded = !expanded
+            }
+        }
+
+        Kirigami.FormLayout {
+            visible: hiddenItemsDisclosure.expanded
+            wideMode: false
+            Layout.fillWidth: true
+            Layout.maximumWidth: visible ? Kirigami.Units.gridUnit * 24 : 0
+
+            Item {
+                objectName: "hiddenDetailSectionsSettings"
+                Kirigami.FormData.label: i18n("Hidden detail sections:")
+                Kirigami.FormData.labelAlignment: Qt.AlignTop
+                Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+                Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                // Isolate FormLayout's size queries while restore delegates rebuild.
+                implicitWidth: hiddenDetailSectionsLayout.implicitWidth
+                implicitHeight: hiddenDetailSectionsLayout.implicitHeight
+
+                ColumnLayout {
+                    id: hiddenDetailSectionsLayout
+                    width: parent.width
+                    spacing: Kirigami.Units.smallSpacing
+
+                    Components.PlainControlsLabel {
+                        Layout.fillWidth: true
+                        text: page.hiddenDetailProviders.length === 0
+                            ? i18n("None. Hide a titled section with its button in the popup.")
+                            : i18n("Restore individual sections in the popup, or all sections for a provider here.")
+                        font: Kirigami.Theme.smallFont
+                        opacity: 0.7
+                        wrapMode: Text.WordWrap
+                    }
+
+                    Repeater {
+                        model: page.hiddenDetailProviders
+                        delegate: RowLayout {
+                            required property var modelData
+                            Layout.fillWidth: true
+                            Layout.maximumWidth: Kirigami.Units.gridUnit * 18
+                            spacing: Kirigami.Units.smallSpacing
+
+                            Kirigami.Icon {
+                                source: page.providerIconSource(modelData)
+                                fallback: "view-statistics"
+                                isMask: true
+                                color: Kirigami.Theme.textColor
+                                Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                                Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                            }
+
+                            Components.PlainControlsLabel {
+                                text: page.hiddenRowProviderTitle(modelData)
+                                Layout.fillWidth: true
+                                elide: Text.ElideRight
+                            }
+
+                            Components.PlainButton {
+                                objectName: "restoreProviderDetailSectionsButton"
+                                flat: true
+                                plainText: i18n("Restore all")
+                                icon.name: "view-visible"
+                                Accessible.name: i18n("Restore all sections for %1", page.hiddenRowProviderTitle(modelData))
+                                onClicked: page.restoreProviderDetailSections(modelData)
+                            }
+                        }
+                    }
+                }
+            }
+
+            Item {
+                id: hiddenUsageRowsSection
+                objectName: "hiddenUsageRowsSection"
+
+                Kirigami.FormData.label: i18n("Hidden usage rows:")
+                Kirigami.FormData.labelAlignment: Qt.AlignTop
+                Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+                Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                // Isolate FormLayout's size queries while restore delegates rebuild.
+                implicitWidth: hiddenUsageRowsLayout.implicitWidth
+                implicitHeight: hiddenUsageRowsLayout.implicitHeight
+
+                ColumnLayout {
+                    id: hiddenUsageRowsLayout
+                    width: parent.width
+                    spacing: Kirigami.Units.smallSpacing
+
+                    Components.PlainControlsLabel {
+                        Layout.fillWidth: true
+                        text: page.hiddenUsageRows.length === 0
+                            ? i18n("None. Hide a usage row with its button in the popup.")
+                            : i18n("Hidden rows stay out of the popup's provider tabs only.")
+                        font: Kirigami.Theme.smallFont
+                        opacity: 0.7
+                        wrapMode: Text.WordWrap
+                    }
+
+                    Repeater {
+                        model: page.hiddenUsageRows
+
+                        delegate: RowLayout {
+                            required property var modelData
+                            readonly property string rowText: i18n("%1: %2",
+                                page.hiddenRowProviderTitle(modelData.provider), page.hiddenRowLabel(modelData))
+
+                            Layout.fillWidth: true
+                            Layout.maximumWidth: Kirigami.Units.gridUnit * 18
+                            spacing: Kirigami.Units.smallSpacing
+
+                            Kirigami.Icon {
+                                source: page.providerIconSource(modelData.provider)
+                                fallback: "view-statistics"
+                                isMask: true
+                                color: Kirigami.Theme.textColor
+                                Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                                Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                            }
+
+                            Components.PlainControlsLabel {
+                                text: rowText
+                                Layout.fillWidth: true
+                                elide: Text.ElideRight
+                            }
+
+                            Components.PlainButton {
+                                objectName: "restoreHiddenUsageRowButton"
+                                flat: true
+                                plainText: i18n("Restore")
+                                icon.name: "view-visible"
+                                Accessible.name: i18n("Restore %1", rowText)
+                                onClicked: page.restoreHiddenUsageRow(modelData)
+                            }
+                        }
                     }
                 }
             }

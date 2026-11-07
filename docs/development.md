@@ -1624,6 +1624,15 @@ python3 scripts/smoke_popup.py --scenario readme-overview --renderer opengl --ou
 python3 scripts/smoke_popup.py --scenario settings-providers --renderer opengl --theme dark --language it
 ```
 
+`settings-popup` and `settings-popup-narrow` verify the initially collapsed
+hidden-item restore controls and that opening, restoring, and closing them keep
+changes pending until Apply. Their captures show the resting collapsed state.
+`tst_overview_settings.qml` covers keyboard disclosure, live singular/plural
+counts, and the manual-only Overview checklist. Restore lists use plain Item
+boundaries so FormLayout cannot query rebuilding delegates' attached size hints;
+the keyboard restore checks also guard the Qt 6.11 layout crash reproduced
+without these boundaries.
+
 `--theme light` or `--theme dark` applies the Breeze color scheme to the
 selected scenarios, except the README and `share-usage` captures, which always
 use Breeze Dark. `--language` runs the selected

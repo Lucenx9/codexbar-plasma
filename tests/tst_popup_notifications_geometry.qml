@@ -272,11 +272,24 @@ TestCase {
             return;
         waitForRosterSettled(page);
         compare(page.hiddenDetailProviders, ["codex", "claude"]);
+        var disclosure = findChild(page, "hiddenItemsDisclosure");
+        verify(!disclosure.expanded);
+        compare(disclosure.plainText, "2 sections, 0 usage rows");
+        disclosure.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Space);
+        verify(disclosure.expanded);
         var button = findChild(page, "restoreProviderDetailSectionsButton");
         verify(button !== null);
-        button.clicked();
+        verify(button.visible);
+        button.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Space);
         compare(page.hiddenDetailProviders, ["claude"]);
+        compare(disclosure.plainText, "1 section, 0 usage rows");
         compare(Sections.parse(page.cfg_popupHiddenDetailSections), [{provider: "claude", section: key}]);
+        disclosure.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Space);
+        verify(!disclosure.expanded);
+        compare(page.hiddenDetailProviders, ["claude"]);
         page.restoreProviderDetailSections("claude");
         compare(page.cfg_popupHiddenDetailSections, "");
     }
@@ -292,6 +305,32 @@ TestCase {
                 rtl: true
             }
         ];
+    }
+
+    function test_hiddenItemsExpansionKeepsHorizontalAlignment_data() {
+        return [{tag: "ltr", rtl: false}, {tag: "rtl", rtl: true}];
+    }
+
+    function test_hiddenItemsExpansionKeepsHorizontalAlignment(data) {
+        width = 600;
+        height = 700;
+        mirroredPage = data.rtl;
+        var page = createPage("../contents/ui/configPopup.qml", {cfg_commandPath: "true"});
+        if (!page) return;
+        waitForRosterSettled(page);
+        var disclosure = findChild(page, "hiddenItemsDisclosure");
+        var pace = findChild(page, "showPopupPaceCheck");
+        waitForRendering(page);
+        var initialX = pace.mapToItem(page, 0, 0).x;
+        disclosure.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Space);
+        verify(disclosure.expanded);
+        waitForRendering(page);
+        compare(pace.mapToItem(page, 0, 0).x, initialX);
+        keyClick(Qt.Key_Space);
+        verify(!disclosure.expanded);
+        waitForRendering(page);
+        compare(pace.mapToItem(page, 0, 0).x, initialX);
     }
 
     function test_popupOpeningKeepsViewportStill(data) {

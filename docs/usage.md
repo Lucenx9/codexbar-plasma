@@ -349,9 +349,12 @@ work and upstream contract requirements.
   session count recreates the cards. Ages use the current clock after each scan.
 - Overview providers can be limited to a chosen set of up to 3 providers, or
   left automatic (the first 3 eligible providers). **Popup → Overview providers**
-  makes this choice explicit: **First 3 providers automatically** follows the
+  makes this choice explicit: **Automatic: first 3 providers** follows the
   order, while **Choose providers** enables the individual checkboxes. Switching
-  to manual selection starts from the currently selected providers. The checkboxes recognize
+  to manual selection starts from the currently selected providers. The provider
+  checklist and its limit appear only in manual mode; automatic mode explains
+  that it follows the provider order above. The tab-label switch sits with these
+  navigation preferences. The checkboxes recognize
   provider aliases and mixed-case IDs, like the panel provider selection.
   Disabled providers keep their saved selection without occupying one of the
   three slots. If more than three selected providers become available again,
@@ -396,8 +399,9 @@ work and upstream contract requirements.
   Overview summary still use them. Expand **Hidden usage rows** below the
   provider's usage bars and select **Restore** beside a row to show it again
   immediately, including when every bar is hidden. The list includes only
-  rows currently returned for that provider. **Settings → Popup → Hidden usage
-  rows** can also restore saved rows by provider and row name, or extra window
+  rows currently returned for that provider. Expand **Settings → Popup → Hidden
+  items** at the bottom of the page to reach **Hidden usage rows** and restore
+  saved rows by provider and row name, or extra window
   ID; **Apply** saves a settings-page restore. Restored quotas keep extra window
   IDs, so a hidden extra window stays hidden after a restart.
   Up to 64 rows can be saved as hidden. At that limit the hide button disappears;
@@ -410,7 +414,7 @@ work and upstream contract requirements.
   their title on hover or keyboard focus. Expand **Hidden detail sections** in
   that provider's popup to restore one using its current CLI title. The list
   starts collapsed for each provider and collapses again once nothing is hidden. **Popup →
-  Hidden detail sections → Restore all** restores all sections for a provider
+  Hidden items → Hidden detail sections → Restore all** restores all sections for a provider
   when you apply settings, including sections no longer returned by the CLI.
   Only provider IDs and title digests are saved, never the titles themselves.
   Up to 64 section choices are retained, including for long provider IDs that
@@ -422,6 +426,10 @@ work and upstream contract requirements.
   Rows and sections hidden or restored in the popup while settings are open
   stay as chosen when you apply settings; the settings pages keep only their
   own pending restores.
+
+  **Hidden items** in settings starts collapsed and reports the saved section
+  and usage-row counts, including zero. Expanding or collapsing it keeps pending
+  restores unchanged; **Apply** or **OK** saves them and **Cancel** discards them.
 
 ## Data freshness
 
