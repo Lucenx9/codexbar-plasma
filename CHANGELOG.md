@@ -73,6 +73,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Keep quota-marker tooltips reachable just outside thin meter tracks. The
   meter's paint clipping no longer cuts off its hover margin.
 
+- Refine popup provider tabs: quota gauges use a slimmer, faint provider-tinted
+  track instead of a bright gray bar, keep a clear gap beside the centered icon
+  in icon-only tabs, and dim together with the icon on unselected tabs, including
+  empty gauges. Icon-only tabs widen with small fonts so the gauge stays inside.
+
 ## 0.2.54 - 2026-11-05
 
 ### Changed

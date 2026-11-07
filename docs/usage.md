@@ -73,9 +73,10 @@ work and upstream contract requirements.
   without a new setting or additional CLI calls.
 - Provider tabs with usage bars, reset windows, account identity, status, and
   credits. The tab surface marks the selected view; a provider tab's compact
-  vertical gauge shows its automatic quota independently of selection. Its visible
-  track establishes the scale; small nonzero readings stay proportional and
-  measured zero leaves the track empty.
+  vertical gauge shows its automatic quota independently of selection. Its faint,
+  outlined track establishes the scale; small nonzero readings stay proportional and
+  measured zero leaves the track empty. Icon-only tabs keep the provider icon
+  centered with the gauge beside it, and unselected tabs dim icon and gauge together.
   The provider header and tab navigation stay visible while account choices,
   incident notices, errors, and usage details scroll below them. Switching
   provider or account starts the details at the top; refreshing the same account

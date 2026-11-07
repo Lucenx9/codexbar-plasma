@@ -280,6 +280,12 @@ Item {
                     readonly property color foreground: selected
                         ? Kirigami.Theme.textColor
                         : applet.withAlpha(Kirigami.Theme.textColor, 0.72)
+                    // Icon and gauge dim together on unselected tabs so each
+                    // tab reads as one unit and keeps its provider hue.
+                    readonly property real identityOpacity: selected ? 1.0 : 0.72
+                    readonly property color identityColor: applet.withAlpha(accent, identityOpacity)
+                    readonly property real gaugeWidth: Math.max(5, Math.round(Kirigami.Units.gridUnit * 0.28))
+                    readonly property real gaugeGap: Math.round(Kirigami.Units.smallSpacing * 0.75)
 
                     function activate() {
                         fullRoot.closeAiInsights(false, false)
@@ -298,7 +304,12 @@ Item {
                             Kirigami.Units.gridUnit * 7,
                             Math.max(Kirigami.Units.gridUnit * 4.2,
                                 Math.ceil(providerTabLabelSizing.implicitWidth) + Kirigami.Units.gridUnit * 2.2))
-                        : providerTabsBar.tabHeight
+                        // Small fonts shrink the strip but not the icon, so
+                        // widen the tab until the gauge beside the centered
+                        // icon still fits inside it.
+                        : Math.max(providerTabsBar.tabHeight,
+                            Kirigami.Units.iconSizes.small
+                                + 2 * (gaugeGap + gaugeWidth + Kirigami.Units.smallSpacing / 2))
                     Layout.preferredHeight: providerTabsBar.tabHeight
                     radius: applet.roundedSurfaceRadius
                     color: providerTabMouse.pressed
@@ -416,10 +427,7 @@ Item {
                             source: applet.providerIconSource(modelData.provider)
                             fallback: "view-statistics"
                             isMask: applet.providerIconIsMask(modelData.provider)
-                            // Unselected tabs dim but keep their hue, so the
-                            // provider stays recognizable while selection
-                            // reads the same way as on the global tabs.
-                            color: providerTab.selected ? providerTab.accent : applet.withAlpha(providerTab.accent, 0.6)
+                            color: providerTab.identityColor
                             Layout.preferredWidth: Kirigami.Units.iconSizes.small
                             Layout.preferredHeight: Kirigami.Units.iconSizes.small
                         }
@@ -447,13 +455,26 @@ Item {
                         id: providerTabQuotaGauge
                         objectName: "providerTabQuotaGauge"
                         visible: providerTab.meter >= 0
+                        // Icon-only tabs keep the icon centered and hang the
+                        // gauge a small gap beside it.
+                        // Anchors mirror with the layout in RTL locales.
                         anchors.right: parent.right
-                        anchors.rightMargin: Kirigami.Units.smallSpacing
+                        anchors.rightMargin: applet.showPopupTabLabels
+                            ? Kirigami.Units.smallSpacing
+                            : Math.round((parent.width - Kirigami.Units.iconSizes.small) / 2
+                                - providerTab.gaugeGap - width)
                         anchors.verticalCenter: parent.verticalCenter
-                        width: Math.round(Kirigami.Units.gridUnit * 0.33)
+                        width: providerTab.gaugeWidth
                         height: Kirigami.Units.iconSizes.small
                         radius: width / 2
-                        color: applet.withAlpha(Kirigami.Theme.textColor, 0.55)
+                        // A faint provider-tinted track with a hairline outline,
+                        // matching the panel quota tracks, so the gauge stays
+                        // legible at zero without outweighing the icon.
+                        // withAlpha replaces alpha, so scale by the tab's
+                        // identity opacity for an empty gauge to dim as well.
+                        color: applet.withAlpha(providerTab.accent, 0.12 * providerTab.identityOpacity)
+                        border.width: 1
+                        border.color: applet.withAlpha(providerTab.accent, 0.5 * providerTab.identityOpacity)
                         clip: true
                         Accessible.ignored: true
 
@@ -464,7 +485,7 @@ Item {
                             height: providerTab.meter <= 0 ? 0 : Math.max(1,
                                 Math.round(parent.height * Math.max(0, Math.min(100, providerTab.meter)) / 100))
                             radius: parent.radius
-                            color: providerTab.accent
+                            color: providerTab.identityColor
                         }
                     }
                 }
