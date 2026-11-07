@@ -230,12 +230,13 @@ work and upstream contract requirements.
   gauge is visible. Expanded rows keep their full native hover and
   focus outlines visible inside the scrollable popup.
 - Overview and provider quota percentages use the same slightly larger type
-  size and align with the end of their meters. Quota percentages, cost summaries,
+  size and align with the end of their meters. Quota names, inline resets and
+  percentages share a text baseline. Quota percentages, cost summaries,
   provider totals and chart readout values request tabular digits from the theme
   font, keeping equal-length numbers stable when supported by that font.
   A thin separator distinguishes an inline reset from its quota name.
-  Overview keeps more space between provider cards and between each identity
-  header and its first quota.
+  Overview keeps more space between provider cards, with a compact gap between
+  each identity header and its first quota.
   Without a pace forecast or summary, a reset appears beside its quota title
   when the full text, percentage and reserved hide action fit with a safety
   margin. Otherwise it stays below the meter. Small changes in the countdown

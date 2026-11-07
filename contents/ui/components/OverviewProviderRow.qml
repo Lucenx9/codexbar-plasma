@@ -178,7 +178,7 @@ Rectangle {
                     || overviewMeterReset.truncated
 
                 Layout.fillWidth: true
-                Layout.topMargin: index === 0 ? Kirigami.Units.largeSpacing : Kirigami.Units.smallSpacing / 2
+                Layout.topMargin: index === 0 ? Kirigami.Units.smallSpacing : Kirigami.Units.smallSpacing / 2
                 spacing: Kirigami.Units.smallSpacing / 2
 
                 Item {
@@ -199,7 +199,7 @@ Rectangle {
                         font.weight: Font.DemiBold
                         opacity: overviewRow.applet.valueTextOpacity
                         anchors.left: parent.left
-                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.baseline: overviewMeterPercent.baseline
                         width: Math.min(implicitWidth, Math.max(0,
                             parent.width - overviewMeterPercent.width - Kirigami.Units.smallSpacing))
                         elide: Text.ElideRight
@@ -227,7 +227,7 @@ Rectangle {
                         opacity: overviewRow.applet.secondaryTextOpacity
                         anchors.left: overviewResetSeparator.right
                         anchors.leftMargin: Kirigami.Units.smallSpacing
-                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.baseline: overviewMeterPercent.baseline
                         width: Math.max(0, parent.width - overviewMeterCaption.width
                             - overviewMeterPercent.width - Kirigami.Units.smallSpacing * 3 - overviewResetSeparator.width)
                         elide: Text.ElideRight
