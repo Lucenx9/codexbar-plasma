@@ -285,6 +285,11 @@ KCM.SimpleKCM {
             text: i18n("Show provider changelog links")
         }
 
+        Kirigami.Separator {
+            Kirigami.FormData.label: i18n("Hidden items")
+            Kirigami.FormData.isSection: true
+        }
+
         ColumnLayout {
             objectName: "hiddenDetailSectionsSettings"
             Kirigami.FormData.label: i18n("Hidden detail sections:")
@@ -518,19 +523,12 @@ KCM.SimpleKCM {
             id: overviewProviderSelection
 
             Kirigami.FormData.label: i18n("Overview providers:")
-            Kirigami.FormData.labelAlignment: Qt.AlignTop
+            // Center the label on the first option rather than the column top.
+            Kirigami.FormData.buddyFor: overviewAutomaticRadio
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             spacing: Kirigami.Units.smallSpacing
-
-            Components.PlainControlsLabel {
-                Layout.fillWidth: true
-                text: i18np("Choose up to %1 provider", "Choose up to %1 providers", page.maxOverviewProviders)
-                font: Kirigami.Theme.smallFont
-                opacity: 0.7
-                wrapMode: Text.WordWrap
-            }
 
             Components.PlainControlsLabel {
                 Layout.fillWidth: true
@@ -550,6 +548,7 @@ KCM.SimpleKCM {
             }
 
             Controls.RadioButton {
+                id: overviewAutomaticRadio
                 objectName: "overviewAutomaticRadio"
                 implicitWidth: 0
                 Layout.fillWidth: true
@@ -565,6 +564,16 @@ KCM.SimpleKCM {
                 text: i18n("Choose providers")
                 checked: OverviewProviders.selectionActive(page.cfg_overviewProviderIDs)
                 onClicked: page.cfg_overviewProviderIDs = OverviewProviders.selectionText(page.resolvedOverviewProviderIDs())
+            }
+
+            // The cap applies to the custom list, so it introduces those boxes.
+            Components.PlainControlsLabel {
+                Layout.fillWidth: true
+                Layout.leftMargin: Kirigami.Units.gridUnit
+                text: i18np("Choose up to %1 provider", "Choose up to %1 providers", page.maxOverviewProviders)
+                font: Kirigami.Theme.smallFont
+                opacity: 0.7
+                wrapMode: Text.WordWrap
             }
 
             Repeater {

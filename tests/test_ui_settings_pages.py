@@ -180,7 +180,7 @@ class SettingsPagesTest(unittest.TestCase):
         assert_form_sections(
             popup_text,
             "configPopup.qml",
-            ("Usage details", "Popup content"),
+            ("Usage details", "Popup content", "Hidden items", "Providers"),
         )
 
         assert_form_sections(panel_surface.text, "configPanel.qml", ("Appearance", "Contents", "Panel visibility"))

@@ -2455,6 +2455,10 @@ msgid "Show provider changelog links"
 msgstr "Mostrar links para os registros de alterações dos provedores"
 
 #: contents/ui/configPopup.qml
+msgid "Hidden items"
+msgstr "Itens ocultos"
+
+#: contents/ui/configPopup.qml
 msgid "Hidden detail sections:"
 msgstr "Seções de detalhes ocultas:"
 

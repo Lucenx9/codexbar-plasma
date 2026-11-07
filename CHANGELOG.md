@@ -23,6 +23,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Group hidden detail sections and usage rows under their own **Hidden items**
+  section in Popup settings, and place the Overview provider limit with the
+  custom provider list it applies to.
+
 - Clarify the usage-sharing window's actions: emphasize Copy image, group
   export commands separately from Close, and keep short copy/save feedback
   from resizing the preview. Long labels adapt to narrow windows.
