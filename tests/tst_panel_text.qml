@@ -17,6 +17,9 @@ TestCase {
     Components.PanelText {
         id: presentation
         numberFormat: CostPresentation.numberFormat(",", ".")
+        function i18nc(context, source) {
+            return i18n.apply(this, Array.prototype.slice.call(arguments, 1));
+        }
         function i18n(source) {
             var text = source;
             for (var i = 1; i < arguments.length; i++) {
@@ -33,6 +36,7 @@ TestCase {
         presentation.showProvider = true;
         presentation.showPercent = true;
         presentation.showCredits = true;
+        presentation.showAutoQuotaLabel = false;
         currentItem = null;
     }
 
@@ -77,6 +81,20 @@ TestCase {
         compare(presentation.displayText(row, "both", "", ""), "");
         compare(presentation.displayText(null, "percent", "", ""), "");
         compare(presentation.displayText(null, "pace", "", ""), "");
+    }
+
+    function test_optionalQuotaLabelRemainsRecoverableWhenSpaceIsLimited() {
+        presentation.showAutoQuotaLabel = true;
+        var segments = presentation.segments(item(125), true, false,
+            "43% used", false, "", "Weekly");
+        compare(presentation.fullText(segments), "Example Weekly 43% used 125cr");
+        compare(PanelTextFit.segmentTexts(segments)[1], "Example 43% used 125cr");
+        presentation.showAutoQuotaLabel = false;
+        compare(presentation.fullText(presentation.segments(item(null), true, false,
+            "43% used", false, "", "Weekly")), "Example 43% used");
+        presentation.showAutoQuotaLabel = true;
+        compare(presentation.fullText(presentation.segments(item(null), true, false,
+            "", false, "", "Weekly")), "Example");
     }
 
     function test_bindingsFollowSettingsAndLoadingWithoutRecreatingTheComponent() {

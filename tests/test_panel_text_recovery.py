@@ -22,6 +22,7 @@ from qml_surfaces import Surface
 QML = '''import QtQuick
 import QtTest
 import "SOURCE_URL/PanelProviders.js" as PanelProviders
+import "SOURCE_URL/PanelDisplay.js" as PanelDisplay
 import "SOURCE_URL/PanelRules.js" as PanelRules
 import "SOURCE_URL/PanelTextFit.js" as PanelTextFit
 import "SOURCE_URL/ProviderIdentity.js" as ProviderIdentity
@@ -36,6 +37,7 @@ TestCase {
         showCredits: applet.showCreditsInPanel
         loading: applet.loading
         numberFormat: CostPresentation.numberFormat(",", ".")
+        function i18nc(context, text, a, b) { return i18n(text, a, b); }
         function i18n(text, a, b) {
             return text.replace("%1", a === undefined ? "" : a).replace("%2", b === undefined ? "" : b);
         }
@@ -46,14 +48,17 @@ TestCase {
         property bool loading: false
         property bool showCreditsInPanel: true
         property string menuBarDisplayMode: "percent"
+        property string panelQuotaLane: "auto"
         property var panelVisibilityRules: PanelRules.normalizedRules("{}")
         property real panelClockMs: Date.now()
         property var selected: null
         function selectedCompactProvider() { return selected; }
         function providerPresentation(item) { return item; }
         function panelDisplayRow(item, mode) { return item ? {hasPercent: true} : null; }
+        function switcherCandidateRows(item) { return item ? item.rows || [] : []; }
         function panelMeterDescription(item) { return "Primary: 43% used"; }
         function menuBarDisplayText(item) { return "43% used"; }
+        function i18nc(context, text, a, b) { return i18n(text, a, b); }
         function formatNumber(value) { return String(value); }
         function i18n(text, a, b) {
             return text.replace("%1", a === undefined ? "" : a).replace("%2", b === undefined ? "" : b);
@@ -99,6 +104,26 @@ TestCase {
         var unknown = applet.compactTextSegments();
         compare(unknown[0].identifying, true);
         compare(PanelTextFit.segmentTexts(unknown)[1], "Example an-unbundled-provider 43% used");
+    }
+
+    function test_productionSegmentsKeepTheSelectedQuotaLabel() {
+        applet.selected = provider("codex", null);
+        applet.selected.rows = [
+            {lane: "primary", label: "Session", hasPercent: true, usedPercent: 43, leftPercent: 57},
+            {lane: "secondary", label: "Weekly", hasPercent: true, usedPercent: 90, leftPercent: 10}
+        ];
+        panelText.showAutoQuotaLabel = true;
+        compare(PanelTextFit.fullText(applet.compactTextSegments()), "Example codex Session 43% used");
+        verify(applet.panelProviderToolTipText(applet.selected).indexOf("Session 43% used") >= 0);
+        applet.panelVisibilityRules = PanelRules.normalizedRules(
+            '{"text":{"condition":"usageAtLeast","usedPercent":100}}');
+        compare(applet.compactTextSegments(), []);
+        verify(applet.panelProviderToolTipText(applet.selected).indexOf("Session 43% used") < 0);
+        applet.panelVisibilityRules = PanelRules.normalizedRules("{}");
+        applet.panelQuotaLane = "primary";
+        compare(PanelTextFit.fullText(applet.compactTextSegments()), "Example codex 43% used");
+        panelText.showAutoQuotaLabel = false;
+        applet.panelQuotaLane = "auto";
     }
 }
 '''

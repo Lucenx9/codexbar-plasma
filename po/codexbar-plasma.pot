@@ -907,6 +907,12 @@ msgid "%1: %2% %3"
 msgstr ""
 
 #: contents/ui/components/PanelSettingsPreview.qml
+#: contents/ui/components/PanelText.qml contents/ui/main.qml
+msgctxt "Quota name %1 before panel usage text %2"
+msgid "%1 %2"
+msgstr ""
+
+#: contents/ui/components/PanelSettingsPreview.qml
 #: contents/ui/components/PanelText.qml
 #, kde-format
 msgid "%1cr"
@@ -3035,6 +3041,10 @@ msgstr ""
 
 #: contents/ui/configPanel.qml
 msgid "Appears only when the quota is forecast to run out before reset."
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Name the quota chosen by Automatic"
 msgstr ""
 
 #: contents/ui/configPanel.qml

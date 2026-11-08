@@ -160,6 +160,30 @@ TestCase {
         compare(PanelDisplay.safeMode(null), "percent");
     }
 
+    function test_autoQuotaLabelFollowsTheModeAndAvailableWindows() {
+        var primary = usageRow({lane: "primary", label: "Session", hasPercent: true,
+            usedPercent: 43, leftPercent: 57});
+        var weekly = usageRow({lane: "secondary", label: "Weekly", hasPercent: true,
+            usedPercent: 60, leftPercent: 40, pacePercent: 60,
+            resetsAt: "2026-11-10T12:00:00Z", paceOnTop: false, paceEtaSeconds: 3600});
+        var rows = [primary, weekly];
+        var before = JSON.stringify(rows);
+        compare(PanelDisplay.autoQuotaLabel(rows, "percent", "auto"), "Session");
+        for (var mode of ["pace", "both", "resetTime", "runOut"]) {
+            compare(PanelDisplay.autoQuotaLabel(rows, mode, "auto"), "Weekly");
+        }
+        compare(PanelDisplay.autoQuotaLabel(rows, "percent", "secondary"), "");
+        compare(PanelDisplay.autoQuotaLabel([primary], "percent", "auto"), "");
+        compare(PanelDisplay.autoQuotaLabel([primary, usageRow({})], "percent", "auto"), "");
+        compare(PanelDisplay.autoQuotaLabel(rows, "percent", "tertiary"), "");
+        compare(JSON.stringify(rows), before);
+        compare(PanelDisplay.autoQuotaLabel(null, "percent", "auto"), "");
+        primary.label = "<b>" + "x".repeat(1000) + "</b>";
+        verify(PanelDisplay.autoQuotaLabel(rows, "percent", "auto").length <= 80);
+        primary.label = undefined;
+        compare(PanelDisplay.autoQuotaLabel(rows, "percent", "auto"), "");
+    }
+
     function test_explicitLaneOverridesAutomaticPreferenceWithoutFallback() {
         var primary = usageRow({lane: "primary", hasPercent: true, usedPercent: 20, leftPercent: 80});
         var secondary = usageRow({lane: "secondary", hasPercent: true, usedPercent: 90, leftPercent: 10});

@@ -217,6 +217,10 @@
       <label>Show the selected usage text in the panel.</label>
       <default>false</default>
     </entry>
+    <entry name="showAutoQuotaLabel" type="Bool">
+      <label>Name the automatically selected quota in panel text when multiple windows are available.</label>
+      <default>false</default>
+    </entry>
     <entry name="showMultiProviderInPanel" type="Bool">
       <label>Show provider meters in the panel.</label>
       <default>true</default>

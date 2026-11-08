@@ -2333,6 +2333,10 @@ msgid "Use monochrome icons and meters only"
 msgstr "Utiliser uniquement les icônes monochromes et les indicateurs"
 
 #: contents/ui/configPanel.qml
+msgid "Name the quota chosen by Automatic"
+msgstr "Nommer le quota choisi en mode Automatique"
+
+#: contents/ui/configPanel.qml
 msgid "Panel providers"
 msgstr "Fournisseurs du panneau"
 
@@ -4365,3 +4369,9 @@ msgstr[1] "%1 lignes d'utilisation"
 #: contents/ui/configPopup.qml
 msgid "%1, %2"
 msgstr "%1, %2"
+
+#: contents/ui/components/PanelSettingsPreview.qml
+#: contents/ui/components/PanelText.qml contents/ui/main.qml
+msgctxt "Quota name %1 before panel usage text %2"
+msgid "%1 %2"
+msgstr "%1 %2"

@@ -876,7 +876,9 @@ clipboard interoperability with every Wayland application or portal backend.
   settings enable and offers progressively smaller compositions when the meter
   row leaves too little room. The renderer measures each candidate on its own
   hidden label and shows the widest that fits, so content is surrendered whole:
-  the provider name first, then credits, keeping the usage figure. The module
+  the optional Auto quota name first, then the provider name and credits,
+  keeping the usage figure or compact pace verdict. An identifying provider
+  name outlives credits when its icon is generic. The module
   performs no measurement and no localization; QML supplies the segment text and
   the measured widths, and keeps the full composition for tooltips and
   accessible names.
@@ -1844,8 +1846,9 @@ isolated using the smoke runner. The installed widget and real credentials are
 not used. The temporary applet runs the production normalization, settings
 adapters, and compact renderer.
 
-The default run saves 384 captures: 128 base combinations plus targeted cases
-for all 24 element orders, five text formats, explicit quotas, visibility rules,
+The default run saves 424 captures: 128 base combinations plus targeted cases
+for all 24 element orders, five text formats with and without automatic quota
+labels, explicit quotas, visibility rules,
 missing data, long names, exhausted quotas, and 24/48/64-pixel panel heights.
 The targeted cases also cover tiny readings, warning colors, stale quotas with
 confidence and incident markers, and real pointer hover/press and keyboard-focus

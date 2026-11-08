@@ -42,6 +42,7 @@ TestCase {
             property bool cfg_autoSelectProvider: false
             property bool cfg_showProviderInPanel: false
             property bool cfg_showPercentInPanel: false
+            property bool cfg_showAutoQuotaLabel: false
             property bool cfg_showCreditsInPanel: false
             property string cfg_panelProviderIDs: ""
             property var orderedPanelProviderRoster: []
@@ -98,6 +99,22 @@ TestCase {
         compare(settings.cfg_panelQuotaLane, "secondary");
         compare(settings.cfg_showMultiProviderInPanel, false);
         verify(renderer.width > 0 && renderer.height > 0);
+    }
+
+    function test_autoQuotaLabelTracksPendingSettingsAndExplicitLanes() {
+        var settings = createTemporaryObject(settingsComponent, testCase, {
+            cfg_showPercentInPanel: true, cfg_showAutoQuotaLabel: true
+        });
+        var preview = createPreview(settings);
+        if (!preview) return;
+        var renderer = findChild(preview, "panelPreviewRenderer");
+        compare(renderer.fullText, "Session 42% used");
+        verify(preview.accessibleSummary().indexOf("Session 42% used") >= 0);
+        settings.cfg_panelQuotaLane = "secondary";
+        compare(renderer.fullText, "27% used");
+        settings.cfg_panelQuotaLane = "auto";
+        settings.cfg_showAutoQuotaLabel = false;
+        compare(renderer.fullText, "42% used");
     }
 
     function test_textKeepsItsIdentityWhenSelectedMeterIsFilteredOut() {

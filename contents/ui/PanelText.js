@@ -15,7 +15,9 @@ function segments(item, visible, selectionActive, options, text) {
             identifying: !options.iconIdentifies });
     }
     if (options.showPercent && text.display.length > 0) {
-        result.push({ id: "usage", text: text.display, compactText: text.compactDisplay });
+        result.push({ id: "usage", text: text.labelledDisplay || text.display,
+            unlabelledText: text.labelledDisplay ? text.display : "",
+            compactText: text.compactDisplay });
     }
     if (options.showCredits && item.credits !== null) {
         result.push({ id: "credits", text: text.credits });

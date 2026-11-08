@@ -1835,7 +1835,9 @@ PlasmoidItem {
             PanelProviders.selectionActive(panelProviderIDsRaw),
             item ? menuBarDisplayText(item) : "",
             item ? providerIconIdentifies(item.provider) : false,
-            panelText.compactDisplayText(row, menuBarDisplayMode))
+            panelText.compactDisplayText(row, menuBarDisplayMode),
+            item && panelText.showAutoQuotaLabel
+                ? PanelDisplay.autoQuotaLabel(switcherCandidateRows(item), menuBarDisplayMode, panelQuotaLane) : "")
     }
 
     function compactText() {
@@ -1878,7 +1880,20 @@ PlasmoidItem {
 
     function panelProviderToolTipText(item) {
         var presented = providerPresentation(item)
-        return panelText.providerToolTipText(presented, panelMeterDescription(presented))
+        var description = panelMeterDescription(presented)
+        var selected = selectedCompactProvider()
+        if (presented && selected && presented.provider === selected.provider
+                && panelText.showAutoQuotaLabel && panelText.showPercent
+                && PanelRules.matches(panelVisibilityRules.text,
+                    panelDisplayRow(presented, menuBarDisplayMode), panelClockMs)) {
+            var label = PanelDisplay.autoQuotaLabel(switcherCandidateRows(presented), menuBarDisplayMode, panelQuotaLane)
+            var display = menuBarDisplayText(presented)
+            if (label.length > 0 && display.length > 0) {
+                var selectedText = i18nc("Quota name %1 before panel usage text %2", "%1 %2", label, display)
+                description = description.length > 0 ? i18n("%1 - %2", selectedText, description) : selectedText
+            }
+        }
+        return panelText.providerToolTipText(presented, description)
     }
 
     function panelToolTipText() {
@@ -1979,6 +1994,7 @@ PlasmoidItem {
         showProvider: Plasmoid.configuration.showProviderInPanel
         showPercent: Plasmoid.configuration.showPercentInPanel
         showCredits: Plasmoid.configuration.showCreditsInPanel
+        showAutoQuotaLabel: Plasmoid.configuration.showAutoQuotaLabel === true
         numberFormat: root.costNumberFormat
     }
 

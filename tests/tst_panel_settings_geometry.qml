@@ -28,6 +28,10 @@ TestCase {
         return (count === 1 ? singular : plural).replace("%1", count);
     }
 
+    function i18nc(context, text, value, second) {
+        return i18n(text, value, second);
+    }
+
     // A settled scene may otherwise render only once on the software backend.
     Timer {
         interval: 50
@@ -220,5 +224,25 @@ TestCase {
         tryCompare(view, "leftPadding", left);
         tryCompare(view, "rightPadding", right);
         verify(waitForRendering(page));
+    }
+
+    function test_autoQuotaLabelCanBeToggledAndRetainsHiddenPendingValue() {
+        var page = createPage({additionalExpanded: true, cfg_showPercentInPanel: true});
+        if (!page) return;
+        var check = findChild(page, "panelAutoQuotaLabelCheck");
+        verify(check !== null);
+        compare(page.cfg_showAutoQuotaLabel, false);
+        verify(check.visible);
+        check.forceActiveFocus();
+        keyClick(Qt.Key_Space);
+        compare(page.cfg_showAutoQuotaLabel, true);
+        page.cfg_panelQuotaLane = "secondary";
+        verify(!check.visible);
+        compare(page.cfg_showAutoQuotaLabel, true);
+        page.cfg_panelQuotaLane = "auto";
+        verify(check.visible && check.checked);
+        page.cfg_showPercentInPanel = false;
+        verify(!check.visible);
+        compare(page.cfg_showAutoQuotaLabel, true);
     }
 }
