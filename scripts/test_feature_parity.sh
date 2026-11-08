@@ -25,7 +25,7 @@ reject_in_file "$PROVIDERS_QML" "return field.options.length > 0 ? 0 : -1"
 # fallback titles are executed by tests/tst_provider_names.qml against the
 # real ProviderNames.titleForKey.
 
-python3 - "$PROVIDERS_QML" <<'PY'
+python3 - "$PROVIDERS_QML" "${ROOT_DIR}/contents/ui/config/ProviderCapabilities.js" <<'PY'
 import pathlib
 import re
 import sys
@@ -35,20 +35,23 @@ start = text.index("    function supportsApiKeySetup(providerID)")
 end = text.index("    function providerDocsUrl(providerID)", start)
 body = text[start:end]
 descriptor_owned = {"aiand", "clinepass", "deepinfra", "neuralwatt", "sub2api", "xai", "zenmux"}
-hardcoded = sorted(descriptor_owned.intersection(re.findall(r'case "([^"]+)":', body)))
+policy = pathlib.Path(sys.argv[2]).read_text(encoding="utf-8")
+key_gates = re.search(r'var keyCapabilities\s*=\s*\{(.*?)\}', policy, re.S)
+legacy = re.search(r'var legacyApiKeyProviders\s*=\s*\[(.*?)\]', policy, re.S)
+if key_gates is None or legacy is None:
+    print("provider capability lists are missing", file=sys.stderr)
+    sys.exit(1)
+providers = re.findall(r'\b([a-z0-9]+)\s*:', key_gates.group(1))
+providers += re.findall(r'"([^"]+)"', legacy.group(1))
+hardcoded = sorted(descriptor_owned.intersection(providers))
 if hardcoded:
-    print("descriptor-owned API key capability hardcoded in QML: " + ", ".join(hardcoded), file=sys.stderr)
+    print("descriptor-owned API key capability hardcoded in fallback policy: " + ", ".join(hardcoded), file=sys.stderr)
     sys.exit(1)
 
-if 'case "ibmbob":' not in body:
-    print("IBM Bob must offer the official generic set-api-key setup path", file=sys.stderr)
+if "ProviderCapabilities.supportsApiKey(" not in body:
+    print("the Providers page must delegate API-key capability policy", file=sys.stderr)
     sys.exit(1)
-if 'case "fireworks":' not in body:
-    print("Fireworks must offer generic API-key setup now that the CLI discovers accountSlug", file=sys.stderr)
-    sys.exit(1)
-if "return fireworksSingleKeySetupSupported" not in body:
-    print("Fireworks API-key setup must require CLI 0.54.0 slug discovery", file=sys.stderr)
-    sys.exit(1)
+# Provider/version behavior runs through tests/tst_provider_capabilities.qml.
 
 for function_name in ("setEnabled", "setApiKey", "loadProviderSettings", "providerCliCommandText"):
     marker = f"    function {function_name}("
