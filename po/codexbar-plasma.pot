@@ -3194,11 +3194,11 @@ msgid "Automatic: first %1 providers"
 msgstr ""
 
 #: contents/ui/configPopup.qml
-msgid "Choose providers"
+msgid "Follows the provider order above."
 msgstr ""
 
 #: contents/ui/configPopup.qml
-msgid "Follows the provider order above."
+msgid "Choose providers"
 msgstr ""
 
 #: contents/ui/configPopup.qml

@@ -368,8 +368,11 @@ work and upstream contract requirements.
   makes this choice explicit: **Automatic: first 3 providers** follows the
   order, while **Choose providers** enables the individual checkboxes. Switching
   to manual selection starts from the currently selected providers. The provider
-  checklist and its limit appear only in manual mode; automatic mode explains
-  that it follows the provider order above. The tab-label switch sits with these
+  checklist and its limit appear only in manual mode. The automatic choice
+  explains directly below its radio button that it follows the provider order
+  above; this hint stays visible in both modes so the radio choices do not move.
+  Manual options align with their radio label, including in right-to-left layouts.
+  The tab-label switch sits with these
   navigation preferences. The checkboxes recognize
   provider aliases and mixed-case IDs, like the panel provider selection.
   Disabled providers keep their saved selection without occupying one of the

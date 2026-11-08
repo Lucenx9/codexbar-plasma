@@ -11,6 +11,14 @@ TestCase {
     width: 600
     height: 900
 
+    property bool mirroredPage: false
+    LayoutMirroring.enabled: mirroredPage
+    LayoutMirroring.childrenInherit: true
+
+    function cleanup() {
+        mirroredPage = false;
+    }
+
     function i18n(text) {
         for (var i = 1; i < arguments.length; i++)
             text = text.replace("%" + i, arguments[i]);
@@ -239,7 +247,12 @@ TestCase {
             compare(moveTips[i].plainText, moveTips[i].parent.Accessible.name);
         }
     }
-    function test_explicitOverviewModePreservesAutomaticContract() {
+    function test_explicitOverviewModePreservesAutomaticContract_data() {
+        return [{tag: "ltr", rtl: false}, {tag: "rtl", rtl: true}];
+    }
+
+    function test_explicitOverviewModePreservesAutomaticContract(data) {
+        mirroredPage = data.rtl;
         var page = createPage({cfg_overviewProviderIDs: "  "});
         if (!page) return;
         var controller = waitForRosterSettled(page);
@@ -255,13 +268,27 @@ TestCase {
         verify(!providerCheck(page, "Codex").visible);
         verify(findChild(page, "overviewAutomaticHint").visible);
         verify(!providerCheck(page, "Codex").enabled);
+        waitForRendering(custom);
+        var customPosition = custom.mapToItem(page, 0, 0);
         custom.forceActiveFocus(Qt.TabFocusReason);
         keyClick(Qt.Key_Space);
         compare(page.cfg_overviewProviderIDs, "codex,claude");
         verify(custom.checked && !automatic.checked);
         var codex = providerCheck(page, "Codex");
         verify(codex.visible);
-        verify(!findChild(page, "overviewAutomaticHint").visible);
+        verify(findChild(page, "overviewAutomaticHint").visible);
+        waitForRendering(custom);
+        compare(custom.mapToItem(page, 0, 0), customPosition,
+            "The manual choice must stay still when its checklist appears");
+        var inset = custom.indicator.width + custom.spacing;
+        for (var child of [codex, findChild(page, "overviewCustomHint")]) {
+            var childPosition = child.mapToItem(page, 0, 0);
+            var leadingInset = data.rtl
+                ? customPosition.x + custom.width - childPosition.x - child.width
+                : childPosition.x - customPosition.x;
+            verify(Math.abs(leadingInset - inset) < 1,
+                "Manual content must align with the radio text in " + data.tag);
+        }
         verify(codex.enabled);
         codex.forceActiveFocus(Qt.TabFocusReason);
         keyClick(Qt.Key_Space);
