@@ -70,6 +70,40 @@ time.sleep(60)
 '''
 
 
+class LoginEventTests(unittest.TestCase):
+    def test_pending_projection_and_terminal_decisions(self):
+        event = {**PENDING, 'private': 'discarded'}
+        self.assertEqual(auth.login_event(False, None, event),
+                         {'kind': 'pending', 'prompt': ('https://github.com/login/device', 'ABCD-1234', 30)})
+        self.assertEqual(event['private'], 'discarded')
+        self.assertEqual(auth.login_event(True, None, {'status': 'authorized'}),
+                         {'kind': 'terminal', 'status': 'ok'})
+        self.assertEqual(auth.login_event(False, None, {'status': 'failed',
+                         'error': 'Config changed during login. Please try again.'}),
+                         {'kind': 'terminal', 'status': 'conflict'})
+        self.assertEqual(auth.login_event(True, None, {'status': 'failed', 'error': 'private'}),
+                         {'kind': 'terminal', 'status': 'failed'})
+
+    def test_invalid_order_and_terminal_state_reject_every_later_event(self):
+        for pending, terminal, event in [(False, None, {'status': 'authorized'}),
+                (True, None, PENDING), (False, None, None), (False, None, []),
+                (False, None, {'status': 'future'}), (True, 'ok', PENDING),
+                (True, 'failed', {'status': 'failed'})]:
+            with self.subTest(pending=pending, terminal=terminal, event=event):
+                self.assertEqual(auth.login_event(pending, terminal, event), {'kind': 'invalid'})
+
+    def test_stream_framing_and_total_budget(self):
+        stream = auth.LoginStream()
+        self.assertEqual(list(stream.feed(b'{"status":')), [])
+        self.assertTrue(stream.incomplete())
+        self.assertEqual(list(stream.feed(b'"authorized"}\n{}\n ')), [{'status': 'authorized'}, {}])
+        self.assertFalse(stream.incomplete())
+        stream = auth.LoginStream()
+        list(stream.feed(b'{}' + b' ' * (auth.MAX_BYTES - 3) + b'\n'))
+        with self.assertRaises(ValueError):
+            list(stream.feed(b'\n'))
+
+
 class ProviderAuthTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(prefix="codexbar-auth-test-")
