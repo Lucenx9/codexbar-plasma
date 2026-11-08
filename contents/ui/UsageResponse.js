@@ -19,6 +19,7 @@ function records(payload, providerID, receivedAtMs) {
             if (!Normalizer.isCliRecord(items[i])) continue;
             var record = items[i];
             if (key.length > 0) {
+                if (!Normalizer.providerMatchesScope(record, key)) continue;
                 record = Guards.copyObject(record);
                 record.provider = key;
             } else if (Normalizer.normalizedProviderID(record.provider).length === 0) {

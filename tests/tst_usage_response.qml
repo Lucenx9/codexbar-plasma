@@ -31,7 +31,7 @@ TestCase {
 
     function test_malformedSiblingOrder(data) {
         var payload = [{provider: "codex", error: {message: {toString: null}}},
-            healthy(data.scoped ? "deliberately-wrong" : "codex", data.used)];
+            healthy(data.scoped ? "CODEX" : "codex", data.used)];
         payload.splice(data.index, 0, broken());
         var result = UsageResponse.records(payload, data.scoped ? "codex" : "", 123456);
         compare(result.outcome, "success");
@@ -82,6 +82,35 @@ TestCase {
     function test_allMalformedRecordsFail() {
         compare(UsageResponse.records([broken(), broken()], "", 1).outcome, "noProviders");
         compare(UsageResponse.records([broken(), broken()], "codex", 1).outcome, "invalidJson");
+    }
+
+    function test_scopedReplyCannotRelabelAnotherProvider() {
+        for (var provider of ["audit-fixture", "claude"]) {
+            for (var foreign of [healthy("codex", 72),
+                    {provider: "codex", error: {kind: "provider", code: 1,
+                        message: "No available fetch strategy for codex"}}]) {
+                var result = UsageResponse.response(JSON.stringify([foreign]), "", provider, 123456, foreign.error ? 1 : 0);
+                compare(result.outcome, "noProviders");
+                verify(!result.items);
+            }
+            var mixed = UsageResponse.records([healthy("codex", 72), healthy(provider, 0)], provider, 123456);
+            compare(mixed.outcome, "success");
+            compare(mixed.items.length, 1);
+            compare(mixed.items[0].rows[0].usedPercent, 0);
+        }
+    }
+
+    function test_scopedReplyAcceptsCanonicalAliases() {
+        var result = UsageResponse.records([healthy("azure-openai", 42)], "azureopenai", 123456);
+        compare(result.outcome, "success");
+        compare(result.items[0].provider, "azureopenai");
+        compare(result.items[0].rows[0].usedPercent, 42);
+    }
+
+    function test_scopedReplyRejectsInvalidExplicitIdentities() {
+        for (var provider of [null, {}, ["codex"], "", "__proto__", "cli"]) {
+            compare(UsageResponse.records([healthy(provider, 72)], "codex", 1).outcome, "noProviders");
+        }
     }
 
     function test_boundedEnvelopes_data() {
