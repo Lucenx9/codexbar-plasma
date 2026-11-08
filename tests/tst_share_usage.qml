@@ -147,7 +147,15 @@ TestCase {
             {tag: "quoted", label: 'model "/home/synthetic user/private project"'},
             {tag: "file-url", label: "model file:///home/synthetic user/private project"},
             {tag: "tilde", label: "model ~/synthetic user/private project"},
-            {tag: "windows", label: "model C:\\synthetic user\\private project"}
+            {tag: "windows", label: "model C:\\synthetic user\\private project"},
+            {tag: "unc", label: "\\\\private-host\\private-share\\private-project"},
+            {tag: "unc-prefixed", label: "model \\\\private-host\\private-share\\private-project"},
+            {tag: "unc-spaces", label: "model \\\\private-host\\private share\\synthetic user"},
+            {tag: "unc-quoted", label: 'model "\\\\private-host\\private share\\synthetic user"'},
+            {tag: "unc-embedded", label: "model=\\\\private-host\\private-share\\private-project"},
+            {tag: "unc-concatenated", label: "model\\\\private-host\\private-share\\private-project"},
+            {tag: "unc-unicode", label: "model \\\\private-host\\共有\\private-project"},
+            {tag: "unc-device", label: "\\\\?\\UNC\\private-host\\private-share\\private-project"}
         ]
     }
 
