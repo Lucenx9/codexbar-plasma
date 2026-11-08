@@ -178,7 +178,7 @@ Rectangle {
 
                 Layout.fillWidth: true
                 Layout.topMargin: Kirigami.Units.smallSpacing
-                spacing: Kirigami.Units.smallSpacing / 2
+                spacing: Kirigami.Units.smallSpacing
 
                 Item {
                     id: overviewMeterHeader
@@ -192,7 +192,7 @@ Rectangle {
                         overviewMeterPercent.implicitHeight - overviewMeterPercent.baselineOffset)
                     implicitWidth: overviewMeterCaption.implicitWidth
                         + overviewMeterReset.implicitWidth + overviewMeterPercent.implicitWidth
-                        + Kirigami.Units.smallSpacing * 3 + 1
+                        + Kirigami.Units.smallSpacing * 4 + 1
 
                     PlainPlasmaLabel {
                         id: overviewMeterCaption
@@ -212,11 +212,11 @@ Rectangle {
 
                         visible: overviewMeterReset.text.length > 0 && overviewMeterReset.width > 0
                         anchors.left: overviewMeterCaption.right
-                        anchors.leftMargin: Kirigami.Units.smallSpacing
+                        anchors.leftMargin: Kirigami.Units.smallSpacing * 1.5
                         anchors.verticalCenter: parent.verticalCenter
                         width: 1
                         height: Math.round(overviewMeterReset.implicitHeight * 0.75)
-                        color: overviewRow.applet.withAlpha(Kirigami.Theme.textColor, 0.3)
+                        color: overviewRow.applet.withAlpha(Kirigami.Theme.textColor, 0.2)
                         Accessible.ignored: true
                     }
 
@@ -228,10 +228,10 @@ Rectangle {
                         font: Kirigami.Theme.smallFont
                         opacity: overviewRow.applet.secondaryTextOpacity
                         anchors.left: overviewResetSeparator.right
-                        anchors.leftMargin: Kirigami.Units.smallSpacing
+                        anchors.leftMargin: Kirigami.Units.smallSpacing * 1.5
                         anchors.baseline: parent.baseline
                         width: Math.max(0, parent.width - overviewMeterCaption.width
-                            - overviewMeterPercent.width - Kirigami.Units.smallSpacing * 3 - overviewResetSeparator.width)
+                            - overviewMeterPercent.width - Kirigami.Units.smallSpacing * 4 - overviewResetSeparator.width)
                         elide: Text.ElideRight
                     }
 

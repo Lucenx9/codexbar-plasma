@@ -51,7 +51,7 @@ ColumnLayout {
     }
 
     Layout.fillWidth: true
-    spacing: Math.round(Kirigami.Units.smallSpacing / 1.5)
+    spacing: Kirigami.Units.smallSpacing
 
     function withAlpha(color, alpha) {
         return Qt.rgba(color.r, color.g, color.b, alpha)
@@ -83,7 +83,7 @@ ColumnLayout {
         id: usageTitleRow
 
         Layout.fillWidth: true
-        spacing: Kirigami.Units.smallSpacing
+        spacing: Kirigami.Units.smallSpacing * 1.5
 
         PlainPlasmaLabel {
             id: usageTitleLabel
@@ -109,7 +109,7 @@ ColumnLayout {
             visible: usageRow.resetInline
             Layout.preferredWidth: 1
             Layout.preferredHeight: Math.round(usageInlineResetLabel.implicitHeight * 0.75)
-            color: usageRow.withAlpha(Kirigami.Theme.textColor, 0.3)
+            color: usageRow.withAlpha(Kirigami.Theme.textColor, 0.2)
             Accessible.ignored: true
         }
 

@@ -244,7 +244,10 @@ work and upstream contract requirements.
   provider totals, project amounts and chart readout values request tabular
   digits from the theme font, keeping equal-length numbers stable when supported
   by that font.
-  A thin separator distinguishes an inline reset from its quota name.
+  The popup keeps an inset around its navigation and content. Quota captions
+  use the same gap above their meters in Overview and provider details.
+  A subdued separator with space on both sides distinguishes an inline reset
+  from its quota name.
   Overview uses body-size quota names, with resets in smaller text and space
   between each quota group. It keeps more space between provider cards, with a
   compact gap between each identity header and its first quota. Provider detail

@@ -55,7 +55,7 @@ Item {
     readonly property int maximumPopupHeight: Kirigami.Units.gridUnit * 38
     readonly property int minimumPopupHeight: Kirigami.Units.gridUnit * 20
     readonly property int popupContentHeight: Math.ceil(popupContent.implicitHeight)
-        + Kirigami.Units.largeSpacing * 2
+        + popupContent.anchors.margins * 2
     // Provider and Overview tabs imply a non-empty roster.
     readonly property bool standardHeightActive: applet.providers.length > 0
         || applet.spendSelected || applet.sessionsSelected
@@ -191,7 +191,7 @@ Item {
         id: popupContent
 
         anchors.fill: parent
-        anchors.margins: Kirigami.Units.largeSpacing
+        anchors.margins: Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing
         spacing: Kirigami.Units.largeSpacing
 
         Components.PopupTabStrip {
