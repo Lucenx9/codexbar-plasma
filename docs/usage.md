@@ -245,7 +245,8 @@ work and upstream contract requirements.
   Pace forecasts and reset metadata share a line when
   they fit; longer text or larger fonts put the reset on a separate line below
   the forecast. Long forecast words wrap inside the popup, and an abbreviated
-  reset still reveals its full text on hover.
+  reset still reveals its full text on hover. Short reset countdowns remain
+  complete when space is available.
 - Hover a quota meter to identify its visible warning and critical markers.
   A small margin around the track also activates the tooltip, making thin
   meters easier to target.

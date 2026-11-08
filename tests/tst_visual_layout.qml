@@ -2229,6 +2229,47 @@ TestCase {
         verify(pace !== null);
     }
 
+    function test_providerResetCountdownDoesNotTruncate_data() {
+        return [
+            {tag: "ltr", mirrored: false, scale: 1},
+            {tag: "rtl", mirrored: true, scale: 1},
+            {tag: "fractional-font", mirrored: false, scale: 1.25},
+            {tag: "large-font", mirrored: false, scale: 2}
+        ];
+    }
+
+    function test_providerResetCountdownDoesNotTruncate(data) {
+        failOnWarning(/Qt Quick Layouts: Detected recursive rearrange|Binding loop detected/);
+        var holder = createTemporaryQmlObject(
+            'import QtQuick; Item { LayoutMirroring.childrenInherit: true }', testCase);
+        holder.LayoutMirroring.enabled = data.mirrored;
+        var model = usageRowData();
+        var row = createUsageRow(model, 240, holder);
+        if (!row)
+            return;
+        var reset = findItem(row, item => item.objectName === "usageResetLabel");
+        var inline = findItem(row, item => item.objectName === "usageInlineResetLabel");
+        var pace = findItem(row, item => item.objectName === "usagePaceLabel");
+        for (var label of [reset, inline, pace])
+            label.font.pointSize *= data.scale;
+        for (var countdown of ["2g 23h", "2d 23h", "2 T. 23 Std.", "Sun 8 Nov, 23:59"]) {
+            for (var forecast of ["On pace", "In linea · Atteso 43% usato",
+                "37% in deficit · Expected 43% used · Runs out in 18 hours", ""]) {
+                row.rowData = Object.assign({}, model, {reset: countdown, pace: forecast});
+                for (var width of [240, 360, 540, 620, 240]) {
+                    row.width = width;
+                    verify(waitForPolish(row));
+                    var shown = reset.visible ? reset : inline;
+                    verify(shown.visible);
+                    verify(!shown.truncated, "Reset " + countdown + " truncated at width " + width
+                        + ", pace: " + forecast + ", assigned reset width: " + shown.width);
+                    verify(shown.mapToItem(row, 0, 0).x >= -1);
+                    verify(shown.mapToItem(row, shown.width, 0).x <= row.width + 1);
+                }
+            }
+        }
+    }
+
     function test_providerUsageMetadataAdaptsToAvailableWidth_data() {
         return [
             {tag: "ltr", mirrored: false, fontScale: 1},
@@ -2342,7 +2383,7 @@ TestCase {
         verify(waitForPolish(row));
         verify(inline.visible, "An inline reset stays in place while the full text fits");
         for (var fitted of [title, inline, percent])
-            verify(!fitted.truncated, "The fit boundary must include every label and the hide action");
+            verify(!fitted.truncated, "The fit boundary must include every label and the hide action: " + fitted.text);
         row.width = fitWidth - 1;
         tryCompare(inline, "visible", false);
         row.width = 900 * data.scale;
