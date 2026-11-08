@@ -102,7 +102,8 @@ TestCase {
             "\\\\private-host\\共有\\private-alice\\config.json",
             "private-alice\\project\\config.json",
             ".\\private-alice\\project\\config.json",
-            "..\\private-alice\\project\\config.json"];
+            "..\\private-alice\\project\\config.json",
+            "private-alice\\new\\temp"];
         var cases = [];
         for (var i = 0; i < paths.length; i++) {
             cases.push({tag: "plain-" + i, diagnostic: "Could not open " + paths[i]});
@@ -128,6 +129,46 @@ TestCase {
             "Before [path] Exit code 2");
         compare(SupportReport.sharedText('HTTP 403: {"message":"Try \\"again\\" later"}'),
             'HTTP 403: {"message":"Try \\"again\\" later"}');
+    }
+
+    function test_quotedTrailingWindowsSeparators_data() {
+        return [
+            {tag: "double-quote", input: 'Could not open "private-alice\\"'},
+            {tag: "single-quote", input: "Could not open 'private-alice\\'"},
+            {tag: "double-separator", input: 'Could not open "private-alice\\\\"'},
+            {tag: "following-quotes", input: 'Could not open "private-alice\\" after "failure"'},
+            {tag: "following-punctuation", input: 'Could not open "private-alice\\", retry later'}
+        ];
+    }
+
+    function test_quotedTrailingWindowsSeparators(data) {
+        compare(SupportReport.sharedText(data.input), "[path]");
+        verify(SupportReport.markdown({lastError: data.input, checkError: data.input}).indexOf("private-alice") < 0);
+    }
+
+    function test_jsonMessageEscapesRemainReadable_data() {
+        var message = "First\nSecond\tThird\rFourth\b\f and \"quoted\" text";
+        var input = "HTTP 400: " + JSON.stringify({message: message});
+        return [
+            {tag: "object", input: input},
+            {tag: "array", input: "HTTP 400: " + JSON.stringify([{message: message}])},
+            {tag: "nested", input: JSON.stringify({error: input})},
+            {tag: "twice", input: JSON.stringify({error: JSON.stringify({error: input})})}
+        ];
+    }
+
+    function test_jsonMessageEscapesRemainReadable(data) {
+        compare(SupportReport.sharedText(data.input), data.input);
+    }
+
+    function test_jsonPathKeysAndInspectionBounds() {
+        var value = {};
+        value["private-alice\\new\\temp"] = "unavailable";
+        compare(SupportReport.sharedText("HTTP 400: " + JSON.stringify(value)), "[path]");
+        compare(SupportReport.sharedText('Could not open "private-alice\\" ' + JSON.stringify({code: 2})), "[path]");
+        var many = [];
+        for (var i = 0; i < 600; i++) many.push("message");
+        compare(SupportReport.sharedText(JSON.stringify(many)), "[redacted]");
     }
 
     function test_relativeAndTildePathsOmitTheWholeDiagnosticLine() {

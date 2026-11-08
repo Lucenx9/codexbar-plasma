@@ -80,7 +80,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 ### Fixed
 
 - Redact Windows paths from shared support-report errors, including drive roots,
-  UNC shares, relative paths, quoted paths and escaped JSON forms.
+  UNC shares, relative paths, quoted paths with final separators and escaped
+  JSON forms. Preserve ordinary JSON message escapes in shared errors.
 
 - Return a structured managed-CLI error for oversized persisted update timestamps
   instead of terminating the helper with an unhandled numeric overflow.

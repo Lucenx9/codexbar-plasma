@@ -1123,7 +1123,9 @@ fields; track proposed extensions in the issue tracker.
   selected and PATH CLI resolve to the same location. Entire error lines that
   contain filesystem separators are also omitted, including absolute, relative,
   tilde-qualified and space-containing paths. Windows drive-rooted, UNC and
-  relative backslash paths are omitted too, including escaped JSON forms.
+  relative backslash paths are omitted too, including escaped JSON forms and
+  quoted directories with a final separator. Ordinary JSON message escapes
+  remain readable. JSON exceeding the inspection limit is omitted conservatively.
   Common permission, missing-file, executable-format and shared-library startup
   reasons remain as fixed text.
   Lines already containing credential-redaction markers are omitted too, since

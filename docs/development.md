@@ -1499,8 +1499,13 @@ drive roots and UNC shares, custom layouts and paths containing spaces
 without guessing path boundaries. Local probe facts and the Diagnostics version
 display retain their paths. Lines with prior credential-redaction markers are
 omitted too, since that filtering may have consumed a path separator. JSON slash
-escapes and Unicode backslash escapes are normalized before filtering. Ordinary
-JSON quote escapes remain literal. Common executable startup failures retain
+escapes are normalized before filtering. Bounded JSON inspection decodes string
+values and keys, including nested encoded payloads, to distinguish paths from
+ordinary message escapes. Reports preserve those message escapes verbatim.
+Inspection exceeding 512 values omits the line as `[redacted]`. Unstructured
+backslashes, including a quoted directory's final separator and Unicode
+backslash escapes, remain subject to the conservative path filter.
+Common executable startup failures retain
 only a fixed reason, never the personal path or library filename.
 `SafeText.js` redacts secret-key and secret-access-key assignments alongside
 the existing credential names, including environment-variable and SDK spellings.
