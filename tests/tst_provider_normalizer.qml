@@ -1972,6 +1972,62 @@ TestCase {
         compare(rows[1].tokens, 30)
     }
 
+    function test_costModelExcludedCountsKeepRawIdentity_data() {
+        return [{ tag: "forward", reverse: false }, { tag: "reverse", reverse: true }]
+    }
+
+    function test_costModelExcludedCountsKeepRawIdentity(data) {
+        var items = [
+            { modelBreakdowns: [
+                { modelName: "same model", incompleteRequestCount: 1000000000 },
+                { modelName: "same  model", incompleteRequestCount: 5 },
+                { modelName: "only-incomplete", incompleteRequestCount: 7 }
+            ] },
+            { modelBreakdowns: [
+                { modelName: "same model", cost: 2, totalTokens: 20, incompleteRequestCount: 3 },
+                { modelName: "same  model", cost: 1, totalTokens: 10, incompleteRequestCount: 4 }
+            ] }
+        ]
+        if (data.reverse) {
+            items.reverse()
+        }
+        var original = JSON.stringify(items)
+        compare(Normalizer.normalizeCostModels(items, "EUR", 2).rows, [
+            { label: "same model", cost: 2, tokens: 20, currency: "EUR", incompleteRequests: 1000000000 },
+            { label: "same model", cost: 1, tokens: 10, currency: "EUR", incompleteRequests: 9 }
+        ])
+        compare(JSON.stringify(items), original)
+    }
+
+    function test_costModelTokenRankingRetainsPartiallyUnpricedAmounts() {
+        var items = [{ modelBreakdowns: [
+            { modelName: "mixed", totalTokens: 6 },
+            { modelName: "mixed", cost: 1, totalTokens: 4 },
+            { modelName: "priced", cost: 2, totalTokens: 5 },
+            { modelName: "cost-only", cost: 3 }
+        ] }]
+        var original = JSON.stringify(items)
+        compare(Normalizer.normalizeCostModels(items, "USD", 1, undefined, true), {
+            rows: [
+                { label: "cost-only", cost: 3, tokens: null, currency: "USD", incompleteRequests: 0 },
+                { label: "priced", cost: 2, tokens: 5, currency: "USD", incompleteRequests: 0 },
+                { label: "mixed", cost: 1, tokens: 10, currency: "USD", incompleteRequests: 0 }
+            ],
+            truncated: false,
+            tokenRanking: {
+                rows: [
+                    { label: "mixed", cost: 1, tokens: 10, currency: "USD", incompleteRequests: 0 },
+                    { label: "priced", cost: 2, tokens: 5, currency: "USD", incompleteRequests: 0 }
+                ],
+                omitted: 0,
+                truncated: false,
+                sourceTruncated: false,
+                hasUnknownCost: true
+            }
+        })
+        compare(JSON.stringify(items), original)
+    }
+
     function test_costModelsUseTheSameCalendarWindowAsDailyHistory_data() {
         return [
             { tag: "date-only", updatedAt: "2026-08-30" },

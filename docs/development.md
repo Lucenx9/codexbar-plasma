@@ -786,6 +786,13 @@ records the Gemini exclusion. Never test credentials against the user's config.
 
 ## Usage sharing
 
+`ProviderNormalizer.js` validates model breakdowns before accumulating amounts
+and excluded-request counts by raw model identity. Separate helpers handle
+overflow-safe sums, cost-first ordering, and optional token ranking. Display
+labels never become aggregation keys. Direct normalizer QtTests cover label
+collisions, excluded-only records before and after measured records, saturated
+counts, input immutability, and partially unpriced token rankings.
+
 `ShareUsage.js` projects range-matched cost snapshots into bounded aggregate
 fields. `CostResponse.js` retains a separate bounded token ranking before the
 normalizer caps its existing cost-first list. Both rankings pass through the
