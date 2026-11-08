@@ -6,7 +6,6 @@ import unittest
 from ui_regression_support import (
     Surface,
     code_contains,
-    cost_presentation_js,
     cost_trust_notice_qml,
     full_representation_qml,
     function_body,
@@ -22,7 +21,6 @@ from ui_regression_support import (
 # component keeps these assertions meaningful instead of silently unhooking them.
 applet = Surface("applet", root)
 main_text = applet.text
-cost_presentation_text = cost_presentation_js.read_text(encoding="utf-8")
 provider_cost_section_text = provider_cost_section_qml.read_text(encoding="utf-8")
 interactive_chart_text = interactive_chart_qml.read_text(encoding="utf-8")
 spend_view_text = spend_view_qml.read_text(encoding="utf-8")
@@ -106,18 +104,6 @@ class CostTest(unittest.TestCase):
                     f"missing {antigravity_hint_fragment!r}"
                 )
 
-        # The aggregation moved into CostPresentation.js; the rule did not. A snapshot
-        # answered for another window must still be excluded from the selected range.
-        spend_snapshots_body = function_body(cost_presentation_text, "spendSnapshots")
-        if not code_contains(spend_snapshots_body, "snapshotMatchesRange(tokenCost, historyDays, period)"):
-            raise AssertionError("global spend aggregates must exclude snapshots from another selected range")
-        cost_range_match_body = function_body(cost_presentation_text, "snapshotMatchesRange")
-        for range_match_fragment in ("Number(tokenCost.historyDays)", "Number(historyDays)"):
-            if not code_contains(cost_range_match_body, range_match_fragment):
-                raise AssertionError(
-                    "cost snapshot range matching must compare normalized snapshot and selected ranges; "
-                    f"missing {range_match_fragment!r}"
-                )
         spend_provider_costs_body = function_body(main_text, "spendProviderCosts")
         for fragment in (
             "CostPresentation.spendSnapshots(tokenCosts, costHistoryDays, function(providerID)",
@@ -651,10 +637,6 @@ class CostTest(unittest.TestCase):
                     "cost amount lines must carry their trust qualifier in localized text; "
                     f"missing {qualified_value_fragment!r}"
                 )
-        present_cost_body = function_body(cost_text, "presentTokenCosts")
-        if not re.search(r'item.sessionLine = costLine\(i18n\("Today"\), snapshot.sessionCost,\s*'
-                         r'snapshot.sessionTokens, currency\)', present_cost_body):
-            raise AssertionError("Today must not inherit history-level trust qualifiers")
 
     def test_cost_presentation_adapters_forward_current_inputs(self):
         source = (root / "contents/ui/main.qml").read_text()

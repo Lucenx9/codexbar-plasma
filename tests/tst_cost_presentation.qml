@@ -950,6 +950,9 @@ TestCase {
 
     function test_snapshotMatchesRangeRejectsAStaleWindow() {
         verify(CostPresentation.snapshotMatchesRange({ historyDays: 30 }, 30))
+        verify(CostPresentation.snapshotMatchesRange({ historyDays: "30" }, "30"))
+        verify(CostPresentation.snapshotMatchesRange({ historyDays: "30" }, 30))
+        verify(CostPresentation.snapshotMatchesRange({ historyDays: 30 }, "30"))
         verify(!CostPresentation.snapshotMatchesRange({ historyDays: 7 }, 30))
         verify(!CostPresentation.snapshotMatchesRange({ historyDays: "abc" }, 30))
         verify(!CostPresentation.snapshotMatchesRange(null, 30))

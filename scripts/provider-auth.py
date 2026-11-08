@@ -71,6 +71,56 @@ def pending_event(event):
     return uri, code, expiry
 
 
+def login_event(pending, terminal, event):
+    """Classify one CLI event without changing login state or performing effects."""
+    if not isinstance(event, dict) or terminal is not None:
+        return {"kind": "invalid"}
+    status = event.get("status")
+    if status == "authorization_pending" and not pending:
+        return {"kind": "pending", "prompt": pending_event(event)}
+    if status == "authorized" and pending:
+        return {"kind": "terminal", "status": "ok"}
+    if status == "failed":
+        conflict = event.get("error") == "Config changed during login. Please try again."
+        return {"kind": "terminal", "status": "conflict" if conflict else "failed"}
+    return {"kind": "invalid"}
+
+
+class LoginStream:
+    """Bound the entire stream and yield complete JSON lines in receipt order."""
+
+    def __init__(self):
+        self.output = bytearray()
+        self.total = 0
+
+    def feed(self, block):
+        self.total += len(block)
+        if self.total > MAX_BYTES:
+            raise ValueError
+        self.output.extend(block)
+        while b"\n" in self.output:
+            line, _, self.output = self.output.partition(b"\n")
+            yield json.loads(line)
+
+    def incomplete(self):
+        return bool(self.output.strip())
+
+
+def login_dialog(title, message, prompt):
+    uri, code, expiry = prompt
+    # Explicit stdin keeps the URI/code out of argv, files and the engine cache.
+    dialog = spawn(["kdialog", "--title", title, "--textbox", "-", "520", "300"],
+                   stdin=subprocess.PIPE, stdout=subprocess.DEVNULL)
+    try:
+        text = message.replace("%1", uri).replace("%2", code).replace("%3", str(expiry))
+        dialog.stdin.write(text.encode("utf-8"))
+        dialog.stdin.close()
+    except BaseException:
+        stop(dialog)
+        raise
+    return dialog
+
+
 def stop(process, group=True):
     if process is None:
         return
@@ -179,7 +229,8 @@ def login(cli, title, message, supervised, request=""):
                         stdin=subprocess.DEVNULL, stdout=subprocess.PIPE)
         os.set_blocking(process.stdout.fileno(), False)
         deadline = time.monotonic() + 60
-        pending, terminal, output, total = False, None, bytearray(), 0
+        pending, terminal = False, None
+        stream = LoginStream()
         with selectors.DefaultSelector() as selector:
             selector.register(process.stdout, selectors.EVENT_READ)
             eof = False
@@ -201,42 +252,20 @@ def login(cli, title, message, supervised, request=""):
                         eof = True
                         selector.unregister(process.stdout)
                         break
-                    total += len(block)
-                    if total > MAX_BYTES:
-                        return {"status": "failed"}
-                    output.extend(block)
-                    while b"\n" in output:
-                        line, _, output = output.partition(b"\n")
-                        event = json.loads(line)
-                        if not isinstance(event, dict) or terminal is not None:
-                            return {"status": "failed"}
-                        status = event.get("status")
-                        if status == "authorization_pending" and not pending:
-                            uri, code, expiry = pending_event(event)
+                    for event in stream.feed(block):
+                        decision = login_event(pending, terminal, event)
+                        if decision["kind"] == "pending":
                             pending = True
-                            deadline = time.monotonic() + expiry
-                            # kdialog's explicit stdin mode keeps code and URI out
-                            # of argv, files, logs and the executable engine cache.
-                            dialog = spawn(["kdialog", "--title", title,
-                                            "--textbox", "-", "520", "300"],
-                                           stdin=subprocess.PIPE, stdout=subprocess.DEVNULL)
-                            text = message.replace("%1", uri).replace("%2", code).replace("%3", str(expiry))
-                            dialog.stdin.write(text.encode("utf-8"))
-                            dialog.stdin.close()
-                        elif status == "authorized" and pending:
-                            terminal = "ok"
-                            stop(dialog)
-                            dialog = None
-                            deadline = time.monotonic() + 5
-                        elif status == "failed":
-                            terminal = ("conflict" if event.get("error") ==
-                                        "Config changed during login. Please try again." else "failed")
+                            deadline = time.monotonic() + decision["prompt"][2]
+                            dialog = login_dialog(title, message, decision["prompt"])
+                        elif decision["kind"] == "terminal":
+                            terminal = decision["status"]
                             stop(dialog)
                             dialog = None
                             deadline = time.monotonic() + 5
                         else:
                             return {"status": "failed"}
-        if output.strip() or terminal is None or (terminal == "ok" and process.returncode != 0):
+        if stream.incomplete() or terminal is None or (terminal == "ok" and process.returncode != 0):
             return {"status": "failed"}
         return {"status": terminal}
     finally:

@@ -55,6 +55,12 @@ network requests and returns semantic JSON records.
 | Secret Service, HTTP, provider differences, output validation | `scripts/lib/ai_insights.py` via `scripts/ai-insights.py` |
 | Settings, key prompt, model discovery | `configAiInsights.qml` |
 
+Snapshot construction separates calendar-day indexing, complete-period totals,
+comparison arithmetic and ordered signal selection. The helper separately
+projects model-list records and validates cloud completion envelopes. These
+steps retain the same public interfaces, limits and privacy allowlists; network
+and credential effects remain in Python.
+
 While `aiInsightsEnabled` is false, the snapshot is not built, the controller
 has no scheduled or active process, and the card and analysis page are hidden.
 The page remains instantiated, so its plain-text rendering also applies while hidden.

@@ -60,6 +60,22 @@ def read_json(path):
     return value
 
 
+def _receipt_version(receipt, target):
+    version = receipt.get("version", "")
+    digest = receipt.get("sha256", "")
+    if not isinstance(version, str) or not re.fullmatch(cli_release.VERSION, version):
+        return None
+    if not isinstance(digest, str) or not re.fullmatch(r"[a-f0-9]{64}", digest):
+        return None
+    return version if target == "releases/v" + version + "-" + digest[:16] else None
+
+
+def _installed_binary(directory):
+    return ((directory / "CodexBarCLI").is_file()
+            and not (directory / "CodexBarCLI").is_symlink()
+            and os.readlink(directory / "codexbar") == "CodexBarCLI")
+
+
 def installed(root, target=None):
     try:
         info = root.lstat()
@@ -71,15 +87,8 @@ def installed(root, target=None):
         directory = root / target
         if directory.is_symlink() or directory.resolve().parent != (root / "releases").resolve():
             return None
-        receipt = read_json(directory / "receipt.json")
-        version = receipt.get("version", "")
-        digest = receipt.get("sha256", "")
-        if not isinstance(version, str) or not re.fullmatch(cli_release.VERSION, version) \
-                or not isinstance(digest, str) or not re.fullmatch(r"[a-f0-9]{64}", digest) \
-                or target != "releases/v" + version + "-" + digest[:16] \
-                or not (directory / "CodexBarCLI").is_file() \
-                or (directory / "CodexBarCLI").is_symlink() \
-                or os.readlink(directory / "codexbar") != "CodexBarCLI":
+        version = _receipt_version(read_json(directory / "receipt.json"), target)
+        if version is None or not _installed_binary(directory):
             return None
         return dict(version=version, target=target)
     except (OSError, ValueError, TypeError):
@@ -202,6 +211,20 @@ def platform_suffix():
     raise ValueError("unsupported_platform")
 
 
+def _release_asset(assets, tag, expected, maximum):
+    matches = [asset for asset in assets if isinstance(asset, dict) and asset.get("name") == expected]
+    if len(matches) != 1:
+        raise ValueError("asset_missing")
+    asset = matches[0]
+    if asset.get("browser_download_url") != DOWNLOAD_PREFIX + tag + "/" + expected:
+        raise ValueError("asset_shape")
+    if type(asset.get("size")) is not int or not 0 < asset["size"] <= maximum:
+        raise ValueError("asset_shape")
+    if not isinstance(asset.get("digest"), str) or not re.fullmatch(r"sha256:[a-f0-9]{64}", asset["digest"]):
+        raise ValueError("asset_shape")
+    return asset
+
+
 def release_assets(release, suffix):
     record = cli_release.compare_release({"version": ""}, release)
     tag = record["tag"]
@@ -209,18 +232,8 @@ def release_assets(release, suffix):
     assets = release.get("assets")
     if not isinstance(assets, list) or len(assets) > 100:
         raise ValueError("assets")
-    selected = []
-    for expected, maximum in ((name, MAX_ARCHIVE), (name + ".sha256", 4096)):
-        matches = [a for a in assets if isinstance(a, dict) and a.get("name") == expected]
-        if len(matches) != 1:
-            raise ValueError("asset_missing")
-        asset = matches[0]
-        if asset.get("browser_download_url") != DOWNLOAD_PREFIX + tag + "/" + expected \
-                or type(asset.get("size")) is not int or not 0 < asset["size"] <= maximum \
-                or not isinstance(asset.get("digest"), str) \
-                or not re.fullmatch(r"sha256:[a-f0-9]{64}", asset["digest"]):
-            raise ValueError("asset_shape")
-        selected.append(asset)
+    selected = [_release_asset(assets, tag, expected, maximum)
+                for expected, maximum in ((name, MAX_ARCHIVE), (name + ".sha256", 4096))]
     return record["latest"], selected
 
 
@@ -329,26 +342,26 @@ def probe_version(command, version, home):
         return False
 
 
+def _require_release_text(path, accepted, error):
+    try:
+        value = path.read_text()
+    except UnicodeDecodeError:
+        raise ValueError(error) from None
+    if value.strip() not in accepted:
+        raise ValueError(error)
+
+
 def _prepare_release(stage, version, assets):
     archive, checksum = stage / "archive.tar.gz", stage / "archive.sha256"
     download(assets[0], archive)
     download(assets[1], checksum)
     expected = assets[0]["digest"][7:]
-    try:
-        checksum_text = checksum.read_text()
-    except UnicodeDecodeError:
-        raise ValueError("checksum_file") from None
-    if checksum_text.strip() not in (expected + "  " + assets[0]["name"], expected + " *" + assets[0]["name"]):
-        raise ValueError("checksum_file")
+    _require_release_text(checksum, (expected + "  " + assets[0]["name"], expected + " *" + assets[0]["name"]),
+                          "checksum_file")
     extracted = stage / "release"
     extracted.mkdir()
     unpack(archive, extracted)
-    try:
-        staged_version = (extracted / "VERSION").read_text()
-    except UnicodeDecodeError:
-        raise ValueError("version_file") from None
-    if staged_version.strip() not in (version, "v" + version):
-        raise ValueError("version_file")
+    _require_release_text(extracted / "VERSION", (version, "v" + version), "version_file")
     home = stage / "probe-home"
     home.mkdir()
     if not probe_version(extracted / "codexbar", version, home):

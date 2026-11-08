@@ -27,28 +27,17 @@ reject_in_file "$PROVIDERS_QML" "return field.options.length > 0 ? 0 : -1"
 
 python3 - "$PROVIDERS_QML" <<'PY'
 import pathlib
-import re
 import sys
 
 text = pathlib.Path(sys.argv[1]).read_text(encoding="utf-8")
 start = text.index("    function supportsApiKeySetup(providerID)")
 end = text.index("    function providerDocsUrl(providerID)", start)
 body = text[start:end]
-descriptor_owned = {"aiand", "clinepass", "deepinfra", "neuralwatt", "sub2api", "xai", "zenmux"}
-hardcoded = sorted(descriptor_owned.intersection(re.findall(r'case "([^"]+)":', body)))
-if hardcoded:
-    print("descriptor-owned API key capability hardcoded in QML: " + ", ".join(hardcoded), file=sys.stderr)
+if "ProviderCapabilities.supportsApiKey(" not in body:
+    print("the Providers page must delegate API-key capability policy", file=sys.stderr)
     sys.exit(1)
-
-if 'case "ibmbob":' not in body:
-    print("IBM Bob must offer the official generic set-api-key setup path", file=sys.stderr)
-    sys.exit(1)
-if 'case "fireworks":' not in body:
-    print("Fireworks must offer generic API-key setup now that the CLI discovers accountSlug", file=sys.stderr)
-    sys.exit(1)
-if "return fireworksSingleKeySetupSupported" not in body:
-    print("Fireworks API-key setup must require CLI 0.54.0 slug discovery", file=sys.stderr)
-    sys.exit(1)
+# Provider/version and descriptor-only fallback behavior run through
+# tests/tst_provider_capabilities.qml against the public policy interface.
 
 for function_name in ("setEnabled", "setApiKey", "loadProviderSettings", "providerCliCommandText"):
     marker = f"    function {function_name}("

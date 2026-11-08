@@ -272,6 +272,10 @@ function rateLimitUntilMs(text, contextKey, nowMs) {
 
 // Automatic generation follows the configured interval only. Opening the
 // popup, a usage refresh, or a changed language never makes it due by itself.
+function withinInterval(value, nowMs, intervalMs) {
+    return isFinite(value) && value <= nowMs && nowMs - value < intervalMs
+}
+
 function automaticDue(observation) {
     var o = observation
     if (!o.enabled || !o.configured || !(o.intervalHours > 0) || o.busy || !o.sufficient) {
@@ -283,10 +287,10 @@ function automaticDue(observation) {
     }
     // Every attempt counts, including a failed or timed-out one: the provider
     // may already have processed and billed it.
-    if (isFinite(o.lastAttemptMs) && o.lastAttemptMs <= o.nowMs && o.nowMs - o.lastAttemptMs < intervalMs) {
+    if (withinInterval(o.lastAttemptMs, o.nowMs, intervalMs)) {
         return false
     }
-    if (isFinite(o.lastSuccessMs) && o.lastSuccessMs <= o.nowMs && o.nowMs - o.lastSuccessMs < intervalMs) {
+    if (withinInterval(o.lastSuccessMs, o.nowMs, intervalMs)) {
         return false
     }
     // Nothing changed since the cached insight: another paid request would
@@ -301,6 +305,13 @@ function scriptPath(scriptUrl) {
     } catch (error) {
         return ""
     }
+}
+
+function generationArguments(provider, value) {
+    if (!validModel(provider, value.model)) return null
+    var parts = ["--model", Guards.shellQuote(value.model), "--language", languageTag(value.language)]
+    if (provider === "openrouter" && value.zdr === false) parts.push("--no-zdr")
+    return parts
 }
 
 // The helper reads API keys itself; no secret is ever part of this command.
@@ -322,13 +333,9 @@ function command(scriptUrl, action, options) {
         parts.push("--endpoint", Guards.shellQuote(endpointText(value.endpoint)))
     }
     if (action === "generate") {
-        if (!validModel(provider, value.model)) {
-            return ""
-        }
-        parts.push("--model", Guards.shellQuote(value.model), "--language", languageTag(value.language))
-        if (provider === "openrouter" && value.zdr === false) {
-            parts.push("--no-zdr")
-        }
+        var generation = generationArguments(provider, value)
+        if (!generation) return ""
+        parts = parts.concat(generation)
     }
     if (action === "generate" || action === "discard") {
         if (!validInputRequest(value.request)) {

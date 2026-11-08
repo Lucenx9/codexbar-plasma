@@ -21,6 +21,7 @@ import "config/ProviderList.js" as ProviderList
 import "config/ProviderOperations.js" as ProviderOperations
 import "config/ProviderSource.js" as ProviderSource
 import "config/ProviderCredentials.js" as ProviderCredentials
+import "config/ProviderCapabilities.js" as ProviderCapabilities
 
 KCM.SimpleKCM {
     id: page
@@ -138,12 +139,7 @@ KCM.SimpleKCM {
         providerDiagnosticErrors = ({})
         selectedProviderID = ""
         providerDescriptorsUnavailable = false
-        fireworksSingleKeySetupSupported = false
-        sonioxApiKeySetupSupported = false
-        abliterationChatboxKeySetupSupported = false
-        munitoApiKeySetupSupported = false
-        commandCodeFalApiKeySetupSupported = false
-        providerSourceSetupSupported = false
+        applyProviderCapabilities(ProviderCapabilities.versionCapabilities("", 1))
         credentialCliVersion = ""
         Qt.callLater(reload)
     }
@@ -537,12 +533,7 @@ KCM.SimpleKCM {
             providerListFailed = true
             errorText = i18n("Loading providers timed out. Try again.")
         } else if (descriptor.kind === "version") {
-            fireworksSingleKeySetupSupported = false
-            sonioxApiKeySetupSupported = false
-            abliterationChatboxKeySetupSupported = false
-            munitoApiKeySetupSupported = false
-            commandCodeFalApiKeySetupSupported = false
-            providerSourceSetupSupported = false
+            applyProviderCapabilities(ProviderCapabilities.versionCapabilities("", 1))
             credentialCliVersion = ""
         } else if (descriptor.kind === "diagnose") {
             setProviderDiagnosticLoading(descriptor.provider, false)
@@ -599,21 +590,19 @@ KCM.SimpleKCM {
         }
     }
 
+    function applyProviderCapabilities(value) {
+        fireworksSingleKeySetupSupported = value.fireworks
+        sonioxApiKeySetupSupported = value.soniox
+        abliterationChatboxKeySetupSupported = value.abliterationChatbox
+        munitoApiKeySetupSupported = value.munito
+        commandCodeFalApiKeySetupSupported = value.commandCodeFal
+        providerSourceSetupSupported = value.source
+    }
+
     function handleCliVersionResult(stdoutText, exitCode) {
         credentialCliVersion = Guards.exitCode(exitCode) === 0
             && ProviderConfigProtocol.cliVersionAtLeast(stdoutText, 0, 0, 0) ? stdoutText : ""
-        fireworksSingleKeySetupSupported = Number(exitCode) === 0
-            && ProviderConfigProtocol.cliVersionAtLeast(stdoutText, 0, 54, 0)
-        sonioxApiKeySetupSupported = Number(exitCode) === 0
-            && ProviderConfigProtocol.cliVersionAtLeast(stdoutText, 0, 80, 0)
-        abliterationChatboxKeySetupSupported = Number(exitCode) === 0
-            && ProviderConfigProtocol.cliVersionAtLeast(stdoutText, 0, 81, 0)
-        munitoApiKeySetupSupported = Number(exitCode) === 0
-            && ProviderConfigProtocol.cliVersionAtLeast(stdoutText, 0, 77, 0)
-        commandCodeFalApiKeySetupSupported = Number(exitCode) === 0
-            && ProviderConfigProtocol.cliVersionAtLeast(stdoutText, 0, 75, 0)
-        providerSourceSetupSupported = Number(exitCode) === 0
-            && ProviderConfigProtocol.cliVersionAtLeast(stdoutText, 0, 73, 0)
+        applyProviderCapabilities(ProviderCapabilities.versionCapabilities(stdoutText, exitCode))
     }
 
     function handleSetSourceResult(descriptor, stdoutText, stderrText, exitCode) {
@@ -1288,67 +1277,13 @@ KCM.SimpleKCM {
 
     function supportsApiKeySetup(providerID) {
         var item = providerByID(providerID)
-        if (item && item.authentication && item.authentication.supportsConfigAPIKey !== true) {
-            return false
-        }
-        switch (providerKey(providerID)) {
-        case "soniox":
-            return sonioxApiKeySetupSupported
-        case "abliteration":
-        case "chatbox":
-            return abliterationChatboxKeySetupSupported
-        case "munito":
-            return munitoApiKeySetupSupported
-        case "fireworks":
-            return fireworksSingleKeySetupSupported
-        case "commandcode":
-        case "fal":
-            return commandCodeFalApiKeySetupSupported
-        case "aerostack":
-        case "linkup":
-        case "sailresearch":
-        case "sofya":
-        case "tavily":
-        case "aixy":
-        case "alibaba":
-        case "amp":
-        case "atlascloud":
-        case "azureopenai":
-        case "chutes":
-        case "codebuff":
-        case "clawrouter":
-        case "copilot":
-        case "crof":
-        case "crossmodel":
-        case "deepgram":
-        case "devpass":
-        case "doubao":
-        case "elevenlabs":
-        case "gitkraken":
-        case "groq":
-        case "ibmbob":
-        case "kimi":
-        case "kimik2":
-        case "kilo":
-        case "litellm":
-        case "llmman":
-        case "llmproxy":
-        case "minimax":
-        case "moonshot":
-        case "ollama":
-        case "openai":
-        case "openrouter":
-        case "poe":
-        case "v0":
-        case "venice":
-        case "vercel":
-        case "warp":
-        case "xkiro":
-        case "zai":
-            return true
-        default:
-            return false
-        }
+        return ProviderCapabilities.supportsApiKey(providerKey(providerID), item ? item.authentication : null, {
+            fireworks: fireworksSingleKeySetupSupported,
+            soniox: sonioxApiKeySetupSupported,
+            abliterationChatbox: abliterationChatboxKeySetupSupported,
+            munito: munitoApiKeySetupSupported,
+            commandCodeFal: commandCodeFalApiKeySetupSupported
+        })
     }
 
     function sourceModeLabel(mode) {

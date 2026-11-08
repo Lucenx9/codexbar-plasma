@@ -46,31 +46,11 @@ class ProviderSettingsTest(unittest.TestCase):
         ):
             providers_surface.require(provider_group_fragment, "provider settings must group by the saved order")
 
-    def test_api_key_setup_gates(self):
-        api_key_setup_body = function_body(providers_text, "supportsApiKeySetup")
-        for provider in ("crossmodel", "clawrouter", "fireworks"):
-            if not code_contains(api_key_setup_body, f'case "{provider}":'):
-                raise AssertionError(
-                    f"supportsApiKeySetup must include released API-key provider {provider}"
-                )
-        if not code_contains(api_key_setup_body, "return fireworksSingleKeySetupSupported"):
-            raise AssertionError(
-                "Fireworks API-key setup must stay hidden until the CLI version proves slug discovery support"
-            )
-        fireworks_gate = re.search(
-            r'((?:case "[^"]+":\s*)+)return fireworksSingleKeySetupSupported',
-            api_key_setup_body,
-        )
-        if fireworks_gate is None or re.findall(
-            r'case "([^"]+)":', fireworks_gate.group(1)
-        ) != ["fireworks"]:
-            raise AssertionError(
-                "the CLI version gate must apply only to Fireworks API-key setup"
-            )
+    def test_reload_probes_cli_version(self):
         if "runCliVersionCommand()" not in function_body(providers_text, "reload"):
             raise AssertionError("provider reload must probe the selected CodexBar CLI version")
         cli_version_result_body = function_body(providers_text, "handleCliVersionResult")
-        if not code_contains(cli_version_result_body, "ProviderConfigProtocol.cliVersionAtLeast("):
+        if not code_contains(cli_version_result_body, "ProviderCapabilities.versionCapabilities(stdoutText, exitCode)"):
             raise AssertionError("the Providers page must gate versioned capabilities through the bounded CLI parser")
 
     def test_mutation_results(self):
