@@ -58,6 +58,95 @@ TestCase {
         return kinds.join(",")
     }
 
+    function test_firstReadingRespectsEachNotificationToggle_data() {
+        var cases = []
+        for (var mode of ["prime", "observe"]) {
+            for (var mask = 0; mask < 8; mask++) {
+                cases.push({tag: mode + "-" + mask, mode: mode,
+                    quota: !!(mask & 1), pace: !!(mask & 2), reset: !!(mask & 4)})
+            }
+        }
+        return cases
+    }
+
+    function test_firstReadingRespectsEachNotificationToggle(data) {
+        var options = plannerOptions(data.mode)
+        options.quotaEnabled = data.quota
+        options.paceEnabled = data.pace
+        options.resetEnabled = data.reset
+        var active = observation("", "", [usageRow("minor", 85, true)])
+        var initial = NotificationPlanner.transition([active], {}, options)
+        compare(intentKinds(initial), "")
+
+        // Enabling a previously disabled signal may announce it. Signals
+        // already baselined by the first reading must remain quiet.
+        var unchanged = transition("observe", [active], initial.nextMemo)
+        var expected = []
+        if (!data.quota) expected.push("quota")
+        if (!data.pace) expected.push("pace")
+        compare(intentKinds(unchanged), expected.join(","))
+
+        // Follow the initial reading independently: a disabled reset must not
+        // have armed itself while the other signals were being primed.
+        var collapsed = transition("observe",
+            [observation("", "", [usageRow("", 3, false)])], initial.nextMemo)
+        compare(intentKinds(collapsed), data.reset ? "reset" : "")
+    }
+
+    function test_mixedConfidenceReadingPrimesOnlyAuthoritativeRows_data() {
+        return [{tag: "prime", mode: "prime"}, {tag: "observe", mode: "observe"}]
+    }
+
+    function test_mixedConfidenceReadingPrimesOnlyAuthoritativeRows(data) {
+        var trusted = usageRow("minor", 85, true, "Trusted", "primary")
+        trusted.dataConfidence = "exact"
+        var untrusted = usageRow("major", 99, true, "Estimated", "secondary")
+        untrusted.dataConfidence = "estimated"
+        var initial = transition(data.mode, [observation("", "", [trusted, untrusted])])
+        compare(intentKinds(initial), "")
+
+        var recovered = usageRow("major", 99, true, "Estimated", "secondary")
+        recovered.dataConfidence = "exact"
+        var fresh = transition("observe", [observation("", "", [trusted, recovered])],
+            initial.nextMemo)
+        compare(intentKinds(fresh), "quota,pace")
+        compare(fresh.intents[0].rowIndex, 1)
+        compare(fresh.intents[1].rowIndex, 1)
+
+        var collapsed = transition("observe", [observation("", "", [trusted,
+            usageRow("", 3, false, "Estimated", "secondary")])], initial.nextMemo)
+        compare(intentKinds(collapsed), "")
+    }
+
+    function test_resetArmingMatchesForInitialAndLaterReadings_data() {
+        return [
+            {tag: "custom-below", threshold: 90, used: 89, hasPercent: true, expected: ""},
+            {tag: "custom-equal", threshold: 90, used: 90, hasPercent: true, expected: "reset"},
+            {tag: "default-below", threshold: undefined, used: 79, hasPercent: true, expected: ""},
+            {tag: "default-equal", threshold: undefined, used: 80, hasPercent: true, expected: "reset"},
+            {tag: "invalid-threshold", threshold: NaN, used: 80, hasPercent: true, expected: "reset"},
+            {tag: "unknown-percent", threshold: 80, used: 90, hasPercent: false, expected: ""},
+            {tag: "invalid-percent", threshold: 80, used: Infinity, hasPercent: true, expected: ""}
+        ]
+    }
+
+    function test_resetArmingMatchesForInitialAndLaterReadings(data) {
+        var options = plannerOptions("prime")
+        options.resetArmThreshold = data.threshold
+        var high = observation("", "", [usageRow("", data.used, false,
+            "Weekly", "secondary", "", data.hasPercent)])
+        var low = observation("", "", [usageRow("", 3, false)])
+        var initial = NotificationPlanner.transition([high], {}, options)
+        options.mode = "observe"
+        var collapsed = NotificationPlanner.transition([low], initial.nextMemo, options)
+        compare(intentKinds(collapsed), data.expected)
+
+        var healthy = transition("prime", [observation("", "", [usageRow("", 20, false)])])
+        var later = NotificationPlanner.transition([high], healthy.nextMemo, options)
+        var laterCollapse = NotificationPlanner.transition([low], later.nextMemo, options)
+        compare(intentKinds(laterCollapse), data.expected)
+    }
+
     function test_errorWithoutStatusOrUsageRemainsPending() {
         compare(NotificationPlanner.observationPending(false, true, false, 0), true)
     }
