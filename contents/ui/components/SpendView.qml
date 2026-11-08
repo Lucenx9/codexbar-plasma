@@ -4,7 +4,10 @@ import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.components as PlasmaComponents
 import "." as Components
-import "../CostPresentation.js" as CostPresentation
+import "../CostAmounts.js" as CostAmounts
+import "../CostChart.js" as CostChart
+import "../CostCurrency.js" as CostCurrency
+import "../CostTrust.js" as CostTrust
 import "../HeatmapNavigation.js" as HeatmapNavigation
 
 ColumnLayout {
@@ -17,15 +20,15 @@ ColumnLayout {
         applet.costHistoryDays, applet.costHistoryPeriod, applet.costHistoryMetric])
     readonly property var providerCosts: applet.spendProviderCosts()
     readonly property var presentedProviderCosts: applet.presentedSpendProviderCosts(providerCosts)
-    readonly property var costTrustSummary: CostPresentation.costTrustSummary(providerCosts)
+    readonly property var costTrustSummary: CostTrust.costTrustSummary(providerCosts)
     readonly property string spendCurrency: applet.spendCurrency(providerCosts)
-    readonly property bool hasMixedCostCurrencies: CostPresentation.spendHasMixedCostCurrencies(providerCosts)
+    readonly property bool hasMixedCostCurrencies: CostCurrency.spendHasMixedCostCurrencies(providerCosts)
     readonly property real heatmapMaximum: chartMaximum(dailyPoints)
-    readonly property var heatmapDays: CostPresentation.spendHeatmapDays(dailyPoints, providerCosts)
+    readonly property var heatmapDays: CostChart.spendHeatmapDays(dailyPoints, providerCosts)
     readonly property int heatmapFirstWeekday: Qt.locale().firstDayOfWeek
-    readonly property var heatmapRowWeekdays: CostPresentation.spendHeatmapRowWeekdays(
+    readonly property var heatmapRowWeekdays: CostChart.spendHeatmapRowWeekdays(
         heatmapDays, heatmapFirstWeekday)
-    readonly property int heatmapTrailingSlots: CostPresentation.spendHeatmapTrailingSlots(
+    readonly property int heatmapTrailingSlots: CostChart.spendHeatmapTrailingSlots(
         heatmapDays, heatmapFirstWeekday)
 
     Layout.fillWidth: true
@@ -308,7 +311,7 @@ ColumnLayout {
                 id: historyChart
 
                 onPointsChanged: {
-                    var index = CostPresentation.costDayIndexAfterRefresh(
+                    var index = CostChart.costDayIndexAfterRefresh(
                         view.daySelectionMemo.points, view.daySelectionMemo.index, points)
                     view.daySelectionMemo = { points: points, index: index }
                     selectedIndex = index
@@ -490,7 +493,7 @@ ColumnLayout {
                                 readonly property real cellHeight: Math.max(minimumCellSize, Math.min(
                                     maximumCellSize, availableCellWidth))
                                 readonly property real cellWidth: cellHeight
-                                readonly property var cells: CostPresentation.spendHeatmapCells(
+                                readonly property var cells: CostChart.spendHeatmapCells(
                                     view.heatmapDays, columnCount * 7, view.heatmapTrailingSlots)
 
                                 width: parent.width
@@ -698,11 +701,11 @@ ColumnLayout {
 
                             required property var modelData
                             readonly property var totals: modelData.totals
-                            readonly property string costText: CostPresentation.hasMetricValue(totals, false)
+                            readonly property string costText: CostAmounts.hasMetricValue(totals, false)
                                 ? view.applet.qualifiedCostValue(view.applet.amountString(totals.cost,
                                     totals.currency), modelData.valueMode)
                                 : i18n("Cost unavailable")
-                            readonly property string tokensText: CostPresentation.hasMetricValue(totals, true)
+                            readonly property string tokensText: CostAmounts.hasMetricValue(totals, true)
                                 ? view.applet.usageCountText(totals.tokens, "tokens")
                                 : i18n("Tokens unavailable")
 

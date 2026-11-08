@@ -1,385 +1,14 @@
 .pragma library
 .import "Guards.js" as Guards
-.import "SafeText.js" as SafeText
-.import "ProviderNormalizer.js" as Normalizer
+.import "CostAmounts.js" as CostAmounts
+.import "CostChart.js" as CostChart
+.import "CostCurrency.js" as CostCurrency
+.import "CostTrust.js" as CostTrust
 
-// Cost and spend presentation: number formatting, chart geometry, and the row
-// and summary builders the Usage & Spend tab and the provider cost sections
-// bind to.
-//
-// Like ProviderNormalizer.js this module must not reach for `Qt`, `Kirigami`,
-// or `i18n`. Two consequences shape the interface:
-//
-//   * The caller supplies the words. Every function that would otherwise call
-//     `i18n` returns figures rather than sentences, so the plural rules and the
-//     placeholder order stay in QML where `i18np` lives.
-//   * The caller supplies the locale separators through `numberFormat`, because
-//     `Qt.locale()` is not reachable from a `.pragma library` module.
-//
-// Everything here is side-effect free apart from `paintRoundedTopBar`, which
-// draws into a caller-supplied canvas context.
+// Build provider cost rows and range-matched spend aggregates.
+// Callers own localization, selection, privacy, and process effects.
 
-var maximumCostHistoryPoints = 365
 var maximumProjectRows = 128
-var maximumCostTrustNoticeScopes = 128
-var maximumIncompleteRequests = 1000000000
-
-// Locale separators, resolved once by the caller from `Qt.locale()`.
-function numberFormat(groupSeparator, decimalPoint) {
-    return {
-        group: typeof groupSeparator === "string" ? groupSeparator : ",",
-        decimal: typeof decimalPoint === "string" ? decimalPoint : "."
-    }
-}
-
-function hasOwnKey(item, key) {
-    return Guards.hasOwnKey(item, key)
-}
-
-function isUnsafeObjectKey(key) {
-    return Guards.isUnsafeObjectKey(key)
-}
-
-function boundedText(value, limit) {
-    if (value === null || value === undefined) {
-        return ""
-    }
-    return SafeText.truncatedText(String(value), limit)
-}
-
-// The metric the charts currently plot. Cost and tokens share one payload, so
-// every scale, peak, and summary has to read the same switch.
-function hasMetricValue(point, showsTokens) {
-    if (!point) {
-        return false
-    }
-    var value = showsTokens ? point.tokens : point.cost
-    return typeof value === "number" && isFinite(value)
-}
-
-function metricValue(point, showsTokens) {
-    if (!hasMetricValue(point, showsTokens)) {
-        return 0
-    }
-    return showsTokens ? point.tokens : point.cost
-}
-
-function groupedDecimalString(fmt, value, digits) {
-    var numeric = Number(value)
-    if (!isFinite(numeric)) {
-        return "-"
-    }
-    // Number.toFixed returns exponential notation past 1e21, which has no
-    // fixed-point digits to group ("1e+21" would gain a bogus separator).
-    if (Math.abs(numeric) >= 1e21) {
-        return String(Math.abs(numeric))
-    }
-    var f = fmt && typeof fmt === "object" ? fmt : numberFormat()
-    var groupSep = typeof f.group === "string" ? f.group : ","
-    var decPoint = typeof f.decimal === "string" ? f.decimal : "."
-    var parts = Math.abs(numeric).toFixed(digits).split(".")
-    var whole = parts[0]
-    var grouped = ""
-    for (var i = 0; i < whole.length; i++) {
-        if (i > 0 && (whole.length - i) % 3 === 0) {
-            grouped += groupSep
-        }
-        grouped += whole.charAt(i)
-    }
-    return parts.length > 1 ? grouped + decPoint + parts[1] : grouped
-}
-
-// "Quota" is a credit balance, not money, so it prints as a bare rounded count.
-// Like the money path it degrades to "-" for non-numeric input instead of
-// printing "NaN".
-function amountString(fmt, value, currency) {
-    var code = typeof currency === "string" ? currency.trim() : ""
-    if (typeof value !== "number" || !isFinite(value)) {
-        return "-"
-    }
-    var numeric = value
-    if (code === "Quota") {
-        return String(Math.round(numeric))
-    }
-    // Use the same precision as the amount, before applying locale separators.
-    // A negative value that rounds to zero must not display as "-$0.00".
-    var negative = numeric < 0 && Math.abs(numeric).toFixed(2) !== "0.00"
-    var amount = groupedDecimalString(fmt, Math.abs(numeric), 2)
-    if (code === "USD") {
-        return negative ? "-$" + amount : "$" + amount
-    }
-    if (code.length === 0) {
-        return (negative ? "-" : "") + amount
-    }
-    return (negative ? "-" : "") + code + " " + amount
-}
-
-// Compact counts use the caller's decimal mark, like costs on the same line:
-// "1,5K" beside "1.234,50" instead of the C-locale "1.5K".
-function scaledTokenCount(value, fmt) {
-    if (value >= 10) {
-        return Number(value).toFixed(0)
-    }
-    var f = fmt && typeof fmt === "object" ? fmt : numberFormat()
-    var decPoint = typeof f.decimal === "string" ? f.decimal : "."
-    return Number(value).toFixed(1).replace(/\.0$/, "").replace(".", decPoint)
-}
-
-// Credit balances are plain counts: a whole balance keeps no fractional part,
-// while a fractional one keeps a single digit. Rounding can carry a fractional
-// value across the whole boundary ("99.95" -> "100.0"), so the fractional digit
-// drops when the rounded figure is whole instead of choosing the precision
-// from the unrounded value.
-function formatCount(fmt, value) {
-    var numeric = Number(value)
-    if (!isFinite(numeric)) {
-        return "-"
-    }
-    var magnitude = Math.abs(numeric)
-    var digits = magnitude >= 100 || magnitude === Math.round(magnitude) ? 0 : 1
-    var text = groupedDecimalString(fmt, magnitude, digits)
-    if (digits === 1) {
-        var f = fmt && typeof fmt === "object" ? fmt : numberFormat()
-        var decPoint = typeof f.decimal === "string" ? f.decimal : "."
-        if (text.slice(-(decPoint.length + 1)) === decPoint + "0") {
-            text = text.slice(0, -(decPoint.length + 1))
-        }
-    }
-    // A tiny negative magnitude rounds to a displayed zero; its sign must not
-    // survive as the negative-zero string "-0".
-    return (numeric < 0 && text !== "0" ? "-" : "") + text
-}
-
-function tokenCountString(tokens, fmt) {
-    var value = Number(tokens)
-    if (!isFinite(value)) {
-        return "-"
-    }
-    var absValue = Math.abs(value)
-    var sign = value < 0 ? "-" : ""
-    // Round inside each unit before choosing it, so a value that rounds up
-    // across a threshold promotes ("1M") instead of printing an overflowing
-    // unit ("1000K").
-    if (Math.round(absValue / 1000000) >= 1000) {
-        return sign + scaledTokenCount(absValue / 1000000000, fmt) + "B"
-    }
-    if (Math.round(absValue / 1000) >= 1000) {
-        return sign + scaledTokenCount(absValue / 1000000, fmt) + "M"
-    }
-    if (Math.round(absValue) >= 1000) {
-        return sign + scaledTokenCount(absValue / 1000, fmt) + "K"
-    }
-    return Math.round(value).toString()
-}
-
-// Dense charts keep a one-pixel bar, so their drawing step must account for the
-// bar width instead of the nominal point slot. Otherwise the newest bar extends
-// beyond the right edge of the canvas.
-function chartBarGeometry(width, count) {
-    var numericWidth = Number(width)
-    var safeWidth = isFinite(numericWidth) ? Math.max(0, numericWidth) : 0
-    var numericCount = Math.floor(Number(count))
-    var points = isFinite(numericCount) ? Math.max(1, numericCount) : 1
-    var slotStep = safeWidth / points
-    var gap = Math.max(0, Math.min(4, slotStep / 4))
-    var barWidth = Math.max(1, slotStep - gap)
-
-    if (barWidth > slotStep) {
-        return {
-            step: points > 1 ? Math.max(0, safeWidth - barWidth) / (points - 1) : 0,
-            gap: gap,
-            barWidth: barWidth,
-            offset: 0
-        }
-    }
-
-    return {
-        step: slotStep,
-        gap: gap,
-        barWidth: barWidth,
-        offset: Math.max(0, slotStep - barWidth) / 2
-    }
-}
-
-// Keep the largest interactive marker fully inside the canvas at both ends.
-function chartLineX(width, count, index, inset) {
-    var numericWidth = Number(width)
-    var safeWidth = isFinite(numericWidth) ? Math.max(0, numericWidth) : 0
-    var numericCount = Math.floor(Number(count))
-    var points = isFinite(numericCount) ? Math.max(1, numericCount) : 1
-    var numericInset = Number(inset)
-    var padding = Math.min(safeWidth / 2,
-        isFinite(numericInset) ? Math.max(0, numericInset) : 0)
-
-    if (points === 1) {
-        return safeWidth / 2
-    }
-
-    var numericIndex = Math.floor(Number(index))
-    var boundedIndex = isFinite(numericIndex)
-        ? Math.max(0, Math.min(points - 1, numericIndex))
-        : 0
-    return padding + (safeWidth - padding * 2) * boundedIndex / (points - 1)
-}
-
-function chartLineIndexAt(width, count, positionX, inset) {
-    var numericWidth = Number(width)
-    var safeWidth = isFinite(numericWidth) ? Math.max(0, numericWidth) : 0
-    var numericCount = Math.floor(Number(count))
-    var points = isFinite(numericCount) ? Math.max(0, numericCount) : 0
-    if (points === 0 || safeWidth === 0) {
-        return -1
-    }
-    if (points === 1) {
-        return 0
-    }
-
-    var numericInset = Number(inset)
-    var padding = Math.min(safeWidth / 2,
-        isFinite(numericInset) ? Math.max(0, numericInset) : 0)
-    var numericPosition = Number(positionX)
-    var boundedPosition = isFinite(numericPosition)
-        ? Math.max(0, Math.min(safeWidth, numericPosition))
-        : 0
-    var drawableWidth = safeWidth - padding * 2
-    var normalizedPosition = drawableWidth > 0
-        ? (boundedPosition - padding) / drawableWidth
-        : boundedPosition / safeWidth
-    return Math.max(0, Math.min(points - 1,
-        Math.round(normalizedPosition * (points - 1))))
-}
-
-function chartLineY(height, fraction, inset) {
-    var numericHeight = Number(height)
-    var safeHeight = isFinite(numericHeight) ? Math.max(0, numericHeight) : 0
-    var numericInset = Number(inset)
-    var padding = Math.min(safeHeight / 2,
-        isFinite(numericInset) ? Math.max(0, numericInset) : 0)
-    var numericFraction = Number(fraction)
-    var boundedFraction = isFinite(numericFraction)
-        ? Math.max(0, Math.min(1, numericFraction))
-        : 0
-    return safeHeight - padding - (safeHeight - padding * 2) * boundedFraction
-}
-
-function paintRoundedTopBar(context, x, baseline, width, height, radius) {
-    var numericWidth = Number(width)
-    var safeWidth = isFinite(numericWidth) ? Math.max(0, numericWidth) : 0
-    var numericHeight = Number(height)
-    var safeHeight = isFinite(numericHeight) ? Math.max(0, numericHeight) : 0
-    var top = baseline - safeHeight
-    var corner = Math.max(0, Math.min(radius, safeWidth / 2, safeHeight))
-
-    context.beginPath()
-    context.moveTo(x, baseline)
-    context.lineTo(x, top + corner)
-    context.quadraticCurveTo(x, top, x + corner, top)
-    context.lineTo(x + safeWidth - corner, top)
-    context.quadraticCurveTo(x + safeWidth, top, x + safeWidth, top + corner)
-    context.lineTo(x + safeWidth, baseline)
-    context.closePath()
-    context.fill()
-}
-
-// Returns the peak of the currently plotted metric, so the bars keep their
-// scale when the Usage & Spend tab switches between cost and tokens.
-function sparklineMax(points, showsTokens) {
-    var maximum = 0
-    if (!Array.isArray(points)) {
-        return maximum
-    }
-    for (var i = 0; i < points.length; i++) {
-        maximum = Math.max(maximum, metricValue(points[i], showsTokens))
-    }
-    return maximum
-}
-
-function metricText(fmt, magnitude, currency, showsTokens) {
-    return showsTokens
-        ? tokenCountString(magnitude, fmt)
-        : amountString(fmt, magnitude, currency || "USD")
-}
-
-function chartPoints(fmt, points, showsTokens) {
-    var result = []
-    if (!Array.isArray(points)) {
-        return result
-    }
-    for (var i = 0; i < points.length; i++) {
-        var point = points[i]
-        if (!hasMetricValue(point, showsTokens)) {
-            continue
-        }
-        var value = Math.max(0, metricValue(point, showsTokens))
-        result.push({
-            label: boundedText(point.label, 120),
-            sourceIndex: i,
-            value: value,
-            displayValue: metricText(fmt, value, point.currency, showsTokens)
-        })
-    }
-    return result
-}
-
-// Returns the previous points while the daily rows, format, and metric are the
-// same objects. Qt 6.8 re-notifies a var binding that re-evaluates to an equal
-// object, so a shallow provider copy would otherwise hand the chart a new array
-// for an unchanged snapshot. Writes only into the caller-owned memo.
-function memoizedChartPoints(memo, fmt, points, showsTokens) {
-    if (!memo || typeof memo !== "object") {
-        return chartPoints(fmt, points, showsTokens)
-    }
-    if (!memo.result || memo.points !== points || memo.fmt !== fmt || memo.showsTokens !== showsTokens) {
-        memo.points = points
-        memo.fmt = fmt
-        memo.showsTokens = showsTokens
-        memo.result = chartPoints(fmt, points, showsTokens)
-    }
-    return memo.result
-}
-
-// Chart points omit unavailable amounts. Their index is not a daily-row index.
-function selectedCostDay(daily, points, activeIndex) {
-    if (!Array.isArray(daily) || !Array.isArray(points)
-            || typeof activeIndex !== "number" || activeIndex !== Math.floor(activeIndex)
-            || activeIndex < 0 || activeIndex >= points.length) {
-        return null
-    }
-    var point = points[activeIndex]
-    var sourceIndex = point && point.sourceIndex
-    if (typeof sourceIndex !== "number" || sourceIndex !== Math.floor(sourceIndex)
-            || sourceIndex < 0 || sourceIndex >= daily.length) {
-        return null
-    }
-    return daily[sourceIndex] || null
-}
-
-function uniqueCostDayIndex(points, label) {
-    var found = -1
-    for (var i = 0; i < points.length; i++) {
-        if (points[i] && points[i].label === label) {
-            if (found !== -1) {
-                return -1
-            }
-            found = i
-        }
-    }
-    return found
-}
-
-function costDayIndexAfterRefresh(previousPoints, selectedIndex, points) {
-    if (!Array.isArray(previousPoints) || !Array.isArray(points)
-            || typeof selectedIndex !== "number" || selectedIndex !== Math.floor(selectedIndex)
-            || selectedIndex < 0 || selectedIndex >= previousPoints.length) {
-        return -1
-    }
-    var previous = previousPoints[selectedIndex]
-    if (!previous || typeof previous.label !== "string" || previous.label.length === 0
-            || uniqueCostDayIndex(previousPoints, previous.label) !== selectedIndex) {
-        return -1
-    }
-    return uniqueCostDayIndex(points, previous.label)
-}
 
 // `entries` is an ordered list of `{ label, tokens }`. Rows with no positive
 // token count are dropped rather than printed as zero.
@@ -390,7 +19,7 @@ function breakdownRows(entries, fmt) {
     }
     for (var i = 0; i < entries.length; i++) {
         var entry = entries[i]
-        if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+        if (!Guards.isRecord(entry)) {
             continue
         }
         var value = Number(entry.tokens)
@@ -399,22 +28,10 @@ function breakdownRows(entries, fmt) {
         }
         rows.push({
             label: entry.label,
-            value: tokenCountString(value, fmt)
+            value: CostAmounts.tokenCountString(value, fmt)
         })
     }
     return rows
-}
-
-// Missing amounts stay absent; measured zeroes remain visible.
-function amountSummary(fmt, amounts, tokensTextFor) {
-    var values = []
-    if (hasMetricValue(amounts, false)) {
-        values.push(amountString(fmt, amounts.cost, amounts.currency))
-    }
-    if (hasMetricValue(amounts, true)) {
-        values.push(tokensTextFor ? tokensTextFor(amounts.tokens) : tokenCountString(amounts.tokens, fmt))
-    }
-    return values.length > 0 ? values.join(" · ") : "-"
 }
 
 // `tokensTextFor(tokens)` lets the caller word the token half of each summary.
@@ -425,13 +42,13 @@ function modelRows(fmt, tokenCost, tokensTextFor) {
     }
     for (var i = 0; i < tokenCost.models.length; i++) {
         var item = tokenCost.models[i]
-        if (!item || typeof item !== "object" || Array.isArray(item)) {
+        if (!Guards.isRecord(item)) {
             continue
         }
         rows.push({
             label: item.label,
-            value: amountSummary(fmt, item, tokensTextFor),
-            incompleteRequests: acceptedIncompleteRequests(item)
+            value: CostAmounts.amountSummary(fmt, item, tokensTextFor),
+            incompleteRequests: CostTrust.acceptedIncompleteRequests(item)
         })
     }
     return rows
@@ -447,136 +64,14 @@ function recentHistoryPoints(daily) {
 // metric so the bar lengths match the figures beside them. A point whose label
 // the payload omitted gets `fallbackLabel`.
 function historyRows(fmt, tokenCost, showsTokens, fallbackLabel) {
-    if (!tokenCost || !Array.isArray(tokenCost.daily) || tokenCost.daily.length === 0) {
-        return []
-    }
-
-    var recentDaily = recentHistoryPoints(tokenCost.daily)
-    var visibleDaily = []
-    for (var day = 0; day < recentDaily.length; day++) {
-        if (hasMetricValue(recentDaily[day], showsTokens)) {
-            visibleDaily.push(recentDaily[day])
-        }
-    }
-    var rows = []
-    var maximum = sparklineMax(visibleDaily, showsTokens)
-    for (var i = visibleDaily.length - 1; i >= 0; i--) {
-        var item = visibleDaily[i]
-        var magnitude = Math.max(0, metricValue(item, showsTokens))
-        rows.push({
-            label: item.label && item.label.length > 0 ? item.label : fallbackLabel,
-            value: amountSummary(fmt, item),
-            incompleteRequests: acceptedIncompleteRequests(item),
-            percent: maximum > 0 && magnitude > 0 ? Math.max(3, (magnitude / maximum) * 100) : 0,
-            isPeak: maximum > 0 && magnitude === maximum
-        })
-    }
-    return rows
-}
-
-// The bars highlight the peak of the selected metric, so this has to name the
-// same day, not the most expensive one. Returns null when nothing was spent.
-function peakPoint(points, showsTokens) {
-    if (!Array.isArray(points) || points.length === 0) {
-        return null
-    }
-    var peak = null
-    for (var i = 0; i < points.length; i++) {
-        var point = points[i]
-        if (!point || typeof point !== "object" || Array.isArray(point)) {
-            continue
-        }
-        var magnitude = metricValue(point, showsTokens)
-        if (!peak || magnitude > peak.magnitude) {
-            peak = {
-                label: point.label && point.label.length > 0 ? point.label : "",
-                magnitude: magnitude,
-                currency: point.currency || "USD"
-            }
-        }
-    }
-    return peak && peak.magnitude > 0 ? peak : null
-}
-
-function averageDailyValue(points, showsTokens, zeroDays) {
-    if (!Array.isArray(points) || points.length === 0) {
-        return null
-    }
-    var average = 0
-    var total = 0
-    var count = 0
-    var currency = "USD"
-    for (var i = 0; i < points.length; i++) {
-        if (!hasMetricValue(points[i], showsTokens)) {
-            continue
-        }
-        count += 1
-        total += Math.max(0, metricValue(points[i], showsTokens))
-        // Nonnegative values keep this difference finite even when their sum
-        // would overflow before division by the measured day count.
-        average += (Math.max(0, metricValue(points[i], showsTokens)) - average) / count
-        if (points[i].currency) {
-            currency = points[i].currency
-        }
-    }
-    // Only an empty denominator has no average. A range measured as zero keeps
-    // its zero, like the history rows built from the same points.
-    if (count === 0) {
-        return null
-    }
-    // Preserve ordinary sums' rounding boundaries; use the incremental mean
-    // only when the intermediate sum cannot be represented.
-    // Sparse all-history aggregates count omitted zero-activity dates without
-    // allocating a row per calendar day. An unavailable metric still stays null.
-    var denominator = count + (typeof zeroDays === "number" && isFinite(zeroDays)
-        ? Math.max(0, Math.floor(zeroDays)) : 0)
-    return { value: isFinite(total) ? total / denominator : average * (count / denominator), currency: currency }
-}
-
-function perMillionAmount(tokenCost) {
-    if (!tokenCost || !tokenCost.totals) {
-        return null
-    }
-    var cost = Number(tokenCost.totals.cost)
-    var tokens = Number(tokenCost.totals.tokens)
-    if (!isFinite(cost) || !isFinite(tokens) || cost <= 0 || tokens <= 0) {
-        return null
-    }
-    var value = cost * 1000000 / tokens
-    // Preserve ordinary rounding; scale the denominator only on overflow.
-    if (!isFinite(value)) {
-        value = cost / (tokens / 1000000)
-    }
-    if (!isFinite(value)) {
-        return null
-    }
-    return {
-        value: value,
-        currency: tokenCost.totals.currency || "USD"
-    }
-}
-
-// The CLI's "today" is the total of the day it scanned. A snapshot scanned on
-// an earlier local date, such as one taken before midnight or retained after a
-// failed refresh, holds that day's spend, so today reads as unknown until a
-// scan from today arrives. A snapshot without a scan date keeps its amounts.
-function todayAmounts(tokenCost, nowMs) {
-    var today = tokenCost && tokenCost.today ? tokenCost.today : null
-    var scanDay = today && typeof tokenCost.scanDay === "string" ? tokenCost.scanDay : ""
-    var now = new Date(typeof nowMs === "number" ? nowMs : NaN)
-    if (scanDay.length === 0 || !isFinite(now.getTime())
-            || scanDay === Normalizer.calendarDateKey(now.getFullYear(), now.getMonth() + 1, now.getDate())) {
-        return today
-    }
-    return {
-        cost: null,
-        tokens: null,
-        inputTokens: null,
-        outputTokens: null,
-        cacheReadTokens: null,
-        cacheCreationTokens: null,
-        currency: today.currency
-    }
+    if (!tokenCost) return []
+    var visibleDaily = recentHistoryPoints(tokenCost.daily).filter(function(day) {
+        return CostAmounts.hasMetricValue(day, showsTokens)
+    })
+    var maximum = CostAmounts.sparklineMax(visibleDaily, showsTokens)
+    return visibleDaily.reverse().map(function(item) {
+        return historyRow(item, maximum, showsTokens, { fmt: fmt, fallbackLabel: fallbackLabel })
+    })
 }
 
 // The calendar periods CLI 0.67.0 computes itself with `cost --period`. Any
@@ -610,7 +105,7 @@ function snapshotMatchesRange(tokenCost, historyDays, period) {
 function spendSnapshots(tokenCosts, historyDays, titleFor, period) {
     var result = []
     for (var providerID in tokenCosts) {
-        if (!hasOwnKey(tokenCosts, providerID)) {
+        if (!Guards.hasOwnKey(tokenCosts, providerID)) {
             continue
         }
         var tokenCost = tokenCosts[providerID]
@@ -633,549 +128,45 @@ function projectRows(costs, showsTokens) {
     var result = { rows: [], truncated: false }
     var items = Array.isArray(costs) ? costs : []
     for (var i = 0; i < items.length; i++) {
-        var snapshot = items[i]
-        var projects = snapshot && typeof snapshot === "object" ? snapshot.projects : null
-        if (!projects || !Array.isArray(projects.rows)) {
-            continue
-        }
-        result.truncated = result.truncated || projects.truncated === true
-        if (result.rows.length === maximumProjectRows) {
-            result.truncated = result.truncated || projects.rows.length > 0
-            continue
-        }
-        // The slice bounds the inspected payload before filtering, so the
-        // truncation check below can tell limit-driven omissions apart from
-        // malformed rows that were never displayable.
-        var inspectedRows = projects.rows.slice(0, maximumProjectRows)
-        var rows = inspectedRows
-            .filter(function(row) { return row && typeof row === "object" && !Array.isArray(row) })
-        rows.sort(function(a, b) {
-            var aHasValue = hasMetricValue(a, showsTokens)
-            var bHasValue = hasMetricValue(b, showsTokens)
-            if (aHasValue !== bHasValue) {
-                return aHasValue ? -1 : 1
-            }
-            var difference = metricValue(b, showsTokens) - metricValue(a, showsTokens)
-            var left = boundedText(a.label, 120)
-            var right = boundedText(b.label, 120)
-            return difference || left.localeCompare(right)
-        })
-        var trust = costTrustSummary([snapshot])
-        for (var j = 0; j < rows.length && result.rows.length < maximumProjectRows; j++) {
-            result.rows.push({
-                provider: snapshot.provider,
-                label: boundedText(rows[j].label, 120),
-                cost: rows[j].cost,
-                tokens: rows[j].tokens,
-                currency: rows[j].currency,
-                valueMode: trust ? trust.valueMode : "plain"
-            })
-        }
-        result.truncated = result.truncated
-            || projects.rows.length > inspectedRows.length
-            || j < rows.length
+        appendProjectSnapshot(result, items[i], showsTokens)
     }
     return result
-}
-
-function pricedSnapshotCurrency(snapshot) {
-    var totals = snapshot && typeof snapshot === "object" && snapshot.totals
-        ? snapshot.totals : ({})
-    if (hasMetricValue(totals, false)) {
-        var totalsCurrency = boundedText(totals.currency || "", 12)
-        if (totalsCurrency.length > 0) {
-            return totalsCurrency
-        }
-    }
-    var daily = snapshot && Array.isArray(snapshot.daily) ? snapshot.daily : []
-    for (var i = 0; i < daily.length; i++) {
-        if (!hasMetricValue(daily[i], false)) {
-            continue
-        }
-        var dailyCurrency = boundedText(daily[i].currency || "", 12)
-        if (dailyCurrency.length > 0) {
-            return dailyCurrency
-        }
-    }
-    return ""
-}
-
-// null means this snapshot offers no fallback. A first daily row with no
-// currency still chooses USD, even if a later snapshot names another currency.
-function fallbackSnapshotCurrency(snapshot) {
-    var totals = snapshot && typeof snapshot === "object" && snapshot.totals
-        ? snapshot.totals : ({})
-    var currency = boundedText(totals.currency || "", 12)
-    if (currency.length > 0) {
-        return currency
-    }
-    var daily = snapshot && Array.isArray(snapshot.daily) ? snapshot.daily : []
-    if (daily.length === 0) {
-        return null
-    }
-    var first = daily[0]
-    var firstCurrency = first && typeof first === "object" ? first.currency : null
-    return boundedText(firstCurrency || "USD", 12)
-}
-
-function spendCurrency(costs) {
-    var items = Array.isArray(costs) ? costs : []
-    // A token-only snapshot still carries a fallback currency, but it must not
-    // choose which priced providers participate in the money aggregate.
-    for (var i = 0; i < items.length; i++) {
-        var pricedCurrency = pricedSnapshotCurrency(items[i])
-        if (pricedCurrency.length > 0) {
-            return pricedCurrency
-        }
-    }
-    for (var j = 0; j < items.length; j++) {
-        var fallbackCurrency = fallbackSnapshotCurrency(items[j])
-        if (fallbackCurrency !== null) {
-            return fallbackCurrency
-        }
-    }
-    return "USD"
-}
-
-function costMatchesSpendCurrency(cost, currency) {
-    var totals = cost && cost.totals ? cost.totals : ({})
-    return boundedText(totals.currency || currency, 12) === currency
-}
-
-function snapshotHasForeignCostCurrency(snapshot, currency) {
-    var totals = snapshot && typeof snapshot === "object" && snapshot.totals
-        ? snapshot.totals : ({})
-    if (hasMetricValue(totals, false) && !costMatchesSpendCurrency(snapshot, currency)) {
-        return true
-    }
-    var daily = snapshot && Array.isArray(snapshot.daily) ? snapshot.daily : []
-    for (var i = 0; i < daily.length; i++) {
-        if (hasMetricValue(daily[i], false)
-                && boundedText(daily[i].currency || "USD", 12) !== currency) {
-            return true
-        }
-    }
-    return false
-}
-
-// Cost figures from different currencies cannot share one aggregate. The
-// caller uses this to label the selected-currency amount as a subtotal and to
-// explain why token totals can cover more providers than money totals.
-function spendHasMixedCostCurrencies(costs) {
-    var items = Array.isArray(costs) ? costs : []
-    var currency = spendCurrency(items)
-    return items.some(function(snapshot) {
-        return snapshotHasForeignCostCurrency(snapshot, currency)
-    })
-}
-
-function acceptedCostCoverage(value) {
-    if (value === null || typeof value !== "object" || Array.isArray(value)) {
-        return null
-    }
-    var fields = ["priced", "unpriced", "unmetered", "estimated"]
-    for (var i = 0; i < fields.length; i++) {
-        var field = fields[i]
-        var count = value[field]
-        if (!hasOwnKey(value, field)
-                || typeof count !== "number"
-                || !isFinite(count)
-                || Math.floor(count) !== count
-                || count < 0) {
-            return null
-        }
-    }
-    return value
-}
-
-// Excluded requests are counted, never summed into an amount. Keep the total
-// bounded so a saturated upstream count cannot overflow the joined notice.
-// Accepts a trust record, a daily point, or a model aggregate alike.
-function acceptedIncompleteRequests(trust) {
-    if (trust === null
-            || typeof trust !== "object"
-            || Array.isArray(trust)
-            || !hasOwnKey(trust, "incompleteRequests")) {
-        return 0
-    }
-    var count = trust.incompleteRequests
-    return typeof count === "number"
-            && isFinite(count)
-            && Math.floor(count) === count
-            && count > 0
-        ? Math.min(count, maximumIncompleteRequests)
-        : 0
-}
-
-function boundedIncompleteRequests(count) {
-    return Math.min(Math.max(0, count), maximumIncompleteRequests)
-}
-
-function acceptedCostSourceKind(value) {
-    return typeof value === "string"
-            && ["listPrice", "vendor", "mixed", "unknown"]
-                .indexOf(value) !== -1
-        ? value
-        : ""
-}
-
-// Provenance without observed cost, token, daily, or coverage data cannot
-// qualify a displayed total. Missing token totals normalize to zero, so only a
-// positive token count is evidence; explicit finite cost values matter at zero.
-function costTrustSnapshotHasEvidence(item) {
-    if (!item) {
-        return false
-    }
-
-    var totals = item.totals || ({})
-    if (hasMetricValue(totals, false)
-            || (hasMetricValue(totals, true) && totals.tokens > 0)) {
-        return true
-    }
-
-    var trust = item.trust
-    var coverage = trust !== null
-            && typeof trust === "object"
-            && !Array.isArray(trust)
-            && hasOwnKey(trust, "coverage")
-        ? acceptedCostCoverage(trust.coverage)
-        : null
-    if (coverage && (coverage.priced > 0
-            || coverage.unpriced > 0
-            || coverage.unmetered > 0
-            || coverage.estimated > 0)) {
-        return true
-    }
-
-    var daily = Array.isArray(item.daily) ? item.daily : []
-    for (var i = 0; i < daily.length; i++) {
-        if (hasMetricValue(daily[i], false)
-                || (hasMetricValue(daily[i], true) && daily[i].tokens > 0)) {
-            return true
-        }
-    }
-    return false
-}
-
-// Fold normalized pricing coverage and provenance into one presentation
-// decision. The caller localizes it; wire enum values never cross this seam.
-// For global spend, currency eligibility deliberately matches `spendTotals()`.
-// Token-only snapshots still qualify a mixed total, but cannot create a notice
-// when there is no finite cost to qualify.
-function costTrustSummary(costs) {
-    var items = Array.isArray(costs) ? costs : []
-    if (items.length === 0) {
-        return null
-    }
-
-    var currency = spendCurrency(items)
-    var hasEstimated = false
-    var hasUnpriced = false
-    var hasUnmetered = false
-    var hasListPrice = false
-    var hasVendor = false
-    var hasMixed = false
-    var hasUnknown = false
-    var hasUnclassifiedSource = false
-    var hasDisplayedCost = false
-    var hasDisplayedTokens = false
-    var incompleteRequests = 0
-
-    for (var i = 0; i < items.length; i++) {
-        var item = items[i]
-        if (!costTrustSnapshotHasEvidence(item)) {
-            continue
-        }
-        var itemHasCost = item && hasMetricValue(item.totals, false)
-        if (!item || (itemHasCost && !costMatchesSpendCurrency(item, currency))) {
-            continue
-        }
-        hasDisplayedCost = hasDisplayedCost
-            || itemHasCost
-        // Excluded requests are missing from the token totals too, so a
-        // token-only snapshot still has an amount they can qualify.
-        hasDisplayedTokens = hasDisplayedTokens
-            || (hasMetricValue(item.totals, true) && item.totals.tokens > 0)
-        if (!hasOwnKey(item, "trust")
-                || item.trust === null
-                || typeof item.trust !== "object"
-                || Array.isArray(item.trust)) {
-            hasUnclassifiedSource = true
-            continue
-        }
-
-        var coverage = hasOwnKey(item.trust, "coverage")
-            ? acceptedCostCoverage(item.trust.coverage)
-            : null
-        if (coverage) {
-            hasEstimated = hasEstimated || coverage.estimated > 0
-            hasUnpriced = hasUnpriced || coverage.unpriced > 0
-            hasUnmetered = hasUnmetered || coverage.unmetered > 0
-        }
-
-        incompleteRequests = boundedIncompleteRequests(
-            incompleteRequests + acceptedIncompleteRequests(item.trust))
-
-        var sourceKind = hasOwnKey(item.trust, "sourceKind")
-            ? acceptedCostSourceKind(item.trust.sourceKind)
-            : ""
-        switch (sourceKind) {
-        case "listPrice":
-            hasListPrice = true
-            break
-        case "vendor":
-            hasVendor = true
-            break
-        case "mixed":
-            hasMixed = true
-            break
-        case "unknown":
-            hasUnknown = true
-            break
-        default:
-            hasUnclassifiedSource = true
-            break
-        }
-    }
-
-    var sourceKind = ""
-    if (hasUnknown) {
-        sourceKind = "unknown"
-    } else if (hasMixed || (hasListPrice && hasVendor)) {
-        sourceKind = "mixed"
-    } else if (hasListPrice) {
-        sourceKind = "listPrice"
-    } else if (hasVendor) {
-        sourceKind = "vendor"
-    }
-
-    if (hasListPrice || hasMixed) {
-        hasEstimated = true
-    }
-    // A source reported by only part of the displayed total cannot describe
-    // the whole amount. Keep all-legacy totals quiet, but make a mixed
-    // classified/unclassified aggregate explicitly conservative.
-    if (hasUnclassifiedSource && sourceKind.length > 0) {
-        sourceKind = "unknown"
-    }
-
-    var hasExcludedRequests = incompleteRequests > 0
-        && (hasDisplayedCost || hasDisplayedTokens)
-    var isPartial = hasUnpriced || hasUnmetered || hasExcludedRequests
-    if ((!hasDisplayedCost && !hasExcludedRequests)
-            || (!hasEstimated && !isPartial && sourceKind.length === 0)) {
-        return null
-    }
-
-    return {
-        level: isPartial || sourceKind === "unknown" ? "warning" : "information",
-        valueMode: isPartial ? "partial"
-            : (sourceKind === "unknown" ? "approximate"
-            : (hasEstimated ? "estimated" : "plain")),
-        sourceKind: sourceKind,
-        hasEstimated: hasEstimated,
-        hasUnpriced: hasUnpriced,
-        hasUnmetered: hasUnmetered,
-        incompleteRequests: hasExcludedRequests ? incompleteRequests : 0
-    }
-}
-
-function costTrustNoticeKey(summary) {
-    if (summary === null
-            || typeof summary !== "object"
-            || Array.isArray(summary)) {
-        return ""
-    }
-
-    var sourceKind = hasOwnKey(summary, "sourceKind")
-        ? acceptedCostSourceKind(summary.sourceKind)
-        : ""
-    var hasEstimated = hasOwnKey(summary, "hasEstimated")
-        && summary.hasEstimated === true
-    var hasUnpriced = hasOwnKey(summary, "hasUnpriced")
-        && summary.hasUnpriced === true
-    var hasUnmetered = hasOwnKey(summary, "hasUnmetered")
-        && summary.hasUnmetered === true
-    // Dismissal is semantic: a changed count describes the same warning, so it
-    // must not revive a notice the user already closed.
-    var hasIncomplete = acceptedIncompleteRequests(summary) > 0
-    if (sourceKind.length === 0
-            && !hasEstimated
-            && !hasUnpriced
-            && !hasUnmetered
-            && !hasIncomplete) {
-        return ""
-    }
-
-    return [
-        hasOwnKey(summary, "level") && summary.level === "warning"
-            ? "warning" : "information",
-        sourceKind,
-        hasEstimated ? "estimated" : "exact",
-        hasUnpriced ? "unpriced" : "priced",
-        hasUnmetered ? "unmetered" : "metered",
-        hasIncomplete ? "incomplete" : "complete"
-    ].join("|")
-}
-
-// Keep dismissal state semantic rather than tying it to localized text or a
-// freshly allocated summary object. Refreshes preserve a dismissal; a changed
-// warning meaning becomes visible again, including a return to an older state.
-function costTrustNoticeTransition(summary, previousState, shouldDismiss) {
-    var key = costTrustNoticeKey(summary)
-    var previousKey = ""
-    var wasDismissed = false
-    if (previousState !== null
-            && typeof previousState === "object"
-            && !Array.isArray(previousState)) {
-        previousKey = hasOwnKey(previousState, "key")
-                && typeof previousState.key === "string"
-            ? previousState.key
-            : ""
-        wasDismissed = hasOwnKey(previousState, "dismissed")
-            && previousState.dismissed === true
-    }
-
-    var dismissed = key.length > 0
-        && key === previousKey
-        && wasDismissed
-    if (shouldDismiss === true && key.length > 0) {
-        dismissed = true
-    }
-    return {
-        key: key,
-        dismissed: dismissed,
-        shouldShow: key.length > 0 && !dismissed
-    }
-}
-
-// The popup representation may be destroyed while the compact applet remains
-// alive. Keep each surface's semantic notice state in the applet owner so a
-// recreated notice does not forget that the user closed it.
-function costTrustNoticeStoreTransition(summary, states, scope, shouldDismiss) {
-    var safeScope = boundedText(scope, 120)
-    if (safeScope.length === 0 || isUnsafeObjectKey(safeScope)) {
-        safeScope = ""
-    }
-    var source = states !== null
-            && typeof states === "object"
-            && !Array.isArray(states)
-        ? states
-        : ({})
-    var previousState = safeScope.length > 0 && hasOwnKey(source, safeScope)
-        ? source[safeScope]
-        : null
-    var state = costTrustNoticeTransition(summary, previousState, shouldDismiss)
-    var nextStates = ({})
-    var copiedScopes = 0
-    for (var existingScope in source) {
-        if (!hasOwnKey(source, existingScope)
-                || isUnsafeObjectKey(existingScope)
-                || existingScope === safeScope
-                || copiedScopes >= maximumCostTrustNoticeScopes - 1) {
-            continue
-        }
-        nextStates[existingScope] = source[existingScope]
-        copiedScopes += 1
-    }
-    var stateToStore = state
-    if (state.key.length === 0
-            && previousState !== null
-            && typeof previousState === "object"
-            && !Array.isArray(previousState)
-            && hasOwnKey(previousState, "key")
-            && typeof previousState.key === "string"
-            && previousState.key.length > 0
-            && hasOwnKey(previousState, "dismissed")
-            && typeof previousState.dismissed === "boolean") {
-        stateToStore = previousState
-    }
-    if (safeScope.length > 0 && stateToStore.key.length > 0) {
-        nextStates[safeScope] = stateToStore
-    }
-    return { states: nextStates, state: state }
 }
 
 function spendDailyPoints(fmt, costs, showsTokens) {
     var items = Array.isArray(costs) ? costs : []
     var byDate = ({})
-    var currency = spendCurrency(items)
+    var currency = CostCurrency.spendCurrency(items)
     for (var i = 0; i < items.length; i++) {
         var snapshot = items[i]
         var daily = snapshot && Array.isArray(snapshot.daily) ? snapshot.daily : []
-        for (var j = 0; j < daily.length; j++) {
-            var point = daily[j]
-            if (!point || typeof point !== "object" || Array.isArray(point)) {
-                continue
-            }
-            var label = boundedText(point.label, 120)
-            var pointCurrency = boundedText(point.currency || "USD", 12)
-            // Mixed currencies cannot be summed as money, but token counts are
-            // currency-free: filtering them would silently drop whole providers
-            // from the chart.
-            if (label.length === 0
-                    || isUnsafeObjectKey(label)
-                    || !hasMetricValue(point, showsTokens)
-                    || (!showsTokens && pointCurrency !== currency)) {
-                continue
-            }
-            if (!hasOwnKey(byDate, label)) {
-                byDate[label] = { label: label, value: 0, currency: currency }
-            }
-            byDate[label].value += Math.max(0, metricValue(point, showsTokens))
-        }
+        addSpendDays(byDate, daily, { currency: currency, showsTokens: showsTokens })
     }
-
-    var result = []
-    for (var day in byDate) {
-        if (!hasOwnKey(byDate, day)) {
-            continue
-        }
-        var item = byDate[day]
-        // Finite provider amounts can overflow when combined. Leave that day
-        // unavailable instead of passing infinity to chart scaling as zero.
-        if (!isFinite(item.value)) {
-            continue
-        }
-        item.displayValue = metricText(fmt, item.value, item.currency, showsTokens)
-        result.push(item)
-    }
-    result.sort(function(a, b) { return a.label.localeCompare(b.label) })
-    return result.slice(Math.max(0, result.length - maximumCostHistoryPoints))
+    var rows = spendPointRows(byDate, fmt, showsTokens)
+    rows.sort(function(a, b) { return a.label.localeCompare(b.label) })
+    return rows.slice(Math.max(0, rows.length - CostChart.maximumCostHistoryPoints))
 }
 
 // Money is summed only in the range currency. Tokens have no currency, so the
 // total keeps every provider just like the token chart does.
 function spendTotals(costs) {
     var items = Array.isArray(costs) ? costs : []
-    if (items.length === 0) {
-        return null
-    }
-    var currency = spendCurrency(items)
-    var totalCost = 0
-    var totalTokens = 0
-    var hasCost = false
-    var hasTokens = false
+    if (items.length === 0) return null
+    var currency = CostCurrency.spendCurrency(items)
+    var cost = null
+    var tokens = null
     for (var i = 0; i < items.length; i++) {
-        var snapshot = items[i]
-        var totals = snapshot && typeof snapshot === "object" && snapshot.totals
-            ? snapshot.totals : ({})
-        if (hasMetricValue(totals, true)) {
-            totalTokens += Math.max(0, totals.tokens)
-            hasTokens = true
+        var totals = CostAmounts.snapshotTotals(items[i])
+        tokens = CostAmounts.addMetric(tokens, totals, true)
+        if (CostCurrency.costMatchesSpendCurrency(items[i], currency)) {
+            cost = CostAmounts.addMetric(cost, totals, false)
         }
-        if (!costMatchesSpendCurrency(items[i], currency)
-                || !hasMetricValue(totals, false)) {
-            continue
-        }
-        totalCost += Math.max(0, totals.cost)
-        hasCost = true
     }
     return {
-        cost: hasCost && isFinite(totalCost) ? totalCost : null,
-        tokens: hasTokens && isFinite(totalTokens) ? totalTokens : null,
+        cost: isFinite(cost) ? cost : null,
+        tokens: isFinite(tokens) ? tokens : null,
         currency: currency,
-        hasMixedCostCurrencies: spendHasMixedCostCurrencies(items)
+        hasMixedCostCurrencies: CostCurrency.spendHasMixedCostCurrencies(items)
     }
 }
 
@@ -1184,147 +175,96 @@ function spendTotals(costs) {
 // than a spend reason. A missing flag counts as established.
 function historyStillBuilding(costs) {
     var items = Array.isArray(costs) ? costs : []
-    for (var i = 0; i < items.length; i++) {
-        var snapshot = items[i]
-        if (snapshot && typeof snapshot === "object"
-                && snapshot.historyCoverageEstablished === false) {
-            return true
-        }
-    }
-    return false
+    return items.some(function(snapshot) {
+        if (!snapshot) return false
+        if (typeof snapshot !== "object") return false
+        return snapshot.historyCoverageEstablished === false
+    })
 }
 
-// The selected metric can omit unavailable days. Use the unfiltered snapshots'
-// calendar bounds so missing values at either edge keep their slots too.
-// Legacy labels with no unambiguous calendar order keep their bounded sequence.
-function spendHeatmapDays(points, costs) {
-    var items = Array.isArray(points) ? points.slice(-maximumCostHistoryPoints) : []
-    var byDate = ({})
-    var firstDayMs = 0
-    var lastDayMs = 0
-    for (var i = 0; i < items.length; i++) {
-        var point = items[i]
-        var date = point && typeof point.label === "string"
-            ? Normalizer.parsedCalendarDateKey(point.label) : null
-        if (!date || (i > 0 && date.timestampMs <= lastDayMs)) {
-            return items
-        }
-        if (i === 0) {
-            firstDayMs = date.timestampMs
-        }
-        lastDayMs = date.timestampMs
-        byDate[lastDayMs] = point
+function historyRow(item, maximum, showsTokens, labels) {
+    var magnitude = Math.max(0, CostAmounts.metricValue(item, showsTokens))
+    return {
+        label: item.label && item.label.length > 0 ? item.label : labels.fallbackLabel,
+        value: CostAmounts.amountSummary(labels.fmt, item),
+        incompleteRequests: CostTrust.acceptedIncompleteRequests(item),
+        percent: maximum > 0 && magnitude > 0 ? Math.max(3, (magnitude / maximum) * 100) : 0,
+        isPeak: maximum > 0 && magnitude === maximum
     }
-    if (items.length === 0) {
-        return []
-    }
-    var snapshots = Array.isArray(costs) ? costs : []
-    for (var providerIndex = 0; providerIndex < Math.min(snapshots.length, Normalizer.maximumCostSnapshots); providerIndex++) {
-        var snapshot = snapshots[providerIndex]
-        var daily = snapshot && Array.isArray(snapshot.daily) ? snapshot.daily : []
-        for (var dayIndex = Math.max(0, daily.length - maximumCostHistoryPoints); dayIndex < daily.length; dayIndex++) {
-            var calendarPoint = daily[dayIndex]
-            var calendarDate = calendarPoint && typeof calendarPoint.label === "string"
-                ? Normalizer.parsedCalendarDateKey(calendarPoint.label) : null
-            if (calendarDate) {
-                firstDayMs = Math.min(firstDayMs, calendarDate.timestampMs)
-                lastDayMs = Math.max(lastDayMs, calendarDate.timestampMs)
-            }
-        }
-    }
-    // UTC calendar keys keep DST changes from adding or losing a day.
-    var dayMs = 24 * 60 * 60 * 1000
-    firstDayMs = Math.max(firstDayMs, lastDayMs - (maximumCostHistoryPoints - 1) * dayMs)
-    var days = []
-    for (var currentDayMs = firstDayMs; currentDayMs <= lastDayMs; currentDayMs += dayMs) {
-        days.push(hasOwnKey(byDate, currentDayMs) ? byDate[currentDayMs] : null)
-    }
-    return days
 }
 
-// Lays the daily points out for the activity heatmap's fixed seven rows,
-// filled top to bottom and column by column. The newest day is followed by
-// `trailingSlots` empty slots that close its week, so every row stays one
-// weekday; the oldest end is padded with `null` placeholders, which keeps a
-// ragged first column from cutting a notch out of the block. Points beyond the
-// capacity are dropped, oldest first.
-function spendHeatmapCells(points, capacity, trailingSlots) {
-    var items = Array.isArray(points) ? points : []
-    var slots = Math.max(0, Math.floor(Number(capacity) || 0))
-    var trailing = Math.max(0, Math.min(slots, Math.floor(Number(trailingSlots) || 0)))
-    var dayCapacity = slots - trailing
-    var visible = dayCapacity > 0 ? items.slice(Math.max(0, items.length - dayCapacity)) : []
-    var cells = []
-    for (var i = visible.length; i < dayCapacity; i++) {
-        cells.push(null)
-    }
-    cells = cells.concat(visible)
-    for (var j = 0; j < trailing; j++) {
-        cells.push(null)
-    }
-    return cells
+function compareProjects(a, b, showsTokens) {
+    var aHasValue = CostAmounts.hasMetricValue(a, showsTokens)
+    var bHasValue = CostAmounts.hasMetricValue(b, showsTokens)
+    if (aHasValue !== bHasValue) return aHasValue ? -1 : 1
+    var difference = CostAmounts.metricValue(b, showsTokens) - CostAmounts.metricValue(a, showsTokens)
+    return difference || CostAmounts.boundedText(a.label, 120).localeCompare(CostAmounts.boundedText(b.label, 120))
 }
 
-// QML's Locale.firstDayOfWeek counts 0 (Sunday) through 6; anything else falls
-// back to the ISO week's Monday start.
-function heatmapFirstWeekday(firstWeekday) {
-    return typeof firstWeekday === "number" && Math.floor(firstWeekday) === firstWeekday
-        && firstWeekday >= 0 && firstWeekday <= 6 ? firstWeekday : 1
+function appendProjectSnapshot(result, snapshot, showsTokens) {
+    var projects = projectData(snapshot)
+    if (!projects) return
+    result.truncated = result.truncated || projects.truncated === true
+    if (result.rows.length === maximumProjectRows) {
+        result.truncated = result.truncated || projects.rows.length > 0
+        return
+    }
+    // Bound inspection before filtering; invalid rows still consume its budget.
+    var rows = projects.rows.slice(0, maximumProjectRows).filter(Guards.isRecord)
+    rows.sort(function(a, b) { return compareProjects(a, b, showsTokens) })
+    var visible = rows.slice(0, maximumProjectRows - result.rows.length)
+    var trust = CostTrust.costTrustSummary([snapshot])
+    var mode = trust ? trust.valueMode : "plain"
+    for (var i = 0; i < visible.length; i++) {
+        result.rows.push(projectRow(snapshot.provider, visible[i], mode))
+    }
+    result.truncated = result.truncated || projects.rows.length > maximumProjectRows || visible.length < rows.length
 }
 
-// Weekday of the newest slot, 0 (Sunday) through 6, or -1 when the slots do not
-// carry one weekday per row. spendHeatmapDays keeps unavailable days as `null`
-// slots; its fallback for undated or unordered points returns -1 here so the
-// caller leaves the rows unlabelled rather than naming the wrong days.
-function spendHeatmapNewestWeekday(days) {
-    var items = Array.isArray(days) ? days : []
-    if (items.length === 0 || items.length > maximumCostHistoryPoints) {
-        return -1
-    }
-    var dayMs = 24 * 60 * 60 * 1000
-    var newestSlotMs = null
-    for (var i = 0; i < items.length; i++) {
-        if (items[i] === null) {
-            continue
+function projectRow(provider, row, mode) {
+    return { provider: provider, label: CostAmounts.boundedText(row.label, 120),
+        cost: row.cost, tokens: row.tokens, currency: row.currency, valueMode: mode }
+}
+
+function normalizedSpendDay(point, context) {
+    if (!Guards.isRecord(point)) return null
+    var label = CostAmounts.boundedText(point.label, 120)
+    if (label.length === 0 || Guards.isUnsafeObjectKey(label)) return null
+    if (!CostAmounts.hasMetricValue(point, context.showsTokens)) return null
+    // Money is currency-scoped. Tokens include every provider's observed count.
+    var pointCurrency = CostAmounts.boundedText(point.currency || "USD", 12)
+    if (!context.showsTokens && pointCurrency !== context.currency) return null
+    return { label: label, value: Math.max(0, CostAmounts.metricValue(point, context.showsTokens)),
+        currency: context.currency }
+}
+
+function addSpendDays(byDate, daily, context) {
+    for (var i = 0; i < daily.length; i++) {
+        var point = normalizedSpendDay(daily[i], context)
+        if (!point) continue
+        if (!Guards.hasOwnKey(byDate, point.label)) {
+            byDate[point.label] = { label: point.label, value: 0, currency: context.currency }
         }
-        var date = typeof items[i] === "object" && typeof items[i].label === "string"
-            ? Normalizer.parsedCalendarDateKey(items[i].label) : null
-        if (!date) {
-            return -1
-        }
-        var slotMs = date.timestampMs + (items.length - 1 - i) * dayMs
-        if (newestSlotMs !== null && slotMs !== newestSlotMs) {
-            return -1
-        }
-        newestSlotMs = slotMs
+        byDate[point.label].value += point.value
     }
-    if (newestSlotMs === null) {
-        return -1
-    }
-    return new Date(newestSlotMs).getUTCDay()
 }
 
-// Weekday of each heatmap row, top to bottom, as 0 (Sunday) through 6. Rows
-// start on the locale's first day of the week, so each weekday keeps its row
-// as the range moves; [] leaves undated rows unlabelled.
-function spendHeatmapRowWeekdays(days, firstWeekday) {
-    if (spendHeatmapNewestWeekday(days) < 0) {
-        return []
+function spendPointRows(byDate, fmt, showsTokens) {
+    var result = []
+    for (var day in byDate) {
+        if (!Guards.hasOwnKey(byDate, day)) continue
+        var item = byDate[day]
+        // A sum that overflowed is unavailable, never a fabricated zero.
+        if (!isFinite(item.value)) continue
+        item.displayValue = CostAmounts.metricText(fmt, item.value, item.currency, showsTokens)
+        result.push(item)
     }
-    var first = heatmapFirstWeekday(firstWeekday)
-    var weekdays = []
-    for (var row = 0; row < 7; row++) {
-        weekdays.push((first + row) % 7)
-    }
-    return weekdays
+    return result
 }
 
-// Empty slots after the newest day that close its week in the locale's row
-// order; 0 when the rows carry no weekday and the newest day simply ends the grid.
-function spendHeatmapTrailingSlots(days, firstWeekday) {
-    var newestWeekday = spendHeatmapNewestWeekday(days)
-    if (newestWeekday < 0) {
-        return 0
-    }
-    return 6 - (newestWeekday - heatmapFirstWeekday(firstWeekday) + 7) % 7
+function projectData(snapshot) {
+    if (!snapshot || typeof snapshot !== "object") return null
+    var projects = snapshot.projects
+    if (!projects || !Array.isArray(projects.rows)) return null
+    return projects
 }

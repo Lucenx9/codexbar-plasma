@@ -3,7 +3,7 @@ import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import "../ChartScale.js" as ChartScale
-import "../CostPresentation.js" as CostPresentation
+import "../CostChart.js" as CostChart
 import "../ProviderNormalizer.js" as Normalizer
 
 ColumnLayout {
@@ -83,7 +83,7 @@ ColumnLayout {
             return -1
         }
         if (kind === "line" && pointCount > 1) {
-            return CostPresentation.chartLineIndexAt(
+            return CostChart.chartLineIndexAt(
                 plot.width, pointCount, positionX, chart.lineMarkerInset)
         }
         return Math.max(0, Math.min(pointCount - 1,
@@ -252,7 +252,7 @@ ColumnLayout {
 
             var baseline = ChartScale.barGeometry(height, 0, chart.valueDomain).baseline
             if (chart.kind === "line" && chart.valueDomain.minimum < 0) {
-                baseline = CostPresentation.chartLineY(height,
+                baseline = CostChart.chartLineY(height,
                     chart.chartFraction(0), chart.lineMarkerInset)
             }
             context.fillStyle = chart.applet.canvasColor(chart.guideColor, 0.12)
@@ -262,10 +262,10 @@ ColumnLayout {
             if (chart.hasActivePoint) {
                 var guideX
                 if (chart.kind === "line") {
-                    guideX = CostPresentation.chartLineX(
+                    guideX = CostChart.chartLineX(
                         width, chart.pointCount, chart.activeIndex, chart.lineMarkerInset)
                 } else {
-                    var guideBars = CostPresentation.chartBarGeometry(width, chart.pointCount)
+                    var guideBars = CostChart.chartBarGeometry(width, chart.pointCount)
                     guideX = guideBars.offset + chart.activeIndex * guideBars.step
                         + guideBars.barWidth / 2
                 }
@@ -293,9 +293,9 @@ ColumnLayout {
                 context.lineJoin = "round"
                 context.beginPath()
                 for (var lineIndex = 0; lineIndex < chart.pointCount; lineIndex++) {
-                    var lineX = CostPresentation.chartLineX(
+                    var lineX = CostChart.chartLineX(
                         width, chart.pointCount, lineIndex, chart.lineMarkerInset)
-                    var lineY = CostPresentation.chartLineY(height,
+                    var lineY = CostChart.chartLineY(height,
                         chart.chartFraction(chart.pointValue(chart.points[lineIndex])), chart.lineMarkerInset)
                     if (lineIndex === 0) {
                         context.moveTo(lineX, lineY)
@@ -305,9 +305,9 @@ ColumnLayout {
                 }
                 context.stroke()
                 for (var dotIndex = 0; dotIndex < chart.pointCount; dotIndex++) {
-                    var dotX = CostPresentation.chartLineX(
+                    var dotX = CostChart.chartLineX(
                         width, chart.pointCount, dotIndex, chart.lineMarkerInset)
-                    var dotY = CostPresentation.chartLineY(height,
+                    var dotY = CostChart.chartLineY(height,
                         chart.chartFraction(chart.pointValue(chart.points[dotIndex])), chart.lineMarkerInset)
                     context.beginPath()
                     context.arc(dotX, dotY,
@@ -318,7 +318,7 @@ ColumnLayout {
                 return
             }
 
-            var geometry = CostPresentation.chartBarGeometry(width, chart.pointCount)
+            var geometry = CostChart.chartBarGeometry(width, chart.pointCount)
             var normalFill = chart.barGradient(context, baseline, 0.78, 0.36)
             var activeFill = chart.barGradient(context, baseline, 1, 0.7)
             for (var barIndex = 0; barIndex < chart.pointCount; barIndex++) {
@@ -330,12 +330,10 @@ ColumnLayout {
                     context.scale(1, -1)
                 }
                 context.fillStyle = barIndex === chart.activeIndex ? activeFill : normalFill
-                CostPresentation.paintRoundedTopBar(
+                CostChart.paintRoundedTopBar(
                     context,
-                    geometry.offset + barIndex * geometry.step,
-                    baseline,
-                    geometry.barWidth,
-                    bar.height,
+                    { x: geometry.offset + barIndex * geometry.step, baseline: baseline,
+                        width: geometry.barWidth, height: bar.height },
                     Kirigami.Units.smallSpacing / 2)
                 context.restore()
             }

@@ -124,12 +124,12 @@ and explicit unavailable values. `historyCoverageIsEstablished` controls the col
 history notice; a missing flag counts as established for legacy payloads.
 
 `ProviderNormalizer.normalizeCostTrustMetadata` bounds `coverage`, `provenance`,
-and the official `incompleteRequestCount`. `CostPresentation.costTrustSummary`
+and the official `incompleteRequestCount`. `CostTrust.costTrustSummary`
 qualifies provider and global amounts with one shared notice. Missing legacy
 metadata stays quiet. Keep pricing coverage separate from history collection
 coverage and never expose raw provenance in QML.
 
-`CostPresentation.spendCurrency` chooses from measured cost amounts in displayed
+`CostCurrency.spendCurrency` chooses from measured cost amounts in displayed
 provider order, checking each provider's totals before its daily rows. Measured
 zero counts; token-only currency metadata cannot override a measured cost.
 When no measured amount names a currency, the existing totals or first daily

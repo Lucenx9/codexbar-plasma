@@ -182,14 +182,28 @@ synchronized.
 - `contents/ui/components/CostText.qml` localizes normalized token-cost snapshots,
   history labels, qualified cost values, count plurals, spend totals and legacy
   dashboard rows. It receives regional number formatting explicitly and takes
-  already selected costs for totals. `CostPresentation.js` retains number and
-  aggregation logic; the applet retains range selection, privacy projection,
+  already selected costs for totals. `CostPresentation.js` builds bounded rows
+  and range-matched aggregates. `CostAmounts.js` owns locale-explicit formatting,
+  missing-versus-zero arithmetic, averages and current-day amounts.
+  `CostCurrency.js` selects the monetary currency and excludes foreign amounts
+  without dropping currency-free tokens. `CostTrust.js` folds pricing confidence
+  and returns bounded semantic notice transitions. `CostChart.js` owns geometry,
+  point memoization, date-preserving selection and calendar heatmap slots; its
+  drawing method receives a canvas, explicit bounds and a corner radius.
+  These modules take explicit inputs and contain no localization or process
+  effects. The applet retains range selection, privacy projection,
   provider attachment, trust-notice state, configuration and refresh effects.
   Root adapters preserve the existing popup and chart interfaces. Executed
   tests in `tests/tst_cost_text.qml` cover snapshot immutability, period-label
   precedence, totals, qualifiers, count plurals, dashboard bounds and regional
   format changes. Catalog and integration fixtures exercise the production
   component through its root adapters, including all six shipped languages.
+  The direct `tst_cost_presentation.qml` suite exercises each pure module through
+  the same interfaces used by production callers. It covers finite drawing
+  coordinates and clamped corners, overflow, sparse dates, currency precedence,
+  confidence and bounded dismissal scopes. Pure behavior belongs there;
+  `test_ui_cost.py` checks QML routing and effect ownership rather than the
+  internal arrangement of helpers.
 - `contents/ui/NotificationObservations.js` projects normalized providers into
   planner observations with `build(providers, selectedAccounts, refreshPending,
   thresholds)` and returns a copied pending map with

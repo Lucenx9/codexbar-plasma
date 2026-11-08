@@ -3,6 +3,9 @@ import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import "." as Components
 import "../CostPresentation.js" as CostPresentation
+import "../CostAmounts.js" as CostAmounts
+import "../CostChart.js" as CostChart
+import "../CostTrust.js" as CostTrust
 import "../QuotaWindowCost.js" as QuotaWindowCost
 
 ColumnLayout {
@@ -25,7 +28,7 @@ ColumnLayout {
     // as their recorded day count grows on a later scan.
     readonly property string selectionScope: providerData ? JSON.stringify([providerData.provider, accountSelectionKey,
         accountSelectionLabel, tokenCost ? (CostPresentation.costPeriod(tokenCost.period) || tokenCost.historyDays) : 0]) : ""
-    readonly property var selectedDay: CostPresentation.selectedCostDay(tokenCost ? tokenCost.daily : [], chartPoints, costChart.selectedIndex)
+    readonly property var selectedDay: CostChart.selectedCostDay(tokenCost ? tokenCost.daily : [], chartPoints, costChart.selectedIndex)
     readonly property bool hasVisibleDetails: detailsExpanded || selectedDay !== null
 
     onSelectionScopeChanged: {
@@ -42,18 +45,18 @@ ColumnLayout {
     }
 
     function amountText(amounts, mode) {
-        return CostPresentation.hasMetricValue(amounts, false) ? applet.qualifiedCostValue(applet.amountString(amounts.cost, amounts.currency), mode) : i18n("Cost unavailable");
+        return CostAmounts.hasMetricValue(amounts, false) ? applet.qualifiedCostValue(applet.amountString(amounts.cost, amounts.currency), mode) : i18n("Cost unavailable");
     }
 
     function tokensText(amounts) {
-        return CostPresentation.hasMetricValue(amounts, true) ? applet.usageCountText(amounts.tokens, "tokens") : i18n("Tokens unavailable");
+        return CostAmounts.hasMetricValue(amounts, true) ? applet.usageCountText(amounts.tokens, "tokens") : i18n("Tokens unavailable");
     }
 
     function daySummaryText() {
-        var summary = CostPresentation.amountSummary(applet.costNumberFormat, selectedDay, function (tokens) {
+        var summary = CostAmounts.amountSummary(applet.costNumberFormat, selectedDay, function (tokens) {
             return applet.usageCountText(tokens, "tokens");
         });
-        var excluded = excludedRequestsText(CostPresentation.acceptedIncompleteRequests(selectedDay));
+        var excluded = excludedRequestsText(CostTrust.acceptedIncompleteRequests(selectedDay));
         return excluded.length > 0 ? summary + " · " + excluded : summary;
     }
 
@@ -79,17 +82,17 @@ ColumnLayout {
 
     function reconcileDaySelection() {
         var points = costChart.points;
-        var index = CostPresentation.costDayIndexAfterRefresh(daySelectionMemo.points, daySelectionMemo.index, points);
+        var index = CostChart.costDayIndexAfterRefresh(daySelectionMemo.points, daySelectionMemo.index, points);
         daySelectionMemo = { points: points, index: index };
         costChart.selectedIndex = index;
         costChart.hoveredIndex = -1;
     }
 
     readonly property var tokenCost: tokenCostSection.providerData ? tokenCostSection.providerData.tokenCost : null
-    // Mutated only by CostPresentation.memoizedChartPoints; never reassigned, so it adds no binding dependency.
+    // Mutated only by CostChart.memoizedChartPoints; never reassigned, so it adds no binding dependency.
     readonly property var chartPointsMemo: ({})
     readonly property var chartPoints: tokenCost ? applet.costChartPoints(tokenCost.daily, chartPointsMemo) : []
-    readonly property var costTrustSummary: CostPresentation.costTrustSummary(tokenCost ? [tokenCost] : [])
+    readonly property var costTrustSummary: CostTrust.costTrustSummary(tokenCost ? [tokenCost] : [])
     readonly property string costErrorText: applet.privateErrorText(applet.costErrorText)
     readonly property bool supportsLocalCost: tokenCostSection.providerData && applet.tokenCostHint(tokenCostSection.providerData.provider).length > 0
 
@@ -152,7 +155,7 @@ ColumnLayout {
             model: tokenCostSection.tokenCost ? [
                 {
                     label: i18n("Today"),
-                    amounts: CostPresentation.todayAmounts(tokenCostSection.tokenCost, tokenCostSection.applet.panelClockMs),
+                    amounts: CostAmounts.todayAmounts(tokenCostSection.tokenCost, tokenCostSection.applet.panelClockMs),
                     valueMode: "plain"
                 },
                 {

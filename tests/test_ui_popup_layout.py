@@ -7,7 +7,6 @@ import unittest
 from ui_regression_support import (
     Surface,
     code_contains,
-    cost_presentation_js,
     full_representation_qml,
     function_body,
     id_block,
@@ -26,7 +25,6 @@ from ui_regression_support import (
 applet = Surface("applet", root)
 main_text = applet.text
 providers_text = providers_qml.read_text(encoding="utf-8")
-cost_presentation_text = cost_presentation_js.read_text(encoding="utf-8")
 provider_header_text = provider_header_qml.read_text(encoding="utf-8")
 provider_usage_row_text = provider_usage_row_qml.read_text(encoding="utf-8")
 overview_provider_row_text = overview_provider_row_qml.read_text(encoding="utf-8")
@@ -434,30 +432,16 @@ class PopupLayoutTest(unittest.TestCase):
         format_number_body = function_body(main_text, "formatNumber")
         if not (
             code_contains(format_number_body, "groupedDecimalString(")
-            or code_contains(format_number_body, "CostPresentation.formatCount(")
+            or code_contains(format_number_body, "CostAmounts.formatCount(")
         ):
             raise AssertionError(
-                "formatNumber must format through groupedDecimalString or CostPresentation.formatCount "
+                "formatNumber must format through groupedDecimalString or CostAmounts.formatCount "
                 "so credit balances carry group separators and the locale decimal mark like every "
                 "other figure in the popup"
             )
         if "toFixed(" in format_number_body:
             raise AssertionError(
                 "formatNumber must not format digits itself again; toFixed hardcodes the "
-                "decimal mark and prints a whole balance as '0.0'"
-            )
-        # The delegated count formatter keeps the same routing contract: locale-aware
-        # grouping, never hardcoded digits.
-        format_count_body = function_body(cost_presentation_text, "formatCount")
-        if not code_contains(format_count_body, "groupedDecimalString("):
-            raise AssertionError(
-                "formatCount must route through groupedDecimalString so credit balances "
-                "carry group separators and the locale decimal mark like every other "
-                "figure in the popup"
-            )
-        if "toFixed(" in format_count_body:
-            raise AssertionError(
-                "formatCount must not format digits itself again; toFixed hardcodes the "
                 "decimal mark and prints a whole balance as '0.0'"
             )
         for usage_metadata_id in ("usagePaceLabel", "usageResetLabel"):

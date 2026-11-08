@@ -78,7 +78,7 @@ class ProviderCostPresentationTests(unittest.TestCase):
                               "monthlySummary": text("Used: %1, remaining: %2 of %3", "0", "1,000", "1,000")})
             qml = '''import QtQuick
 import QtTest
-import "SOURCE_URL/CostPresentation.js" as CostPresentation
+import "SOURCE_URL/CostAmounts.js" as CostAmounts
 import "SOURCE_URL/components" as Components
 TestCase {
     id: testCase
@@ -91,7 +91,7 @@ TestCase {
     }
     property var messages: ({})
     property var plurals: ({})
-    property var costNumberFormat: CostPresentation.numberFormat(",", ".")
+    property var costNumberFormat: CostAmounts.numberFormat(",", ".")
     function i18n(source) {
         var text = messages[source] || source;
         for (var i = 1; i < arguments.length; i++)
@@ -142,7 +142,7 @@ TestCase {
 import QtTest
 import org.kde.kirigami as Kirigami
 import "SOURCE_URL/components" as Components
-import "SOURCE_URL/CostPresentation.js" as CostPresentation
+import "SOURCE_URL/CostAmounts.js" as CostAmounts
 TestCase {
     id: fullRoot
     property alias applet: applet
@@ -154,7 +154,7 @@ TestCase {
     }
     Components.ProviderCostDetails {
         id: providerCostDetails
-        numberFormat: CostPresentation.numberFormat(",", ".")
+        numberFormat: CostAmounts.numberFormat(",", ".")
         function i18n(source) { return applet.i18n.apply(applet, arguments); }
     }
     when: windowShown

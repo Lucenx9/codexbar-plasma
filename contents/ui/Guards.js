@@ -19,6 +19,23 @@ function hasOwnKey(item, key) {
     return item ? Object.prototype.hasOwnProperty.call(item, key) : false
 }
 
+function isRecord(value) {
+    return value !== null && typeof value === "object" && !Array.isArray(value)
+}
+
+function isFiniteNumber(value) {
+    return typeof value === "number" && isFinite(value)
+}
+
+function isNonNegativeInteger(value) {
+    return isFiniteNumber(value) && Math.floor(value) === value && value >= 0
+}
+
+function isArrayIndex(items, index) {
+    return Array.isArray(items) && typeof index === "number"
+        && Math.floor(index) === index && index >= 0 && index < items.length
+}
+
 // The key is coerced first: a non-string key that stringifies to `__proto__`
 // reaches the same slot as the string would.
 function isUnsafeObjectKey(key) {

@@ -1,13 +1,13 @@
 import QtQuick
 import QtTest
-import "../contents/ui/CostPresentation.js" as CostPresentation
+import "../contents/ui/CostAmounts.js" as CostAmounts
 import "../contents/ui/components" as Components
 
 TestCase {
     id: testCase
     name: "CostLabels"
 
-    property var numberFormat: CostPresentation.numberFormat(",", ".")
+    property var numberFormat: CostAmounts.numberFormat(",", ".")
     property bool showsTokens: false
 
     function i18n(source) {
@@ -42,7 +42,7 @@ TestCase {
     }
 
     function init() {
-        numberFormat = CostPresentation.numberFormat(",", ".");
+        numberFormat = CostAmounts.numberFormat(",", ".");
         showsTokens = false;
     }
     function laneTotals() {
@@ -256,7 +256,7 @@ TestCase {
         };
         var before = JSON.stringify(snapshot);
         compare(costLabels.costModelRows(snapshot)[0].value, "1.5K tokens");
-        numberFormat = CostPresentation.numberFormat(".", ",");
+        numberFormat = CostAmounts.numberFormat(".", ",");
         compare(costLabels.costModelRows(snapshot)[0].value, "1,5K tokens");
         compare(JSON.stringify(snapshot), before);
     }

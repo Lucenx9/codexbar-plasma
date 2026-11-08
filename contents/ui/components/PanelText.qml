@@ -1,7 +1,7 @@
 import QtQuick
 import "../PanelText.js" as PanelText
 import "../PanelTextFit.js" as PanelTextFit
-import "../CostPresentation.js" as CostPresentation
+import "../CostAmounts.js" as CostAmounts
 import "../ProviderNormalizer.js" as Normalizer
 
 // Localized panel text only. The applet supplies privacy-filtered providers,
@@ -82,7 +82,7 @@ QtObject {
                 ? i18nc("Quota name %1 before panel usage text %2", "%1 %2", quotaLabel, display) : "",
             compactDisplay: compactDisplay,
             credits: item && root.showCredits && item.credits !== null
-                ? i18n("%1cr", CostPresentation.formatCount(root.numberFormat, item.credits)) : ""
+                ? i18n("%1cr", CostAmounts.formatCount(root.numberFormat, item.credits)) : ""
         })
     }
 
@@ -100,7 +100,7 @@ QtObject {
             details.push(parts.description)
         }
         if (parts.credits !== null) {
-            details.push(i18n("%1cr", CostPresentation.formatCount(root.numberFormat, parts.credits)))
+            details.push(i18n("%1cr", CostAmounts.formatCount(root.numberFormat, parts.credits)))
         }
         if (Normalizer.usageConfidence(item.dataConfidence) === "percentOnly") {
             details.push(i18n("The source provides usage percentages; some details may be unavailable."))

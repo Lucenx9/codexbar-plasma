@@ -1,6 +1,6 @@
 import QtQuick
 import "../ProviderCostPresentation.js" as ProviderCostPresentation
-import "../CostPresentation.js" as CostPresentation
+import "../CostAmounts.js" as CostAmounts
 
 // Localized cost and credit details. Cost/reset inputs are classified by the
 // pure module; monthly credit limits arrive normalized by ProviderNormalizer.
@@ -105,10 +105,10 @@ QtObject {
     }
 
     function amountString(value, currency) {
-        return CostPresentation.amountString(root.numberFormat, value, currency)
+        return CostAmounts.amountString(root.numberFormat, value, currency)
     }
 
     function formatNumber(value) {
-        return CostPresentation.formatCount(root.numberFormat, value)
+        return CostAmounts.formatCount(root.numberFormat, value)
     }
 }

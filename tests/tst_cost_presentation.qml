@@ -1,12 +1,52 @@
 import QtQuick
 import QtTest
 import "../contents/ui/CostPresentation.js" as CostPresentation
+import "../contents/ui/CostAmounts.js" as CostAmounts
+import "../contents/ui/CostChart.js" as CostChart
+import "../contents/ui/CostCurrency.js" as CostCurrency
+import "../contents/ui/CostTrust.js" as CostTrust
 import "../contents/ui/CostResponse.js" as CostResponse
 import "../contents/ui/PrivacyPresentation.js" as Privacy
 import "../contents/ui/ProviderNormalizer.js" as Normalizer
 
 TestCase {
     name: "CostPresentation"
+
+    function test_roundedBarsClampCornersToTheirBounds_data() {
+        return [
+            { tag: "ordinary", bounds: { x: 5, baseline: 100, width: 10, height: 10 }, radius: 3,
+                expected: [[5, 100], [5, 93], [5, 90, 8, 90], [12, 90], [15, 90, 15, 93], [15, 100]] },
+            { tag: "short-and-narrow", bounds: { x: 5, baseline: 100, width: 4, height: 2 }, radius: 99,
+                expected: [[5, 100], [5, 100], [5, 98, 7, 98], [7, 98], [9, 98, 9, 100], [9, 100]] }
+        ]
+    }
+
+    function test_roundedBarsClampCornersToTheirBounds(data) {
+        var points = []
+        var operations = []
+        function record() { points.push(Array.prototype.slice.call(arguments)) }
+        var context = {
+            beginPath: function() { operations.push("begin") },
+            moveTo: record, lineTo: record, quadraticCurveTo: record,
+            closePath: function() { operations.push("close") },
+            fill: function() { operations.push("fill") }
+        }
+        CostChart.paintRoundedTopBar(context, data.bounds, data.radius)
+        compare(points, data.expected)
+        compare(operations, ["begin", "close", "fill"])
+    }
+
+    function test_noticeScopesCannotReadEmptyOrUnsafeMapKeys() {
+        var key = "information|vendor|exact|priced|metered|complete"
+        var states = JSON.parse('{"":{},"__proto__":{},"constructor":{},"prototype":{}}')
+        for (var scope in states)
+            states[scope] = { key: key, dismissed: true }
+        for (var invalid of [null, "", "__proto__", "constructor", "prototype"]) {
+            compare(CostTrust.costTrustNoticeStoreTransition({ sourceKind: "vendor" }, states, invalid, false), {
+                states: ({}), state: { key: key, dismissed: false, shouldShow: true }
+            })
+        }
+    }
 
     function test_barCanvasCoordinatesStayFiniteForMissingDimensions() {
         var coordinates = []
@@ -18,9 +58,9 @@ TestCase {
             beginPath: function() {}, closePath: function() {}, fill: function() {},
             moveTo: record, lineTo: record, quadraticCurveTo: record
         }
-        CostPresentation.paintRoundedTopBar(context, 5, 100, Number.NaN, undefined, 3)
-        CostPresentation.paintRoundedTopBar(context, 5, 100, Infinity, 20, 3)
-        CostPresentation.paintRoundedTopBar(context, 5, 100, 10, Infinity, 3)
+        CostChart.paintRoundedTopBar(context, { x: 5, baseline: 100, width: Number.NaN, height: undefined }, 3)
+        CostChart.paintRoundedTopBar(context, { x: 5, baseline: 100, width: Infinity, height: 20 }, 3)
+        CostChart.paintRoundedTopBar(context, { x: 5, baseline: 100, width: 10, height: Infinity }, 3)
         verify(coordinates.length > 0)
         for (var coordinate of coordinates)
             verify(isFinite(coordinate), "Canvas coordinates must remain finite")
@@ -54,7 +94,7 @@ TestCase {
     }
 
     function test_costDayIndexAfterRefresh(data) {
-        compare(CostPresentation.costDayIndexAfterRefresh(data.previous, data.index, data.next), data.expected)
+        compare(CostChart.costDayIndexAfterRefresh(data.previous, data.index, data.next), data.expected)
     }
 
     function test_selectedCostDayUsesSourceRowAfterUnavailableAmountsAreSkipped() {
@@ -62,27 +102,27 @@ TestCase {
             { label: "2026-09-01", cost: null, tokens: 3, models: [{label: "First"}] },
             { label: "2026-09-02", cost: 0, tokens: 7, models: [{label: "Second"}] }
         ]
-        var costPoints = CostPresentation.chartPoints(fmt, daily, false)
+        var costPoints = CostChart.chartPoints(fmt, daily, false)
         compare(costPoints.length, 1)
-        compare(CostPresentation.selectedCostDay(daily, costPoints, 0), daily[1])
-        var tokenPoints = CostPresentation.chartPoints(fmt, daily, true)
-        compare(CostPresentation.selectedCostDay(daily, tokenPoints, 0), daily[0])
-        compare(CostPresentation.selectedCostDay(daily, tokenPoints, 1), daily[1])
-        compare(CostPresentation.selectedCostDay(daily, costPoints, -1), null)
-        compare(CostPresentation.selectedCostDay([], costPoints, 0), null)
-        compare(CostPresentation.selectedCostDay(daily, [{ sourceIndex: "1" }], 0), null)
-        compare(CostPresentation.selectedCostDay(daily, [{ sourceIndex: 0.5 }], 0), null)
-        compare(CostPresentation.selectedCostDay(daily, costPoints, 0.5), null)
-        compare(CostPresentation.selectedCostDay(daily, null, 0), null)
+        compare(CostChart.selectedCostDay(daily, costPoints, 0), daily[1])
+        var tokenPoints = CostChart.chartPoints(fmt, daily, true)
+        compare(CostChart.selectedCostDay(daily, tokenPoints, 0), daily[0])
+        compare(CostChart.selectedCostDay(daily, tokenPoints, 1), daily[1])
+        compare(CostChart.selectedCostDay(daily, costPoints, -1), null)
+        compare(CostChart.selectedCostDay([], costPoints, 0), null)
+        compare(CostChart.selectedCostDay(daily, [{ sourceIndex: "1" }], 0), null)
+        compare(CostChart.selectedCostDay(daily, [{ sourceIndex: 0.5 }], 0), null)
+        compare(CostChart.selectedCostDay(daily, costPoints, 0.5), null)
+        compare(CostChart.selectedCostDay(daily, null, 0), null)
     }
 
     function test_amountSummaryPreservesAvailableMetrics() {
-        var fmt = CostPresentation.numberFormat(",", ".")
+        var fmt = CostAmounts.numberFormat(",", ".")
         var tokensText = function(tokens) { return tokens + " tokens" }
-        compare(CostPresentation.amountSummary(fmt, { cost: null, tokens: 5 }, tokensText), "5 tokens")
-        compare(CostPresentation.amountSummary(fmt, { cost: 0, tokens: null, currency: "USD" }, tokensText), "$0.00")
-        compare(CostPresentation.amountSummary(fmt, { cost: 0, tokens: 0, currency: "USD" }, tokensText), "$0.00 · 0 tokens")
-        compare(CostPresentation.amountSummary(fmt, null, tokensText), "-")
+        compare(CostAmounts.amountSummary(fmt, { cost: null, tokens: 5 }, tokensText), "5 tokens")
+        compare(CostAmounts.amountSummary(fmt, { cost: 0, tokens: null, currency: "USD" }, tokensText), "$0.00")
+        compare(CostAmounts.amountSummary(fmt, { cost: 0, tokens: 0, currency: "USD" }, tokensText), "$0.00 · 0 tokens")
+        compare(CostAmounts.amountSummary(fmt, null, tokensText), "-")
     }
 
     function test_modelRowsDistinguishZeroFromMissingAmounts() {
@@ -196,7 +236,7 @@ TestCase {
         compare(CostPresentation.projectRows(null, false), { rows: [], truncated: false })
     }
 
-    readonly property var fmt: CostPresentation.numberFormat(",", ".")
+    readonly property var fmt: CostAmounts.numberFormat(",", ".")
 
     function dailyPoint(label, cost, tokens, currency) {
         return { label: label, cost: cost, tokens: tokens, currency: currency || "USD" }
@@ -210,83 +250,83 @@ TestCase {
     }
 
     function test_numberFormatFallsBackWhenTheCallerHasNoLocale() {
-        var fallback = CostPresentation.numberFormat(undefined, undefined)
+        var fallback = CostAmounts.numberFormat(undefined, undefined)
         compare(fallback.group, ",")
         compare(fallback.decimal, ".")
-        compare(CostPresentation.amountString(fallback, 1234.5, "USD"), "$1,234.50")
+        compare(CostAmounts.amountString(fallback, 1234.5, "USD"), "$1,234.50")
     }
 
     function test_amountStringHonoursTheCallerSeparators() {
-        var italian = CostPresentation.numberFormat(".", ",")
-        compare(CostPresentation.amountString(italian, 1234.5, "USD"), "$1.234,50")
-        compare(CostPresentation.amountString(fmt, 1234.5, "USD"), "$1,234.50")
+        var italian = CostAmounts.numberFormat(".", ",")
+        compare(CostAmounts.amountString(italian, 1234.5, "USD"), "$1.234,50")
+        compare(CostAmounts.amountString(fmt, 1234.5, "USD"), "$1,234.50")
     }
 
     function test_amountStringKeepsTheSignOutsideTheCurrencySymbol() {
-        compare(CostPresentation.amountString(fmt, -12, "USD"), "-$12.00")
-        compare(CostPresentation.amountString(fmt, -12, "EUR"), "-EUR 12.00")
+        compare(CostAmounts.amountString(fmt, -12, "USD"), "-$12.00")
+        compare(CostAmounts.amountString(fmt, -12, "EUR"), "-EUR 12.00")
     }
 
     function test_quotaIsACreditBalanceNotMoney() {
-        compare(CostPresentation.amountString(fmt, 1499.6, "Quota"), "1500")
-        compare(CostPresentation.amountString(fmt, 1499.6, " Quota "), "1500")
-        compare(CostPresentation.amountString(fmt, "abc", "Quota"), "-")
-        compare(CostPresentation.amountString(fmt, null, "Quota"), "-")
+        compare(CostAmounts.amountString(fmt, 1499.6, "Quota"), "1500")
+        compare(CostAmounts.amountString(fmt, 1499.6, " Quota "), "1500")
+        compare(CostAmounts.amountString(fmt, "abc", "Quota"), "-")
+        compare(CostAmounts.amountString(fmt, null, "Quota"), "-")
     }
 
     function test_amountStringDoesNotDisplayNegativeZero() {
-        for (var format of [fmt, CostPresentation.numberFormat(".", ","), null]) {
+        for (var format of [fmt, CostAmounts.numberFormat(".", ","), null]) {
             for (var currency of ["USD", "EUR", ""]) {
                 for (var value of [-0, -0.001, -0.0049]) {
-                    compare(CostPresentation.amountString(format, value, currency),
-                        CostPresentation.amountString(format, 0, currency))
+                    compare(CostAmounts.amountString(format, value, currency),
+                        CostAmounts.amountString(format, 0, currency))
                 }
                 for (var negative of [-0.005, -0.01, -12.5]) {
-                    compare(CostPresentation.amountString(format, negative, currency),
-                        "-" + CostPresentation.amountString(format, -negative, currency))
+                    compare(CostAmounts.amountString(format, negative, currency),
+                        "-" + CostAmounts.amountString(format, -negative, currency))
                 }
             }
         }
     }
 
     function test_nonNumericAmountDegradesToDash() {
-        compare(CostPresentation.amountString(fmt, "abc", "USD"), "-")
-        compare(CostPresentation.amountString(fmt, "abc", "EUR"), "-")
-        compare(CostPresentation.amountString(fmt, "12", "USD"), "-")
-        compare(CostPresentation.amountString(fmt, "", "USD"), "-")
-        compare(CostPresentation.amountString(fmt, undefined, "USD"), "-")
-        compare(CostPresentation.amountString(fmt, Number.NaN, "USD"), "-")
-        compare(CostPresentation.amountString(fmt, null, "USD"), "-")
-        compare(CostPresentation.amountString(fmt, false, "USD"), "-")
-        compare(CostPresentation.amountString(fmt, [], "USD"), "-")
-        compare(CostPresentation.amountString(fmt, {}, "USD"), "-")
-        compare(CostPresentation.groupedDecimalString(fmt, "abc", 2), "-")
+        compare(CostAmounts.amountString(fmt, "abc", "USD"), "-")
+        compare(CostAmounts.amountString(fmt, "abc", "EUR"), "-")
+        compare(CostAmounts.amountString(fmt, "12", "USD"), "-")
+        compare(CostAmounts.amountString(fmt, "", "USD"), "-")
+        compare(CostAmounts.amountString(fmt, undefined, "USD"), "-")
+        compare(CostAmounts.amountString(fmt, Number.NaN, "USD"), "-")
+        compare(CostAmounts.amountString(fmt, null, "USD"), "-")
+        compare(CostAmounts.amountString(fmt, false, "USD"), "-")
+        compare(CostAmounts.amountString(fmt, [], "USD"), "-")
+        compare(CostAmounts.amountString(fmt, {}, "USD"), "-")
+        compare(CostAmounts.groupedDecimalString(fmt, "abc", 2), "-")
     }
 
     function test_amountStringHandlesNullOrMissingFormatGracefully() {
-        compare(CostPresentation.amountString(null, 12, "USD"), "$12.00")
-        compare(CostPresentation.amountString(undefined, 12, "USD"), "$12.00")
-        compare(CostPresentation.amountString({}, 12, "USD"), "$12.00")
-        compare(CostPresentation.groupedDecimalString(null, 1234.5, 2), "1,234.50")
+        compare(CostAmounts.amountString(null, 12, "USD"), "$12.00")
+        compare(CostAmounts.amountString(undefined, 12, "USD"), "$12.00")
+        compare(CostAmounts.amountString({}, 12, "USD"), "$12.00")
+        compare(CostAmounts.groupedDecimalString(null, 1234.5, 2), "1,234.50")
     }
 
     function test_amountStringHandlesEmptyOrMissingCurrencyGracefully() {
-        compare(CostPresentation.amountString(fmt, 12, ""), "12.00")
-        compare(CostPresentation.amountString(fmt, -12, ""), "-12.00")
-        compare(CostPresentation.amountString(fmt, 12, null), "12.00")
-        compare(CostPresentation.amountString(fmt, 12, undefined), "12.00")
-        compare(CostPresentation.amountString(fmt, 12, "   "), "12.00")
+        compare(CostAmounts.amountString(fmt, 12, ""), "12.00")
+        compare(CostAmounts.amountString(fmt, -12, ""), "-12.00")
+        compare(CostAmounts.amountString(fmt, 12, null), "12.00")
+        compare(CostAmounts.amountString(fmt, 12, undefined), "12.00")
+        compare(CostAmounts.amountString(fmt, 12, "   "), "12.00")
     }
 
     // Number.toFixed returns exponential notation past 1e21, which has no
     // fixed-point digits to group: without the guard "1e+21" gained a bogus
     // separator ("1e,+21").
     function test_groupedDecimalStringKeepsHugeMagnitudesReadable() {
-        compare(CostPresentation.groupedDecimalString(fmt, 1e21, 2), "1e+21")
-        compare(CostPresentation.groupedDecimalString(fmt, -1e21, 2), "1e+21")
-        compare(CostPresentation.groupedDecimalString(fmt, 1.5e21, 2), "1.5e+21")
-        compare(CostPresentation.amountString(fmt, 1e21, "USD"), "$1e+21")
-        compare(CostPresentation.amountString(fmt, -1e21, "USD"), "-$1e+21")
+        compare(CostAmounts.groupedDecimalString(fmt, 1e21, 2), "1e+21")
+        compare(CostAmounts.groupedDecimalString(fmt, -1e21, 2), "1e+21")
+        compare(CostAmounts.groupedDecimalString(fmt, 1.5e21, 2), "1.5e+21")
+        compare(CostAmounts.amountString(fmt, 1e21, "USD"), "$1e+21")
+        compare(CostAmounts.amountString(fmt, -1e21, "USD"), "-$1e+21")
     }
 
     // Credit balances print as bare counts: whole balances keep no fractional
@@ -294,98 +334,98 @@ TestCase {
     // (99.95 -> "100.0"), so the fractional digit drops when the rounded
     // figure is whole.
     function test_formatCountDropsTheFractionalDigitAfterRoundingUp() {
-        compare(CostPresentation.formatCount(fmt, 0), "0")
-        compare(CostPresentation.formatCount(fmt, 100), "100")
-        compare(CostPresentation.formatCount(fmt, 99.95), "100")
-        compare(CostPresentation.formatCount(fmt, 2.95), "3")
-        compare(CostPresentation.formatCount(fmt, -99.95), "-100")
-        compare(CostPresentation.formatCount(fmt, 99.94), "99.9")
-        compare(CostPresentation.formatCount(fmt, 199.99), "200")
-        compare(CostPresentation.formatCount(fmt, 1234.5), "1,235")
-        compare(CostPresentation.formatCount(fmt, 12.5), "12.5")
-        compare(CostPresentation.formatCount(fmt, "abc"), "-")
-        compare(CostPresentation.formatCount(fmt, Number.NaN), "-")
-        compare(CostPresentation.formatCount(fmt, undefined), "-")
+        compare(CostAmounts.formatCount(fmt, 0), "0")
+        compare(CostAmounts.formatCount(fmt, 100), "100")
+        compare(CostAmounts.formatCount(fmt, 99.95), "100")
+        compare(CostAmounts.formatCount(fmt, 2.95), "3")
+        compare(CostAmounts.formatCount(fmt, -99.95), "-100")
+        compare(CostAmounts.formatCount(fmt, 99.94), "99.9")
+        compare(CostAmounts.formatCount(fmt, 199.99), "200")
+        compare(CostAmounts.formatCount(fmt, 1234.5), "1,235")
+        compare(CostAmounts.formatCount(fmt, 12.5), "12.5")
+        compare(CostAmounts.formatCount(fmt, "abc"), "-")
+        compare(CostAmounts.formatCount(fmt, Number.NaN), "-")
+        compare(CostAmounts.formatCount(fmt, undefined), "-")
         // Number(null) coerces to 0, as the delegated main.qml helper did.
-        compare(CostPresentation.formatCount(fmt, null), "0")
-        var italian = CostPresentation.numberFormat(".", ",")
-        compare(CostPresentation.formatCount(italian, 99.95), "100")
-        compare(CostPresentation.formatCount(italian, 99.94), "99,9")
-        compare(CostPresentation.formatCount(italian, 1234.5), "1.235")
-        compare(CostPresentation.formatCount(null, 12.5), "12.5")
+        compare(CostAmounts.formatCount(fmt, null), "0")
+        var italian = CostAmounts.numberFormat(".", ",")
+        compare(CostAmounts.formatCount(italian, 99.95), "100")
+        compare(CostAmounts.formatCount(italian, 99.94), "99,9")
+        compare(CostAmounts.formatCount(italian, 1234.5), "1.235")
+        compare(CostAmounts.formatCount(null, 12.5), "12.5")
     }
 
     // A tiny negative balance rounds to a displayed zero. The sign must not
     // survive as the negative-zero string "-0".
     function test_formatCountDropsTheSignWhenANegativeRoundsToZero() {
-        compare(CostPresentation.formatCount(fmt, -0.04), "0")
-        compare(CostPresentation.formatCount(fmt, -0.049), "0")
-        var italian = CostPresentation.numberFormat(".", ",")
-        compare(CostPresentation.formatCount(italian, -0.04), "0")
+        compare(CostAmounts.formatCount(fmt, -0.04), "0")
+        compare(CostAmounts.formatCount(fmt, -0.049), "0")
+        var italian = CostAmounts.numberFormat(".", ",")
+        compare(CostAmounts.formatCount(italian, -0.04), "0")
         // A negative that survives rounding keeps its sign.
-        compare(CostPresentation.formatCount(fmt, -0.05), "-0.1")
-        compare(CostPresentation.formatCount(fmt, -0.4), "-0.4")
-        compare(CostPresentation.formatCount(fmt, -5), "-5")
+        compare(CostAmounts.formatCount(fmt, -0.05), "-0.1")
+        compare(CostAmounts.formatCount(fmt, -0.4), "-0.4")
+        compare(CostAmounts.formatCount(fmt, -5), "-5")
     }
 
     function test_tokenCountStringScalesAndDropsTrailingZero() {
-        compare(CostPresentation.tokenCountString(999), "999")
-        compare(CostPresentation.tokenCountString(1000), "1K")
-        compare(CostPresentation.tokenCountString(1500), "1.5K")
-        compare(CostPresentation.tokenCountString(15000), "15K")
-        compare(CostPresentation.tokenCountString(2500000), "2.5M")
-        compare(CostPresentation.tokenCountString(3000000000), "3B")
-        compare(CostPresentation.tokenCountString(-1500), "-1.5K")
-        compare(CostPresentation.tokenCountString("abc"), "-")
+        compare(CostAmounts.tokenCountString(999), "999")
+        compare(CostAmounts.tokenCountString(1000), "1K")
+        compare(CostAmounts.tokenCountString(1500), "1.5K")
+        compare(CostAmounts.tokenCountString(15000), "15K")
+        compare(CostAmounts.tokenCountString(2500000), "2.5M")
+        compare(CostAmounts.tokenCountString(3000000000), "3B")
+        compare(CostAmounts.tokenCountString(-1500), "-1.5K")
+        compare(CostAmounts.tokenCountString("abc"), "-")
     }
 
     function test_tokenCountStringUsesTheCallerDecimalMark() {
-        var comma = CostPresentation.numberFormat(".", ",")
-        compare(CostPresentation.tokenCountString(1500, comma), "1,5K")
-        compare(CostPresentation.tokenCountString(-2500000, comma), "-2,5M")
-        compare(CostPresentation.tokenCountString(4294967297, comma), "4,3B")
-        compare(CostPresentation.tokenCountString(1000, comma), "1K")
-        compare(CostPresentation.tokenCountString(15000, comma), "15K")
-        compare(CostPresentation.tokenCountString(999, comma), "999")
-        compare(CostPresentation.tokenCountString(1500, ({})), "1.5K")
-        compare(CostPresentation.metricText(comma, 1500, "USD", true), "1,5K")
+        var comma = CostAmounts.numberFormat(".", ",")
+        compare(CostAmounts.tokenCountString(1500, comma), "1,5K")
+        compare(CostAmounts.tokenCountString(-2500000, comma), "-2,5M")
+        compare(CostAmounts.tokenCountString(4294967297, comma), "4,3B")
+        compare(CostAmounts.tokenCountString(1000, comma), "1K")
+        compare(CostAmounts.tokenCountString(15000, comma), "15K")
+        compare(CostAmounts.tokenCountString(999, comma), "999")
+        compare(CostAmounts.tokenCountString(1500, ({})), "1.5K")
+        compare(CostAmounts.metricText(comma, 1500, "USD", true), "1,5K")
         compare(CostPresentation.breakdownRows([{ label: "Input", tokens: 1500 }], comma)[0].value, "1,5K")
-        compare(CostPresentation.amountSummary(comma, { cost: 1.5, tokens: 1500, currency: "USD" }), "$1,50 · 1,5K")
+        compare(CostAmounts.amountSummary(comma, { cost: 1.5, tokens: 1500, currency: "USD" }), "$1,50 · 1,5K")
     }
 
     // A value that rounds up across a unit boundary must promote to the larger
     // unit instead of printing an overflowing one ("1000K", "1000M").
     function test_tokenCountStringPromotesAtRoundedBoundaries() {
-        compare(CostPresentation.tokenCountString(999.6), "1K")
-        compare(CostPresentation.tokenCountString(999999), "1M")
-        compare(CostPresentation.tokenCountString(994999), "995K")
-        compare(CostPresentation.tokenCountString(999600), "1M")
-        compare(CostPresentation.tokenCountString(-999600), "-1M")
-        compare(CostPresentation.tokenCountString(999999999), "1B")
-        compare(CostPresentation.tokenCountString(999499999), "999M")
+        compare(CostAmounts.tokenCountString(999.6), "1K")
+        compare(CostAmounts.tokenCountString(999999), "1M")
+        compare(CostAmounts.tokenCountString(994999), "995K")
+        compare(CostAmounts.tokenCountString(999600), "1M")
+        compare(CostAmounts.tokenCountString(-999600), "-1M")
+        compare(CostAmounts.tokenCountString(999999999), "1B")
+        compare(CostAmounts.tokenCountString(999499999), "999M")
     }
 
     // The regression this guards: a marker or bar drawn against the wrong
     // metric claims a spend level the payload never reported.
     function test_sparklineMaxFollowsTheSelectedMetric() {
         var points = [dailyPoint("Mon", 5, 900), dailyPoint("Tue", 2, 4000)]
-        compare(CostPresentation.sparklineMax(points, false), 5)
-        compare(CostPresentation.sparklineMax(points, true), 4000)
-        compare(CostPresentation.sparklineMax([], false), 0)
-        compare(CostPresentation.sparklineMax(null, false), 0)
+        compare(CostAmounts.sparklineMax(points, false), 5)
+        compare(CostAmounts.sparklineMax(points, true), 4000)
+        compare(CostAmounts.sparklineMax([], false), 0)
+        compare(CostAmounts.sparklineMax(null, false), 0)
     }
 
     function test_chartPointsDropUnavailableCostButKeepTokens() {
         var points = [dailyPoint("Mon", null, 250)]
 
-        compare(CostPresentation.chartPoints(fmt, points, false).length, 0)
-        compare(CostPresentation.chartPoints(fmt, points, true)[0].value, 250)
+        compare(CostChart.chartPoints(fmt, points, false).length, 0)
+        compare(CostChart.chartPoints(fmt, points, true)[0].value, 250)
     }
 
     function test_peakPointNamesTheDayTheBarsHighlight() {
         var points = [dailyPoint("Mon", 5, 900), dailyPoint("Tue", 2, 4000)]
-        compare(CostPresentation.peakPoint(points, false).label, "Mon")
-        compare(CostPresentation.peakPoint(points, true).label, "Tue")
+        compare(CostAmounts.peakPoint(points, false).label, "Mon")
+        compare(CostAmounts.peakPoint(points, true).label, "Tue")
     }
 
     function test_recentHistoryPointsKeepTheNewestSevenDays() {
@@ -402,30 +442,30 @@ TestCase {
     }
 
     function test_peakPointIsNullWhenNothingWasSpent() {
-        compare(CostPresentation.peakPoint([dailyPoint("Mon", 0, 0)], false), null)
-        compare(CostPresentation.peakPoint([], false), null)
-        compare(CostPresentation.peakPoint(null, false), null)
-        compare(CostPresentation.peakPoint([null, "invalid", 42], false), null)
-        compare(CostPresentation.peakPoint([null, dailyPoint("Tue", 4, 0)], false).label, "Tue")
+        compare(CostAmounts.peakPoint([dailyPoint("Mon", 0, 0)], false), null)
+        compare(CostAmounts.peakPoint([], false), null)
+        compare(CostAmounts.peakPoint(null, false), null)
+        compare(CostAmounts.peakPoint([null, "invalid", 42], false), null)
+        compare(CostAmounts.peakPoint([null, dailyPoint("Tue", 4, 0)], false).label, "Tue")
     }
 
     function test_peakPointLeavesAnEmptyLabelForTheCallerToWord() {
-        compare(CostPresentation.peakPoint([dailyPoint("", 5, 900)], false).label, "")
+        compare(CostAmounts.peakPoint([dailyPoint("", 5, 900)], false).label, "")
     }
 
     // Null entries carry no data: the peak skips them like uniqueCostDayIndex
     // does, and breakdown rows never read a token count from one.
     function test_peakPointAndBreakdownRowsSkipNullEntries() {
-        compare(CostPresentation.peakPoint([null, dailyPoint("Mon", 5, 900)], false).label, "Mon")
-        compare(CostPresentation.peakPoint([null, null], false), null)
+        compare(CostAmounts.peakPoint([null, dailyPoint("Mon", 5, 900)], false).label, "Mon")
+        compare(CostAmounts.peakPoint([null, null], false), null)
         compare(CostPresentation.breakdownRows([null, { label: "ok", tokens: 5 }]).length, 1)
         compare(CostPresentation.breakdownRows([null]).length, 0)
     }
 
     function test_averageDailyValueDividesByEveryPlottedDay() {
         var points = [dailyPoint("Mon", 3, 0), dailyPoint("Tue", 0, 0), dailyPoint("Wed", 6, 0)]
-        compare(CostPresentation.averageDailyValue(points, false).value, 3)
-        compare(CostPresentation.averageDailyValue([], false), null)
+        compare(CostAmounts.averageDailyValue(points, false).value, 3)
+        compare(CostAmounts.averageDailyValue([], false), null)
     }
 
     function test_averageDailyValuePreservesHalfTokenRounding() {
@@ -433,8 +473,8 @@ TestCase {
             return {tokens: tokens}
         })
         for (var order = 0; order < 2; order++) {
-            var average = CostPresentation.averageDailyValue(points, true)
-            compare(CostPresentation.tokenCountString(average.value), "242")
+            var average = CostAmounts.averageDailyValue(points, true)
+            compare(CostAmounts.tokenCountString(average.value), "242")
             verify(average.value === 241.5)
             points.reverse()
         }
@@ -446,12 +486,12 @@ TestCase {
                 {cost: Number.MAX_VALUE, tokens: Number.MAX_VALUE, currency: "EUR"},
                 {cost: Number.MAX_VALUE, tokens: Number.MAX_VALUE, currency: "EUR"}
             ]
-            var average = CostPresentation.averageDailyValue(points, showsTokens)
+            var average = CostAmounts.averageDailyValue(points, showsTokens)
             compare(average.value, Number.MAX_VALUE)
             compare(average.currency, "EUR")
             points.push({cost: null, tokens: null})
             points.push({cost: 0, tokens: 0, currency: "EUR"})
-            average = CostPresentation.averageDailyValue(points, showsTokens)
+            average = CostAmounts.averageDailyValue(points, showsTokens)
             verify(isFinite(average.value))
             verify(Math.abs(average.value / Number.MAX_VALUE - 2 / 3) < 1e-15)
         }
@@ -462,17 +502,17 @@ TestCase {
     function test_averageDailyValueKeepsAFullyMeasuredZeroRange() {
         var measuredZeros = [dailyPoint("Mon", 0, 0), dailyPoint("Tue", 0, 0)]
 
-        compare(CostPresentation.averageDailyValue(measuredZeros, false).value, 0)
-        compare(CostPresentation.averageDailyValue(measuredZeros, false).currency, "USD")
-        compare(CostPresentation.averageDailyValue(measuredZeros, true).value, 0)
-        compare(CostPresentation.averageDailyValue(
+        compare(CostAmounts.averageDailyValue(measuredZeros, false).value, 0)
+        compare(CostAmounts.averageDailyValue(measuredZeros, false).currency, "USD")
+        compare(CostAmounts.averageDailyValue(measuredZeros, true).value, 0)
+        compare(CostAmounts.averageDailyValue(
             [dailyPoint("Mon", null, null), dailyPoint("Tue", null, null)], false), null)
 
         // The caller prints the average through these formatters, so a zero has
         // to reach the line as a figure rather than the unavailable dash.
-        var fmt = CostPresentation.numberFormat(undefined, undefined)
-        compare(CostPresentation.amountString(fmt, 0, "USD"), "$0.00")
-        compare(CostPresentation.tokenCountString(0), "0")
+        var fmt = CostAmounts.numberFormat(undefined, undefined)
+        compare(CostAmounts.amountString(fmt, 0, "USD"), "$0.00")
+        compare(CostAmounts.tokenCountString(0), "0")
     }
 
     function test_averageDailyValueExcludesUnavailableMetricDays() {
@@ -481,15 +521,15 @@ TestCase {
             dailyPoint("Tue", 6, 300)
         ]
 
-        compare(CostPresentation.averageDailyValue(points, false).value, 6)
-        compare(CostPresentation.averageDailyValue(points, true).value, 200)
+        compare(CostAmounts.averageDailyValue(points, false).value, 6)
+        compare(CostAmounts.averageDailyValue(points, true).value, 200)
     }
 
     function test_perMillionAmountNeedsBothHalvesOfTheRatio() {
-        compare(CostPresentation.perMillionAmount({ totals: { cost: 2, tokens: 1000000, currency: "USD" } }).value, 2)
-        compare(CostPresentation.perMillionAmount({ totals: { cost: 2, tokens: 0 } }), null)
-        compare(CostPresentation.perMillionAmount({ totals: { cost: 0, tokens: 500 } }), null)
-        compare(CostPresentation.perMillionAmount(null), null)
+        compare(CostAmounts.perMillionAmount({ totals: { cost: 2, tokens: 1000000, currency: "USD" } }).value, 2)
+        compare(CostAmounts.perMillionAmount({ totals: { cost: 2, tokens: 0 } }), null)
+        compare(CostAmounts.perMillionAmount({ totals: { cost: 0, tokens: 500 } }), null)
+        compare(CostAmounts.perMillionAmount(null), null)
     }
 
     function test_perMillionAmountKeepsRepresentableRatios_data() {
@@ -503,7 +543,7 @@ TestCase {
     }
 
     function test_perMillionAmountKeepsRepresentableRatios(data) {
-        var result = CostPresentation.perMillionAmount({totals: {
+        var result = CostAmounts.perMillionAmount({totals: {
             cost: data.cost, tokens: data.tokens, currency: "EUR"
         }})
         verify(result !== null)
@@ -513,17 +553,17 @@ TestCase {
     }
 
     function test_perMillionAmountOmitsUnrepresentableRatios() {
-        compare(CostPresentation.perMillionAmount({totals: {
+        compare(CostAmounts.perMillionAmount({totals: {
             cost: Number.MAX_VALUE, tokens: 1, currency: "USD"
         }}), null)
     }
 
     function test_chartBarGeometryKeepsTheLastBarInsideTheCanvas() {
-        var dense = CostPresentation.chartBarGeometry(100, 365)
+        var dense = CostChart.chartBarGeometry(100, 365)
         verify(dense.offset >= 0)
         verify(dense.offset + dense.step * (365 - 1) + dense.barWidth <= 100.0001)
         verify(dense.barWidth >= 1)
-        var sparse = CostPresentation.chartBarGeometry(100, 2)
+        var sparse = CostChart.chartBarGeometry(100, 2)
         compare(sparse.offset, 2)
         compare(sparse.gap, 4)
         compare(sparse.step, 50)
@@ -531,47 +571,47 @@ TestCase {
     }
 
     function test_chartLineGeometryInsetsEndpointMarkers() {
-        compare(CostPresentation.chartLineX(100, 3, 0, 3.5), 3.5)
-        compare(CostPresentation.chartLineX(100, 3, 1, 3.5), 50)
-        compare(CostPresentation.chartLineX(100, 3, 2, 3.5), 96.5)
+        compare(CostChart.chartLineX(100, 3, 0, 3.5), 3.5)
+        compare(CostChart.chartLineX(100, 3, 1, 3.5), 50)
+        compare(CostChart.chartLineX(100, 3, 2, 3.5), 96.5)
 
-        compare(CostPresentation.chartLineX(4, 2, 0, 3.5), 2)
-        compare(CostPresentation.chartLineX(4, 2, 1, 3.5), 2)
-        compare(CostPresentation.chartLineX(100, 1, 0, 3.5), 50)
+        compare(CostChart.chartLineX(4, 2, 0, 3.5), 2)
+        compare(CostChart.chartLineX(4, 2, 1, 3.5), 2)
+        compare(CostChart.chartLineX(100, 1, 0, 3.5), 50)
     }
 
     function test_chartLineHitTestingMatchesInsetMarkerPositions() {
-        compare(CostPresentation.chartLineIndexAt(300, 120, 3.5, 3.5), 0)
-        compare(CostPresentation.chartLineIndexAt(300, 120, 296.5, 3.5), 119)
-        compare(CostPresentation.chartLineIndexAt(300, 120, 150, 3.5), 60)
-        compare(CostPresentation.chartLineIndexAt(300, 120, 0, 3.5), 0)
-        compare(CostPresentation.chartLineIndexAt(300, 120, 300, 3.5), 119)
+        compare(CostChart.chartLineIndexAt(300, 120, 3.5, 3.5), 0)
+        compare(CostChart.chartLineIndexAt(300, 120, 296.5, 3.5), 119)
+        compare(CostChart.chartLineIndexAt(300, 120, 150, 3.5), 60)
+        compare(CostChart.chartLineIndexAt(300, 120, 0, 3.5), 0)
+        compare(CostChart.chartLineIndexAt(300, 120, 300, 3.5), 119)
     }
 
     function test_chartLineGeometryInsetsVerticalMarkers() {
-        compare(CostPresentation.chartLineY(100, 0, 3.5), 96.5)
-        compare(CostPresentation.chartLineY(100, 0.5, 3.5), 50)
-        compare(CostPresentation.chartLineY(100, 1, 3.5), 3.5)
+        compare(CostChart.chartLineY(100, 0, 3.5), 96.5)
+        compare(CostChart.chartLineY(100, 0.5, 3.5), 50)
+        compare(CostChart.chartLineY(100, 1, 3.5), 3.5)
 
-        compare(CostPresentation.chartLineY(4, 0, 3.5), 2)
-        compare(CostPresentation.chartLineY(4, 1, 3.5), 2)
-        compare(CostPresentation.chartLineY(100, -1, 3.5), 96.5)
-        compare(CostPresentation.chartLineY(100, 2, 3.5), 3.5)
+        compare(CostChart.chartLineY(4, 0, 3.5), 2)
+        compare(CostChart.chartLineY(4, 1, 3.5), 2)
+        compare(CostChart.chartLineY(100, -1, 3.5), 96.5)
+        compare(CostChart.chartLineY(100, 2, 3.5), 3.5)
     }
 
     function test_chartBarGeometrySurvivesAZeroPointChart() {
-        var empty = CostPresentation.chartBarGeometry(0, 0)
+        var empty = CostChart.chartBarGeometry(0, 0)
         compare(empty.step, 0)
         compare(empty.barWidth, 1)
         compare(empty.offset, 0)
     }
 
     function test_chartPointsClampNegativeValuesAndBoundLabels() {
-        var points = CostPresentation.chartPoints(fmt, [dailyPoint("Mon", -4, 100)], false)
+        var points = CostChart.chartPoints(fmt, [dailyPoint("Mon", -4, 100)], false)
         compare(points[0].value, 0)
         compare(points[0].displayValue, "$0.00")
         // `long` is a QML reserved word, so the label fixture cannot borrow it.
-        var oversized = CostPresentation.chartPoints(fmt, [dailyPoint(new Array(300).join("x"), 1, 1)], false)
+        var oversized = CostChart.chartPoints(fmt, [dailyPoint(new Array(300).join("x"), 1, 1)], false)
         compare(oversized[0].label.length, 120)
     }
 
@@ -615,8 +655,8 @@ TestCase {
             { date: "2026-10-19", totalCost: 1e308, totalTokens: 1e308 },
             { date: "2026-10-20", totalCost: 5e307, totalTokens: 5e307 }
         ], "USD", 2, "2026-10-20T12:00:00Z")
-        compare(CostPresentation.metricValue(daily[1], data.showsTokens), 5e307)
-        compare(CostPresentation.sparklineMax(daily, data.showsTokens), 1e308)
+        compare(CostAmounts.metricValue(daily[1], data.showsTokens), 5e307)
+        compare(CostAmounts.sparklineMax(daily, data.showsTokens), 1e308)
         var rows = CostPresentation.historyRows(fmt, { daily: daily }, data.showsTokens, "Latest")
         compare(rows.length, 2)
         compare(rows[0].percent, 50)
@@ -750,38 +790,38 @@ TestCase {
     function test_memoizedChartPointsKeepIdentityForSameInputs() {
         var memo = ({})
         var daily = [dailyPoint("Mon", 1, 100), dailyPoint("Tue", 2, 200)]
-        var first = CostPresentation.memoizedChartPoints(memo, fmt, daily, false)
+        var first = CostChart.memoizedChartPoints(memo, fmt, daily, false)
         compare(first.length, 2)
-        verify(CostPresentation.memoizedChartPoints(memo, fmt, daily, false) === first)
+        verify(CostChart.memoizedChartPoints(memo, fmt, daily, false) === first)
         var copy = daily.slice()
-        var rebuilt = CostPresentation.memoizedChartPoints(memo, fmt, copy, false)
+        var rebuilt = CostChart.memoizedChartPoints(memo, fmt, copy, false)
         verify(rebuilt !== first)
-        verify(CostPresentation.memoizedChartPoints(memo, fmt, copy, true) !== rebuilt)
-        var otherFormat = CostPresentation.numberFormat(".", ",")
-        verify(CostPresentation.memoizedChartPoints(memo, otherFormat, copy, true) !== rebuilt)
-        compare(CostPresentation.memoizedChartPoints(memo, fmt, null, false).length, 0)
-        compare(CostPresentation.memoizedChartPoints(null, fmt, daily, false).length, 2)
+        verify(CostChart.memoizedChartPoints(memo, fmt, copy, true) !== rebuilt)
+        var otherFormat = CostAmounts.numberFormat(".", ",")
+        verify(CostChart.memoizedChartPoints(memo, otherFormat, copy, true) !== rebuilt)
+        compare(CostChart.memoizedChartPoints(memo, fmt, null, false).length, 0)
+        compare(CostChart.memoizedChartPoints(null, fmt, daily, false).length, 2)
     }
 
     function test_chartPointsAndSparklineMaxSurviveNonArrayInputs() {
-        compare(CostPresentation.chartPoints(fmt, null, false).length, 0)
-        compare(CostPresentation.chartPoints(fmt, "invalid", false).length, 0)
-        compare(CostPresentation.sparklineMax(null, false), 0)
-        compare(CostPresentation.sparklineMax("invalid", false), 0)
+        compare(CostChart.chartPoints(fmt, null, false).length, 0)
+        compare(CostChart.chartPoints(fmt, "invalid", false).length, 0)
+        compare(CostAmounts.sparklineMax(null, false), 0)
+        compare(CostAmounts.sparklineMax("invalid", false), 0)
     }
 
     function test_averageDailyValueAndPeakPointSurviveNonArrayInputs() {
-        compare(CostPresentation.averageDailyValue(null, false), null)
-        compare(CostPresentation.averageDailyValue("invalid", false), null)
-        compare(CostPresentation.peakPoint(null, false), null)
-        compare(CostPresentation.peakPoint("invalid", false), null)
+        compare(CostAmounts.averageDailyValue(null, false), null)
+        compare(CostAmounts.averageDailyValue("invalid", false), null)
+        compare(CostAmounts.peakPoint(null, false), null)
+        compare(CostAmounts.peakPoint("invalid", false), null)
     }
 
     function test_spendHelpersSurviveNonArrayInputs() {
         var arrayLike = { length: 1, 0: null }
         compare(CostPresentation.spendDailyPoints(fmt, arrayLike, false).length, 0)
-        compare(CostPresentation.spendCurrency(arrayLike), "USD")
-        compare(CostPresentation.spendHasMixedCostCurrencies(arrayLike), false)
+        compare(CostCurrency.spendCurrency(arrayLike), "USD")
+        compare(CostCurrency.spendHasMixedCostCurrencies(arrayLike), false)
         compare(CostPresentation.spendTotals("invalid"), null)
         compare(CostPresentation.historyStillBuilding("invalid"), false)
     }
@@ -789,7 +829,7 @@ TestCase {
     function test_modelRowsLetTheCallerWordTheTokenHalf() {
         var rows = CostPresentation.modelRows(fmt, { models: [
             { label: "gpt", cost: 1, tokens: 2000, currency: "USD" }
-        ] }, function(tokens) { return CostPresentation.tokenCountString(tokens) + " tokens" })
+        ] }, function(tokens) { return CostAmounts.tokenCountString(tokens) + " tokens" })
         compare(rows[0].value, "$1.00 · 2K tokens")
     }
 
@@ -843,9 +883,9 @@ TestCase {
     }
 
     function test_spendCurrencyPrefersTotalsThenFallsBackToDaily() {
-        compare(CostPresentation.spendCurrency([{ totals: { currency: "EUR" } }]), "EUR")
-        compare(CostPresentation.spendCurrency([{ totals: {}, daily: [dailyPoint("Mon", 1, 1, "GBP")] }]), "GBP")
-        compare(CostPresentation.spendCurrency([]), "USD")
+        compare(CostCurrency.spendCurrency([{ totals: { currency: "EUR" } }]), "EUR")
+        compare(CostCurrency.spendCurrency([{ totals: {}, daily: [dailyPoint("Mon", 1, 1, "GBP")] }]), "GBP")
+        compare(CostCurrency.spendCurrency([]), "USD")
     }
 
     function test_spendCurrencyPrefersPricedDataOverTokenOnlyFallbacks() {
@@ -860,7 +900,7 @@ TestCase {
             }
         ]
 
-        compare(CostPresentation.spendCurrency(costs), "EUR")
+        compare(CostCurrency.spendCurrency(costs), "EUR")
 
         var totals = CostPresentation.spendTotals(costs)
         compare(totals.cost, 9)
@@ -910,8 +950,8 @@ TestCase {
 
     function test_spendCurrencyPreservesSelectionAndMixedCurrencyPolicy(data) {
         var original = JSON.stringify(data.costs)
-        compare(CostPresentation.spendCurrency(data.costs), data.currency)
-        compare(CostPresentation.spendHasMixedCostCurrencies(data.costs), data.mixed)
+        compare(CostCurrency.spendCurrency(data.costs), data.currency)
+        compare(CostCurrency.spendHasMixedCostCurrencies(data.costs), data.mixed)
         compare(JSON.stringify(data.costs), original)
     }
 
@@ -980,7 +1020,7 @@ TestCase {
         compare(points.length, 1)
         compare(points[0].label, "2026-09-02")
         compare(points[0].value, 0)
-        var days = CostPresentation.spendHeatmapDays(points, costs)
+        var days = CostChart.spendHeatmapDays(points, costs)
         compare(days.length, 2)
         compare(days[0], null)
         compare(days[1].value, 0)
@@ -999,7 +1039,7 @@ TestCase {
             points.push({ label: "day-" + day, value: day, displayValue: "" })
         }
 
-        var cells = CostPresentation.spendHeatmapCells(points, 35)
+        var cells = CostChart.spendHeatmapCells(points, 35)
         compare(cells.length, 35)
         for (var padded = 0; padded < 5; padded++) {
             compare(cells[padded], null)
@@ -1016,8 +1056,8 @@ TestCase {
         var costs = [{ totals: { currency: "USD" }, daily: daily }]
         var points = CostPresentation.spendDailyPoints(fmt, costs, false)
         compare(points.length, 8)
-        var cells = CostPresentation.spendHeatmapCells(
-            CostPresentation.spendHeatmapDays(points, costs), 14)
+        var cells = CostChart.spendHeatmapCells(
+            CostChart.spendHeatmapDays(points, costs), 14)
         compare(cells.length, 14)
         verify(cells[5] !== null, "the first day must occupy its calendar slot")
         compare(cells[5].label, "2026-09-01")
@@ -1025,8 +1065,8 @@ TestCase {
         compare(cells[12].label, "2026-09-08")
         compare(cells[13].label, "2026-09-09")
         compare(cells[12].value, 8)
-        var tokenCells = CostPresentation.spendHeatmapCells(
-            CostPresentation.spendHeatmapDays(CostPresentation.spendDailyPoints(fmt, costs, true), costs), 14)
+        var tokenCells = CostChart.spendHeatmapCells(
+            CostChart.spendHeatmapDays(CostPresentation.spendDailyPoints(fmt, costs, true), costs), 14)
         compare(tokenCells[8].label, "2026-09-04")
         compare(tokenCells[8].value, 40)
     }
@@ -1038,14 +1078,14 @@ TestCase {
         for (var day = 17; day <= 23; day++) {
             days.push({ label: "2026-09-" + day, value: day })
         }
-        compare(CostPresentation.spendHeatmapRowWeekdays(days, 1), [1, 2, 3, 4, 5, 6, 0])
-        compare(CostPresentation.spendHeatmapRowWeekdays(days, 0), [0, 1, 2, 3, 4, 5, 6])
-        compare(CostPresentation.spendHeatmapRowWeekdays(days, 6), [6, 0, 1, 2, 3, 4, 5])
+        compare(CostChart.spendHeatmapRowWeekdays(days, 1), [1, 2, 3, 4, 5, 6, 0])
+        compare(CostChart.spendHeatmapRowWeekdays(days, 0), [0, 1, 2, 3, 4, 5, 6])
+        compare(CostChart.spendHeatmapRowWeekdays(days, 6), [6, 0, 1, 2, 3, 4, 5])
         // An unusable locale value falls back to the ISO Monday start.
-        compare(CostPresentation.spendHeatmapRowWeekdays(days, 7), [1, 2, 3, 4, 5, 6, 0])
-        compare(CostPresentation.spendHeatmapRowWeekdays(days, "0"), [1, 2, 3, 4, 5, 6, 0])
-        compare(CostPresentation.spendHeatmapRowWeekdays(days, 1.5), [1, 2, 3, 4, 5, 6, 0])
-        compare(CostPresentation.spendHeatmapRowWeekdays(days), [1, 2, 3, 4, 5, 6, 0])
+        compare(CostChart.spendHeatmapRowWeekdays(days, 7), [1, 2, 3, 4, 5, 6, 0])
+        compare(CostChart.spendHeatmapRowWeekdays(days, "0"), [1, 2, 3, 4, 5, 6, 0])
+        compare(CostChart.spendHeatmapRowWeekdays(days, 1.5), [1, 2, 3, 4, 5, 6, 0])
+        compare(CostChart.spendHeatmapRowWeekdays(days), [1, 2, 3, 4, 5, 6, 0])
     }
 
     function test_spendHeatmapTrailingSlotsCloseTheNewestWeek() {
@@ -1054,15 +1094,15 @@ TestCase {
         for (var day = 17; day <= 23; day++) {
             days.push({ label: "2026-09-" + day, value: day })
         }
-        compare(CostPresentation.spendHeatmapTrailingSlots(days, 1), 4)
-        compare(CostPresentation.spendHeatmapTrailingSlots(days, 0), 3)
-        compare(CostPresentation.spendHeatmapTrailingSlots(days, 4), 0)
+        compare(CostChart.spendHeatmapTrailingSlots(days, 1), 4)
+        compare(CostChart.spendHeatmapTrailingSlots(days, 0), 3)
+        compare(CostChart.spendHeatmapTrailingSlots(days, 4), 0)
         // An unavailable newest day still ends the grid in its own slot.
         days[6] = null
-        compare(CostPresentation.spendHeatmapTrailingSlots(days, 1), 4)
+        compare(CostChart.spendHeatmapTrailingSlots(days, 1), 4)
         // Unlabelled rows keep the newest day last, with no trailing gap.
-        compare(CostPresentation.spendHeatmapTrailingSlots([{ label: "day-0" }], 1), 0)
-        compare(CostPresentation.spendHeatmapTrailingSlots(undefined, 1), 0)
+        compare(CostChart.spendHeatmapTrailingSlots([{ label: "day-0" }], 1), 0)
+        compare(CostChart.spendHeatmapTrailingSlots(undefined, 1), 0)
     }
 
     function test_spendHeatmapCellsLeaveTrailingSlotsAfterTheNewestDay() {
@@ -1070,7 +1110,7 @@ TestCase {
         for (var day = 0; day < 8; day++) {
             points.push({ label: "day-" + day, value: day, displayValue: "" })
         }
-        var cells = CostPresentation.spendHeatmapCells(points, 14, 4)
+        var cells = CostChart.spendHeatmapCells(points, 14, 4)
         compare(cells.length, 14)
         compare(cells[0], null)
         compare(cells[1], null)
@@ -1080,12 +1120,12 @@ TestCase {
             compare(cells[slot], null)
         }
         // Capacity drops the oldest days first, never the trailing slots.
-        cells = CostPresentation.spendHeatmapCells(points, 7, 4)
+        cells = CostChart.spendHeatmapCells(points, 7, 4)
         compare(cells[0].label, "day-5")
         compare(cells[2].label, "day-7")
         compare(cells[6], null)
-        compare(CostPresentation.spendHeatmapCells(points, 7, 9).length, 7)
-        compare(CostPresentation.spendHeatmapCells(points, 7, -3)[6].label, "day-7")
+        compare(CostChart.spendHeatmapCells(points, 7, 9).length, 7)
+        compare(CostChart.spendHeatmapCells(points, 7, -3)[6].label, "day-7")
     }
 
     function test_spendHeatmapRowWeekdaysRejectRowsWithoutOneWeekday_data() {
@@ -1104,7 +1144,7 @@ TestCase {
     }
 
     function test_spendHeatmapRowWeekdaysRejectRowsWithoutOneWeekday(data) {
-        compare(CostPresentation.spendHeatmapRowWeekdays(data.days, 1), [])
+        compare(CostChart.spendHeatmapRowWeekdays(data.days, 1), [])
     }
 
     function test_spendHeatmapRowWeekdaysFollowTheCalendarFallback() {
@@ -1113,15 +1153,15 @@ TestCase {
             daily.push(dailyPoint("2026-09-0" + day, day === 9 ? null : day, day * 10, "USD"))
         }
         var costs = [{ totals: { currency: "USD" }, daily: daily }]
-        var days = CostPresentation.spendHeatmapDays(
+        var days = CostChart.spendHeatmapDays(
             CostPresentation.spendDailyPoints(fmt, costs, false), costs)
         // 2026-09-09 is a Wednesday; its unavailable slot still ends the grid.
-        compare(CostPresentation.spendHeatmapRowWeekdays(days, 1)[0], 1)
-        compare(CostPresentation.spendHeatmapTrailingSlots(days, 1), 4)
+        compare(CostChart.spendHeatmapRowWeekdays(days, 1)[0], 1)
+        compare(CostChart.spendHeatmapTrailingSlots(days, 1), 4)
 
         var undated = [{ label: "day-0", value: 1 }, { label: "day-1", value: 2 }]
-        compare(CostPresentation.spendHeatmapRowWeekdays(
-            CostPresentation.spendHeatmapDays(undated, []), 1), [])
+        compare(CostChart.spendHeatmapRowWeekdays(
+            CostChart.spendHeatmapDays(undated, []), 1), [])
     }
 
     function test_spendHeatmapDaysPreserveCalendarBoundaries_data() {
@@ -1153,21 +1193,21 @@ TestCase {
         }
         var costs = [{totals: {currency: "USD"}, daily: daily}]
         var points = CostPresentation.spendDailyPoints(fmt, costs, data.tokens)
-        var days = CostPresentation.spendHeatmapDays(points, costs)
+        var days = CostChart.spendHeatmapDays(points, costs)
         compare(days.length, 9, "metric filtering must preserve the loaded calendar boundaries")
-        compare(CostPresentation.spendHeatmapDays([], costs), [])
+        compare(CostChart.spendHeatmapDays([], costs), [])
         compare(days[4].value, 0)
         for (var i = 0; i < data.missing.length; i++) {
             compare(days[data.missing[i] - 1], null)
         }
-        var cells = CostPresentation.spendHeatmapCells(days, 14)
+        var cells = CostChart.spendHeatmapCells(days, 14)
         compare(cells[9].label, "2026-09-05")
         compare(cells[13], days[8])
     }
 
     function test_spendHeatmapDaysPreserveCalendarBoundaries(data) {
         var points = [{label: data.first, value: 0}, {label: data.last, value: 3}]
-        var days = CostPresentation.spendHeatmapDays(points)
+        var days = CostChart.spendHeatmapDays(points)
         compare(days.length, data.span)
         compare(days[0], points[0])
         compare(days[days.length - 1], points[1])
@@ -1179,12 +1219,12 @@ TestCase {
 
     function test_spendHeatmapDaysBoundSparseHistoryAndPreserveLegacyLabels() {
         var latest = {label: "2026-09-09", value: 0}
-        var days = CostPresentation.spendHeatmapDays([{label: "1970-01-01", value: 2}, latest])
-        compare(days.length, CostPresentation.maximumCostHistoryPoints)
+        var days = CostChart.spendHeatmapDays([{label: "1970-01-01", value: 2}, latest])
+        compare(days.length, CostChart.maximumCostHistoryPoints)
         compare(days[0], null)
         compare(days[days.length - 1], latest)
-        var cells = CostPresentation.spendHeatmapCells(
-            CostPresentation.spendHeatmapDays([{label: "2026-09-01", value: 2}, latest]), 7)
+        var cells = CostChart.spendHeatmapCells(
+            CostChart.spendHeatmapDays([{label: "2026-09-01", value: 2}, latest]), 7)
         compare(cells.length, 7)
         compare(cells[0], null)
         compare(cells[6], latest)
@@ -1197,13 +1237,13 @@ TestCase {
             [{label: {toString: null}}, latest]
         ]
         for (var i = 0; i < legacyCases.length; i++) {
-            compare(CostPresentation.spendHeatmapDays(legacyCases[i]), legacyCases[i])
+            compare(CostChart.spendHeatmapDays(legacyCases[i]), legacyCases[i])
         }
-        compare(CostPresentation.spendHeatmapDays(null), [])
+        compare(CostChart.spendHeatmapDays(null), [])
     }
 
     function test_spendHeatmapCellsDropTheOldestDaysBeyondCapacity() {
-        var cells = CostPresentation.spendHeatmapCells([
+        var cells = CostChart.spendHeatmapCells([
             { label: "a" }, { label: "b" }, { label: "c" }
         ], 2)
         compare(cells.length, 2)
@@ -1212,12 +1252,12 @@ TestCase {
     }
 
     function test_spendHeatmapCellsSurviveMissingAndNonsenseInput() {
-        compare(CostPresentation.spendHeatmapCells(undefined, 7).length, 7)
-        compare(CostPresentation.spendHeatmapCells("not an array", 2)[0], null)
-        compare(CostPresentation.spendHeatmapCells([{ label: "a" }], 0).length, 0)
-        compare(CostPresentation.spendHeatmapCells([{ label: "a" }], -4).length, 0)
-        compare(CostPresentation.spendHeatmapCells([{ label: "a" }], NaN).length, 0)
-        compare(CostPresentation.spendHeatmapCells([{ label: "a" }], 2.7).length, 2)
+        compare(CostChart.spendHeatmapCells(undefined, 7).length, 7)
+        compare(CostChart.spendHeatmapCells("not an array", 2)[0], null)
+        compare(CostChart.spendHeatmapCells([{ label: "a" }], 0).length, 0)
+        compare(CostChart.spendHeatmapCells([{ label: "a" }], -4).length, 0)
+        compare(CostChart.spendHeatmapCells([{ label: "a" }], NaN).length, 0)
+        compare(CostChart.spendHeatmapCells([{ label: "a" }], 2.7).length, 2)
     }
 
     function test_spendTotalsKeepAllCurrencyFreeTokens() {
@@ -1242,7 +1282,7 @@ TestCase {
     }
 
     function test_spendCurrencyStatusChecksDailyCostWhenTotalsAreUnavailable() {
-        verify(CostPresentation.spendHasMixedCostCurrencies([
+        verify(CostCurrency.spendHasMixedCostCurrencies([
             {
                 totals: { cost: 2, tokens: 100, currency: "USD" },
                 daily: [dailyPoint("Mon", 2, 100, "USD")]
@@ -1282,13 +1322,13 @@ TestCase {
     }
 
     function test_costTrustSummaryIsQuietForLegacyAndExactUnspecifiedData() {
-        compare(CostPresentation.costTrustSummary([]), null)
-        compare(CostPresentation.costTrustSummary(null), null)
-        compare(CostPresentation.costTrustSummary([{ totals: { currency: "USD" } }]), null)
-        compare(CostPresentation.costTrustSummary([trustedCost("USD", {
+        compare(CostTrust.costTrustSummary([]), null)
+        compare(CostTrust.costTrustSummary(null), null)
+        compare(CostTrust.costTrustSummary([{ totals: { currency: "USD" } }]), null)
+        compare(CostTrust.costTrustSummary([trustedCost("USD", {
             priced: 3, unpriced: 0, unmetered: 0, estimated: 0
         }, "")]), null)
-        compare(CostPresentation.costTrustSummary([{
+        compare(CostTrust.costTrustSummary([{
             totals: { currency: "USD" },
             trust: { coverage: { priced: "3" }, sourceKind: "not-a-semantic-value" }
         }]), null)
@@ -1298,14 +1338,14 @@ TestCase {
             priced: 0, unpriced: 1, unmetered: 0, estimated: 0
         }
         InheritedTrust.prototype.sourceKind = "unknown"
-        compare(CostPresentation.costTrustSummary([{
+        compare(CostTrust.costTrustSummary([{
             totals: { currency: "USD" },
             trust: new InheritedTrust()
         }]), null)
     }
 
     function test_costTrustSummaryIgnoresTokenOnlySnapshots() {
-        compare(CostPresentation.costTrustSummary([{
+        compare(CostTrust.costTrustSummary([{
             totals: { cost: null, tokens: 250, currency: "USD" },
             trust: { coverage: null, sourceKind: "unknown" }
         }]), null)
@@ -1334,7 +1374,7 @@ TestCase {
             emptySnapshot.historyCoverageEstablished = data.historyEstablished
         }
 
-        var summary = CostPresentation.costTrustSummary([
+        var summary = CostTrust.costTrustSummary([
             trustedCost("USD", {
                 priced: 1, unpriced: 0, unmetered: 0, estimated: 1
             }, "listPrice"),
@@ -1346,7 +1386,7 @@ TestCase {
     }
 
     function test_costTrustSummaryKeepsTokenOnlyGapsInAMixedTotal() {
-        var summary = CostPresentation.costTrustSummary([
+        var summary = CostTrust.costTrustSummary([
             trustedCost("USD", null, "vendor"),
             {
                 totals: { cost: null, tokens: 250, currency: "USD" },
@@ -1361,7 +1401,7 @@ TestCase {
     }
 
     function test_costTrustSummaryKeepsCurrencyFreeTokenOnlyGaps() {
-        var summary = CostPresentation.costTrustSummary([
+        var summary = CostTrust.costTrustSummary([
             {
                 totals: { cost: null, tokens: 250, currency: "USD" },
                 trust: { coverage: null, sourceKind: "unknown" }
@@ -1375,7 +1415,7 @@ TestCase {
     }
 
     function test_costTrustSummaryMapsEstimateAndSourceToSemanticKeys() {
-        var summary = CostPresentation.costTrustSummary([trustedCost("USD", {
+        var summary = CostTrust.costTrustSummary([trustedCost("USD", {
             priced: 4, unpriced: 0, unmetered: 0, estimated: 1
         }, "listPrice")])
 
@@ -1388,7 +1428,7 @@ TestCase {
     }
 
     function test_costTrustSummaryMakesIncompleteCoverageAWarning() {
-        var summary = CostPresentation.costTrustSummary([trustedCost("USD", {
+        var summary = CostTrust.costTrustSummary([trustedCost("USD", {
             priced: 5, unpriced: 2, unmetered: 1, estimated: 0
         }, "vendor")])
 
@@ -1400,7 +1440,7 @@ TestCase {
     }
 
     function test_costTrustSummaryMakesExcludedRequestsPartial() {
-        var summary = CostPresentation.costTrustSummary([{
+        var summary = CostTrust.costTrustSummary([{
             totals: { cost: 4, tokens: 40, currency: "USD" },
             trust: {
                 coverage: { priced: 2, unpriced: 0, unmetered: 0, estimated: 0 },
@@ -1417,7 +1457,7 @@ TestCase {
     }
 
     function test_costTrustSummaryAddsExcludedRequestsAcrossSnapshots() {
-        var summary = CostPresentation.costTrustSummary([
+        var summary = CostTrust.costTrustSummary([
             {
                 totals: { cost: 1, tokens: 10, currency: "USD" },
                 trust: { coverage: null, sourceKind: "vendor", incompleteRequests: 2 }
@@ -1445,7 +1485,7 @@ TestCase {
     }
 
     function test_costTrustSummaryRejectsUnusableExcludedRequestCounts(data) {
-        var summary = CostPresentation.costTrustSummary([{
+        var summary = CostTrust.costTrustSummary([{
             totals: { cost: 1, tokens: 10, currency: "USD" },
             trust: { coverage: null, sourceKind: "vendor", incompleteRequests: data.value }
         }])
@@ -1456,7 +1496,7 @@ TestCase {
     }
 
     function test_costTrustSummaryBoundsSaturatedExcludedRequestCounts() {
-        var summary = CostPresentation.costTrustSummary([
+        var summary = CostTrust.costTrustSummary([
             {
                 totals: { cost: 1, tokens: 10, currency: "USD" },
                 trust: { coverage: null, sourceKind: "vendor", incompleteRequests: 1000000000 }
@@ -1473,7 +1513,7 @@ TestCase {
     function test_costTrustSummaryQualifiesATokenOnlyTotalWithExcludedRequests() {
         // The excluded requests are missing from the tokens as well, so the
         // warning must survive a snapshot without a cost amount.
-        var summary = CostPresentation.costTrustSummary([{
+        var summary = CostTrust.costTrustSummary([{
             totals: { tokens: 10, currency: "USD" },
             trust: { coverage: null, sourceKind: "", incompleteRequests: 4 }
         }])
@@ -1484,20 +1524,20 @@ TestCase {
     }
 
     function test_costTrustSummaryStaysQuietWithoutAnyDisplayedAmount() {
-        compare(CostPresentation.costTrustSummary([{
+        compare(CostTrust.costTrustSummary([{
             totals: { tokens: 0, currency: "USD" },
             trust: { coverage: null, sourceKind: "", incompleteRequests: 4 }
         }]), null)
     }
 
     function test_costTrustNoticeKeyIgnoresTheExcludedRequestMagnitude() {
-        var one = CostPresentation.costTrustNoticeKey({
+        var one = CostTrust.costTrustNoticeKey({
             level: "warning", sourceKind: "vendor", incompleteRequests: 1
         })
-        var many = CostPresentation.costTrustNoticeKey({
+        var many = CostTrust.costTrustNoticeKey({
             level: "warning", sourceKind: "vendor", incompleteRequests: 9
         })
-        var none = CostPresentation.costTrustNoticeKey({
+        var none = CostTrust.costTrustNoticeKey({
             level: "warning", sourceKind: "vendor", incompleteRequests: 0
         })
 
@@ -1505,13 +1545,13 @@ TestCase {
         verify(one.indexOf("incomplete") !== -1)
         verify(none.indexOf("complete") !== -1)
         verify(none.indexOf("incomplete") === -1)
-        compare(CostPresentation.costTrustNoticeKey({ incompleteRequests: 3 }),
+        compare(CostTrust.costTrustNoticeKey({ incompleteRequests: 3 }),
             "information||exact|priced|metered|incomplete")
-        compare(CostPresentation.costTrustNoticeKey({ incompleteRequests: 0 }), "")
+        compare(CostTrust.costTrustNoticeKey({ incompleteRequests: 0 }), "")
     }
 
     function test_costTrustSummaryTreatsUnknownAsApproximateAndConservative() {
-        var summary = CostPresentation.costTrustSummary([
+        var summary = CostTrust.costTrustSummary([
             trustedCost("USD", null, "listPrice"),
             trustedCost("USD", null, "unknown")
         ])
@@ -1522,7 +1562,7 @@ TestCase {
     }
 
     function test_costTrustSummaryDoesNotClassifyLegacyCostFromTrustedSubset() {
-        var summary = CostPresentation.costTrustSummary([
+        var summary = CostTrust.costTrustSummary([
             trustedCost("USD", null, "vendor"),
             { totals: { cost: 9, tokens: 90, currency: "USD" }, trust: null }
         ])
@@ -1533,7 +1573,7 @@ TestCase {
     }
 
     function test_costTrustSummaryFoldsKnownSourcesWithoutCallingMixedIncomplete() {
-        var summary = CostPresentation.costTrustSummary([
+        var summary = CostTrust.costTrustSummary([
             trustedCost("USD", null, "listPrice"),
             trustedCost("USD", null, "vendor")
         ])
@@ -1547,7 +1587,7 @@ TestCase {
     }
 
     function test_costTrustSummaryUsesTheSpendTotalCurrencyEligibility() {
-        var summary = CostPresentation.costTrustSummary([
+        var summary = CostTrust.costTrustSummary([
             trustedCost("USD", null, "listPrice"),
             trustedCost("EUR", {
                 priced: 0, unpriced: 3, unmetered: 0, estimated: 0
@@ -1561,91 +1601,91 @@ TestCase {
     }
 
     function test_costTrustSummaryDoesNotConfuseScanCoverageWithPricingCoverage() {
-        compare(CostPresentation.costTrustSummary([{
+        compare(CostTrust.costTrustSummary([{
             totals: { currency: "USD" },
             historyCoverageEstablished: false
         }]), null)
     }
 
     function test_costTrustNoticeDismissalSurvivesRefreshUntilMeaningChanges() {
-        var estimated = CostPresentation.costTrustSummary([trustedCost("USD", {
+        var estimated = CostTrust.costTrustSummary([trustedCost("USD", {
             priced: 4, unpriced: 0, unmetered: 0, estimated: 1
         }, "listPrice")])
-        var initial = CostPresentation.costTrustNoticeTransition(
+        var initial = CostTrust.costTrustNoticeTransition(
             estimated, null, false)
         verify(initial.shouldShow)
 
-        var dismissed = CostPresentation.costTrustNoticeTransition(
+        var dismissed = CostTrust.costTrustNoticeTransition(
             estimated, initial, true)
         verify(!dismissed.shouldShow)
 
-        var refreshed = CostPresentation.costTrustNoticeTransition(
-            CostPresentation.costTrustSummary([trustedCost("USD", {
+        var refreshed = CostTrust.costTrustNoticeTransition(
+            CostTrust.costTrustSummary([trustedCost("USD", {
                 priced: 4, unpriced: 0, unmetered: 0, estimated: 1
             }, "listPrice")]),
             dismissed,
             false)
         verify(!refreshed.shouldShow)
 
-        var partial = CostPresentation.costTrustSummary([trustedCost("USD", {
+        var partial = CostTrust.costTrustSummary([trustedCost("USD", {
             priced: 4, unpriced: 1, unmetered: 0, estimated: 1
         }, "listPrice")])
-        var changed = CostPresentation.costTrustNoticeTransition(
+        var changed = CostTrust.costTrustNoticeTransition(
             partial, refreshed, false)
         verify(changed.shouldShow)
         verify(changed.key !== dismissed.key)
 
-        var dismissedPartial = CostPresentation.costTrustNoticeTransition(
+        var dismissedPartial = CostTrust.costTrustNoticeTransition(
             partial, changed, true)
-        var returned = CostPresentation.costTrustNoticeTransition(
+        var returned = CostTrust.costTrustNoticeTransition(
             estimated, dismissedPartial, false)
         verify(returned.shouldShow)
     }
 
     function test_costTrustNoticeDismissalSurvivesNoticeRecreationPerScope() {
-        var summary = CostPresentation.costTrustSummary([trustedCost("USD", {
+        var summary = CostTrust.costTrustSummary([trustedCost("USD", {
             priced: 4, unpriced: 1, unmetered: 0, estimated: 1
         }, "listPrice")])
-        var initial = CostPresentation.costTrustNoticeStoreTransition(
+        var initial = CostTrust.costTrustNoticeStoreTransition(
             summary, ({}), "provider:codex", false)
         verify(initial.state.shouldShow)
 
-        var dismissed = CostPresentation.costTrustNoticeStoreTransition(
+        var dismissed = CostTrust.costTrustNoticeStoreTransition(
             summary, initial.states, "provider:codex", true)
         verify(!dismissed.state.shouldShow)
         verify(dismissed.states !== initial.states)
         verify(!initial.states["provider:codex"].dismissed)
 
-        var temporarilyMissing = CostPresentation.costTrustNoticeStoreTransition(
+        var temporarilyMissing = CostTrust.costTrustNoticeStoreTransition(
             null, dismissed.states, "provider:codex", false)
         verify(!temporarilyMissing.state.shouldShow)
 
         // A new CostTrustNotice instance must recover the dismissal from its
         // persistent owner even if its summary binding was briefly empty.
-        var recreated = CostPresentation.costTrustNoticeStoreTransition(
+        var recreated = CostTrust.costTrustNoticeStoreTransition(
             summary, temporarilyMissing.states, "provider:codex", false)
         verify(!recreated.state.shouldShow)
 
         // Provider details and aggregate Spend are separate information scopes.
-        var aggregate = CostPresentation.costTrustNoticeStoreTransition(
+        var aggregate = CostTrust.costTrustNoticeStoreTransition(
             summary, dismissed.states, "spend", false)
         verify(aggregate.state.shouldShow)
     }
 
     function test_costTrustNoticeStoreBoundsAndRejectsUnsafeScopes() {
-        var summary = CostPresentation.costTrustSummary([trustedCost("USD", {
+        var summary = CostTrust.costTrustSummary([trustedCost("USD", {
             priced: 4, unpriced: 1, unmetered: 0, estimated: 1
         }, "listPrice")])
         var oversized = ({})
         for (var i = 0; i < 200; i++) {
             oversized["provider:" + i] = { key: "old", dismissed: true }
         }
-        var bounded = CostPresentation.costTrustNoticeStoreTransition(
+        var bounded = CostTrust.costTrustNoticeStoreTransition(
             summary, oversized, "spend", false)
         verify(Object.keys(bounded.states).length <= 128)
         verify(Object.prototype.hasOwnProperty.call(bounded.states, "spend"))
 
-        var unsafe = CostPresentation.costTrustNoticeStoreTransition(
+        var unsafe = CostTrust.costTrustNoticeStoreTransition(
             summary, bounded.states, "__proto__", true)
         verify(!Object.prototype.hasOwnProperty.call(unsafe.states, "__proto__"))
         verify(unsafe.state.dismissed)
@@ -1654,7 +1694,7 @@ TestCase {
     function test_costTrustNoticeTransitionRejectsMalformedSummaries() {
         var invalidSummaries = [null, undefined, [], "estimated", 7, ({})]
         for (var i = 0; i < invalidSummaries.length; i++) {
-            var state = CostPresentation.costTrustNoticeTransition(
+            var state = CostTrust.costTrustNoticeTransition(
                 invalidSummaries[i],
                 { key: "old", dismissed: true, shouldShow: false },
                 true)
@@ -1673,14 +1713,14 @@ TestCase {
         summary.hasUnpriced = false
         summary.hasUnmetered = false
 
-        var state = CostPresentation.costTrustNoticeTransition(
+        var state = CostTrust.costTrustNoticeTransition(
             summary, null, false)
         compare(state.key, "information|listPrice|estimated|priced|metered|complete")
         verify(state.shouldShow)
     }
 
     function test_costTrustNoticeTransitionRejectsMalformedPreviousState() {
-        var summary = CostPresentation.costTrustSummary([trustedCost("USD", {
+        var summary = CostTrust.costTrustSummary([trustedCost("USD", {
             priced: 4, unpriced: 0, unmetered: 0, estimated: 1
         }, "listPrice")])
 
@@ -1696,7 +1736,7 @@ TestCase {
             new InheritedDismissal()
         ]
         for (var i = 0; i < invalidStates.length; i++) {
-            var state = CostPresentation.costTrustNoticeTransition(
+            var state = CostTrust.costTrustNoticeTransition(
                 summary, invalidStates[i], false)
             verify(state.key.length > 0)
             verify(state.key.length < 80)
@@ -1738,7 +1778,7 @@ TestCase {
         compare(totals.tokens, null)
         compare(CostPresentation.spendTotals([null, { totals: { cost: 2, tokens: 40, currency: "USD" } }]).tokens, 40)
         verify(!CostPresentation.historyStillBuilding([null]))
-        compare(CostPresentation.spendCurrency([null]), "USD")
+        compare(CostCurrency.spendCurrency([null]), "USD")
     }
 
     // The suite runs with TZ=America/Los_Angeles. The CLI's "today" is the
@@ -1752,39 +1792,39 @@ TestCase {
         var cost = CostResponse.response(JSON.stringify(payload), "", 30, 0).costs.codex;
         compare(cost.scanDay, "2026-09-23");
 
-        var sameDay = CostPresentation.todayAmounts(cost, new Date(2026, 8, 23, 23, 30).getTime());
+        var sameDay = CostAmounts.todayAmounts(cost, new Date(2026, 8, 23, 23, 30).getTime());
         compare(sameDay.cost, 1.25);
         compare(sameDay.tokens, 1200);
 
-        var nextDay = CostPresentation.todayAmounts(cost, new Date(2026, 8, 24, 0, 30).getTime());
+        var nextDay = CostAmounts.todayAmounts(cost, new Date(2026, 8, 24, 0, 30).getTime());
         compare(nextDay.cost, null);
         compare(nextDay.tokens, null);
         compare(nextDay.currency, "USD");
-        verify(!CostPresentation.hasMetricValue(nextDay, false));
-        verify(!CostPresentation.hasMetricValue(nextDay, true));
+        verify(!CostAmounts.hasMetricValue(nextDay, false));
+        verify(!CostAmounts.hasMetricValue(nextDay, true));
         // The retained snapshot itself is untouched.
         compare(cost.today.cost, 1.25);
 
         // Privacy mode keeps the scan date, so it hides the same stale total.
         var privateCost = Privacy.cost(cost, true);
         compare(privateCost.scanDay, "2026-09-23");
-        compare(CostPresentation.todayAmounts(privateCost, new Date(2026, 8, 24, 0, 30).getTime()).cost, null);
+        compare(CostAmounts.todayAmounts(privateCost, new Date(2026, 8, 24, 0, 30).getTime()).cost, null);
         compare(Privacy.cost({scanDay: {}}, true).scanDay, "");
 
         // Without a scan date or a usable clock there is nothing to compare.
         payload[0].updatedAt = "not a date";
         var undated = CostResponse.response(JSON.stringify(payload), "", 30, 0).costs.codex;
         compare(undated.scanDay, "");
-        compare(CostPresentation.todayAmounts(undated, new Date(2026, 8, 24, 0, 30).getTime()).cost, 1.25);
-        compare(CostPresentation.todayAmounts(cost, NaN).cost, 1.25);
-        compare(CostPresentation.todayAmounts(cost, "2026-09-24").cost, 1.25);
-        compare(CostPresentation.todayAmounts(null, 0), null);
-        compare(CostPresentation.todayAmounts({scanDay: "2026-09-23"}, 0), null);
+        compare(CostAmounts.todayAmounts(undated, new Date(2026, 8, 24, 0, 30).getTime()).cost, 1.25);
+        compare(CostAmounts.todayAmounts(cost, NaN).cost, 1.25);
+        compare(CostAmounts.todayAmounts(cost, "2026-09-24").cost, 1.25);
+        compare(CostAmounts.todayAmounts(null, 0), null);
+        compare(CostAmounts.todayAmounts({scanDay: "2026-09-23"}, 0), null);
     }
     function test_truncationKeepsSurrogatePairsWhole() {
         var emoji = "\uD83D\uDE00"
-        compare(CostPresentation.boundedText("a".repeat(119) + emoji, 120), "a".repeat(119))
-        compare(CostPresentation.boundedText("a".repeat(118) + emoji, 120), "a".repeat(118) + emoji)
+        compare(CostAmounts.boundedText("a".repeat(119) + emoji, 120), "a".repeat(119))
+        compare(CostAmounts.boundedText("a".repeat(118) + emoji, 120), "a".repeat(118) + emoji)
     }
 
 }

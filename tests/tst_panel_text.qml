@@ -2,7 +2,7 @@ import QtQuick
 import QtTest
 import "../contents/ui/PanelText.js" as PanelTextPlan
 import "../contents/ui/PanelTextFit.js" as PanelTextFit
-import "../contents/ui/CostPresentation.js" as CostPresentation
+import "../contents/ui/CostAmounts.js" as CostAmounts
 import "../contents/ui/components" as Components
 
 TestCase {
@@ -16,7 +16,7 @@ TestCase {
 
     Components.PanelText {
         id: presentation
-        numberFormat: CostPresentation.numberFormat(",", ".")
+        numberFormat: CostAmounts.numberFormat(",", ".")
         function i18nc(context, source) {
             return i18n.apply(this, Array.prototype.slice.call(arguments, 1));
         }

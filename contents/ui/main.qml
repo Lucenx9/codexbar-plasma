@@ -22,6 +22,10 @@ import "PopupSelection.js" as PopupSelection
 import "ProviderAutoSelect.js" as ProviderAutoSelect
 import "ProviderSnapshot.js" as ProviderSnapshot
 import "CostPresentation.js" as CostPresentation
+import "CostAmounts.js" as CostAmounts
+import "CostChart.js" as CostChart
+import "CostCurrency.js" as CostCurrency
+import "CostTrust.js" as CostTrust
 import "ShareUsage.js" as ShareUsage
 import "OverviewProviders.js" as OverviewProviders
 import "ProviderIdentity.js" as ProviderIdentity
@@ -103,7 +107,7 @@ PlasmoidItem {
     property string costHistoryMetric: safeCostHistoryMetric(Plasmoid.configuration.costHistoryMetric)
     readonly property bool costHistoryShowsTokens: costHistoryMetric === "tokens"
     // Resolved once: a .pragma library module cannot reach Qt.locale().
-    readonly property var costNumberFormat: CostPresentation.numberFormat(
+    readonly property var costNumberFormat: CostAmounts.numberFormat(
         Qt.locale().groupSeparator, Qt.locale().decimalPoint)
     property bool usageBarsShowUsed: Plasmoid.configuration.usageBarsShowUsed !== false
     property bool showQuotaWarningMarkers: Plasmoid.configuration.showQuotaWarningMarkers !== false
@@ -536,7 +540,7 @@ PlasmoidItem {
     }
 
     function costChartPoints(points, memo) {
-        return CostPresentation.memoizedChartPoints(memo, costNumberFormat, points, costHistoryShowsTokens)
+        return CostChart.memoizedChartPoints(memo, costNumberFormat, points, costHistoryShowsTokens)
     }
 
     property var shareUsageSnapshot: null
@@ -582,7 +586,7 @@ PlasmoidItem {
     }
 
     function spendCurrency(costs) {
-        return CostPresentation.spendCurrency(costs || spendProviderCosts())
+        return CostCurrency.spendCurrency(costs || spendProviderCosts())
     }
 
     function spendTotalLine() {
@@ -590,7 +594,7 @@ PlasmoidItem {
     }
 
     function updateCostTrustNoticeState(scope, summary, shouldDismiss) {
-        var transition = CostPresentation.costTrustNoticeStoreTransition(
+        var transition = CostTrust.costTrustNoticeStoreTransition(
             summary, costTrustNoticeStates, scope, shouldDismiss)
         costTrustNoticeStates = transition.states
         return transition.state
@@ -726,7 +730,7 @@ PlasmoidItem {
         result.title = i18n("Cost")
         result.sessionLine = costLine(i18n("Today"), result.today.cost,
             result.today.tokens, result.today.currency)
-        var trust = CostPresentation.costTrustSummary([result])
+        var trust = CostTrust.costTrustSummary([result])
         result.valueMode = trust ? trust.valueMode : "plain"
         result.windowLabel = costHistoryWindowLabel(result, result.historyDays)
         result.monthLine = costLine(result.windowLabel,
@@ -1562,7 +1566,7 @@ PlasmoidItem {
     }
 
     function amountString(value, currency) {
-        return CostPresentation.amountString(costNumberFormat, value, currency)
+        return CostAmounts.amountString(costNumberFormat, value, currency)
     }
 
     // Same figures as costLine without the window label, for surfaces that
@@ -1950,7 +1954,7 @@ PlasmoidItem {
     // a hardcoded decimal mark. A whole balance keeps no fractional part, so a
     // depleted account reads as "0" rather than "0.0".
     function formatNumber(value) {
-        return CostPresentation.formatCount(costNumberFormat, value)
+        return CostAmounts.formatCount(costNumberFormat, value)
     }
 
     Timer {

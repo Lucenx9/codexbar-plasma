@@ -1,6 +1,7 @@
 .pragma library
 .import "SafeText.js" as SafeText
 .import "CostPresentation.js" as Costs
+.import "CostTrust.js" as CostTrust
 
 function record(value) {
     return value !== null && typeof value === "object" && !Array.isArray(value)
@@ -51,7 +52,7 @@ function snapshot(costs, days, createdAt, refreshFailed, period) {
         var totals = quantities(item.totals)
         var provider = label(item.provider)
         if (!provider) continue
-        var trust = Costs.costTrustSummary([{totals: totals, trust: item.trust}])
+        var trust = CostTrust.costTrustSummary([{totals: totals, trust: item.trust}])
         result.partial = result.partial || item.historyCoverageEstablished === false
             || totals.tokens === null || totals.cost === null
             || (trust !== null && trust.valueMode !== "plain")

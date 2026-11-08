@@ -1,5 +1,7 @@
 import QtQuick
 import "../CostPresentation.js" as CostPresentation
+import "../CostAmounts.js" as CostAmounts
+import "../CostTrust.js" as CostTrust
 import "../ProviderNormalizer.js" as Normalizer
 import "../ProviderIdentity.js" as ProviderIdentity
 import "../Guards.js" as Guards
@@ -60,14 +62,14 @@ QtObject {
             return ""
         }
         var numericCost = Normalizer.strictFiniteNumber(totals.cost)
-        var hasTokens = CostPresentation.hasMetricValue(totals, true)
+        var hasTokens = CostAmounts.hasMetricValue(totals, true)
         if (!isFinite(numericCost)) {
             return hasTokens ? usageCountText(totals.tokens, "tokens")
                 : i18n("Tokens unavailable")
         }
-        var trustSummary = CostPresentation.costTrustSummary(costs)
+        var trustSummary = CostTrust.costTrustSummary(costs)
         var costValue = qualifiedCostValue(
-            CostPresentation.amountString(root.numberFormat, numericCost, totals.currency),
+            CostAmounts.amountString(root.numberFormat, numericCost, totals.currency),
             trustSummary ? trustSummary.valueMode : "plain")
         if (!hasTokens) {
             return totals.hasMixedCostCurrencies ? i18n("%1 subtotal", costValue) : i18n("%1 total", costValue)
@@ -174,7 +176,7 @@ QtObject {
     }
 
     function usageCountText(value, unit) {
-        var text = CostPresentation.tokenCountString(value, root.numberFormat)
+        var text = CostAmounts.tokenCountString(value, root.numberFormat)
         var count = Number(text)
         // Compact counts such as 1K keep their own translation. Only the small
         // displayed integers go through KI18n's integer plural argument.
@@ -205,10 +207,10 @@ QtObject {
     }
 
     function amountString(value, currency) {
-        return CostPresentation.amountString(root.numberFormat, value, currency)
+        return CostAmounts.amountString(root.numberFormat, value, currency)
     }
 
     function tokenCountString(tokens) {
-        return CostPresentation.tokenCountString(tokens, root.numberFormat)
+        return CostAmounts.tokenCountString(tokens, root.numberFormat)
     }
 }

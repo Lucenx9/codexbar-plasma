@@ -1,6 +1,8 @@
 .pragma library
 .import "ProviderNormalizer.js" as Normalizer
 .import "CostPresentation.js" as CostPresentation
+.import "CostAmounts.js" as CostAmounts
+.import "CostTrust.js" as CostTrust
 .import "CliResponse.js" as CliResponse
 
 // `--period all` reports the days since year 1. Size its window from the
@@ -60,8 +62,8 @@ function longHistoryAverage(items, currency, recordedDays, scanDay) {
         Normalizer.maximumCostHistoryScanItems, undefined, Normalizer.maximumCostHistoryScanItems);
     var zeroDays = canFill && daily.length > 0 ? Math.max(0, recordedDays - daily.length) : 0;
     return {
-        cost: CostPresentation.averageDailyValue(daily, false, zeroDays),
-        tokens: CostPresentation.averageDailyValue(daily, true, zeroDays)
+        cost: CostAmounts.averageDailyValue(daily, false, zeroDays),
+        tokens: CostAmounts.averageDailyValue(daily, true, zeroDays)
     };
 }
 
@@ -83,7 +85,7 @@ function normalizeSnapshot(item, requestedHistoryDays) {
     var totals = Normalizer.normalizeProviderCostTotals(provider, item.totals,
         item.last30DaysCostUSD, item.last30DaysTokens, currency);
     var trust = Normalizer.normalizeCostTrustMetadata(item);
-    var summary = CostPresentation.costTrustSummary([{totals: totals, trust: trust}]);
+    var summary = CostTrust.costTrustSummary([{totals: totals, trust: trust}]);
     // All history charts at most the newest year, but its model totals and
     // daily average cover every recorded day within the scan budget.
     var aggregateBound = Normalizer.maximumCostHistoryScanItems;
@@ -121,8 +123,8 @@ function normalizeSnapshot(item, requestedHistoryDays) {
         averageDaily: aggregateDays > aggregateBound
             ? longHistoryAverage(item.daily, currency, recordedDays, scanDay)
             : aggregateDaily ? {
-            cost: CostPresentation.averageDailyValue(aggregateDaily, false),
-            tokens: CostPresentation.averageDailyValue(aggregateDaily, true)
+            cost: CostAmounts.averageDailyValue(aggregateDaily, false),
+            tokens: CostAmounts.averageDailyValue(aggregateDaily, true)
         } : null,
         daily: Normalizer.normalizeCostDaily(item.daily, currency, historyDays, item.updatedAt)
     };

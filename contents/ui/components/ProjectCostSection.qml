@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import "../CostPresentation.js" as CostPresentation
+import "../CostAmounts.js" as CostAmounts
 
 ColumnLayout {
     id: section
@@ -17,7 +18,7 @@ ColumnLayout {
     spacing: Kirigami.Units.smallSpacing
 
     function valueText(row) {
-        if (!CostPresentation.hasMetricValue(row, applet.costHistoryShowsTokens)) {
+        if (!CostAmounts.hasMetricValue(row, applet.costHistoryShowsTokens)) {
             return applet.costHistoryShowsTokens ? i18n("Tokens unavailable") : i18n("Cost unavailable");
         }
         return applet.costHistoryShowsTokens ? applet.usageCountText(row.tokens, "tokens") : applet.qualifiedCostValue(applet.amountString(row.cost, row.currency), row.valueMode);
