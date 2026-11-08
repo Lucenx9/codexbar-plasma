@@ -94,7 +94,7 @@ TestCase {
             return { date: row.label, totalCost: row.cost, totalTokens: row.tokens }
         })
         source[2].incompleteRequestCount = 1
-        var daily = Normalizer.normalizeCostDaily(source, "USD", 7, "2026-09-22T12:00:00Z")
+        var daily = Normalizer.normalizeCostDaily(source, "USD", { days: 7, updatedAt: "2026-09-22T12:00:00Z" })
         compare(daily[2].incompleteRequests, 1)
         var privateCost = Privacy.cost({provider: "codex", historyDays: 7, daily: daily}, true)
         compare(privateCost.daily[2].incompleteRequests, 1)

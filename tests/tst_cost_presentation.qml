@@ -742,7 +742,7 @@ TestCase {
         var daily = Normalizer.normalizeCostDaily([
             { date: "2026-10-19", totalCost: 1e308, totalTokens: 1e308 },
             { date: "2026-10-20", totalCost: 5e307, totalTokens: 5e307 }
-        ], "USD", 2, "2026-10-20T12:00:00Z")
+        ], "USD", { days: 2, updatedAt: "2026-10-20T12:00:00Z" })
         compare(CostAmounts.metricValue(daily[1], data.showsTokens), 5e307)
         compare(CostAmounts.sparklineMax(daily, data.showsTokens), 1e308)
         var rows = CostPresentation.historyRows(fmt, { daily: daily }, data.showsTokens, "Latest")

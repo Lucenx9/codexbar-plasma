@@ -58,8 +58,10 @@ function longHistoryAverage(items, currency, recordedDays, scanDay) {
     canFill = canFill && Object.keys(blocked).every(function(key) {
         return Normalizer.hasOwnKey(seen, key);
     });
-    var daily = Normalizer.normalizeCostDaily(retained, currency,
-        Normalizer.maximumCostHistoryScanItems, undefined, Normalizer.maximumCostHistoryScanItems);
+    var daily = Normalizer.normalizeCostDaily(retained, currency, {
+        days: Normalizer.maximumCostHistoryScanItems,
+        maximumDays: Normalizer.maximumCostHistoryScanItems
+    });
     var zeroDays = canFill && daily.length > 0 ? Math.max(0, recordedDays - daily.length) : 0;
     return {
         cost: CostAmounts.averageDailyValue(daily, false, zeroDays),
@@ -82,17 +84,23 @@ function normalizeSnapshot(item, requestedHistoryDays) {
     var historyDays = isFinite(emittedDays) && emittedDays > 0 ? emittedDays
         : (isFinite(fallbackDays) && fallbackDays > 0 ? fallbackDays : 30);
     historyDays = Math.max(1, Math.min(Normalizer.maximumCostHistoryPoints, Math.floor(historyDays)));
-    var totals = Normalizer.normalizeProviderCostTotals(provider, item.totals,
-        item.last30DaysCostUSD, item.last30DaysTokens, currency);
+    var totals = Normalizer.normalizeProviderCostTotals(provider, item.totals, {
+        cost: item.last30DaysCostUSD, tokens: item.last30DaysTokens, currency: currency
+    });
     var trust = Normalizer.normalizeCostTrustMetadata(item);
     var summary = CostTrust.costTrustSummary([{totals: totals, trust: trust}]);
     // All history charts at most the newest year, but its model totals and
     // daily average cover every recorded day within the scan budget.
     var aggregateBound = Normalizer.maximumCostHistoryScanItems;
     var aggregateDays = isFinite(recordedDays) ? recordedDays : historyDays;
-    var modelSummary = Normalizer.normalizeCostModels(item.daily, currency, aggregateDays, item.updatedAt, true, Math.max(aggregateBound, aggregateDays));
+    var modelSummary = Normalizer.normalizeCostModels(item.daily, currency, {
+        days: aggregateDays, updatedAt: item.updatedAt,
+        includeTokenRanking: true, maximumDays: Math.max(aggregateBound, aggregateDays)
+    });
     var aggregateDaily = aggregateDays > historyDays && aggregateDays <= aggregateBound
-        ? Normalizer.normalizeCostDaily(item.daily, currency, aggregateDays, item.updatedAt, aggregateBound) : null;
+        ? Normalizer.normalizeCostDaily(item.daily, currency, {
+            days: aggregateDays, updatedAt: item.updatedAt, maximumDays: aggregateBound
+        }) : null;
     return {
         provider: provider,
         currency: currency,
@@ -109,7 +117,9 @@ function normalizeSnapshot(item, requestedHistoryDays) {
         labelDays: isFinite(emittedDays) && emittedDays > 0 ? Math.max(1, Math.floor(emittedDays)) : historyDays,
         trust: trust,
         valueMode: summary ? summary.valueMode : "plain",
-        today: Normalizer.normalizeProviderCostTotals(provider, null, item.sessionCostUSD, item.sessionTokens, currency),
+        today: Normalizer.normalizeProviderCostTotals(provider, null, {
+            cost: item.sessionCostUSD, tokens: item.sessionTokens, currency: currency
+        }),
         // Keep the current-session line independent of the history trust mode.
         sessionCost: Normalizer.normalizeProviderCostAmount(provider, item.sessionCostUSD),
         sessionTokens: Normalizer.strictFiniteNumber(item.sessionTokens),
@@ -126,7 +136,7 @@ function normalizeSnapshot(item, requestedHistoryDays) {
             cost: CostAmounts.averageDailyValue(aggregateDaily, false),
             tokens: CostAmounts.averageDailyValue(aggregateDaily, true)
         } : null,
-        daily: Normalizer.normalizeCostDaily(item.daily, currency, historyDays, item.updatedAt)
+        daily: Normalizer.normalizeCostDaily(item.daily, currency, { days: historyDays, updatedAt: item.updatedAt })
     };
 }
 

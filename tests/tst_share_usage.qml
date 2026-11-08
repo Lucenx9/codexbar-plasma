@@ -311,8 +311,7 @@ TestCase {
             {date: "2026-09-21", modelBreakdowns: [{modelName: "model", totalTokens: 10}]},
             {date: "2026-09-22", modelBreakdowns: [{modelName: "model", cost: 2, totalTokens: 20}]}
         ]
-        var ranking = Normalizer.normalizeCostModels(days, "USD", 30,
-            "2026-09-22T12:00:00Z", true).tokenRanking
+        var ranking = Normalizer.normalizeCostModels(days, "USD", { days: 30, updatedAt: "2026-09-22T12:00:00Z", includeTokenRanking: true }).tokenRanking
         compare(ranking.rows[0].cost, 2)
         compare(ranking.rows[0].tokens, 30)
         compare(ranking.hasUnknownCost, true)
@@ -327,8 +326,7 @@ TestCase {
             {modelName: "older model", cost: 2, totalTokens: 10}]}]
         for (var i = 0; i < Normalizer.maximumCostHistoryScanItems; i++)
             days.push({date: "2026-08-01", modelBreakdowns: []})
-        var ranking = Normalizer.normalizeCostModels(days, "USD", 30,
-            "2026-09-22T12:00:00Z", true).tokenRanking
+        var ranking = Normalizer.normalizeCostModels(days, "USD", { days: 30, updatedAt: "2026-09-22T12:00:00Z", includeTokenRanking: true }).tokenRanking
         compare(ranking.rows.length, 0)
         compare(ranking.sourceTruncated, true)
         var input = cost("codex", 10, 2, "USD")
@@ -341,7 +339,7 @@ TestCase {
         var legacy = Normalizer.normalizeCostModels([
             {modelBreakdowns: [{modelName: "old", cost: 1, totalTokens: 5}]},
             {modelBreakdowns: [{modelName: "current", cost: 2, totalTokens: 10}]}
-        ], "USD", 1, undefined, true).tokenRanking
+        ], "USD", { days: 1, includeTokenRanking: true }).tokenRanking
         compare(legacy.sourceTruncated, false)
 
         // Empty records do not spend that tail, but a scan that stops before
@@ -350,7 +348,7 @@ TestCase {
         for (i = 0; i < Normalizer.maximumCostHistoryScanItems - 1; i++)
             unanchored.push({})
         unanchored.push({modelBreakdowns: [{modelName: "current", cost: 2, totalTokens: 10}]})
-        var exhausted = Normalizer.normalizeCostModels(unanchored, "USD", 2, undefined, true).tokenRanking
+        var exhausted = Normalizer.normalizeCostModels(unanchored, "USD", { days: 2, includeTokenRanking: true }).tokenRanking
         compare(exhausted.rows.length, 1)
         compare(exhausted.sourceTruncated, true)
     }

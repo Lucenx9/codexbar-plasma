@@ -803,7 +803,14 @@ records the Gemini exclusion. Never test credentials against the user's config.
 `ProviderNormalizer.js` validates model breakdowns before accumulating amounts
 and excluded-request counts by raw model identity. Separate helpers handle
 overflow-safe sums, cost-first ordering, and optional token ranking. Display
-labels never become aggregation keys. Direct normalizer QtTests cover label
+labels never become aggregation keys. Daily rows and period models share a
+calendar selection with separate display-day and input-scan bounds. Their
+normalization calls take named `days`, `updatedAt`, and optional `maximumDays`
+options; model calls can also request `includeTokenRanking`. Daily rows reuse
+the totals normalizer for strict numeric fallback and unknown-versus-zero rules.
+Calendar indexing and gap construction remain separate so malformed or duplicate
+days disable zero-day inference without losing valid in-range observations.
+Direct normalizer QtTests cover label
 collisions, excluded-only records before and after measured records, saturated
 counts, input immutability, and partially unpriced token rankings.
 

@@ -54,6 +54,10 @@ function clamp(value, minimum, maximum) {
     return Math.max(minimum, Math.min(maximum, value))
 }
 
+function nonEmptyString(value) {
+    return typeof value === "string" && value.length > 0
+}
+
 function strictFiniteNumber(value) {
     var numericType = typeof value === "number"
         || (typeof value === "string" && value.trim().length > 0)
@@ -99,6 +103,14 @@ function providerMatchesScope(item, providerID) {
         || (actual === "cli" && isCliRecord(item.error))
 }
 
+function providerConfigEntry(item) {
+    if (!isCliRecord(item) || typeof ownField(item, "enabled") !== "boolean") return null
+    var providerID = normalizedProviderID(item.provider)
+    if (providerID.length === 0) return null
+    return { provider: providerID, enabled: item.enabled,
+        displayName: boundedDisplayText(item.displayName, 120) }
+}
+
 // `config providers` output reduced to the enabled provider ids plus every
 // display name it carried. A disabled provider still contributes its name,
 // because the popup labels providers it learns about from a later usage payload.
@@ -112,32 +124,16 @@ function normalizeProviderConfigEntries(payload) {
     var sawProviderConfigEntry = items.length === 0
     var itemLimit = Math.min(items.length, maximumProviderSnapshots)
     for (var i = 0; i < itemLimit; i++) {
-        if (!isCliRecord(items[i])
-                || !hasOwnKey(items[i], "enabled")
-                || typeof items[i].enabled !== "boolean") {
-            continue
-        }
-        var providerID = normalizedProviderID(items[i].provider)
-        if (providerID.length === 0) {
-            continue
-        }
+        var entry = providerConfigEntry(items[i])
+        if (!entry) continue
         sawProviderConfigEntry = true
-        var displayName = boundedDisplayText(items[i].displayName, 120)
-        if (displayName.length > 0) {
-            displayNames[providerID] = displayName
-        }
-        if (items[i].enabled && !hasOwnKey(seenProviderIDs, providerID)) {
-            seenProviderIDs[providerID] = true
-            providerIDs.push(providerID)
+        if (entry.displayName.length > 0) displayNames[entry.provider] = entry.displayName
+        if (entry.enabled && !hasOwnKey(seenProviderIDs, entry.provider)) {
+            seenProviderIDs[entry.provider] = true
+            providerIDs.push(entry.provider)
         }
     }
-    if (!sawProviderConfigEntry) {
-        return null
-    }
-    return {
-        providerIDs: providerIDs,
-        displayNames: displayNames
-    }
+    return sawProviderConfigEntry ? { providerIDs: providerIDs, displayNames: displayNames } : null
 }
 
 function providerSnapshotHasError(item) {
@@ -147,71 +143,64 @@ function providerSnapshotHasError(item) {
             && String(item.error).trim().length > 0))
 }
 
+function canonicalProviderSnapshot(item) {
+    if (!isCliRecord(item)) return null
+    var providerID = normalizedProviderID(item.provider)
+    if (providerID.length === 0) return null
+    var snapshot = copyObject(item)
+    snapshot.provider = providerID
+    return snapshot
+}
+
 // Provider tabs are keyed by canonical provider id. Keep their model unique and
 // retain the first healthy snapshot when a malformed payload repeats an id.
 function dedupeProviderSnapshots(items) {
     var result = []
     var indexes = ({})
-    if (!Array.isArray(items)) {
-        return result
-    }
+    if (!Array.isArray(items)) return result
     var itemLimit = Math.min(items.length, maximumProviderSnapshots)
     for (var i = 0; i < itemLimit; i++) {
-        var item = isCliRecord(items[i]) ? items[i] : null
-        var providerID = item ? normalizedProviderID(item.provider) : ""
-        if (providerID.length === 0) {
-            continue
-        }
-        var snapshot = copyObject(item)
-        snapshot.provider = providerID
-        var hasError = providerSnapshotHasError(item)
+        var snapshot = canonicalProviderSnapshot(items[i])
+        if (!snapshot) continue
+        var providerID = snapshot.provider
         if (!hasOwnKey(indexes, providerID)) {
             indexes[providerID] = result.length
             result.push(snapshot)
             continue
         }
         var existingIndex = indexes[providerID]
-        var existing = result[existingIndex]
-        var existingHasError = providerSnapshotHasError(existing)
-        if (existingHasError && !hasError) {
+        if (providerSnapshotHasError(result[existingIndex]) && !providerSnapshotHasError(items[i])) {
             result[existingIndex] = snapshot
         }
     }
     return result
 }
 
+function ownField(item, key) {
+    return hasOwnKey(item, key) ? item[key] : undefined
+}
+
+function isNonNegativeNumber(value) {
+    return isFinite(value) && value >= 0
+}
+
 function normalizeCodexCreditLimit(providerID, creditLimit) {
-    if (normalizedProviderID(providerID) !== "codex" || !isCliRecord(creditLimit)) {
-        return null
-    }
-
-    var requiredAmountFields = ["used", "limit", "remaining", "remainingPercent"]
-    for (var fieldIndex = 0; fieldIndex < requiredAmountFields.length; fieldIndex++) {
-        if (!hasOwnKey(creditLimit, requiredAmountFields[fieldIndex])) {
-            return null
-        }
-    }
-
-    var used = strictFiniteNumber(creditLimit.used)
-    var limit = strictFiniteNumber(creditLimit.limit)
-    var remaining = strictFiniteNumber(creditLimit.remaining)
-    var remainingPercent = strictFiniteNumber(creditLimit.remainingPercent)
-    if (!isFinite(used) || used < 0
-            || !isFinite(limit) || limit <= 0
-            || !isFinite(remaining) || remaining < 0
-            || !isFinite(remainingPercent)) {
-        return null
-    }
-
+    if (normalizedProviderID(providerID) !== "codex" || !isCliRecord(creditLimit)) return null
+    var used = strictFiniteNumber(ownField(creditLimit, "used"))
+    var limit = strictFiniteNumber(ownField(creditLimit, "limit"))
+    var remaining = strictFiniteNumber(ownField(creditLimit, "remaining"))
+    var remainingPercent = strictFiniteNumber(ownField(creditLimit, "remainingPercent"))
+    if (!isNonNegativeNumber(used) || !isNonNegativeNumber(remaining)) return null
+    if (!isFinite(limit) || limit <= 0 || !isFinite(remainingPercent)) return null
     remainingPercent = clamp(remainingPercent, 0, 100)
     return {
-        title: boundedDisplayText(hasOwnKey(creditLimit, "title") ? creditLimit.title : "", 120),
+        title: boundedDisplayText(ownField(creditLimit, "title"), 120),
         used: used,
         limit: limit,
         remaining: remaining,
         usedPercent: 100 - remainingPercent,
         leftPercent: remainingPercent,
-        resetsAt: boundedDisplayText(hasOwnKey(creditLimit, "resetsAt") ? creditLimit.resetsAt : "", 128)
+        resetsAt: boundedDisplayText(ownField(creditLimit, "resetsAt"), 128)
     }
 }
 
@@ -242,6 +231,22 @@ function canPresentQuotaDetails(row) {
     return !!row && (authoritativeQuota(row) || usageConfidence(row.dataConfidence) === "percentOnly")
 }
 
+function paceForecastKnown(pace, eta) {
+    if (!isCliRecord(pace) || typeof ownField(pace, "willLastToReset") !== "boolean") return false
+    return pace.willLastToReset === true || (isFinite(eta) && eta > 0)
+}
+
+function paceMetrics(pace) {
+    var expectedUsed = strictFiniteNumber(pace && pace.expectedUsedPercent)
+    var eta = strictFiniteNumber(pace && pace.etaSeconds)
+    return {
+        paceKnown: paceForecastKnown(pace, eta),
+        pacePercent: isFinite(expectedUsed) ? clamp(expectedUsed, 0, 100) : -1,
+        paceOnTop: !pace || pace.willLastToReset !== false,
+        paceEtaSeconds: isFinite(eta) ? clamp(eta, 0, maximumPaceEtaSeconds) : 0
+    }
+}
+
 // The numeric half of one usage row. `null` when the payload carries no window
 // record at all, which is how the caller distinguishes "no such window" from
 // "window present but percentage unknown" (`hasPercent === false`).
@@ -252,35 +257,15 @@ function canPresentQuotaDetails(row) {
 // not a pace of zero, and a marker drawn at 0 would claim the provider is
 // comfortably ahead of schedule.
 function rateWindowMetrics(window, pace, usageKnown) {
-    if (!isCliRecord(window)) {
-        return null
-    }
-
-    var known = usageKnown !== false
+    if (!isCliRecord(window)) return null
     var used = strictFiniteNumber(window.usedPercent)
-    var hasPercent = known && isFinite(used)
-    var expectedUsed = strictFiniteNumber(pace && pace.expectedUsedPercent)
-    var paceEta = strictFiniteNumber(pace && pace.etaSeconds)
-    var paceWillLastKnown = isCliRecord(pace)
-        && hasOwnKey(pace, "willLastToReset")
-        && typeof pace.willLastToReset === "boolean"
-    var paceKnown = paceWillLastKnown
-        && (pace.willLastToReset === true || (isFinite(paceEta) && paceEta > 0))
-    var paceValue = isFinite(expectedUsed)
-        ? clamp(expectedUsed, 0, 100)
-        : -1
-    return {
-        hasPercent: hasPercent,
-        usedPercent: hasPercent ? clamp(used, 0, 100) : 0,
-        leftPercent: hasPercent ? clamp(100 - used, 0, 100) : 0,
-        paceKnown: paceKnown,
-        pacePercent: paceValue,
-        paceOnTop: !pace || pace.willLastToReset !== false,
-        paceEtaSeconds: isFinite(paceEta)
-            ? Math.max(0, Math.min(maximumPaceEtaSeconds, paceEta))
-            : 0,
-        windowMinutes: rateWindowMinutes(window.windowMinutes)
-    }
+    var hasPercent = usageKnown !== false && isFinite(used)
+    var result = paceMetrics(pace)
+    result.hasPercent = hasPercent
+    result.usedPercent = hasPercent ? clamp(used, 0, 100) : 0
+    result.leftPercent = hasPercent ? clamp(100 - used, 0, 100) : 0
+    result.windowMinutes = rateWindowMinutes(window.windowMinutes)
+    return result
 }
 
 // The window length the CLI reports beside `resetsAt` (10080 for a weekly
@@ -393,24 +378,19 @@ function accountLabel(item) {
 // is reused once it passes the same blank and length checks as a fresh
 // candidate. Overlong or non-string identities carry no key and stay
 // display-only.
+function validAccountIdentity(value) {
+    return typeof value === "string" && value.trim().length > 0
+        && value.length <= maximumAccountIdentityLength
+}
+
 function accountKey(item) {
-    if (!isCliRecord(item)) {
-        return ""
-    }
-    if (typeof item.accountKey === "string"
-            && item.accountKey.trim().length > 0
-            && item.accountKey.length <= maximumAccountIdentityLength) {
-        return item.accountKey
-    }
+    if (!isCliRecord(item)) return ""
+    if (validAccountIdentity(item.accountKey)) return item.accountKey
     var candidates = [item.account, item.organization, item.loginMethod]
     for (var i = 0; i < candidates.length; i++) {
-        if (typeof candidates[i] !== "string") {
-            continue
-        }
+        if (typeof candidates[i] !== "string") continue
         var identity = candidates[i].trim()
-        if (identity.length > 0 && identity.length <= maximumAccountIdentityLength) {
-            return identity
-        }
+        if (validAccountIdentity(identity)) return identity
     }
     return ""
 }
@@ -582,27 +562,14 @@ function calendarDateKey(year, month, day) {
 }
 
 function parsedCalendarDateKey(value) {
-    if (typeof value !== "string") {
-        return null
-    }
+    if (typeof value !== "string") return null
     var match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
-    if (!match) {
-        return null
-    }
-    var year = Number(match[1])
-    var month = Number(match[2])
-    var day = Number(match[3])
-    if (year < 1970 || month < 1 || month > 12 || day < 1 || day > 31) {
-        return null
-    }
-    var timestampMs = Date.UTC(year, month - 1, day)
+    if (!match || Number(match[1]) < 1970) return null
+    var timestampMs = Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
     var date = new Date(timestampMs)
-    if (date.getUTCFullYear() !== year
-            || date.getUTCMonth() !== month - 1
-            || date.getUTCDate() !== day) {
-        return null
-    }
-    return { key: calendarDateKey(year, month, day), timestampMs: timestampMs }
+    var key = calendarDateKey(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate())
+    // UTC construction rolls invalid days and months; round-trip the whole key.
+    return key === value ? { key: key, timestampMs: timestampMs } : null
 }
 
 // A CLI calendar key names a local day, not an instant: its local noon keeps
@@ -618,7 +585,7 @@ function calendarKeyLocalDate(value) {
 }
 
 function localCalendarDateKey(value) {
-    if (typeof value !== "string" || value.trim().length === 0 || value.length > 100) {
+    if (!nonEmptyString(value) || value.length > 100) {
         return ""
     }
     var dateOnly = parsedCalendarDateKey(value.trim())
@@ -662,102 +629,91 @@ function costHistoryRowsWithinWindow(rows, window) {
     })
 }
 
-function fillMissingCostDays(rows, currency, days, updatedAt, blockedDateKeys, maximumDays) {
-    if (!rows || rows.length === 0) {
-        return rows || []
-    }
-    var window = costHistoryCalendarWindow(days, updatedAt, maximumDays)
-    if (!window) {
-        return rows
-    }
-
-    var historyDays = Math.floor(boundedHistoryDays(days, maximumDays))
-    var dayMilliseconds = 24 * 60 * 60 * 1000
-    var firstTimestampMs = window.firstTimestampMs
-    var byDate = ({})
-    var hasObservedCost = false
-    var hasObservedTokens = false
+function indexedCostDays(rows, window, historyDays) {
+    var indexed = { byDate: ({}), hasCost: false, hasTokens: false }
     for (var i = 0; i < rows.length; i++) {
         var parsed = parsedCalendarDateKey(rows[i].label)
+        // A malformed retained label or duplicate makes zero-day inference unsafe.
         if (!parsed) {
-            // Preserve malformed labels in the retained tail, but older labels
-            // discovered by the extended scan must not suppress a healthy window.
-            if (i >= rows.length - historyDays) {
-                return costHistoryRowsWithinWindow(rows, window)
-            }
+            if (i >= rows.length - historyDays) return null
             continue
         }
-        if (parsed.timestampMs < firstTimestampMs || parsed.timestampMs > window.lastTimestampMs) {
-            continue
-        }
-        if (hasOwnKey(byDate, parsed.key)) {
-            return costHistoryRowsWithinWindow(rows, window)
-        }
-        byDate[parsed.key] = rows[i]
-        hasObservedCost = hasObservedCost
-            || (typeof rows[i].cost === "number"
-                && isFinite(rows[i].cost))
-        hasObservedTokens = hasObservedTokens
-            || (typeof rows[i].tokens === "number"
-                && isFinite(rows[i].tokens))
+        if (!costDateWithinWindow(parsed, window)) continue
+        if (hasOwnKey(indexed.byDate, parsed.key)) return null
+        indexed.byDate[parsed.key] = rows[i]
+        indexed.hasCost = indexed.hasCost || isObservedCostAmount(rows[i].cost)
+        indexed.hasTokens = indexed.hasTokens || isObservedCostAmount(rows[i].tokens)
     }
+    return indexed
+}
 
+function isObservedCostAmount(value) {
+    return typeof value === "number" && isFinite(value)
+}
+
+function costDateWithinWindow(parsed, window) {
+    return parsed.timestampMs >= window.firstTimestampMs
+        && parsed.timestampMs <= window.lastTimestampMs
+}
+
+function emptyCostDay(key, currency, indexed) {
+    // Only metrics observed in this snapshot can imply zero activity on a gap.
+    return {
+        label: key,
+        cost: indexed.hasCost ? 0 : null,
+        tokens: indexed.hasTokens ? 0 : null,
+        inputTokens: 0,
+        outputTokens: 0,
+        cacheReadTokens: 0,
+        cacheCreationTokens: 0,
+        currency: currency,
+        models: [],
+        modelsTruncated: false
+    }
+}
+
+function filledCostDays(indexed, window, currency, blockedDateKeys) {
     var result = []
     var observedInRange = false
-    var safeCurrency = boundedDisplayText(currency || "USD", 12)
-    for (var offset = 0; offset < historyDays; offset++) {
-        var date = new Date(firstTimestampMs + offset * dayMilliseconds)
+    var dayMilliseconds = 24 * 60 * 60 * 1000
+    for (var timestampMs = window.firstTimestampMs; timestampMs <= window.lastTimestampMs;
+            timestampMs += dayMilliseconds) {
+        var date = new Date(timestampMs)
         var key = calendarDateKey(
             date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate())
-        if (hasOwnKey(blockedDateKeys, key) && !hasOwnKey(byDate, key)) {
-            return costHistoryRowsWithinWindow(rows, window)
-        }
-        if (hasOwnKey(byDate, key)) {
-            result.push(byDate[key])
-            observedInRange = true
-        } else {
-            // Omitted calendar days mean no recorded activity only for metrics
-            // observed in this snapshot. An unavailable metric stays unknown.
-            result.push({
-                label: key,
-                cost: hasObservedCost ? 0 : null,
-                tokens: hasObservedTokens ? 0 : null,
-                inputTokens: 0,
-                outputTokens: 0,
-                cacheReadTokens: 0,
-                cacheCreationTokens: 0,
-                currency: safeCurrency,
-                models: [],
-                modelsTruncated: false
-            })
-        }
+        var observed = hasOwnKey(indexed.byDate, key)
+        if (!observed && hasOwnKey(blockedDateKeys, key)) return null
+        observedInRange = observedInRange || observed
+        result.push(observed ? indexed.byDate[key] : emptyCostDay(key, currency, indexed))
     }
-    // No observation in a valid window must not revive older or future dates.
-    // Leave it empty rather than manufacture a zero-cost history without evidence.
+    // No observation in range must not manufacture a zero-cost history.
     return observedInRange ? result : []
 }
 
-function normalizedCostCoverage(coverage) {
-    if (!isCliRecord(coverage)) {
-        return null
-    }
+function fillMissingCostDays(rows, currency, selection, blockedDateKeys) {
+    if (rows.length === 0) return rows
+    var window = selection.window
+    if (!window) return rows
+    var indexed = indexedCostDays(rows, window, selection.historyDays)
+    if (!indexed) return costHistoryRowsWithinWindow(rows, window)
+    var result = filledCostDays(indexed, window,
+        boundedDisplayText(currency || "USD", 12), blockedDateKeys)
+    return result === null ? costHistoryRowsWithinWindow(rows, window) : result
+}
 
+function isIntegerInRange(value, minimum, maximum) {
+    return typeof value === "number" && isFinite(value) && Math.floor(value) === value
+        && value >= minimum && value <= maximum
+}
+
+function normalizedCostCoverage(coverage) {
+    if (!isCliRecord(coverage)) return null
     var fields = ["priced", "unpriced", "unmetered", "estimated"]
     var result = ({})
     for (var i = 0; i < fields.length; i++) {
-        var field = fields[i]
-        if (!hasOwnKey(coverage, field)) {
-            return null
-        }
-        var value = coverage[field]
-        if (typeof value !== "number"
-                || !isFinite(value)
-                || Math.floor(value) !== value
-                || value < 0
-                || value > maximumCostCoverageCount) {
-            return null
-        }
-        result[field] = value
+        var value = ownField(coverage, fields[i])
+        if (!isIntegerInRange(value, 0, maximumCostCoverageCount)) return null
+        result[fields[i]] = value
     }
     return result
 }
@@ -768,13 +724,7 @@ function normalizedCostCoverage(coverage) {
 // unknown amount. The upstream sum saturates, so accept the same bound as the
 // coverage counts and keep anything larger as the bound.
 function normalizedIncompleteRequestCount(value) {
-    if (typeof value !== "number"
-            || !isFinite(value)
-            || Math.floor(value) !== value
-            || value <= 0) {
-        return 0
-    }
-    return Math.min(value, maximumCostCoverageCount)
+    return isIntegerInRange(value, 1, Infinity) ? Math.min(value, maximumCostCoverageCount) : 0
 }
 
 // `coverage`, `provenance`, and the incomplete-request count describe how
@@ -782,39 +732,23 @@ function normalizedIncompleteRequestCount(value) {
 // bounded contract and translate the provenance wire enum before the snapshot
 // becomes QML state; older payloads and records whose axes are all unusable
 // remain quiet.
+function costSourceKind(provenance) {
+    switch (provenance) {
+    case "listPriceEstimate": return "listPrice"
+    case "vendorMetered": return "vendor"
+    case "mixed":
+    case "unknown": return provenance
+    default: return ""
+    }
+}
+
 function normalizeCostTrustMetadata(rawCostRecord) {
-    if (!isCliRecord(rawCostRecord)) {
-        return null
-    }
-
-    var coverage = hasOwnKey(rawCostRecord, "coverage")
-        ? normalizedCostCoverage(rawCostRecord.coverage)
-        : null
-    var incompleteRequests = normalizedIncompleteRequestCount(
-        rawCostRecord.incompleteRequestCount)
-    var sourceKind = ""
-    if (hasOwnKey(rawCostRecord, "provenance")
-            && typeof rawCostRecord.provenance === "string") {
-        switch (rawCostRecord.provenance) {
-        case "listPriceEstimate":
-            sourceKind = "listPrice"
-            break
-        case "vendorMetered":
-            sourceKind = "vendor"
-            break
-        case "mixed":
-        case "unknown":
-            sourceKind = rawCostRecord.provenance
-            break
-        }
-    }
-
+    if (!isCliRecord(rawCostRecord)) return null
+    var coverage = normalizedCostCoverage(ownField(rawCostRecord, "coverage"))
+    var incompleteRequests = normalizedIncompleteRequestCount(rawCostRecord.incompleteRequestCount)
+    var sourceKind = costSourceKind(ownField(rawCostRecord, "provenance"))
     return coverage !== null || sourceKind.length > 0 || incompleteRequests > 0
-        ? {
-            coverage: coverage,
-            sourceKind: sourceKind,
-            incompleteRequests: incompleteRequests
-        }
+        ? { coverage: coverage, sourceKind: sourceKind, incompleteRequests: incompleteRequests }
         : null
 }
 
@@ -829,37 +763,23 @@ function costRecordHasError(item) {
     return Boolean(error)
 }
 
-function normalizeCostEnvelope(payload) {
-    var items
-    if (Array.isArray(payload)) {
-        if (payload.length === 0) {
-            return []
-        }
-        items = payload
-    } else if (isCliRecord(payload)) {
-        items = [payload]
-    } else {
-        return null
-    }
+function costEnvelopeItems(payload) {
+    if (Array.isArray(payload)) return payload
+    return isCliRecord(payload) ? [payload] : null
+}
 
+function normalizeCostEnvelope(payload) {
+    var items = costEnvelopeItems(payload)
+    if (!items) return null
+    if (items.length === 0) return []
     var result = []
     var itemLimit = Math.min(items.length, maximumCostSnapshots)
     for (var i = 0; i < itemLimit; i++) {
         var item = items[i]
-        if (!isCliRecord(item)) {
-            continue
-        }
-        var providerID = normalizedProviderID(item.provider)
-        var itemHasError = costRecordHasError(item)
-        if (providerID.length === 0 && itemHasError) {
-            return null
-        }
-        if (providerID.length === 0) {
-            continue
-        }
-        var snapshot = copyObject(item)
-        snapshot.provider = providerID
-        result.push(snapshot)
+        if (!isCliRecord(item)) continue
+        var snapshot = canonicalProviderSnapshot(item)
+        if (snapshot) result.push(snapshot)
+        else if (costRecordHasError(item)) return null
     }
     return result.length > 0 ? result : null
 }
@@ -876,42 +796,38 @@ function mergeCostSnapshotsAfterPartialFailure(previousSnapshots, freshSnapshots
     var itemLimit = Math.min(failedProviderIDs.length, maximumCostSnapshots)
     for (var i = 0; i < itemLimit; i++) {
         var providerID = normalizedProviderID(failedProviderIDs[i])
-        if (providerID.length > 0
-                && !hasOwnKey(merged, providerID)
-                && hasOwnKey(previousSnapshots, providerID)) {
+        if (providerID.length === 0 || hasOwnKey(merged, providerID)) continue
+        if (hasOwnKey(previousSnapshots, providerID)) {
             merged[providerID] = previousSnapshots[providerID]
         }
     }
     return merged
 }
 
+function nonNegativeAmount(value, missing) {
+    return isFinite(value) ? Math.max(0, value) : missing
+}
+
+function normalizedCostProject(item, currency) {
+    if (!isCliRecord(item) || typeof ownField(item, "name") !== "string") return null
+    var label = boundedDisplayText(item.name, 120)
+    var cost = strictFiniteNumber(ownField(item, "totalCost"))
+    var tokens = strictFiniteNumber(ownField(item, "totalTokens"))
+    if (label.length === 0 || (!isFinite(cost) && !isFinite(tokens))) return null
+    return { label: label, cost: nonNegativeAmount(cost, null),
+        tokens: nonNegativeAmount(tokens, null), currency: boundedDisplayText(currency || "USD", 12) }
+}
+
 // CLI 0.56.2 projects carry local paths and nested source records. Retain only
 // the display name and range totals; project names are labels, never map keys.
 function normalizeCostProjects(items, currency) {
     var result = { rows: [], truncated: false }
-    if (!Array.isArray(items)) {
-        return result
-    }
+    if (!Array.isArray(items)) return result
     var limit = Math.min(items.length, maximumCostProjects)
     result.truncated = items.length > limit
     for (var i = 0; i < limit; i++) {
-        var item = items[i]
-        if (!isCliRecord(item) || !hasOwnKey(item, "name")
-                || typeof item.name !== "string") {
-            continue
-        }
-        var label = boundedDisplayText(item.name, 120)
-        var cost = hasOwnKey(item, "totalCost") ? strictFiniteNumber(item.totalCost) : NaN
-        var tokens = hasOwnKey(item, "totalTokens") ? strictFiniteNumber(item.totalTokens) : NaN
-        if (label.length === 0 || (!isFinite(cost) && !isFinite(tokens))) {
-            continue
-        }
-        result.rows.push({
-            label: label,
-            cost: isFinite(cost) ? Math.max(0, cost) : null,
-            tokens: isFinite(tokens) ? Math.max(0, tokens) : null,
-            currency: boundedDisplayText(currency || "USD", 12)
-        })
+        var row = normalizedCostProject(items[i], currency)
+        if (row) result.rows.push(row)
     }
     return result
 }
@@ -929,62 +845,54 @@ function costRecordHasAmounts(item) {
             })
 }
 
-function normalizeCostDaily(items, currency, days, updatedAt, maximumDays) {
-    var result = []
-    if (!items || !Array.isArray(items)) {
-        return result
-    }
+function costDayLabel(item) {
+    return boundedDisplayText(item.date || item.day || item.dayKey || "", 120)
+}
 
-    var historyDays = Math.floor(boundedHistoryDays(days, maximumDays))
+function normalizedCostDay(item, currency) {
+    var row = normalizeCostTotals(item, item.costUSD, item.tokens, currency)
+    var modelSummary = costModelSummary([item], currency)
+    row.label = costDayLabel(item)
+    row.incompleteRequests = normalizedIncompleteRequestCount(item.incompleteRequestCount)
+    row.models = modelSummary.rows
+    row.modelsTruncated = modelSummary.truncated
+    return row
+}
+
+// Daily rows and model totals share calendar and input-inspection bounds.
+function costHistorySelection(items, options) {
+    var historyDays = Math.floor(boundedHistoryDays(options.days, options.maximumDays))
+    return {
+        historyDays: historyDays,
+        firstItem: Math.max(0, items.length - historyDays),
+        firstInspectedItem: Math.max(0, items.length - maximumCostHistoryScanItems),
+        window: costHistoryCalendarWindow(historyDays, options.updatedAt, options.maximumDays)
+    }
+}
+
+function normalizeCostDaily(items, currency, options) {
+    if (!Array.isArray(items)) return []
+    var selection = costHistorySelection(items, options || ({}))
+    var historyDays = selection.historyDays
     var blockedDateKeys = ({})
-    var inspectedItems = 0
-    for (var i = items.length - 1; i >= 0
-            && inspectedItems < maximumCostHistoryScanItems; i--) {
-        inspectedItems++
-        var item = isCliRecord(items[i]) ? items[i] : null
-        if (!item) {
+    var firstInspectedItem = selection.firstInspectedItem
+    var result = []
+    for (var i = items.length - 1; i >= firstInspectedItem; i--) {
+        var item = items[i]
+        if (!isCliRecord(item)) continue
+        if (costRecordHasAmounts(item)) {
+            result.unshift(normalizedCostDay(item, currency))
             continue
         }
-        var label = boundedDisplayText(item.date || item.day || item.dayKey || "", 120)
-        var cost = firstStrictFiniteNumber(item.totalCost, item.costUSD)
-        var tokens = firstStrictFiniteNumber(item.totalTokens, item.tokens)
-        var inputTokens = strictFiniteNumber(item.inputTokens)
-        var outputTokens = strictFiniteNumber(item.outputTokens)
-        var cacheReadTokens = strictFiniteNumber(item.cacheReadTokens)
-        var cacheCreationTokens = firstStrictFiniteNumber(
-            item.cacheCreationTokens, item.cacheWriteTokens)
-        if (!isFinite(tokens)) {
-            tokens = sumTokenParts(inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens)
-        }
-        if (!costRecordHasAmounts(item)) {
-            var blockedDate = parsedCalendarDateKey(label)
-            if (blockedDate) {
-                blockedDateKeys[blockedDate.key] = true
-            }
-            continue
-        }
-        var modelSummary = costModelSummary([item], currency)
-        result.unshift({
-            label: label,
-            cost: isFinite(cost) ? Math.max(0, cost) : null,
-            tokens: isFinite(tokens) ? Math.max(0, tokens) : null,
-            incompleteRequests: normalizedIncompleteRequestCount(item.incompleteRequestCount),
-            inputTokens: isFinite(inputTokens) ? Math.max(0, inputTokens) : 0,
-            outputTokens: isFinite(outputTokens) ? Math.max(0, outputTokens) : 0,
-            cacheReadTokens: isFinite(cacheReadTokens) ? Math.max(0, cacheReadTokens) : 0,
-            cacheCreationTokens: isFinite(cacheCreationTokens) ? Math.max(0, cacheCreationTokens) : 0,
-            currency: boundedDisplayText(currency || "USD", 12),
-            models: modelSummary.rows,
-            modelsTruncated: modelSummary.truncated
-        })
+        var blockedDate = parsedCalendarDateKey(costDayLabel(item))
+        if (blockedDate) blockedDateKeys[blockedDate.key] = true
     }
-    // Inspect beyond the display limit: earlier records may contain valid or
-    // malformed days inside the window, so they must be known before filling.
-    if (i >= 0 && inspectedItems >= maximumCostHistoryScanItems) {
+    // An incomplete scan cannot establish safe zero-activity gaps.
+    if (firstInspectedItem > 0) {
         return costHistoryRowsWithinWindow(result,
-            costHistoryCalendarWindow(historyDays, updatedAt, maximumDays)).slice(-historyDays)
+            selection.window).slice(-historyDays)
     }
-    return fillMissingCostDays(result, currency, historyDays, updatedAt, blockedDateKeys, maximumDays)
+    return fillMissingCostDays(result, currency, selection, blockedDateKeys)
         .slice(-historyDays)
 }
 
@@ -1001,12 +909,12 @@ function normalizeCostTotals(totals, fallbackCost, fallbackTokens, currency) {
         tokens = sumTokenParts(inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens)
     }
     return {
-        cost: isFinite(cost) ? Math.max(0, cost) : null,
-        tokens: isFinite(tokens) ? Math.max(0, tokens) : null,
-        inputTokens: isFinite(inputTokens) ? Math.max(0, inputTokens) : 0,
-        outputTokens: isFinite(outputTokens) ? Math.max(0, outputTokens) : 0,
-        cacheReadTokens: isFinite(cacheReadTokens) ? Math.max(0, cacheReadTokens) : 0,
-        cacheCreationTokens: isFinite(cacheCreationTokens) ? Math.max(0, cacheCreationTokens) : 0,
+        cost: nonNegativeAmount(cost, null),
+        tokens: nonNegativeAmount(tokens, null),
+        inputTokens: nonNegativeAmount(inputTokens, 0),
+        outputTokens: nonNegativeAmount(outputTokens, 0),
+        cacheReadTokens: nonNegativeAmount(cacheReadTokens, 0),
+        cacheCreationTokens: nonNegativeAmount(cacheCreationTokens, 0),
         currency: boundedDisplayText(currency || "USD", 12)
     }
 }
@@ -1019,101 +927,80 @@ function normalizeProviderCostAmount(providerID, amount) {
         ? cost : null
 }
 
-function normalizeProviderCostTotals(providerID, totals, fallbackCost,
-        fallbackTokens, currency) {
-    var result = normalizeCostTotals(
-        totals, fallbackCost, fallbackTokens, currency)
+function normalizeProviderCostTotals(providerID, totals, fallback) {
+    fallback = fallback || ({})
+    var result = normalizeCostTotals(totals, fallback.cost, fallback.tokens, fallback.currency)
     result.cost = normalizeProviderCostAmount(providerID, result.cost)
     return result
 }
 
-function normalizeCostModels(items, currency, days, updatedAt, includeTokenRanking, maximumDays) {
-    if (!items || !Array.isArray(items)) {
-        return { rows: [], truncated: false }
-    }
+function eligibleCostModelDay(item, itemIndex, selection) {
+    if (!isCliRecord(item)) return false
+    if (!hasOwnKey(item, "modelBreakdowns") && !costRecordHasAmounts(item)) return false
+    if (!selection.window) return true
+    var parsed = parsedCalendarDateKey(costDayLabel(item))
+    // Undated legacy records retain the original bounded tail behavior.
+    return parsed ? costDateWithinWindow(parsed, selection.window) : itemIndex >= selection.firstItem
+}
 
-    // Match the daily history's whole-day budget, including the legacy tail.
-    var historyDays = Math.floor(boundedHistoryDays(days, maximumDays))
-    var firstItem = Math.max(0, items.length - historyDays)
-    var window = costHistoryCalendarWindow(historyDays, updatedAt, maximumDays)
-    var firstInspectedItem = Math.max(0, items.length - maximumCostHistoryScanItems)
+function costModelScanTruncated(selection, retainedDayCount) {
+    return selection.firstInspectedItem > 0
+        && (selection.window !== null || retainedDayCount < selection.historyDays)
+}
+
+function normalizeCostModels(items, currency, options) {
+    if (!Array.isArray(items)) return { rows: [], truncated: false }
+    options = options || ({})
+    var selection = costHistorySelection(items, options)
     var modelDays = []
-    for (var itemIndex = items.length - 1; itemIndex >= firstInspectedItem
-            && modelDays.length < historyDays; itemIndex--) {
-        var item = isCliRecord(items[itemIndex]) ? items[itemIndex] : null
-        if (!item || (!hasOwnKey(item, "modelBreakdowns") && !costRecordHasAmounts(item))) {
-            continue
+    for (var itemIndex = items.length - 1; itemIndex >= selection.firstInspectedItem
+            && modelDays.length < selection.historyDays; itemIndex--) {
+        if (eligibleCostModelDay(items[itemIndex], itemIndex, selection)) {
+            modelDays.unshift(items[itemIndex])
         }
-        if (window) {
-            var parsed = parsedCalendarDateKey(boundedDisplayText(
-                item.date || item.day || item.dayKey || "", 120))
-            if (parsed && (parsed.timestampMs < window.firstTimestampMs
-                    || parsed.timestampMs > window.lastTimestampMs)) {
-                continue
-            }
-            // Undated legacy records retain the original bounded tail behavior.
-            if (!parsed && itemIndex < firstItem) {
-                continue
-            }
-        }
-        modelDays.unshift(item)
     }
-    var summary = costModelSummary(modelDays, currency, includeTokenRanking)
+    var summary = costModelSummary(modelDays, currency, options.includeTokenRanking)
     if (summary.tokenRanking) {
         summary.tokenRanking.sourceTruncated = summary.tokenRanking.sourceTruncated
-            || (firstInspectedItem > 0
-                && (window !== null || modelDays.length < historyDays))
+            || costModelScanTruncated(selection, modelDays.length)
     }
     return summary
 }
 
+function costModelName(breakdown) {
+    var name = ownField(breakdown, "modelName")
+    return nonEmptyString(name) ? name : ownField(breakdown, "model")
+}
+
 function normalizedCostModelBreakdown(breakdown) {
-    if (!isCliRecord(breakdown)) {
-        return null
-    }
-    var rawName = hasOwnKey(breakdown, "modelName") ? breakdown.modelName : ""
-    if ((typeof rawName !== "string" || rawName.length === 0)
-            && hasOwnKey(breakdown, "model")) {
-        rawName = breakdown.model
-    }
+    if (!isCliRecord(breakdown)) return null
+    var rawName = costModelName(breakdown)
     // Aggregate by raw identity: bounded, redacted labels can collide.
-    if (typeof rawName !== "string" || rawName.length === 0
-            || isUnsafeObjectKey(rawName)) {
-        return null
-    }
+    if (!nonEmptyString(rawName) || isUnsafeObjectKey(rawName)) return null
     var name = boundedDisplayText(rawName, 120)
-    if (name.length === 0) {
-        return null
-    }
+    if (name.length === 0) return null
     return {
         key: rawName,
         label: name,
-        incompleteRequests: normalizedIncompleteRequestCount(
-            hasOwnKey(breakdown, "incompleteRequestCount") ? breakdown.incompleteRequestCount : undefined),
-        cost: firstStrictFiniteNumber(
-            hasOwnKey(breakdown, "cost") ? breakdown.cost : undefined,
-            hasOwnKey(breakdown, "totalCost") ? breakdown.totalCost : undefined),
-        tokens: firstStrictFiniteNumber(
-            hasOwnKey(breakdown, "totalTokens") ? breakdown.totalTokens : undefined,
-            hasOwnKey(breakdown, "tokens") ? breakdown.tokens : undefined)
+        incompleteRequests: normalizedIncompleteRequestCount(ownField(breakdown, "incompleteRequestCount")),
+        cost: firstStrictFiniteNumber(ownField(breakdown, "cost"), ownField(breakdown, "totalCost")),
+        tokens: firstStrictFiniteNumber(ownField(breakdown, "totalTokens"), ownField(breakdown, "tokens"))
     }
 }
 
-function accumulateCostModelAmounts(aggregate, breakdown) {
-    if (isFinite(breakdown.tokens) && !isFinite(breakdown.cost)) {
-        aggregate.unknownCost = true
-    }
+function accumulateCostModelMetric(aggregate, breakdown, metric) {
+    var overflowKey = metric + "Overflow"
+    if (!isFinite(breakdown[metric]) || aggregate[overflowKey]) return
+    var total = (aggregate[metric] === null ? 0 : aggregate[metric]) + Math.max(0, breakdown[metric])
     // Later finite rows must not revive an overflowed sum as a partial total.
-    if (isFinite(breakdown.cost) && !aggregate.costOverflow) {
-        var totalCost = (aggregate.cost === null ? 0 : aggregate.cost) + Math.max(0, breakdown.cost)
-        aggregate.costOverflow = !isFinite(totalCost)
-        aggregate.cost = aggregate.costOverflow ? null : totalCost
-    }
-    if (isFinite(breakdown.tokens) && !aggregate.tokensOverflow) {
-        var totalTokens = (aggregate.tokens === null ? 0 : aggregate.tokens) + Math.max(0, breakdown.tokens)
-        aggregate.tokensOverflow = !isFinite(totalTokens)
-        aggregate.tokens = aggregate.tokensOverflow ? null : totalTokens
-    }
+    aggregate[overflowKey] = !isFinite(total)
+    aggregate[metric] = aggregate[overflowKey] ? null : total
+}
+
+function accumulateCostModelAmounts(aggregate, breakdown) {
+    if (isFinite(breakdown.tokens) && !isFinite(breakdown.cost)) aggregate.unknownCost = true
+    accumulateCostModelMetric(aggregate, breakdown, "cost")
+    accumulateCostModelMetric(aggregate, breakdown, "tokens")
 }
 
 function addCostModelBreakdown(byName, incompleteByName, breakdown, currency) {
@@ -1142,18 +1029,21 @@ function addCostModelBreakdown(byName, incompleteByName, breakdown, currency) {
     accumulateCostModelAmounts(byName[key], breakdown)
 }
 
-function compareCostModels(a, b) {
-    var aCost = a.cost === null ? 0 : a.cost
-    var bCost = b.cost === null ? 0 : b.cost
-    if (bCost !== aCost) {
-        return bCost > aCost ? 1 : -1
-    }
-    var aTokens = a.tokens === null ? 0 : a.tokens
-    var bTokens = b.tokens === null ? 0 : b.tokens
-    if (bTokens !== aTokens) {
-        return bTokens > aTokens ? 1 : -1
-    }
+function compareCostModelLabels(a, b) {
     return a.label === b.label ? 0 : (a.label < b.label ? -1 : 1)
+}
+
+function compareCostModelAmounts(a, b) {
+    var aValue = a === null ? 0 : a
+    var bValue = b === null ? 0 : b
+    if (aValue === bValue) return 0
+    return bValue > aValue ? 1 : -1
+}
+
+function compareCostModels(a, b) {
+    return compareCostModelAmounts(a.cost, b.cost)
+        || compareCostModelAmounts(a.tokens, b.tokens)
+        || compareCostModelLabels(a, b)
 }
 
 function costModelTokenRanking(rows, truncated, hasUnknownCost) {
@@ -1161,7 +1051,7 @@ function costModelTokenRanking(rows, truncated, hasUnknownCost) {
     // A cheap or unpriced model can still have the largest token count.
     var tokenRows = rows.filter(function(row) { return row.tokens !== null })
     tokenRows.sort(function(a, b) {
-        return b.tokens - a.tokens || (a.label === b.label ? 0 : (a.label < b.label ? -1 : 1))
+        return b.tokens - a.tokens || compareCostModelLabels(a, b)
     })
     return {
         rows: tokenRows.slice(0, maximumCostModelRows),
@@ -1174,43 +1064,38 @@ function costModelTokenRanking(rows, truncated, hasUnknownCost) {
     }
 }
 
-function costModelSummary(modelDays, currency, includeTokenRanking) {
-    var byName = ({})
-    // Requests the CLI excluded from a model's amounts, counted separately so
-    // a breakdown without measured amounts still reaches the model's row.
-    var incompleteByName = ({})
-    var truncated = false
-    for (var i = 0; i < modelDays.length; i++) {
-        var breakdowns = hasOwnKey(modelDays[i], "modelBreakdowns")
-                && Array.isArray(modelDays[i].modelBreakdowns)
-            ? modelDays[i].modelBreakdowns
-            : []
-        var breakdownLimit = Math.min(breakdowns.length, maximumModelBreakdownsPerDay)
-        truncated = truncated || breakdowns.length > breakdownLimit
-        for (var j = 0; j < breakdownLimit; j++) {
-            addCostModelBreakdown(byName, incompleteByName,
-                normalizedCostModelBreakdown(breakdowns[j]), currency)
-        }
+function accumulateCostModelDay(aggregation, item, currency) {
+    var breakdowns = hasOwnKey(item, "modelBreakdowns") && Array.isArray(item.modelBreakdowns)
+        ? item.modelBreakdowns : []
+    var breakdownLimit = Math.min(breakdowns.length, maximumModelBreakdownsPerDay)
+    aggregation.truncated = aggregation.truncated || breakdowns.length > breakdownLimit
+    for (var i = 0; i < breakdownLimit; i++) {
+        addCostModelBreakdown(aggregation.byName, aggregation.incompleteByName,
+            normalizedCostModelBreakdown(breakdowns[i]), currency)
     }
+}
 
-    var rows = []
-    var hasUnknownCost = false
-    for (var modelName in byName) {
-        if (!hasOwnKey(byName, modelName)) {
-            continue
-        }
-        var model = byName[modelName]
-        hasUnknownCost = hasUnknownCost || (model.tokens !== null && model.unknownCost)
-        rows.push({ label: model.label, cost: model.cost, tokens: model.tokens, currency: model.currency,
-            incompleteRequests: hasOwnKey(incompleteByName, modelName) ? incompleteByName[modelName] : 0 })
+function costModelSummary(modelDays, currency, includeTokenRanking) {
+    // Excluded-only records contribute counts without manufacturing measured amounts.
+    var aggregation = { byName: ({}), incompleteByName: ({}), truncated: false }
+    for (var i = 0; i < modelDays.length; i++) {
+        accumulateCostModelDay(aggregation, modelDays[i], currency)
     }
+    var hasUnknownCost = false
+    var rows = Object.keys(aggregation.byName).map(function(key) {
+        var model = aggregation.byName[key]
+        hasUnknownCost = hasUnknownCost || (model.tokens !== null && model.unknownCost)
+        return { label: model.label, cost: model.cost, tokens: model.tokens, currency: model.currency,
+            incompleteRequests: hasOwnKey(aggregation.incompleteByName, key)
+                ? aggregation.incompleteByName[key] : 0 }
+    })
     rows.sort(compareCostModels)
     var result = {
         rows: rows.slice(0, maximumCostModelRows),
-        truncated: truncated || rows.length > maximumCostModelRows
+        truncated: aggregation.truncated || rows.length > maximumCostModelRows
     }
     if (includeTokenRanking === true) {
-        result.tokenRanking = costModelTokenRanking(rows, truncated, hasUnknownCost)
+        result.tokenRanking = costModelTokenRanking(rows, aggregation.truncated, hasUnknownCost)
     }
     return result
 }
