@@ -36,14 +36,14 @@ TestCase {
         var original = JSON.stringify(items)
         var rows
         if (data.daily) {
-            var daily = Normalizer.normalizeCostDaily(items, "EUR", 1, "2026-09-11")
+            var daily = Normalizer.normalizeCostDaily(items, "EUR", { days: 1, updatedAt: "2026-09-11" })
             compare(daily.length, 1)
             compare(daily[0].cost, 3)
             compare(daily[0].tokens, 30)
             compare(daily[0].modelsTruncated, false)
             rows = daily[0].models
         } else {
-            var period = Normalizer.normalizeCostModels(items, "EUR", 1, "2026-09-11")
+            var period = Normalizer.normalizeCostModels(items, "EUR", { days: 1, updatedAt: "2026-09-11" })
             compare(period.truncated, false)
             rows = period.rows
         }
