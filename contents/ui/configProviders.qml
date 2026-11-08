@@ -1731,9 +1731,7 @@ KCM.SimpleKCM {
                     }
                 }
             }
-            // The selected provider reads as one borderless surface, like the
-            // popup's provider tiles, instead of a run of separated rows.
-            Rectangle {
+            Item {
                 id: selectedProviderSurface
                 objectName: "selectedProviderSurface"
                 Layout.alignment: Qt.AlignTop
@@ -1748,8 +1746,6 @@ KCM.SimpleKCM {
                 Layout.rightMargin: Kirigami.Units.smallSpacing
                 implicitHeight: Math.max(selectedProviderContent.implicitHeight + Kirigami.Units.largeSpacing * 2,
                     providerPanes.columns === 2 ? providerPanes.paneHeight - Kirigami.Units.smallSpacing : 0)
-                radius: Kirigami.Units.cornerRadius
-                color: page.withAlpha(Kirigami.Theme.textColor, 0.035)
                 visible: page.selectedProvider !== null
 
                 ColumnLayout {
