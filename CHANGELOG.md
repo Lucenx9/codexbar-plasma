@@ -26,6 +26,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Refine popup tab corners to follow their container inset, use body-size
+  quota names with clearer spacing in Overview, and soften provider section
+  dividers.
 - Give the Cost/Tokens switch even inner margins and space the provider
   header's account and plan like other popup metadata.
 - Keep Popup settings focused on content and provider navigation. Move hidden

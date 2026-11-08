@@ -1011,6 +1011,7 @@ TestCase {
 
     function test_globalTabActivationAndNavigation() {
         var strip = {
+            tabRadius: 6,
             claimed: null,
             claimSelectedTab: function(tabItem, selected) {
                 if (selected)

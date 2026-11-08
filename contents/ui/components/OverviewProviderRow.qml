@@ -173,12 +173,11 @@ Rectangle {
                 id: overviewMeter
 
                 required property var modelData
-                required property int index
                 readonly property bool captionTruncated: overviewMeterCaption.truncated
                     || overviewMeterReset.truncated
 
                 Layout.fillWidth: true
-                Layout.topMargin: index === 0 ? Kirigami.Units.smallSpacing : Kirigami.Units.smallSpacing / 2
+                Layout.topMargin: Kirigami.Units.smallSpacing
                 spacing: Kirigami.Units.smallSpacing / 2
 
                 Item {
@@ -199,7 +198,6 @@ Rectangle {
                         id: overviewMeterCaption
 
                         text: overviewMeter.modelData.label || ""
-                        font.pointSize: Kirigami.Theme.smallFont.pointSize
                         font.weight: Font.DemiBold
                         opacity: overviewRow.applet.valueTextOpacity
                         anchors.left: parent.left

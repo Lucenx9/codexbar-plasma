@@ -13,6 +13,7 @@ Item {
     default property alias tabs: providerTabs.data
     required property real surfaceRadius
     readonly property real tabHeight: providerTabsFlickable.height
+    readonly property real tabRadius: Math.max(0, surfaceRadius - providerTabsFlickable.anchors.margins)
     readonly property real tabPageStep: Math.max(Kirigami.Units.gridUnit * 4, providerTabsFlickable.width * 0.6)
     readonly property real tabWheelStep: Kirigami.Units.gridUnit * 5
     property Item selectedTab: null

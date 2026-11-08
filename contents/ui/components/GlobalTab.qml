@@ -34,7 +34,7 @@ Rectangle {
     Layout.preferredHeight: tabHeight
     implicitWidth: Layout.preferredWidth
     implicitHeight: tabHeight
-    radius: applet.roundedSurfaceRadius
+    radius: tabStrip ? tabStrip.tabRadius : applet.roundedSurfaceRadius
     color: tabMouse.pressed
         ? applet.withAlpha(Kirigami.Theme.focusColor, 0.24)
         : (selected
