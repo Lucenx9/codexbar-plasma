@@ -14,6 +14,7 @@ from qml_surfaces import Surface
 QML = r'''import QtQuick
 import QtTest
 import "SOURCE_URL/config/ProviderCredentials.js" as ProviderCredentials
+import "SOURCE_URL/config/ProviderCapabilities.js" as ProviderCapabilities
 import "SOURCE_URL/config/ProviderSource.js" as ProviderSource
 import "SOURCE_URL/config/ProviderOperations.js" as ProviderOperations
 import "SOURCE_URL/config/ProviderConfigProtocol.js" as ProviderConfigProtocol
@@ -560,7 +561,7 @@ class ProviderSourceTests(unittest.TestCase):
                  "startDeviceLogin", "startCredentialCommand", "cancelDeviceLogin", "deviceLoginActive",
                  "handleCredentialResult", "setProviderSource", "handleSetSourceResult", "setApiKey", "apiKeyPrompt", "visualEnabled",
                  "retireProviderDiagnostic", "invalidateProviderDiagnostic",
-                 "providerCommandFailureText", "handleCliVersionResult", "handleData",
+                 "providerCommandFailureText", "applyProviderCapabilities", "handleCliVersionResult", "handleData",
                  "applySetSourceResult", "runReloadDeferredBySourceWrite",
                  "providerByID", "markPending", "isPending", "runCommand", "copyObject",
                  "hasOwnKey", "expireConfigCommands", "handleConfigCommandTimeout",
