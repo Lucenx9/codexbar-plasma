@@ -26,6 +26,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Give the Cost/Tokens switch even inner margins and space the provider
+  header's account and plan like other popup metadata.
 - Keep Popup settings focused on content and provider navigation. Move hidden
   detail sections and usage rows to a collapsed **Hidden items** section at the
   bottom, with live counts and pending restores preserved. Show the Overview
