@@ -25,33 +25,19 @@ reject_in_file "$PROVIDERS_QML" "return field.options.length > 0 ? 0 : -1"
 # fallback titles are executed by tests/tst_provider_names.qml against the
 # real ProviderNames.titleForKey.
 
-python3 - "$PROVIDERS_QML" "${ROOT_DIR}/contents/ui/config/ProviderCapabilities.js" <<'PY'
+python3 - "$PROVIDERS_QML" <<'PY'
 import pathlib
-import re
 import sys
 
 text = pathlib.Path(sys.argv[1]).read_text(encoding="utf-8")
 start = text.index("    function supportsApiKeySetup(providerID)")
 end = text.index("    function providerDocsUrl(providerID)", start)
 body = text[start:end]
-descriptor_owned = {"aiand", "clinepass", "deepinfra", "neuralwatt", "sub2api", "xai", "zenmux"}
-policy = pathlib.Path(sys.argv[2]).read_text(encoding="utf-8")
-key_gates = re.search(r'var keyCapabilities\s*=\s*\{(.*?)\}', policy, re.S)
-legacy = re.search(r'var legacyApiKeyProviders\s*=\s*\[(.*?)\]', policy, re.S)
-if key_gates is None or legacy is None:
-    print("provider capability lists are missing", file=sys.stderr)
-    sys.exit(1)
-providers = re.findall(r'\b([a-z0-9]+)\s*:', key_gates.group(1))
-providers += re.findall(r'"([^"]+)"', legacy.group(1))
-hardcoded = sorted(descriptor_owned.intersection(providers))
-if hardcoded:
-    print("descriptor-owned API key capability hardcoded in fallback policy: " + ", ".join(hardcoded), file=sys.stderr)
-    sys.exit(1)
-
 if "ProviderCapabilities.supportsApiKey(" not in body:
     print("the Providers page must delegate API-key capability policy", file=sys.stderr)
     sys.exit(1)
-# Provider/version behavior runs through tests/tst_provider_capabilities.qml.
+# Provider/version and descriptor-only fallback behavior run through
+# tests/tst_provider_capabilities.qml against the public policy interface.
 
 for function_name in ("setEnabled", "setApiKey", "loadProviderSettings", "providerCliCommandText"):
     marker = f"    function {function_name}("

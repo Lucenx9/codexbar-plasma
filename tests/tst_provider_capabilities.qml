@@ -39,6 +39,16 @@ TestCase {
         }
     }
 
+    function test_descriptorOwnedProvidersNeverUseFallback() {
+        for (var version of ["0.53.0", "0.83.0"]) {
+            var capabilities = Capabilities.versionCapabilities(version, 0)
+            for (var provider of ["aiand", "clinepass", "deepinfra", "neuralwatt", "sub2api", "xai", "zenmux"]) {
+                verify(!Capabilities.supportsApiKey(provider, null, capabilities), provider + " without descriptor")
+                verify(!Capabilities.supportsApiKey(provider, {supportsConfigAPIKey: true}, capabilities), provider)
+            }
+        }
+    }
+
     function test_providerAndAuthenticationRestrictions() {
         var old = Capabilities.versionCapabilities("0.53.0", 0)
         var current = Capabilities.versionCapabilities("0.83.0", 0)
