@@ -36,6 +36,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   detail sections and usage rows to a collapsed **Hidden items** section at the
   bottom, with live counts and pending restores preserved. Show the Overview
   provider checklist and its limit only in manual mode.
+  Align the provider-order label with its first row, keeping empty-list messages
+  top-aligned, and give provider names the full content width before the move buttons.
+  Keep the automatic Overview hint below its choice in both modes so switching
+  does not move the radio buttons; align manual options with the radio text in
+  both layout directions.
 
 - Clarify the usage-sharing window's actions: emphasize Copy image, group
   export commands separately from Close, and keep short copy/save feedback

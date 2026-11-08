@@ -291,8 +291,11 @@ KCM.SimpleKCM {
         }
 
         ColumnLayout {
+            id: providerOrderColumn
             Kirigami.FormData.label: i18n("Provider order:")
-            Kirigami.FormData.labelAlignment: Qt.AlignTop
+            Kirigami.FormData.labelAlignment: providerOrderRepeater.count > 0 ? 0 : Qt.AlignTop
+            Kirigami.FormData.buddyFor: providerOrderRepeater.count > 0
+                ? providerOrderRepeater.itemAt(0) : providerOrderColumn
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
@@ -339,7 +342,6 @@ KCM.SimpleKCM {
                     onYChanged: page.revealFocusedOrderButton(upButton, downButton)
 
                     Layout.fillWidth: true
-                    Layout.maximumWidth: Kirigami.Units.gridUnit * 18
                     spacing: Kirigami.Units.smallSpacing
 
                     Components.PlainControlsLabel {
@@ -438,19 +440,9 @@ KCM.SimpleKCM {
                 onClicked: page.resetOverviewProvidersToAutomatic()
             }
 
-            Controls.RadioButton {
-                objectName: "overviewCustomRadio"
-                implicitWidth: 0
-                Layout.fillWidth: true
-                text: i18n("Choose providers")
-                checked: OverviewProviders.selectionActive(page.cfg_overviewProviderIDs)
-                onClicked: page.cfg_overviewProviderIDs = OverviewProviders.selectionText(page.resolvedOverviewProviderIDs())
-            }
-
             Components.PlainControlsLabel {
                 objectName: "overviewAutomaticHint"
                 Layout.fillWidth: true
-                visible: !OverviewProviders.selectionActive(page.cfg_overviewProviderIDs)
                 text: i18n("Follows the provider order above.")
                 font: Kirigami.Theme.smallFont
                 opacity: 0.7
@@ -459,10 +451,21 @@ KCM.SimpleKCM {
                 wrapMode: Text.WordWrap
             }
 
+            Controls.RadioButton {
+                id: overviewCustomRadio
+                objectName: "overviewCustomRadio"
+                implicitWidth: 0
+                Layout.fillWidth: true
+                text: i18n("Choose providers")
+                checked: OverviewProviders.selectionActive(page.cfg_overviewProviderIDs)
+                onClicked: page.cfg_overviewProviderIDs = OverviewProviders.selectionText(page.resolvedOverviewProviderIDs())
+            }
+
             // The cap applies to the custom list, so it introduces those boxes.
             Components.PlainControlsLabel {
+                objectName: "overviewCustomHint"
                 Layout.fillWidth: true
-                Layout.leftMargin: Kirigami.Units.gridUnit
+                Layout.leftMargin: overviewCustomRadio.indicator.width + overviewCustomRadio.spacing
                 visible: OverviewProviders.selectionActive(page.cfg_overviewProviderIDs)
                 text: i18np("Choose up to %1 provider", "Choose up to %1 providers", page.maxOverviewProviders)
                 font: Kirigami.Theme.smallFont
@@ -487,7 +490,7 @@ KCM.SimpleKCM {
                     checked: selected
                     enabled: OverviewProviders.selectionActive(page.cfg_overviewProviderIDs)
                         && (selected || page.selectedOverviewProviderCount() < page.maxOverviewProviders)
-                    Layout.leftMargin: Kirigami.Units.gridUnit
+                    Layout.leftMargin: overviewCustomRadio.indicator.width + overviewCustomRadio.spacing
                     onClicked: {
                         page.toggleOverviewProvider(modelData.provider, checked)
                         // Clicking severs the binding on `checked`; restore it so the box reflects the
