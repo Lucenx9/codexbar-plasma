@@ -110,7 +110,11 @@ def state_record(root):
         if not isinstance(value, str) or (value and not pattern.fullmatch(value)):
             raise ValueError("state_field")
     last_attempt = state.get("lastAttempt", 0)
-    if type(last_attempt) not in (int, float) or not math.isfinite(last_attempt):
+    try:
+        valid_time = type(last_attempt) in (int, float) and math.isfinite(last_attempt)
+    except OverflowError:
+        valid_time = False
+    if not valid_time:
         raise ValueError("state_time")
     activation = state.pop("activation", None)
     if activation is not None:

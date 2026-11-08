@@ -1340,6 +1340,8 @@ independently of release-check notifications. Selecting another command dims the
 setting once it is off, and leaves it switchable while it is still on. Widget
 instances using the same user data directory share one installation, lock and
 daily attempt timestamp.
+An invalid stored attempt timestamp reports a managed-CLI failure without
+rewriting the state file or changing the active version.
 Any instance with automatic updates enabled can update that shared copy. Failed
 automatic attempts retry the next day; manual actions bypass the daily interval.
 An installation already in progress can finish after closing settings or disabling
