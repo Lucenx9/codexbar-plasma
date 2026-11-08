@@ -43,6 +43,12 @@ if [[ -x "$QT_PATHS_TOOL" ]] \
     PlainTextControls::test_checkBoxPreservesVisibleText
   QT_QUICK_CONTROLS_STYLE=org.kde.desktop QT_QPA_PLATFORMTHEME=kde \
     QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
+    run_qml_tests -input "$ROOT_DIR/tests/tst_visual_layout.qml" \
+    VisualLayout::test_providerResetCountdownDoesNotTruncate \
+    VisualLayout::test_providerResetPlacement \
+    VisualLayout::test_providerUsageMetadataAdaptsToAvailableWidth
+  QT_QUICK_CONTROLS_STYLE=org.kde.desktop QT_QPA_PLATFORMTHEME=kde \
+    QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
     run_qml_tests -input "$ROOT_DIR/tests/tst_panel_settings_geometry.qml"
   QT_QUICK_CONTROLS_STYLE=org.kde.desktop QT_QPA_PLATFORMTHEME=kde \
     QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
