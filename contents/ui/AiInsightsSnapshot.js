@@ -75,15 +75,7 @@ function dateKey(date) {
     return date.getFullYear() + "-" + (month < 10 ? "0" : "") + month + "-" + (day < 10 ? "0" : "") + day
 }
 
-// Two complete, adjacent seven-day periods ending yesterday, or nothing. Today
-// is partial and a missing or unknown day would make the comparison invented.
-// The history ends at the day it was scanned, so it must reach today: a scan
-// from before midnight saw only part of yesterday.
-function periods(tokenCost, nowMs, metric) {
-    var daily = field(tokenCost, "daily")
-    if (!Array.isArray(daily) || field(tokenCost, "historyCoverageEstablished") === false) {
-        return null
-    }
+function historyDates(daily) {
     var byDate = ({})
     for (var i = 0; i < daily.length && i < 400; i++) {
         var label = field(daily[i], "label")
@@ -93,12 +85,12 @@ function periods(tokenCost, nowMs, metric) {
             byDate[label] = Guards.hasOwnKey(byDate, label) ? null : daily[i]
         }
     }
+    return byDate
+}
+
+function periodTotals(byDate, now, metric) {
     var sums = [0, 0]
     var incomplete = false
-    var now = new Date(nowMs)
-    if (!Guards.hasOwnKey(byDate, dateKey(now)) || byDate[dateKey(now)] === null) {
-        return null
-    }
     for (var offset = 1; offset <= comparisonDays * 2; offset++) {
         // Construct at local noon so a spring-forward transition at 00:00
         // cannot roll the calendar day back into the previous date.
@@ -117,29 +109,40 @@ function periods(tokenCost, nowMs, metric) {
         sums[slot] = next
         incomplete = incomplete || (finite(field(record, "incompleteRequests")) && record.incompleteRequests > 0)
     }
-    var result = {last7Days: sums[0], previous7Days: sums[1]}
-    if (sums[1] > 0) {
-        var changePercent = Math.round((sums[0] - sums[1]) / sums[1] * 100)
-        // A large increase reads better as a multiple, and small models
-        // divide unreliably, so the multiple is computed here. Only one form
-        // is sent: given both, small models keep the percentage. An
-        // unrepresentable change is omitted; the honest sums stay.
-        if (finite(changePercent)) {
-            if (changePercent > 300) {
-                var ratio = sums[0] / sums[1]
-                var multiple = ratio < 10 ? Math.round(ratio * 10) / 10 : Math.round(ratio)
-                if (finite(multiple)) {
-                    result.changeMultiple = multiple
-                }
-            } else {
-                result.changePercent = changePercent
-            }
-        }
-    }
-    if (incomplete) {
-        result.incomplete = true
-    }
+    return {sums: sums, incomplete: incomplete}
+}
+
+function periodChange(current, previous) {
+    if (!(previous > 0)) return null
+    var percent = Math.round((current - previous) / previous * 100)
+    if (!finite(percent)) return null
+    if (percent <= 300) return {key: "changePercent", value: percent}
+    // Keep one precomputed form; small models otherwise confuse multiples and percentages.
+    var ratio = current / previous
+    var multiple = ratio < 10 ? Math.round(ratio * 10) / 10 : Math.round(ratio)
+    return finite(multiple) ? {key: "changeMultiple", value: multiple} : null
+}
+
+function periodComparison(totals) {
+    var result = {last7Days: totals.sums[0], previous7Days: totals.sums[1]}
+    var change = periodChange(totals.sums[0], totals.sums[1])
+    if (change) result[change.key] = change.value
+    if (totals.incomplete) result.incomplete = true
     return result
+}
+
+// Two complete, adjacent seven-day periods ending yesterday, or nothing. Today
+// is partial and a missing or unknown day would make the comparison invented.
+// The history ends at the day it was scanned, so it must reach today: a scan
+// from before midnight saw only part of yesterday.
+function periods(tokenCost, nowMs, metric) {
+    var daily = field(tokenCost, "daily")
+    if (!Array.isArray(daily) || field(tokenCost, "historyCoverageEstablished") === false) return null
+    var byDate = historyDates(daily)
+    var now = new Date(nowMs)
+    if (!Guards.hasOwnKey(byDate, dateKey(now)) || byDate[dateKey(now)] === null) return null
+    var totals = periodTotals(byDate, now, metric)
+    return totals ? periodComparison(totals) : null
 }
 
 function spend(tokenCost, nowMs) {
@@ -223,47 +226,42 @@ function providerRecord(item, nowMs) {
     return record
 }
 
+function quotaSignal(provider, q, warningPercent) {
+    if (q.usedPercent >= 100) {
+        return {kind: "quotaExhausted", provider: provider, window: q.window, resetsInHours: q.resetsInHours}
+    }
+    if (q.forecast === "runsOutBeforeReset") {
+        return {kind: "quotaRunsOutBeforeReset", provider: provider, window: q.window,
+            runsOutInHours: q.runsOutInHours, resetsInHours: q.resetsInHours}
+    }
+    return q.usedPercent >= warningPercent
+        ? {kind: "quotaNearLimit", provider: provider, window: q.window, usedPercent: q.usedPercent} : null
+}
+
+function changeSignal(provider, period, kind) {
+    var signal = null
+    if (period && finite(period.changeMultiple)) {
+        signal = {kind: kind, provider: provider, changeMultiple: period.changeMultiple}
+    } else if (period && finite(period.changePercent) && Math.abs(period.changePercent) >= changeSignalPercent) {
+        signal = {kind: kind, provider: provider, changePercent: period.changePercent}
+    }
+    if (signal && period.currency) signal.currency = period.currency
+    return signal
+}
+
 function signals(records, warningPercent) {
     var result = []
     function add(signal) {
-        if (result.length < maximumSignals) {
-            result.push(signal)
-        }
+        if (signal && result.length < maximumSignals) result.push(signal)
     }
     for (var i = 0; i < records.length; i++) {
         var record = records[i]
         for (var j = 0; record.quotas && j < record.quotas.length; j++) {
-            var q = record.quotas[j]
-            if (q.usedPercent >= 100) {
-                add({kind: "quotaExhausted", provider: record.id, window: q.window,
-                    resetsInHours: q.resetsInHours})
-            } else if (q.forecast === "runsOutBeforeReset") {
-                add({kind: "quotaRunsOutBeforeReset", provider: record.id, window: q.window,
-                    runsOutInHours: q.runsOutInHours, resetsInHours: q.resetsInHours})
-            } else if (q.usedPercent >= warningPercent) {
-                add({kind: "quotaNearLimit", provider: record.id, window: q.window, usedPercent: q.usedPercent})
-            }
+            add(quotaSignal(record.id, record.quotas[j], warningPercent))
         }
-        var kinds = [["spend", "spendChange"], ["tokens", "tokenChange"]]
-        for (var k = 0; k < kinds.length; k++) {
-            var period = record[kinds[k][0]]
-            var signal = null
-            if (period && finite(period.changeMultiple)) {
-                signal = {kind: kinds[k][1], provider: record.id, changeMultiple: period.changeMultiple}
-            } else if (period && finite(period.changePercent)
-                    && Math.abs(period.changePercent) >= changeSignalPercent) {
-                signal = {kind: kinds[k][1], provider: record.id, changePercent: period.changePercent}
-            }
-            if (signal) {
-                if (period.currency) {
-                    signal.currency = period.currency
-                }
-                add(signal)
-            }
-        }
-        if (record.incident) {
-            add({kind: "serviceIncident", provider: record.id, severity: record.incident})
-        }
+        add(changeSignal(record.id, record.spend, "spendChange"))
+        add(changeSignal(record.id, record.tokens, "tokenChange"))
+        if (record.incident) add({kind: "serviceIncident", provider: record.id, severity: record.incident})
     }
     return result
 }

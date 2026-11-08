@@ -424,40 +424,34 @@ def require_key(provider):
     return key
 
 
-def model_records(provider, payload):
-    records = []
+def _model_record(provider, item):
+    if not isinstance(item, dict):
+        return None
     if provider == "ollama":
-        items = payload.get("models") if isinstance(payload, dict) else None
-        for item in items if isinstance(items, list) else []:
-            name = item.get("name") if isinstance(item, dict) else None
-            if isinstance(name, str) and MODEL_PATTERN.match(name):
-                records.append({"id": name, "label": name})
-    else:
-        items = payload.get("data") if isinstance(payload, dict) else None
-        for item in items if isinstance(items, list) else []:
-            if not isinstance(item, dict) or not isinstance(item.get("id"), str):
-                continue
-            model_id = item["id"]
-            if not MODEL_PATTERN.match(model_id) or not valid_model(provider, model_id):
-                continue
-            if provider == "openrouter":
-                # Batch variants serve only OpenRouter's asynchronous Batch API.
-                if model_id.endswith(":batch"):
-                    continue
-                parameters = item.get("supported_parameters")
-                # require_parameters routing needs a structured-output endpoint.
-                if not isinstance(parameters, list) or "structured_outputs" not in parameters:
-                    continue
-                name = item.get("name")
-                label = name.strip()[:120] if isinstance(name, str) and name.strip() else model_id
-                records.append({"id": model_id, "label": "".join(c for c in label if c.isprintable())})
-            else:
-                if (not re.match(r"^(gpt-|o[0-9]|chatgpt-)", model_id) or OPENAI_LEGACY.match(model_id)
-                        or OPENAI_NO_SCHEMA.match(model_id)
-                        or any(part in model_id for part in OPENAI_EXCLUDED)):
-                    continue
-                records.append({"id": model_id, "label": model_id})
-    unique = {record["id"]: record for record in records}
+        name = item.get("name")
+        return {"id": name, "label": name} if isinstance(name, str) and MODEL_PATTERN.match(name) else None
+    model_id = item.get("id")
+    if not isinstance(model_id, str) or not MODEL_PATTERN.match(model_id) or not valid_model(provider, model_id):
+        return None
+    if provider == "openrouter":
+        # Batch variants and routes without structured outputs cannot generate an insight.
+        parameters = item.get("supported_parameters")
+        if model_id.endswith(":batch") or not isinstance(parameters, list) or "structured_outputs" not in parameters:
+            return None
+        name = item.get("name")
+        label = name.strip()[:120] if isinstance(name, str) and name.strip() else model_id
+        return {"id": model_id, "label": "".join(c for c in label if c.isprintable())}
+    if (not re.match(r"^(gpt-|o[0-9]|chatgpt-)", model_id) or OPENAI_LEGACY.match(model_id)
+            or OPENAI_NO_SCHEMA.match(model_id) or any(part in model_id for part in OPENAI_EXCLUDED)):
+        return None
+    return {"id": model_id, "label": model_id}
+
+
+def model_records(provider, payload):
+    key = "models" if provider == "ollama" else "data"
+    items = payload.get(key) if isinstance(payload, dict) else None
+    records = (_model_record(provider, item) for item in items) if isinstance(items, list) else ()
+    unique = {record["id"]: record for record in records if record is not None}
     return sorted(unique.values(), key=lambda record: record["id"].lower())[:MAX_MODELS]
 
 
@@ -568,14 +562,7 @@ def insight(content):
     return {"status": "ok", "summary": summary, "highlights": cleaned[:MAX_HIGHLIGHTS]}
 
 
-def completion_content(provider, payload, headers=None):
-    if not isinstance(payload, dict):
-        raise Failure("format")
-    if provider == "ollama":
-        message = payload.get("message")
-        if payload.get("done_reason") == "length":
-            raise Failure("truncated")
-        return message.get("content") if isinstance(message, dict) else None
+def _cloud_choice(provider, payload, headers):
     choices = payload.get("choices")
     detail = payload.get("error")
     if not choices and isinstance(detail, dict):
@@ -586,7 +573,18 @@ def completion_content(provider, payload, headers=None):
                              headers if headers is not None else {})
     if not isinstance(choices, list) or not choices or not isinstance(choices[0], dict):
         raise Failure("format")
-    choice = choices[0]
+    return choices[0]
+
+
+def completion_content(provider, payload, headers=None):
+    if not isinstance(payload, dict):
+        raise Failure("format")
+    if provider == "ollama":
+        message = payload.get("message")
+        if payload.get("done_reason") == "length":
+            raise Failure("truncated")
+        return message.get("content") if isinstance(message, dict) else None
+    choice = _cloud_choice(provider, payload, headers)
     message = choice.get("message") if isinstance(choice.get("message"), dict) else {}
     if message.get("refusal") or choice.get("finish_reason") == "content_filter":
         raise Failure("refused")
