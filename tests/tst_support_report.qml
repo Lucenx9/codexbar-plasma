@@ -94,6 +94,42 @@ TestCase {
         verify(loader.indexOf("alice") < 0)
     }
 
+    function test_windowsPathsNeverReachSharedReports_data() {
+        var paths = ["C:\\Users\\private-alice\\project\\config.json",
+            "d:\\private alice\\project\\config.json",
+            "\\\\private-host\\private-share\\private-alice\\config.json",
+            "\\\\?\\C:\\Users\\private-alice\\config.json",
+            "\\\\private-host\\共有\\private-alice\\config.json",
+            "private-alice\\project\\config.json",
+            ".\\private-alice\\project\\config.json",
+            "..\\private-alice\\project\\config.json"];
+        var cases = [];
+        for (var i = 0; i < paths.length; i++) {
+            cases.push({tag: "plain-" + i, diagnostic: "Could not open " + paths[i]});
+            cases.push({tag: "quoted-" + i, diagnostic: 'Could not open "' + paths[i] + '"'});
+            var encoded = JSON.stringify({file: paths[i]});
+            cases.push({tag: "json-" + i, diagnostic: "Could not open " + encoded});
+            cases.push({tag: "nested-json-" + i, diagnostic: JSON.stringify({error: encoded})});
+        }
+        cases.push({tag: "unicode-escape", diagnostic: 'Could not open {"file":"C:\\u005cUsers\\u005cprivate-alice\\u005cconfig.json"}'});
+        return cases;
+    }
+
+    function test_windowsPathsNeverReachSharedReports(data) {
+        compare(SupportReport.sharedText(data.diagnostic), "[path]");
+        var report = SupportReport.markdown({checkError: data.diagnostic, lastError: data.diagnostic});
+        for (var personal of ["private-alice", "private alice", "private-host", "private-share", "共有"])
+            verify(report.indexOf(personal) < 0, "Shared report retained private path content");
+    }
+
+    function test_windowsPathsKeepOnlyFixedFailureReasonsAndOtherLines() {
+        compare(SupportReport.sharedText("C:\\Users\\private-alice\\tool: Permission denied"), "[path]: Permission denied");
+        compare(SupportReport.sharedText("Before\nCould not open \\\\private-host\\private-share\\file\nExit code 2"),
+            "Before [path] Exit code 2");
+        compare(SupportReport.sharedText('HTTP 403: {"message":"Try \\"again\\" later"}'),
+            'HTTP 403: {"message":"Try \\"again\\" later"}');
+    }
+
     function test_relativeAndTildePathsOmitTheWholeDiagnosticLine() {
         for (var path of ["alice/project/config.json", "~alice/.config/tool", "~/private-alice/tool",
                           "./alice/tool", "../alice/tool", '"private alice/project/config.json"',

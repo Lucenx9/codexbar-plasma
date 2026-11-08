@@ -1493,13 +1493,15 @@ the accessible name of its command-path field. `SupportReport.js` accepts
 explicit facts and produces a bounded English technical Markdown report; QML
 owns module probes, localization, processes, clipboard and feedback. The
 report omits resolved paths, retains only the selected/PATH CLI location
-comparison, and omits whole slash-containing error lines. This covers absolute,
-relative and tilde-qualified paths, custom layouts and paths containing spaces
+comparison, and omits whole error lines containing forward slashes or path-like
+backslashes. This covers absolute, relative and tilde-qualified paths, Windows
+drive roots and UNC shares, custom layouts and paths containing spaces
 without guessing path boundaries. Local probe facts and the Diagnostics version
 display retain their paths. Lines with prior credential-redaction markers are
 omitted too, since that filtering may have consumed a path separator. JSON slash
-escapes are normalized before filtering, and common executable startup failures
-retain only a fixed reason, never the personal path or library filename.
+escapes and Unicode backslash escapes are normalized before filtering. Ordinary
+JSON quote escapes remain literal. Common executable startup failures retain
+only a fixed reason, never the personal path or library filename.
 `SafeText.js` redacts secret-key and secret-access-key assignments alongside
 the existing credential names, including environment-variable and SDK spellings.
 It also matches keys whose quotes are backslash-escaped by one or more JSON

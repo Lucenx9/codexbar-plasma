@@ -43,9 +43,11 @@ function sharedText(value, limit) {
     if (typeof value !== "string") return ""
     return SafeText.truncatedText(SafeText.cliDiagnostic(value, SafeText.maximumDiagnosticLength)
         .replace(/\\u002f|\\\//gi, "/")
-        // Earlier credential filtering may consume a path's slash. Treat its
+        .replace(/\\u005c/gi, "\\")
+        // Earlier credential filtering may consume a path's separator. Treat its
         // marker as ambiguous too, and never guess either path boundary.
-        .replace(/^[^\r\n]*(?:\/|\[redacted\])[^\r\n]*/gim, redactedDiagnosticLine)
+        // Backslashes immediately before quotes can be JSON syntax.
+        .replace(/^[^\r\n]*(?:\/|\\(?![\\"'])|\[redacted\])[^\r\n]*/gim, redactedDiagnosticLine)
         .replace(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, "[email]")
         // Escaped JSON embedded in a CLI error quotes keys and values with
         // backslashes; as in SafeText, such a value redacts the rest of the line.
@@ -59,7 +61,7 @@ function sharedText(value, limit) {
 function redactedDiagnosticLine(value) {
     // Keep common startup failures as fixed text, without retaining a path's
     // arbitrary suffix or a loader's potentially personal library filename.
-    var marker = value.indexOf("/") >= 0 ? "[path]" : "[redacted]"
+    var marker = /\/|\\(?![\\"'])/.test(value) ? "[path]" : "[redacted]"
     if (/: error while loading shared libraries:/.test(value)) {
         return marker + ": error while loading shared libraries"
     }
