@@ -99,39 +99,47 @@ def owns_command(command):
         and installed(root) is not None
 
 
-def state_record(root):
-    try:
-        state = read_json(root / "state.json")
-    except FileNotFoundError:
-        return {}
-    for key in ("previous", "blockedVersion"):
-        value = state.get(key, "")
-        pattern = RELEASE_DIRECTORY if key == "previous" else re.compile(cli_release.VERSION)
+def _validate_state_fields(record, keys, error):
+    for key in keys:
+        value = record.get(key, "")
+        pattern = re.compile(cli_release.VERSION) if key == "blockedVersion" else RELEASE_DIRECTORY
         if not isinstance(value, str) or (value and not pattern.fullmatch(value)):
-            raise ValueError("state_field")
-    last_attempt = state.get("lastAttempt", 0)
+            raise ValueError(error)
+
+
+def _validate_attempt_time(last_attempt):
     try:
         valid_time = type(last_attempt) in (int, float) and math.isfinite(last_attempt)
     except OverflowError:
         valid_time = False
     if not valid_time:
         raise ValueError("state_time")
+
+
+def _recover_activation(root, state, activation):
+    if not isinstance(activation, dict):
+        raise ValueError("activation_shape")
+    _validate_state_fields(activation, ("target", "before", "previous", "blockedVersion"), "activation_field")
+    current = os.readlink(root / "current") if (root / "current").is_symlink() else ""
+    if current == activation.get("target"):
+        return
+    if current != activation.get("before"):
+        raise ValueError("activation_state")
+    # A crash before the atomic switch must not discard the earlier rollback target.
+    state["previous"] = activation.get("previous", "")
+    state["blockedVersion"] = activation.get("blockedVersion", "")
+
+
+def state_record(root):
+    try:
+        state = read_json(root / "state.json")
+    except FileNotFoundError:
+        return {}
+    _validate_state_fields(state, ("previous", "blockedVersion"), "state_field")
+    _validate_attempt_time(state.get("lastAttempt", 0))
     activation = state.pop("activation", None)
     if activation is not None:
-        if not isinstance(activation, dict):
-            raise ValueError("activation_shape")
-        for key in ("target", "before", "previous", "blockedVersion"):
-            value = activation.get(key, "")
-            pattern = re.compile(cli_release.VERSION) if key == "blockedVersion" else RELEASE_DIRECTORY
-            if not isinstance(value, str) or (value and not pattern.fullmatch(value)):
-                raise ValueError("activation_field")
-        current = os.readlink(root / "current") if (root / "current").is_symlink() else ""
-        if current != activation.get("target"):
-            if current != activation.get("before"):
-                raise ValueError("activation_state")
-            # A crash before the atomic switch must not discard the earlier rollback target.
-            state["previous"] = activation.get("previous", "")
-            state["blockedVersion"] = activation.get("blockedVersion", "")
+        _recover_activation(root, state, activation)
     return state
 
 
@@ -260,6 +268,42 @@ class ExpandedArchive:
         return raw
 
 
+def _validate_archive_name(name, seen):
+    if len(seen) >= 256 or name in seen or len(name) > 200 \
+            or str(PurePosixPath(name)) != name or ".." in PurePosixPath(name).parts:
+        raise ValueError("archive_name")
+
+
+def _validate_archive_file(member, expanded):
+    if not member.isfile():
+        raise ValueError("archive_type")
+    limits = {"CodexBarCLI": MAX_EXPANDED, "VERSION": 128, "THIRD_PARTY_NOTICES": MAX_NOTICE}
+    is_resource = re.fullmatch(r"CodexBar_CodexBarCore\.bundle/[A-Za-z0-9_.-]+", member.name) is not None
+    maximum = 16 * 1024 * 1024 if is_resource else limits.get(member.name)
+    if maximum is None:
+        raise ValueError("archive_type")
+    expanded += member.size
+    if not 0 <= member.size <= maximum or expanded > MAX_EXPANDED:
+        raise ValueError("archive_size")
+    return expanded
+
+
+def _extract_archive_member(bundle, member, destination, expanded):
+    name = member.name
+    if name == "codexbar" and member.issym() and member.linkname == "CodexBarCLI":
+        return expanded  # Create this single known alias ourselves after extraction.
+    if name == "CodexBar_CodexBarCore.bundle" and member.isdir():
+        (destination / name).mkdir(exist_ok=True)
+        return expanded
+    expanded = _validate_archive_file(member, expanded)
+    target = destination / name
+    target.parent.mkdir(exist_ok=True)
+    with bundle.extractfile(member) as source, target.open("xb") as output:
+        shutil.copyfileobj(source, output, 1024 * 1024)
+    target.chmod(0o700 if name == "CodexBarCLI" else 0o600)
+    return expanded
+
+
 def unpack(archive, destination):
     """Allow only the official executable, alias, metadata and flat resource bundle."""
     seen = set()
@@ -267,31 +311,9 @@ def unpack(archive, destination):
     with gzip.open(archive, "rb") as compressed, \
             tarfile.open(fileobj=ExpandedArchive(compressed), mode="r|") as bundle:
         for member in bundle:
-            name = member.name
-            if len(seen) >= 256 or name in seen or len(name) > 200 \
-                    or str(PurePosixPath(name)) != name or ".." in PurePosixPath(name).parts:
-                raise ValueError("archive_name")
-            seen.add(name)
-            is_resource = re.fullmatch(r"CodexBar_CodexBarCore\.bundle/[A-Za-z0-9_.-]+", name) is not None
-            is_notice = name == "THIRD_PARTY_NOTICES"
-            if name == "codexbar" and member.issym() and member.linkname == "CodexBarCLI":
-                continue  # Create this single known alias ourselves after extraction.
-            if name == "CodexBar_CodexBarCore.bundle" and member.isdir():
-                (destination / name).mkdir(exist_ok=True)
-                continue
-            if not member.isfile() or not (name in ("CodexBarCLI", "VERSION") or is_notice or is_resource):
-                raise ValueError("archive_type")
-            expanded += member.size
-            if expanded > MAX_EXPANDED or member.size < 0 \
-                    or (name == "VERSION" and member.size > 128) \
-                    or (is_notice and member.size > MAX_NOTICE) \
-                    or (is_resource and member.size > 16 * 1024 * 1024):
-                raise ValueError("archive_size")
-            target = destination / name
-            target.parent.mkdir(exist_ok=True)
-            with bundle.extractfile(member) as source, target.open("xb") as output:
-                shutil.copyfileobj(source, output, 1024 * 1024)
-            target.chmod(0o700 if name == "CodexBarCLI" else 0o600)
+            _validate_archive_name(member.name, seen)
+            seen.add(member.name)
+            expanded = _extract_archive_member(bundle, member, destination, expanded)
     if not {"CodexBarCLI", "codexbar", "VERSION"}.issubset(seen):
         raise ValueError("archive_missing")
     (destination / "codexbar").symlink_to("CodexBarCLI")
@@ -307,12 +329,63 @@ def probe_version(command, version, home):
         return False
 
 
+def _prepare_release(stage, version, assets):
+    archive, checksum = stage / "archive.tar.gz", stage / "archive.sha256"
+    download(assets[0], archive)
+    download(assets[1], checksum)
+    expected = assets[0]["digest"][7:]
+    try:
+        checksum_text = checksum.read_text()
+    except UnicodeDecodeError:
+        raise ValueError("checksum_file") from None
+    if checksum_text.strip() not in (expected + "  " + assets[0]["name"], expected + " *" + assets[0]["name"]):
+        raise ValueError("checksum_file")
+    extracted = stage / "release"
+    extracted.mkdir()
+    unpack(archive, extracted)
+    try:
+        staged_version = (extracted / "VERSION").read_text()
+    except UnicodeDecodeError:
+        raise ValueError("version_file") from None
+    if staged_version.strip() not in (version, "v" + version):
+        raise ValueError("version_file")
+    home = stage / "probe-home"
+    home.mkdir()
+    if not probe_version(extracted / "codexbar", version, home):
+        raise ValueError("version_probe")
+    (extracted / "receipt.json").write_text(json.dumps(dict(version=version, sha256=expected)))
+    return extracted, "releases/v" + version + "-" + expected[:16]
+
+
+def _replace_release(root, target, extracted, current_target):
+    retained = None
+    if (root / target).exists():
+        # Replace a retained copy only with freshly verified content, never the active copy.
+        if not installed(root, target) or target == current_target:
+            raise ValueError("existing_release")
+        # Keep recovery outside staging: even a failed restore must survive
+        # TemporaryDirectory cleanup for manual recovery.
+        retained = root / (".retained-" + uuid.uuid4().hex)
+        os.rename(root / target, retained)
+    try:
+        os.rename(extracted, root / target)
+    except OSError:
+        if retained is not None:
+            os.rename(retained, root / target)
+        raise
+    if retained is not None:
+        try:
+            shutil.rmtree(retained)
+        except OSError:
+            pass  # The verified replacement is already in place.
+
+
 def install(root, automatic=False):
     current = installed(root)
     state = state_record(root)
     now = time.time()
     last = state.get("lastAttempt", 0)
-    if automatic and isinstance(last, (int, float)) and 0 <= now - last < 86400:
+    if automatic and 0 <= now - last < 86400:
         return status(root)
     # Shared throttle also covers failures and concurrent widget instances.
     state["lastAttempt"] = now
@@ -324,54 +397,11 @@ def install(root, automatic=False):
         return status(root)
     if automatic and state.get("blockedVersion") == version:
         return status(root)
+    current_target = current["target"] if current else ""
     with tempfile.TemporaryDirectory(prefix=".install-", dir=root) as staging:
-        stage = Path(staging)
-        archive, checksum = stage / "archive.tar.gz", stage / "archive.sha256"
-        download(assets[0], archive)
-        download(assets[1], checksum)
-        expected = assets[0]["digest"][7:]
-        try:
-            checksum_text = checksum.read_text()
-        except UnicodeDecodeError:
-            raise ValueError("checksum_file") from None
-        if checksum_text.strip() not in (expected + "  " + assets[0]["name"], expected + " *" + assets[0]["name"]):
-            raise ValueError("checksum_file")
-        extracted = stage / "release"
-        extracted.mkdir()
-        unpack(archive, extracted)
-        try:
-            staged_version = (extracted / "VERSION").read_text()
-        except UnicodeDecodeError:
-            raise ValueError("version_file") from None
-        if staged_version.strip() not in (version, "v" + version):
-            raise ValueError("version_file")
-        home = stage / "probe-home"
-        home.mkdir()
-        if not probe_version(extracted / "codexbar", version, home):
-            raise ValueError("version_probe")
-        (extracted / "receipt.json").write_text(json.dumps(dict(version=version, sha256=expected)))
-        target = "releases/v" + version + "-" + expected[:16]
-        retained = None
-        if (root / target).exists():
-            # Replace a retained copy only with freshly verified content, never the active copy.
-            if not installed(root, target) or (current and target == current["target"]):
-                raise ValueError("existing_release")
-            # Keep recovery outside staging: even a failed restore must survive
-            # TemporaryDirectory cleanup for manual recovery.
-            retained = root / (".retained-" + uuid.uuid4().hex)
-            os.rename(root / target, retained)
-        try:
-            os.rename(extracted, root / target)
-        except OSError:
-            if retained is not None:
-                os.rename(retained, root / target)
-            raise
-        if retained is not None:
-            try:
-                shutil.rmtree(retained)
-            except OSError:
-                pass  # The verified replacement is already in place.
-        activate(root, target, state, current["target"] if current else "")
+        extracted, target = _prepare_release(Path(staging), version, assets)
+        _replace_release(root, target, extracted, current_target)
+        activate(root, target, state, current_target)
     return {**status(root), "status": "installed"}
 
 
@@ -413,17 +443,47 @@ def failure_status(error):
     return "error"
 
 
+def _probe_installed_release(root, release):
+    with tempfile.TemporaryDirectory(prefix="codexbar-cli-probe-") as home:
+        return probe_version(root / release["target"] / "codexbar", release["version"], home)
+
+
+def _reuse_installation(root):
+    current = installed(root)
+    if not current:
+        return None
+    if not _probe_installed_release(root, current):
+        return {"status": "unusable"}
+    return status(root)
+
+
+def _rollback(root):
+    state = state_record(root)
+    previous = installed(root, state.get("previous", ""))
+    current = installed(root)
+    if not previous or not current:
+        return {"status": "no_previous"}
+    if not _probe_installed_release(root, previous):
+        return {"status": "no_previous"}
+    activate(root, previous["target"], state, current["target"], current["version"])
+    return {**status(root), "status": "restored"}
+
+
+def _prune_if_possible(root):
+    try:
+        prune(root)
+    except OSError:
+        pass  # Cleanup must not prevent retry/rollback or invalidate a completed activation.
+
+
 def run(action, command=""):
     root = root_path()
     if action == "status":
         return status(root)
     if action == "install":
-        current = installed(root)
-        if current:
-            with tempfile.TemporaryDirectory(prefix="codexbar-cli-probe-") as home:
-                if not probe_version(root / current["target"] / "codexbar", current["version"], home):
-                    return {"status": "unusable"}
-            return status(root)
+        reused = _reuse_installation(root)
+        if reused is not None:
+            return reused
     if action in ("update", "automatic", "rollback") and not owns_command(command):
         return {"status": "external"}
     private_directory(root)
@@ -434,24 +494,9 @@ def run(action, command=""):
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError:
             return {"status": "busy"}
-        try:
-            prune(root)
-        except OSError:
-            pass  # A failed cleanup must not prevent a retry or rollback.
+        _prune_if_possible(root)
         if action == "rollback":
-            state = state_record(root)
-            previous = installed(root, state.get("previous", ""))
-            current = installed(root)
-            if not previous or not current:
-                return {"status": "no_previous"}
-            with tempfile.TemporaryDirectory(prefix="codexbar-cli-probe-") as home:
-                if not probe_version(root / previous["target"] / "codexbar", previous["version"], home):
-                    return {"status": "no_previous"}
-            activate(root, previous["target"], state, current["target"], current["version"])
-            return {**status(root), "status": "restored"}
+            return _rollback(root)
         result = install(root, automatic=action == "automatic")
-        try:
-            prune(root)
-        except OSError:
-            pass  # Cleanup cannot invalidate a completed atomic activation.
+        _prune_if_possible(root)
         return result
