@@ -13,6 +13,7 @@ sys.path.insert(0, str(ROOT / "scripts/lib"))
 from qml_surfaces import Surface
 
 QML = '''import QtQuick
+import QtQuick.Window
 import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import QtTest
@@ -230,6 +231,56 @@ TestCase {
         // empty popup, not for a stale classification over usable quotas.
         subject.applet.providers = [{provider: "codex"}];
         verify(!subject.missingMessage.visible);
+    }
+
+    function test_missingCliRecoveryFitsOrScrolls() {
+        var subject = createSubject();
+        subject.applet.selectedProviderData = null;
+        subject.applet.commandPathFailed = true;
+        var message = subject.missingMessage;
+        message.parent = testCase;
+        message.width = 320;
+        message.height = 240;
+        subject.applet.cliSetupStatus = "The release server could not be reached. ".repeat(12);
+        verify(waitForPolish(message));
+        var scroll = findChild(message, "missingCommandScroll");
+        verify(scroll !== null, "Overflowing recovery must offer vertical scrolling");
+        var settings = findChild(message, "popupCliSetupSettings");
+        var flickable = scroll.contentItem;
+        verify(flickable.contentHeight > flickable.height, "Long recovery content must exceed the viewport");
+        flickable.contentY = flickable.contentHeight - flickable.height;
+        verify(waitForPolish(message));
+        var position = settings.mapToItem(scroll, 0, 0);
+        verify(position.y >= 0 && position.y + settings.height <= scroll.height + 1,
+            "Scrolling must expose Settings: " + position.y + ", " + settings.height + ", " + scroll.height);
+        mouseClick(settings);
+        compare(subject.settingsOpened, 1);
+
+        flickable.contentY = 0;
+        testCase.forceActiveFocus();
+        settings.forceActiveFocus(Qt.TabFocusReason);
+        verify(waitForPolish(message));
+        position = settings.mapToItem(scroll, 0, 0);
+        verify(position.y >= 0 && position.y + settings.height <= scroll.height + 1,
+            "Keyboard focus must reveal the recovery action");
+        keyClick(Qt.Key_Space);
+        compare(subject.settingsOpened, 2);
+        var install = buttonWithText(subject.missingPlaceholder, "Install and use CLI");
+        verify(install !== null);
+        keyClick(Qt.Key_Backtab);
+        verify(install.activeFocus);
+        position = install.mapToItem(scroll, 0, 0);
+        verify(position.y >= 0 && position.y + install.height <= scroll.height + 1,
+            "Reverse keyboard navigation must reveal CLI installation");
+
+        subject.applet.cliSetupStatus = "";
+        message.width = 560;
+        message.height = 500;
+        verify(waitForPolish(message));
+        var content = settings.parent;
+        var top = content.mapToItem(scroll, 0, 0).y;
+        fuzzyCompare(top, (scroll.availableHeight - content.height) / 2, 1);
+        message.parent = subject;
     }
 
     function test_errorStateKeepsScrollableRecoveryAndAStatusGlyph() {

@@ -2258,6 +2258,24 @@ TestCase {
         ];
     }
 
+    function test_providerTitleKeepsItsSpaceWithoutInlineReset() {
+        var model = Object.assign({}, usageRowData(), {
+            lane: "primary", label: "Workspace allowance", reset: ""
+        });
+        var row = createUsageRow(model, 540);
+        if (!row)
+            return;
+        verify(waitForPolish(row));
+        var title = findItem(row, item => item.text === model.label);
+        var percent = findItem(row, item => item.objectName === "usagePercentLabel");
+        var hide = findItem(row, item => item.objectName === "hideUsageRowButton");
+        row.width = Math.ceil(title.implicitWidth) + Math.ceil(percent.implicitWidth)
+            + hide.width + Kirigami.Units.smallSpacing * 2;
+        verify(waitForPolish(row));
+        verify(!title.truncated, "A fitting title must not lose space to absent inline metadata");
+        verify(!percent.truncated);
+    }
+
     function test_providerResetCountdownDoesNotTruncate(data) {
         failOnWarning(/Qt Quick Layouts: Detected recursive rearrange|Binding loop detected/);
         var holder = createTemporaryQmlObject(

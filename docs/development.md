@@ -1690,6 +1690,8 @@ with retained quotas, checks that repeated activation cannot start another reque
 usage without rescanning cost history. `tests/test_usage_recovery.py` exercises
 the production action handlers and message controls with keyboard activation,
 observing refresh and native configuration actions at their effect boundaries.
+They also exercise scrolling long missing-CLI messages, pointer and keyboard
+access to recovery actions, and centered placement when setup content fits.
 The missing-CLI state also offers direct preparation through the applet-owned
 managed CLI controller. `tests/test_popup_cli_setup.py` exercises immediate
 selection and refresh after installation or offline reuse, failures and retry,

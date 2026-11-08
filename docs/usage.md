@@ -244,7 +244,10 @@ work and upstream contract requirements.
   provider totals, project amounts and chart readout values request tabular
   digits from the theme font, keeping equal-length numbers stable when supported
   by that font.
-  A thin separator distinguishes an inline reset from its quota name.
+  The popup keeps an inset around its navigation and content. Quota captions
+  use the same gap above their meters in Overview and provider details.
+  A subdued separator with space on both sides distinguishes an inline reset
+  from its quota name. Rows without an inline reset keep tighter title spacing.
   Overview uses body-size quota names, with resets in smaller text and space
   between each quota group. It keeps more space between provider cards, with a
   compact gap between each identity header and its first quota. Provider detail
@@ -496,6 +499,8 @@ empty popup says **CodexBar CLI not found** and names the configured value.
 **Install and use CLI** prepares and selects a private official copy immediately;
 it can be tried again if preparation fails. **Settings** opens Plasma's standard
 widget settings window, where **Diagnostics** accepts an external CLI path.
+Long setup messages scroll to keep both actions reachable; keyboard focus reveals
+the selected action. Short setup content stays centered in the available space.
 Opening settings does not change configuration or run diagnostics automatically.
 The setup state stays visible across Usage & Spend and Sessions. Retained
 providers and a refresh in flight take precedence over it. Any other failure
