@@ -138,7 +138,9 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   returns a Codex error even after approval. Done when the released usage
   command preserves the requested custom identity and Plasma's existing
   discovery/normalization is verified against that output. Do not relabel the
-  wrong provider or read plugin files in QML.
+  wrong provider or read plugin files in QML. Plasma rejects scoped usage and
+  account records that explicitly name a different provider; this prevents
+  mislabelling but does not repair the CLI routing blocker.
   [Evidence](docs/research/2026-10-21-macos-parity-0.79.0.md#linux-cli-contract-changes);
   [0.81.0 recheck](docs/research/2026-10-25-macos-parity-0.81.0.md#carried-forward-blockers-rechecked).
   Since 0.81.0, `plugins fetch` also emits optional window titles that the

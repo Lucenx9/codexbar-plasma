@@ -1344,7 +1344,8 @@ CI runners while keeping the production deadlines unchanged.
 Missing optional KDE modules are reported as local skips and
 rejected by `QML_TEST_REQUIRE_NO_SKIPS=1`. `tests/tst_usage_response.qml` covers
 malformed siblings and identities, response bounds, measured zeros, scoped
-provider identity, deduplication, and redaction directly at the pure interface.
+provider identity, rejection of foreign-provider records, deduplication, and
+redaction directly at the pure interface.
 Surface checks protect process ownership and registration/retirement ordering.
 
 `tests/test_accounts_controller.py` instantiates the production controller with

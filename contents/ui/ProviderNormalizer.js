@@ -90,6 +90,15 @@ function normalizedProviderID(value) {
     return ProviderIdentity.normalizedProviderID(value)
 }
 
+// A scoped response may omit its identity in legacy account records, or carry
+// a command-wide CLI error. An explicit different provider is never its data.
+function providerMatchesScope(item, providerID) {
+    if (!hasOwnKey(item, "provider")) return true
+    var actual = normalizedProviderID(item.provider)
+    return actual === providerID
+        || (actual === "cli" && isCliRecord(item.error))
+}
+
 // `config providers` output reduced to the enabled provider ids plus every
 // display name it carried. A disabled provider still contributes its name,
 // because the popup labels providers it learns about from a later usage payload.

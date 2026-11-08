@@ -82,6 +82,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Return a structured managed-CLI error for oversized persisted update timestamps
   instead of terminating the helper with an unhandled numeric overflow.
 
+- Reject usage and account records that explicitly name a different provider,
+  instead of showing their quotas or accounts under the requested provider.
+
 - Preserve dashboard summaries and no-usage explanations when optional provider
   detail charts contain no usable title, unit, or points.
 

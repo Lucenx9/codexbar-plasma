@@ -26,6 +26,7 @@ function records(payload, providerID, receivedAtMs) {
         if (!Normalizer.isCliRecord(items[i])) continue;
         var snapshot;
         try {
+            if (!Normalizer.providerMatchesScope(items[i], key)) continue;
             var record = Guards.copyObject(items[i]);
             record.provider = key;
             snapshot = ProviderSnapshot.normalize(record, receivedAtMs);
