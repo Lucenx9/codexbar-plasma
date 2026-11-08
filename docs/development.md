@@ -836,7 +836,12 @@ clipboard interoperability with every Wayland application or portal backend.
   provider status baselines. Settings changes must not announce an ongoing
   incident again or swallow an incident arriving during refresh. Keep these
   decisions pure and covered by `tests/tst_notification_planner.qml` and
-  `tests/tst_notification_memo.qml`. A failed status-page fetch, which the CLI
+  `tests/tst_notification_memo.qml`. Scope priming handles quota, pace and reset
+  baselines in one pass over the rows, with shared reset-percentage validation
+  and arming-threshold fallback for priming and subsequent observations. Direct
+  planner tests cover every quota/pace/reset toggle combination in both initial
+  modes, mixed-confidence rows, and reset threshold and percentage boundaries.
+  A failed status-page fetch, which the CLI
   reports as severity `unknown`, keeps a known incident baseline instead of
   replacing it. The planner treats that severity as missing status evidence,
   even when a status object was returned: it neither notifies nor primes a new

@@ -155,49 +155,45 @@ function clearObservedRowState(nextMemo, observation) {
     }
 }
 
+function resetArmThreshold(options) {
+    var threshold = Number(options && options.resetArmThreshold)
+    return isFinite(threshold) ? threshold : 80
+}
+
+function resetUsagePercent(row) {
+    var used = Number(row && row.usedPercent)
+    return row && row.hasPercent === true && isFinite(used) ? used : null
+}
+
 function primeScope(nextMemo, observation, options) {
-    var observedRows = Array.isArray(observation.rows) ? observation.rows : []
-    // A degraded first reading supplies no threshold baseline. Wait for an
-    // authoritative row, including a measured value below the warning level.
-    if (observedRows.some(function(row) { return row && Normalizer.authoritativeQuota(row) })) {
-        nextMemo[scopePrimedKey(observation)] = "1"
-    }
-    for (var rowIndex = 0; rowIndex < observedRows.length; rowIndex++) {
-        if (!Normalizer.authoritativeQuota(observedRows[rowIndex])) {
-            delete nextMemo[quotaKey(observation, observedRows[rowIndex], rowIndex)]
-            delete nextMemo[paceKey(observation, observedRows[rowIndex], rowIndex)]
-            delete nextMemo[resetKey(observation, observedRows[rowIndex], rowIndex)]
+    var rows = Array.isArray(observation.rows) ? observation.rows : []
+    var quotaEnabled = !options || options.quotaEnabled !== false
+    var paceEnabled = !options || options.paceEnabled !== false
+    var resetEnabled = !options || options.resetEnabled !== false
+    var armThreshold = resetEnabled ? resetArmThreshold(options) : 0
+    for (var i = 0; i < rows.length; i++) {
+        var row = rows[i]
+        if (!Normalizer.authoritativeQuota(row)) {
+            delete nextMemo[quotaKey(observation, row, i)]
+            delete nextMemo[paceKey(observation, row, i)]
+            delete nextMemo[resetKey(observation, row, i)]
+            continue
         }
-    }
-    if (!options || options.quotaEnabled !== false) {
-        var rows = Array.isArray(observation.rows) ? observation.rows : []
-        for (var i = 0; i < rows.length; i++) {
-            var level = String(rows[i] && rows[i].quotaLevel || "")
-            if (Normalizer.authoritativeQuota(rows[i]) && level.length > 0) {
-                nextMemo[quotaKey(observation, rows[i], i)] = level
-            }
+        // A degraded first reading supplies no threshold baseline. Even a
+        // healthy row below the warning level establishes one silently.
+        if (row) {
+            nextMemo[scopePrimedKey(observation)] = "1"
         }
-    }
-    if (!options || options.paceEnabled !== false) {
-        var paceRows = Array.isArray(observation.rows) ? observation.rows : []
-        for (var paceIndex = 0; paceIndex < paceRows.length; paceIndex++) {
-            if (paceRows[paceIndex] && Normalizer.authoritativeQuota(paceRows[paceIndex]) && paceRows[paceIndex].paceActive === true) {
-                nextMemo[paceKey(observation, paceRows[paceIndex], paceIndex)] = "1"
-            }
+        var level = String(row && row.quotaLevel || "")
+        if (quotaEnabled && level.length > 0) {
+            nextMemo[quotaKey(observation, row, i)] = level
         }
-    }
-    if (!options || options.resetEnabled !== false) {
-        var resetRows = Array.isArray(observation.rows) ? observation.rows : []
-        var armThreshold = Number(options && options.resetArmThreshold)
-        if (!isFinite(armThreshold)) {
-            armThreshold = 80
+        if (paceEnabled && row && row.paceActive === true) {
+            nextMemo[paceKey(observation, row, i)] = "1"
         }
-        for (var resetIndex = 0; resetIndex < resetRows.length; resetIndex++) {
-            var row = resetRows[resetIndex]
-            var used = Number(row && row.usedPercent)
-            if (row && Normalizer.authoritativeQuota(row) && row.hasPercent === true && isFinite(used) && used >= armThreshold) {
-                nextMemo[resetKey(observation, row, resetIndex)] = "1"
-            }
+        var used = resetUsagePercent(row)
+        if (resetEnabled && used !== null && used >= armThreshold) {
+            nextMemo[resetKey(observation, row, i)] = "1"
         }
     }
 }
@@ -269,11 +265,8 @@ function processPace(previousMemo, nextMemo, observation, observationIndex, inte
 
 function processReset(previousMemo, nextMemo, observation, observationIndex, options, intents) {
     var rows = Array.isArray(observation.rows) ? observation.rows : []
-    var armThreshold = Number(options && options.resetArmThreshold)
+    var armThreshold = resetArmThreshold(options)
     var floor = Number(options && options.resetFloor)
-    if (!isFinite(armThreshold)) {
-        armThreshold = 80
-    }
     if (!isFinite(floor)) {
         floor = 5
     }
@@ -284,8 +277,8 @@ function processReset(previousMemo, nextMemo, observation, observationIndex, opt
             continue
         }
         var wasArmed = previousMemo && previousMemo[key] === "1"
-        var used = Number(row && row.usedPercent)
-        if (!row || row.hasPercent !== true || !isFinite(used)) {
+        var used = resetUsagePercent(row)
+        if (used === null) {
             // An unreadable percentage is not a disarmed one. Keep the arm so
             // one degraded pass cannot swallow the promised reset notice.
             if (wasArmed) {
@@ -331,26 +324,17 @@ function transition(observations, previousMemo, options) {
         }
         if ((!options || options.statusEnabled !== false) && item.statusKnown !== false
                 && item.statusSeverity !== "unknown") {
-            var value = statusValue(item)
-            if (mode === "prime") {
-                // Rebuild silently without erasing a temporarily missing id.
-                NotificationMemo.applyStatusDecision(nextMemo, item.providerID,
-                    NotificationMemo.statusDecision(previousMemo, item.providerID,
-                        value, item.statusSeverity))
-            } else {
-                var decision = NotificationMemo.statusDecision(
-                    previousMemo,
-                    item.providerID,
-                    value,
-                    item.statusSeverity)
-                NotificationMemo.applyStatusDecision(nextMemo, item.providerID, decision)
-                if (decision.notify) {
-                    intents.push({
-                        kind: "status",
-                        observationIndex: i,
-                        severity: String(item.statusSeverity || "")
-                    })
-                }
+            var decision = NotificationMemo.statusDecision(previousMemo, item.providerID,
+                statusValue(item), item.statusSeverity)
+            // Priming records the same decision silently, including a known
+            // incident ID temporarily omitted by the status response.
+            NotificationMemo.applyStatusDecision(nextMemo, item.providerID, decision)
+            if (mode !== "prime" && decision.notify) {
+                intents.push({
+                    kind: "status",
+                    observationIndex: i,
+                    severity: String(item.statusSeverity || "")
+                })
             }
         } else if (mode === "prime") {
             // Missing status or a failed status fetch cannot establish a new
@@ -362,23 +346,16 @@ function transition(observations, previousMemo, options) {
         if (item.usageStale === true) {
             continue
         }
-        if (mode === "prime") {
-            if (item.errorPresent === true && Array.isArray(item.rows) && item.rows.length === 0) {
-                // A failed first observation establishes no threshold
-                // baseline: leave the scope unprimed so the first healthy
-                // pass primes silently. The status block above already
-                // recorded the incident, so it keeps notifying later.
-                continue
-            }
-            primeScope(nextMemo, item, options)
-            continue
-        }
         // An error observation with no usage rows carries no threshold
         // evidence: keep quota/pace/reset state untouched instead of treating
         // the outage as a quiet recovery, and leave an unprimed scope
         // unprimed so the next healthy pass primes silently. Status above has
         // already processed, so incidents keep notifying through the outage.
         if (item.errorPresent === true && Array.isArray(item.rows) && item.rows.length === 0) {
+            continue
+        }
+        if (mode === "prime") {
+            primeScope(nextMemo, item, options)
             continue
         }
         clearObservedRowState(nextMemo, item)
