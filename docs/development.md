@@ -785,6 +785,10 @@ records the Gemini exclusion. Never test credentials against the user's config.
 fields. `CostResponse.js` retains a separate bounded token ranking before the
 normalizer caps its existing cost-first list. Both rankings pass through the
 privacy projection. The export never serializes a provider record, account, project, or raw error.
+`ShareUsage.js` redacts whole model labels containing absolute paths, including
+UNC network shares, while retaining ordinary namespaced model IDs and the
+aggregate amounts. Direct sharing tests cover quoted, embedded, Unicode and
+space-containing UNC paths.
 `main.qml` freezes that projection when the user opens the lazy-loaded
 `ShareUsageWindow.qml`. `ShareUsageCard.qml` renders the export with system
 fonts, tabular figures, theme colors, a provider token-share bar, and responsive

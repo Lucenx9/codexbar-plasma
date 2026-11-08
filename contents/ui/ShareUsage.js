@@ -19,7 +19,7 @@ function label(value) {
         .replace(/\bhttps?:\S+/g, "[redacted]")
     // Spaces do not delimit filesystem paths. Omit the whole label rather
     // than guessing where a path ends and sharing its remaining components.
-    if (/(^|[^\w/])(?:\/|~\/|[A-Za-z]:\\)\S+/.test(text)) return "[redacted]"
+    if (/(^|[^\w/])(?:\/|~\/|[A-Za-z]:\\)\S+|\\\\\S+/.test(text)) return "[redacted]"
     return text.replace(/\S+@\S+|\bfile:\S+/g, "[redacted]")
 }
 
