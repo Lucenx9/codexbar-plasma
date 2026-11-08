@@ -12,6 +12,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Added
 
+- Optionally name the quota chosen by Automatic panel text when multiple
+  windows are available. Crowded panels omit the name before shortening usage;
+  the full text remains available to assistive technology and in tooltips.
 - Bundle dedicated Soniox, Trae CN, Chatbox AI, abliteration.ai, and OpenDesign
   icons and identity metadata, covering the official CLI 0.83.0 registry.
 - Offer secure manual-cookie setup for 14 verified Linux providers and

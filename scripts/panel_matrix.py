@@ -18,6 +18,7 @@ import smoke_popup as smoke
 DEFAULTS = {
     "panelStyle": "standard", "showProviderInPanel": False,
     "showPercentInPanel": False, "showCreditsInPanel": False,
+    "showAutoQuotaLabel": False,
     "showMultiProviderInPanel": True, "panelQuotaLane": "auto",
     "panelElementOrder": "identity,status,text,meters", "panelVisibilityRules": "{}",
     "menuBarDisplayMode": "percent", "autoSelectProvider": False,
@@ -50,6 +51,8 @@ def matrix_cases(vertical=False):
     for style in ("standard", "minimal"):
         for mode in ("percent", "pace", "both", "runOut", "resetTime"):
             add(style + "-mode-" + mode, all_text | {"panelStyle": style, "menuBarDisplayMode": mode})
+            add(style + "-auto-label-" + mode, all_text | {
+                "panelStyle": style, "menuBarDisplayMode": mode, "showAutoQuotaLabel": True})
         for extent in (24, 48, 64):
             add(style + "-height-" + str(extent), all_text | {"panelStyle": style}, extent=extent)
         add(style + "-long-name", all_text | {"panelStyle": style}, longName=True)

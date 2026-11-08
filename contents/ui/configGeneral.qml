@@ -119,6 +119,8 @@ KCM.SimpleKCM {
     property string cfg_panelStyleDefault: "standard"
     property bool cfg_showPercentInPanel
     property bool cfg_showPercentInPanelDefault: false
+    property bool cfg_showAutoQuotaLabel
+    property bool cfg_showAutoQuotaLabelDefault: false
     property bool cfg_showMultiProviderInPanel
     property bool cfg_showMultiProviderInPanelDefault: true
     property string cfg_panelElementOrder
@@ -370,6 +372,7 @@ KCM.SimpleKCM {
             [cfg_showProviderInPanel, cfg_showProviderInPanelDefault],
             [cfg_panelStyle, cfg_panelStyleDefault],
             [cfg_showPercentInPanel, cfg_showPercentInPanelDefault],
+            [cfg_showAutoQuotaLabel, cfg_showAutoQuotaLabelDefault],
             [cfg_showMultiProviderInPanel, cfg_showMultiProviderInPanelDefault],
             [cfg_panelElementOrder, cfg_panelElementOrderDefault],
             [cfg_panelQuotaLane, cfg_panelQuotaLaneDefault],
@@ -439,6 +442,7 @@ KCM.SimpleKCM {
         cfg_showProviderInPanel = cfg_showProviderInPanelDefault
         cfg_panelStyle = cfg_panelStyleDefault
         cfg_showPercentInPanel = cfg_showPercentInPanelDefault
+        cfg_showAutoQuotaLabel = cfg_showAutoQuotaLabelDefault
         cfg_showMultiProviderInPanel = cfg_showMultiProviderInPanelDefault
         cfg_panelElementOrder = cfg_panelElementOrderDefault
         cfg_panelQuotaLane = cfg_panelQuotaLaneDefault

@@ -49,6 +49,8 @@ function normalizedSegments(value) {
         }
         seen[id] = true;
         result.push({ id: id, text: text, identifying: entry.identifying === true,
+            unlabelledText: id === "usage"
+                ? SafeText.boundedDisplayText(entry.unlabelledText, maximumSegmentLength) : "",
             compactText: id === "usage"
                 ? SafeText.boundedDisplayText(entry.compactText, maximumSegmentLength) : "" });
     }
@@ -65,9 +67,9 @@ function surrenderOrder(segments) {
 }
 
 // Progressively smaller compositions, widest first, each keeping the caller's
-// display order. One segment is surrendered per step, so a caller measuring
-// candidates gets one composition per known segment id, plus an optional
-// compact usage reading. The empty composition is never offered: a label that cannot
+// display order. The optional quota name yields first, followed by one segment
+// per step and an optional compact usage reading. The empty composition is
+// never offered: a label that cannot
 // fit even its most important segment is elided by the caller rather than
 // dropped, so an enabled segment never disappears without a trace.
 function compositions(value) {
@@ -78,6 +80,15 @@ function compositions(value) {
 
     var result = [segments];
     var remaining = segments;
+    var unlabelled = segments.map(function(segment) {
+        return segment.unlabelledText && segment.unlabelledText !== segment.text
+            ? {id: segment.id, text: segment.unlabelledText, compactText: segment.compactText}
+            : segment;
+    });
+    if (unlabelled.some(function(segment, index) { return segment !== segments[index]; })) {
+        remaining = unlabelled;
+        result.push(remaining);
+    }
     var order = surrenderOrder(segments);
     for (var i = 0; i < order.length && remaining.length > 1; i++) {
         var dropped = order[i];

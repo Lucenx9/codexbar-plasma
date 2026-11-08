@@ -14,6 +14,7 @@ QtObject {
     property bool showProvider: false
     property bool showPercent: false
     property bool showCredits: false
+    property bool showAutoQuotaLabel: false
     property var numberFormat: ({})
     property UsageWindowText usageLabels: UsageWindowText {}
 
@@ -68,7 +69,7 @@ QtObject {
         return mode === "both" ? percentText(row) : ""
     }
 
-    function segments(item, visible, selectionActive, display, iconIdentifies, compactDisplay) {
+    function segments(item, visible, selectionActive, display, iconIdentifies, compactDisplay, quotaLabel) {
         return PanelText.segments(item, visible, selectionActive, {
             showProvider: root.showProvider,
             showPercent: root.showPercent,
@@ -77,6 +78,8 @@ QtObject {
         }, {
             fallback: root.loading ? i18n("Loading") : "CodexBar",
             display: display,
+            labelledDisplay: root.showAutoQuotaLabel && quotaLabel
+                ? i18nc("Quota name %1 before panel usage text %2", "%1 %2", quotaLabel, display) : "",
             compactDisplay: compactDisplay,
             credits: item && root.showCredits && item.credits !== null
                 ? i18n("%1cr", CostPresentation.formatCount(root.numberFormat, item.credits)) : ""

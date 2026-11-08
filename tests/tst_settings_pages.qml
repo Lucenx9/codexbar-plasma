@@ -522,6 +522,7 @@ TestCase {
             cfg_autoUpdateEnabled: false,
             cfg_autoUpdateIntervalHours: 48,
             cfg_menuBarDisplayMode: "pace",
+            cfg_showAutoQuotaLabel: true,
             cfg_panelStyle: "minimal",
             cfg_panelQuotaLane: "primary",
             cfg_panelVisibilityRules: '{"text":{"condition":"runOut"}}',
@@ -559,6 +560,7 @@ TestCase {
         compare(page.cfg_autoUpdateEnabled, true);
         compare(page.cfg_autoUpdateIntervalHours, 24);
         compare(page.cfg_menuBarDisplayMode, "percent");
+        compare(page.cfg_showAutoQuotaLabel, false);
         compare(page.cfg_panelStyle, "standard");
         compare(page.cfg_panelQuotaLane, "auto");
         compare(page.cfg_panelVisibilityRules, "{}");

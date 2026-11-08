@@ -221,4 +221,24 @@ TestCase {
         tryCompare(view, "rightPadding", right);
         verify(waitForRendering(page));
     }
+
+    function test_autoQuotaLabelCanBeToggledAndRetainsHiddenPendingValue() {
+        var page = createPage({additionalExpanded: true, cfg_showPercentInPanel: true});
+        if (!page) return;
+        var check = findChild(page, "panelAutoQuotaLabelCheck");
+        verify(check !== null);
+        compare(page.cfg_showAutoQuotaLabel, false);
+        verify(check.visible);
+        check.forceActiveFocus();
+        keyClick(Qt.Key_Space);
+        compare(page.cfg_showAutoQuotaLabel, true);
+        page.cfg_panelQuotaLane = "secondary";
+        verify(!check.visible);
+        compare(page.cfg_showAutoQuotaLabel, true);
+        page.cfg_panelQuotaLane = "auto";
+        verify(check.visible && check.checked);
+        page.cfg_showPercentInPanel = false;
+        verify(!check.visible);
+        compare(page.cfg_showAutoQuotaLabel, true);
+    }
 }

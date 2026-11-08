@@ -161,7 +161,7 @@ For private CLI selection, updates, and rollback, see
   configurable warnings and Plasma notifications.
 - Standard and Minimal panel styles, up to two quota capsules per provider,
   spaced provider groups, readable stacked meters on vertical panels, optional
-  text, and a live settings preview.
+  text with optional automatic quota names, and a live settings preview.
 - **Usage & Spend** with cost and token charts, history ranges, an activity
   heatmap, and provider, model, and project breakdowns when the CLI supplies them.
 - Local agent **Sessions**. Transcript paths and working directories are never

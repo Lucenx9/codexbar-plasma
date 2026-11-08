@@ -142,13 +142,16 @@ TestCase {
         }
         property string providerNameText: "A long provider name"
         property string usageText: "57% remaining"
+        property string usageUnlabelledText: ""
+        property string usageCompactText: ""
         property string creditsText: ""
         function compactTextSegments() {
             var segments = [];
             if (providerNameText.length > 0)
                 segments.push({id: "name", text: providerNameText});
             if (usageText.length > 0)
-                segments.push({id: "usage", text: usageText});
+                segments.push({id: "usage", text: usageText,
+                    unlabelledText: usageUnlabelledText, compactText: usageCompactText});
             if (creditsText.length > 0)
                 segments.push({id: "credits", text: creditsText});
             return segments;
@@ -336,6 +339,8 @@ TestCase {
         applet.panelOrder = ["identity", "status", "text", "meters"];
         applet.providerNameText = "A long provider name";
         applet.usageText = "57% remaining";
+        applet.usageUnlabelledText = "";
+        applet.usageCompactText = "";
         applet.creditsText = "";
     }
 
@@ -614,6 +619,22 @@ TestCase {
         applet.providerNameText = "Codex";
         applet.meterCount = 1;
         tryCompare(panel, "primaryText", applet.compactText());
+    }
+
+    function test_crowdedLabelledPaceKeepsItsCompleteFinalVerdict() {
+        applet.providerNameText = "Codex";
+        applet.usageText = "Session 30% used, behind pace";
+        applet.usageUnlabelledText = "30% used, behind pace";
+        applet.usageCompactText = "Behind pace";
+        applet.creditsText = "125cr";
+        applet.meterCount = 4;
+        var panel = createControl("CompactRepresentation", {applet: applet, height: 32});
+        if (!panel) return;
+        tryCompare(panel, "primaryText", "Behind pace");
+        var label = findItem(panel, item => item.visible && item.objectName === "panelProviderText");
+        verify(label !== null);
+        tryVerify(() => !label.truncated);
+        compare(label.Accessible.name, "Codex Session 30% used, behind pace 125cr");
     }
 
     // Grows the usage segment until the full composition is as wide as the

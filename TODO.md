@@ -304,14 +304,6 @@ These are unresolved Linux candidates, not confirmed missing features.
   Claude's limits-unavailable state. Done when emitted Linux output shows
   whether Plasma's generic window, details, and spend paths suffice.
   [Limits](docs/research/2026-10-23-macos-parity-0.80.0.md#unverified-in-this-review).
-- [ ] Decide whether Auto panel text should name the lane it picked. macOS
-  0.81.0 adds the window name to Auto percentage, pace, and reset tokens
-  (`5h 84%`) when several windows exist, behind its existing Show window labels
-  option; this is app rendering, not CLI output. Plasma's
-  `PanelDisplay.rowForMode` picks a lane without naming it. Done when a bounded
-  accept/reject decision exists; any accepted work uses the CLI lane labels and
-  keeps panel width and accessibility bounded.
-  [Comparison](docs/research/2026-10-25-macos-parity-0.81.0.md#plasma-comparison).
 - [ ] Verify 0.81.0 authenticated output: abliteration.ai balance and credits,
   Chatbox AI plan, reward, top-up, and image pools, the DeepSeek API balance
   under Auto, and a signed-in Gemini Auto fetch. Done when emitted Linux output

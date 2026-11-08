@@ -143,6 +143,18 @@ function rowForMode(rows, value, laneValue) {
     return null;
 }
 
+function autoQuotaLabel(rows, mode, laneValue) {
+    if (safeLane(laneValue) !== "auto" || !Array.isArray(rows)) {
+        return "";
+    }
+    var available = rows.filter(function(row) {
+        return rowSupportsMode(row, bothMode) || rowHasReset(row) || rowHasRunOut(row);
+    });
+    var selected = rowForMode(rows, mode);
+    return available.length > 1 && selected
+        ? Normalizer.boundedDisplayText(selected.label, 80) : "";
+}
+
 // Meter positions follow named lanes, not the provider's text preference or
 // current consumption. Providers without those lanes keep their single fallback.
 function meterRows(rows, laneValue) {

@@ -34,6 +34,8 @@ KCM.SimpleKCM {
     property string cfg_panelStyleDefault: "standard"
     property alias cfg_showPercentInPanel: showPercentCheck.checked
     property bool cfg_showPercentInPanelDefault: false
+    property alias cfg_showAutoQuotaLabel: showAutoQuotaLabelCheck.checked
+    property bool cfg_showAutoQuotaLabelDefault: false
     property alias cfg_showMultiProviderInPanel: showMultiProviderCheck.checked
     property bool cfg_showMultiProviderInPanelDefault: true
     property string cfg_panelElementOrder: "identity,status,text,meters"
@@ -475,6 +477,16 @@ KCM.SimpleKCM {
                 font: Kirigami.Theme.smallFont
                 opacity: 0.7
                 wrapMode: Text.WordWrap
+            }
+
+            Controls.CheckBox {
+                id: showAutoQuotaLabelCheck
+                objectName: "panelAutoQuotaLabelCheck"
+                implicitWidth: 0
+                Layout.fillWidth: true
+                text: i18n("Name the quota chosen by Automatic")
+                visible: showPercentCheck.checked
+                    && PanelDisplay.safeLane(page.cfg_panelQuotaLane) === "auto"
             }
 
             Controls.CheckBox {

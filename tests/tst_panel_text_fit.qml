@@ -130,6 +130,25 @@ TestCase {
         compare(PanelTextFit.fullText(null), "")
     }
 
+    function test_quotaLabelYieldsBeforeWholeSegmentsAndPaceVerdicts() {
+        var input = [
+            {id: "name", text: "Codex", identifying: true},
+            {id: "usage", text: "Weekly 43% used - 60% used, behind pace",
+                unlabelledText: "43% used - 60% used, behind pace", compactText: "Behind pace"},
+            {id: "credits", text: "125cr"}
+        ];
+        var before = JSON.stringify(input);
+        compare(PanelTextFit.segmentTexts(input), [
+            "Codex Weekly 43% used - 60% used, behind pace 125cr",
+            "Codex 43% used - 60% used, behind pace 125cr",
+            "Codex 43% used - 60% used, behind pace",
+            "43% used - 60% used, behind pace", "Behind pace"
+        ]);
+        compare(PanelTextFit.fullText(input),
+            "Codex Weekly 43% used - 60% used, behind pace 125cr");
+        compare(JSON.stringify(input), before);
+    }
+
     function test_compactUsageIsOfferedOnlyAfterWholeSegments() {
         var input = [
             {id: "name", text: "Codex", compactText: "C"},

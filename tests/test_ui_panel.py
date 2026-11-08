@@ -260,8 +260,11 @@ class PanelTest(unittest.TestCase):
             raise AssertionError("segment identity must follow the selected provider's icon")
         applet.require("identifying: !options.iconIdentifies", "unidentified names remain recoverable")
         if not code_contains(function_body(main_text, "panelProviderToolTipText"),
-                             "panelText.providerToolTipText(presented, panelMeterDescription(presented))"):
+                             "panelText.providerToolTipText(presented, description)"):
             raise AssertionError("tooltip presentation must receive the privacy-filtered provider")
+        if not code_contains(function_body(main_text, "panelProviderToolTipText"),
+                             "var description = panelMeterDescription(presented)"):
+            raise AssertionError("tooltip quota descriptions must use the privacy-filtered provider")
         if "providerBrandColorChannels" not in function_body(main_text, "providerIconIdentifies"):
             raise AssertionError(
                 "icon identification must follow the bundled provider tables, not a guess"
@@ -315,7 +318,7 @@ class PanelTest(unittest.TestCase):
         # enough for the renderer to elide a composition that was picked to fit.
         composition_measurers = (
             "firstCompositionMeasurer", "secondCompositionMeasurer", "thirdCompositionMeasurer",
-            "fourthCompositionMeasurer")
+            "fourthCompositionMeasurer", "fifthCompositionMeasurer")
         for measurer in composition_measurers:
             if (
                 f"id: {measurer}" not in compact_representation_text

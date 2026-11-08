@@ -121,6 +121,10 @@ ColumnLayout {
         usageBarsShowUsed: preview.usageBarsShowUsed
     }
 
+    RateWindowLabels {
+        id: quotaLabels
+    }
+
     QtObject {
         id: previewApplet
 
@@ -188,7 +192,16 @@ ColumnLayout {
             }
             var metric = preview.metricText(preview.previewModel.textRow);
             if (preview.configPage.cfg_showPercentInPanel && metric.length > 0) {
-                segments.push({ id: "usage", text: metric,
+                var labelledRows = provider.rows.map(function(row) {
+                    return Object.assign({}, row, {
+                        label: quotaLabels.labelForLane(provider.provider, row.lane)
+                    });
+                });
+                var label = preview.configPage.cfg_showAutoQuotaLabel === true
+                    ? PanelDisplay.autoQuotaLabel(labelledRows, preview.previewModel.mode, preview.previewModel.lane) : "";
+                segments.push({ id: "usage", text: label
+                    ? i18nc("Quota name %1 before panel usage text %2", "%1 %2", label, metric) : metric,
+                    unlabelledText: label ? metric : "",
                     compactText: panelTextLabels.compactDisplayText(preview.previewModel.textRow, preview.previewModel.mode) });
             }
             if (preview.configPage.cfg_showCreditsInPanel

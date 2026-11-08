@@ -153,6 +153,15 @@ work and upstream contract requirements.
   meters in **Panel → Quota, order and visibility**. An explicit primary, secondary, or tertiary
   choice shows one capsule. Automatic text and popup tabs retain their existing
   quota preference; automatic capsules use the pair described above.
+- Enable **Panel → Additional information → Name the quota chosen by Automatic**
+  to prefix automatic usage text with the selected quota's popup caption when
+  multiple windows are available. This option is off by default and applies to
+  every text format. It uses the existing localized provider captions or CLI
+  window labels, including extra windows, and does not change quota selection.
+  Explicit quota choices and single-window providers keep their existing text.
+  When space is tight, the quota name yields before provider names, credits,
+  usage values, or pace verdicts. The complete labelled text stays in the
+  panel tooltip and accessible name. Vertical panels continue to omit usage text.
 - Set independent visibility conditions for the full panel text and each
   provider meter: always, minimum percent used, reset within a chosen number of
   minutes, or forecast exhaustion before reset. A provider meter stays visible

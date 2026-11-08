@@ -1844,8 +1844,9 @@ isolated using the smoke runner. The installed widget and real credentials are
 not used. The temporary applet runs the production normalization, settings
 adapters, and compact renderer.
 
-The default run saves 384 captures: 128 base combinations plus targeted cases
-for all 24 element orders, five text formats, explicit quotas, visibility rules,
+The default run saves 424 captures: 128 base combinations plus targeted cases
+for all 24 element orders, five text formats with and without automatic quota
+labels, explicit quotas, visibility rules,
 missing data, long names, exhausted quotas, and 24/48/64-pixel panel heights.
 The targeted cases also cover tiny readings, warning colors, stale quotas with
 confidence and incident markers, and real pointer hover/press and keyboard-focus
