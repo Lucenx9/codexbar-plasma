@@ -28,6 +28,7 @@ var legacyApiKeyProviders = [
 ]
 
 function supportsApiKey(providerID, authentication, capabilities) {
+    if (typeof providerID !== "string") return false
     if (authentication && authentication.supportsConfigAPIKey !== true) return false
     if (Guards.hasOwnKey(keyCapabilities, providerID)) return capabilities[keyCapabilities[providerID]]
     return legacyApiKeyProviders.indexOf(providerID) >= 0

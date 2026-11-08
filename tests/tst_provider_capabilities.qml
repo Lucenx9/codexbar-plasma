@@ -51,5 +51,8 @@ TestCase {
         verify(Capabilities.supportsApiKey("openai", {supportsConfigAPIKey: true}, old))
         verify(!Capabilities.supportsApiKey("openai", {}, current))
         verify(!Capabilities.supportsApiKey("future-provider", {supportsConfigAPIKey: true}, current))
+        for (var malformed of [["fireworks"], ["soniox"], {}, null, true]) {
+            verify(!Capabilities.supportsApiKey(malformed, null, current), String(malformed))
+        }
     }
 }
