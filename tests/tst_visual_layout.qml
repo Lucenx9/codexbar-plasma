@@ -3,7 +3,6 @@ import QtQuick.Window
 import QtTest
 import org.kde.kirigami as Kirigami
 import "../contents/ui/components" as Components
-import "../contents/ui/CostPresentation.js" as CostPresentation
 import "../contents/ui/SafeText.js" as SafeText
 import "../contents/ui/ThemeContrast.js" as ThemeContrast
 import "../contents/ui/UsageDetails.js" as UsageDetails

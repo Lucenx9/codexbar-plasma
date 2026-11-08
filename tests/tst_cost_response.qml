@@ -1,7 +1,7 @@
 import QtQuick
 import QtTest
 import "../contents/ui/CostResponse.js" as CostResponse
-import "../contents/ui/CostPresentation.js" as CostPresentation
+import "../contents/ui/CostAmounts.js" as CostAmounts
 import "../contents/ui/ProviderNormalizer.js" as Normalizer
 import "../contents/ui/SafeText.js" as SafeText
 
@@ -36,8 +36,8 @@ TestCase {
         compare(actual.costs.codex.historyDays, 13);
         compare(actual.costs.codex.labelDays, 13);
         compare(actual.costs.codex.models, baseline.costs.codex.models);
-        compare(CostPresentation.averageDailyValue(actual.costs.codex.daily, false),
-            CostPresentation.averageDailyValue(baseline.costs.codex.daily, false));
+        compare(CostAmounts.averageDailyValue(actual.costs.codex.daily, false),
+            CostAmounts.averageDailyValue(baseline.costs.codex.daily, false));
     }
 
     function test_duplicateDateFallbackKeepsDailyAndModelCostsInsidePeriod() {
@@ -414,8 +414,8 @@ TestCase {
         compare(actual.daily, baseline.daily);
         compare(actual.models, baseline.models);
         compare(actual.tokenRanking, baseline.tokenRanking);
-        compare(CostPresentation.averageDailyValue(actual.daily, false).value, 1);
-        compare(CostPresentation.averageDailyValue(actual.daily, true).value, 10);
+        compare(CostAmounts.averageDailyValue(actual.daily, false).value, 1);
+        compare(CostAmounts.averageDailyValue(actual.daily, true).value, 10);
     }
     function test_allFutureDatesKeepTheEmptyHistoryFallback() {
         var payload = {provider: "codex", reportingPeriod: "all", historyDays: 739911,

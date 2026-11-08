@@ -1,12 +1,12 @@
 import QtQuick
 import QtTest
-import "../contents/ui/CostPresentation.js" as CostPresentation
+import "../contents/ui/CostAmounts.js" as CostAmounts
 import "../contents/ui/components" as Components
 
 TestCase {
     name: "CostText"
 
-    property var regionalFormat: CostPresentation.numberFormat(",", ".")
+    property var regionalFormat: CostAmounts.numberFormat(",", ".")
 
     Components.CostText {
         id: subject
@@ -355,9 +355,9 @@ TestCase {
     }
 
     function test_numberFormatIsExplicitAndReactive() {
-        regionalFormat = CostPresentation.numberFormat(",", ".");
+        regionalFormat = CostAmounts.numberFormat(",", ".");
         compare(subject.amountString(1234.5, "USD"), "$1,234.50");
-        regionalFormat = CostPresentation.numberFormat(".", ",");
+        regionalFormat = CostAmounts.numberFormat(".", ",");
         compare(subject.amountString(1234.5, "USD"), "$1.234,50");
         compare(subject.costLine("Today", 1234.5, null, "USD", "plain"), "Today: $1.234,50");
         compare(subject.dashboardPartText({ kind: "currency", value: 1234.5, currency: "EUR" }), "EUR 1.234,50");
@@ -373,7 +373,7 @@ TestCase {
         compare(subject.tokenCountString(15000), "15K");
         regionalFormat = ({});
         compare(subject.amountString(1234.5, "USD"), "$1,234.50");
-        regionalFormat = CostPresentation.numberFormat(",", ".");
+        regionalFormat = CostAmounts.numberFormat(",", ".");
         compare(subject.amountString(-12, "USD"), "-$12.00");
         compare(subject.amountString(12.6, "Quota"), "13");
         compare(subject.amountString("12.6", "USD"), "-");

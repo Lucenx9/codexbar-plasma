@@ -38,6 +38,10 @@ import "SOURCE_URL/PacePresentation.js" as PacePresentation
 import "SOURCE_URL/ResetPresentation.js" as ResetPresentation
 import "SOURCE_URL/UsageCache.js" as UsageCache
 import "SOURCE_URL/CostPresentation.js" as CostPresentation
+import "SOURCE_URL/CostAmounts.js" as CostAmounts
+import "SOURCE_URL/CostChart.js" as CostChart
+import "SOURCE_URL/CostCurrency.js" as CostCurrency
+import "SOURCE_URL/CostTrust.js" as CostTrust
 import "SOURCE_URL/PopupHiddenSections.js" as PopupHiddenSections
 TestCase {
     name: "ProviderMetadata"
@@ -82,7 +86,7 @@ TestCase {
             property bool loading: true
             property double panelClockMs: Date.UTC(2026, 8, 11, 12)
             property int maximumProviderSnapshots: Normalizer.maximumProviderSnapshots
-            property var costNumberFormat: CostPresentation.numberFormat(",", ".")
+            property var costNumberFormat: CostAmounts.numberFormat(",", ".")
             // QtObject has no default property, so the component is a property,
             // the same way UsageWindowText is supplied to the copied wrappers.
             property QtObject costText: Components.CostText {

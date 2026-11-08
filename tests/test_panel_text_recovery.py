@@ -28,6 +28,10 @@ import "SOURCE_URL/PanelTextFit.js" as PanelTextFit
 import "SOURCE_URL/ProviderIdentity.js" as ProviderIdentity
 import "SOURCE_URL/components" as Components
 import "SOURCE_URL/CostPresentation.js" as CostPresentation
+import "SOURCE_URL/CostAmounts.js" as CostAmounts
+import "SOURCE_URL/CostChart.js" as CostChart
+import "SOURCE_URL/CostCurrency.js" as CostCurrency
+import "SOURCE_URL/CostTrust.js" as CostTrust
 TestCase {
     name: "PanelTextRecovery"
     Components.PanelText {
@@ -36,7 +40,7 @@ TestCase {
         showPercent: true
         showCredits: applet.showCreditsInPanel
         loading: applet.loading
-        numberFormat: CostPresentation.numberFormat(",", ".")
+        numberFormat: CostAmounts.numberFormat(",", ".")
         function i18nc(context, text, a, b) { return i18n(text, a, b); }
         function i18n(text, a, b) {
             return text.replace("%1", a === undefined ? "" : a).replace("%2", b === undefined ? "" : b);

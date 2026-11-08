@@ -19,6 +19,10 @@ import org.kde.kirigami as Kirigami
 import org.kde.plasma.components as PlasmaComponents
 import "SOURCE_URL/components" as Components
 import "SOURCE_URL/CostPresentation.js" as CostPresentation
+import "SOURCE_URL/CostAmounts.js" as CostAmounts
+import "SOURCE_URL/CostChart.js" as CostChart
+import "SOURCE_URL/CostCurrency.js" as CostCurrency
+import "SOURCE_URL/CostTrust.js" as CostTrust
 import "SOURCE_URL/CostResponse.js" as CostResponse
 import "SOURCE_URL/PrivacyPresentation.js" as Privacy
 TestCase {
@@ -108,7 +112,7 @@ TestCase {
         property string daysSet: ""
         property string periodSet: ""
         property int refreshCount: 0
-        property var costNumberFormat: CostPresentation.numberFormat(",", ".")
+        property var costNumberFormat: CostAmounts.numberFormat(",", ".")
         function accountKey(item) { return item.account || ""; }
         function accountLabel(item) { return item.account || ""; }
         function tokenCostHint(provider) { return "hint"; }
@@ -125,7 +129,7 @@ TestCase {
         function providerIconIsMask(provider) { return false; }
         function canvasColor(color, alpha) { return "#000000"; }
         function costChartPoints(points, memo) {
-            return CostPresentation.memoizedChartPoints(memo, costNumberFormat, points, costHistoryShowsTokens);
+            return CostChart.memoizedChartPoints(memo, costNumberFormat, points, costHistoryShowsTokens);
         }
         function spendDailyPoints() { return testCase.spendPoints; }
         function spendProviderCosts() { return testCase.spendCosts; }

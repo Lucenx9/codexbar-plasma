@@ -1,7 +1,7 @@
 import QtQuick
 import QtTest
 import "../contents/ui/components" as Components
-import "../contents/ui/CostPresentation.js" as CostPresentation
+import "../contents/ui/CostAmounts.js" as CostAmounts
 import "../contents/ui/ProviderNormalizer.js" as Normalizer
 
 TestCase {
@@ -13,7 +13,7 @@ TestCase {
 
     Components.ProviderCostDetails {
         id: details
-        numberFormat: CostPresentation.numberFormat(",", ".")
+        numberFormat: CostAmounts.numberFormat(",", ".")
         function i18n(source) {
             var text = source;
             for (var i = 1; i < arguments.length; i++) {
@@ -29,7 +29,7 @@ TestCase {
     function init() {
         failOnWarning(/.*/);
         currentCost = null;
-        details.numberFormat = CostPresentation.numberFormat(",", ".");
+        details.numberFormat = CostAmounts.numberFormat(",", ".");
     }
 
     function test_zeroAndMissingAmountsKeepDistinctMeaning() {
@@ -83,7 +83,7 @@ TestCase {
         currentCost = {used: 1234.5, limit: 2000, currencyCode: "EUR", personalUsed: 1000};
         compare(liveSection.spendLine, "This month: EUR 1,234.50 / EUR 2,000.00");
         compare(liveSection.personalSpendLine, "Your spend: EUR 1,000.00");
-        details.numberFormat = CostPresentation.numberFormat(".", ",");
+        details.numberFormat = CostAmounts.numberFormat(".", ",");
         compare(liveSection.spendLine, "This month: EUR 1.234,50 / EUR 2.000,00");
         compare(liveSection.personalSpendLine, "Your spend: EUR 1.000,00");
     }

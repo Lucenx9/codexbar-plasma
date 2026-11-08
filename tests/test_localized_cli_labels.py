@@ -120,7 +120,7 @@ class LocalizedCliLabelTests(unittest.TestCase):
 import QtTest
 import PACE_PATH as PacePresentation
 import PRIVACY_PATH as PrivacyPresentation
-import COST_PATH as CostPresentation
+import COST_PATH as CostAmounts
 import COMPONENTS_PATH as Components
 TestCase {
     id: testCase
@@ -146,7 +146,7 @@ TestCase {
     }
     Components.CostText {
         id: costText
-        numberFormat: CostPresentation.numberFormat(",", ".")
+        numberFormat: CostAmounts.numberFormat(",", ".")
         function i18n() { return testCase.i18n.apply(testCase, arguments); }
         function i18np(one, many, count) { return testCase.i18np(one, many, count); }
     }
@@ -243,7 +243,7 @@ TestCase {
             fixture = directory / "tst_labels.qml"
             fixture.write_text(qml.replace("PACE_PATH", json.dumps((ROOT / "contents/ui/PacePresentation.js").as_uri()))
                                .replace("PRIVACY_PATH", json.dumps((ROOT / "contents/ui/PrivacyPresentation.js").as_uri()))
-                               .replace("COST_PATH", json.dumps((ROOT / "contents/ui/CostPresentation.js").as_uri()))
+                               .replace("COST_PATH", json.dumps((ROOT / "contents/ui/CostAmounts.js").as_uri()))
                                .replace("COMPONENTS_PATH", json.dumps((ROOT / "contents/ui/components").as_uri()))
                                .replace("ADAPTERS", adapters).replace("CASES", json.dumps(cases)), encoding="utf-8")
             result = subprocess.run(

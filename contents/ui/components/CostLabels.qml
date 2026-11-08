@@ -1,5 +1,6 @@
 import QtQuick
 import "../CostPresentation.js" as CostPresentation
+import "../CostAmounts.js" as CostAmounts
 import "../ProviderNormalizer.js" as Normalizer
 
 // Localized text for a provider's cost history: summary lines, breakdown,
@@ -47,35 +48,35 @@ QtObject {
     }
 
     function costPeakLine(points) {
-        var peak = CostPresentation.peakPoint(CostPresentation.recentHistoryPoints(points), root.showsTokens)
+        var peak = CostAmounts.peakPoint(CostPresentation.recentHistoryPoints(points), root.showsTokens)
         if (!peak) {
             return ""
         }
         return i18n("Peak: %1 - %2",
             peak.label.length > 0 ? root.costDayLabel(peak.label) : i18n("Latest"),
             root.showsTokens
-                ? CostPresentation.tokenCountString(peak.magnitude, root.numberFormat)
-                : CostPresentation.amountString(root.numberFormat, peak.magnitude, peak.currency))
+                ? CostAmounts.tokenCountString(peak.magnitude, root.numberFormat)
+                : CostAmounts.amountString(root.numberFormat, peak.magnitude, peak.currency))
     }
 
     // A calendar period longer than the chart supplies its whole-range average.
     function costAverageDailyLine(points, averageDaily) {
         var average = averageDaily ? averageDaily[root.showsTokens ? "tokens" : "cost"]
-            : CostPresentation.averageDailyValue(points, root.showsTokens)
+            : CostAmounts.averageDailyValue(points, root.showsTokens)
         if (!average) {
             return ""
         }
         return i18n("Average/day: %1", root.showsTokens
-            ? CostPresentation.tokenCountString(average.value, root.numberFormat)
-            : CostPresentation.amountString(root.numberFormat, average.value, average.currency))
+            ? CostAmounts.tokenCountString(average.value, root.numberFormat)
+            : CostAmounts.amountString(root.numberFormat, average.value, average.currency))
     }
 
     function costPerMillionLine(tokenCost) {
-        var perMillion = CostPresentation.perMillionAmount(tokenCost)
+        var perMillion = CostAmounts.perMillionAmount(tokenCost)
         if (!perMillion) {
             return ""
         }
         return i18n("Average: %1 / 1M tokens",
-            CostPresentation.amountString(root.numberFormat, perMillion.value, perMillion.currency))
+            CostAmounts.amountString(root.numberFormat, perMillion.value, perMillion.currency))
     }
 }

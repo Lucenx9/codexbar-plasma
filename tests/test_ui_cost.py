@@ -194,32 +194,15 @@ class CostTest(unittest.TestCase):
                     f"missing {history_row_fragment!r}"
                 )
 
-        cost_history_rows_body = function_body(cost_presentation_text, "historyRows")
-        if not code_contains(cost_history_rows_body, "sparklineMax(visibleDaily, showsTokens)"):
-            raise AssertionError("cost history bars must scale against the seven visible days")
-        if "tokenCost.daily.length - 14" in cost_history_rows_body:
-            raise AssertionError("cost history must not dominate the popup with fourteen detailed rows")
         if "function costDailyRows(tokenCost)" in main_text:
             raise AssertionError("cost details must not repeat the daily history below the chart")
 
     def test_detail_charts(self):
-        rounded_bar_body = function_body(cost_presentation_text, "paintRoundedTopBar")
-        for rounded_bar_fragment in (
-            "Math.min(radius, safeWidth / 2, safeHeight)",
-            "context.quadraticCurveTo(",
-            "context.fill()",
-        ):
-            if not code_contains(rounded_bar_body, rounded_bar_fragment):
-                raise AssertionError(
-                    "paintRoundedTopBar must preserve restrained top rounding for Canvas bars; "
-                    f"missing {rounded_bar_fragment!r}"
-                )
-
-        if not code_contains(interactive_chart_text, "CostPresentation.paintRoundedTopBar("):
+        if not code_contains(interactive_chart_text, "CostChart.paintRoundedTopBar("):
             raise AssertionError("provider detail bar charts must use rounded top corners")
         for detail_chart_fragment in (
             "chart.barGradient(",
-            "CostPresentation.chartBarGeometry(width, chart.pointCount)",
+            "CostChart.chartBarGeometry(width, chart.pointCount)",
             "ChartScale.barGeometry(height,",
         ):
             if not code_contains(interactive_chart_text, detail_chart_fragment):
@@ -263,27 +246,10 @@ class CostTest(unittest.TestCase):
                 "missing 'applet.costChartPoints('"
             )
 
-        # Bar charts are painted for up to 365 cost-history days and 120 detail-chart
-        # points. Their one-pixel minimum width can exceed a dense point slot, so the
-        # shared geometry helper must distribute the drawable bar edges inside the
-        # canvas instead of using the nominal slot as the drawing step.
-        if not code_contains(cost_presentation_text, "function chartBarGeometry(width, count)"):
-            raise AssertionError("CostPresentation.js must expose a shared bar-chart geometry helper")
-        chart_geometry_body = function_body(cost_presentation_text, "chartBarGeometry")
-        for fragment in (
-            "var slotStep = safeWidth / points",
-            "var barWidth = Math.max(1, slotStep - gap)",
-            "Math.max(0, safeWidth - barWidth) / (points - 1)",
-            "offset: Math.max(0, slotStep - barWidth) / 2",
-        ):
-            if not code_contains(chart_geometry_body, fragment):
-                raise AssertionError(
-                    f"chartBarGeometry must keep sparse and dense bars inside the canvas: {fragment}"
-                )
         for label, source_text in (
             ("InteractiveChart.qml", interactive_chart_text),
         ):
-            if not code_contains(source_text, "CostPresentation.chartBarGeometry("):
+            if not code_contains(source_text, "CostChart.chartBarGeometry("):
                 raise AssertionError(f"{label} bar charts must use the shared geometry helper")
             if "barWidth + gap" in source_text:
                 raise AssertionError(f"{label} bar charts must not recompute their own bar pitch")
@@ -294,16 +260,14 @@ class CostTest(unittest.TestCase):
         # testing must use the shared inset geometry so the visible marker stays inside
         # Canvas and resolves back to its own point.
         for helper_name in ("chartLineX", "chartLineIndexAt", "chartLineY"):
-            if not code_contains(cost_presentation_text, f"function {helper_name}("):
-                raise AssertionError(f"CostPresentation.js must expose {helper_name} marker geometry")
-            if not code_contains(interactive_chart_text, f"CostPresentation.{helper_name}("):
+            if not code_contains(interactive_chart_text, f"CostChart.{helper_name}("):
                 raise AssertionError(f"provider detail line charts must use {helper_name}")
 
     def test_cost_hierarchy_and_selection(self):
         cost_summary_body = applet.id_block("costSummaryGrid")
         for fragment in (
             "columns: 2",
-            "amounts: CostPresentation.todayAmounts(tokenCostSection.tokenCost, tokenCostSection.applet.panelClockMs)",
+            "amounts: CostAmounts.todayAmounts(tokenCostSection.tokenCost, tokenCostSection.applet.panelClockMs)",
             "amounts: tokenCostSection.tokenCost.totals",
             "tokenCostSection.amountText(modelData.amounts, modelData.valueMode)",
             "tokenCostSection.tokensText(modelData.amounts)",
@@ -316,11 +280,11 @@ class CostTest(unittest.TestCase):
 
         for fragment in (
             "property bool detailsExpanded: false",
-            "CostPresentation.selectedCostDay(",
+            "CostChart.selectedCostDay(",
             "chartPoints, costChart.selectedIndex)",
             "onPointsChanged: tokenCostSection.reconcileDaySelection()",
             "onSelectedIndexChanged: tokenCostSection.rememberDaySelection()",
-            "CostPresentation.costDayIndexAfterRefresh(",
+            "CostChart.costDayIndexAfterRefresh(",
             "onCostHistoryShowsTokensChanged: clearDaySelection()",
             "applet.accountKey(providerData)",
             "accountSelectionKey,",
@@ -476,7 +440,7 @@ class CostTest(unittest.TestCase):
         if "visible: view.dailyPoints.length > 1" in spend_view_text:
             raise AssertionError("SpendView must not hide the accessible chart when one history day is available")
         for heatmap_range_fragment in (
-            "readonly property var heatmapDays: CostPresentation.spendHeatmapDays(dailyPoints, providerCosts)",
+            "readonly property var heatmapDays: CostChart.spendHeatmapDays(dailyPoints, providerCosts)",
             "Math.ceil( (view.heatmapDays.length + view.heatmapTrailingSlots) / 7)",
             "readonly property int fittingColumns",
             "readonly property real cellHeight",
@@ -490,8 +454,8 @@ class CostTest(unittest.TestCase):
                 )
         for heatmap_weekday_fragment in (
             "readonly property int heatmapFirstWeekday: Qt.locale().firstDayOfWeek",
-            "CostPresentation.spendHeatmapRowWeekdays( heatmapDays, heatmapFirstWeekday)",
-            "CostPresentation.spendHeatmapTrailingSlots( heatmapDays, heatmapFirstWeekday)",
+            "CostChart.spendHeatmapRowWeekdays( heatmapDays, heatmapFirstWeekday)",
+            "CostChart.spendHeatmapTrailingSlots( heatmapDays, heatmapFirstWeekday)",
             "view.heatmapDays, columnCount * 7, view.heatmapTrailingSlots)",
             "visible: view.heatmapRowWeekdays.length === 7",
             "Qt.locale().dayName(modelData, Locale.ShortFormat)",
@@ -501,7 +465,7 @@ class CostTest(unittest.TestCase):
                     "the activity heatmap rows must name their weekday, and stay unlabelled when "
                     f"the days are not calendar aligned; missing {heatmap_weekday_fragment!r}"
                 )
-        if not code_contains(spend_view_text, "CostPresentation.spendHeatmapCells("):
+        if not code_contains(spend_view_text, "CostChart.spendHeatmapCells("):
             raise AssertionError(
                 "the activity heatmap must pad its grid through the shared cell layout, so a ragged "
                 "final column cannot cut a week-wide notch out of the block"
@@ -573,7 +537,7 @@ class CostTest(unittest.TestCase):
         if not code_contains(function_body(cost_text, "spendTotalLine"), 'i18n("%1 subtotal", costValue)'):
             raise AssertionError("mixed-currency spend text must label the selected currency as a subtotal")
         for mixed_currency_fragment in (
-            "CostPresentation.spendHasMixedCostCurrencies(providerCosts)",
+            "CostCurrency.spendHasMixedCostCurrencies(providerCosts)",
             "The cost subtotal and charts use %1.",
         ):
             if not code_contains(main_text, mixed_currency_fragment):
@@ -600,14 +564,14 @@ class CostTest(unittest.TestCase):
                 raise AssertionError(
                     f"{trust_owner_source} must render the shared cost-trust notice"
                 )
-            if not code_contains(trust_owner_text, "CostPresentation.costTrustSummary("):
+            if not code_contains(trust_owner_text, "CostTrust.costTrustSummary("):
                 raise AssertionError(
-                    f"{trust_owner_source} must delegate cost-trust policy to CostPresentation"
+                    f"{trust_owner_source} must delegate cost-trust policy to CostTrust"
                 )
         for persistent_notice_fragment in (
             "property var costTrustNoticeStates: ({})",
             "function updateCostTrustNoticeState(",
-            "CostPresentation.costTrustNoticeStoreTransition(",
+            "CostTrust.costTrustNoticeStoreTransition(",
         ):
             if not code_contains(main_text, persistent_notice_fragment):
                 raise AssertionError(
@@ -696,7 +660,7 @@ class CostTest(unittest.TestCase):
         source = (root / "contents/ui/main.qml").read_text()
         for name, call in (
             ("costHistoryWindowLabel", "return costText.costHistoryWindowLabel(item, requestedHistoryDays)"),
-            ("costChartPoints", "return CostPresentation.memoizedChartPoints(memo, costNumberFormat, points, costHistoryShowsTokens)"),
+            ("costChartPoints", "return CostChart.memoizedChartPoints(memo, costNumberFormat, points, costHistoryShowsTokens)"),
             ("spendHistoryStillBuilding", "return CostPresentation.historyStillBuilding(spendProviderCosts())"),
         ):
             self.assertTrue(code_contains(function_body(source, name), call), name)

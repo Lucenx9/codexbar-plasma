@@ -5,6 +5,33 @@ import "../contents/ui/Guards.js" as Guards
 TestCase {
     name: "Guards"
 
+    function test_recordAndNumberGuardsRejectCoercion() {
+        verify(Guards.isRecord({ value: 1 }))
+        verify(Guards.isFiniteNumber(0))
+        verify(Guards.isFiniteNumber(-2.5))
+        for (var value of [undefined, null, [], [1], "1", 1, false])
+            verify(!Guards.isRecord(value))
+        for (var number of [undefined, null, "1", true, [], {}, NaN, Infinity, -Infinity])
+            verify(!Guards.isFiniteNumber(number))
+    }
+
+    function test_arrayIndicesRequireAnIntegerInsideARealArray() {
+        var items = ["first", "last"]
+        verify(Guards.isArrayIndex(items, 0))
+        verify(Guards.isArrayIndex(items, 1))
+        for (var index of [-1, 2, 0.5, "0", null, false, NaN, Infinity])
+            verify(!Guards.isArrayIndex(items, index))
+        verify(!Guards.isArrayIndex([], 0))
+        verify(!Guards.isArrayIndex({ length: 2, 0: "fake" }, 0))
+    }
+
+    function test_integerCountsRejectCoercionAndNonFiniteValues() {
+        verify(Guards.isNonNegativeInteger(0))
+        verify(Guards.isNonNegativeInteger(1000000000))
+        for (var value of [-1, 0.5, "1", false, null, [], {}, NaN, Infinity])
+            verify(!Guards.isNonNegativeInteger(value))
+    }
+
     function test_exitCodeFailsClosedWithoutANumericStatus() {
         compare(Guards.exitCode(0), 0)
         compare(Guards.exitCode("0"), 0)

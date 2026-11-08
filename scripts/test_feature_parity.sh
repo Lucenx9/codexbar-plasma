@@ -68,14 +68,14 @@ PY
 # renders the real component with cost-heavy/token-heavy/unpriced rows:
 # metric ordering, the per-metric values and the unavailable fallback each
 # go red there when broken.
-# Cost presentation moved behind CostPresentation.js. Assert the delegation so
-# the maths cannot quietly grow a second copy back inside main.qml.
-require_in_surface applet "CostPresentation.costTrustSummary("
+# Cost presentation modules own the pure policy. Assert the delegation so the
+# maths cannot quietly grow a second copy back inside main.qml.
+require_in_surface applet "CostTrust.costTrustSummary("
 # The locale separator wiring is unobservable in executed tests: the
 # costNumberFormat property initializer cannot be extracted, so fixtures
 # declare the format themselves and swapping the separators keeps every cost
 # test green. This stays as the only pin on the locale wiring.
-require_in_surface applet "CostPresentation.numberFormat("
+require_in_surface applet "CostAmounts.numberFormat("
 reject_in_surface applet "function appendTokenBreakdownRow("
 # The popup dashboard sections are executed by tests/test_usage_dashboard.py,
 # which extracts the production providerDetailsSection and usageDashboardSection
