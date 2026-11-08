@@ -297,6 +297,29 @@ TestCase {
         verify(legacy.usageDashboard !== null);
         compare(legacy.placeholder, "");
     }
+
+    function test_emptyChartsDoNotSuppressFallbacks_data() {
+        return [
+            {tag: "empty", chart: {kind: "bars", points: []}},
+            {tag: "invalid-points", chart: {kind: "line", points: [{label: "", value: 1}]}},
+            {tag: "invalid-labels", chart: {kind: "bars", title: {}, unit: [], points: []}}
+        ];
+    }
+
+    function test_emptyChartsDoNotSuppressFallbacks(data) {
+        var usage = {details: [{chart: data.chart}]};
+        var legacy = ProviderSnapshot.normalize({provider: "codex", usage: usage,
+            openaiDashboard: {creditsRemaining: 8}}, 1000);
+        verify(legacy.usageDashboard !== null, "Empty optional chart must preserve dashboard data");
+        compare(legacy.providerDetails.length, 0);
+        compare(legacy.usageDashboard.kpis[0].parts[0].value, 8);
+        compare(legacy.placeholder, "");
+
+        var empty = ProviderSnapshot.normalize({provider: "codex", usage: usage}, 1000);
+        compare(empty.providerDetails.length, 0);
+        compare(empty.usageDashboard, null);
+        compare(empty.placeholder, "noUsage");
+    }
     // Official Linux output carries lane titles beside `usage` on the provider
     // record (`{"primary": "Memory"}` for llmman at 0.67.0). Only a bounded,
     // non-empty string for a lane that produced a row survives.

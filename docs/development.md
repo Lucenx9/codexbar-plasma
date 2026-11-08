@@ -167,7 +167,9 @@ synchronized.
   `identified-*` smoke scenarios cover this path with synthetic data, including
   schema 2 estimates, unpriced requests and schema mismatch guidance.
 - `UsageDetails.js` bounds detail sections and preserves only the CLI row
-  severities `normal`, `warning`, and `critical`. `ProviderDetailSection.qml`
+  severities `normal`, `warning`, and `critical`. Charts without a usable title,
+  unit, or point are omitted so an empty detail section cannot suppress the
+  legacy dashboard or no-usage placeholder. `ProviderDetailSection.qml`
   localizes warning/critical descriptions and paints compact Canvas symbols
   with theme-contrast accents and transparent cutouts. Painting the accent
   directly works with software and OpenGL rendering. It supplies readable
