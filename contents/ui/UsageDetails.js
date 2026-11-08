@@ -125,6 +125,9 @@ function normalizeSections(rawSections) {
                 unit: optionalText(rawChart.unit),
                 points: points
             }
+            if (chart.title.length === 0 && chart.unit.length === 0 && points.length === 0) {
+                chart = null
+            }
         }
 
         var title = optionalText(rawSection.title)

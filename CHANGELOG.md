@@ -79,6 +79,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Preserve dashboard summaries and no-usage explanations when optional provider
+  detail charts contain no usable title, unit, or points.
+
 - Polish the Providers settings page: end the selected provider's highlight
   before its switch, tighten stacked diagnostic label/value pairs, and offer a
   centered **Reload** when the provider list cannot load, including after the

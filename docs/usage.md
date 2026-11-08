@@ -372,6 +372,8 @@ work and upstream contract requirements.
   use equal columns aligned with the Cost summaries. Truncated summary labels
   and values show their full text on hover. Long detail values stay within
   half the row and also show their full text on hover.
+  An optional detail chart without a title, unit, or valid points does not
+  suppress the dashboard summary or the no-usage explanation.
 - Declarative provider detail sections from the CLI `usage.details` contract,
   including labeled rows, secondary values, and keyboard/pointer-inspectable
   bar/line charts. A row that carries a valid `progress` used/total pair, such
