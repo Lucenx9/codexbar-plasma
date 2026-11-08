@@ -288,6 +288,13 @@ synchronized.
   for per-user locking, daily throttling, bounded official asset downloads, strict
   archive extraction, isolated-environment version probes, atomic activation and
   rollback. Only the exact managed command is eligible for update/rollback.
+  Its internal helpers separate release preparation from recoverable replacement,
+  archive validation from member extraction, and state validation from interrupted
+  activation recovery. `run` keeps the shared lock around cleanup, install and
+  rollback; offline reuse still bypasses that lock and all release requests.
+  Managed CLI tests cover recovery on both sides of the atomic switch, archive
+  name/count/size limits and resource permissions, and cleanup failures during
+  install, update and rollback.
   Rollback runs the same bounded, isolated version probe used for offline reuse
   against the previous copy before writing activation state or switching the
   symlink. A failed probe returns `no_previous` without changing either; the
