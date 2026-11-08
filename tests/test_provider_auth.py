@@ -102,6 +102,9 @@ class LoginEventTests(unittest.TestCase):
         list(stream.feed(b'{}' + b' ' * (auth.MAX_BYTES - 3) + b'\n'))
         with self.assertRaises(ValueError):
             list(stream.feed(b'\n'))
+        for invalid in (b'\n', b'{\n'):
+            with self.subTest(invalid=invalid), self.assertRaises(ValueError):
+                list(auth.LoginStream().feed(invalid))
 
 
 class ProviderAuthTests(unittest.TestCase):

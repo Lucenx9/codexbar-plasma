@@ -395,8 +395,9 @@ class ManagedCliTests(unittest.TestCase):
             with self.subTest(field=field), self.assertRaises(ValueError):
                 cli.release_assets(data, "linux-x86_64")
         self.release["assets"].append(self.release["assets"][0])
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValueError) as refused:
             cli.release_assets(self.release, "linux-x86_64")
+        self.assertEqual(str(refused.exception), "asset_missing")
 
     def test_archive_rejects_traversal_links_devices_duplicates_and_oversize(self):
         for name, kind, link, size in [("../escape", tarfile.REGTYPE, "", 0),
