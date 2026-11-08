@@ -79,6 +79,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Preserve dashboard summaries and no-usage explanations when optional provider
+  detail charts contain no usable title, unit, or points.
+
 - Keep short reset countdowns complete beside pace forecasts in provider popups,
   and preserve quota titles at the inline-reset fit boundary with KDE desktop fonts.
 
