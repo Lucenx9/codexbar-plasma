@@ -38,6 +38,10 @@ The existing bounded `--version` probe gates all actions. Unknown versions,
 failed probes and matching prereleases fail closed. Same-executable reloads
 retain visible controls but disable writes until list/version checks finish.
 Changing executables resets capabilities and retires outstanding requests.
+The pure `config/ProviderCapabilities.js` module centralizes the existing
+API-key version gates and legacy provider allowlist. The page still owns the
+probe lifecycle and publishes its results; inventory authentication metadata
+can restrict an action but cannot add an unverified writer.
 
 ## Linux cookie allowlist
 
@@ -63,6 +67,8 @@ The executable engine delivers output on exit, so `scripts/provider-auth.py`
 bridges the official event stream to a native KDE text dialog. The helper has
 no provider HTTP client and never reads config. The page owns request creation,
 localized text, cancellation, nonces, deadlines and final configuration effects.
+Inside the helper, bounded stream framing and pure event decisions are separate
+from the process loop that opens the dialog and applies cancellation and expiry.
 
 Pending events accept a bounded HTTPS `/login/device` address (including GitHub
 Enterprise hosts), an eight-character device code with a hyphen, and an integer

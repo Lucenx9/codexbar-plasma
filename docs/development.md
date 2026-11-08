@@ -314,6 +314,9 @@ synchronized.
   rollback. Only the exact managed command is eligible for update/rollback.
   `run` keeps the shared lock around cleanup, install and
   rollback; offline reuse still bypasses that lock and all release requests.
+  Receipt identity, asset selection and checksum/VERSION text validation are
+  separate checks inside the helper; installation and recovery retain their
+  existing lock and filesystem ownership.
   Managed CLI tests cover recovery on both sides of the atomic switch, archive
   name and member-count limits, VERSION size rejection and resource permissions,
   and cleanup failures during install, update and rollback.
@@ -660,6 +663,8 @@ synchronized.
   `Plasmoid.configuration` at runtime.
 - `UsageCache.js` reconciles failed usage snapshots and projects a bounded quota
   cache. `UsageState.js` composes its retention rules into publication decisions.
+  Freshness selection, stale-data projection and persisted-record conversion
+  remain separate pure steps behind the same cache interface and schema.
   `main.qml` owns context invalidation effects, configuration reads/writes, and
   stale notification suppression. Its minute timer expires retained measurements
   even when automatic refresh is disabled. Persisted records never bypass
@@ -770,6 +775,11 @@ transitions, boolean binding restoration, numeric zero and control availability.
 
 ### Provider credential commands
 
+`config/ProviderCapabilities.js` owns the released-version capability gates and
+legacy API-key allowlist. The Providers page publishes the resulting flags and
+resets them on executable changes or failed probes; direct capability QtTests
+cover version boundaries and authentication restrictions.
+
 `config/ProviderCredentials.js` owns version gates, the probe-backed Linux cookie
 allowlist, quoted helper commands and bounded semantic results. The Providers
 page owns prompts, nonces, pending locks, confirmation, command retirement,
@@ -785,6 +795,9 @@ newline-delimited CLI events while a native `kdialog --textbox -`
 shows the pending URI/code. This bridge is necessary because Plasma's executable
 engine publishes stdout only when a process exits. QML supplies localized dialog
 text and starts the supervised command through `Guards.supervisedShellCommand`.
+The helper's bounded `LoginStream` frames events without effects; `login_event`
+classifies each event from explicit pending/terminal state. The process loop
+applies those decisions, retaining ownership of dialog stdin, timers and cleanup.
 Disconnecting a cached executable source does not stop its process immediately.
 Cancellation sends a credential-free request marker through a short-lived
 DataSource owned by the `credential/LoginCancellation.qml` singleton, so page
@@ -797,7 +810,8 @@ window close button cancels; OK dismisses it and continues waiting in settings.
 Successful login bumps the existing provider-config revision to refresh usage.
 
 Run `make check-python-test_provider_auth check-python-test_provider_source`
-and the direct `tst_provider_credentials.qml` QtTest while editing. The auth
+and the direct `tst_provider_credentials.qml` and `tst_provider_capabilities.qml`
+QtTests while editing. The auth
 adapter tests execute synthetic CLI streams, including split writes, bad shapes,
 refusal, cancellation, expiry, conflicts and loss of the engine parent. A real
 Plasma executable-engine test destroys the request owner and verifies both
