@@ -247,6 +247,31 @@ TestCase {
             compare(moveTips[i].plainText, moveTips[i].parent.Accessible.name);
         }
     }
+    function test_emptyOrderLabelStaysAtTopOfWrappedError_data() {
+        return [{tag: "ltr", rtl: false}, {tag: "rtl", rtl: true}];
+    }
+
+    function test_emptyOrderLabelStaysAtTopOfWrappedError(data) {
+        mirroredPage = data.rtl;
+        var page = createPage({width: 840});
+        if (!page) return;
+        var controller = waitForRosterSettled(page);
+        controller.enabledProviderRoster = [];
+        controller.providerRosterError = "The provider list could not be loaded. ".repeat(12);
+        waitForRendering(page);
+        var all = [];
+        walkObjects(page, all);
+        var labels = all.filter(function(item) {
+            return item.text === "Provider order:" && item.verticalAlignment !== undefined;
+        });
+        compare(labels.length, 1);
+        var label = labels[0];
+        verify(label.height > label.implicitHeight * 2,
+            "The empty roster message must wrap across multiple lines");
+        compare(label.verticalAlignment, Text.AlignTop,
+            "An empty roster label must stay at the top of its status message");
+    }
+
     function test_explicitOverviewModePreservesAutomaticContract_data() {
         return [{tag: "ltr", rtl: false}, {tag: "rtl", rtl: true}];
     }

@@ -293,6 +293,7 @@ KCM.SimpleKCM {
         ColumnLayout {
             id: providerOrderColumn
             Kirigami.FormData.label: i18n("Provider order:")
+            Kirigami.FormData.labelAlignment: providerOrderRepeater.count > 0 ? 0 : Qt.AlignTop
             Kirigami.FormData.buddyFor: providerOrderRepeater.count > 0
                 ? providerOrderRepeater.itemAt(0) : providerOrderColumn
             Layout.fillWidth: true
