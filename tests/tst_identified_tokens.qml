@@ -203,6 +203,59 @@ TestCase {
         value.records[0].pricingMode = "priority";
         compare(decode(value).outcome, "data");
     }
+    function test_schema1IgnoresSchema2PricingFields() {
+        var value = ledger();
+        value.records[0].model = {};
+        value.records[0].pricingMode = "unknown";
+        value.records[0].includedInPlan = "unknown";
+        var result = decode(value);
+        compare(result.outcome, "data");
+        compare(result.snapshot.totalTokens, 320);
+        compare(result.snapshot.apiEstimateUSD, null);
+    }
+    function test_reportFailurePrecedence_data() {
+        return [{tag: "malformed-first", expected: "unsupported"},
+            {tag: "error-before-schema", expected: "unsupported"},
+            {tag: "source-before-schema", expected: "unsupported"},
+            {tag: "mixed-before-metadata", expected: "schemaMismatch"},
+            {tag: "matching-missing-metadata", expected: "unsupported"}];
+    }
+    function test_reportFailurePrecedence(data) {
+        var value = remotePayload2();
+        switch (data.tag) {
+        case "malformed-first":
+            value.reports[0].ledger.records[0].inputTokens = -1;
+            value.reports[1].ledger.schemaVersion = 3;
+            break;
+        case "error-before-schema":
+            value.reports[1].error = "unavailable";
+            value.reports[1].ledger.schemaVersion = 3;
+            break;
+        case "source-before-schema":
+            value.reports[1].source = "local";
+            value.reports[1].ledger.schemaVersion = 3;
+            break;
+        case "mixed-before-metadata":
+            value.reports[0].ledger = ledger();
+            delete value.reports[1].source;
+            break;
+        case "matching-missing-metadata":
+            delete value.reports[1].source;
+            break;
+        }
+        compare(decode(value, "build@host").outcome, data.expected);
+    }
+    function test_conflictingRowsStillObeyCountBounds() {
+        var value = ledger();
+        value.conflictingIDs = ["a".repeat(64), "b".repeat(64)];
+        value.records[0].inputTokens = 9007199254740981;
+        compare(decode(value).outcome, "unsupported");
+        value.records[0].inputTokens = "100";
+        compare(decode(value).outcome, "unsupported");
+        value.records[0].inputTokens = 100;
+        value.records[0].cacheReadTokens = -1;
+        compare(decode(value).outcome, "unsupported");
+    }
     function test_invalidSchema2Fields_data() {
         return ["model", "emptyModel", "longModel", "mode", "included", "missingIncluded",
             "source", "collectedAt", "priceString", "priceNegative", "priceOverflow", "missingPrice",

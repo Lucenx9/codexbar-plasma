@@ -45,40 +45,68 @@ function requestPlan(commandPath, days, endUnixMs, remoteHost) {
         startUnixMs: start, endUnixMs: endUnixMs, remoteHost: remoteHost};
 }
 
-// IDs exist only within this bounded decoder. Duplicate ledger rows are rejected;
-// native parsing and cross-source identity reconciliation belong to the CLI.
-function ledgerSummary(ledger, plan) {
-    if (!record(ledger) || (ledger.schemaVersion !== 1 && ledger.schemaVersion !== 2) || ledger.provider !== "codex"
-            || ledger.startUnixMs !== plan.startUnixMs || ledger.endUnixMs !== plan.endUnixMs
-            || typeof ledger.partial !== "boolean" || !count(ledger.excludedCount)
-            || !Array.isArray(ledger.records) || ledger.records.length > maximumRecords
-            || !Array.isArray(ledger.conflictingIDs) || ledger.conflictingIDs.length > maximumRecords) return null;
-    var conflicts = ({});
-    var seen = ({});
-    var digest = /^[0-9a-f]{64}$/;
-    for (var i = 0; i < ledger.conflictingIDs.length; i++) {
-        var id = ledger.conflictingIDs[i];
-        if (typeof id !== "string" || id.length !== 64 || !digest.test(id) || Guards.hasOwnKey(conflicts, id)) return null;
-        conflicts[id] = true;
+function supportedSchema(version) {
+    return version === 1 || version === 2;
+}
+
+function boundedRecords(value) {
+    return Array.isArray(value) && value.length <= maximumRecords;
+}
+
+function ledgerMetadataValid(ledger, plan) {
+    if (!record(ledger) || !supportedSchema(ledger.schemaVersion) || ledger.provider !== "codex") return false;
+    if (ledger.startUnixMs !== plan.startUnixMs || ledger.endUnixMs !== plan.endUnixMs) return false;
+    return typeof ledger.partial === "boolean" && count(ledger.excludedCount)
+        && boundedRecords(ledger.records) && boundedRecords(ledger.conflictingIDs);
+}
+
+function validDigest(value) {
+    return typeof value === "string" && value.length === 64 && /^[0-9a-f]{64}$/.test(value);
+}
+
+function conflictSet(ids) {
+    var result = ({});
+    for (var i = 0; i < ids.length; i++) {
+        var id = ids[i];
+        if (!validDigest(id) || Guards.hasOwnKey(result, id)) return null;
+        result[id] = true;
     }
+    return result;
+}
+
+function tokenCountsValid(row) {
+    if (!count(row.inputTokens) || !count(row.outputTokens) || !count(row.cacheReadTokens)) return false;
+    if (row.cacheReadTokens > row.inputTokens) return false;
+    if (row.reasoningTokens === undefined || row.reasoningTokens === null) return true;
+    return count(row.reasoningTokens) && row.reasoningTokens <= row.outputTokens;
+}
+
+function pricingFieldsValid(row) {
+    if (typeof row.includedInPlan !== "boolean") return false;
+    var model = row.model;
+    if (model !== undefined && model !== null) {
+        if (typeof model !== "string" || model.length === 0 || model.length > 1024) return false;
+    }
+    var mode = row.pricingMode;
+    return mode === undefined || mode === null || mode === "standard" || mode === "priority";
+}
+
+function ledgerRowValid(row, plan, schema) {
+    if (!record(row) || !validDigest(row.id) || !count(row.timestampUnixMs)) return false;
+    if (row.timestampUnixMs < plan.startUnixMs || row.timestampUnixMs > plan.endUnixMs) return false;
+    if (!tokenCountsValid(row)) return false;
+    return schema !== 2 || pricingFieldsValid(row);
+}
+
+// Validate every row, including conflicts, before publishing any aggregate.
+function recordTotals(ledger, plan, conflicts) {
+    var seen = ({});
     var total = 0;
     var allTokens = 0;
     var requests = 0;
     for (var j = 0; j < ledger.records.length; j++) {
         var row = ledger.records[j];
-        if (!record(row) || typeof row.id !== "string" || row.id.length !== 64 || !digest.test(row.id)
-                || Guards.hasOwnKey(seen, row.id) || !count(row.timestampUnixMs)
-                || row.timestampUnixMs < plan.startUnixMs || row.timestampUnixMs > plan.endUnixMs
-                || !count(row.inputTokens) || !count(row.outputTokens) || !count(row.cacheReadTokens)
-                || row.cacheReadTokens > row.inputTokens
-                || (row.reasoningTokens !== undefined && row.reasoningTokens !== null
-                    && (!count(row.reasoningTokens) || row.reasoningTokens > row.outputTokens))) return null;
-        if (ledger.schemaVersion === 2
-                && ((row.model !== undefined && row.model !== null
-                        && (typeof row.model !== "string" || row.model.length === 0 || row.model.length > 1024))
-                    || (row.pricingMode !== undefined && row.pricingMode !== null
-                        && row.pricingMode !== "standard" && row.pricingMode !== "priority")
-                    || typeof row.includedInPlan !== "boolean")) return null;
+        if (!ledgerRowValid(row, plan, ledger.schemaVersion) || Guards.hasOwnKey(seen, row.id)) return null;
         seen[row.id] = true;
         var tokens = row.inputTokens + row.outputTokens;
         allTokens += tokens;
@@ -88,7 +116,18 @@ function ledgerSummary(ledger, plan) {
             requests++;
         }
     }
-    return {schemaVersion: ledger.schemaVersion, totalTokens: total, requestCount: requests,
+    return {totalTokens: total, requestCount: requests};
+}
+
+// IDs exist only within this bounded decoder. Duplicate ledger rows are rejected;
+// native parsing and cross-source identity reconciliation belong to the CLI.
+function ledgerSummary(ledger, plan) {
+    if (!ledgerMetadataValid(ledger, plan)) return null;
+    var conflicts = conflictSet(ledger.conflictingIDs);
+    if (!conflicts) return null;
+    var totals = recordTotals(ledger, plan, conflicts);
+    if (!totals) return null;
+    return {schemaVersion: ledger.schemaVersion, totalTokens: totals.totalTokens, requestCount: totals.requestCount,
         conflictCount: ledger.conflictingIDs.length,
         excludedCount: ledger.excludedCount,
         partial: ledger.partial || ledger.excludedCount > 0 || ledger.conflictingIDs.length > 0};
@@ -105,36 +144,98 @@ function snapshot(summary, plan, localAvailable, remoteAvailable, partial) {
         startUnixMs: plan.startUnixMs, endUnixMs: plan.endUnixMs, historyDays: plan.historyDays};
 }
 
-function envelope(payload, plan, exit) {
-    var remote = plan.remoteHost.length > 0;
-    if (!record(payload) || !Array.isArray(payload.reports)
-            || payload.reports.length !== (remote ? 2 : 1)
-            || typeof payload.allSourcesAvailable !== "boolean" || typeof payload.partial !== "boolean") return null;
+function reportSummary(report, plan, index) {
+    if (!record(report) || report.host !== (index === 0 ? "local" : plan.remoteHost)) return null;
+    var source = index === 0 ? "local" : "ssh";
+    if (report.source !== undefined && report.source !== source) return null;
+    var hasLedger = report.ledger !== null && report.ledger !== undefined;
+    if (!hasLedger) {
+        return typeof report.error === "string" ? {outcome: "failed", summary: null} : null;
+    }
+    if (report.error !== undefined && report.error !== null) return null;
+    if (record(report.ledger) && report.ledger.schemaVersion !== undefined
+            && !supportedSchema(report.ledger.schemaVersion)) return {outcome: "schemaMismatch"};
+    var summary = ledgerSummary(report.ledger, plan);
+    return summary ? {outcome: "data", summary: summary} : null;
+}
+
+function reportMetadataValid(report, index) {
+    return report.source === (index === 0 ? "local" : "ssh")
+        && typeof report.collectedAt === "string" && isFinite(Date.parse(report.collectedAt));
+}
+
+function envelopeSources(reports, plan) {
     var sources = [];
     var schema = null;
-    for (var i = 0; i < payload.reports.length; i++) {
-        var report = payload.reports[i];
-        if (!record(report) || report.host !== (i === 0 ? "local" : plan.remoteHost)) return null;
-        var hasLedger = report.ledger !== null && report.ledger !== undefined;
-        if (report.source !== undefined && report.source !== (i === 0 ? "local" : "ssh")) return null;
-        if (hasLedger) {
-            if (report.error !== undefined && report.error !== null) return null;
-            if (record(report.ledger) && report.ledger.schemaVersion !== undefined
-                    && report.ledger.schemaVersion !== 1 && report.ledger.schemaVersion !== 2)
-                return {outcome: "schemaMismatch"};
-            var summary = ledgerSummary(report.ledger, plan);
-            if (!summary) return null;
-            if (schema !== null && schema !== summary.schemaVersion) return {outcome: "schemaMismatch"};
-            schema = summary.schemaVersion;
-            if (schema === 2 && (report.source !== (i === 0 ? "local" : "ssh")
-                    || typeof report.collectedAt !== "string" || !isFinite(Date.parse(report.collectedAt)))) return null;
-            sources.push(summary);
-        } else {
-            if (typeof report.error !== "string") return null;
-            sources.push(null);
-        }
+    for (var i = 0; i < reports.length; i++) {
+        var result = reportSummary(reports[i], plan, i);
+        if (!result) return null;
+        if (result.outcome === "schemaMismatch") return result;
+        var summary = result.summary;
+        sources.push(summary);
+        if (!summary) continue;
+        if (schema !== null && schema !== summary.schemaVersion) return {outcome: "schemaMismatch"};
+        schema = summary.schemaVersion;
+        if (schema === 2 && !reportMetadataValid(reports[i], i)) return null;
     }
-    var available = sources.filter(function(source) { return source !== null; });
+    return {outcome: "data", sources: sources, schema: schema,
+        available: sources.filter(function(source) { return source !== null; })};
+}
+
+function subtotalCountsValid(subtotal) {
+    if (!count(subtotal.totalTokens) || !count(subtotal.requestCount)
+            || !count(subtotal.conflictCount) || !count(subtotal.excludedCount)) return false;
+    if (subtotal.requestCount > maximumRecords * 2 || subtotal.conflictCount > maximumRecords * 2) return false;
+    return subtotal.requestCount !== 0 || subtotal.totalTokens === 0;
+}
+
+function subtotalShapeValid(subtotal) {
+    return record(subtotal) && subtotal.kind === "identified-request-subtotal"
+        && typeof subtotal.partial === "boolean" && subtotalCountsValid(subtotal);
+}
+
+function estimateValid(value) {
+    return typeof value === "number" && isFinite(value) && value >= 0 && value <= maximumCount;
+}
+
+function subtotalPricingValid(subtotal, schema) {
+    if (schema === 1) return subtotal.costUSD === null;
+    if (!count(subtotal.unpricedRequestCount) || subtotal.unpricedRequestCount > subtotal.requestCount) return false;
+    if (subtotal.costUSD !== null && !estimateValid(subtotal.costUSD)) return false;
+    if ((subtotal.costUSD === null) !== (subtotal.unpricedRequestCount > 0)) return false;
+    return subtotal.requestCount !== 0 || subtotal.costUSD === 0;
+}
+
+function sourceTotals(available) {
+    var totals = {tokens: 0, requests: 0, excluded: 0, conflicts: 0, partial: false};
+    for (var i = 0; i < available.length; i++) {
+        var source = available[i];
+        totals.tokens += source.totalTokens;
+        totals.requests += source.requestCount;
+        totals.excluded += source.excludedCount;
+        totals.conflicts = Math.max(totals.conflicts, source.conflictCount);
+        totals.partial = totals.partial || source.partial;
+    }
+    return totals;
+}
+
+function singleSourceMatches(subtotal, source) {
+    return subtotal.totalTokens === source.totalTokens && subtotal.requestCount === source.requestCount
+        && subtotal.conflictCount === source.conflictCount && subtotal.partial === source.partial;
+}
+
+function subtotalMatchesSources(subtotal, available) {
+    var totals = sourceTotals(available);
+    if (!count(totals.tokens) || !count(totals.excluded) || subtotal.excludedCount !== totals.excluded) return false;
+    if (subtotal.totalTokens > totals.tokens || subtotal.requestCount > totals.requests
+            || subtotal.conflictCount < totals.conflicts) return false;
+    if (subtotal.partial !== (totals.partial || subtotal.conflictCount > 0 || totals.excluded > 0)) return false;
+    return available.length !== 1 || singleSourceMatches(subtotal, available[0]);
+}
+
+function subtotalSnapshot(payload, plan, exit, sourceState) {
+    var sources = sourceState.sources;
+    var available = sourceState.available;
     var allAvailable = available.length === sources.length;
     if (payload.allSourcesAvailable !== allAvailable || exit !== (allAvailable ? 0 : 1)) return null;
     var subtotal = payload.subtotal;
@@ -143,44 +244,24 @@ function envelope(payload, plan, exit) {
             ? {outcome: "unavailable"} : null;
     }
     // Successful local-only collection uses a bare ledger, never this envelope.
-    if (!remote || !record(subtotal) || subtotal.kind !== "identified-request-subtotal"
-            || typeof subtotal.partial !== "boolean"
-            || !count(subtotal.totalTokens) || !count(subtotal.requestCount)
-            || !count(subtotal.conflictCount) || !count(subtotal.excludedCount)
-            || subtotal.requestCount > maximumRecords * 2 || subtotal.conflictCount > maximumRecords * 2
-            || (subtotal.requestCount === 0 && subtotal.totalTokens !== 0)
-            || payload.partial !== (!allAvailable || subtotal.partial)) return null;
-    if (schema === 1) {
-        if (subtotal.costUSD !== null) return null;
-    } else {
-        if (!count(subtotal.unpricedRequestCount) || subtotal.unpricedRequestCount > subtotal.requestCount
-                || (subtotal.costUSD !== null && (typeof subtotal.costUSD !== "number"
-                    || !isFinite(subtotal.costUSD) || subtotal.costUSD < 0 || subtotal.costUSD > maximumCount))
-                || (subtotal.costUSD === null) !== (subtotal.unpricedRequestCount > 0)
-                || (subtotal.requestCount === 0 && subtotal.costUSD !== 0)) return null;
-    }
-    var tokens = 0, requests = 0, excluded = 0, conflicts = 0, partial = false;
-    for (var j = 0; j < available.length; j++) {
-        tokens += available[j].totalTokens;
-        requests += available[j].requestCount;
-        excluded += available[j].excludedCount;
-        conflicts = Math.max(conflicts, available[j].conflictCount);
-        partial = partial || available[j].partial;
-    }
-    if (!count(tokens) || !count(excluded) || subtotal.excludedCount !== excluded
-            || subtotal.totalTokens > tokens || subtotal.requestCount > requests
-            || subtotal.conflictCount < conflicts
-            || subtotal.partial !== (partial || subtotal.conflictCount > 0 || excluded > 0)) return null;
-    if (available.length === 1) {
-        var only = available[0];
-        if (subtotal.totalTokens !== only.totalTokens || subtotal.requestCount !== only.requestCount
-                || subtotal.conflictCount !== only.conflictCount || subtotal.partial !== only.partial) return null;
-    }
+    if (plan.remoteHost.length === 0 || !subtotalShapeValid(subtotal)) return null;
+    if (payload.partial !== (!allAvailable || subtotal.partial)) return null;
+    if (!subtotalPricingValid(subtotal, sourceState.schema) || !subtotalMatchesSources(subtotal, available)) return null;
     var result = snapshot(subtotal, plan, sources[0] !== null,
         sources[1] !== null, payload.partial);
-    result.apiEstimateUSD = schema === 2 ? subtotal.costUSD : null;
-    result.unpricedRequestCount = schema === 2 ? subtotal.unpricedRequestCount : null;
+    result.apiEstimateUSD = sourceState.schema === 2 ? subtotal.costUSD : null;
+    result.unpricedRequestCount = sourceState.schema === 2 ? subtotal.unpricedRequestCount : null;
     return {outcome: "data", snapshot: result};
+}
+
+function envelope(payload, plan, exit) {
+    var remote = plan.remoteHost.length > 0;
+    if (!record(payload) || !Array.isArray(payload.reports)
+            || payload.reports.length !== (remote ? 2 : 1)
+            || typeof payload.allSourcesAvailable !== "boolean" || typeof payload.partial !== "boolean") return null;
+    var sources = envelopeSources(payload.reports, plan);
+    if (!sources || sources.outcome === "schemaMismatch") return sources;
+    return subtotalSnapshot(payload, plan, exit, sources);
 }
 
 function decode(stdoutText, exitCode, plan) {
@@ -196,7 +277,7 @@ function decode(stdoutText, exitCode, plan) {
     var payload;
     try { payload = JSON.parse(text); } catch (error) { return {outcome: "invalidJson"}; }
     if (plan.remoteHost.length === 0 && record(payload) && payload.schemaVersion !== undefined) {
-        if (payload.schemaVersion !== 1 && payload.schemaVersion !== 2) return {outcome: "schemaMismatch"};
+        if (!supportedSchema(payload.schemaVersion)) return {outcome: "schemaMismatch"};
         var summary = exit === 0 ? ledgerSummary(payload, plan) : null;
         return summary ? {outcome: "data", snapshot: snapshot(summary, plan, true, false, summary.partial)}
             : {outcome: "unsupported"};
