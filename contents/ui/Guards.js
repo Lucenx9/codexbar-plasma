@@ -58,15 +58,22 @@ function shellQuote(value) {
 // stderr stays empty so the CLI's own error text still flows through.
 // Callers that can spawn descendants opt into a process-group timeout instead.
 // Keep that monitor behind a waiting shell so destroying the engine-owned
-// shell cannot remove the bound. These callers place it after their UI deadline.
+// shell cannot remove the bound. Its monitored shell must survive TERM until
+// the kill escalation, even if the direct child exits before its descendants.
+// Catch PIPE only in that shell: a diagnostic on a disconnected engine pipe
+// must not cancel the escalation. Caught handlers reset in executed children.
+// These callers place the bound after their UI deadline.
 function boundedShellCommand(command, timeoutSeconds, killAfterSeconds, processGroup) {
     if (command.length === 0) {
         return ""
     }
+    var monitored = processGroup === true
+        ? "sh -c " + shellQuote("trap 'while :; do sleep 1; done' TERM; trap ':' PIPE; " + command)
+        : command
     var bounded = "timeout " + (processGroup === true ? "" : "--foreground ")
         + "--kill-after=" + shellQuote(killAfterSeconds + "s")
         + " " + shellQuote(timeoutSeconds + "s")
-        + " " + command
+        + " " + monitored
     var script = "if command -v timeout >/dev/null 2>&1 && timeout --foreground --kill-after=1s 1s true >/dev/null 2>&1; then "
         + bounded + (processGroup === true ? " & wait $!" : "")
         + "; else " + command + "; fi"

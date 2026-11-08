@@ -167,7 +167,9 @@ synchronized.
   `identified-*` smoke scenarios cover this path with synthetic data, including
   schema 2 estimates, unpriced requests and schema mismatch guidance.
 - `UsageDetails.js` bounds detail sections and preserves only the CLI row
-  severities `normal`, `warning`, and `critical`. `ProviderDetailSection.qml`
+  severities `normal`, `warning`, and `critical`. Charts without a usable title,
+  unit, or point are omitted so an empty detail section cannot suppress the
+  legacy dashboard or no-usage placeholder. `ProviderDetailSection.qml`
   localizes warning/critical descriptions and paints compact Canvas symbols
   with theme-contrast accents and transparent cutouts. Painting the accent
   directly works with software and OpenGL rendering. It supplies readable
@@ -218,6 +220,15 @@ synchronized.
   and emits `activated(sourceName)` only after that reply retired its ledger
   entry; read-only `sending` reports whether requests remain pending. Failed
   commands finish silently, and missing `notify-send` remains a quiet no-op.
+  The shared `Guards.boundedShellCommand` process-group bound sends TERM two
+  seconds after the UI deadline, then escalates after a one-second grace.
+  Its monitored shell stays alive after TERM so a direct child exiting cannot
+  cancel the kill escalation for surviving descendants. CLI owners using the
+  same process-group guard keep this guarantee too. That shell catches PIPE
+  so diagnostics written after engine disconnection cannot end it early;
+  executed children retain their normal signal handlers.
+  Disconnection and widget destruction leave the process bound intact; GNU
+  timeout is optional, as for CLI commands.
   `NotificationCommand.js` bounds notification text, escapes the body's markup
   (`&`, `<`, `>`) so CLI text stays literal while the summary stays plain text,
   builds the quoted command,
@@ -1303,8 +1314,12 @@ argument boundaries with synthetic `notify-send` executables, missing executable
 default-action activation through stdout, and the pre-action fallback without
 capability, plus failure recovery through the real Plasma DataSource. A substituted transport
 exercises synchronous and retired replies, reentrant completion, destruction,
-and the production 10-second timer. The pure command interface has adversarial
-QtTests in `tests/tst_notification_command.qml`. Surface checks keep notification
+and the production 10-second timer. Notifications have
+process-bound coverage in `tests/test_cli_process_bounds.py` for ordinary and
+clickable notifications and widget destruction through the real executable
+engine. Both CLI and notification cases keep a TERM-resistant child while the
+parent either exits on TERM or ignores it. The command interface also has
+adversarial QtTests in `tests/tst_notification_command.qml`. Surface checks keep notification
 policy and privacy in the applet and enforce registration and retirement ordering.
 `tests/tst_update_notification_state.qml` covers trusted URLs, immutable action
 maps, unsafe sources and replay. `tests/tst_update_notifications_controller.qml`

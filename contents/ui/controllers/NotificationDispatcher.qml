@@ -36,11 +36,12 @@ Item {
             if (command.length === 0)
                 return "";
             runSerial += 1;
-            var sourceName = CommandLedger.withRunNonce(command, runSerial, Date.now() + "-" + Math.random());
             var timeout = NotificationCommand.wantsAction(actionLabel)
                 ? notificationActionCommandTimeoutMs
                 : notificationCommandTimeoutMs;
             var descriptor = CommandLedger.descriptor("notification", "", Date.now(), timeout);
+            var bounded = Guards.boundedShellCommand("sh -c " + Guards.shellQuote(command), timeout / 1000 + 2, 1, true);
+            var sourceName = CommandLedger.withRunNonce(bounded, runSerial, Date.now() + "-" + Math.random());
             // Plasma may publish a cached result while connecting the source.
             commands = CommandLedger.opened(commands, sourceName, descriptor);
             notificationSource.connectSource(sourceName);

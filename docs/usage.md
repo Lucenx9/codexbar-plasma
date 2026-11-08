@@ -373,6 +373,8 @@ work and upstream contract requirements.
   use equal columns aligned with the Cost summaries. Truncated summary labels
   and values show their full text on hover. Long detail values stay within
   half the row and also show their full text on hover.
+  An optional detail chart without a title, unit, or valid points does not
+  suppress the dashboard summary or the no-usage explanation.
 - Declarative provider detail sections from the CLI `usage.details` contract,
   including labeled rows, secondary values, and keyboard/pointer-inspectable
   bar/line charts. A row that carries a valid `progress` used/total pair, such
@@ -444,6 +446,11 @@ children receive a termination signal two seconds after the request's UI
 deadline, then are killed if still running one second later. Cancelling a
 request or closing the widget or settings retires its result immediately and
 leaves this process deadline in place.
+The forced kill still runs if the immediate CLI process exits on the first
+signal but a child remains unresponsive.
+Notification commands have the same process bound after their 10-second UI
+deadline, or 2-minute deadline for clickable notifications, including when the
+widget is removed.
 Without GNU `timeout`, the UI deadline still applies, but cannot stop a hung
 process.
 
