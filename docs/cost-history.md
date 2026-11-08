@@ -129,6 +129,15 @@ qualifies provider and global amounts with one shared notice. Missing legacy
 metadata stays quiet. Keep pricing coverage separate from history collection
 coverage and never expose raw provenance in QML.
 
+`CostPresentation.spendCurrency` chooses from measured cost amounts in displayed
+provider order, checking each provider's totals before its daily rows. Measured
+zero counts; token-only currency metadata cannot override a measured cost.
+When no measured amount names a currency, the existing totals or first daily
+row provide the fallback, then USD. Currency checks share the totals eligibility
+rule with spend aggregation. Daily rows without a currency retain their USD
+default, while totals without a currency inherit the selected currency. Direct
+presentation QtTests cover these priorities and input immutability.
+
 Official CLI 0.60.5 reports `incompleteRequestCount` on the cost payload, its
 `totals`, each daily entry, and each model breakdown, omitting the key when no
 request was excluded. The counts describe requests that lacked final usage and
