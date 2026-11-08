@@ -93,6 +93,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Show chart focus outlines only for keyboard navigation, while keeping mouse
   day selection and arrow-key inspection available.
 
+- Bound hung notification processes and their children after UI deadlines or
+  widget removal, including notifications with a release-page action. Keep the
+  forced kill for CLI descendants when their parent exits on the first signal.
+
 - Keep dark provider indicators readable in usage-sharing previews and exported
   images, including abliteration.ai and OpenDesign, while preserving brand colors
   where they already have sufficient contrast.

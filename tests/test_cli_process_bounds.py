@@ -1,9 +1,9 @@
-"""Hung CLI processes and their descendants exit after a timeout or retirement.
+"""Hung CLI and notification processes exit after a timeout or retirement.
 
 Plasma5Support's executable engine keeps a process running after
-disconnectSource(), so every CLI owner must bound its command in the shell.
-The synthetic CLI ignores SIGTERM and spawns a child, so only a process-group
-bound with a kill-after escalation ends both.
+disconnectSource(), so every process owner must bound its command in the shell.
+The synthetic CLI spawns a child that ignores SIGTERM. Its parent either exits
+on TERM or ignores it too; the process-group escalation must end both cases.
 """
 import json
 import os
@@ -27,10 +27,10 @@ EXIT_WITHIN_SECONDS = 6.0
 
 # Each line is "pid starttime"; the start time guards cleanup against PID reuse.
 CLI = '''#!/bin/sh
-trap '' TERM
+PARENT_TERM_HANDLING
 record() { echo "$1 $(cut -d' ' -f22 "/proc/$1/stat")" >> "$0.pids"; }
 record $$
-sleep 30 &
+sh -c "trap '' TERM; exec sleep 30" &
 record $!
 wait
 '''
@@ -93,9 +93,18 @@ TestCase {
         rosterInactive.active = false;
         rosterDestroyed.destroy();
 
+        var notificationTimeout = create("NotificationDispatcher.qml");
+        verify(notificationTimeout.send("notification-timeout", "body", "normal"));
+        var notificationAction = create("NotificationDispatcher.qml");
+        verify(notificationAction.send("notification-action", "body", "normal", "Open"));
+        var notificationDestroyed = create("NotificationDispatcher.qml");
+        verify(notificationDestroyed.send("notification-destroyed", "body", "normal"));
+        notificationDestroyed.destroy();
+
         tryVerify(function() { return failures === 1 && !usageTimeout.loading && timeouts === 1
             && accountsTimeout.errorForProvider("codex").length > 0
-            && rosterTimeout.providerRosterError.length > 0 && !rosterTimeout.providerRosterLoading; }, 3000);
+            && rosterTimeout.providerRosterError.length > 0 && !rosterTimeout.providerRosterLoading
+            && !notificationTimeout.sending && !notificationAction.sending; }, 3000);
         // Keep the runner alive past the hard bound; the harness watches /proc.
         wait(HOLD_MS);
     }
@@ -103,12 +112,14 @@ TestCase {
 '''
 
 OWNERS = {
+    "NotificationDispatcher.qml": (r"notificationCommandTimeoutMs", r"controller\.sending"),
     "UsageController.qml": (r"defaultCommandTimeoutMs", r"lifecycle\.hasPendingCommandTimeouts\(\)"),
     "CliProcess.qml": (None, r"process\.busy"),
     "AccountsController.qml": (r"accountCommandTimeoutMs", r"CommandLedger\.hasDeadlines\(lifecycle\.commands\)"),
     "ProviderRosterController.qml": (r"providerRosterCommandTimeoutMs", r"controller\.hasPendingProviderRosterCommands\(\)"),
 }
 SCRIPTS = [owner + "-" + path for owner, paths in {
+    "notification": ("timeout", "action", "destroyed"),
     "usage": ("timeout", "reset", "destroyed"), "process": ("timeout", "cancel", "destroyed"),
     "accounts": ("timeout", "reset", "destroyed"), "roster": ("timeout", "inactive", "destroyed")}.items()
     for path in paths]
@@ -140,6 +151,11 @@ def start_time(pid):
 
 class CliProcessBoundTests(unittest.TestCase):
     def test_provider_settings_dispatcher_bounds_hung_descendants(self):
+        for parent_exits_on_term in (False, True):
+            with self.subTest(parent_exits_on_term=parent_exits_on_term):
+                self.check_provider_settings_bounds(parent_exits_on_term)
+
+    def check_provider_settings_bounds(self, parent_exits_on_term):
         page = ROOT / "contents/ui/configProviders.qml"
         surface = Surface("providers", ROOT)
         surface.texts = {page: page.read_text()}
@@ -150,7 +166,7 @@ class CliProcessBoundTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="codexbar provider bounds 'test-") as temporary:
             directory = Path(temporary)
             cli = directory / "codexbar"
-            cli.write_text(CLI)
+            cli.write_text(CLI.replace("PARENT_TERM_HANDLING", "" if parent_exits_on_term else "trap '' TERM"))
             cli.chmod(0o700)
             fixture = directory / "tst_provider_bounds.qml"
             fixture.write_text('''import QtQuick
@@ -221,16 +237,34 @@ TestCase {
                         process.wait(timeout=5)
 
     def test_hung_cli_and_descendants_exit_after_timeout_or_retirement(self):
+        for parent_exits_on_term in (False, True):
+            with self.subTest(parent_exits_on_term=parent_exits_on_term):
+                self.check_process_bounds(parent_exits_on_term)
+
+    def check_process_bounds(self, parent_exits_on_term):
         with tempfile.TemporaryDirectory(prefix="codexbar bounds 'test-") as temporary:
             directory = Path(temporary)
             for name in SCRIPTS:
-                (directory / name).write_text(CLI)
+                (directory / name).write_text(CLI.replace("PARENT_TERM_HANDLING", "" if parent_exits_on_term else "trap '' TERM"))
                 (directory / name).chmod(0o700)
+            notify = directory / "notify-send"
+            notify.write_text('''#!/bin/sh
+if [ "$1" = --help ]; then echo --action; exit 0; fi
+while [ "$1" != -- ]; do shift; done
+shift
+exec "$(dirname "$0")/$1"
+''')
+            notify.chmod(0o700)
             ui = directory / "ui"
             shutil.copytree(ROOT / "contents/ui", ui)
             for owner, (deadline, sweeper) in OWNERS.items():
                 path = ui / "controllers" / owner
-                path.write_text(shrink(path.read_text(), deadline, sweeper))
+                source = shrink(path.read_text(), deadline, sweeper)
+                if owner == "NotificationDispatcher.qml":
+                    source, count = re.subn(r"(notificationActionCommandTimeoutMs:\s*)\d+",
+                                            r"\g<1>" + str(UI_DEADLINE_MS), source)
+                    self.assertEqual(count, 1)
+                path.write_text(source)
             fixture = directory / "tst_bounds.qml"
             fixture.write_text(QML.replace("UI_URL", ui.as_uri()).replace("FIXTURE_PATH", str(directory))
                                .replace("DEADLINE", str(UI_DEADLINE_MS))
@@ -238,7 +272,8 @@ TestCase {
             seen, exited = {}, {}
             runner = subprocess.Popen(
                 [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],
-                env={**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software"},
+                env={**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software",
+                     "PATH": str(directory) + os.pathsep + os.environ.get("PATH", "")},
                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
             try:
                 deadline = time.monotonic() + 120
