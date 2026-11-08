@@ -638,6 +638,40 @@ TestCase {
         compare(intentKinds(changed), "status,quota,pace,reset")
     }
 
+    function test_intentsKeepOriginalObservationIndexesAndGroupRowsBySignal() {
+        var first = observation("", "", [
+            usageRow("minor", 85, false, "Weekly"),
+            usageRow("minor", 85, false, "Daily"),
+            usageRow("minor", 85, false, "Monthly")])
+        var second = observation("", "", [usageRow("minor", 85, false)], "claude/account-b")
+        second.providerID = "claude"
+        var initial = transition("prime", [first, second])
+        first.statusActive = true
+        first.statusSeverity = "major"
+        first.statusIncidentKey = "incident-a"
+        first.rows = [
+            usageRow("major", 96, true, "Weekly"),
+            usageRow("major", 96, true, "Daily"),
+            usageRow("", 3, false, "Monthly")]
+        second.rows = [usageRow("major", 96, true)]
+        var pending = observation("critical", "cached", [], "codex/pending", true)
+        var observations = [null, pending, first, null, second]
+        var before = JSON.stringify(observations)
+        var changed = transition("observe", observations, initial.nextMemo)
+        compare(changed.intents, [
+            {kind: "status", severity: "major", observationIndex: 2},
+            {kind: "quota", severity: "major", rowIndex: 0, observationIndex: 2},
+            {kind: "quota", severity: "major", rowIndex: 1, observationIndex: 2},
+            {kind: "pace", rowIndex: 0, observationIndex: 2},
+            {kind: "pace", rowIndex: 1, observationIndex: 2},
+            {kind: "reset", rowIndex: 2, observationIndex: 2},
+            {kind: "quota", severity: "major", rowIndex: 0, observationIndex: 4},
+            {kind: "pace", rowIndex: 0, observationIndex: 4}
+        ])
+        compare(JSON.stringify(observations), before)
+        compare(transition("observe", observations, changed.nextMemo).intents.length, 0)
+    }
+
     function test_transitionReturnsANewMemoWithoutMutatingThePreviousOne() {
         var primed = transition(
             "prime",
@@ -771,6 +805,28 @@ TestCase {
             "observe", [observation("", "", [usageRow("", 0, false)], currentScope)], previous)
         verify(Object.keys(result.nextMemo).length <= limit)
         compare(result.nextMemo["scope:" + currentScope], "1")
+    }
+
+    function test_memoBudgetProtectsOldCurrentBaselinesBeforeRecentStaleScopes() {
+        var observations = [observation("major", "incident-a", [usageRow("major", 96, true)])]
+        var initial = transition("prime", observations)
+        var currentKeys = Object.keys(initial.nextMemo)
+        var previous = initial.nextMemo
+        var limit = NotificationPlanner.maximumMemoEntries
+        for (var i = 0; i < limit + 32; i++) {
+            previous["scope:stale-" + i] = "1"
+        }
+        var before = JSON.stringify(previous)
+        var result = transition("observe", observations, previous)
+        compare(result.intents.length, 0)
+        compare(Object.keys(result.nextMemo).length, limit)
+        for (var key of currentKeys) {
+            compare(result.nextMemo[key], previous[key])
+        }
+        verify(!Object.prototype.hasOwnProperty.call(result.nextMemo, "scope:stale-0"))
+        compare(result.nextMemo["scope:stale-" + (limit + 31)], "1")
+        compare(Object.keys(result.nextMemo).slice(0, currentKeys.length), currentKeys)
+        compare(JSON.stringify(previous), before)
     }
 
     function test_transitionRejectsUnsafeKeysWhenCopyingTheOpaqueMemo() {

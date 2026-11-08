@@ -215,6 +215,16 @@ synchronized.
   planner, including account switches, stale quotas and fresh status. Keep
   composition-root effect ordering and routing in `test_notification_wiring.py`;
   observation tests must not reconstruct root functions from source.
+- `contents/ui/NotificationPlanner.js` composes provider status and account-scoped
+  usage transitions through `transition(observations, previousMemo, options)`.
+  Per-row quota, pace and reset decisions preserve their distinct recovery rules;
+  observation processing keeps pending refreshes, stale usage and usage errors
+  without rows from rebuilding baselines. Intents retain the original
+  observation/row indexes and status, quota, pace, reset ordering. Bounded memo
+  selection protects current keys before retaining recent stale scopes,
+  preserving source insertion order.
+  Direct `tst_notification_planner.qml` tests these contracts, input immutability
+  and notification toggles. Localization and dispatch remain in QML.
 - `contents/ui/components/ProviderNotificationText.qml` builds localized status,
   quota, predictive pace and reset messages from a planner intent, normalized
   provider/row and preformatted reset/ETA labels. It returns title/body/urgency
