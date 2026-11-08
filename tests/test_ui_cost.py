@@ -566,7 +566,7 @@ class CostTest(unittest.TestCase):
                 )
             if not code_contains(trust_owner_text, "CostTrust.costTrustSummary("):
                 raise AssertionError(
-                    f"{trust_owner_source} must delegate cost-trust policy to CostPresentation"
+                    f"{trust_owner_source} must delegate cost-trust policy to CostTrust"
                 )
         for persistent_notice_fragment in (
             "property var costTrustNoticeStates: ({})",

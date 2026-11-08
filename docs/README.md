@@ -38,9 +38,8 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
 - [Provider settings descriptor](cli-provider-settings-descriptor.md): proposed
   upstream CLI contract for generic settings. It is not a shipped contract.
 - [Cost history](cost-history.md): daily model data, selection, currency and
-  confidence rules, and
-  the pinned Linux CLI evidence behind the popup, plus the separate manual
-  identified Codex token subtotal and its decoder limits.
+  confidence rules, pinned Linux CLI evidence behind the popup, and the separate
+  manual identified Codex token subtotal and its decoder limits.
 - [Identified-token screenshot](codexbar-plasma-identified-tokens.png): synthetic
   schema 2 local subtotal and separate API-price estimate retained after an
   SSH-source failure, used in the usage guide.

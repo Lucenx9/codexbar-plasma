@@ -5,6 +5,7 @@
 
 // Locale-explicit cost/count formatting and measured-amount arithmetic.
 // Missing amounts remain distinct from measured zero; no localization or effects.
+// Shared text and snapshot accessors keep the other cost modules on the same inputs.
 
 function numberFormat(groupSeparator, decimalPoint) {
     return {
@@ -273,7 +274,6 @@ function scanIsCurrent(scanDay, now) {
     if (scanDay.length === 0 || !isFinite(now.getTime())) return true
     return scanDay === Normalizer.calendarDateKey(now.getFullYear(), now.getMonth() + 1, now.getDate())
 }
-
 
 function snapshotTotals(snapshot) {
     return snapshot && typeof snapshot === "object" && snapshot.totals ? snapshot.totals : ({})

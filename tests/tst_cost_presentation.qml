@@ -12,6 +12,94 @@ import "../contents/ui/ProviderNormalizer.js" as Normalizer
 TestCase {
     name: "CostPresentation"
 
+    function projectFixtureRows(count) {
+        var rows = []
+        for (var i = 0; i < count; i++)
+            rows.push({ label: "project-" + i, cost: i, tokens: i * 10, currency: "USD" })
+        return rows
+    }
+
+    function test_projectRowsShareTheCapAcrossPartiallyFilledProviders() {
+        var result = CostPresentation.projectRows([
+            { provider: "first", projects: { rows: projectFixtureRows(100) } },
+            { provider: "second", projects: { rows: projectFixtureRows(128) } }
+        ], false)
+        compare(result.rows.length, 128)
+        compare(result.truncated, true)
+        compare(result.rows[99].provider, "first")
+        compare(result.rows[100].provider, "second")
+        compare(result.rows[100].cost, 127)
+        compare(result.rows[127].cost, 100)
+    }
+
+    function test_projectRowsReportSourceInspectionTruncation() {
+        var result = CostPresentation.projectRows([
+            { provider: "single", projects: { rows: projectFixtureRows(129) } }
+        ], false)
+        compare(result.rows.length, 128)
+        compare(result.truncated, true)
+        compare(result.rows[0].cost, 127)
+        compare(result.rows[127].cost, 0)
+    }
+
+    function test_excludedRequestCountsClampBeforeIndividualRowUse() {
+        compare(CostTrust.acceptedIncompleteRequests({ incompleteRequests: 9007199254740991 }), 1000000000)
+        compare(CostTrust.acceptedIncompleteRequests({ incompleteRequests: 7 }), 7)
+        compare(CostTrust.acceptedIncompleteRequests({ incompleteRequests: 0 }), 0)
+    }
+
+    function test_excludedRequestsNeedAPublishedAmountEvenWithDailyEvidence() {
+        var item = {
+            totals: { cost: null, tokens: 0, currency: "USD" },
+            daily: [{ cost: 1, tokens: 4, currency: "USD" }],
+            trust: { sourceKind: "vendor", incompleteRequests: 3 }
+        }
+        compare(CostTrust.costTrustSummary([item]), null)
+        item.totals.tokens = 4
+        compare(CostTrust.costTrustSummary([item]), {
+            level: "warning", valueMode: "partial", sourceKind: "vendor",
+            hasEstimated: false, hasUnpriced: false, hasUnmetered: false, incompleteRequests: 3
+        })
+    }
+
+    function test_mixedProvenanceAloneQualifiesAnAmountAsEstimated() {
+        compare(CostTrust.costTrustSummary([{
+            totals: { cost: 1, currency: "USD" }, trust: { sourceKind: "mixed" }
+        }]), {
+            level: "information", valueMode: "estimated", sourceKind: "mixed",
+            hasEstimated: true, hasUnpriced: false, hasUnmetered: false, incompleteRequests: 0
+        })
+    }
+
+    function test_noticeDismissalRequiresLiteralTrue() {
+        var summary = { sourceKind: "vendor" }
+        var key = "information|vendor|exact|priced|metered|complete"
+        for (var truthy of [1, "yes", [], {}]) {
+            compare(CostTrust.costTrustNoticeTransition(summary, null, truthy), {
+                key: key, dismissed: false, shouldShow: true
+            })
+        }
+        compare(CostTrust.costTrustNoticeTransition(summary, null, true), {
+            key: key, dismissed: true, shouldShow: false
+        })
+    }
+
+    function test_noticeStoreRetainsOnlyValidPreviousState() {
+        var invalidStates = [null, {}, { key: "remembered", dismissed: "yes" },
+            { key: "remembered" }, { key: 7, dismissed: true }, []]
+        for (var invalid of invalidStates) {
+            compare(CostTrust.costTrustNoticeStoreTransition(null, { provider: invalid }, "provider", false), {
+                states: ({}), state: { key: "", dismissed: false, shouldShow: false }
+            })
+        }
+        compare(CostTrust.costTrustNoticeStoreTransition(null, {
+            provider: { key: "remembered", dismissed: true }
+        }, "provider", false), {
+            states: { provider: { key: "remembered", dismissed: true } },
+            state: { key: "", dismissed: false, shouldShow: false }
+        })
+    }
+
     function test_roundedBarsClampCornersToTheirBounds_data() {
         return [
             { tag: "ordinary", bounds: { x: 5, baseline: 100, width: 10, height: 10 }, radius: 3,

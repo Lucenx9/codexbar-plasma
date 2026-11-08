@@ -68,8 +68,8 @@ PY
 # renders the real component with cost-heavy/token-heavy/unpriced rows:
 # metric ordering, the per-metric values and the unavailable fallback each
 # go red there when broken.
-# Cost presentation moved behind CostPresentation.js. Assert the delegation so
-# the maths cannot quietly grow a second copy back inside main.qml.
+# Cost presentation modules own the pure policy. Assert the delegation so the
+# maths cannot quietly grow a second copy back inside main.qml.
 require_in_surface applet "CostTrust.costTrustSummary("
 # The locale separator wiring is unobservable in executed tests: the
 # costNumberFormat property initializer cannot be extracted, so fixtures

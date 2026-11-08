@@ -4,10 +4,6 @@
 // Select monetary amounts in provider order, independently of token totals.
 // Totals inherit the selected currency; legacy daily rows default to USD.
 
-
-
-
-
 function pricedAmountCurrency(amounts) {
     if (!CostAmounts.hasMetricValue(amounts, false)) return null
     var currency = CostAmounts.boundedText(amounts.currency || "", 12)
