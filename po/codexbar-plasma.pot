@@ -668,9 +668,7 @@ msgid "Identified Codex tokens"
 msgstr ""
 
 #: contents/ui/components/IdentifiedTokensSection.qml scripts/smoke/Capture.qml
-msgid ""
-"Manual subtotal of identified requests only. This is not account-wide usage "
-"or spend."
+msgid "Identified requests only, not the whole account."
 msgstr ""
 
 #: contents/ui/components/IdentifiedTokensSection.qml
@@ -682,26 +680,36 @@ msgid "No identified subtotal loaded."
 msgstr ""
 
 #: contents/ui/components/IdentifiedTokensSection.qml scripts/smoke/Capture.qml
-msgid "API-price estimate: less than %1. Separate from spend totals."
+msgid "API-price estimate: less than %1."
 msgstr ""
 
 #: contents/ui/components/IdentifiedTokensSection.qml scripts/smoke/Capture.qml
-msgid "API-price estimate: %1. Separate from spend totals."
+msgid "API-price estimate: %1."
 msgstr ""
 
 #: contents/ui/components/IdentifiedTokensSection.qml
 msgid "API-price estimate unavailable: %1 without a price."
 msgstr ""
 
+#: contents/ui/components/IdentifiedTokensSection.qml scripts/smoke/Capture.qml
+msgid "%1 UTC day"
+msgid_plural "%1 UTC days"
+msgstr[0] ""
+msgstr[1] ""
+
 #: contents/ui/components/IdentifiedTokensSection.qml
-msgid "UTC window: %1 to %2"
+#: contents/ui/components/ProviderCostSection.qml
+msgid "Hide details"
 msgstr ""
 
 #: contents/ui/components/IdentifiedTokensSection.qml
-msgid "Last %1 UTC day"
-msgid_plural "Last %1 UTC days"
-msgstr[0] ""
-msgstr[1] ""
+#: contents/ui/components/ProviderCostSection.qml
+msgid "Show details"
+msgstr ""
+
+#: contents/ui/components/IdentifiedTokensSection.qml
+msgid "UTC window: %1 to %2"
+msgstr ""
 
 #: contents/ui/components/IdentifiedTokensSection.qml
 msgid "Source requested: this computer"
@@ -712,19 +720,23 @@ msgid "Sources requested: this computer + SSH"
 msgstr ""
 
 #: contents/ui/components/IdentifiedTokensSection.qml
-msgid ""
-"Local data is unavailable. This subtotal contains the available SSH data "
-"only."
+msgid "Separate from spend totals."
 msgstr ""
 
-#: contents/ui/components/IdentifiedTokensSection.qml
+#: contents/ui/components/IdentifiedTokensSection.qml scripts/smoke/Capture.qml
 msgid ""
-"SSH data is unavailable. This subtotal contains the available local data "
-"only. Check SSH and use the same supported codexbar version on both "
-"computers."
+"Check SSH and use the same supported codexbar version on both computers."
 msgstr ""
 
-#: contents/ui/components/IdentifiedTokensSection.qml
+#: contents/ui/components/IdentifiedTokensSection.qml scripts/smoke/Capture.qml
+msgid "Local data unavailable. Showing SSH data only."
+msgstr ""
+
+#: contents/ui/components/IdentifiedTokensSection.qml scripts/smoke/Capture.qml
+msgid "SSH unavailable. Showing local data only."
+msgstr ""
+
+#: contents/ui/components/IdentifiedTokensSection.qml scripts/smoke/Capture.qml
 msgid "Some requests could not be included. This subtotal is partial."
 msgstr ""
 
@@ -733,11 +745,11 @@ msgid "Conflicts: %1; excluded: %2"
 msgstr ""
 
 #: contents/ui/components/IdentifiedTokensSection.qml
-msgid "Load local subtotal"
+msgid "Load local"
 msgstr ""
 
 #: contents/ui/components/IdentifiedTokensSection.qml
-msgid "Load local + SSH subtotal"
+msgid "Load local + SSH"
 msgstr ""
 
 #: contents/ui/components/InteractiveChart.qml
@@ -1109,14 +1121,6 @@ msgstr ""
 #: contents/ui/components/ProviderCostSection.qml
 #: contents/ui/components/SpendView.qml
 msgid "Daily token history"
-msgstr ""
-
-#: contents/ui/components/ProviderCostSection.qml
-msgid "Hide details"
-msgstr ""
-
-#: contents/ui/components/ProviderCostSection.qml
-msgid "Show details"
 msgstr ""
 
 #: contents/ui/components/ProviderCostSection.qml

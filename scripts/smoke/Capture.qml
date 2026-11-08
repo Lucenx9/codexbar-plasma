@@ -1451,8 +1451,17 @@ Item {
             verifyScenario(value.requestsPartial === (scenario === "identified-partial"), "wrong identified request quality");
             verifyScenario(JSON.stringify(applet.tokenCosts) === costSnapshot && !applet.costLoading, "identified scan changed generic costs");
             verifyScenario(!/records|reports|build@host|costUSD/.test(JSON.stringify(value)), "identified result leaked wire data");
-            verifyScenario(hasVisibleText(popup, i18n("Manual subtotal of identified requests only. This is not account-wide usage or spend.")),
+            verifyScenario(hasVisibleText(popup, i18n("Identified requests only, not the whole account.")),
                 "identified scope caption is missing");
+            if (!value.allSourcesAvailable) {
+                verifyScenario(hasVisibleText(popup, value.localAvailable
+                    ? i18n("SSH unavailable. Showing local data only.")
+                    : i18n("Local data unavailable. Showing SSH data only.")),
+                    "source warning must remain visible beside the retained subtotal");
+            }
+            if (value.requestsPartial)
+                verifyScenario(hasVisibleText(popup, i18n("Some requests could not be included. This subtotal is partial.")),
+                    "partial-request warning must remain visible");
             var estimate = findItem(popup, "identifiedTokensEstimate");
             var unpriced = findItem(popup, "identifiedTokensUnpriced");
             verifyScenario(estimate && estimate.visible === (schema2 && scenario !== "identified-schema2-unpriced"), "wrong estimate visibility");
@@ -1463,12 +1472,31 @@ Item {
                 verifyScenario(value.apiEstimateUSD === expectedPrice, "wrong CLI estimate");
                 verifyScenario(value.unpricedRequestCount === (expectedPrice === null ? 1 : 0), "wrong unpriced count");
                 if (scenario === "identified-schema2-subcent")
-                    verifyScenario(hasVisibleText(popup, i18n("API-price estimate: less than %1. Separate from spend totals.", applet.amountString(0.01, "USD"))),
+                    verifyScenario(hasVisibleText(popup, i18n("API-price estimate: less than %1.", applet.amountString(0.01, "USD"))),
                         "a positive subcent estimate must not appear as zero");
                 if (scenario === "identified-schema2-zero")
-                    verifyScenario(hasVisibleText(popup, i18n("API-price estimate: %1. Separate from spend totals.", applet.amountString(0, "USD"))),
+                    verifyScenario(hasVisibleText(popup, i18n("API-price estimate: %1.", applet.amountString(0, "USD"))),
                         "a known zero estimate must remain zero");
             }
+            var collectionDetails = findItem(popup, "identifiedCollectionDetails");
+            var detailsButton = findItem(popup, "identifiedDetailsButton");
+            verifyScenario(collectionDetails && !collectionDetails.visible && detailsButton && detailsButton.visible,
+                "collection details must start collapsed and remain reachable");
+            var window = findItem(popup, "identifiedTokensWindow");
+            verifyScenario(window && !window.visible, "exact dates must start inside the disclosure");
+            verifyScenario(hasVisibleText(popup, i18np("%1 UTC day", "%1 UTC days", value.historyDays)),
+                "the compact range must describe the loaded snapshot");
+            detailsButton.clicked();
+            verifyScenario(collectionDetails.visible && window.visible && window.text.indexOf(
+                new Date(value.endUnixMs).toISOString().replace("T", " ").slice(0, 19)) >= 0,
+                "collection details must retain the exact UTC load time");
+            if (remote)
+                verifyScenario(hasVisibleText(popup, i18n("Check SSH and use the same supported codexbar version on both computers.")),
+                    "SSH recovery guidance must remain available in details");
+            detailsButton.clicked();
+            verifyScenario(!collectionDetails.visible && !applet.identifiedTokensLoading
+                && applet.identifiedTokensSnapshot === value && JSON.stringify(applet.tokenCosts) === costSnapshot,
+                "collection disclosure must not reload or change any history");
             var section = findItem(popup, "identifiedTokensSection");
             verifyScenario(section !== null && section.mapToItem(popup, 0, 0).y < 200,
                 "identified section must stay near the top when generic costs are disabled");
