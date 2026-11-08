@@ -129,6 +129,14 @@ qualifies provider and global amounts with one shared notice. Missing legacy
 metadata stays quiet. Keep pricing coverage separate from history collection
 coverage and never expose raw provenance in QML.
 
+The shared pricing notice keeps cost provenance scoped to the selected currency.
+A foreign-currency snapshot with a finite cost is excluded from this notice,
+including its incomplete-request count, although its tokens enter the global
+total. Daily cost data alone does not create a range pricing notice. Token-only
+incomplete-request warnings still require a positive published token amount.
+Token-completeness notices across all currencies and daily-only cost notices need
+their own scope and text rather than a message about a displayed range total.
+
 `CostCurrency.spendCurrency` chooses from measured cost amounts in displayed
 provider order, checking each provider's totals before its daily rows. Measured
 zero counts; token-only currency metadata cannot override a measured cost.

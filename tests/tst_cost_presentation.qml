@@ -877,16 +877,20 @@ TestCase {
     // a shallow provider copy must not rebuild the points the chart reconciles.
     function test_memoizedChartPointsKeepIdentityForSameInputs() {
         var memo = ({})
-        var daily = [dailyPoint("Mon", 1, 100), dailyPoint("Tue", 2, 200)]
+        var daily = [dailyPoint("Mon", 1, 1500), dailyPoint("Tue", 2, 200)]
         var first = CostChart.memoizedChartPoints(memo, fmt, daily, false)
         compare(first.length, 2)
         verify(CostChart.memoizedChartPoints(memo, fmt, daily, false) === first)
         var copy = daily.slice()
         var rebuilt = CostChart.memoizedChartPoints(memo, fmt, copy, false)
         verify(rebuilt !== first)
-        verify(CostChart.memoizedChartPoints(memo, fmt, copy, true) !== rebuilt)
+        var tokenPoints = CostChart.memoizedChartPoints(memo, fmt, copy, true)
+        verify(tokenPoints !== rebuilt)
+        compare(tokenPoints[0].displayValue, "1.5K")
         var otherFormat = CostAmounts.numberFormat(".", ",")
-        verify(CostChart.memoizedChartPoints(memo, otherFormat, copy, true) !== rebuilt)
+        var localizedPoints = CostChart.memoizedChartPoints(memo, otherFormat, copy, true)
+        verify(localizedPoints !== tokenPoints)
+        compare(localizedPoints[0].displayValue, "1,5K")
         compare(CostChart.memoizedChartPoints(memo, fmt, null, false).length, 0)
         compare(CostChart.memoizedChartPoints(null, fmt, daily, false).length, 2)
     }
