@@ -1067,6 +1067,113 @@ function normalizeCostModels(items, currency, days, updatedAt, includeTokenRanki
     return summary
 }
 
+function normalizedCostModelBreakdown(breakdown) {
+    if (!isCliRecord(breakdown)) {
+        return null
+    }
+    var rawName = hasOwnKey(breakdown, "modelName") ? breakdown.modelName : ""
+    if ((typeof rawName !== "string" || rawName.length === 0)
+            && hasOwnKey(breakdown, "model")) {
+        rawName = breakdown.model
+    }
+    // Aggregate by raw identity: bounded, redacted labels can collide.
+    if (typeof rawName !== "string" || rawName.length === 0
+            || isUnsafeObjectKey(rawName)) {
+        return null
+    }
+    var name = boundedDisplayText(rawName, 120)
+    if (name.length === 0) {
+        return null
+    }
+    return {
+        key: rawName,
+        label: name,
+        incompleteRequests: normalizedIncompleteRequestCount(
+            hasOwnKey(breakdown, "incompleteRequestCount") ? breakdown.incompleteRequestCount : undefined),
+        cost: firstStrictFiniteNumber(
+            hasOwnKey(breakdown, "cost") ? breakdown.cost : undefined,
+            hasOwnKey(breakdown, "totalCost") ? breakdown.totalCost : undefined),
+        tokens: firstStrictFiniteNumber(
+            hasOwnKey(breakdown, "totalTokens") ? breakdown.totalTokens : undefined,
+            hasOwnKey(breakdown, "tokens") ? breakdown.tokens : undefined)
+    }
+}
+
+function accumulateCostModelAmounts(aggregate, breakdown) {
+    if (isFinite(breakdown.tokens) && !isFinite(breakdown.cost)) {
+        aggregate.unknownCost = true
+    }
+    // Later finite rows must not revive an overflowed sum as a partial total.
+    if (isFinite(breakdown.cost) && !aggregate.costOverflow) {
+        var totalCost = (aggregate.cost === null ? 0 : aggregate.cost) + Math.max(0, breakdown.cost)
+        aggregate.costOverflow = !isFinite(totalCost)
+        aggregate.cost = aggregate.costOverflow ? null : totalCost
+    }
+    if (isFinite(breakdown.tokens) && !aggregate.tokensOverflow) {
+        var totalTokens = (aggregate.tokens === null ? 0 : aggregate.tokens) + Math.max(0, breakdown.tokens)
+        aggregate.tokensOverflow = !isFinite(totalTokens)
+        aggregate.tokens = aggregate.tokensOverflow ? null : totalTokens
+    }
+}
+
+function addCostModelBreakdown(byName, incompleteByName, breakdown, currency) {
+    if (!breakdown) {
+        return
+    }
+    var key = breakdown.key
+    if (breakdown.incompleteRequests > 0) {
+        incompleteByName[key] = Math.min(maximumCostCoverageCount,
+            (hasOwnKey(incompleteByName, key) ? incompleteByName[key] : 0) + breakdown.incompleteRequests)
+    }
+    if (!isFinite(breakdown.cost) && !isFinite(breakdown.tokens)) {
+        return
+    }
+    if (!hasOwnKey(byName, key)) {
+        byName[key] = {
+            label: breakdown.label,
+            cost: null,
+            tokens: null,
+            currency: boundedDisplayText(currency || "USD", 12),
+            costOverflow: false,
+            tokensOverflow: false,
+            unknownCost: false
+        }
+    }
+    accumulateCostModelAmounts(byName[key], breakdown)
+}
+
+function compareCostModels(a, b) {
+    var aCost = a.cost === null ? 0 : a.cost
+    var bCost = b.cost === null ? 0 : b.cost
+    if (bCost !== aCost) {
+        return bCost > aCost ? 1 : -1
+    }
+    var aTokens = a.tokens === null ? 0 : a.tokens
+    var bTokens = b.tokens === null ? 0 : b.tokens
+    if (bTokens !== aTokens) {
+        return bTokens > aTokens ? 1 : -1
+    }
+    return a.label === b.label ? 0 : (a.label < b.label ? -1 : 1)
+}
+
+function costModelTokenRanking(rows, truncated, hasUnknownCost) {
+    // Rank the full bounded aggregation before the cost-first display cap.
+    // A cheap or unpriced model can still have the largest token count.
+    var tokenRows = rows.filter(function(row) { return row.tokens !== null })
+    tokenRows.sort(function(a, b) {
+        return b.tokens - a.tokens || (a.label === b.label ? 0 : (a.label < b.label ? -1 : 1))
+    })
+    return {
+        rows: tokenRows.slice(0, maximumCostModelRows),
+        omitted: Math.max(0, tokenRows.length - maximumCostModelRows),
+        truncated: truncated || tokenRows.length > maximumCostModelRows,
+        // Display-only omissions are listed separately. Source loss and
+        // unknown costs still qualify the export's data notice.
+        sourceTruncated: truncated,
+        hasUnknownCost: hasUnknownCost || tokenRows.some(function(row) { return row.cost === null })
+    }
+}
+
 function costModelSummary(modelDays, currency, includeTokenRanking) {
     var byName = ({})
     // Requests the CLI excluded from a model's amounts, counted separately so
@@ -1081,68 +1188,8 @@ function costModelSummary(modelDays, currency, includeTokenRanking) {
         var breakdownLimit = Math.min(breakdowns.length, maximumModelBreakdownsPerDay)
         truncated = truncated || breakdowns.length > breakdownLimit
         for (var j = 0; j < breakdownLimit; j++) {
-            var breakdown = breakdowns[j]
-            if (!isCliRecord(breakdown)) {
-                continue
-            }
-            var rawName = hasOwnKey(breakdown, "modelName") ? breakdown.modelName : ""
-            if ((typeof rawName !== "string" || rawName.length === 0)
-                    && hasOwnKey(breakdown, "model")) {
-                rawName = breakdown.model
-            }
-            // Aggregate by the raw model identity. Display labels are bounded
-            // to 120 characters and collapse whitespace, so two distinct
-            // models can share one label; keying by the label would merge
-            // their costs and token counts.
-            if (typeof rawName !== "string" || rawName.length === 0
-                    || isUnsafeObjectKey(rawName)) {
-                continue
-            }
-            var name = boundedDisplayText(rawName, 120)
-            if (name.length === 0) {
-                continue
-            }
-            var incomplete = normalizedIncompleteRequestCount(
-                hasOwnKey(breakdown, "incompleteRequestCount") ? breakdown.incompleteRequestCount : undefined)
-            if (incomplete > 0) {
-                incompleteByName[rawName] = Math.min(maximumCostCoverageCount,
-                    (hasOwnKey(incompleteByName, rawName) ? incompleteByName[rawName] : 0) + incomplete)
-            }
-            var cost = firstStrictFiniteNumber(
-                hasOwnKey(breakdown, "cost") ? breakdown.cost : undefined,
-                hasOwnKey(breakdown, "totalCost") ? breakdown.totalCost : undefined)
-            var tokens = firstStrictFiniteNumber(
-                hasOwnKey(breakdown, "totalTokens") ? breakdown.totalTokens : undefined,
-                hasOwnKey(breakdown, "tokens") ? breakdown.tokens : undefined)
-            if (!isFinite(cost) && !isFinite(tokens)) {
-                continue
-            }
-            if (!hasOwnKey(byName, rawName)) {
-                byName[rawName] = {
-                    label: name,
-                    cost: null,
-                    tokens: null,
-                    currency: boundedDisplayText(currency || "USD", 12),
-                    costOverflow: false,
-                    tokensOverflow: false,
-                    unknownCost: false
-                }
-            }
-            var aggregate = byName[rawName]
-            if (isFinite(tokens) && !isFinite(cost)) {
-                aggregate.unknownCost = true
-            }
-            // Later finite rows must not revive an overflowed sum as a partial total.
-            if (isFinite(cost) && !aggregate.costOverflow) {
-                var totalCost = (aggregate.cost === null ? 0 : aggregate.cost) + Math.max(0, cost)
-                aggregate.costOverflow = !isFinite(totalCost)
-                aggregate.cost = aggregate.costOverflow ? null : totalCost
-            }
-            if (isFinite(tokens) && !aggregate.tokensOverflow) {
-                var totalTokens = (aggregate.tokens === null ? 0 : aggregate.tokens) + Math.max(0, tokens)
-                aggregate.tokensOverflow = !isFinite(totalTokens)
-                aggregate.tokens = aggregate.tokensOverflow ? null : totalTokens
-            }
+            addCostModelBreakdown(byName, incompleteByName,
+                normalizedCostModelBreakdown(breakdowns[j]), currency)
         }
     }
 
@@ -1157,39 +1204,13 @@ function costModelSummary(modelDays, currency, includeTokenRanking) {
         rows.push({ label: model.label, cost: model.cost, tokens: model.tokens, currency: model.currency,
             incompleteRequests: hasOwnKey(incompleteByName, modelName) ? incompleteByName[modelName] : 0 })
     }
-    rows.sort(function(a, b) {
-        var aCost = a.cost === null ? 0 : a.cost
-        var bCost = b.cost === null ? 0 : b.cost
-        if (bCost !== aCost) {
-            return bCost > aCost ? 1 : -1
-        }
-        var aTokens = a.tokens === null ? 0 : a.tokens
-        var bTokens = b.tokens === null ? 0 : b.tokens
-        if (bTokens !== aTokens) {
-            return bTokens > aTokens ? 1 : -1
-        }
-        return a.label === b.label ? 0 : (a.label < b.label ? -1 : 1)
-    })
+    rows.sort(compareCostModels)
     var result = {
         rows: rows.slice(0, maximumCostModelRows),
         truncated: truncated || rows.length > maximumCostModelRows
     }
     if (includeTokenRanking === true) {
-        // Rank the full bounded aggregation before the cost-first display cap.
-        // A cheap or unpriced model can still have the largest token count.
-        var tokenRows = rows.filter(function(row) { return row.tokens !== null })
-        tokenRows.sort(function(a, b) {
-            return b.tokens - a.tokens || (a.label === b.label ? 0 : (a.label < b.label ? -1 : 1))
-        })
-        result.tokenRanking = {
-            rows: tokenRows.slice(0, maximumCostModelRows),
-            omitted: Math.max(0, tokenRows.length - maximumCostModelRows),
-            truncated: truncated || tokenRows.length > maximumCostModelRows,
-            // Display-only omissions are listed separately. Source loss and
-            // unknown costs still qualify the export's data notice.
-            sourceTruncated: truncated,
-            hasUnknownCost: hasUnknownCost || tokenRows.some(function(row) { return row.cost === null })
-        }
+        result.tokenRanking = costModelTokenRanking(rows, truncated, hasUnknownCost)
     }
     return result
 }
