@@ -239,6 +239,39 @@ class ManagedCliTests(unittest.TestCase):
         self.assertEqual(result["previous"], "0.62.0")
         self.assertEqual(self.operation("rollback")["version"], "0.62.0")
 
+    def test_activation_recovery_distinguishes_both_sides_of_the_switch(self):
+        cli.private_directory(self.root)
+        before = "releases/v0.63.0-" + "a" * 16
+        target = "releases/v0.64.0-" + "b" * 16
+        previous = "releases/v0.62.0-" + "c" * 16
+        state = dict(previous=before, blockedVersion="0.63.0", lastAttempt=123,
+                     activation=dict(target=target, before=before, previous=previous, blockedVersion="0.61.0"))
+        state_file = self.root / "state.json"
+        raw = json.dumps(state)
+        state_file.write_text(raw)
+        for selected, expected_previous, expected_blocked in ((before, previous, "0.61.0"),
+                                                              (target, before, "0.63.0")):
+            with self.subTest(selected=selected):
+                (self.root / "current").symlink_to(selected)
+                self.assertEqual(cli.state_record(self.root),
+                                 dict(previous=expected_previous, blockedVersion=expected_blocked, lastAttempt=123))
+                self.assertEqual(os.readlink(self.root / "current"), selected)
+                self.assertEqual(state_file.read_text(), raw)
+                (self.root / "current").unlink()
+
+    def test_activation_recovery_rejects_unrelated_current_without_writing(self):
+        self.operation("install")
+        selected = os.readlink(self.root / "current")
+        state = dict(activation=dict(target="releases/v0.64.0-" + "a" * 16,
+                                     before="releases/v0.63.0-" + "b" * 16))
+        state_file = self.root / "state.json"
+        raw = json.dumps(state)
+        state_file.write_text(raw)
+        with self.assertRaisesRegex(ValueError, "^activation_state$"):
+            cli.state_record(self.root)
+        self.assertEqual(state_file.read_text(), raw)
+        self.assertEqual(os.readlink(self.root / "current"), selected)
+
     def test_corrupt_checksum_preserves_current(self):
         self.operation("install")
         self.publish("0.63.0")
@@ -382,9 +415,61 @@ class ManagedCliTests(unittest.TestCase):
                 cli.unpack(self.payload, Path(directory))
         self.assertFalse((self.base / "escape").exists())
 
+    def test_archive_accepts_flat_resources_and_bundle_directory_with_private_modes(self):
+        for directory in (False, True):
+            name = "CodexBar_CodexBarCore.bundle" + ("" if directory else "/resource.json")
+            item = tarfile.TarInfo(name)
+            item.type = tarfile.DIRTYPE if directory else tarfile.REGTYPE
+            item.size = 0 if directory else 7
+            self.publish(extra=item)
+            with self.subTest(directory=directory), tempfile.TemporaryDirectory(dir=self.base) as temporary:
+                destination = Path(temporary)
+                cli.unpack(self.payload, destination)
+                self.assertTrue((destination / "CodexBar_CodexBarCore.bundle").is_dir())
+                self.assertEqual(os.readlink(destination / "codexbar"), "CodexBarCLI")
+                self.assertEqual((destination / "CodexBarCLI").stat().st_mode & 0o777, 0o700)
+                self.assertEqual((destination / "VERSION").stat().st_mode & 0o777, 0o600)
+                if not directory:
+                    self.assertEqual((destination / name).read_bytes(), b"x" * 7)
+                    self.assertEqual((destination / name).stat().st_mode & 0o777, 0o600)
+
+    def test_archive_member_count_boundary(self):
+        for additional, error in ((253, None), (254, "archive_name")):
+            payload = self.base / "many.tar.gz"
+            with tarfile.open(self.payload, "r:gz") as source, tarfile.open(payload, "w:gz") as bundle:
+                for member in source:
+                    bundle.addfile(member, source.extractfile(member) if member.isfile() else None)
+                for index in range(additional):
+                    bundle.addfile(tarfile.TarInfo("CodexBar_CodexBarCore.bundle/file" + str(index)))
+            with self.subTest(additional=additional), tempfile.TemporaryDirectory(dir=self.base) as temporary:
+                if error:
+                    with self.assertRaisesRegex(ValueError, "^" + error + "$"):
+                        cli.unpack(payload, Path(temporary))
+                else:
+                    cli.unpack(payload, Path(temporary))
+                    self.assertEqual(len(list((Path(temporary) / "CodexBar_CodexBarCore.bundle").iterdir())), 253)
+
+    def test_rejected_archive_keeps_active_release_and_cleans_staging(self):
+        self.operation("install")
+        selected = os.readlink(self.root / "current")
+        for name, error in (("./unexpected", "archive_name"), ("x" * 201, "archive_name"),
+                            ("unexpected", "archive_type"),
+                            ("CodexBar_CodexBarCore.bundle/nested/file", "archive_type")):
+            self.publish("0.63.0", extra=tarfile.TarInfo(name))
+            with self.subTest(name=name), self.assertRaisesRegex(ValueError, "^" + error + "$"):
+                self.operation("update")
+            self.assertEqual(os.readlink(self.root / "current"), selected)
+            self.assertFalse(list(self.root.glob(".install-*")))
+        self.publish("0.63.0", version_bytes=b"x" * 129)
+        with self.assertRaisesRegex(ValueError, "^archive_size$"):
+            self.operation("update")
+        self.assertEqual(os.readlink(self.root / "current"), selected)
+        self.assertFalse(list(self.root.glob(".install-*")))
+
     def test_state_shapes_are_bounded_before_mutation(self):
         cli.private_directory(self.root)
         for state in ({"previous": []}, {"blockedVersion": {}}, {"lastAttempt": "today"},
+                      {"lastAttempt": True}, {"lastAttempt": False},
                       {"lastAttempt": float("nan")}, {"lastAttempt": float("inf")},
                       {"lastAttempt": float("-inf")}, {"activation": {"target": []}},
                       {"activation": []}):
@@ -435,6 +520,16 @@ class ManagedCliTests(unittest.TestCase):
         cli.prune(self.root)
         self.assertFalse((self.root / first).exists())
         self.assertTrue((self.root / second).exists())
+
+    def test_cleanup_failure_does_not_block_install_update_or_rollback(self):
+        with patch.object(cli, "prune", side_effect=OSError("synthetic cleanup failure")):
+            self.assertEqual(self.operation("install")["status"], "installed")
+            self.publish("0.63.0")
+            self.assertEqual(self.operation("update")["version"], "0.63.0")
+            restored = self.operation("rollback")
+        self.assertEqual(restored["status"], "restored")
+        self.assertEqual(restored["version"], "0.62.0")
+        self.assertEqual(restored["previous"], "0.63.0")
 
     def test_prune_keeps_only_current_and_previous_after_daily_updates(self):
         # Upstream ships near-daily, so a replaced release must not linger for days.
