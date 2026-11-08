@@ -6,6 +6,7 @@ import io
 import json
 import os
 from pathlib import Path
+import subprocess
 import sys
 import tarfile
 import tempfile
@@ -385,7 +386,8 @@ class ManagedCliTests(unittest.TestCase):
         cli.private_directory(self.root)
         for state in ({"previous": []}, {"blockedVersion": {}}, {"lastAttempt": "today"},
                       {"lastAttempt": float("nan")}, {"lastAttempt": float("inf")},
-                      {"lastAttempt": float("-inf")}, {"activation": {"target": []}},
+                      {"lastAttempt": float("-inf")}, {"lastAttempt": 10 ** 400},
+                      {"lastAttempt": -(10 ** 400)}, {"activation": {"target": []}},
                       {"activation": []}):
             (self.root / "state.json").write_text(json.dumps(state))
             with self.subTest(state=state), self.assertRaises(ValueError):
@@ -393,6 +395,24 @@ class ManagedCliTests(unittest.TestCase):
         (self.root / "state.json").write_text("x" * 20000)
         with self.assertRaises(ValueError):
             cli.status(self.root)
+
+    def test_oversized_state_timestamp_returns_json_without_changing_installation(self):
+        self.operation("install")
+        selected = os.readlink(self.root / "current")
+        helper = Path(__file__).resolve().parents[1] / "scripts/manage-cli.py"
+        for timestamp in (10 ** 400, -(10 ** 400)):
+            raw = json.dumps({"lastAttempt": timestamp})
+            (self.root / "state.json").write_text(raw)
+            for action in ("status", "install", "update", "automatic", "rollback"):
+                with self.subTest(timestamp=timestamp, action=action):
+                    result = subprocess.run(
+                        [sys.executable, str(helper), "--action", action, "--command", self.command],
+                        capture_output=True, text=True, timeout=10)
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    self.assertEqual(json.loads(result.stdout), {"status": "error"})
+                    self.assertEqual(result.stderr, "")
+                    self.assertEqual(os.readlink(self.root / "current"), selected)
+                    self.assertEqual((self.root / "state.json").read_text(), raw)
 
     def test_prune_keeps_previous_and_recent_versions(self):
         self.operation("install")
