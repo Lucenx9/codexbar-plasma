@@ -106,6 +106,7 @@ ColumnLayout {
 
     Kirigami.Separator {
         Layout.fillWidth: true
+        opacity: tokenCostSection.applet.secondaryTextOpacity
     }
 
     RowLayout {

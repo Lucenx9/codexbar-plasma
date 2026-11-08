@@ -310,7 +310,7 @@ Item {
                                 Math.ceil(providerTabLabelSizing.implicitWidth) + Kirigami.Units.gridUnit * 2.2))
                         : providerTabsBar.tabHeight
                     Layout.preferredHeight: providerTabsBar.tabHeight
-                    radius: applet.roundedSurfaceRadius
+                    radius: providerTabsBar.tabRadius
                     color: providerTabMouse.pressed
                         ? applet.withAlpha(Kirigami.Theme.focusColor, 0.24)
                         : (selected
@@ -1010,6 +1010,7 @@ Item {
 
                         Kirigami.Separator {
                             Layout.fillWidth: true
+                            opacity: applet.secondaryTextOpacity
                         }
 
                         Repeater {
@@ -1044,6 +1045,7 @@ Item {
 
                         Kirigami.Separator {
                             Layout.fillWidth: true
+                            opacity: applet.secondaryTextOpacity
                         }
 
                         PlainHeading {
@@ -1116,6 +1118,7 @@ Item {
 
                         Kirigami.Separator {
                             Layout.fillWidth: true
+                            opacity: applet.secondaryTextOpacity
                         }
 
                         PlainHeading {
@@ -1198,6 +1201,7 @@ Item {
 
                         Kirigami.Separator {
                             Layout.fillWidth: true
+                            opacity: applet.secondaryTextOpacity
                         }
 
                         Repeater {
@@ -1270,6 +1274,7 @@ Item {
 
                         Kirigami.Separator {
                             Layout.fillWidth: true
+                            opacity: applet.secondaryTextOpacity
                         }
 
                         PlainHeading {
@@ -1424,6 +1429,7 @@ Item {
 
                         Kirigami.Separator {
                             Layout.fillWidth: true
+                            opacity: applet.secondaryTextOpacity
                         }
 
                         Components.DisclosureButton {
@@ -1465,6 +1471,7 @@ Item {
 
                                     visible: modelData.separatorBefore === true
                                     Layout.fillWidth: true
+                                    opacity: applet.secondaryTextOpacity
                                     Layout.topMargin: Kirigami.Units.smallSpacing / 2
                                     Layout.bottomMargin: Kirigami.Units.smallSpacing / 2
                                 }

@@ -245,8 +245,10 @@ work and upstream contract requirements.
   digits from the theme font, keeping equal-length numbers stable when supported
   by that font.
   A thin separator distinguishes an inline reset from its quota name.
-  Overview keeps more space between provider cards, with a compact gap between
-  each identity header and its first quota.
+  Overview uses body-size quota names, with resets in smaller text and space
+  between each quota group. It keeps more space between provider cards, with a
+  compact gap between each identity header and its first quota. Provider detail
+  sections use subdued dividers to keep quota values prominent.
   Without a pace forecast or summary, a reset appears beside its quota title
   when the full text, percentage and reserved hide action fit with a safety
   margin. Otherwise it stays below the meter. Small changes in the countdown
@@ -270,7 +272,8 @@ work and upstream contract requirements.
   between tabs and wrap around at either end, Home and End jump to the first
   and last tab, and Enter or Space opens the focused tab.
   Selected tabs use a tint of the theme focus color; the quota gauge under the
-  icon remains a usage meter. Selecting a tab keeps its width stable, so neighbouring tabs
+  icon remains a usage meter. Tab corners follow the inset inside the rounded
+  strip. Selecting a tab keeps its width stable, so neighbouring tabs
   stay in place.
   Overview, Usage & Spend, Sessions and provider headers use the theme's smaller
   text for summary and update metadata beneath their titles.
