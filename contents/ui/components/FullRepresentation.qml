@@ -599,7 +599,7 @@ Item {
                     if (!owner || !missingCommandScroll.visible) {
                         return
                     }
-                    var flickable = missingCommandScroll.contentItem
+                    var flickable = missingCommandFlickable
                     var top = focused.mapToItem(flickable.contentItem, 0, 0).y
                     if (top < flickable.contentY) {
                         flickable.contentY = top
@@ -619,6 +619,8 @@ Item {
                 PlasmaComponents.ScrollBar.horizontal.policy: PlasmaComponents.ScrollBar.AlwaysOff
 
                 Flickable {
+                    id: missingCommandFlickable
+
                     contentWidth: width
                     contentHeight: Math.max(missingCommandContent.implicitHeight, height)
                     boundsBehavior: Flickable.StopAtBounds
