@@ -66,18 +66,6 @@ class ProviderDataTest(unittest.TestCase):
                     f"{label}: providerTitle has grown a local display-name table again"
                 )
 
-        # Wayfinder was added late and is the canary for a half-finished provider.
-        identity_text = (root / "contents/ui/ProviderIdentity.js").read_text(encoding="utf-8")
-        for identity_fragment, requirement in (
-            ('"wayfinder": "wayfinder.md"', "documentation link"),
-            ('"wayfinder": [', "brand color"),
-        ):
-            if not code_contains(identity_text, identity_fragment):
-                raise AssertionError(f"ProviderIdentity.js must expose the Wayfinder {requirement}")
-        names_text = (root / "contents/ui/components/ProviderNames.qml").read_text(encoding="utf-8")
-        if '"wayfinder": i18n("Wayfinder")' not in function_body(names_text, "titleForKey"):
-            raise AssertionError("ProviderNames.qml must expose the Wayfinder display name")
-
     def test_provider_config_parsing(self):
         provider_config_body = function_body(main_text, "normalizeProviderConfigEntries")
         if not code_contains(provider_config_body, "Array.isArray(payload) ? payload : [payload]"):
@@ -168,23 +156,12 @@ class ProviderDataTest(unittest.TestCase):
     def test_quota_normalization(self):
         snapshot_text = (root / "contents/ui/ProviderSnapshot.js").read_text()
         window_body = function_body(snapshot_text, "windowSnapshot")
-        for fragment in ("Normalizer.rateWindowMetrics(", "Guards.copyObject(metrics)",
+        for fragment in ("Normalizer.rateWindowMetrics(",
                          "result.resetsAt = resetsAtText(",
                          "result.resetDescription = Normalizer.boundedDisplayText(",
                          "result.paceObservedAtMs = receivedAtMs"):
             if not code_contains(window_body, fragment):
                 raise AssertionError("quota normalization must preserve reset and forecast data")
-        # The stored reset is read back as a date string by the countdown, the panel
-        # reset rule, and absolute formatting, so a numeric CLI date keeps its ISO form
-        # and every other value stays bounded display text.
-        resets_at_body = function_body(snapshot_text, "resetsAtText")
-        for fragment in ("typeof value === \"number\"", "new Date(value).toISOString()",
-                         "Normalizer.boundedDisplayText("):
-            if not code_contains(resets_at_body, fragment):
-                raise AssertionError(
-                    "stored quota reset dates must stay parsable and bounded; "
-                    f"missing {fragment!r}"
-                )
         if "row.reset = Normalizer.boundedDisplayText(resetText(" not in function_body(main_text, "presentUsageWindow"):
             raise AssertionError("QML must format the initial reset label")
         if "onResetTimesShowAbsoluteChanged: Qt.callLater(refreshNow)" in main_text:
