@@ -43,6 +43,11 @@ Controls.Control {
 
                 text: modelData
                 font: Kirigami.Theme.smallFont
+                // The theme's padding hugs the checked frame around a small
+                // label; widen it so the frame gets the same inner margin
+                // horizontally that the label already has vertically.
+                leftPadding: Kirigami.Units.largeSpacing
+                rightPadding: Kirigami.Units.largeSpacing
                 checkable: true
                 checked: metricToggle.currentIndex === index
                 Accessible.name: modelData
