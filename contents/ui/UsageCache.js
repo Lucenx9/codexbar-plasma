@@ -48,73 +48,81 @@ function accountOverridden(accounts, providerID) {
         && accounts[providerID].length > 0
 }
 
-// Inputs are normalized live snapshots. A successful empty usage result replaces
-// old quotas; only an explicit failure may reuse them in the same account scope.
+function canRetainQuota(old, incoming, nowMs) {
+    if (!(incoming.error.length > 0) || !hasQuota(old) || !recent(old.lastGoodAtMs, nowMs)) return false
+    var account = Normalizer.accountKey(incoming)
+    return account.length === 0 || account === Normalizer.accountKey(old)
+}
+
+function measurementTime(item, nowMs) {
+    var measuredAt = timestamp(item.updatedAt)
+    // Account selection must not renew a missing/future timestamp's receipt time.
+    var receivedAt = typeof item.usageReceivedAtMs === "number"
+        && isFinite(item.usageReceivedAtMs) && item.usageReceivedAtMs > 0
+        && item.usageReceivedAtMs <= nowMs ? item.usageReceivedAtMs : nowMs
+    return !isFinite(measuredAt) || measuredAt > receivedAt ? receivedAt : measuredAt
+}
+
+function currentSnapshot(item, nowMs) {
+    var next = Guards.copyObject(item)
+    if (item.error.length !== 0) {
+        next.lastGoodAtMs = 0
+        next.usageStale = false
+        return next
+    }
+    var measuredAt = measurementTime(item, nowMs)
+    if (isFinite(measuredAt) && measuredAt <= nowMs && nowMs - measuredAt <= maximumAgeMs) {
+        next.lastGoodAtMs = measuredAt
+        next.usageStale = false
+    } else if (!hasQuota(next) || !isFinite(measuredAt) || measuredAt > nowMs) {
+        next.lastGoodAtMs = nowMs
+        next.usageStale = false
+    } else {
+        next.lastGoodAtMs = measuredAt
+        next.usageStale = true
+    }
+    return next
+}
+
+function staleSnapshot(item) {
+    var next = Guards.copyObject(item)
+    // A retained measurement cannot support live forecasts or supplemental data.
+    next.rows = next.rows.map(function(row) {
+        var copy = Guards.copyObject(row)
+        copy.paceKnown = false
+        copy.pace = ""
+        copy.paceParts = []
+        copy.pacePercent = -1
+        copy.paceEtaSeconds = 0
+        return copy
+    })
+    next.primaryRow = next.rows.filter(function(row) { return row.lane === "primary" })[0] || null
+    next.subscriptionDates = []
+    next.providerDetails = []
+    next.usageDashboard = null
+    next.providerCost = null
+    next.resetCredits = null
+    next.tokenCost = null
+    next.codexCreditLimit = null
+    next.credits = null
+    return next
+}
+
+// A successful empty result replaces quotas; only failure can reuse the same account.
 function reconcile(previous, incoming, nowMs) {
     var byProvider = ({})
     previous.forEach(function(item) { byProvider[item.provider] = item })
     return incoming.map(function(item) {
-        var next = Guards.copyObject(item)
         var old = byProvider[item.provider]
-        var incomingAccountKey = Normalizer.accountKey(item)
-        if (item.error.length > 0 && hasQuota(old) && recent(old.lastGoodAtMs, nowMs)
-                && (incomingAccountKey.length === 0
-                    || incomingAccountKey === Normalizer.accountKey(old))) {
+        var next
+        if (canRetainQuota(old, item, nowMs)) {
             next = withCurrentStatus(old, item)
             next.error = item.error
             next.usageStale = true
         } else {
-            var measuredAt = timestamp(item.updatedAt)
-            // Cached account options keep their original receipt time. Missing
-            // or future CLI timestamps must not gain a new lifetime on selection.
-            var receivedAt = typeof item.usageReceivedAtMs === "number"
-                && isFinite(item.usageReceivedAtMs) && item.usageReceivedAtMs > 0
-                && item.usageReceivedAtMs <= nowMs ? item.usageReceivedAtMs : nowMs
-            if (!isFinite(measuredAt) || measuredAt > receivedAt) {
-                measuredAt = receivedAt
-            }
-            if (item.error.length === 0 && isFinite(measuredAt) && measuredAt <= nowMs
-                    && nowMs - measuredAt <= maximumAgeMs) {
-                next.lastGoodAtMs = measuredAt
-                next.usageStale = false
-            } else if (item.error.length === 0
-                    && (!hasQuota(next) || !isFinite(measuredAt) || measuredAt > nowMs)) {
-                next.lastGoodAtMs = nowMs
-                next.usageStale = false
-            } else if (item.error.length === 0) {
-                // A quota measurement older than the retention window cannot back
-                // a fresh snapshot (e.g. a days-old cached account option
-                // applied via replaceProviderSnapshot); keep it stale.
-                next.lastGoodAtMs = measuredAt
-                next.usageStale = true
-            } else {
-                next.lastGoodAtMs = 0
-                next.usageStale = false
-            }
+            next = currentSnapshot(item, nowMs)
         }
-        if (next.usageStale) {
-            // Forecasts are live estimates. Stale measurements cannot support
-            // a current pace or run-out prediction.
-            next.rows = next.rows.map(function(row) {
-                var copy = Guards.copyObject(row)
-                copy.paceKnown = false
-                copy.pace = ""
-                copy.paceParts = []
-                copy.pacePercent = -1
-                copy.paceEtaSeconds = 0
-                return copy
-            })
-            next.primaryRow = next.rows.filter(function(row) { return row.lane === "primary" })[0] || null
-            next.subscriptionDates = []
-            next.providerDetails = []
-            next.usageDashboard = null
-            next.providerCost = null
-            next.resetCredits = null
-            next.tokenCost = null
-            next.codexCreditLimit = null
-            next.credits = null
-        }
-        return next
+        return next.usageStale ? staleSnapshot(next) : next
     })
 }
 
@@ -201,6 +209,32 @@ function extraRecord(id, window) {
     return windowID.length > 0 ? { id: windowID, window: window } : { window: window }
 }
 
+function savedWindows(rows) {
+    var windows = ({})
+    var extras = []
+    rows.forEach(function(row) {
+        if (row.hasPercent !== true) return
+        var window = windowRecord(row)
+        if (!window) return
+        if (lanes.indexOf(row.lane) >= 0) {
+            windows[row.lane] = window
+        } else if (row.lane === "extra" && extras.length < Normalizer.maximumExtraRateWindows) {
+            extras.push(extraRecord(row.windowId, window))
+        }
+    })
+    if (extras.length > 0) windows.extraRateWindows = extras
+    return windows
+}
+
+function savedSnapshot(item) {
+    var windows = savedWindows(item.rows)
+    if (Object.keys(windows).length === 0) return null
+    var confidence = Normalizer.usageConfidence(item.dataConfidence)
+    var saved = { provider: item.provider, measuredAt: item.lastGoodAtMs, windows: windows }
+    if (confidence.length > 0) saved.dataConfidence = confidence
+    return saved
+}
+
 function encode(items, context, nowMs, accounts) {
     if (!validContext(context)) {
         return ""
@@ -212,31 +246,8 @@ function encode(items, context, nowMs, accounts) {
                 || accountOverridden(accounts, item.provider)) {
             continue
         }
-        var windows = ({})
-        var extras = []
-        item.rows.forEach(function(row) {
-            if (row.hasPercent === true) {
-                var window = windowRecord(row)
-                if (window) {
-                    if (lanes.indexOf(row.lane) >= 0) {
-                        windows[row.lane] = window
-                    } else if (row.lane === "extra" && extras.length < Normalizer.maximumExtraRateWindows) {
-                        extras.push(extraRecord(row.windowId, window))
-                    }
-                }
-            }
-        })
-        if (extras.length > 0) {
-            windows.extraRateWindows = extras
-        }
-        if (Object.keys(windows).length > 0) {
-            var confidence = Normalizer.usageConfidence(item.dataConfidence)
-            var saved = { provider: item.provider, measuredAt: item.lastGoodAtMs, windows: windows }
-            if (confidence.length > 0) {
-                saved.dataConfidence = confidence
-            }
-            snapshots.push(saved)
-        }
+        var saved = savedSnapshot(item)
+        if (saved) snapshots.push(saved)
     }
     if (snapshots.length === 0) {
         return ""
@@ -251,8 +262,44 @@ function encode(items, context, nowMs, accounts) {
     return ""
 }
 
-// Persisted data is untrusted. Rebuild only the quota contract that QML already
-// knows how to normalize, never restore arbitrary provider view models or prose.
+function cacheEntryValid(item, nowMs) {
+    return Normalizer.isCliRecord(item) && typeof item.provider === "string"
+        && Normalizer.normalizedProviderID(item.provider) === item.provider && item.provider.length > 0
+        && recent(item.measuredAt, nowMs) && Normalizer.isCliRecord(item.windows)
+}
+
+function restoredUsage(item) {
+    var usage = { updatedAt: new Date(item.measuredAt).toISOString() }
+    var confidence = Normalizer.usageConfidenceField(item)
+    if (confidence.length > 0) usage.dataConfidence = confidence
+    var count = 0
+    for (var j = 0; j < lanes.length; j++) {
+        var lane = lanes[j]
+        var window = Guards.hasOwnKey(item.windows, lane) ? windowRecord(item.windows[lane]) : null
+        if (window) {
+            usage[lane] = window
+            count++
+        }
+    }
+    var extras = restoredExtras(item.windows.extraRateWindows)
+    if (extras.length > 0) {
+        usage.extraRateWindows = extras
+        count += extras.length
+    }
+    return count > 0 ? usage : null
+}
+
+function restoredExtras(value) {
+    var extras = Array.isArray(value) ? value : []
+    var result = []
+    for (var k = 0; k < Math.min(extras.length, Normalizer.maximumExtraRateWindows); k++) {
+        var window = Normalizer.isCliRecord(extras[k]) ? windowRecord(extras[k].window) : null
+        if (window) result.push(extraRecord(extras[k].id, window))
+    }
+    return result
+}
+
+// Rebuild only quota fields; persisted prose and arbitrary view models are untrusted.
 function decode(raw, context, nowMs) {
     if (!withinByteLimit(raw) || !validContext(context)) {
         return []
@@ -271,39 +318,9 @@ function decode(raw, context, nowMs) {
     var seen = ({})
     for (var i = 0; i < cache.snapshots.length; i++) {
         var item = cache.snapshots[i]
-        if (!Normalizer.isCliRecord(item) || typeof item.provider !== "string"
-                || Normalizer.normalizedProviderID(item.provider) !== item.provider
-                || item.provider.length === 0 || Guards.hasOwnKey(seen, item.provider)
-                || !recent(item.measuredAt, nowMs) || !Normalizer.isCliRecord(item.windows)) {
-            continue
-        }
-        var usage = { updatedAt: new Date(item.measuredAt).toISOString() }
-        var confidence = Normalizer.usageConfidenceField(item)
-        if (confidence.length > 0) {
-            usage.dataConfidence = confidence
-        }
-        var count = 0
-        for (var j = 0; j < lanes.length; j++) {
-            var lane = lanes[j]
-            var window = Guards.hasOwnKey(item.windows, lane) ? windowRecord(item.windows[lane]) : null
-            if (window) {
-                usage[lane] = window
-                count++
-            }
-        }
-        var extras = Array.isArray(item.windows.extraRateWindows) ? item.windows.extraRateWindows : []
-        var restoredExtras = []
-        for (var k = 0; k < Math.min(extras.length, Normalizer.maximumExtraRateWindows); k++) {
-            var extraWindow = Normalizer.isCliRecord(extras[k]) ? windowRecord(extras[k].window) : null
-            if (extraWindow) {
-                restoredExtras.push(extraRecord(extras[k].id, extraWindow))
-            }
-        }
-        if (restoredExtras.length > 0) {
-            usage.extraRateWindows = restoredExtras
-            count += restoredExtras.length
-        }
-        if (count > 0) {
+        if (!cacheEntryValid(item, nowMs) || Guards.hasOwnKey(seen, item.provider)) continue
+        var usage = restoredUsage(item)
+        if (usage) {
             seen[item.provider] = true
             result.push({ provider: item.provider, usage: usage })
         }
