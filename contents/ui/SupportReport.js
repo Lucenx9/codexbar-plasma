@@ -43,9 +43,9 @@ function sharedText(value, limit) {
     if (typeof value !== "string") return ""
     return SafeText.truncatedText(SafeText.cliDiagnostic(value, SafeText.maximumDiagnosticLength)
         .replace(/\\u002f|\\\//gi, "/")
-        // Earlier credential filtering may consume a path's slash. Treat its
+        // Earlier credential filtering may consume a path's separator. Treat its
         // marker as ambiguous too, and never guess either path boundary.
-        .replace(/^[^\r\n]*(?:\/|\[redacted\])[^\r\n]*/gim, redactedDiagnosticLine)
+        .replace(/[^\r\n]+/g, sharedDiagnosticLine)
         .replace(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, "[email]")
         // Escaped JSON embedded in a CLI error quotes keys and values with
         // backslashes; as in SafeText, such a value redacts the rest of the line.
@@ -56,10 +56,74 @@ function sharedText(value, limit) {
         .replace(/[\x00-\x1f\x7f\u0060<>]/g, " "), limit || 1024)
 }
 
-function redactedDiagnosticLine(value) {
+function diagnosticJsonParts(text) {
+    var ranges = [[0, text.length], [text.indexOf("{"), text.lastIndexOf("}") + 1],
+        [text.indexOf("["), text.lastIndexOf("]") + 1]]
+    for (var range of ranges) {
+        if (range[0] < 0 || range[1] <= range[0]) continue
+        try {
+            var value = JSON.parse(text.slice(range[0], range[1]))
+            if (typeof value === "string" || value !== null && typeof value === "object")
+                return [text.slice(0, range[0]), value, text.slice(range[1])]
+        } catch (error) { /* Unstructured diagnostics are inspected literally. */ }
+    }
+    return null
+}
+
+function literalBackslashPath(text) {
+    var quote = ""
+    var escapedQuote = false
+    for (var i = 0; i < text.length; i++) {
+        var character = text.charAt(i)
+        if (character === "\\") {
+            var next = text.charAt(++i)
+            if (next !== "\"" && next !== "'") return true
+            if (next === quote) {
+                if (i + 1 === text.length || /[\s,;)}\]]/.test(text.charAt(i + 1))) return true
+                escapedQuote = true
+            }
+        } else if (character === quote) {
+            quote = ""
+            escapedQuote = false
+        } else if (!quote && (character === "\"" || character === "'")) {
+            quote = character
+            escapedQuote = false
+        }
+    }
+    // An escaped closing quote can instead be a quoted directory's separator.
+    return !!quote && escapedQuote
+}
+
+function diagnosticPathKind(text) {
+    var pending = [text]
+    var remaining = 512
+    while (pending.length) {
+        if (--remaining < 0) return "redacted"
+        var value = pending.pop()
+        if (typeof value === "string") {
+            if (/\/|\b[A-Za-z]:\\/.test(value)) return "path"
+            var parts = diagnosticJsonParts(value)
+            if (parts) pending = pending.concat(parts)
+            else if (literalBackslashPath(value.replace(/\\u005c/gi, "\\"))) return "path"
+        } else if (value !== null && typeof value === "object") {
+            var keys = Object.keys(value)
+            if (pending.length + keys.length * 2 > remaining) return "redacted"
+            for (var key of keys) pending.push(key, value[key])
+        }
+    }
+    return ""
+}
+
+function sharedDiagnosticLine(value) {
+    // Decode JSON only for inspection; preserve useful message escapes verbatim.
+    var kind = diagnosticPathKind(value)
+    if (!kind && /\[redacted\]/i.test(value)) kind = "redacted"
+    return kind ? redactedDiagnosticLine(value, "[" + kind + "]") : value
+}
+
+function redactedDiagnosticLine(value, marker) {
     // Keep common startup failures as fixed text, without retaining a path's
     // arbitrary suffix or a loader's potentially personal library filename.
-    var marker = value.indexOf("/") >= 0 ? "[path]" : "[redacted]"
     if (/: error while loading shared libraries:/.test(value)) {
         return marker + ": error while loading shared libraries"
     }

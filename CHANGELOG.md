@@ -79,6 +79,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Redact Windows paths from shared support-report errors, including drive roots,
+  UNC shares, relative paths, quoted paths with final separators and escaped
+  JSON forms. Preserve ordinary JSON message escapes in shared errors.
+
 - Redact private UNC network paths from model labels in shared usage images and
   statistics, including quoted paths and share names containing spaces.
 
