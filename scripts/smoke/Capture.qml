@@ -2399,14 +2399,15 @@ Item {
             verifyScenario(claude.rows[0].dataConfidence === "percentOnly", "limited confidence disappeared in the root adapter");
             verifyScenario(applet.quotaSeverity(claude.rows[1]) === "" && applet.quotaWarningMarkers(claude.rows[1]).length === 0,
                 "limited-detail quota gained warning colours or threshold markers");
-            verifyScenario(applet.notificationObservations().filter(function(item) { return item.providerID === "claude"; })[0].rows[0].dataConfidence === "percentOnly",
+            var claudeObservation = applet.notificationObservations().filter(function(item) { return item.providerID === "claude"; })[0];
+            verifyScenario(claudeObservation.rows[0].dataConfidence === "percentOnly",
                 "notification adapter discarded limited confidence");
             verifyScenario(applet.usageResetText(claude.rows[0]) === i18n("Reset unavailable") && applet.usageResetText(claude.rows[1]).length > 0,
                 "reported weekly reset disappeared or missing session reset was not explained");
             if (scenario === "percent-only-pace") {
                 verifyScenario(applet.paceMarkerPercent(claude.rows[1]) === 43,
                     "reported pace marker disappeared");
-                verifyScenario(applet.runOutTextForRow(claude.rows[1]).length > 0 && !applet.paceWarningActive(claude.rows[1]),
+                verifyScenario(applet.runOutTextForRow(claude.rows[1]).length > 0 && claudeObservation.rows[1].paceActive === false,
                     "reported panel ETA disappeared or enabled automated pace warnings");
                 verifyScenario(hasVisibleText(applet.fullRepresentationItem, applet.usagePaceText(claude.rows[1])),
                     "reported pace summary disappeared");

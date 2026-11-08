@@ -136,7 +136,7 @@ class PanelTextRecoveryTests(unittest.TestCase):
                      "switcherCandidateRows",
                      "clamp", "providerKey", "displayPercent",
                      "paceMarkerPercent",
-                     "paceWarningActive", "paceEtaText", "runOutTextForRow",
+                     "paceEtaText", "runOutTextForRow",
                      "resetTextForRow", "usageResetText", "resetText", "resetLabel"):
             signature = re.search(r"function " + name + r"\([^)]*\)", source).group(0)
             functions.append(signature + " {" + surface.function_body(name) + "}")
