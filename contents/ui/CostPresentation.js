@@ -678,45 +678,60 @@ function projectRows(costs, showsTokens) {
     return result
 }
 
+function pricedSnapshotCurrency(snapshot) {
+    var totals = snapshot && typeof snapshot === "object" && snapshot.totals
+        ? snapshot.totals : ({})
+    if (hasMetricValue(totals, false)) {
+        var totalsCurrency = boundedText(totals.currency || "", 12)
+        if (totalsCurrency.length > 0) {
+            return totalsCurrency
+        }
+    }
+    var daily = snapshot && Array.isArray(snapshot.daily) ? snapshot.daily : []
+    for (var i = 0; i < daily.length; i++) {
+        if (!hasMetricValue(daily[i], false)) {
+            continue
+        }
+        var dailyCurrency = boundedText(daily[i].currency || "", 12)
+        if (dailyCurrency.length > 0) {
+            return dailyCurrency
+        }
+    }
+    return ""
+}
+
+// null means this snapshot offers no fallback. A first daily row with no
+// currency still chooses USD, even if a later snapshot names another currency.
+function fallbackSnapshotCurrency(snapshot) {
+    var totals = snapshot && typeof snapshot === "object" && snapshot.totals
+        ? snapshot.totals : ({})
+    var currency = boundedText(totals.currency || "", 12)
+    if (currency.length > 0) {
+        return currency
+    }
+    var daily = snapshot && Array.isArray(snapshot.daily) ? snapshot.daily : []
+    if (daily.length === 0) {
+        return null
+    }
+    var first = daily[0]
+    var firstCurrency = first && typeof first === "object" ? first.currency : null
+    return boundedText(firstCurrency || "USD", 12)
+}
+
 function spendCurrency(costs) {
     var items = Array.isArray(costs) ? costs : []
     // A token-only snapshot still carries a fallback currency, but it must not
     // choose which priced providers participate in the money aggregate.
     for (var i = 0; i < items.length; i++) {
-        var snapshot = items[i]
-        var totals = snapshot && typeof snapshot === "object" && snapshot.totals
-            ? snapshot.totals : ({})
-        if (hasMetricValue(totals, false)) {
-            var totalsCurrency = boundedText(totals.currency || "", 12)
-            if (totalsCurrency.length > 0) {
-                return totalsCurrency
-            }
-        }
-        var daily = snapshot && Array.isArray(snapshot.daily) ? snapshot.daily : []
-        for (var j = 0; j < daily.length; j++) {
-            if (!hasMetricValue(daily[j], false)) {
-                continue
-            }
-            var dailyCurrency = boundedText(daily[j].currency || "", 12)
-            if (dailyCurrency.length > 0) {
-                return dailyCurrency
-            }
+        var pricedCurrency = pricedSnapshotCurrency(items[i])
+        if (pricedCurrency.length > 0) {
+            return pricedCurrency
         }
     }
-    for (var fallbackIndex = 0; fallbackIndex < items.length; fallbackIndex++) {
-        var fallbackSnapshot = items[fallbackIndex]
-        var fallbackTotals = fallbackSnapshot && typeof fallbackSnapshot === "object"
-            && fallbackSnapshot.totals ? fallbackSnapshot.totals : ({})
-        var fallbackCurrency = boundedText(fallbackTotals.currency || "", 12)
-        if (fallbackCurrency.length > 0) {
+    for (var j = 0; j < items.length; j++) {
+        var fallbackCurrency = fallbackSnapshotCurrency(items[j])
+        if (fallbackCurrency !== null) {
             return fallbackCurrency
-        }
-        var fallbackDaily = fallbackSnapshot && Array.isArray(fallbackSnapshot.daily) ? fallbackSnapshot.daily : []
-        if (fallbackDaily.length > 0) {
-            var firstDaily = fallbackDaily[0]
-            var firstCurrency = firstDaily && typeof firstDaily === "object"
-                ? firstDaily.currency : null
-            return boundedText(firstCurrency || "USD", 12)
         }
     }
     return "USD"
@@ -727,29 +742,31 @@ function costMatchesSpendCurrency(cost, currency) {
     return boundedText(totals.currency || currency, 12) === currency
 }
 
+function snapshotHasForeignCostCurrency(snapshot, currency) {
+    var totals = snapshot && typeof snapshot === "object" && snapshot.totals
+        ? snapshot.totals : ({})
+    if (hasMetricValue(totals, false) && !costMatchesSpendCurrency(snapshot, currency)) {
+        return true
+    }
+    var daily = snapshot && Array.isArray(snapshot.daily) ? snapshot.daily : []
+    for (var i = 0; i < daily.length; i++) {
+        if (hasMetricValue(daily[i], false)
+                && boundedText(daily[i].currency || "USD", 12) !== currency) {
+            return true
+        }
+    }
+    return false
+}
+
 // Cost figures from different currencies cannot share one aggregate. The
 // caller uses this to label the selected-currency amount as a subtotal and to
 // explain why token totals can cover more providers than money totals.
 function spendHasMixedCostCurrencies(costs) {
     var items = Array.isArray(costs) ? costs : []
     var currency = spendCurrency(items)
-    for (var i = 0; i < items.length; i++) {
-        var snapshot = items[i]
-        var totals = snapshot && typeof snapshot === "object" && snapshot.totals
-            ? snapshot.totals : ({})
-        if (hasMetricValue(totals, false)
-                && boundedText(totals.currency || currency, 12) !== currency) {
-            return true
-        }
-        var daily = snapshot && Array.isArray(snapshot.daily) ? snapshot.daily : []
-        for (var j = 0; j < daily.length; j++) {
-            if (hasMetricValue(daily[j], false)
-                    && boundedText(daily[j].currency || "USD", 12) !== currency) {
-                return true
-            }
-        }
-    }
-    return false
+    return items.some(function(snapshot) {
+        return snapshotHasForeignCostCurrency(snapshot, currency)
+    })
 }
 
 function acceptedCostCoverage(value) {

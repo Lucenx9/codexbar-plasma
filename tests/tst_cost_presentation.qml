@@ -875,6 +875,46 @@ TestCase {
         compare(tokenPoints[0].value, 650)
     }
 
+    function test_spendCurrencyPreservesSelectionAndMixedCurrencyPolicy_data() {
+        return [
+            { tag: "measured-zero", costs: [
+                { totals: { cost: null, currency: "USD" } },
+                { totals: { cost: 0, currency: "EUR" } }
+            ], currency: "EUR", mixed: false },
+            { tag: "daily-before-later-provider-total", costs: [
+                { totals: { currency: "USD" }, daily: [{ cost: 0, currency: "GBP" }] },
+                { totals: { cost: 2, currency: "EUR" } }
+            ], currency: "GBP", mixed: true },
+            { tag: "totals-before-own-daily", costs: [
+                { totals: { cost: 1, currency: "EUR" }, daily: [{ cost: 2, currency: "GBP" }] }
+            ], currency: "EUR", mixed: true },
+            { tag: "unusable-amounts-cannot-select-currency", costs: [
+                { totals: { cost: "3", currency: "USD" },
+                    daily: [null, { cost: false, currency: "GBP" }, { cost: Infinity, currency: "CAD" }] },
+                { totals: { cost: 1, currency: "JPY" } }
+            ], currency: "JPY", mixed: false },
+            { tag: "token-only-totals-fallback", costs: [
+                null, { totals: { tokens: 10, currency: "EUR" }, daily: [{ currency: "GBP" }] }
+            ], currency: "EUR", mixed: false },
+            { tag: "first-daily-usd-fallback", costs: [
+                { daily: [null, { currency: "GBP" }] }, { totals: { currency: "EUR" } }
+            ], currency: "USD", mixed: false },
+            { tag: "unlabelled-total-inherits-selected-currency", costs: [
+                { totals: { cost: 1 } }, { totals: { cost: 2, currency: "EUR" } }
+            ], currency: "EUR", mixed: false },
+            { tag: "unlabelled-daily-keeps-usd-default", costs: [
+                { daily: [{ cost: 1 }] }, { totals: { cost: 2, currency: "EUR" } }
+            ], currency: "EUR", mixed: true }
+        ]
+    }
+
+    function test_spendCurrencyPreservesSelectionAndMixedCurrencyPolicy(data) {
+        var original = JSON.stringify(data.costs)
+        compare(CostPresentation.spendCurrency(data.costs), data.currency)
+        compare(CostPresentation.spendHasMixedCostCurrencies(data.costs), data.mixed)
+        compare(JSON.stringify(data.costs), original)
+    }
+
     // Money in mixed currencies cannot be summed, but token counts are
     // currency-free: filtering them would drop whole providers from the chart.
     function test_spendDailyPointsDropForeignMoneyButKeepForeignTokens() {
