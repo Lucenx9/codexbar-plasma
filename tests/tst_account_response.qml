@@ -55,6 +55,17 @@ TestCase {
         compare(missing.outcome, "success");
         compare(missing.options, []);
     }
+
+    function test_foreignProviderCannotBecomeARequestedAccount() {
+        var foreign = {provider: "claude", account: "Work", usage: {primary: {usedPercent: 72}}};
+        var rejected = parse([foreign]);
+        compare(rejected.outcome, "empty");
+        verify(!rejected.options);
+        var result = parse([foreign, {provider: "codex", account: "Work", usage: {primary: {usedPercent: 0}}}]);
+        compare(result.outcome, "success");
+        compare(result.options.length, 1);
+        compare(result.options[0].rows[0].usedPercent, 0);
+    }
     function test_successReportsNamedAccountAvailability() {
         compare(parse([]).availability, "none");
         compare(parse({
@@ -105,7 +116,7 @@ TestCase {
     function test_validSiblingsAndNamedErrorsRemainUsable() {
         var result = parse([
             {
-                provider: "claude",
+                provider: "CODEX",
                 account: "Work  Team",
                 usage: {
                     primary: {
