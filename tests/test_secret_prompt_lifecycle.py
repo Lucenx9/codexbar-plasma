@@ -20,6 +20,7 @@ import QtTest
 import "SOURCE_URL/Guards.js" as Guards
 import "SOURCE_URL/config/ProviderDescriptor.js" as ProviderDescriptor
 import "SOURCE_URL/config/ProviderCredentials.js" as ProviderCredentials
+import "SOURCE_URL/config/ProviderCapabilities.js" as ProviderCapabilities
 TestCase {
     name: "SecretPromptCommands"
     property string commandPath: CLI_PATH
@@ -259,6 +260,7 @@ import "SOURCE_URL/CommandLedger.js" as CommandLedger
 import "SOURCE_URL/config/ProviderDescriptor.js" as ProviderDescriptor
 import "SOURCE_URL/config/ProviderConfigProtocol.js" as ProviderConfigProtocol
 import "SOURCE_URL/config/ProviderCredentials.js" as ProviderCredentials
+import "SOURCE_URL/config/ProviderCapabilities.js" as ProviderCapabilities
 TestCase {
     name: "ProviderCommandWiring"
     property string commandPath: "codexbar"
@@ -909,7 +911,7 @@ TestCase {
 WIRING_FUNCTIONS = (
     "hasCredentialWrite", "hasPendingFields", "deviceLoginActive",
     "runCommand", "disconnectCommandsByKind", "expireConfigCommands",
-    "hasTimedConfigCommands", "handleConfigCommandTimeout",
+    "hasTimedConfigCommands", "handleConfigCommandTimeout", "applyProviderCapabilities",
     "reload", "runProviderListCommand",
     "runCliVersionCommand", "loadProviderSettings",
     "providerConfigRevisionValue", "bumpProviderConfigRevision",

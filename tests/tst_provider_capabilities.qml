@@ -6,12 +6,12 @@ TestCase {
     name: "ProviderCapabilities"
 
     function test_releasedVersionBoundaries_data() {
-        return [{tag: "fireworks", key: "fireworks", before: "0.53.9", at: "0.54.0"},
+        return [{tag: "fireworks", provider: "fireworks", key: "fireworks", before: "0.53.9", at: "0.54.0"},
             {tag: "source", key: "source", before: "0.72.9", at: "0.73.0"},
-            {tag: "commandcode-fal", key: "commandCodeFal", before: "0.74.9", at: "0.75.0"},
-            {tag: "munito", key: "munito", before: "0.76.9", at: "0.77.0"},
-            {tag: "soniox", key: "soniox", before: "0.79.9", at: "0.80.0"},
-            {tag: "chatbox", key: "abliterationChatbox", before: "0.80.9", at: "0.81.0"}]
+            {tag: "commandcode-fal", provider: "commandcode", key: "commandCodeFal", before: "0.74.9", at: "0.75.0"},
+            {tag: "munito", provider: "munito", key: "munito", before: "0.76.9", at: "0.77.0"},
+            {tag: "soniox", provider: "soniox", key: "soniox", before: "0.79.9", at: "0.80.0"},
+            {tag: "chatbox", provider: "chatbox", key: "abliterationChatbox", before: "0.80.9", at: "0.81.0"}]
     }
     function test_releasedVersionBoundaries(data) {
         verify(!Capabilities.versionCapabilities(data.before, 0)[data.key])
@@ -19,6 +19,10 @@ TestCase {
         verify(!Capabilities.versionCapabilities(data.at, 1)[data.key])
         verify(!Capabilities.versionCapabilities(data.at + "-rc.1", 0)[data.key])
         verify(!Capabilities.versionCapabilities("unknown", 0)[data.key])
+        if (data.provider) {
+            verify(Capabilities.supportsApiKey(data.provider, null, Capabilities.versionCapabilities(data.at, 0)))
+            verify(!Capabilities.supportsApiKey(data.provider, null, Capabilities.versionCapabilities(data.before, 0)))
+        }
     }
     function test_legacyAllowlistRemainsAvailableBeforeVersionGatedWriters() {
         var capabilities = Capabilities.versionCapabilities("0.53.0", 0)
