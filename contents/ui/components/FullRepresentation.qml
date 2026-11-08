@@ -587,45 +587,83 @@ Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
-            ColumnLayout {
-                id: missingCommandContent
-                anchors.centerIn: parent
-                width: parent.width
-                spacing: Kirigami.Units.smallSpacing
+            Connections {
+                target: missingCommandScroll.Window.window
 
-                PlainPlaceholderMessage {
-                    id: missingCommandPlaceholder
-                    objectName: "missingCommandPlaceholder"
-
-                    Layout.fillWidth: true
-                    plainText: i18n("CodexBar CLI not found")
-                    plainExplanation: i18n("Plasma could not run '%1'. Install or reuse a private official CLI for this widget and use it immediately. If your CLI is installed elsewhere, set its path in Settings > Diagnostics.", applet.commandPath)
-                    icon.name: "download"
-                    type: Kirigami.PlaceholderMessage.Type.Actionable
-                    helpfulAction: prepareCliAction
+                function onActiveFocusItemChanged() {
+                    var focused = missingCommandScroll.Window.window.activeFocusItem
+                    var owner = focused
+                    while (owner && owner !== missingCommandContent) {
+                        owner = owner.parent
+                    }
+                    if (!owner || !missingCommandScroll.visible) {
+                        return
+                    }
+                    var flickable = missingCommandScroll.contentItem
+                    var top = focused.mapToItem(flickable.contentItem, 0, 0).y
+                    if (top < flickable.contentY) {
+                        flickable.contentY = top
+                    } else if (top + focused.height > flickable.contentY + flickable.height) {
+                        flickable.contentY = top + focused.height - flickable.height
+                    }
                 }
+            }
 
-                Controls.BusyIndicator {
-                    Layout.alignment: Qt.AlignHCenter
-                    Layout.preferredWidth: Kirigami.Units.iconSizes.medium
-                    Layout.preferredHeight: Kirigami.Units.iconSizes.medium
-                    running: applet.cliSetupBusy
-                    visible: running
-                }
+            PlasmaComponents.ScrollView {
+                id: missingCommandScroll
+                objectName: "missingCommandScroll"
 
-                PlainControlsLabel {
-                    objectName: "popupCliSetupStatus"
-                    Layout.fillWidth: true
-                    text: applet.cliSetupStatus
-                    visible: text.length > 0
-                    horizontalAlignment: Text.AlignHCenter
-                    wrapMode: Text.WordWrap
-                }
+                anchors.fill: parent
+                contentWidth: availableWidth
+                clip: true
+                PlasmaComponents.ScrollBar.horizontal.policy: PlasmaComponents.ScrollBar.AlwaysOff
 
-                Controls.Button {
-                    objectName: "popupCliSetupSettings"
-                    Layout.alignment: Qt.AlignHCenter
-                    action: usageSettingsAction
+                Flickable {
+                    contentWidth: width
+                    contentHeight: Math.max(missingCommandContent.implicitHeight, height)
+                    boundsBehavior: Flickable.StopAtBounds
+
+                    ColumnLayout {
+                        id: missingCommandContent
+                        y: Math.max(0, (missingCommandScroll.availableHeight - implicitHeight) / 2)
+                        width: missingCommandScroll.availableWidth
+                        spacing: Kirigami.Units.smallSpacing
+
+                        PlainPlaceholderMessage {
+                            id: missingCommandPlaceholder
+                            objectName: "missingCommandPlaceholder"
+
+                            Layout.fillWidth: true
+                            plainText: i18n("CodexBar CLI not found")
+                            plainExplanation: i18n("Plasma could not run '%1'. Install or reuse a private official CLI for this widget and use it immediately. If your CLI is installed elsewhere, set its path in Settings > Diagnostics.", applet.commandPath)
+                            icon.name: "download"
+                            type: Kirigami.PlaceholderMessage.Type.Actionable
+                            helpfulAction: prepareCliAction
+                        }
+
+                        Controls.BusyIndicator {
+                            Layout.alignment: Qt.AlignHCenter
+                            Layout.preferredWidth: Kirigami.Units.iconSizes.medium
+                            Layout.preferredHeight: Kirigami.Units.iconSizes.medium
+                            running: applet.cliSetupBusy
+                            visible: running
+                        }
+
+                        PlainControlsLabel {
+                            objectName: "popupCliSetupStatus"
+                            Layout.fillWidth: true
+                            text: applet.cliSetupStatus
+                            visible: text.length > 0
+                            horizontalAlignment: Text.AlignHCenter
+                            wrapMode: Text.WordWrap
+                        }
+
+                        Controls.Button {
+                            objectName: "popupCliSetupSettings"
+                            Layout.alignment: Qt.AlignHCenter
+                            action: usageSettingsAction
+                        }
+                    }
                 }
             }
         }

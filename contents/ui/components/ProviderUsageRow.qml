@@ -30,12 +30,13 @@ ColumnLayout {
     readonly property bool hasPaceOrSummary: summaryText.length > 0
         || (showPace && rowData.pace.length > 0)
     readonly property bool inlineResetEligible: !hasPaceOrSummary && resetText.length > 0
+    readonly property real inlineTitleSpacing: Kirigami.Units.smallSpacing * 1.5
     // TextMetrics stay independent of assigned label widths and visibility.
     readonly property real resetSpareWidth: width - Math.ceil(usageTitleMetrics.advanceWidth)
         - Math.ceil(usageResetMetrics.advanceWidth)
         - (rowData.hasPercent ? Math.ceil(usagePercentMetrics.advanceWidth) : 0)
         - (hideable ? actionSize : 0)
-        - 1 - usageTitleRow.spacing * (3 + (hideable ? 1 : 0) + (rowData.hasPercent ? 1 : 0))
+        - 1 - inlineTitleSpacing * (3 + (hideable ? 1 : 0) + (rowData.hasPercent ? 1 : 0))
     property bool resetInline: false
     readonly property string warningDescription: warningMarkers.filter(function(marker) {
         return marker.percent > 0 && marker.percent < 100 && typeof marker.description === "string"
@@ -83,7 +84,7 @@ ColumnLayout {
         id: usageTitleRow
 
         Layout.fillWidth: true
-        spacing: Kirigami.Units.smallSpacing * 1.5
+        spacing: usageRow.resetInline ? usageRow.inlineTitleSpacing : Kirigami.Units.smallSpacing
 
         PlainPlasmaLabel {
             id: usageTitleLabel

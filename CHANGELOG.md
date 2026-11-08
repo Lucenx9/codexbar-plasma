@@ -88,6 +88,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep missing-CLI recovery actions reachable by scrolling long setup messages
+  and revealing keyboard-focused actions. Keep the content centered when it fits.
 - Redact Windows paths from shared support-report errors, including drive roots,
   UNC shares, relative paths, quoted paths with final separators and escaped
   JSON forms. Preserve ordinary JSON message escapes in shared errors.
