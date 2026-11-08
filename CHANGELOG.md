@@ -88,6 +88,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Remove the full-height tint behind Provider settings so the details share
+  the page background in all KDE color schemes.
 - Keep missing-CLI recovery actions reachable by scrolling long setup messages
   and revealing keyboard-focused actions. Keep the content centered when it fits.
 - Redact Windows paths from shared support-report errors, including drive roots,
