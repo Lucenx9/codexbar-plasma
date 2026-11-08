@@ -307,8 +307,9 @@ synchronized.
   `network`: urllib wraps only connection setup in `URLError`.
   Add new helper failure codes to `UNVERIFIED` or `UNSUPPORTED`; anything
   unlisted degrades to the generic `error`.
-  Invalid persisted attempt timestamps, including integers too large for
-  floating-point conversion, raise `state_time` before mutation. The managed
+  Parsed attempt timestamps that are not finite numbers, including integers too
+  large for floating-point conversion, raise `state_time` before mutation.
+  Decoder failures also return the helper's bounded generic JSON error. The managed
   CLI tests exercise every helper action and its JSON error response while
   checking that the state file and active release remain unchanged.
   Tests use temporary XDG directories and synthetic archives, never host binaries

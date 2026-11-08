@@ -386,27 +386,33 @@ class ManagedCliTests(unittest.TestCase):
         cli.private_directory(self.root)
         for state in ({"previous": []}, {"blockedVersion": {}}, {"lastAttempt": "today"},
                       {"lastAttempt": float("nan")}, {"lastAttempt": float("inf")},
-                      {"lastAttempt": float("-inf")}, {"lastAttempt": 10 ** 400},
-                      {"lastAttempt": -(10 ** 400)}, {"activation": {"target": []}},
+                      {"lastAttempt": float("-inf")}, {"activation": {"target": []}},
                       {"activation": []}):
             (self.root / "state.json").write_text(json.dumps(state))
             with self.subTest(state=state), self.assertRaises(ValueError):
+                cli.status(self.root)
+        for timestamp in (10 ** 400, -(10 ** 400)):
+            (self.root / "state.json").write_text(json.dumps({"lastAttempt": timestamp}))
+            with self.subTest(timestamp=timestamp), self.assertRaisesRegex(ValueError, "^state_time$"):
                 cli.status(self.root)
         (self.root / "state.json").write_text("x" * 20000)
         with self.assertRaises(ValueError):
             cli.status(self.root)
 
-    def test_oversized_state_timestamp_returns_json_without_changing_installation(self):
+    def test_invalid_state_timestamp_returns_json_without_changing_installation(self):
         self.operation("install")
         selected = os.readlink(self.root / "current")
         helper = Path(__file__).resolve().parents[1] / "scripts/manage-cli.py"
-        for timestamp in (10 ** 400, -(10 ** 400)):
-            raw = json.dumps({"lastAttempt": timestamp})
+        cases = [("positive-overflow", json.dumps({"lastAttempt": 10 ** 400})),
+                 ("negative-overflow", json.dumps({"lastAttempt": -(10 ** 400)})),
+                 ("parser-limit", '{"lastAttempt":' + "9" * 4301 + '}')]
+        for label, raw in cases:
             (self.root / "state.json").write_text(raw)
             for action in ("status", "install", "update", "automatic", "rollback"):
-                with self.subTest(timestamp=timestamp, action=action):
+                with self.subTest(case=label, action=action):
                     result = subprocess.run(
                         [sys.executable, str(helper), "--action", action, "--command", self.command],
+                        env={**os.environ, "PYTHONINTMAXSTRDIGITS": "4300"},
                         capture_output=True, text=True, timeout=10)
                     self.assertEqual(result.returncode, 0, result.stderr)
                     self.assertEqual(json.loads(result.stdout), {"status": "error"})
