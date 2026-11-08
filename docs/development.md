@@ -845,7 +845,9 @@ clipboard interoperability with every Wayland application or portal backend.
   action/title tooltip without changing other copy controls or adding Tab stops.
 - `PanelRules.js` evaluates displayed quotas without effects. Automatic capsules
   use `PanelDisplay.meterRows` in primary/secondary order, and either displayed
-  quota can satisfy the provider meter condition. Direct missing quotas stay omitted; `runOut` depends on `paceWarningActive`. Panel visibility,
+  quota can satisfy the provider meter condition. Direct missing quotas stay
+  omitted; `runOut` requires authoritative quota data and a reported run-out
+  forecast through `PanelDisplay.rowHasRunOut`. Panel visibility,
   order, and metric settings preserve the minute clock and icon fallback and
   must not fetch data or change notification state.
 - `ProviderSnapshot.js` stamps normalized quota rows with the receipt time

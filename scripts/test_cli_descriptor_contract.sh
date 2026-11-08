@@ -2,25 +2,8 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+. "${ROOT_DIR}/scripts/lib/qml_surfaces.sh"
 CONTRACT_MD="${ROOT_DIR}/docs/cli-provider-settings-descriptor.md"
-
-require_in_file() {
-  local file="$1"
-  local needle="$2"
-  if ! grep -Fq -- "$needle" "$file"; then
-    echo "missing expected CLI descriptor contract fragment in ${file#"$ROOT_DIR"/}: $needle" >&2
-    exit 1
-  fi
-}
-
-reject_in_file() {
-  local file="$1"
-  local needle="$2"
-  if grep -Fq -- "$needle" "$file"; then
-    echo "unexpected CLI descriptor contract fragment in ${file#"$ROOT_DIR"/}: $needle" >&2
-    exit 1
-  fi
-}
 
 if [[ ! -f "$CONTRACT_MD" ]]; then
   echo "docs/cli-provider-settings-descriptor.md must document the provider settings descriptor contract" >&2

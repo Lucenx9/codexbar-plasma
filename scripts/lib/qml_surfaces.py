@@ -1,20 +1,9 @@
 #!/usr/bin/env python3
-"""Single source of truth for which files make up each QML surface.
+"""QML/JS file groups shared by static checks, linting and translation extraction.
 
-The static checks in `scripts/` assert that lifecycle, security, and UI rules are
-present in the widget sources. Historically each check hardcoded
-`contents/ui/main.qml`, so moving a rule into a component or JS helper broke
-`make check` for reasons that had nothing to do with behavior, and the only fix
-was to edit the assertion in the same commit as the move. That makes the safety
-net useless exactly when it matters most.
-
-A *surface* is one scope that owns its own process lifecycle and state: the
-plasmoid runtime, or one config page. Assertions run against every file in the
-surface, so extracting a helper out of `main.qml` into `contents/ui/` or
-`contents/ui/components/` keeps the check green without editing the check.
-
-Some globs point at directories that do not exist yet. That is deliberate: it is
-where a planned extraction lands, and an empty glob costs nothing.
+A surface groups the applet runtime or a settings page with its helpers.
+Assertions search the group so moving code within it preserves the check.
+Missing optional directories match no files; discovery and read errors fail.
 
 Usage from bash (see `qml_surfaces.sh`):
 
@@ -41,14 +30,12 @@ SURFACES: dict[str, tuple[str, ...]] = {
         "contents/ui/main.qml",
         "contents/ui/*.js",
         "contents/ui/components/*.qml",
-        # Planned home for extracted process/command controllers.
         "contents/ui/controllers/*.qml",
         "contents/ui/controllers/*.js",
     ),
     "providers": (
         "contents/ui/configProviders.qml",
         "contents/ui/credential/*.qml",
-        # Planned home for the extracted provider-config backend and descriptor code.
         "contents/ui/config/*.qml",
         "contents/ui/config/*.js",
     ),

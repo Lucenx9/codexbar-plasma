@@ -31,11 +31,10 @@ function windowSnapshot(window, pace, usageKnown, lane, label, receivedAtMs, con
     if (!presentDetails) {
         pace = null;
     }
-    var metrics = Normalizer.rateWindowMetrics(window, pace, usageKnown);
-    if (metrics === null) {
+    var result = Normalizer.rateWindowMetrics(window, pace, usageKnown);
+    if (result === null) {
         return null;
     }
-    var result = Guards.copyObject(metrics);
     result.dataConfidence = confidence;
     result.lane = lane;
     result.label = label;

@@ -4,24 +4,9 @@
 .import "SafeText.js" as SafeText
 
 // Pure normalization of untrusted `codexbar` CLI payloads.
-//
-// `main.qml` owns the two halves that used to share the `parse*` prefix: the
-// process lifecycle, the root properties, the error text, and the loading flag
-// stay there, while the raw-JSON-to-validated-structure half lives here. The
-// split is mechanical: nothing in this file may touch `root`, a QML property,
-// `Qt`, `Kirigami`, or `i18n`.
-//
-// The `i18n` exclusion is not a style rule. This file is in the gettext
-// extraction glob, so a user-facing string here would be extracted untranslated.
-// That is why the label of a rate window, the reset description, and the cost
-// section titles stay in `main.qml` and only the numbers, the bounds, and the
-// shape checks moved: `rateWindowMetrics` returns clamped percentages and the
-// caller supplies the words.
-//
-// Every bound below is a delegate/allocation budget applied to attacker- or
-// bug-influenced array lengths, so a malformed payload truncates instead of
-// hanging the popup. They are asserted by `scripts/test_security_regressions.sh`
-// and exercised by `tests/tst_provider_normalizer.qml`.
+// QML owns effects and localization; these helpers return bounded semantic data.
+// Collection bounds limit allocations and delegates for malformed payloads.
+// Security checks and direct normalizer QtTests cover these limits.
 
 var maximumProviderSnapshots = 256
 var maximumAccountSnapshots = 128

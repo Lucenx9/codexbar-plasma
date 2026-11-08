@@ -77,6 +77,6 @@ TestCase {
     }
 
     function test_lateAddedProvidersHaveBundledFallbackTitles(data) {
-        compare(providerNames.titleForKey(data.key, ""), data.title);
+        compare(providerNames.titleForKey(data.key, "Private provider"), data.title);
     }
 }

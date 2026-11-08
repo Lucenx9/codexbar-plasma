@@ -2,17 +2,9 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+. "${ROOT_DIR}/scripts/lib/qml_surfaces.sh"
 POT_FILE="${ROOT_DIR}/po/codexbar-plasma.pot"
 UPDATE_SCRIPT="${ROOT_DIR}/scripts/update_translations.sh"
-
-require_in_file() {
-  local file="$1"
-  local needle="$2"
-  if ! grep -Fq -- "$needle" "$file"; then
-    echo "missing expected i18n catalog fragment in ${file#"$ROOT_DIR"/}: $needle" >&2
-    exit 1
-  fi
-}
 
 if [[ ! -x "$UPDATE_SCRIPT" ]]; then
   echo "scripts/update_translations.sh must exist and be executable" >&2

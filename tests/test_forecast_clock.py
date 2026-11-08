@@ -14,7 +14,7 @@ from qml_surfaces import Surface
 
 FUNCTIONS = (
     "presentUsageWindow", "replaceProviderSnapshot", "runOutTextForRow", "paceEtaText",
-    "paceWarningActive", "selectAccount", "providerMapKey", "copyObject",
+    "selectAccount", "providerMapKey", "copyObject",
     "accountKey", "accountOptionsForProvider", "markUsageSnapshotReceived",
 )
 

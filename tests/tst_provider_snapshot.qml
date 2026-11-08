@@ -223,6 +223,13 @@ TestCase {
                 resetDescription: broken.resetDescription}, 1000, false).text, "");
         }
     }
+    function test_resetTextIsBounded() {
+        var result = ProviderSnapshot.normalize({
+            provider: "codex",
+            usage: {primary: {usedPercent: 50, resetsAt: "x".repeat(200)}}
+        }, 1000);
+        compare(result.rows[0].resetsAt, "x".repeat(128));
+    }
     function test_errorsAndEmptyPlaceholdersRemainDistinct() {
         compare(ProviderSnapshot.normalize({
             provider: "codex"

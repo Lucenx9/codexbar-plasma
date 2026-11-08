@@ -1150,10 +1150,6 @@ PlasmoidItem {
             items, selectedAccounts, notificationRefreshPending)
     }
 
-    function paceWarningActive(row) {
-        return row && Normalizer.authoritativeQuota(row) && row.paceOnTop === false && Number(row.paceEtaSeconds) > 0
-    }
-
     function paceSummaryPartsText(parts) {
         return usageWindowText.paceSummaryPartsText(parts)
     }

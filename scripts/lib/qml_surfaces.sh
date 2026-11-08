@@ -14,14 +14,8 @@
 
 QML_SURFACES_PY="${ROOT_DIR}/scripts/lib/qml_surfaces.py"
 
-declare -A _qml_surface_cache=()
-
 qml_surface_files() {
-  local surface="$1"
-  if [[ -z "${_qml_surface_cache[$surface]:-}" ]]; then
-    _qml_surface_cache[$surface]="$(python3 "$QML_SURFACES_PY" files "$surface")" || return 1
-  fi
-  printf '%s\n' "${_qml_surface_cache[$surface]}"
+  python3 "$QML_SURFACES_PY" files "$1"
 }
 
 _qml_relative_paths() {
