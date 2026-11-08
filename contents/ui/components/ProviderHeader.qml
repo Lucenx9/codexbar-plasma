@@ -129,7 +129,9 @@ RowLayout {
             // Capped labels must not cap the grid after its filler disappears.
             Layout.maximumWidth: Infinity
             columns: stacked ? 1 : 4
-            columnSpacing: Kirigami.Units.smallSpacing
+            // The dot's own side bearings already separate it, so half the
+            // usual gap matches the inline " · " used by other popup metadata.
+            columnSpacing: Kirigami.Units.smallSpacing / 2
             rowSpacing: Kirigami.Units.smallSpacing / 2
 
             PlainPlasmaLabel {
