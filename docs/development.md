@@ -778,7 +778,9 @@ transitions, boolean binding restoration, numeric zero and control availability.
 `config/ProviderCapabilities.js` owns the released-version capability gates and
 legacy API-key allowlist. The Providers page publishes the resulting flags and
 resets them on executable changes or failed probes; direct capability QtTests
-cover version boundaries and authentication restrictions.
+cover version boundaries and authentication restrictions. The parity check
+keeps descriptor-owned providers out of the fallback tables and checks QML
+delegation without requiring a switch statement inside the page.
 
 `config/ProviderCredentials.js` owns version gates, the probe-backed Linux cookie
 allowlist, quoted helper commands and bounded semantic results. The Providers
