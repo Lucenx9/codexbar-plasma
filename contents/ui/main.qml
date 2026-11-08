@@ -1883,7 +1883,9 @@ PlasmoidItem {
         var description = panelMeterDescription(presented)
         var selected = selectedCompactProvider()
         if (presented && selected && presented.provider === selected.provider
-                && panelText.showAutoQuotaLabel && panelText.showPercent) {
+                && panelText.showAutoQuotaLabel && panelText.showPercent
+                && PanelRules.matches(panelVisibilityRules.text,
+                    panelDisplayRow(presented, menuBarDisplayMode), panelClockMs)) {
             var label = PanelDisplay.autoQuotaLabel(switcherCandidateRows(presented), menuBarDisplayMode, panelQuotaLane)
             var display = menuBarDisplayText(presented)
             if (label.length > 0 && display.length > 0) {

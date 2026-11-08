@@ -28,6 +28,10 @@ TestCase {
         return (count === 1 ? singular : plural).replace("%1", count);
     }
 
+    function i18nc(context, text, value, second) {
+        return i18n(text, value, second);
+    }
+
     // A settled scene may otherwise render only once on the software backend.
     Timer {
         interval: 50

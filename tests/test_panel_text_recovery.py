@@ -115,6 +115,11 @@ TestCase {
         panelText.showAutoQuotaLabel = true;
         compare(PanelTextFit.fullText(applet.compactTextSegments()), "Example codex Session 43% used");
         verify(applet.panelProviderToolTipText(applet.selected).indexOf("Session 43% used") >= 0);
+        applet.panelVisibilityRules = PanelRules.normalizedRules(
+            '{"text":{"condition":"usageAtLeast","usedPercent":100}}');
+        compare(applet.compactTextSegments(), []);
+        verify(applet.panelProviderToolTipText(applet.selected).indexOf("Session 43% used") < 0);
+        applet.panelVisibilityRules = PanelRules.normalizedRules("{}");
         applet.panelQuotaLane = "primary";
         compare(PanelTextFit.fullText(applet.compactTextSegments()), "Example codex 43% used");
         panelText.showAutoQuotaLabel = false;
