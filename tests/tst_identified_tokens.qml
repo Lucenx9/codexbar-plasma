@@ -252,6 +252,9 @@ TestCase {
         compare(decode(value).outcome, "unsupported");
         value.records[0].inputTokens = "100";
         compare(decode(value).outcome, "unsupported");
+        value.records[0].inputTokens = 100;
+        value.records[0].cacheReadTokens = -1;
+        compare(decode(value).outcome, "unsupported");
     }
     function test_invalidSchema2Fields_data() {
         return ["model", "emptyModel", "longModel", "mode", "included", "missingIncluded",
