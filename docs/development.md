@@ -167,7 +167,9 @@ synchronized.
   `identified-*` smoke scenarios cover this path with synthetic data, including
   schema 2 estimates, unpriced requests and schema mismatch guidance. The section
   tests exercise pointer/keyboard disclosure, exact snapshot dates, visible
-  source/partial warnings and focus retention when a new result closes details.
+  source/partial warnings, inherited LTR/RTL load-action order and focus retention
+  when a new result closes details. The QML runner repeats the section tests with
+  an RTL application to catch double mirroring of the load actions.
 - `UsageDetails.js` bounds detail sections and preserves only the CLI row
   severities `normal`, `warning`, and `critical`. Charts without a usable title,
   unit, or point are omitted so an empty detail section cannot suppress the

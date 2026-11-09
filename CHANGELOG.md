@@ -29,7 +29,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Group the identified Codex subtotal in a quiet Usage & Spend surface, with
   clearer token totals, shorter labels and source warnings, and separate load
   actions. Move exact UTC dates, source information and SSH guidance behind
-  Show details. Keep API-price estimates and SSH/partial-data warnings visible.
+  Show details. Keep API-price estimates and SSH/partial-data warnings visible,
+  and let load actions follow inherited right-to-left mirroring.
 
 - Refine popup tab corners to follow their container inset, use body-size
   quota names with clearer spacing in Overview, and soften provider section

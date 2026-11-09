@@ -214,7 +214,6 @@ Rectangle {
             id: loadActions
             objectName: "identifiedLoadActions"
             Layout.fillWidth: true
-            layoutDirection: Qt.application.layoutDirection
             spacing: Kirigami.Units.smallSpacing
 
             PlasmaComponents.Button {

@@ -59,6 +59,8 @@ TestCase {
         applet.identifiedTokensHistoryDays = 7;
         applet.loads = 0;
         section.detailsExpanded = false;
+        section.LayoutMirroring.childrenInherit = true;
+        section.LayoutMirroring.enabled = false;
     }
 
     function test_unloadedRangeDoesNotStartCollection() {
@@ -66,6 +68,20 @@ TestCase {
         verify(!findChild(section, "identifiedDetailsButton").visible);
         applet.identifiedTokensHistoryDays = 1;
         compare(findChild(section, "identifiedTokensRange").text, "1 UTC day");
+        compare(applet.loads, 0);
+    }
+
+    function test_loadActionsFollowInheritedMirroring_data() {
+        return [{tag: "ltr", rtl: false}, {tag: "rtl", rtl: true}];
+    }
+    function test_loadActionsFollowInheritedMirroring(data) {
+        section.LayoutMirroring.enabled = data.rtl;
+        var local = findChild(section, "identifiedLocalButton");
+        var ssh = findChild(section, "identifiedSshButton");
+        tryVerify(function() {
+            return data.rtl ? local.x > ssh.x : local.x < ssh.x;
+        });
+        compare(local.y, ssh.y);
         compare(applet.loads, 0);
     }
 
