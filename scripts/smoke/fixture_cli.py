@@ -163,15 +163,33 @@ def readme_cost(provider, days, now):
             "totals": {"totalCost": total_cost, "totalTokens": total_tokens}, "daily": daily}
 
 
+def read_source_settings(scenario, now):
+    """Project the fixture roster and persisted choices into a CLI config dump."""
+    state_path = os.environ.get("CODEXBAR_SMOKE_SOURCE_STATE")
+    saved = json.loads(Path(state_path).read_text()) if state_path and Path(state_path).exists() else {}
+    rows = response(["config", "providers", "--format", "json", "--json-only"], scenario, now)
+    return {"providers": [{"id": row["provider"], "source": saved.get(row["provider"], "auto")} for row in rows]}
+
+
+def source_settings_response(args, scenario, now):
+    """Read or update source settings in the isolated smoke scenario state."""
+    if args == ["config", "dump", "--format", "json", "--json-only"]:
+        return read_source_settings(scenario, now)
+    if not scenario.startswith("settings-providers-auth") or args != [
+            "config", "set-source", "--provider", "openrouter", "--source", "api", "--format", "json", "--json-only"]:
+        raise ValueError("Unsupported synthetic CLI command: " + " ".join(args))
+    state_path = os.environ.get("CODEXBAR_SMOKE_SOURCE_STATE")
+    if state_path:
+        Path(state_path).write_text(json.dumps({"openrouter": "api"}))
+    return {"provider": "openrouter", "enabled": True, "source": "api"}
+
+
 def response(args, scenario, now):
     """Synthetic reads and the source write used by authentication scenarios."""
     if args == ["config", "providers", "--descriptors", "--format", "json", "--json-only"]:
         raise ValueError("Unknown option --descriptors")
-    if args == ["config", "dump", "--format", "json", "--json-only"]:
-        state_path = os.environ.get("CODEXBAR_SMOKE_SOURCE_STATE")
-        saved = json.loads(Path(state_path).read_text()) if state_path and Path(state_path).exists() else {}
-        rows = response(["config", "providers", "--format", "json", "--json-only"], scenario, now)
-        return {"providers": [{"id": row["provider"], "source": saved.get(row["provider"], "auto")} for row in rows]}
+    if args[:2] in (["config", "dump"], ["config", "set-source"]):
+        return source_settings_response(args, scenario, now)
     if args == ["--version"]:
         if scenario.startswith("settings-providers-keys"):
             return "CodexBar 0.83.0"
@@ -229,12 +247,6 @@ def response(args, scenario, now):
                 "jetbrains", "perplexity", "example-provider-with-an-unusually-long-identifier"))
             rows[0]["defaultEnabled"] = True
         return rows
-    if scenario.startswith("settings-providers-auth") and args[:2] == ["config", "set-source"]:
-        assert args == ["config", "set-source", "--provider", "openrouter", "--source", "api", "--format", "json", "--json-only"]
-        state_path = os.environ.get("CODEXBAR_SMOKE_SOURCE_STATE")
-        if state_path:
-            Path(state_path).write_text(json.dumps({"openrouter": "api"}))
-        return {"provider": "openrouter", "enabled": True, "source": "api"}
     if args == ["diagnose", "--provider", "codex", "--format", "json", "--redact"]:
         return {"provider": "codex", "displayName": "Codex", "source": "cli", "sourceMode": "auto",
                 "auth": {"configured": True, "modes": ["oauth", "apiKey"]},
