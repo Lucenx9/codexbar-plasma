@@ -571,6 +571,32 @@ TestCase {
         page.retireAllConfigCommands();
     }
 
+    function test_savedSourceSelectionPreservesDraftAndReopeningUsesSavedValue() {
+        var page = createProvidersPage();
+        if (!page) return;
+        page.providers = [{provider: "codex", enabled: false}];
+        page.selectedProviderID = "codex";
+        page.handleCliVersionResult("CodexBar 0.83.0", 0);
+        var box = findChild(page, "providerSourceBox");
+        var save = findChild(page, "providerSourceSaveButton");
+        function read(target, mode) {
+            target.savedProviderSources = {"provider:codex": mode};
+        }
+        read(page, "api");
+        compare(box.currentText, "API");
+        verify(!save.enabled);
+        box.currentIndex = 2;
+        box.activated(2);
+        read(page, "oauth");
+        compare(box.currentText, "CLI"); // A late read cannot erase a draft.
+        page.destroy();
+        page = createProvidersPage();
+        page.providers = [{provider: "codex", enabled: false}];
+        page.selectedProviderID = "codex";
+        read(page, "oauth");
+        compare(findChild(page, "providerSourceBox").currentText, "OAuth");
+    }
+
     function test_sourceEditorGateSelectionAndPendingState() {
         var page = createProvidersPage();
         if (!page)
@@ -590,6 +616,7 @@ TestCase {
         compare(box.displayText, "Choose a source");
         verify(!save.enabled);
         box.currentIndex = 1;
+        box.activated(1);
         compare(box.displayText, "API");
         verify(save.enabled);
         page.loading = true;
@@ -631,6 +658,7 @@ TestCase {
         compare(box.textAt(1), "Automatic");
         compare(box.currentIndex, -1);
         box.currentIndex = 1;
+        box.activated(1);
         verify(save.enabled);
         page.updateProviderEnabled("future", true);
         wait(0);

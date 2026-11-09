@@ -1961,7 +1961,7 @@ Item {
             if (scenario.indexOf("settings-providers-auth") === 0) {
                 var authPage = preview.page;
                 var legacy = scenario === "settings-providers-auth-legacy";
-                if (authPage.providers.length !== 7 || !authPage.providerSourceSetupSupported) return false;
+                if (authPage.providers.length !== 7 || !authPage.providerSourceSetupSupported || authPage.providerSourcesLoading) return false;
                 var authBox = findItem(authPage, "providerSourceBox");
                 var authSave = findItem(authPage, "providerSourceSaveButton");
                 if (providerAuthenticationStep === 0) {
@@ -1971,13 +1971,14 @@ Item {
                     return false;
                 }
                 if (providerAuthenticationStep === 1) {
-                    verifyScenario(authBox.count === (legacy ? 5 : 2) && authBox.currentIndex === -1,
+                    verifyScenario(authBox.count === (legacy ? 5 : 2) && authBox.currentText === i18n("Automatic") && !authSave.enabled,
                         "inventory source choices or initial selection are incorrect");
                     verifyScenario(authPage.supportsApiKeySetup("openrouter")
                         && authPage.supportsApiKeySetup("moonshot") === legacy
                         && !authPage.supportsApiKeySetup("flora") && !authPage.supportsApiKeySetup("future-provider"),
                         "inventory API-key flags bypassed the curated Linux gates");
                     authBox.currentIndex = legacy ? 1 : 0;
+                    authBox.activated(authBox.currentIndex);
                     authPage.updateProviderEnabled("moonshot", true);
                     providerAuthenticationStep = 2;
                     return false;
@@ -1991,10 +1992,17 @@ Item {
                 }
                 if (providerAuthenticationStep === 3) {
                     if (authPage.isPending("openrouter") || authPage.statusText.length === 0) return false;
-                    verifyScenario(authPage.errorText.length === 0 && authBox.currentIndex === -1,
+                    verifyScenario(authPage.errorText.length === 0 && authBox.currentText === "API" && !authSave.enabled,
                         "the source writer did not use the selected inventory mode");
+                    authPage.reload(true);
+                    providerAuthenticationStep = 30;
+                    return false;
+                }
+                if (providerAuthenticationStep === 30) {
+                    if (authPage.loading || authPage.providerSourcesLoading) return false;
+                    verifyScenario(authBox.currentText === "API" && !authSave.enabled,
+                        "reload did not restore the source confirmed by the CLI");
                     authPage.statusText = "";
-                    authBox.currentIndex = legacy ? 1 : 0;
                     authPage.selectedProviderID = "helmcode";
                     providerAuthenticationStep = 4;
                     return false;
@@ -2003,7 +2011,7 @@ Item {
                 if (providerAuthenticationStep === 4) {
                     verifyScenario(JSON.stringify(authPage.selectedProviderSourceModes)
                         === JSON.stringify(legacy ? legacyModes : ["auto", "web"])
-                        && authBox.count === (legacy ? 5 : 2) && authBox.currentIndex === -1
+                        && authBox.count === (legacy ? 5 : 2) && authBox.currentText === i18n("Automatic")
                         && authBox.textAt(0) === i18n("Automatic")
                         && authBox.textAt(legacy ? 4 : 1) === i18n("Web"),
                         "Helmcode selection retained another provider's mode values or unsaved choice");
@@ -2014,7 +2022,7 @@ Item {
                 }
                 verifyScenario(JSON.stringify(authPage.selectedProviderSourceModes)
                     === JSON.stringify(legacy ? legacyModes : ["api", "auto"])
-                    && authBox.count === (legacy ? 5 : 2) && authBox.currentIndex === -1
+                    && authBox.count === (legacy ? 5 : 2) && authBox.currentText === i18n("Automatic")
                     && authBox.textAt(legacy ? 1 : 0) === "API"
                     && authBox.textAt(legacy ? 0 : 1) === i18n("Automatic"),
                     "Copilot selection retained another provider's mode values or unsaved choice");

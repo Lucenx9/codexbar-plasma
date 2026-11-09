@@ -7,6 +7,7 @@ import os
 import sys
 import time
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 SCENARIOS = ("normal", "tabs-overflow", "provider-settings", "provider-header", "provider-header-large", "loading", "partial-error", "long-text", "panel-rules", "panel-standard", "panel-minimal", "panel-minimal-single", "legacy-dashboard",
              "project-costs", "project-tokens", "project-range", "project-long-text",
@@ -166,6 +167,11 @@ def response(args, scenario, now):
     """Synthetic reads and the source write used by authentication scenarios."""
     if args == ["config", "providers", "--descriptors", "--format", "json", "--json-only"]:
         raise ValueError("Unknown option --descriptors")
+    if args == ["config", "dump", "--format", "json", "--json-only"]:
+        state_path = os.environ.get("CODEXBAR_SMOKE_SOURCE_STATE")
+        saved = json.loads(Path(state_path).read_text()) if state_path and Path(state_path).exists() else {}
+        rows = response(["config", "providers", "--format", "json", "--json-only"], scenario, now)
+        return {"providers": [{"id": row["provider"], "source": saved.get(row["provider"], "auto")} for row in rows]}
     if args == ["--version"]:
         if scenario.startswith("settings-providers-keys"):
             return "CodexBar 0.83.0"
@@ -225,6 +231,9 @@ def response(args, scenario, now):
         return rows
     if scenario.startswith("settings-providers-auth") and args[:2] == ["config", "set-source"]:
         assert args == ["config", "set-source", "--provider", "openrouter", "--source", "api", "--format", "json", "--json-only"]
+        state_path = os.environ.get("CODEXBAR_SMOKE_SOURCE_STATE")
+        if state_path:
+            Path(state_path).write_text(json.dumps({"openrouter": "api"}))
         return {"provider": "openrouter", "enabled": True, "source": "api"}
     if args == ["diagnose", "--provider", "codex", "--format", "json", "--redact"]:
         return {"provider": "codex", "displayName": "Codex", "source": "cli", "sourceMode": "auto",

@@ -3659,7 +3659,16 @@ msgid "Choose a source"
 msgstr ""
 
 #: contents/ui/configProviders.qml
-msgid "Choose a source to save. Automatic restores the provider default."
+msgid "Loading saved source…"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid ""
+"The saved source is unavailable. Choose a source and save to replace it."
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Changes are saved immediately. Automatic restores the provider default."
 msgstr ""
 
 #: contents/ui/configProviders.qml

@@ -4210,10 +4210,6 @@ msgid ""
 "takes precedence."
 msgstr "Alcune sorgenti non sono disponibili su Linux. La sorgente impostata in Diagnostica ha la precedenza."
 
-#: contents/ui/configProviders.qml
-msgid "Choose a source to save. Automatic restores the provider default."
-msgstr "Scegli una sorgente da salvare. Automatico ripristina la scelta predefinita del provider."
-
 #: contents/ui/components/ProviderNames.qml
 msgid "Trae CN"
 msgstr "Trae CN"
@@ -4380,3 +4376,15 @@ msgid ""
 msgstr ""
 "Attiva lo stile monocromatico e gli indicatori dei provider e nasconde nomi, testo "
 "di utilizzo e crediti."
+
+#: contents/ui/configProviders.qml
+msgid "Loading saved source…"
+msgstr "Caricamento della sorgente salvata…"
+
+#: contents/ui/configProviders.qml
+msgid "The saved source is unavailable. Choose a source and save to replace it."
+msgstr "La sorgente salvata non è disponibile. Scegli una sorgente e salva per sostituirla."
+
+#: contents/ui/configProviders.qml
+msgid "Changes are saved immediately. Automatic restores the provider default."
+msgstr "Le modifiche vengono salvate immediatamente. Automatica ripristina la sorgente predefinita del provider."

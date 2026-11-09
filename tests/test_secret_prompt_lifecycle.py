@@ -269,6 +269,8 @@ TestCase {
     property string statusText: ""
     property bool loading: false
     property bool providerListFailed: false
+    property var savedProviderSources: ({})
+    property bool providerSourcesFailed: false
     property var providers: []
     property var providerDiagnostics: ({})
     property var providerDiagnosticErrors: ({})
@@ -345,8 +347,8 @@ TestCase {
         compare(configSource.disconnected.length, 1);
         compare(configSource.disconnected[0], stale);
         verify(CommandLedger.find(commands, stale) === null);
-        compare(configSource.connected.length, 3);
-        compare(commandRunSerial, 3);
+        compare(configSource.connected.length, 4);
+        compare(commandRunSerial, 4);
     }
     // A command without its own timeout inherits the 60s configured default:
     // the sweep leaves it connected at 59s and retires it with the timeout
@@ -913,7 +915,7 @@ WIRING_FUNCTIONS = (
     "hasCredentialWrite", "hasPendingFields", "deviceLoginActive",
     "runCommand", "disconnectCommandsByKind", "expireConfigCommands",
     "hasTimedConfigCommands", "handleConfigCommandTimeout", "applyProviderCapabilities",
-    "reload", "runProviderListCommand",
+    "reload", "runProviderSourcesCommand", "runProviderListCommand",
     "runCliVersionCommand", "loadProviderSettings",
     "providerConfigRevisionValue", "bumpProviderConfigRevision",
     "copyObject", "hasOwnKey", "providerKey", "providerMapKey", "providerIconSource", "shellQuote", "writeDescriptorField",

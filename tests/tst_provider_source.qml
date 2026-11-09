@@ -5,6 +5,29 @@ import "../contents/ui/config/ProviderSource.js" as Source
 TestCase {
     name: "ProviderSource"
 
+    function test_savedSourcesKeepOnlyKnownModesAndOwnIdentifiers() {
+        var payload = {providers: [{id: "codex", source: "api", apiKey: "REDACTED"},
+            {id: "claude"}, {id: "future", source: "unknown"}, {id: "bad", source: null},
+            {id: "constructor", source: "api"}, Object.create({id: "inherited", source: "api"})]};
+        var result = Source.savedSources(payload);
+        compare(Source.savedMode(result, "codex"), "api");
+        compare(Source.savedMode(result, "claude"), "auto");
+        compare(Source.savedMode(result, "missing"), "");
+        compare(Source.savedMode(result, "future"), "");
+        compare(Source.savedMode(result, "bad"), "");
+        compare(Source.savedMode(result, "inherited"), "");
+        verify(JSON.stringify(result).indexOf("apiKey") < 0);
+        compare(payload.providers[0].apiKey, "REDACTED");
+        var duplicates = Source.savedSources({providers: [{id: "azureopenai", source: "api"},
+            {id: "azure-openai", source: "auto"}]});
+        compare(Source.savedMode(duplicates, "azureopenai"), "");
+        for (var invalid of [null, [], {}, {providers: {}}, {providers: new Array(257)},
+                Object.create({providers: []})]) compare(Source.savedSources(invalid), null);
+        var updated = Source.withSavedMode(result, "codex", "cli");
+        compare(Source.savedMode(updated, "codex"), "cli");
+        compare(Source.savedMode(result, "codex"), "api");
+    }
+
     function test_plansBoundedModesAndQuotesUnknownProviders() {
         var plan = Source.planWrite("/tmp/cli path'", "future'provider", "api")
         verify(plan.ok)

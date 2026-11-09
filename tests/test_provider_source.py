@@ -54,6 +54,12 @@ TestCase {
             property string errorText: ""
             property string statusText: ""
             property string cfg_source: "web"
+            property var savedProviderSources: ({})
+            property string providerSourceDraft: ""
+            property bool providerSourcesFailed: false
+            readonly property var selectedProviderSourceModes: ProviderSource.availableModes(
+                providerByID(selectedProviderID) ? providerByID(selectedProviderID).authentication : null)
+            readonly property string selectedProviderSavedSource: ProviderSource.savedMode(savedProviderSources, selectedProviderID)
             property int revisions: 0
             property int writes: 0
             property int diagnosticsCleared: 0
@@ -94,6 +100,57 @@ TestCase {
         compare(Object.keys(page.commands).length, 1);
         return Object.keys(page.commands)[0];
     }
+    function test_savedSourceReadsDoNotOverwriteANewerSaveOrDraft() {
+        var page = createTemporaryObject(harness, this);
+        page.runProviderSourcesCommand();
+        var old = Object.keys(page.commands)[0];
+        verify(old.indexOf("config dump --format json --json-only") >= 0);
+        verify(old.indexOf("--show-secrets") < 0);
+        page.providerSourceDraft = "cli";
+        page.handleData(old, '{"providers":[{"id":"codex","source":"api"}]}', "", 0);
+        compare(page.providerSourceBox.currentIndex, 2);
+        compare(page.selectedProviderSavedSource, "api");
+        page.runProviderSourcesCommand();
+        old = Object.keys(page.commands)[0];
+        page.setProviderSource("codex", "cli");
+        var write = CommandLedger.sourcesOfKind(page.commands, "setSource")[0];
+        page.handleData(write, sourceResult("cli"), "", 0);
+        compare(page.selectedProviderSavedSource, "cli");
+        compare(page.providerSourceBox.currentIndex, 2);
+        page.handleData(old, '{"providers":[{"id":"codex","source":"api"}]}', "", 0);
+        compare(page.selectedProviderSavedSource, "cli");
+        var read = CommandLedger.sourcesOfKind(page.commands, "sources")[0];
+        verify(read !== undefined);
+        page.handleData(read, '{"providers":[{"id":"codex","source":"cli"}]}', "", 0);
+        compare(page.selectedProviderSavedSource, "cli");
+        compare(page.providerSourceDraft, "");
+    }
+    function test_sourceReadFailuresAndRetiredRepliesNeverInventAutomatic() {
+        var page = createTemporaryObject(harness, this);
+        for (var value of ["broken", "{}", "", '{"providers":null}']) {
+            page.runProviderSourcesCommand();
+            var read = Object.keys(page.commands)[0];
+            page.handleData(read, value, "", 0);
+            verify(page.providerSourcesFailed);
+            compare(page.selectedProviderSavedSource, "");
+            compare(page.providerSourceBox.currentIndex, -1);
+        }
+        page.runProviderSourcesCommand();
+        var expired = Object.keys(page.commands)[0];
+        page.expireConfigCommands(Date.now() + 61000);
+        verify(page.providerSourcesFailed);
+        page.handleData(expired, '{"providers":[{"id":"codex","source":"api"}]}', "", 0);
+        compare(page.selectedProviderSavedSource, "");
+        page.runProviderSourcesCommand();
+        var retired = Object.keys(page.commands)[0];
+        page.runProviderSourcesCommand();
+        page.handleData(retired, '{"providers":[{"id":"codex","source":"api"}]}', "", 0);
+        compare(page.selectedProviderSavedSource, "");
+        var current = Object.keys(page.commands)[0];
+        page.handleData(current, '{"providers":[{"id":"codex"}]}', "", 0);
+        compare(page.selectedProviderSavedSource, "auto");
+        compare(page.providerSourceBox.currentIndex, 0);
+    }
     function test_successAndClearingPreserveGlobalOverride() {
         for (var mode of ["api", "auto"]) {
             var page = createTemporaryObject(harness, this);
@@ -107,7 +164,7 @@ TestCase {
             compare(page.writes, 1);
             compare(page.diagnosticsCleared, 1);
             compare(page.cfg_source, "web");
-            compare(page.providerSourceBox.currentIndex, -1);
+            compare(page.providerSourceBox.currentIndex, ProviderSource.modes.indexOf(mode));
             verify(!page.isPending("codex"));
             page.handleData(source, JSON.stringify({provider: "codex", enabled: true, source: "web"}), "", 0);
             compare(page.revisions, 1);
@@ -334,12 +391,12 @@ TestCase {
         var page = createTemporaryObject(harness, this);
         page.reload();
         verify(page.loading);
-        compare(Object.keys(page.commands).length, 2);
+        compare(Object.keys(page.commands).length, 3);
         // Version can complete before the retained provider list refresh.
         page.handleCliVersionResult("CodexBar 0.73.0", 0);
         verify(page.providerSourceSetupSupported);
         page.setProviderSource("codex", "web");
-        compare(Object.keys(page.commands).length, 2);
+        compare(Object.keys(page.commands).length, 3);
         verify(!page.isPending("codex"));
         page.retireAllConfigCommands();
         var source = start(page, "web");
@@ -517,9 +574,9 @@ TestCase {
         verify(!page.operationState.reloadDeferred);
         verify(page.deviceLoginActive());
         verify(page.isPending("copilot"));
-        compare(Object.keys(page.commands).length, 3);
+        compare(Object.keys(page.commands).length, 4);
         page.cancelDeviceLogin();
-        compare(Object.keys(page.commands).length, 2);
+        compare(Object.keys(page.commands).length, 3);
         page.retireAllConfigCommands();
     }
     function test_reloadWaitsForCredentialPromptAndPreservesRefusal() {
@@ -557,7 +614,7 @@ class ProviderSourceTests(unittest.TestCase):
     def test_source_writes_and_lifecycle(self):
         source = (ROOT / "contents/ui/configProviders.qml").read_text()
         surface = Surface("providers", ROOT)
-        names = ("hasCredentialWrite", "credentialWriteAllowed", "setCookie", "clearCredentials",
+        names = ("syncProviderSourceSelection", "runProviderSourcesCommand", "handleProviderSourcesResult", "hasCredentialWrite", "credentialWriteAllowed", "setCookie", "clearCredentials",
                  "startDeviceLogin", "startCredentialCommand", "cancelDeviceLogin", "deviceLoginActive",
                  "handleCredentialResult", "setProviderSource", "handleSetSourceResult", "setApiKey", "apiKeyPrompt", "visualEnabled",
                  "retireProviderDiagnostic", "invalidateProviderDiagnostic",

@@ -29,6 +29,9 @@ TestCase {
     property bool diagnosticLoading: false
     property string errorText: ""
     property string statusText: ""
+    property var savedProviderSources: ({})
+    property string providerSourceDraft: ""
+    function syncProviderSourceSelection() {}
     property string selectedProviderID: "codex"
     property QtObject providerSourceBox: QtObject { property int currentIndex: 1 }
     property QtObject configSource: QtObject {

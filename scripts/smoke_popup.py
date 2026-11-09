@@ -41,7 +41,8 @@ def preview_environment(work, scenario, renderer="software", language=None):
                XDG_CACHE_HOME=str(work / "cache"), XDG_STATE_HOME=str(work / "state"),
                XDG_CONFIG_DIRS=str(work / "system-config"), XDG_DATA_DIRS="/usr/local/share:/usr/share",
                CODEXBAR_CONFIG=str(work / "config/codexbar/config.json"),
-               CODEXBAR_SMOKE_SCENARIO=scenario, QT_QUICK_BACKEND="software",
+               CODEXBAR_SMOKE_SCENARIO=scenario, CODEXBAR_SMOKE_SOURCE_STATE=str(work / "source-state.json"),
+               QT_QUICK_BACKEND="software",
                QT_FORCE_STDERR_LOGGING="1", XDG_CURRENT_DESKTOP="KDE",
                QT_QPA_PLATFORMTHEME="kde", QT_QUICK_CONTROLS_STYLE="org.kde.desktop")
     if renderer == "opengl":
