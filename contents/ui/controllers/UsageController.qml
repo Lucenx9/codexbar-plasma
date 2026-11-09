@@ -454,7 +454,9 @@ Item {
         }
 
         function parseOutput(stdoutText, stderrText, exitCode) {
-            var result = UsageResponse.response(stdoutText, stderrText, controller.provider, Date.now(), exitCode);
+            var providerID = Normalizer.normalizedProviderID(controller.provider);
+            var scope = providerID === "all" || providerID === "both" ? "" : controller.provider;
+            var result = UsageResponse.response(stdoutText, stderrText, scope, Date.now(), exitCode);
             if (result.outcome !== "success") {
                 if (result.outcome === "empty" && canUseProviderFallback()) {
                     startProviderFallback();

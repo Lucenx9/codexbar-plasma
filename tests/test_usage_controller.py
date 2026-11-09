@@ -109,6 +109,16 @@ TestCase {
         compare(latest(o)[0].rows[0].usedPercent, 0);
         compare(o.failures, []);
     }
+    function test_directAggregateSelectorsKeepAllProviders_data() {
+        return [{tag: "default", provider: ""}, {tag: "all", provider: "all"},
+            {tag: "both", provider: "both"}];
+    }
+    function test_directAggregateSelectorsKeepAllProviders(data) {
+        var o = create("mixed-providers", {provider: data.provider, sourceMode: "cli"});
+        completed(o, 1);
+        compare(latest(o).map(function(item) { return item.provider; }), ["claude", "codex"]);
+        compare(o.failures, []);
+    }
     function test_batchedInputsStartOneReplacementAndRejectOldReply_data() {
         return [{tag: "aggregate", provider: "", sourceMode: "cli"},
             {tag: "scoped", provider: "claude", sourceMode: ""}];
@@ -398,7 +408,8 @@ provider = args[args.index("--provider") + 1] if "--provider" in args else "code
 account = args[args.index("--account") + 1] if "--account" in args else "run " + str(run)
 if name == "mapped": assert provider == "groqcloud"
 if name in ("foreign-provider", "mixed-providers", "missing-provider"):
-    matching = {"provider": provider, "usage": {"primary": {"usedPercent": 0}}}
+    matching = {"provider": "codex" if provider in ("all", "both") else provider,
+                "usage": {"primary": {"usedPercent": 0}}}
     foreign = {"provider": "claude", "usage": {"primary": {"usedPercent": 99}}}
     if name == "missing-provider":
         del matching["provider"]
