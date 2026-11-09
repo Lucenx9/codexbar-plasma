@@ -103,20 +103,21 @@ function providerMatchesScope(item, providerID) {
         || (actual === "cli" && isCliRecord(item.error))
 }
 
-function providerConfigEntry(item) {
+function providerConfigEntry(item, includeDisabled) {
     if (!isCliRecord(item) || typeof ownField(item, "enabled") !== "boolean") return null
     var providerID = normalizedProviderID(item.provider)
     if (providerID.length === 0) return null
-    return { provider: providerID, enabled: item.enabled,
+    return { provider: providerID, included: item.enabled || includeDisabled === true,
         displayName: boundedDisplayText(item.displayName, 120) }
 }
 
 // `config providers` output reduced to the enabled provider ids plus every
 // display name it carried. A disabled provider still contributes its name,
 // because the popup labels providers it learns about from a later usage payload.
+// The explicit CLI `all` selector includes disabled providers as well.
 // null means the envelope had no provider-config records. An empty array is a
 // valid success and remains distinguishable from an error-shaped JSON payload.
-function normalizeProviderConfigEntries(payload) {
+function normalizeProviderConfigEntries(payload, includeDisabled) {
     var providerIDs = []
     var displayNames = ({})
     var seenProviderIDs = ({})
@@ -124,11 +125,11 @@ function normalizeProviderConfigEntries(payload) {
     var sawProviderConfigEntry = items.length === 0
     var itemLimit = Math.min(items.length, maximumProviderSnapshots)
     for (var i = 0; i < itemLimit; i++) {
-        var entry = providerConfigEntry(items[i])
+        var entry = providerConfigEntry(items[i], includeDisabled)
         if (!entry) continue
         sawProviderConfigEntry = true
         if (entry.displayName.length > 0) displayNames[entry.provider] = entry.displayName
-        if (entry.enabled && !hasOwnKey(seenProviderIDs, entry.provider)) {
+        if (entry.included && !hasOwnKey(seenProviderIDs, entry.provider)) {
             seenProviderIDs[entry.provider] = true
             providerIDs.push(entry.provider)
         }

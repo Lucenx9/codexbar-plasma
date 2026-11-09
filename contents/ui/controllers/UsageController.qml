@@ -93,7 +93,8 @@ Item {
         readonly property int maximumConcurrentProviderFallbackCommands: 8
         property var providerFallbackState: null
         readonly property string requestContext: JSON.stringify([controller.commandPath, controller.provider, controller.sourceMode, controller.includeStatus, controller.selectedAccounts, controller.providerConfigRevision])
-        readonly property string rosterContext: JSON.stringify(providerRosterContext())
+        // Enabled-only and explicit all-provider rosters cannot share a cache.
+        readonly property string rosterContext: JSON.stringify([providerRosterContext(), controller.provider])
 
         onRequestContextChanged: {
             retireUsageCommands();
@@ -270,8 +271,13 @@ Item {
 
         function startProviderFallback(bypassProviderRosterCache) {
             retireUsageCommandKind("usage");
-            if (controller.provider.length > 0) {
-                startProviderFallbackForProviders([Normalizer.providerSnapshotKey(controller.provider)]);
+            var selector = Normalizer.normalizedProviderID(controller.provider);
+            if (selector === "both") {
+                startProviderFallbackForProviders(["codex", "claude"]);
+                return;
+            }
+            if (controller.provider.length > 0 && selector !== "all") {
+                startProviderFallbackForProviders([selector]);
                 return;
             }
 
@@ -473,7 +479,8 @@ Item {
                 scheduleUsageRefresh();
                 return;
             }
-            var result = UsageResponse.roster(stdoutText, stderrText, exitCode);
+            var result = UsageResponse.roster(stdoutText, stderrText, exitCode,
+                Normalizer.normalizedProviderID(controller.provider) === "all");
             if (result.outcome !== "success") {
                 failUsageRefresh(responseMessage(result, true));
                 return;

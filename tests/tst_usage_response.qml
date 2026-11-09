@@ -149,6 +149,18 @@ TestCase {
         compare(result.displayNames.codex, "Synthetic Codex");
     }
 
+    function test_allRosterIncludesDisabledProvidersWithoutRelaxingValidation() {
+        var text = JSON.stringify([
+            {provider: "codex", enabled: false},
+            {provider: "claude", enabled: true},
+            {provider: "codex", enabled: true},
+            {provider: "__proto__", enabled: false},
+            {provider: "gemini", enabled: "false"}]);
+        compare(UsageResponse.roster(text, "", 0, true).providerIDs, ["codex", "claude"]);
+        for (var value of [undefined, false, "true", 1, {}])
+            compare(UsageResponse.roster(text, "", 0, value).providerIDs, ["claude", "codex"]);
+    }
+
     function test_errorsAreRedactedAndBounded() {
         var result = UsageResponse.response("", "Authorization: Bearer synthetic-secret-abcdef " + "x".repeat(5000), "", 1, 0);
         verify(result.message.indexOf("synthetic-secret-abcdef") < 0);
