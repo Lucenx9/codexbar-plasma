@@ -20,6 +20,7 @@ import "config/ProviderDescriptor.js" as ProviderDescriptor
 import "config/ProviderList.js" as ProviderList
 import "config/ProviderOperations.js" as ProviderOperations
 import "config/ProviderSource.js" as ProviderSource
+import "config/ProviderSavedSources.js" as ProviderSavedSources
 import "config/ProviderCredentials.js" as ProviderCredentials
 import "config/ProviderCapabilities.js" as ProviderCapabilities
 
@@ -103,6 +104,11 @@ KCM.SimpleKCM {
     property var providerDiagnostics: ({})
     property var providerDiagnosticErrors: ({})
     property string selectedProviderID: ""
+    property var savedProviderSources: ({})
+    property string providerSourceDraft: ""
+    property bool providerSourcesFailed: false
+    readonly property bool providerSourcesLoading: CommandLedger.hasKind(commands, "sources")
+    readonly property string selectedProviderSavedSource: ProviderSavedSources.savedMode(savedProviderSources, selectedProviderID)
     property var providerListFocus: null
 
     readonly property var visibleProviders: ProviderList.filteredProviders(providers, filterText, filterScope)
@@ -127,8 +133,17 @@ KCM.SimpleKCM {
     Component.onCompleted: Qt.callLater(reload)
     onCfg_commandPathChanged: handleCommandPathChanged()
     onSelectedProviderIDChanged: {
-        providerSourceBox.currentIndex = -1
+        providerSourceDraft = ""
+        syncProviderSourceSelection()
         cancelDeviceLogin()
+    }
+    onSelectedProviderSourceModesChanged: {
+        if (selectedProviderSourceModes.indexOf(providerSourceDraft) < 0) providerSourceDraft = ""
+        syncProviderSourceSelection()
+    }
+    onSelectedProviderSavedSourceChanged: {
+        if (providerSourceDraft === selectedProviderSavedSource) providerSourceDraft = ""
+        syncProviderSourceSelection()
     }
     Component.onDestruction: retireAllConfigCommands()
 
@@ -137,6 +152,9 @@ KCM.SimpleKCM {
         providers = []
         providerDiagnostics = ({})
         providerDiagnosticErrors = ({})
+        savedProviderSources = ({})
+        providerSourceDraft = ""
+        providerSourcesFailed = false
         selectedProviderID = ""
         providerDescriptorsUnavailable = false
         applyProviderCapabilities(ProviderCapabilities.versionCapabilities("", 1))
@@ -167,6 +185,38 @@ KCM.SimpleKCM {
         }
         runProviderListCommand(true, errorText)
         runCliVersionCommand()
+        runProviderSourcesCommand()
+    }
+
+    function syncProviderSourceSelection() {
+        if (providerSourceBox) {
+            providerSourceBox.currentIndex = selectedProviderSourceModes.indexOf(
+                providerSourceDraft || selectedProviderSavedSource)
+        }
+    }
+
+    function runProviderSourcesCommand() {
+        disconnectCommandsByKind("sources")
+        providerSourcesFailed = false
+        runCommand([shellQuote(commandPath), "config dump --format json --json-only"].join(" "), {
+            kind: "sources",
+            providerConfigRevision: providerConfigRevisionValue(),
+            timeoutMs: configCommandTimeoutMs
+        })
+    }
+
+    function handleProviderSourcesResult(descriptor, stdoutText, stderrText, exitCode) {
+        if (!ProviderConfigProtocol.providerListResultIsCurrent(descriptor, providerConfigRevisionValue())) {
+            runProviderSourcesCommand()
+            return
+        }
+        var result = ProviderConfigProtocol.response(stdoutText, stderrText, exitCode, "command")
+        var sources = result.outcome === "success" ? ProviderSavedSources.savedSources(result.value) : null
+        providerSourcesFailed = sources === null
+        if (sources !== null) {
+            savedProviderSources = sources
+        }
+        syncProviderSourceSelection()
     }
 
     function boundedCliMessage(value) {
@@ -409,7 +459,7 @@ KCM.SimpleKCM {
     }
 
     function setProviderSource(providerID, mode) {
-        if (loading || !providerSourceSetupSupported || !providerByID(providerID) || isPending(providerID)
+        if (loading || providerSourcesLoading || !providerSourceSetupSupported || !providerByID(providerID) || isPending(providerID)
                 || hasPendingFields(providerID)) {
             return
         }
@@ -528,7 +578,9 @@ KCM.SimpleKCM {
     }
 
     function handleConfigCommandTimeout(descriptor) {
-        if (descriptor.kind === "list") {
+        if (descriptor.kind === "sources") {
+            providerSourcesFailed = true
+        } else if (descriptor.kind === "list") {
             loading = false
             providerListFailed = true
             errorText = i18n("Loading providers timed out. Try again.")
@@ -575,6 +627,8 @@ KCM.SimpleKCM {
             handleListResult(descriptor, stdoutText, stderrText, exitCode)
         } else if (descriptor.kind === "version") {
             handleCliVersionResult(stdoutText, exitCode)
+        } else if (descriptor.kind === "sources") {
+            handleProviderSourcesResult(descriptor, stdoutText, stderrText, exitCode)
         } else if (descriptor.kind === "toggle") {
             handleToggleResult(descriptor, stdoutText, stderrText, exitCode)
         } else if (descriptor.kind === "setApiKey") {
@@ -631,8 +685,10 @@ KCM.SimpleKCM {
         bumpProviderConfigRevision()
         errorText = ""
         statusText = i18n("%1 setting saved", displayNameForProvider(descriptor.provider))
+        savedProviderSources = ProviderSavedSources.withSavedMode(savedProviderSources, descriptor.provider, descriptor.sourceMode)
         if (selectedProviderID === descriptor.provider) {
-            providerSourceBox.currentIndex = -1
+            providerSourceDraft = ""
+            syncProviderSourceSelection()
         }
     }
 
@@ -1907,9 +1963,15 @@ KCM.SimpleKCM {
                                 objectName: "providerSourceBox"
                                 Layout.fillWidth: true
                                 model: page.selectedProviderSourceModes.map(function(mode) { return page.sourceModeLabel(mode) })
-                                onModelChanged: currentIndex = -1
+                                onModelChanged: page.syncProviderSourceSelection()
                                 currentIndex: -1
-                                displayText: currentIndex < 0 ? i18n("Choose a source") : currentText
+                                onActivated: index => {
+                                    var mode = page.selectedProviderSourceModes[index]
+                                    page.providerSourceDraft = mode === page.selectedProviderSavedSource ? "" : mode
+                                }
+                                displayText: currentIndex < 0
+                                    ? (page.providerSourcesLoading ? i18n("Loading saved source…") : i18n("Choose a source"))
+                                    : currentText
                                 Accessible.name: i18n("Source mode")
                                 enabled: page.selectedProvider !== null
                                     && !page.loading
@@ -1923,7 +1985,9 @@ KCM.SimpleKCM {
                                 icon.name: "document-save"
                                 enabled: page.selectedProvider !== null
                                     && !page.loading
+                                    && !page.providerSourcesLoading
                                     && providerSourceBox.currentIndex >= 0
+                                    && page.selectedProviderSourceModes[providerSourceBox.currentIndex] !== page.selectedProviderSavedSource
                                     && !page.isPending(page.selectedProvider.provider)
                                     && !page.hasPendingFields(page.selectedProvider.provider)
                                 onClicked: if (page.selectedProvider) page.setProviderSource(
@@ -1934,7 +1998,12 @@ KCM.SimpleKCM {
 
                         Components.PlainControlsLabel {
                             Layout.fillWidth: true
-                            text: i18n("Choose a source to save. Automatic restores the provider default.")
+                            text: page.providerSourcesFailed
+                                ? i18n("Could not read the saved source. Reload to try again.")
+                                : page.selectedProviderSourceModes.indexOf(page.selectedProviderSavedSource) < 0
+                                    && !page.providerSourcesLoading
+                                    ? i18n("The saved source is not recognized. Choose a source and save to replace it.")
+                                    : i18n("Select Save to store this source. Apply is not needed. Automatic restores the provider default.")
                             opacity: page.secondaryTextOpacity
                             font: Kirigami.Theme.smallFont
                             wrapMode: Text.WordWrap

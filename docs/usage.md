@@ -705,12 +705,19 @@ Provider-specific editable settings depend on the official CLI contract.
   come from the provider's `authentication.sourceModes` inventory when available,
   verified with official Linux CLI 0.83.0. Older inventories keep Automatic,
   API, CLI, OAuth, and Web; CodexBar validates these legacy choices and reports
-  unsupported modes without confirming a save. The selector starts at **Choose a source** because the provider
-  registry does not expose the saved mode; inspect redacted settings to
-  request source details.
-  Changes are saved immediately, independently of Apply and Cancel. A successful
-  save preserves provider enablement and credentials and invalidates cached
-  usage through the existing provider-config revision. The source override in Diagnostics
+  unsupported modes without confirming a save. The selector reads the saved mode
+  through the CLI's normalized, credential-redacted `config dump` output when
+  the page opens or reloads, verified with Linux CLI 0.83.0. It keeps the confirmed
+  value visible after saving and during reloads. **Save** stays disabled while
+  reading sources or until a different mode is selected. This read does not fetch
+  provider usage. If reading fails, use **Reload** to retry; the last confirmed
+  value stays visible. An unrecognized mode can be explicitly replaced, but is
+  never presented as Automatic. A late read does not replace an unsaved
+  choice, and results from before a completed write are discarded and reread.
+  Selecting a mode creates a draft; **Save** stores it immediately, independently
+  of Apply and Cancel. A successful save preserves provider enablement and
+  credentials and invalidates cached usage through the existing provider-config
+  revision. The source override in Diagnostics
   still takes precedence globally for widget requests. Older or unrecognized
   CLI versions omit the editor.
 - With CLI 0.83.0 authentication metadata, API-key setup also requires the

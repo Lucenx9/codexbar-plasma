@@ -2191,11 +2191,26 @@ account records; this probe does not establish authenticated multi-account
 availability or add a Linux login-switching action.
 
 `config/ProviderSource.js` plans allowlisted source-mode writes and validates
-matching provider/source result records. Available modes come from normalized
-authentication metadata, with the five legacy modes only when that metadata is
+matching provider/source result records. `config/ProviderSavedSources.js` owns
+the saved-source map: it projects the normalized, redacted
+`config dump --format json --json-only` reply into provider source enums only.
+The dump contract was verified with Linux CLI 0.83.0: `providers[].id` identifies
+providers; a known `source` selects the saved mode, and an absent `source` means
+Automatic. Dump entries match the exact inventory provider ID, so retained
+alias-like IDs do not collide. Malformed/unknown modes and duplicate exact IDs
+stay unknown; credential fields are discarded. No raw config file is read or edited.
+The Providers page owns this independent, bounded read on open/reload. It does
+not fetch provider usage. Read results carry the provider-config revision;
+a reply predating a completed write is discarded and reread. Selection changes
+clear the draft, background reads preserve a different choice, and selecting the
+confirmed mode clears the draft. Reloads keep the last confirmation visible and
+block source writes until the read completes. Failed reads offer Reload without
+inventing Automatic; failed writes preserve the draft and prior confirmation.
+
+Available modes come from normalized authentication metadata, with the five legacy modes only when that metadata is
 absent. The page maps combo-box indexes through that same per-provider list and
-clears an unsaved selection when the model changes. The Providers page owns the CLI 0.73.0
-capability gate, execution, deadlines, revision writes and
+clears an unsaved selection when its mode is no longer offered. The Providers
+page owns the CLI 0.73.0 capability gate, execution, deadlines, revision writes and
 diagnostic invalidation; `ProviderOperations.js` owns pending state and deferred
 reload decisions. `tests/tst_provider_source.qml` covers its pure boundary;
 `tests/test_provider_source.py` executes the production page handlers for
@@ -2206,8 +2221,8 @@ a descriptor field or action is pending for the same provider.
 redaction, immutable projections, legacy fallback and the Copilot command
 allowlist. The `settings-providers-auth` and `settings-providers-auth-legacy`
 smoke scenarios execute an API source write with the new and legacy option
-orders, check the key gate and render the read-only hints. The
-`settings-providers-keys-soniox` and `settings-providers-keys-chatbox` scenarios
+orders, verify the saved selection survives a reload, check the key gate and
+render the read-only hints. The `settings-providers-keys-soniox` and `settings-providers-keys-chatbox` scenarios
 check all three setup gates and documentation links. Each checks its target
 action and visible guidance: Soniox organization keys or Chatbox license keys.
 The Chatbox scenario also checks its localized license-key label.

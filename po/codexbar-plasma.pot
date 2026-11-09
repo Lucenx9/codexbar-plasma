@@ -3659,7 +3659,22 @@ msgid "Choose a source"
 msgstr ""
 
 #: contents/ui/configProviders.qml
-msgid "Choose a source to save. Automatic restores the provider default."
+msgid "Loading saved source…"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Could not read the saved source. Reload to try again."
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid ""
+"The saved source is not recognized. Choose a source and save to replace it."
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid ""
+"Select Save to store this source. Apply is not needed. Automatic restores "
+"the provider default."
 msgstr ""
 
 #: contents/ui/configProviders.qml

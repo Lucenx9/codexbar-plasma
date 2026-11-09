@@ -4218,10 +4218,6 @@ msgid ""
 "takes precedence."
 msgstr "Certaines sources ne sont pas disponibles sous Linux. Le choix de source dans Diagnostics est prioritaire."
 
-#: contents/ui/configProviders.qml
-msgid "Choose a source to save. Automatic restores the provider default."
-msgstr "Choisissez une source à enregistrer. Automatique rétablit le choix par défaut du fournisseur."
-
 #: contents/ui/components/ProviderNames.qml
 msgid "Trae CN"
 msgstr "Trae CN"
@@ -4388,3 +4384,19 @@ msgid ""
 msgstr ""
 "Active le mode monochrome et les jauges des fournisseurs, et masque les "
 "noms, le texte d’utilisation et les crédits."
+
+#: contents/ui/configProviders.qml
+msgid "Loading saved source…"
+msgstr "Chargement de la source enregistrée…"
+
+#: contents/ui/configProviders.qml
+msgid "Could not read the saved source. Reload to try again."
+msgstr "Impossible de lire la source enregistrée. Sélectionnez Recharger pour réessayer."
+
+#: contents/ui/configProviders.qml
+msgid "The saved source is not recognized. Choose a source and save to replace it."
+msgstr "La source enregistrée n’est pas reconnue. Choisissez une source et enregistrez-la pour la remplacer."
+
+#: contents/ui/configProviders.qml
+msgid "Select Save to store this source. Apply is not needed. Automatic restores the provider default."
+msgstr "Sélectionnez Enregistrer pour mémoriser cette source. Appliquer n’est pas nécessaire. Automatique rétablit la source par défaut du fournisseur."

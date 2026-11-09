@@ -19,6 +19,7 @@ import "SOURCE_URL/Guards.js" as Guards
 import "SOURCE_URL/SafeText.js" as SafeText
 import "SOURCE_URL/config/ProviderConfigProtocol.js" as ProviderConfigProtocol
 import "SOURCE_URL/config/ProviderSource.js" as ProviderSource
+import "SOURCE_URL/config/ProviderSavedSources.js" as ProviderSavedSources
 TestCase {
     id: page
     name: "ProviderDiagnosticResults"
@@ -29,6 +30,9 @@ TestCase {
     property bool diagnosticLoading: false
     property string errorText: ""
     property string statusText: ""
+    property var savedProviderSources: ({})
+    property string providerSourceDraft: ""
+    function syncProviderSourceSelection() {}
     property string selectedProviderID: "codex"
     property QtObject providerSourceBox: QtObject { property int currentIndex: 1 }
     property QtObject configSource: QtObject {
