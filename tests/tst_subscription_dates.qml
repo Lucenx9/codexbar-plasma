@@ -25,6 +25,8 @@ TestCase {
         return [
             {tag: "iso", value: "2026-11-30T00:00:00Z", flag: undefined, valid: true, day: ""},
             {tag: "offset", value: "2026-11-30T03:15:12+02:30", flag: false, valid: true, day: ""},
+            {tag: "maximum-positive-offset", value: "2026-11-30T03:15:12+14:00", flag: false, valid: true, day: ""},
+            {tag: "maximum-negative-offset", value: "2026-11-30T03:15:12-14:00", flag: false, valid: true, day: ""},
             {tag: "fraction-bound", value: "2026-11-30T03:15:12.123456789+02:30", flag: false, valid: true, day: ""},
             {tag: "fraction-too-long", value: "2026-11-30T03:15:12.1234567890+02:30", valid: false},
             {tag: "fraction", value: "2026-11-30T03:15:12.123Z", flag: null, valid: true, day: ""},
@@ -61,6 +63,9 @@ TestCase {
             {tag: "bad-minute", value: "2026-11-30T00:60:00Z", valid: false},
             {tag: "bad-second", value: "2026-11-30T00:00:60Z", valid: false},
             {tag: "bad-offset", value: "2026-11-30T00:00:00+25:00", valid: false},
+            {tag: "offset-hour-over-limit", value: "2026-11-30T00:00:00+15:00", valid: false},
+            {tag: "offset-minute-over-limit", value: "2026-11-30T00:00:00+14:01", valid: false},
+            {tag: "date-only-offset-over-limit", value: "2026-11-30T00:00:00-14:01", flag: true, valid: false},
             {tag: "bad-offset-minute", value: "2026-11-30T00:00:00+01:60", valid: false},
             {tag: "trailing", value: "2026-11-30T00:00:00Z secret", valid: false}
         ];

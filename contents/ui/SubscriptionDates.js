@@ -21,8 +21,11 @@ function date(value, dateOnly, kind) {
     }
     if (parts[4] !== undefined) {
         var zone = parts[7];
+        var zoneHour = zone === "Z" ? 0 : Number(zone.slice(1, 3));
+        var zoneMinute = zone === "Z" ? 0 : Number(zone.slice(4));
         if (Number(parts[4]) > 23 || Number(parts[5]) > 59 || Number(parts[6]) > 59
-                || (zone !== "Z" && (Number(zone.slice(1, 3)) > 23 || Number(zone.slice(4)) > 59))) {
+                || zoneHour > 14 || (zoneHour === 14 && zoneMinute > 0)
+                || zoneMinute > 59) {
             return null;
         }
     } else if (!dateOnly) {
