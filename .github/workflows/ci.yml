@@ -28,6 +28,9 @@ env:
   # Explicit import warnings prevent the local missing-module fallback.
   QMLLINT_FLAGS: --import warning --unqualified disable
   QML_TEST_REQUIRE_NO_SKIPS: '1'
+  CI_REPORT_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+  CI_REPORT_BASE_SHA: ${{ github.event.pull_request.base.sha || '' }}
+  CI_REPORT_IMAGE: 106a4197fe23f22700fa068709fc4f93bb63f2fb2718d4a628e7d484d0d7b169
 
 jobs:
   lint:
@@ -71,6 +74,20 @@ jobs:
       - name: Select Plasma coverage
         id: scope
         run: python3 scripts/ci_scope.py
+
+      - name: Record the tested PR target before runtime checks
+        if: always()
+        run: python3 scripts/ci_report.py collect
+
+      - name: Upload CI source identity
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ci-results
+          path: dist/ci-results.json
+          overwrite: true
+          if-no-files-found: warn
+          retention-days: 30
 
   check-runtime:
     needs: scope
@@ -147,6 +164,20 @@ jobs:
           path: dist/smoke/panel-matrix
           if-no-files-found: warn
           retention-days: 7
+
+      - name: Collect bounded CI measurements
+        if: always()
+        run: python3 scripts/ci_report.py collect
+
+      - name: Upload CI report data
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ci-results
+          path: dist/ci-results.json
+          overwrite: true
+          if-no-files-found: warn
+          retention-days: 30
 
   check:
     if: always()

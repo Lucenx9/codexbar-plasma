@@ -12,6 +12,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Added
 
+- Publish one updating CI comment per pull request from `codexbar-review-bot`,
+  with job status, popup outcomes, panel capture counts, and comparable smoke
+  timings when a matching base-branch measurement is available.
 - Optionally name the quota chosen by Automatic panel text when multiple
   windows are available. Crowded panels omit the name before shortening usage;
   the full text remains available to assistive technology and in tooltips.

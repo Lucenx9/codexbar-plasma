@@ -1688,6 +1688,114 @@ Repeater to verify that changed usage preserves its focused delegate and updates
 its meter and accessible name. Reordered, replaced, and removed providers must
 activate the current provider without binding or lifecycle warnings.
 
+### Sticky CI report
+
+After a pull-request CI run completes, [ci-report.yml](../.github/workflows/ci-report.yml)
+publishes one English comment as `codexbar-review-bot[bot]`. Later runs update
+the comment containing `<!-- codexbar-ci-report -->`; the publisher checks the
+author as well as the marker. An unchanged report makes no write request.
+This report supplements the existing Sonnet code review. Required `check`,
+`smoke`, and `pr-title` checks still decide merge readiness.
+
+`scripts/ci_report.py` owns event handling and publication. Its focused
+`scripts/lib/ci_report_data.py`, `ci_report_github.py`, and `ci_report_markdown.py`
+modules own validation/collection, credential-separated HTTP transport, and
+comment rendering respectively. They keep the same trust boundaries in local
+probes and Actions.
+
+The comment shows the CI job conclusions, recorded popup successes/failures,
+the panel-matrix record count, and links to the run and graphical artifacts.
+Editorial-only runs explicitly explain their omitted runtime checks. A failed
+or cancelled run still reports its job conclusions. Missing or rejected
+measurements never become passing test results. Panel records can be partial
+when capture fails; they are not a separate visual approval.
+
+`scripts/ci_report.py collect` first runs in the unprivileged scope job, including
+after coverage-selection failures. It records the original event's tested base
+branch and SHA even for editorial-only runs. The smoke job then replaces that
+record with runtime measurements, including after test failures. Both upload
+`dist/ci-results.json` as the `ci-results` artifact for 30 days. Its ZIP contains
+`ci-results.json` at the root. Schema version 2 records the run ID/attempt,
+PR head SHA, tested base branch/SHA, tested merge SHA,
+reported runtime-image and smoke-fixture fingerprints, popup scenario outcomes
+and seconds, and panel record count. Screenshots and full logs keep their
+existing seven-day retention. Missing or invalid artifacts still allow reporting
+historical job status, with an explicit warning that the tested PR target could
+not be verified. A record for a different current target is rejected.
+
+The publisher first looks for measurements from a successful push CI run at
+the exact PR base commit, then a recent successful base-branch run. It labels
+the selected baseline in the comment. Timing deltas and new popup failures
+appear only when both reports have the same schema, image/fixture fingerprints,
+and scenario IDs. The fixture fingerprint includes the smoke harness, Makefile,
+and CI workflow, so renderer, theme, language, or invocation changes suppress
+incompatible comparisons. Scenario seconds include setup and process startup. They are
+diagnostic smoke timings, not a Plasmoid update-latency benchmark or a regression
+threshold. QtTest/Python totals, RAM usage, and code coverage are not collected
+by this report. Check the job logs for individual test suites, and inspect
+screenshots for visual quality.
+
+The publishing workflow uses `workflow_run` after CI, with read-only Actions,
+contents, and PR permissions for `GITHUB_TOKEN`. It checks out the repository's
+default branch explicitly, runs the trusted publisher tests, and then creates a
+repository-scoped GitHub App token with only `pull-requests: write` for comments.
+It never checks out or executes the PR in this privileged job. ZIP input must
+contain exactly one bounded JSON file; paths, symlinks, unknown fields,
+unexpected types, duplicate scenario IDs, and invalid values are rejected.
+Artifact download requests never forward the GitHub token to signed storage.
+Measurement and tested-target data still come from the PR's CI and are not an
+independent audit. Oversized measurement details are omitted from the comment
+while job conclusions and artifact links remain available.
+
+Before writing, the publisher verifies the CI workflow ID, completed PR event,
+run attempt, head SHA, head repository/branch, associated open PR, and recorded
+tested target. It uses the immutable target record from the CI artifact because
+GitHub's PR fields on historical runs can change as the PR changes. Target changes
+during preparation are checked again immediately before writing.
+After a partial rerun it uses the latest job execution for each check. A retained
+measurement must match the latest smoke job's attempt, which the report labels
+when older than the overall run. Invalid JSON/compression and expired downloads
+omit measurements while preserving job conclusions; unavailable baseline listings
+or downloads do not abort publication.
+
+A read-only source resolver derives a concurrency key from the head repository
+ID and branch. Automatic events and manual dispatches for the same source share
+that key, so comment creation cannot race. Different PR sources do not replace
+each other's pending publishers. Each request reconciles to the latest completed
+CI run for the source's current head, so a late stale request cannot discard a
+newer pending report. A newer in-progress run is awaited instead. Runs from other
+branches or forks at the same SHA cannot supersede this source. These
+checks support PRs from forks without giving the fork CI write credentials.
+
+Maintainer setup uses the existing GitHub App installation for this repository:
+
+- Repository variable `CODEXBAR_REVIEW_APP_CLIENT_ID`: the App's client ID.
+- Repository Actions secret `CODEXBAR_REVIEW_APP_PRIVATE_KEY`: its PEM private key.
+- App repository permission **Pull requests: Read and write**. Install the App
+  only on repositories it should review. The publishing token requests no
+  other write permission.
+
+Configure the secret from its protected file, without putting it in command
+arguments or logs:
+
+```sh
+gh variable set CODEXBAR_REVIEW_APP_CLIENT_ID --repo Lucenx9/codexbar-plasma --body CLIENT_ID
+gh secret set CODEXBAR_REVIEW_APP_PRIVATE_KEY --repo Lucenx9/codexbar-plasma < /path/to/private-key.pem
+```
+
+The workflow becomes automatic after it lands on the default branch. To
+regenerate a report for a completed PR CI run after installation or a fix:
+
+```sh
+gh workflow run ci-report.yml --ref main -f run_id=RUN_ID
+```
+
+It still rejects stale, closed, ambiguous, or non-PR runs. Baselines become
+available after a successful full CI push run produces the new artifact.
+`tests/test_ci_report.py` covers artifact validation, transport credentials,
+baseline compatibility, real job statuses, stale/retried runs, and bot-comment
+creation, updates, and unchanged-body handling.
+
 ## Popup smoke tests
 
 `popup-content` also expands and collapses Provider actions, checking that its
