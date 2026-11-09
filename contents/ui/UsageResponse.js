@@ -56,10 +56,10 @@ function response(stdoutValue, stderrValue, providerID, receivedAtMs, exitCode, 
     return result;
 }
 
-function roster(stdoutValue, stderrValue, exitCode) {
+function roster(stdoutValue, stderrValue, exitCode, includeDisabled) {
     var parsed = CliResponse.decode(stdoutValue, stderrValue, exitCode, 0);
     if (parsed.outcome !== "success") return parsed;
-    var entries = Normalizer.normalizeProviderConfigEntries(parsed.payload);
+    var entries = Normalizer.normalizeProviderConfigEntries(parsed.payload, includeDisabled);
     return entries === null ? {outcome: "noProviders", message: ""}
         : {outcome: "success", providerIDs: entries.providerIDs, displayNames: entries.displayNames, message: ""};
 }

@@ -119,6 +119,38 @@ TestCase {
         compare(latest(o).map(function(item) { return item.provider; }), ["claude", "codex"]);
         compare(o.failures, []);
     }
+    function test_aggregateFallbackPreservesSelectorAndAccount_data() {
+        var rows = [];
+        for (var provider of ["", "all", "both"])
+            for (var selected of [false, true])
+                rows.push({tag: (provider || "default") + (selected ? "-account" : "-auto"),
+                    provider: provider, selected: selected});
+        return rows;
+    }
+    function test_aggregateFallbackPreservesSelectorAndAccount(data) {
+        var o = create("aggregate-selectors", {provider: data.provider,
+            sourceMode: data.selected ? "cli" : "",
+            selectedAccounts: data.selected ? {claude: "Work  Team"} : {}});
+        completed(o, 1);
+        compare(latest(o).map(function(item) { return item.provider; }),
+            data.provider === "all" ? ["codex", "claude", "gemini"] : ["codex", "claude"]);
+        verify(latest(o).every(function(item) { return !item.commandFailed && item.rows.length === 1; }));
+        if (data.selected)
+            compare(latest(o)[1].accountKey, "Work  Team");
+        compare(o.failures, []);
+    }
+    function test_aggregateSelectorChangesDoNotReuseAnotherRoster() {
+        var o = create("aggregate-selectors");
+        completed(o, 1);
+        for (var provider of ["all", "", "both", "all"]) {
+            var count = o.snapshots.length + 1;
+            o.subject.provider = provider;
+            completed(o, count);
+            compare(latest(o).map(function(item) { return item.provider; }),
+                provider === "all" ? ["codex", "claude", "gemini"] : ["codex", "claude"]);
+            verify(latest(o).every(function(item) { return !item.commandFailed; }));
+        }
+    }
     function test_batchedInputsStartOneReplacementAndRejectOldReply_data() {
         return [{tag: "aggregate", provider: "", sourceMode: "cli"},
             {tag: "scoped", provider: "claude", sourceMode: ""}];
@@ -401,11 +433,17 @@ if args[0] == "config":
     if name == "slow-roster": time.sleep(0.3)
     if name == "broken-roster": print("null"); sys.exit(0)
     ids = ["synthetic" + str(i) for i in range(11)] if name == "queue" else ["codex", "claude"]
+    if name == "aggregate-selectors": ids.append("gemini")
     print(json.dumps([] if name == "empty-roster" else [
-        {"provider": key, "displayName": "Synthetic Codex" if key == "codex" else key, "enabled": True} for key in ids]))
+        {"provider": key, "displayName": "Synthetic Codex" if key == "codex" else key,
+         "enabled": key != "gemini"} for key in ids]))
     sys.exit(1 if name == "failed-roster" and run == 1 else 0)
 provider = args[args.index("--provider") + 1] if "--provider" in args else "codex"
 account = args[args.index("--account") + 1] if "--account" in args else "run " + str(run)
+if name == "aggregate-selectors" and provider in ("all", "both"):
+    ids = ["codex", "claude", "gemini"] if provider == "all" else ["codex", "claude"]
+    print(json.dumps([{"provider": key, "usage": {"primary": {"usedPercent": 0}}} for key in ids]))
+    sys.exit(0)
 if name == "mapped": assert provider == "groqcloud"
 if name in ("foreign-provider", "mixed-providers", "missing-provider"):
     matching = {"provider": "codex" if provider in ("all", "both") else provider,
@@ -456,6 +494,7 @@ class UsageControllerTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="codexbar usage 'test-") as temporary:
             directory = Path(temporary)
             for name in ("foreign-provider", "mixed-providers", "missing-provider", "failed-valid", "failed-timeout", "failed-roster", "ancient", "normal", "slow-roster", "flags", "mapped", "slow-first", "queue", "malformed", "empty",
+                         "aggregate-selectors",
                          "no-records", "too-large", "empty-roster", "broken-roster", "timeout-aggregate",
                          "timeout-roster", "timeout-scoped"):
                 script = directory / name

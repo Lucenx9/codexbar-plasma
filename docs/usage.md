@@ -534,6 +534,11 @@ relabelled, for both usage refreshes and account discovery. Canonical aliases,
 legacy account records without a provider, and command-wide CLI errors remain
 supported. A provider override keeps this scope when Diagnostics also specifies
 a source, including the direct CLI refresh path.
+The persisted `provider` override also accepts the CLI aggregate selectors:
+`both` requests Codex and Claude, and `all` requests every discovered provider,
+including disabled ones. Leaving it empty uses enabled providers only.
+Automatic refreshes and per-provider account selections preserve these scopes;
+changing the override retires pending replies and invalidates the roster cache.
 Retained data never generates quota, pace, reset,
 or status notifications, and its pace and run-out forecasts are suppressed,
 including in privacy mode. If a failed

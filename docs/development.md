@@ -483,6 +483,19 @@ synchronized.
   persists quotas, and coordinates accounts and notifications. `UsageResponse.js`
   contains bounded response classification and per-record normalization; the
   controller supplies the receipt time and localizes failure outcomes.
+  Aggregate provider overrides expand before scheduling scoped commands:
+  `both` requests Codex and Claude; `all` discovers every valid roster entry,
+  including disabled providers. An empty override retains enabled-only discovery.
+  The roster cache is invalidated when the override changes. CLI 0.83.0 was
+  checked in a bubblewrap sandbox with host homes/IPC hidden and networking
+  disabled: after `config disable --provider codex`, `usage --provider both
+  --source web --format json --json-only` still returned Codex and Claude,
+  while `--provider all` returned all 111 inventory providers. The runtime
+  errors from the unsupported web source establish identities without fetching
+  authenticated data. `test_usage_controller.py` covers these scopes, selected
+  accounts and cache changes with synthetic process replies;
+  `tst_usage_response.qml` checks disabled-entry inclusion without relaxing
+  record validation.
   Selected Codex usage uses `--all-accounts`; `UsageResponse.js` reuses the
   account normalizer to match the exact selected key before deduplicating by
   provider. Missing or failed selections cannot use a healthy sibling's quotas.

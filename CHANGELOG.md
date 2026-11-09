@@ -99,6 +99,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Preserve the `all` and `both` provider overrides during automatic usage
+  refreshes and account selection. Show separate provider results instead of
+  an empty aggregate-provider card, and keep roster caches separate when the
+  override changes.
 - Keep direct usage replies scoped to the requested provider when a source
   override is set. Reject other providers and accept legacy replies that omit
   the provider instead of replacing the filtered view with unrelated usage.
