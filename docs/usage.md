@@ -816,15 +816,23 @@ an older host's schema 1 data, while the widget retains the available local
 subtotal with an SSH warning. Unknown or mixed ledger schemas get a distinct
 compatibility message. Choose its independent 1–365 day
 window in General. This window
-starts at midnight UTC and ends at the exact load time displayed in the result;
+starts at midnight UTC and ends at the exact load time shown in **Show details**;
 it does not follow the cost chart's calendar periods or range selector.
-The loaded token/request subtotal is emphasized; the unloaded placeholder uses
-secondary text.
+The section uses a quiet inset surface to distinguish the manual subtotal from
+ordinary history. The loaded token/request subtotal uses emphasized, tabular
+figures; the unloaded placeholder uses secondary text. The API-price estimate
+stays with its subtotal. A compact UTC day count describes the snapshot's own
+window. **Show details** reveals its exact dates, requested sources, the estimate's
+separation from spend totals, and SSH recovery guidance. These details start
+collapsed and close after a new result, without starting collection. Source and
+partial-request warnings remain visible above the manual load actions. Native
+load buttons stay within the section at narrow widths; their full labels are also
+available on hover or keyboard focus.
 
-**Load local subtotal** scans only this computer, even when an SSH host is
+**Load local** scans only this computer, even when an SSH host is
 saved. To include another computer, enter one SSH alias or `user@host` in
-**Optional SSH host**, apply the settings, and choose **Load local + SSH
-subtotal**. The host accepts ASCII letters, digits and `._-@:%[]`, at most
+**Optional SSH host**, apply the settings, and choose **Load local + SSH**.
+The host accepts ASCII letters, digits and `._-@:%[]`, at most
 255 characters, with no leading `-`, spaces, or command options. The SSH button
 is available only for a valid host. Configure authentication and trusted host
 keys outside the widget first. The CLI uses batch SSH with strict host-key

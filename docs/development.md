@@ -162,10 +162,14 @@ synchronized.
   reports schema incompatibility separately, and leaves pricing to the CLI.
   `IdentifiedTokensSection.qml` localizes the scope and independent availability
   and partial-request notices. Generic costs and sharing remain separate.
-  Direct `tst_identified_tokens.qml`, process tests in
+  Direct `tst_identified_tokens.qml` and `tst_identified_tokens_section.qml`, process tests in
   `test_identified_tokens_context.py`, paired source-isolation tests and the
   `identified-*` smoke scenarios cover this path with synthetic data, including
-  schema 2 estimates, unpriced requests and schema mismatch guidance.
+  schema 2 estimates, unpriced requests and schema mismatch guidance. The section
+  tests exercise pointer/keyboard disclosure, exact snapshot dates, visible
+  source/partial warnings, inherited LTR/RTL load-action order and focus retention
+  when a new result closes details. The QML runner repeats the section tests with
+  an RTL application to catch double mirroring of the load actions.
 - `UsageDetails.js` bounds detail sections and preserves only the CLI row
   severities `normal`, `warning`, and `critical`. Charts without a usable title,
   unit, or point are omitted so an empty detail section cannot suppress the

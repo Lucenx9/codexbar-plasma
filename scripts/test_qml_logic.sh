@@ -23,6 +23,10 @@ run_qml_tests() {
 TZ=America/Los_Angeles QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
   run_qml_tests -input "$ROOT_DIR/tests"
 
+# An RTL application must not reverse the inherited action-row mirroring twice.
+QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
+  run_qml_tests -reverse -input "$ROOT_DIR/tests/tst_identified_tokens_section.qml"
+
 # The main run covers Los Angeles. Calendar-only subscription dates must also
 # preserve the same day in UTC, Rome, and across Apia's skipped civil day.
 for subscription_timezone in UTC Europe/Rome Pacific/Apia; do
