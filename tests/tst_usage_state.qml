@@ -73,7 +73,7 @@ TestCase {
         verify(failed.cacheValue.indexOf("https://") < 0)
         compare(Cache.decode(failed.cacheValue, context, now + 2000).length, 2)
     }
-    function test_emptySuccessReplacesQuotaAndMissingContextDoesNotOverwriteDisk() {
+    function test_missingContextPreservesDiskExceptForConfirmedEmptyRoster() {
         var result = State.accepted(fresh(), [item("codex", undefined)], "", now)
         compare(result.label, "updated")
         compare(result.cacheValue, null)
@@ -84,6 +84,8 @@ TestCase {
         var empty = State.accepted(fresh(), [], context, now)
         compare(empty.label, "clear")
         verify(!empty.receivedFreshUsage)
+        compare(empty.cacheValue, "")
+        compare(State.accepted(fresh(), [], "", now).cacheValue, "")
     }
     function test_invalidationClearsOnlySelectedProviderAndPersistsHealthySibling() {
         var previous = fresh()
