@@ -454,7 +454,7 @@ Item {
         }
 
         function parseOutput(stdoutText, stderrText, exitCode) {
-            var result = UsageResponse.response(stdoutText, stderrText, "", Date.now(), exitCode);
+            var result = UsageResponse.response(stdoutText, stderrText, controller.provider, Date.now(), exitCode);
             if (result.outcome !== "success") {
                 if (result.outcome === "empty" && canUseProviderFallback()) {
                     startProviderFallback();
