@@ -231,7 +231,10 @@ synchronized.
   usage transitions through `transition(observations, previousMemo, options)`.
   Per-row quota, pace and reset decisions preserve their distinct recovery rules;
   observation processing keeps pending refreshes, stale usage and usage errors
-  without rows from rebuilding baselines. Intents retain the original
+  without rows from rebuilding baselines. An initial authoritative window needs
+  a finite measured percentage or a known forecast to prime its account scope;
+  an empty window cannot make the first measurement look like a threshold crossing.
+  Intents retain the original
   observation/row indexes and status, quota, pace, reset ordering. Bounded memo
   selection protects current keys before retaining recent stale scopes,
   preserving source insertion order.

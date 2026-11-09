@@ -102,6 +102,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Avoid false quota warnings when startup first returns a window without a
+  percentage or forecast: the first usable measurement now establishes the
+  notification baseline silently.
 - Keep translated period labels beside legacy billing-dashboard amounts when
   optional CLI labels are blank or malformed.
 - Keep a successful empty provider list authoritative during startup: clear

@@ -69,6 +69,26 @@ TestCase {
         return cases
     }
 
+    function test_initialMeasuredZeroOrKnownForecastEstablishesBaseline_data() {
+        return [
+            {tag: "zero-prime", mode: "prime", hasPercent: true, paceKnown: false},
+            {tag: "zero-observe", mode: "observe", hasPercent: true, paceKnown: false},
+            {tag: "forecast-prime", mode: "prime", hasPercent: false, paceKnown: true},
+            {tag: "forecast-observe", mode: "observe", hasPercent: false, paceKnown: true}
+        ]
+    }
+
+    function test_initialMeasuredZeroOrKnownForecastEstablishesBaseline(data) {
+        var initial = transition(data.mode, [observation("", "", [
+            usageRow("", 0, false, "Weekly", "secondary", "", data.hasPercent, data.paceKnown)
+        ])])
+        compare(intentKinds(initial), "")
+        var increased = transition("observe", [observation("", "", [
+            usageRow("minor", 85, true)
+        ])], initial.nextMemo)
+        compare(intentKinds(increased), "quota,pace")
+    }
+
     function test_firstReadingRespectsEachNotificationToggle(data) {
         var options = plannerOptions(data.mode)
         options.quotaEnabled = data.quota
