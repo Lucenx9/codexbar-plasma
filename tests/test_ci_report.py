@@ -79,17 +79,22 @@ class FakeGitHub:
             return next(run for run in [self.run] + self.latest if run["id"] == int(path.split("/")[-1]))
         if path == "pulls/12":
             return self.pr
+        if "event=" in path:
+            return self.workflow_runs(path)
+        raise AssertionError(path)
+
+    def workflow_runs(self, path):
         if "event=pull_request" in path:
             return {"workflow_runs": self.latest}
-        if "event=push" in path:
-            return {"workflow_runs": self.exact_runs if "head_sha=" in path else self.baseline_runs}
-        raise AssertionError(path)
+        if "event=push" not in path:
+            raise AssertionError(path)
+        return {"workflow_runs": self.exact_runs if "head_sha=" in path else self.baseline_runs}
 
     def pages(self, path, key=None):
         if path == "pulls?state=open":
             return deepcopy(self.pulls)
-        if key == "workflow_runs" and "event=pull_request" in path:
-            return self.latest
+        if key == "workflow_runs":
+            return self.api(path)[key]
         if re.fullmatch(r"actions/runs/\d+/jobs\?filter=all", path) and key == "jobs":
             return self.jobs
         if path == "issues/12/comments":
