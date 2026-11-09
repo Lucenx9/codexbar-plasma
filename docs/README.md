@@ -26,7 +26,7 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
   data freshness and quota cache limits, cost history,
   notifications, and widget defaults.
 - [Development](development.md): QML ownership, regression checks, runtime
-  verification, CI image maintenance and coverage gates, PR delivery and CI
+  verification, CI image maintenance, coverage gates and sticky bot reports, PR delivery and CI
   follow-up, repository maintenance, and agent
   instructions. Read before code or tooling changes.
 - [Release skill](../.claude/skills/release/SKILL.md): agent command sequence
