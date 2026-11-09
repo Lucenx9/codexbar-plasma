@@ -114,9 +114,10 @@ function providerConfigEntry(item) {
 // `config providers` output reduced to the enabled provider ids plus every
 // display name it carried. A disabled provider still contributes its name,
 // because the popup labels providers it learns about from a later usage payload.
+// The explicit CLI `all` selector includes disabled providers as well.
 // null means the envelope had no provider-config records. An empty array is a
 // valid success and remains distinguishable from an error-shaped JSON payload.
-function normalizeProviderConfigEntries(payload) {
+function normalizeProviderConfigEntries(payload, includeDisabled) {
     var providerIDs = []
     var displayNames = ({})
     var seenProviderIDs = ({})
@@ -128,7 +129,7 @@ function normalizeProviderConfigEntries(payload) {
         if (!entry) continue
         sawProviderConfigEntry = true
         if (entry.displayName.length > 0) displayNames[entry.provider] = entry.displayName
-        if (entry.enabled && !hasOwnKey(seenProviderIDs, entry.provider)) {
+        if ((entry.enabled || includeDisabled === true) && !hasOwnKey(seenProviderIDs, entry.provider)) {
             seenProviderIDs[entry.provider] = true
             providerIDs.push(entry.provider)
         }
