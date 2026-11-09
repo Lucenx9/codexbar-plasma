@@ -29,6 +29,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Rename the panel styles to **Provider colors** and **Monochrome**. Label the
+  separate preset **Show only icons and meters** and explain that it switches
+  to monochrome, enables meters, and hides names, usage text, and credits.
+
 - Group the identified Codex subtotal in a quiet Usage & Spend surface, with
   clearer token totals, shorter labels and source warnings, and separate load
   actions. Move exact UTC dates, source information and SSH guidance behind

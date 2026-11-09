@@ -86,7 +86,7 @@ font family, radius, or opacity scale.
 | Supporting text | `secondaryTextOpacity` (0.7) | Metadata is quieter, but still readable against the rendered background. This opacity is not a contrast guarantee for custom themes. |
 | Supporting values | `valueTextOpacity` (0.85) | Values remain stronger than their labels without competing with primary quota percentages. |
 | Selection and focus | Theme `highlightColor`, `highlightedTextColor`, `focusColor` | Keep selected, hovered, pressed, and keyboard-focused states distinguishable. |
-| Provider identity | Existing provider icon and readable accent helpers | Keep brands recognizable; use the generic fallback for unknown providers and the existing monochrome policy in Minimal mode. |
+| Provider identity | Existing provider icon and readable accent helpers | Keep brands recognizable; use the generic fallback for unknown providers and the existing monochrome policy in Monochrome mode. |
 | Severity | Existing quota/status helpers and theme warning/negative roles | Use the configured thresholds and actual status evidence. Never assign a fixed alert hue solely to match a reference site. |
 | Spacing | `Kirigami.Units.smallSpacing`, `largeSpacing`, `gridUnit` | Tight gaps bind a label to its value; larger gaps separate providers or tasks. Use the same rhythm in comparable sections. |
 | Corners | `roundedSurfaceRadius`, `nestedSurfaceRadius` | Preserve concentric inset rounding; reserve pill geometry for meters and existing compact badges. |
@@ -141,9 +141,9 @@ Settings:  Preview or context → common choices → advanced options
 
 ### Panel
 
-Keep Standard and Minimal geometrically consistent. Group each provider's icon
+Keep Provider colors and Monochrome geometrically consistent. Group each provider's icon
 and its primary/secondary capsules; preserve the configured selected-provider
-text grouping and custom order. Healthy Minimal meters use the theme text color;
+text grouping and custom order. Healthy Monochrome meters use the theme text color;
 warning and critical meaning remains visible in both styles. Provider groups
 need more separation than elements within a group.
 

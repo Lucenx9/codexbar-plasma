@@ -45,8 +45,9 @@ in TODO.
 
 In Italian, settings use "Diagnostica" and "Finestra a comparsa". Technical
 terms such as "provider", "account", and "token" remain unchanged.
-Spanish instructions use the formal address consistently. Brazilian Portuguese
-uses "Padrão" for the Standard panel style.
+Spanish instructions use the formal address consistently. Panel style labels
+describe the color choice: "Provider colors" and "Monochrome". The separate
+"Show only icons and meters" preset also changes which panel contents are visible.
 
 Use each catalog's translated AI Insights name in connection results as well as
 settings. French uses "jetons" for usage tokens and "fournisseur" for providers;

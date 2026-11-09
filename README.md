@@ -159,7 +159,7 @@ For private CLI selection, updates, and rollback, see
 
 - Quota meters, reset windows, account selection, and provider status, with
   configurable warnings and Plasma notifications.
-- Standard and Minimal panel styles, up to two quota capsules per provider,
+- Provider colors and Monochrome panel styles, up to two quota capsules per provider,
   spaced provider groups, readable stacked meters on vertical panels, optional
   text with optional automatic quota names, and a live settings preview.
 - **Usage & Spend** with cost and token charts, history ranges, an activity
@@ -185,9 +185,9 @@ abliteration.ai and Chatbox AI with CLI 0.81.0 or later. Soniox requires an
 organization API key; Chatbox requires a license key. See the
 [provider setup notes](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/usage.md#providers-and-accounts).
 
-| Standard panel | Minimal panel |
+| Provider colors panel | Monochrome panel |
 | --- | --- |
-| [![Colored provider icons and dual quota capsules in the Standard panel](docs/codexbar-plasma-panel-standard.png)](docs/codexbar-plasma-panel-standard.png) | [![Monochrome provider icons and dual quota capsules in the Minimal panel](docs/codexbar-plasma-panel-minimal.png)](docs/codexbar-plasma-panel-minimal.png) |
+| [![Colored provider icons and dual quota capsules in the Provider colors panel](docs/codexbar-plasma-panel-standard.png)](docs/codexbar-plasma-panel-standard.png) | [![Monochrome provider icons and dual quota capsules in the Monochrome panel](docs/codexbar-plasma-panel-minimal.png)](docs/codexbar-plasma-panel-minimal.png) |
 
 The same usage in both styles, with panel text hidden.
 

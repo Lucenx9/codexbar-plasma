@@ -2038,7 +2038,7 @@ failure rather than silently skipping when that environment is unavailable.
 
 ## Panel configuration matrix
 
-Capture all 32 combinations of Standard/Minimal and the four content switches
+Capture all 32 combinations of Provider colors/Monochrome and the four content switches
 (provider name, usage text, credits, meters) with one and four providers in
 Breeze Light and Breeze Dark:
 
@@ -2084,6 +2084,8 @@ possible font, scale factor, translation, provider payload, or rule threshold.
 CI runs the horizontal matrix in `smoke-runtime` and uploads the `panel-matrix`
 artifact. The popup artifact also includes `settings-panel-scrolled`, which
 checks that the preview remains visible at the bottom of the expanded options.
+The settings preview checks use translated percentages when run with `--language`,
+including the space before the percent sign in French.
 QtTests cover the corresponding identity fallback and fixed-preview behavior,
 including the KDE desktop controls style and right-to-left layout.
 
