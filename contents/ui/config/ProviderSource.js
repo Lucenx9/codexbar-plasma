@@ -10,9 +10,8 @@ var modes = Authentication.supportedSourceModes.slice()
 // The CLI dump is normalized and redacted upstream. Retain only source enums,
 // never credential placeholders or arbitrary configuration fields.
 function savedSources(payload) {
-    if (!Protocol.isCliRecord(payload) || !Guards.hasOwnKey(payload, "providers")
-            || !Array.isArray(payload.providers)
-            || payload.providers.length > Protocol.maximumProviderItems) return null
+    if (!Protocol.isCliRecord(payload) || !Guards.hasOwnKey(payload, "providers")) return null
+    if (!Array.isArray(payload.providers) || payload.providers.length > Protocol.maximumProviderItems) return null
     var result = {}
     for (var i = 0; i < payload.providers.length; i++) {
         var item = payload.providers[i]
