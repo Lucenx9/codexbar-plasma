@@ -122,6 +122,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Preserve dashboard summaries and no-usage explanations when optional provider
   detail charts contain no usable title, unit, or points.
 
+- Keep cost-trust notices open when switching tabs or closing the popup. Only
+  pressing Close dismisses the same warning across refreshes and reopenings.
+
 - Keep short reset countdowns complete beside pace forecasts in provider popups,
   and preserve quota titles at the inline-reset fit boundary with KDE desktop fonts.
 

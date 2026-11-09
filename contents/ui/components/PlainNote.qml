@@ -5,7 +5,7 @@ import org.kde.plasma.components as PlasmaComponents
 
 // A quiet footnote for information and warnings that need no action. Errors
 // with recovery actions keep PlainInlineMessage. The close button hides the
-// note like Kirigami.InlineMessage does, so owners can observe visibility.
+// note like Kirigami.InlineMessage does and signals the explicit close action.
 Rectangle {
     id: noteRoot
 
@@ -13,6 +13,8 @@ Rectangle {
     property int type: Kirigami.MessageType.Information
     property bool showCloseButton: false
     readonly property alias text: noteLabel.text
+
+    signal closed()
 
     readonly property bool warning: type === Kirigami.MessageType.Warning
     readonly property color tone: warning ? Kirigami.Theme.neutralTextColor : Kirigami.Theme.textColor
@@ -73,7 +75,10 @@ Rectangle {
             Layout.alignment: Qt.AlignTop
             Layout.topMargin: -noteRoot.padding / 2
             Layout.bottomMargin: -noteRoot.padding / 2
-            onClicked: noteRoot.visible = false
+            onClicked: {
+                noteRoot.visible = false
+                noteRoot.closed()
+            }
 
             // Match every other icon-only ToolButton: Accessible.name covers
             // screen readers, and the tooltip covers pointer and keyboard focus.
