@@ -27,6 +27,10 @@ function accepted(previous, incoming, context, nowMs, accounts) {
     var items = Cache.reconcile(previous, incoming, nowMs)
     var fresh = items.some(function(item) { return !item.usageStale && item.error.length === 0 })
     var result = publication(items, context, nowMs, hasStale(items) ? "stale" : fresh ? "updated" : "clear", accounts)
+    // A confirmed empty roster invalidates disk quotas even before startup's
+    // fingerprint arrives, or its delayed restore would bring them back.
+    if (items.length === 0)
+        result.cacheValue = ""
     result.refreshCompleted = true
     result.receivedFreshUsage = fresh
     return result

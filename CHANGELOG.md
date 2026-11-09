@@ -99,6 +99,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep a successful empty provider list authoritative during startup: clear
+  saved quotas before delayed cache verification can restore removed providers.
+  Failed startup refreshes still restore last-known usage.
 - Preserve the `all` and `both` provider overrides during automatic usage
   refreshes and account selection. Show separate provider results instead of
   an empty aggregate-provider card, and keep roster caches separate when the

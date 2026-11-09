@@ -135,6 +135,9 @@ synchronized.
   clock/notification decisions. `applyUsageTransition` is the single persisted
   usage-cache writer; it clears notification suppression before publishing fresh
   data and keeps localization and configuration effects in QML.
+  An accepted empty provider list clears disk quotas even without a cache
+  context, preventing the first checksum callback from restoring removed
+  providers. A failed early refresh leaves the unverified disk cache intact.
   `ProviderViewModel.js` projects normalized snapshots and explicit localized
   decorations into the shared popup/account model. It bounds display metadata,
   converts Qt sequences to arrays and preserves receipt time without copying

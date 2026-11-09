@@ -571,6 +571,10 @@ If a partial refresh finishes before that verification, its results take
 precedence for the providers it returned. Other cached providers are restored
 as last known and included when the merged snapshot is saved.
 
+An early successful empty provider list clears the disk cache immediately,
+so delayed verification cannot bring back providers the CLI has removed.
+A failed startup refresh still permits cached quota restoration.
+
 Explicit account selections last only for the current session, so the disk
 cache leaves out every provider with a selected account. Its quotas are never
 restored as the default account's after a restart, and a restore that finishes

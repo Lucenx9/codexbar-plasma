@@ -16,7 +16,7 @@ FUNCTIONS = (
     "copyObject", "providerMapKey", "accountKey", "accountOptionsForProvider",
     "usageCacheContext", "applyUsageTransition", "invalidateUsageData", "restoreUsageCache",
     "commitUsageSnapshot", "failUsageRefresh", "selectAccount", "replaceProviderSnapshot",
-    "providerErrorPayload",
+    "providerErrorPayload", "handleProviderConfigObservation",
 )
 
 QML = '''import QtQuick
@@ -106,6 +106,33 @@ TestCase {
         verify(hostConfiguration.usageCache.indexOf("work@example.test") < 0)
         applet.failUsageRefresh("offline")
         compare(quotas(restart()), "claude:12")
+    }
+
+    function test_emptyStartupSuccessCannotBeUndoneByDelayedCacheRestore_data() {
+        return [{tag: "empty-success", failAfterSuccess: false},
+            {tag: "failed-retry-after-empty-success", failAfterSuccess: true}]
+    }
+
+    function test_emptyStartupSuccessCannotBeUndoneByDelayedCacheRestore(data) {
+        launchWithDefaults()
+        var applet = createTemporaryObject(harness, this, {providerConfigStamp: ""})
+        applet.commitUsageSnapshot([])
+        if (data.failAfterSuccess)
+            applet.failUsageRefresh("offline")
+        applet.handleProviderConfigObservation("stamp", true)
+        compare(quotas(applet), "")
+        compare(hostConfiguration.usageCache, "")
+        compare(applet.lastUpdatedText, "")
+        compare(quotas(restart()), "")
+    }
+
+    function test_failedStartupStillRestoresCachedQuotas() {
+        launchWithDefaults()
+        var applet = createTemporaryObject(harness, this, {providerConfigStamp: ""})
+        applet.failUsageRefresh("offline")
+        applet.handleProviderConfigObservation("stamp", true)
+        compare(quotas(applet), "codex:40,claude:10")
+        verify(applet.providers.every(function(item) { return item.usageStale }))
     }
 
     function test_failedRefreshUnderSelectionKeepsSiblings() {
