@@ -191,11 +191,7 @@ function resetUsagePercent(row) {
 
 function primeRow(nextMemo, observation, index, settings) {
     var row = observation.rows[index]
-    // An empty window supplies no baseline. A measured percentage (including
-    // zero) or a known forecast establishes one, even below warning levels.
-    if (resetUsagePercent(row) !== null || (row && row.paceKnown === true)) {
-        nextMemo[scopePrimedKey(observation)] = "1"
-    }
+    nextMemo[scopePrimedKey(observation)] = "1"
     var level = quotaLevel(row, "")
     if (settings.quotaEnabled && level.length > 0) {
         nextMemo[quotaKey(observation, row, index)] = level
@@ -211,12 +207,16 @@ function primeRow(nextMemo, observation, index, settings) {
 function primeScope(nextMemo, observation, settings) {
     var rows = Array.isArray(observation.rows) ? observation.rows : []
     for (var i = 0; i < rows.length; i++) {
+        if (!rows[i]) continue
         if (!Normalizer.authoritativeQuota(rows[i])) {
             delete nextMemo[quotaKey(observation, rows[i], i)]
             delete nextMemo[paceKey(observation, rows[i], i)]
             delete nextMemo[resetKey(observation, rows[i], i)]
             continue
         }
+        // An empty window supplies no baseline. Measured zero or a known
+        // forecast does, even below warning levels.
+        if (resetUsagePercent(rows[i]) === null && rows[i].paceKnown !== true) continue
         primeRow(nextMemo, observation, i, settings)
     }
 }
