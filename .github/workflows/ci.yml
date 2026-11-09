@@ -161,6 +161,7 @@ jobs:
         with:
           name: ci-results
           path: dist/ci-results.json
+          overwrite: true
           if-no-files-found: warn
           retention-days: 30
 
