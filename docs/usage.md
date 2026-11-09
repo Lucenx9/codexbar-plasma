@@ -532,7 +532,8 @@ updating that provider; a reply with no readable records remains an error.
 Records that explicitly name a different provider are rejected instead of
 relabelled, for both usage refreshes and account discovery. Canonical aliases,
 legacy account records without a provider, and command-wide CLI errors remain
-supported.
+supported. A provider override keeps this scope when Diagnostics also specifies
+a source, including the direct CLI refresh path.
 Retained data never generates quota, pace, reset,
 or status notifications, and its pace and run-out forecasts are suppressed,
 including in privacy mode. If a failed
