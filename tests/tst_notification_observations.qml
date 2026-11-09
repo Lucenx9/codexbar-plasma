@@ -85,6 +85,43 @@ TestCase {
         notificationRefreshPending = NotificationObservations.freshPending(items, selectedAccounts, notificationRefreshPending);
         providers = items;
     }
+    function test_unmeasuredStartupDoesNotInventQuotaCrossing_data() {
+        var cases = [];
+        for (var mode of ["prime", "observe"]) {
+            for (var value of [undefined, null, "invalid", {unexpected: true}]) {
+                cases.push({tag: mode + "-" + String(value), mode: mode, used: value});
+            }
+        }
+        return cases;
+    }
+    function test_unmeasuredStartupDoesNotInventQuotaCrossing(data) {
+        var payload = {provider: "codex", usage: {primary: {usedPercent: data.used}}};
+        providers = [ProviderSnapshot.normalize(payload, 1000)];
+        compare(providers[0].rows[0].hasPercent, false);
+        compare(providers[0].rows[0].paceKnown, false);
+        compare(observations()[0].rows[0].hasPercent, false);
+        compare(observations()[0].rows[0].paceKnown, false);
+        compare(observations()[0].rows[0].quotaLevel, "");
+        var initial = observe(data.mode);
+        compare(initial.intents.length, 0);
+
+        payload.usage.primary.usedPercent = 85;
+        providers = [ProviderSnapshot.normalize(payload, 2000)];
+        var measured = observe("observe", initial.nextMemo);
+        compare(measured.intents.length, 0);
+
+        payload.usage.primary.usedPercent = 96;
+        providers = [ProviderSnapshot.normalize(payload, 3000)];
+        var escalated = observe("observe", measured.nextMemo);
+        compare(escalated.intents.length, 1);
+        compare(escalated.intents[0].kind, "quota");
+
+        payload.usage.primary.usedPercent = 2;
+        providers = [ProviderSnapshot.normalize(payload, 4000)];
+        var reset = observe("observe", escalated.nextMemo);
+        compare(reset.intents.length, 1);
+        compare(reset.intents[0].kind, "reset");
+    }
     function test_namedWindowReorderDoesNotInventQuotaCrossingsOrResets() {
         var nearLimit = {
             id: "requests",

@@ -191,9 +191,9 @@ function resetUsagePercent(row) {
 
 function primeRow(nextMemo, observation, index, settings) {
     var row = observation.rows[index]
-    // A degraded first reading supplies no threshold baseline. Even a
-    // healthy row below the warning level establishes one silently.
-    if (row) {
+    // An empty window supplies no baseline. A measured percentage (including
+    // zero) or a known forecast establishes one, even below warning levels.
+    if (resetUsagePercent(row) !== null || (row && row.paceKnown === true)) {
         nextMemo[scopePrimedKey(observation)] = "1"
     }
     var level = quotaLevel(row, "")

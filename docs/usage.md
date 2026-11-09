@@ -1102,7 +1102,11 @@ fields; track proposed extensions in the issue tracker.
   fill. Forecast parts are separated with ` · `, like other popup metadata.
 - Optional Plasma notifications for provider status incidents, configurable
   quota crossings, predicted quota exhaustion from CLI pace data, and when a
-  heavily used limit resets back to empty. A temporarily omitted usage window
+  heavily used limit resets back to empty. If all initial windows lack a measured
+  percentage and a known forecast, no notification baseline is established;
+  the first usable reading is recorded silently. Measured zero and a known
+  on-track forecast do establish a baseline for later warnings.
+  A temporarily omitted usage window
   preserves its notification baseline: returning at the same threshold does
   not repeat a warning, and a previously armed reset can still be reported.
   Named extra windows keep separate baselines by their CLI IDs, even when
