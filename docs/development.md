@@ -823,7 +823,9 @@ Run `make check-python-test_provider_auth check-python-test_provider_source`
 and the direct `tst_provider_credentials.qml` and `tst_provider_capabilities.qml`
 QtTests while editing. The auth
 adapter tests execute synthetic CLI streams, including split writes, bad shapes,
-refusal, cancellation, expiry, conflicts and loss of the engine parent. A real
+refusal, cancellation, expiry, conflicts and loss of the engine parent.
+Checks for descendant termination allow a bounded wait after a group signal;
+they must still fail when group cleanup is disabled. A real
 Plasma executable-engine test destroys the request owner and verifies both
 synthetic CLI and dialog processes stop. Page tests
 cover old CLI versions, locks, refresh/diagnostic invalidation and stale replies;

@@ -152,7 +152,18 @@ class ProviderAuthTests(unittest.TestCase):
             return
         pid = int(pid_file.read_text())
         stat = Path(f"/proc/{pid}/stat")
-        self.assertTrue(not stat.exists() or stat.read_text().split(') ')[1].startswith('Z'))
+        # Descendants are not waitable children of the helper. SIGKILL is
+        # asynchronous, so allow the kernel to finish their termination.
+        deadline = time.monotonic() + 2
+        while True:
+            try:
+                state = stat.read_text().split(') ')[1]
+            except (FileNotFoundError, ProcessLookupError):
+                return
+            if state.startswith('Z'):
+                return
+            self.assertLess(time.monotonic(), deadline, name + ' is still running')
+            time.sleep(.01)
 
     def test_authorized_stream_shows_only_projected_event_in_private_dialog(self):
         self.assertEqual(self.run_helper([PENDING, .2, {"status": "authorized"}])['status'], 'ok')
