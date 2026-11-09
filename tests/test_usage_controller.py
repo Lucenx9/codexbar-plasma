@@ -89,6 +89,36 @@ TestCase {
         completed(o, 1);
         compare(latest(o)[0].provider, "groq");
     }
+    function test_directProviderScopeRejectsForeignRecords() {
+        var o = create("foreign-provider", {provider: "codex", sourceMode: "cli"});
+        tryVerify(function() { return o.failures.length === 1 && !o.subject.loading; });
+        compare(o.snapshots.length, 0);
+        verify(o.subject.errorText.length > 0);
+    }
+    function test_directProviderScopeKeepsOnlyMatchingRecords_data() {
+        return [{tag: "mixed", script: "mixed-providers"},
+            {tag: "legacy", script: "missing-provider"},
+            {tag: "alias", script: "mapped", provider: "groq"}];
+    }
+    function test_directProviderScopeKeepsOnlyMatchingRecords(data) {
+        var provider = data.provider || "codex";
+        var o = create(data.script, {provider: provider, sourceMode: "cli"});
+        completed(o, 1);
+        compare(latest(o).length, 1);
+        compare(latest(o)[0].provider, provider);
+        compare(latest(o)[0].rows[0].usedPercent, 0);
+        compare(o.failures, []);
+    }
+    function test_directAggregateSelectorsKeepAllProviders_data() {
+        return [{tag: "default", provider: ""}, {tag: "all", provider: "all"},
+            {tag: "both", provider: "both"}];
+    }
+    function test_directAggregateSelectorsKeepAllProviders(data) {
+        var o = create("mixed-providers", {provider: data.provider, sourceMode: "cli"});
+        completed(o, 1);
+        compare(latest(o).map(function(item) { return item.provider; }), ["claude", "codex"]);
+        compare(o.failures, []);
+    }
     function test_batchedInputsStartOneReplacementAndRejectOldReply_data() {
         return [{tag: "aggregate", provider: "", sourceMode: "cli"},
             {tag: "scoped", provider: "claude", sourceMode: ""}];
@@ -377,6 +407,15 @@ if args[0] == "config":
 provider = args[args.index("--provider") + 1] if "--provider" in args else "codex"
 account = args[args.index("--account") + 1] if "--account" in args else "run " + str(run)
 if name == "mapped": assert provider == "groqcloud"
+if name in ("foreign-provider", "mixed-providers", "missing-provider"):
+    matching = {"provider": "codex" if provider in ("all", "both") else provider,
+                "usage": {"primary": {"usedPercent": 0}}}
+    foreign = {"provider": "claude", "usage": {"primary": {"usedPercent": 99}}}
+    if name == "missing-provider":
+        del matching["provider"]
+    print(json.dumps([foreign, matching] if name == "mixed-providers"
+                     else [foreign] if name == "foreign-provider" else [matching]))
+    sys.exit(0)
 if name == "flags":
     assert args[args.index("--source") + 1] == "source'; literal"
     assert account == "Work  Team'; literal" and "--status" in args
@@ -416,7 +455,7 @@ class UsageControllerTests(unittest.TestCase):
     def test_production_lifecycle_with_synthetic_cli(self):
         with tempfile.TemporaryDirectory(prefix="codexbar usage 'test-") as temporary:
             directory = Path(temporary)
-            for name in ("failed-valid", "failed-timeout", "failed-roster", "ancient", "normal", "slow-roster", "flags", "mapped", "slow-first", "queue", "malformed", "empty",
+            for name in ("foreign-provider", "mixed-providers", "missing-provider", "failed-valid", "failed-timeout", "failed-roster", "ancient", "normal", "slow-roster", "flags", "mapped", "slow-first", "queue", "malformed", "empty",
                          "no-records", "too-large", "empty-roster", "broken-roster", "timeout-aggregate",
                          "timeout-roster", "timeout-scoped"):
                 script = directory / name

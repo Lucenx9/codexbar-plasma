@@ -99,6 +99,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep direct usage replies scoped to the requested provider when a source
+  override is set. Reject other providers and accept legacy replies that omit
+  the provider instead of replacing the filtered view with unrelated usage.
 - Remove the full-height tint behind Provider settings so the details share
   the page background in all KDE color schemes.
 - Keep missing-CLI recovery actions reachable by scrolling long setup messages
