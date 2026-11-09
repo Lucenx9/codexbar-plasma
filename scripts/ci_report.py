@@ -14,6 +14,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import zipfile
+import zlib
 
 MARKER = "<!-- codexbar-ci-report -->"
 ARTIFACT = "ci-results"
@@ -23,6 +24,7 @@ JOBS = ("scope", "lint", "check-runtime", "smoke-runtime", "check", "smoke")
 SHA = re.compile(r"[0-9a-f]{40}")
 DIGEST = re.compile(r"[0-9a-f]{64}")
 CASE = re.compile(r"[a-zA-Z0-9][a-zA-Z0-9_-]{0,100}")
+ARTIFACT_ERRORS = (ValueError, KeyError, zipfile.BadZipFile, RecursionError, zlib.error, OSError)
 
 
 def exact(value, keys):
@@ -110,7 +112,7 @@ def collect(root, env):
                      "panelCases": None if panels is None else len(panels)})
 
 
-def read_archive(raw, run):
+def read_archive(raw, run, expected_attempt=None):
     if len(raw) > MAX_RESULT:
         raise ValueError("Artifact archive exceeds its size limit")
     with zipfile.ZipFile(io.BytesIO(raw)) as archive:
@@ -123,8 +125,9 @@ def read_archive(raw, run):
                 or entry.flag_bits & 1 or entry.compress_type not in (zipfile.ZIP_STORED, zipfile.ZIP_DEFLATED)):
             raise ValueError("Invalid result entry")
         result = validate(json.loads(archive.read(entry), object_pairs_hook=json_object))
-    if (result["runId"], result["runAttempt"], result["headSha"]) != (
-            run["id"], run["run_attempt"], run["head_sha"]):
+    if ((result["runId"], result["headSha"]) != (run["id"], run["head_sha"])
+            or not 1 <= result["runAttempt"] <= run["run_attempt"]
+            or expected_attempt is not None and result["runAttempt"] != expected_attempt):
         raise ValueError("Artifact does not belong to this run attempt and head")
     return result
 
@@ -165,7 +168,7 @@ class GitHub:
                 return
         raise ValueError("GitHub pagination limit reached")
 
-    def artifact(self, run):
+    def artifact(self, run, expected_attempt=None):
         artifacts = sorted(self.pages(f"actions/runs/{run['id']}/artifacts", "artifacts"),
                            key=lambda item: item["id"], reverse=True)
         artifact = next((item for item in artifacts if item["name"] == ARTIFACT and not item["expired"]), None)
@@ -191,7 +194,7 @@ class GitHub:
         # The signed storage request must never receive the GitHub token.
         with urllib.request.build_opener(NoRedirect).open(url, timeout=30) as response:
             raw = response.read(MAX_RESULT + 1)
-        return read_archive(raw, run)
+        return read_archive(raw, run, expected_attempt)
 
 
 def comparable(current, baseline):
@@ -215,11 +218,13 @@ def render(repo, run, jobs, result, baseline=None, baseline_run=None, rejected=F
             statuses.get(key) == "skipped" for key in ("check-runtime", "smoke-runtime")):
         lines += ["", "Runtime checks were intentionally omitted by the editorial-only scope gates."]
     if result is None:
-        lines += ["", "Measurement artifact rejected by validation." if rejected else
+        lines += ["", "Measurement artifact unavailable or rejected by validation." if rejected else
                   "No measurement artifact was produced; check the job results above."]
     else:
         popup = result["popup"]
         lines += ["", "### Runtime measurements", ""]
+        if result["runAttempt"] != run["run_attempt"]:
+            lines += [f"Measurements retained from CI attempt {result['runAttempt']}; the smoke job was not rerun.", ""]
         if popup is None:
             lines.append("Popup scenario measurements are unavailable.")
         else:
@@ -268,15 +273,37 @@ def current_run(api, run, pr):
     return not any(item["run_number"] > run["run_number"] for item in recent["workflow_runs"])
 
 
-def publish(api, run_id, expected_login):
-    if not re.fullmatch(r"[a-zA-Z0-9-]+\[bot\]", expected_login):
-        raise ValueError("Invalid bot login")
+def latest_jobs(jobs, attempt):
+    latest = {}
+    for job in sorted(jobs, key=lambda item: (item["run_attempt"], item["id"])):
+        if job["name"] in JOBS and 1 <= job["run_attempt"] <= attempt:
+            latest[job["name"]] = job
+    return list(latest.values())
+
+
+def source_run(api, run_id):
     run = api.api(f"actions/runs/{positive(run_id)}")
     workflow = api.api("actions/workflows/ci.yml")
-    if run["workflow_id"] != workflow["id"] or run["event"] != "pull_request" or run["status"] != "completed":
-        raise ValueError("Source must be a completed pull-request CI run")
+    if run["workflow_id"] != workflow["id"] or run["event"] != "pull_request":
+        raise ValueError("Source must be a pull-request CI run")
     if not SHA.fullmatch(run["head_sha"]):
         raise ValueError("Invalid source head SHA")
+    return run
+
+
+def source_key(run):
+    source = f"{positive(run['head_repository']['id'])}:{run['head_branch']}"
+    return hashlib.sha256(source.encode()).hexdigest()
+
+
+def publish(api, run_id, expected_login, expected_attempt=None):
+    if not re.fullmatch(r"[a-zA-Z0-9-]+\[bot\]", expected_login):
+        raise ValueError("Invalid bot login")
+    run = source_run(api, run_id)
+    if (run["status"] != "completed"
+            or expected_attempt is not None and run["run_attempt"] != positive(expected_attempt)):
+        print("Skipping incomplete or superseded CI attempt.")
+        return None
     pulls = list(api.pages(f"commits/{run['head_sha']}/pulls"))
     candidates = [pr for pr in pulls if pr["state"] == "open" and pr["head"]["sha"] == run["head_sha"]
                   and pr["base"]["repo"]["full_name"] == api.repo
@@ -287,20 +314,21 @@ def publish(api, run_id, expected_login):
         print("Skipping stale, closed, or ambiguous PR result.")
         return None
     pr = candidates[0]
-    jobs = list(api.pages(f"actions/runs/{run_id}/attempts/{run['run_attempt']}/jobs", "jobs"))
+    jobs = latest_jobs(api.pages(f"actions/runs/{run_id}/jobs?filter=all", "jobs"), run["run_attempt"])
+    smoke_attempt = next((job["run_attempt"] for job in jobs if job["name"] == "smoke-runtime"), None)
     rejected = False
     try:
-        result = api.artifact(run)
-    except (ValueError, KeyError, zipfile.BadZipFile):
+        result = api.artifact(run, expected_attempt=smoke_attempt)
+    except ARTIFACT_ERRORS:
         result, rejected = None, True
     baseline, baseline_run = None, None
     branch = urllib.parse.quote(pr["base"]["ref"], safe="")
-    recent = api.api(f"actions/workflows/{workflow['id']}/runs?event=push&branch={branch}&status=success&per_page=20")["workflow_runs"]
-    exact_runs = api.api(f"actions/workflows/{workflow['id']}/runs?event=push&branch={branch}&status=success&head_sha={pr['base']['sha']}&per_page=20")["workflow_runs"]
+    recent = api.api(f"actions/workflows/{run['workflow_id']}/runs?event=push&branch={branch}&status=success&per_page=20")["workflow_runs"]
+    exact_runs = api.api(f"actions/workflows/{run['workflow_id']}/runs?event=push&branch={branch}&status=success&head_sha={pr['base']['sha']}&per_page=20")["workflow_runs"]
     for candidate in (exact_runs + [item for item in recent if item["head_sha"] != pr["base"]["sha"]])[:20]:
         try:
             baseline = api.artifact(candidate)
-        except (ValueError, KeyError, zipfile.BadZipFile):
+        except ARTIFACT_ERRORS:
             continue
         if baseline:
             baseline_run = dict(candidate, exact_base=candidate["head_sha"] == pr["base"]["sha"])
@@ -323,7 +351,7 @@ def publish(api, run_id, expected_login):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("collect", "publish"))
+    parser.add_argument("command", choices=("collect", "source", "publish"))
     args = parser.parse_args()
     if args.command == "collect":
         root = Path(__file__).resolve().parents[1]
@@ -337,11 +365,17 @@ def main():
         event = load_json(Path(os.environ["GITHUB_EVENT_PATH"]), 1024 * 1024)
         if os.environ["GITHUB_EVENT_NAME"] == "workflow_run":
             run_id = event["workflow_run"]["id"]
+            expected_attempt = event["workflow_run"]["run_attempt"]
         else:
             run_id = int(event["inputs"]["run_id"])
-        api = GitHub(os.environ["GITHUB_REPOSITORY"], os.environ["GH_TOKEN"], os.environ["CI_REPORT_TOKEN"])
-        url = publish(api, run_id, os.environ["CI_REPORT_BOT_LOGIN"])
-        print(url or "No comment needed.")
+            expected_attempt = None
+        api = GitHub(os.environ["GITHUB_REPOSITORY"], os.environ["GH_TOKEN"], os.environ.get("CI_REPORT_TOKEN", ""))
+        if args.command == "source":
+            with Path(os.environ["GITHUB_OUTPUT"]).open("a") as output:
+                output.write("group=" + source_key(source_run(api, run_id)) + "\n")
+        else:
+            url = publish(api, run_id, os.environ["CI_REPORT_BOT_LOGIN"], expected_attempt)
+            print(url or "No comment needed.")
 
 
 if __name__ == "__main__":

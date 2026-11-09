@@ -1705,7 +1705,8 @@ measurements never become passing test results. Panel records can be partial
 when capture fails; they are not a separate visual approval.
 
 `scripts/ci_report.py collect` runs in the unprivileged smoke job, including
-after test failures, and uploads `ci-results/ci-results.json` for 30 days. The
+after test failures, and uploads `dist/ci-results.json` as the `ci-results`
+artifact for 30 days. Its ZIP contains `ci-results.json` at the root. The
 compact schema records the run ID/attempt, PR head SHA, tested merge SHA,
 reported runtime-image and smoke-fixture fingerprints, popup scenario outcomes
 and seconds, and panel record count. Screenshots and full logs keep their
@@ -1733,13 +1734,23 @@ Measurement data still comes from the PR's CI and is not an independent audit.
 
 Before writing, the publisher verifies the CI workflow ID, completed PR event,
 run attempt, head SHA, head repository/branch, and associated open PR. It checks
-again immediately before writing and skips superseded runs. Publisher jobs
-share a concurrency group to serialize comment creation and updates. These
+again immediately before writing and skips superseded runs or event attempts.
+After a partial rerun it uses the latest job execution for each check. A retained
+measurement must match the latest smoke job's attempt, which the report labels
+when older than the overall run. Invalid JSON/compression and expired downloads
+omit measurements while preserving job conclusions; unavailable baselines do
+not abort publication.
+
+A read-only source resolver derives a concurrency key from the head repository
+ID and branch. Automatic events and manual dispatches for the same source share
+that key, so comment creation cannot race. Different PR sources do not replace
+each other's pending publishers. New pending events for the same source can
+supersede older pending ones under GitHub's concurrency policy. These
 checks support PRs from forks without giving the fork CI write credentials.
 
 Maintainer setup uses the existing GitHub App installation for this repository:
 
-- Repository variable `CODEXBAR_REVIEW_APP_ID`: the App ID.
+- Repository variable `CODEXBAR_REVIEW_APP_CLIENT_ID`: the App's client ID.
 - Repository Actions secret `CODEXBAR_REVIEW_APP_PRIVATE_KEY`: its PEM private key.
 - App repository permission **Pull requests: Read and write**. Install the App
   only on repositories it should review. The publishing token requests no
@@ -1749,7 +1760,7 @@ Configure the secret from its protected file, without putting it in command
 arguments or logs:
 
 ```sh
-gh variable set CODEXBAR_REVIEW_APP_ID --repo Lucenx9/codexbar-plasma --body APP_ID
+gh variable set CODEXBAR_REVIEW_APP_CLIENT_ID --repo Lucenx9/codexbar-plasma --body CLIENT_ID
 gh secret set CODEXBAR_REVIEW_APP_PRIVATE_KEY --repo Lucenx9/codexbar-plasma < /path/to/private-key.pem
 ```
 

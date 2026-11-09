@@ -12,6 +12,7 @@ import unittest
 from unittest.mock import patch
 import urllib.error
 import zipfile
+import zlib
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 import ci_report as report
@@ -53,7 +54,8 @@ class FakeGitHub:
         self.pr = deepcopy(PR)
         self.pulls = [self.pr]
         self.latest = [self.run]
-        self.jobs = [{"name": name, "conclusion": "success"} for name in report.JOBS]
+        self.jobs = [{"name": name, "conclusion": "success", "id": index, "run_attempt": 2}
+                     for index, name in enumerate(report.JOBS, 1)]
         self.comments = []
         self.writes = []
         self.measurements = result()
@@ -61,6 +63,7 @@ class FakeGitHub:
         self.baseline_runs = []
         self.exact_runs = []
         self.before_comments = None
+        self.requested_attempts = []
 
     def api(self, path, body=None, method=None):
         if body is not None:
@@ -81,7 +84,7 @@ class FakeGitHub:
     def pages(self, path, key=None):
         if path.startswith("commits/"):
             return self.pulls
-        if path == "actions/runs/42/attempts/2/jobs" and key == "jobs":
+        if path == "actions/runs/42/jobs?filter=all" and key == "jobs":
             return self.jobs
         if path == "issues/12/comments":
             if self.before_comments:
@@ -89,7 +92,8 @@ class FakeGitHub:
             return self.comments
         raise AssertionError(path)
 
-    def artifact(self, run):
+    def artifact(self, run, expected_attempt=None):
+        self.requested_attempts.append(expected_attempt)
         value = self.measurements if run["id"] == 42 else self.baseline
         if isinstance(value, Exception):
             raise value
@@ -97,6 +101,16 @@ class FakeGitHub:
 
 
 class ArtifactTests(unittest.TestCase):
+    def test_concurrency_is_scoped_to_source_for_automatic_and_manual_reports(self):
+        workflow = (Path(__file__).resolve().parents[1] / ".github/workflows/ci-report.yml").read_text()
+        self.assertIn("group: ci-report-${{ needs.source.outputs.group }}", workflow)
+        self.assertIn("python3 scripts/ci_report.py source", workflow)
+        source = report.source_key(RUN)
+        self.assertEqual(source, report.source_key(dict(RUN, id=99, head_sha=BASE, run_attempt=3)))
+        self.assertNotEqual(source, report.source_key(dict(RUN, head_branch="another-pr")))
+        self.assertNotEqual(source, report.source_key(dict(RUN, head_repository={"id": 8})))
+        self.assertRegex(source, r"^[0-9a-f]{64}$")
+
     def test_report_image_matches_both_runtime_containers(self):
         workflow = (Path(__file__).resolve().parents[1] / ".github/workflows/ci.yml").read_text()
         images = re.findall(r"image: ghcr.io/lucenx9/codexbar-plasma-ci-runtime@sha256:([0-9a-f]{64})", workflow)
@@ -105,11 +119,18 @@ class ArtifactTests(unittest.TestCase):
 
     def test_valid_archive_and_exact_run_attempt(self):
         self.assertEqual(report.read_archive(archive(result()), RUN), result())
-        for key, value in (("runId", 43), ("runAttempt", 1), ("headSha", BASE)):
+        for key, value in (("runId", 43), ("runAttempt", 3), ("headSha", BASE)):
             data = result()
             data[key] = value
             with self.subTest(key=key), self.assertRaises(ValueError):
                 report.read_archive(archive(data), RUN)
+
+    def test_retained_artifact_must_match_the_latest_smoke_job_attempt(self):
+        retained = dict(result(), runAttempt=1)
+        self.assertEqual(report.read_archive(archive(retained), RUN, expected_attempt=1), retained)
+        with self.assertRaises(ValueError):
+            report.read_archive(archive(retained), RUN, expected_attempt=2)
+        self.assertEqual(report.read_archive(archive(retained), RUN), retained)
 
     def test_strict_schema_types_bounds_and_text(self):
         bad = [("schemaVersion", True), ("schemaVersion", 2), ("runId", True), ("runAttempt", 0),
@@ -217,7 +238,7 @@ class RenderTests(unittest.TestCase):
 
     def test_missing_or_rejected_data_is_explicit(self):
         self.assertIn("No measurement artifact", report.render(REPO, RUN, [], None))
-        self.assertIn("artifact rejected", report.render(REPO, RUN, [], None, rejected=True))
+        self.assertIn("artifact unavailable or rejected", report.render(REPO, RUN, [], None, rejected=True))
         self.assertIn("| `smoke` | missing |", report.render(REPO, RUN, [], None))
 
     def test_editorial_omissions_require_successful_gates(self):
@@ -250,12 +271,65 @@ class PublishTests(unittest.TestCase):
         self.assertEqual(api.writes, [])
 
     def test_rejects_wrong_workflow_event_and_incomplete_runs(self):
-        for key, value in (("workflow_id", 10), ("event", "push"), ("status", "in_progress")):
+        for key, value in (("workflow_id", 10), ("event", "push")):
             api = FakeGitHub()
             api.run[key] = value
             with self.subTest(key=key), self.assertRaises(ValueError):
                 report.publish(api, 42, BOT)
             self.assertFalse(api.writes)
+
+    def test_incomplete_and_superseded_event_attempts_skip_without_failure(self):
+        for status, event_attempt in (("in_progress", 2), ("completed", 1)):
+            api = FakeGitHub()
+            api.run["status"] = status
+            self.assertIsNone(report.publish(api, 42, BOT, expected_attempt=event_attempt))
+            self.assertFalse(api.writes)
+
+    def test_partial_rerun_uses_latest_job_per_name_and_retains_earlier_smoke(self):
+        api = FakeGitHub()
+        smoke = next(job for job in api.jobs if job["name"] == "smoke-runtime")
+        smoke["run_attempt"] = 1
+        api.jobs += [{"id": 0, "name": "lint", "run_attempt": 1, "conclusion": "failure"}]
+        api.measurements["runAttempt"] = 1
+        report.publish(api, 42, BOT, expected_attempt=2)
+        body = api.writes[0][2]["body"]
+        self.assertIn("| `lint` | success |", body)
+        self.assertIn("Measurements retained from CI attempt 1", body)
+        self.assertIn("**1/1 passed**", body)
+        self.assertEqual(api.requested_attempts, [1])
+
+    def test_hostile_json_and_deflate_become_rejected_measurements(self):
+        hostile = []
+        for text, compression in (("[" * 100000, zipfile.ZIP_DEFLATED),
+                                  (json.dumps(result()), zipfile.ZIP_DEFLATED)):
+            output = io.BytesIO()
+            with zipfile.ZipFile(output, "w", compression) as bundle:
+                bundle.writestr(report.RESULT_FILE, text)
+            hostile.append(output.getvalue())
+        corrupt = bytearray(hostile[1])
+        corrupt[30 + len(report.RESULT_FILE)] = 0x07  # Reserved deflate block type.
+        hostile[1] = bytes(corrupt)
+        for raw, error in zip(hostile, (RecursionError, zlib.error)):
+            with self.assertRaises(error):
+                report.read_archive(raw, RUN)
+            api = FakeGitHub()
+            with patch.object(api, "artifact", side_effect=lambda run, expected_attempt=None:
+                              report.read_archive(raw, run, expected_attempt)):
+                report.publish(api, 42, BOT)
+            self.assertIn("artifact unavailable or rejected", api.writes[0][2]["body"])
+
+    def test_expired_artifacts_do_not_abort_job_status_or_baseline_fallback(self):
+        for code in (404, 410):
+            api = FakeGitHub()
+            error = urllib.error.HTTPError("https://api.github.com", code, "unavailable", {}, None)
+            api.baseline_runs = [dict(RUN, id=40, head_sha=BASE), dict(RUN, id=39, head_sha="f" * 40)]
+            api.exact_runs = [api.baseline_runs[0]]
+            with patch.object(api, "artifact", side_effect=[error, error, result()]):
+                report.publish(api, 42, BOT)
+            body = api.writes[0][2]["body"]
+            self.assertIn("artifact unavailable or rejected", body)
+            self.assertIn("| `smoke` | success |", body)
+            self.assertIn("/actions/runs/39", body)
 
     def test_skips_stale_closed_fork_mismatched_or_ambiguous_prs(self):
         for mutate in (lambda api: api.pr["head"].update(sha=BASE),
