@@ -395,7 +395,7 @@ msgid "Latest dashboard day"
 msgstr ""
 
 #: contents/ui/components/CostText.qml
-#: contents/ui/components/ShareUsageWindow.qml
+#: contents/ui/components/ShareUsageWindow.qml scripts/smoke/Capture.qml
 #, kde-format
 msgid "%1%"
 msgstr ""
@@ -1698,7 +1698,7 @@ msgstr ""
 msgid "Plan credits"
 msgstr ""
 
-#: contents/ui/components/RateWindowLabels.qml contents/ui/configPanel.qml
+#: contents/ui/components/RateWindowLabels.qml
 msgid "Standard"
 msgstr ""
 
@@ -2964,11 +2964,15 @@ msgid "Panel style:"
 msgstr ""
 
 #: contents/ui/configPanel.qml
+msgid "Provider colors"
+msgstr ""
+
+#: contents/ui/configPanel.qml
 msgid "Colored provider icons"
 msgstr ""
 
 #: contents/ui/configPanel.qml
-msgid "Minimal"
+msgid "Monochrome"
 msgstr ""
 
 #: contents/ui/configPanel.qml
@@ -2980,7 +2984,13 @@ msgid "Quota capsules keep their warning colors in both styles."
 msgstr ""
 
 #: contents/ui/configPanel.qml
-msgid "Use monochrome icons and meters only"
+msgid "Show only icons and meters"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid ""
+"Switches to monochrome, enables provider meters, and hides names, usage "
+"text, and credits."
 msgstr ""
 
 #: contents/ui/configPanel.qml

@@ -222,8 +222,8 @@ when the product changes instead of adding dated before/after copies.
 - [Usage-sharing window](codexbar-plasma-share-window.png): synthetic aggregate
   preview with native export and window controls.
 - [Sessions](codexbar-plasma-sessions.png)
-- [Standard panel](codexbar-plasma-panel-standard.png): contrast-adjusted colored provider icons and outlined dual quota capsules.
-- [Minimal panel](codexbar-plasma-panel-minimal.png): monochrome provider icons and dual quota capsules.
+- [Provider colors panel](codexbar-plasma-panel-standard.png): contrast-adjusted colored provider icons and outlined dual quota capsules.
+- [Monochrome panel](codexbar-plasma-panel-minimal.png): monochrome provider icons and dual quota capsules.
 - [Panel with usage text](codexbar-plasma-panel-information.png): selected-provider text grouped with its quota capsules.
 
 ## Store artwork

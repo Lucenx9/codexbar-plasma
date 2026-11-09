@@ -1196,7 +1196,7 @@ msgstr "Gesamt"
 msgid "Plan credits"
 msgstr "Plan-Guthaben"
 
-#: contents/ui/components/RateWindowLabels.qml contents/ui/configPanel.qml
+#: contents/ui/components/RateWindowLabels.qml
 msgid "Standard"
 msgstr "Standard"
 
@@ -2251,12 +2251,16 @@ msgid "Panel style:"
 msgstr "Leistenstil:"
 
 #: contents/ui/configPanel.qml
+msgid "Provider colors"
+msgstr "Anbieterfarben"
+
+#: contents/ui/configPanel.qml
 msgid "Colored provider icons"
 msgstr "Farbige Anbietersymbole"
 
 #: contents/ui/configPanel.qml
-msgid "Minimal"
-msgstr "Minimal"
+msgid "Monochrome"
+msgstr "Monochrom"
 
 #: contents/ui/configPanel.qml
 msgid "Monochrome provider icons"
@@ -2337,8 +2341,8 @@ msgstr ""
 "erschöpft ist."
 
 #: contents/ui/configPanel.qml
-msgid "Use monochrome icons and meters only"
-msgstr "Nur einfarbige Symbole und Anzeigen verwenden"
+msgid "Show only icons and meters"
+msgstr "Nur Symbole und Anzeigen einblenden"
 
 #: contents/ui/configPanel.qml
 msgid "Name the quota chosen by Automatic"
@@ -4397,3 +4401,11 @@ msgid "%1 UTC day"
 msgid_plural "%1 UTC days"
 msgstr[0] "%1 UTC-Tag"
 msgstr[1] "%1 UTC-Tage"
+
+#: contents/ui/configPanel.qml
+msgid ""
+"Switches to monochrome, enables provider meters, and hides names, usage "
+"text, and credits."
+msgstr ""
+"Aktiviert die monochrome Darstellung und die Anbieteranzeigen und blendet "
+"Namen, Nutzungstext und Guthaben aus."

@@ -800,13 +800,13 @@ Item {
         page.cfg_showPercentInPanel = true;
         page.cfg_showProviderInPanel = true;
         page.cfg_panelElementOrder = "meters,text,identity,status";
-        verifyScenario(renderer.primaryText.indexOf("42%") >= 0
+        verifyScenario(renderer.primaryText.indexOf(i18n("%1%", 42)) >= 0
             && renderer.applet.panelElementOrder()[0] === "meters", "preview ignored pending text or order");
         page.cfg_panelStyle = "minimal";
         verifyScenario(renderer.minimalStyle && !renderer.animationsEnabled && !renderer.interactive,
             "preview did not apply pending style immediately");
         preview.scenario = "nearLimit";
-        verifyScenario(renderer.primaryText.indexOf("98%") >= 0, "near-limit preview did not update");
+        verifyScenario(renderer.primaryText.indexOf(i18n("%1%", 98)) >= 0, "near-limit preview did not update");
         page.cfg_panelVisibilityRules = '{"meters":{"condition":"usageAtLeast","usedPercent":95}}';
         verifyScenario(renderer.applet.compactProviders().length === 1, "preview ignored conditional meters");
         preview.scenario = "missing";

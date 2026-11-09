@@ -9,9 +9,10 @@ work and upstream contract requirements.
 
 ## Panel and popup
 
-- Standard shows a small colored provider icon beside quota capsules. Minimal
-  uses the same geometry with monochrome icons and capsules in the Plasma text
-  color. Warning and critical colors remain independent for each quota.
+- **Provider colors** shows a small colored provider icon beside quota capsules.
+  **Monochrome** uses the same geometry with monochrome icons and capsules in
+  the Plasma text color. Warning and critical colors remain independent for
+  each quota.
   When a provider's brand hue is within 20 degrees of the theme's warning or
   critical color, its capsules use a muted version of the brand color, so a
   healthy quota cannot pass for an alert; the provider icon keeps the brand
@@ -65,8 +66,8 @@ work and upstream contract requirements.
 
   ![Optional usage text beside its provider's quota capsules](codexbar-plasma-panel-information.png)
 
-- **Use monochrome icons and meters only** in **Panel → Appearance** selects
-  Minimal and enables provider meters, including with a single
+- **Show only icons and meters** in **Panel → Appearance** selects
+  Monochrome and enables provider meters, including with a single
   provider, and hides panel names, usage text and credits. The style selector
   changes appearance alone. Existing installations keep their style, explicit
   quota choice, and visibility settings. Automatic meters gain the second quota
@@ -1216,11 +1217,12 @@ fields; track proposed extensions in the issue tracker.
   keyboard focus as well as hover.
   The predictive-notification explanation in **Notifications** also appears on
   keyboard focus as well as hover.
-- **Panel** starts with the preview, side-by-side Standard/Minimal choices, and
-  provider meters. Text and controls keep their horizontal position as the page
-  opens. **Additional information** contains the selected provider's
-  name, usage text, and credit balance. The monochrome preset sits in **Appearance**. Its closed summary
-  lists enabled information. Text format appears only when usage text is enabled;
+- **Panel** starts with the preview, side-by-side **Provider colors** and
+  **Monochrome** choices, and provider meters. Text and controls keep their
+  horizontal position as the page opens. The **Show only icons and meters**
+  preset sits in **Appearance**. **Additional information** contains the selected
+  provider's name, usage text, and credit balance. Its closed summary lists
+  enabled information. Text format appears only when usage text is enabled;
   hiding controls preserves their selected values. These additions work in
   horizontal panels; meters also work in vertical panels. With several panel
   providers the panel may not have room for all of them and drops the least
@@ -1574,7 +1576,7 @@ and 95% critical thresholds. Reset notifications are off until enabled.
 | Managed CLI automatic updates | Off; requires the managed copy to be selected |
 | Plasma notifications | On; quota warnings on; predicted exhaustion and limit-reset notices off |
 | Widget updates | Check and install automatically every 24 hours, with notifications; restart Plasma to apply installed updates |
-| Panel appearance | Standard style with colored provider icons and automatic quota capsules, including a single provider |
+| Panel appearance | Provider colors style with colored provider icons and automatic quota capsules, including a single provider |
 | Extra panel content | Provider names, usage text and credit balances off |
 | Panel element order | Default grouping of selected text with its meters; custom orders retain separate elements |
 | Panel quota and visibility | Automatic quota pair for meters and automatic text quota; enabled elements always visible |
