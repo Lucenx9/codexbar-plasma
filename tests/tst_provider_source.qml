@@ -20,7 +20,15 @@ TestCase {
         compare(payload.providers[0].apiKey, "REDACTED");
         var duplicates = Source.savedSources({providers: [{id: "azureopenai", source: "api"},
             {id: "azure-openai", source: "auto"}]});
-        compare(Source.savedMode(duplicates, "azureopenai"), "");
+        compare(Source.savedMode(duplicates, "azureopenai"), "api");
+        compare(Source.savedMode(duplicates, "azure-openai"), "auto");
+        var reversed = Source.savedSources({providers: [{id: "azure-openai", source: "auto"},
+            {id: "azureopenai", source: "api"}]});
+        compare(Source.savedMode(reversed, "azureopenai"), "api");
+        compare(Source.savedMode(Source.withSavedMode(reversed, "azureopenai", "cli"), "azure-openai"), "auto");
+        var ambiguous = Source.savedSources({providers: [{id: "codex", source: "api"},
+            {id: "codex", source: "cli"}]});
+        compare(Source.savedMode(ambiguous, "codex"), "");
         for (var invalid of [null, [], {}, {providers: {}}, {providers: new Array(257)},
                 Object.create({providers: []})]) compare(Source.savedSources(invalid), null);
         var updated = Source.withSavedMode(result, "codex", "cli");

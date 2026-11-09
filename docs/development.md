@@ -2195,13 +2195,15 @@ matching provider/source result records, and projects the normalized, redacted
 `config dump --format json --json-only` reply into provider source enums only.
 The dump contract was verified with Linux CLI 0.83.0: `providers[].id` identifies
 providers; a known `source` selects the saved mode, and an absent `source` means
-Automatic. Malformed/unknown modes and duplicate identities stay unknown;
-credential fields are discarded. No raw config file is read or edited.
+Automatic. Dump entries match the exact inventory provider ID, so retained
+alias-like IDs do not collide. Malformed/unknown modes and duplicate exact IDs
+stay unknown; credential fields are discarded. No raw config file is read or edited.
 The Providers page owns this independent, bounded read on open/reload. It does
 not fetch provider usage. Read results carry the provider-config revision;
 a reply predating a completed write is discarded and reread. Selection changes
-clear the draft, background reads preserve it, and successful writes keep the
-confirmed mode selected. Failed reads leave an unavailable state without
+clear the draft, background reads preserve a different choice, and selecting the
+confirmed mode clears the draft. Reloads keep the last confirmation visible and
+block source writes until the read completes. Failed reads offer Reload without
 inventing Automatic; failed writes preserve the draft and prior confirmation.
 
 Available modes come from normalized authentication metadata, with the five legacy modes only when that metadata is

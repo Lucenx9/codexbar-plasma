@@ -140,7 +140,10 @@ KCM.SimpleKCM {
         if (selectedProviderSourceModes.indexOf(providerSourceDraft) < 0) providerSourceDraft = ""
         syncProviderSourceSelection()
     }
-    onSelectedProviderSavedSourceChanged: syncProviderSourceSelection()
+    onSelectedProviderSavedSourceChanged: {
+        if (providerSourceDraft === selectedProviderSavedSource) providerSourceDraft = ""
+        syncProviderSourceSelection()
+    }
     Component.onDestruction: retireAllConfigCommands()
 
     function handleCommandPathChanged() {
@@ -181,7 +184,6 @@ KCM.SimpleKCM {
         }
         runProviderListCommand(true, errorText)
         runCliVersionCommand()
-        savedProviderSources = ({})
         runProviderSourcesCommand()
     }
 
@@ -456,7 +458,7 @@ KCM.SimpleKCM {
     }
 
     function setProviderSource(providerID, mode) {
-        if (loading || !providerSourceSetupSupported || !providerByID(providerID) || isPending(providerID)
+        if (loading || providerSourcesLoading || !providerSourceSetupSupported || !providerByID(providerID) || isPending(providerID)
                 || hasPendingFields(providerID)) {
             return
         }
@@ -1962,7 +1964,10 @@ KCM.SimpleKCM {
                                 model: page.selectedProviderSourceModes.map(function(mode) { return page.sourceModeLabel(mode) })
                                 onModelChanged: page.syncProviderSourceSelection()
                                 currentIndex: -1
-                                onActivated: index => { page.providerSourceDraft = page.selectedProviderSourceModes[index] }
+                                onActivated: index => {
+                                    var mode = page.selectedProviderSourceModes[index]
+                                    page.providerSourceDraft = mode === page.selectedProviderSavedSource ? "" : mode
+                                }
                                 displayText: currentIndex < 0
                                     ? (page.providerSourcesLoading ? i18n("Loading saved source…") : i18n("Choose a source"))
                                     : currentText
@@ -1979,6 +1984,7 @@ KCM.SimpleKCM {
                                 icon.name: "document-save"
                                 enabled: page.selectedProvider !== null
                                     && !page.loading
+                                    && !page.providerSourcesLoading
                                     && providerSourceBox.currentIndex >= 0
                                     && page.selectedProviderSourceModes[providerSourceBox.currentIndex] !== page.selectedProviderSavedSource
                                     && !page.isPending(page.selectedProvider.provider)
@@ -1991,10 +1997,12 @@ KCM.SimpleKCM {
 
                         Components.PlainControlsLabel {
                             Layout.fillWidth: true
-                            text: page.selectedProviderSourceModes.indexOf(page.selectedProviderSavedSource) < 0
-                                && (page.providerSourcesFailed || !page.providerSourcesLoading)
-                                ? i18n("The saved source is unavailable. Choose a source and save to replace it.")
-                                : i18n("Changes are saved immediately. Automatic restores the provider default.")
+                            text: page.providerSourcesFailed
+                                ? i18n("Could not read the saved source. Reload to try again.")
+                                : page.selectedProviderSourceModes.indexOf(page.selectedProviderSavedSource) < 0
+                                    && !page.providerSourcesLoading
+                                    ? i18n("The saved source is not recognized. Choose a source and save to replace it.")
+                                    : i18n("Select Save to store this source. Apply is not needed. Automatic restores the provider default.")
                             opacity: page.secondaryTextOpacity
                             font: Kirigami.Theme.smallFont
                             wrapMode: Text.WordWrap

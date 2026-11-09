@@ -19,7 +19,7 @@ function savedSources(payload) {
         if (!Protocol.isCliRecord(item) || !Guards.hasOwnKey(item, "id")) continue
         var id = Protocol.boundedProviderID(item.id)
         if (!id) continue
-        var key = "provider:" + Identity.resolveProviderKey(id)
+        var key = "provider:" + id
         var mode = Guards.hasOwnKey(item, "source") ? item.source : "auto"
         result[key] = Guards.hasOwnKey(result, key) || modes.indexOf(mode) < 0 ? "" : mode
     }
@@ -27,14 +27,14 @@ function savedSources(payload) {
 }
 
 function savedMode(sources, provider) {
-    var key = "provider:" + Identity.resolveProviderKey(provider)
+    var key = "provider:" + Protocol.boundedProviderID(provider)
     return Protocol.isCliRecord(sources) && Guards.hasOwnKey(sources, key)
         && modes.indexOf(sources[key]) >= 0 ? sources[key] : ""
 }
 
 function withSavedMode(sources, provider, mode) {
     var next = Guards.copyObject(sources)
-    next["provider:" + Identity.resolveProviderKey(provider)] = mode
+    next["provider:" + Protocol.boundedProviderID(provider)] = mode
     return next
 }
 

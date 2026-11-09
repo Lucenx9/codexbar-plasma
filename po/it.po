@@ -4382,9 +4382,13 @@ msgid "Loading saved source…"
 msgstr "Caricamento della sorgente salvata…"
 
 #: contents/ui/configProviders.qml
-msgid "The saved source is unavailable. Choose a source and save to replace it."
-msgstr "La sorgente salvata non è disponibile. Scegli una sorgente e salva per sostituirla."
+msgid "Could not read the saved source. Reload to try again."
+msgstr "Impossibile leggere la sorgente salvata. Premi Ricarica per riprovare."
 
 #: contents/ui/configProviders.qml
-msgid "Changes are saved immediately. Automatic restores the provider default."
-msgstr "Le modifiche vengono salvate immediatamente. Automatica ripristina la sorgente predefinita del provider."
+msgid "The saved source is not recognized. Choose a source and save to replace it."
+msgstr "La sorgente salvata non è riconosciuta. Scegli una sorgente e salvala per sostituirla."
+
+#: contents/ui/configProviders.qml
+msgid "Select Save to store this source. Apply is not needed. Automatic restores the provider default."
+msgstr "Premi Salva per memorizzare questa sorgente. Applica non è necessario. Automatica ripristina la sorgente predefinita del provider."

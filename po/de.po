@@ -4411,9 +4411,13 @@ msgid "Loading saved source…"
 msgstr "Gespeicherte Quelle wird geladen…"
 
 #: contents/ui/configProviders.qml
-msgid "The saved source is unavailable. Choose a source and save to replace it."
-msgstr "Die gespeicherte Quelle ist nicht verfügbar. Wählen und speichern Sie eine Quelle, um sie zu ersetzen."
+msgid "Could not read the saved source. Reload to try again."
+msgstr "Die gespeicherte Quelle konnte nicht gelesen werden. Wählen Sie Neu laden, um es erneut zu versuchen."
 
 #: contents/ui/configProviders.qml
-msgid "Changes are saved immediately. Automatic restores the provider default."
-msgstr "Änderungen werden sofort gespeichert. Automatisch stellt die Standardquelle des Anbieters wieder her."
+msgid "The saved source is not recognized. Choose a source and save to replace it."
+msgstr "Die gespeicherte Quelle wird nicht erkannt. Wählen und speichern Sie eine Quelle, um sie zu ersetzen."
+
+#: contents/ui/configProviders.qml
+msgid "Select Save to store this source. Apply is not needed. Automatic restores the provider default."
+msgstr "Wählen Sie Speichern, um diese Quelle zu speichern. Anwenden ist nicht erforderlich. Automatisch stellt die Standardquelle des Anbieters wieder her."

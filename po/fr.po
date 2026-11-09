@@ -4390,9 +4390,13 @@ msgid "Loading saved source…"
 msgstr "Chargement de la source enregistrée…"
 
 #: contents/ui/configProviders.qml
-msgid "The saved source is unavailable. Choose a source and save to replace it."
-msgstr "La source enregistrée est indisponible. Choisissez une source et enregistrez-la pour la remplacer."
+msgid "Could not read the saved source. Reload to try again."
+msgstr "Impossible de lire la source enregistrée. Sélectionnez Recharger pour réessayer."
 
 #: contents/ui/configProviders.qml
-msgid "Changes are saved immediately. Automatic restores the provider default."
-msgstr "Les modifications sont enregistrées immédiatement. Automatique rétablit la source par défaut du fournisseur."
+msgid "The saved source is not recognized. Choose a source and save to replace it."
+msgstr "La source enregistrée n’est pas reconnue. Choisissez une source et enregistrez-la pour la remplacer."
+
+#: contents/ui/configProviders.qml
+msgid "Select Save to store this source. Apply is not needed. Automatic restores the provider default."
+msgstr "Sélectionnez Enregistrer pour mémoriser cette source. Appliquer n’est pas nécessaire. Automatique rétablit la source par défaut du fournisseur."

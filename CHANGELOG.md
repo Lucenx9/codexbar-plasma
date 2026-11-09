@@ -108,7 +108,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 - Keep the provider's saved source mode visible after saving and when reopening
   settings. Read the current value through the CLI, preserve pending choices
-  during background reads, and explain when the saved mode is unavailable.
+  during background reads, and keep the confirmed value visible during reloads.
+  Explain when Save is needed and offer a retry if the saved source cannot be read.
 
 - Omit subscription dates whose UTC offset falls outside the real-world
   `-14:00` through `+14:00` range instead of displaying a malformed CLI value.

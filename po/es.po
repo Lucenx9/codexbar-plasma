@@ -4384,9 +4384,13 @@ msgid "Loading saved source…"
 msgstr "Cargando la fuente guardada…"
 
 #: contents/ui/configProviders.qml
-msgid "The saved source is unavailable. Choose a source and save to replace it."
-msgstr "La fuente guardada no está disponible. Elija una fuente y guárdela para sustituirla."
+msgid "Could not read the saved source. Reload to try again."
+msgstr "No se pudo leer la fuente guardada. Seleccione Recargar para volver a intentarlo."
 
 #: contents/ui/configProviders.qml
-msgid "Changes are saved immediately. Automatic restores the provider default."
-msgstr "Los cambios se guardan inmediatamente. Automática restaura la fuente predeterminada del proveedor."
+msgid "The saved source is not recognized. Choose a source and save to replace it."
+msgstr "No se reconoce la fuente guardada. Elija una fuente y guárdela para reemplazarla."
+
+#: contents/ui/configProviders.qml
+msgid "Select Save to store this source. Apply is not needed. Automatic restores the provider default."
+msgstr "Seleccione Guardar para almacenar esta fuente. No es necesario pulsar Aplicar. Automática restaura la fuente predeterminada del proveedor."

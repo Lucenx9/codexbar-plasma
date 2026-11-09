@@ -585,8 +585,15 @@ TestCase {
         read(page, "api");
         compare(box.currentText, "API");
         verify(!save.enabled);
+        box.activated(1);
+        compare(page.providerSourceDraft, "");
+        read(page, "web");
+        compare(box.currentText, "Web");
         box.currentIndex = 2;
         box.activated(2);
+        page.commands = {"pending-read": {kind: "sources"}};
+        verify(!save.enabled);
+        page.commands = ({});
         read(page, "oauth");
         compare(box.currentText, "CLI"); // A late read cannot erase a draft.
         page.destroy();

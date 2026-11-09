@@ -57,6 +57,7 @@ TestCase {
             property var savedProviderSources: ({})
             property string providerSourceDraft: ""
             property bool providerSourcesFailed: false
+            readonly property bool providerSourcesLoading: CommandLedger.hasKind(commands, "sources")
             readonly property var selectedProviderSourceModes: ProviderSource.availableModes(
                 providerByID(selectedProviderID) ? providerByID(selectedProviderID).authentication : null)
             readonly property string selectedProviderSavedSource: ProviderSource.savedMode(savedProviderSources, selectedProviderID)
@@ -110,9 +111,9 @@ TestCase {
         page.handleData(old, '{"providers":[{"id":"codex","source":"api"}]}', "", 0);
         compare(page.providerSourceBox.currentIndex, 2);
         compare(page.selectedProviderSavedSource, "api");
-        page.runProviderSourcesCommand();
-        old = Object.keys(page.commands)[0];
         page.setProviderSource("codex", "cli");
+        page.runProviderSourcesCommand();
+        old = CommandLedger.sourcesOfKind(page.commands, "sources")[0];
         var write = CommandLedger.sourcesOfKind(page.commands, "setSource")[0];
         page.handleData(write, sourceResult("cli"), "", 0);
         compare(page.selectedProviderSavedSource, "cli");
@@ -124,6 +125,23 @@ TestCase {
         page.handleData(read, '{"providers":[{"id":"codex","source":"cli"}]}', "", 0);
         compare(page.selectedProviderSavedSource, "cli");
         compare(page.providerSourceDraft, "");
+    }
+    function test_reloadRetainsConfirmationAndBlocksWritesUntilSourceReadCompletes() {
+        var page = createTemporaryObject(harness, this);
+        page.savedProviderSources = {"provider:codex": "api"};
+        page.syncProviderSourceSelection();
+        page.reload();
+        compare(page.selectedProviderSavedSource, "api");
+        compare(page.providerSourceBox.currentIndex, 1);
+        page.loading = false; // The list can finish before the source read.
+        page.setProviderSource("codex", "cli");
+        compare(CommandLedger.sourcesOfKind(page.commands, "setSource").length, 0);
+        var read = CommandLedger.sourcesOfKind(page.commands, "sources")[0];
+        page.handleData(read, "", "unavailable", 1);
+        verify(page.providerSourcesFailed);
+        compare(page.selectedProviderSavedSource, "api");
+        page.setProviderSource("codex", "cli");
+        compare(CommandLedger.sourcesOfKind(page.commands, "setSource").length, 1);
     }
     function test_sourceReadFailuresAndRetiredRepliesNeverInventAutomatic() {
         var page = createTemporaryObject(harness, this);
