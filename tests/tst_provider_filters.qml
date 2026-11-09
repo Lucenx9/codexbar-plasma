@@ -574,7 +574,7 @@ TestCase {
     function test_savedSourceSelectionPreservesDraftAndReopeningUsesSavedValue() {
         var page = createProvidersPage();
         if (!page) return;
-        page.providers = [{provider: "codex", enabled: false}];
+        page.providers = [{provider: "codex", displayName: "Codex", enabled: false}];
         page.selectedProviderID = "codex";
         page.handleCliVersionResult("CodexBar 0.83.0", 0);
         var box = findChild(page, "providerSourceBox");
@@ -591,7 +591,7 @@ TestCase {
         compare(box.currentText, "CLI"); // A late read cannot erase a draft.
         page.destroy();
         page = createProvidersPage();
-        page.providers = [{provider: "codex", enabled: false}];
+        page.providers = [{provider: "codex", displayName: "Codex", enabled: false}];
         page.selectedProviderID = "codex";
         read(page, "oauth");
         compare(findChild(page, "providerSourceBox").currentText, "OAuth");

@@ -2047,13 +2047,13 @@ Item {
                 }
                 if (providersPage.providers.length !== 12)
                     return false;
-                if (!providersPage.providerSourceSetupSupported)
+                if (!providersPage.providerSourceSetupSupported || providersPage.providerSourcesLoading)
                     return false;
                 var sourceBox = findItem(providersPage, "providerSourceBox");
                 var sourceSave = findItem(providersPage, "providerSourceSaveButton");
                 verifyScenario(sourceBox !== null && sourceSave !== null
-                    && sourceBox.currentIndex === -1 && !sourceSave.enabled,
-                    "Provider source selection must start without claiming a saved value");
+                    && sourceBox.currentText === i18n("Automatic") && !sourceSave.enabled,
+                    "Provider source selection must show the saved CLI value");
                 if (scenario === "settings-providers-default")
                     return true;
                 if (scenario === "settings-providers-wide") {
