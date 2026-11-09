@@ -106,6 +106,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Omit subscription dates whose UTC offset falls outside the real-world
+  `-14:00` through `+14:00` range instead of displaying a malformed CLI value.
 - Avoid false quota warnings when startup first returns a window without a
   percentage or forecast: the first usable measurement now establishes the
   notification baseline silently.

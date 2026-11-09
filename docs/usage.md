@@ -89,8 +89,9 @@ work and upstream contract requirements.
 - Provider tabs show **Plan renews on** and **Plan expires on** separately from
   quota resets when the CLI supplies valid subscription dates. Datetimes follow
   your regional date and clock format; dates marked as calendar-only keep their
-  day without a time or time-zone conversion. Missing or invalid dates are
-  omitted. Privacy mode hides them, and failed-refresh quota retention and the
+  day without a time or time-zone conversion. Missing or invalid dates, including
+  timestamps with UTC offsets outside `-14:00` through `+14:00`, are omitted.
+  Privacy mode hides them, and failed-refresh quota retention and the
   disk quota cache omit them. Dates alone remain useful even without quota rows.
   No subscription date is inferred from a quota window. The
   [pinned Linux evidence](research/2026-10-11-macos-parity-0.74.0.md#linux-cli-contract-changes-since-0730)
