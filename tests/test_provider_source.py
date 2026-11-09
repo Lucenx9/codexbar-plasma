@@ -16,6 +16,7 @@ import QtTest
 import "SOURCE_URL/config/ProviderCredentials.js" as ProviderCredentials
 import "SOURCE_URL/config/ProviderCapabilities.js" as ProviderCapabilities
 import "SOURCE_URL/config/ProviderSource.js" as ProviderSource
+import "SOURCE_URL/config/ProviderSavedSources.js" as ProviderSavedSources
 import "SOURCE_URL/config/ProviderOperations.js" as ProviderOperations
 import "SOURCE_URL/config/ProviderConfigProtocol.js" as ProviderConfigProtocol
 import "SOURCE_URL/CommandLedger.js" as CommandLedger
@@ -60,7 +61,7 @@ TestCase {
             readonly property bool providerSourcesLoading: CommandLedger.hasKind(commands, "sources")
             readonly property var selectedProviderSourceModes: ProviderSource.availableModes(
                 providerByID(selectedProviderID) ? providerByID(selectedProviderID).authentication : null)
-            readonly property string selectedProviderSavedSource: ProviderSource.savedMode(savedProviderSources, selectedProviderID)
+            readonly property string selectedProviderSavedSource: ProviderSavedSources.savedMode(savedProviderSources, selectedProviderID)
             property int revisions: 0
             property int writes: 0
             property int diagnosticsCleared: 0

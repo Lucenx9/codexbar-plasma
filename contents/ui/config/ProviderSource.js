@@ -7,36 +7,6 @@
 // Older inventories have no per-provider modes. The CLI still validates writes.
 var modes = Authentication.supportedSourceModes.slice()
 
-// The CLI dump is normalized and redacted upstream. Retain only source enums,
-// never credential placeholders or arbitrary configuration fields.
-function savedSources(payload) {
-    if (!Protocol.isCliRecord(payload) || !Guards.hasOwnKey(payload, "providers")) return null
-    if (!Array.isArray(payload.providers) || payload.providers.length > Protocol.maximumProviderItems) return null
-    var result = {}
-    for (var i = 0; i < payload.providers.length; i++) {
-        var item = payload.providers[i]
-        if (!Protocol.isCliRecord(item) || !Guards.hasOwnKey(item, "id")) continue
-        var id = Protocol.boundedProviderID(item.id)
-        if (!id) continue
-        var key = "provider:" + id
-        var mode = Guards.hasOwnKey(item, "source") ? item.source : "auto"
-        result[key] = Guards.hasOwnKey(result, key) || modes.indexOf(mode) < 0 ? "" : mode
-    }
-    return result
-}
-
-function savedMode(sources, provider) {
-    var key = "provider:" + Protocol.boundedProviderID(provider)
-    return Protocol.isCliRecord(sources) && Guards.hasOwnKey(sources, key)
-        && modes.indexOf(sources[key]) >= 0 ? sources[key] : ""
-}
-
-function withSavedMode(sources, provider, mode) {
-    var next = Guards.copyObject(sources)
-    next["provider:" + Protocol.boundedProviderID(provider)] = mode
-    return next
-}
-
 function availableModes(authentication) {
     if (authentication === undefined || authentication === null) return modes.slice()
     var result = []

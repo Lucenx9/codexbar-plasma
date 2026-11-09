@@ -20,6 +20,7 @@ import "config/ProviderDescriptor.js" as ProviderDescriptor
 import "config/ProviderList.js" as ProviderList
 import "config/ProviderOperations.js" as ProviderOperations
 import "config/ProviderSource.js" as ProviderSource
+import "config/ProviderSavedSources.js" as ProviderSavedSources
 import "config/ProviderCredentials.js" as ProviderCredentials
 import "config/ProviderCapabilities.js" as ProviderCapabilities
 
@@ -107,7 +108,7 @@ KCM.SimpleKCM {
     property string providerSourceDraft: ""
     property bool providerSourcesFailed: false
     readonly property bool providerSourcesLoading: CommandLedger.hasKind(commands, "sources")
-    readonly property string selectedProviderSavedSource: ProviderSource.savedMode(savedProviderSources, selectedProviderID)
+    readonly property string selectedProviderSavedSource: ProviderSavedSources.savedMode(savedProviderSources, selectedProviderID)
     property var providerListFocus: null
 
     readonly property var visibleProviders: ProviderList.filteredProviders(providers, filterText, filterScope)
@@ -210,7 +211,7 @@ KCM.SimpleKCM {
             return
         }
         var result = ProviderConfigProtocol.response(stdoutText, stderrText, exitCode, "command")
-        var sources = result.outcome === "success" ? ProviderSource.savedSources(result.value) : null
+        var sources = result.outcome === "success" ? ProviderSavedSources.savedSources(result.value) : null
         providerSourcesFailed = sources === null
         if (sources !== null) {
             savedProviderSources = sources
@@ -684,7 +685,7 @@ KCM.SimpleKCM {
         bumpProviderConfigRevision()
         errorText = ""
         statusText = i18n("%1 setting saved", displayNameForProvider(descriptor.provider))
-        savedProviderSources = ProviderSource.withSavedMode(savedProviderSources, descriptor.provider, descriptor.sourceMode)
+        savedProviderSources = ProviderSavedSources.withSavedMode(savedProviderSources, descriptor.provider, descriptor.sourceMode)
         if (selectedProviderID === descriptor.provider) {
             providerSourceDraft = ""
             syncProviderSourceSelection()

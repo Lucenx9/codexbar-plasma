@@ -2190,8 +2190,9 @@ explain that distinction. Synthetic controller tests cover multiple returned
 account records; this probe does not establish authenticated multi-account
 availability or add a Linux login-switching action.
 
-`config/ProviderSource.js` plans allowlisted source-mode writes, validates
-matching provider/source result records, and projects the normalized, redacted
+`config/ProviderSource.js` plans allowlisted source-mode writes and validates
+matching provider/source result records. `config/ProviderSavedSources.js` owns
+the saved-source map: it projects the normalized, redacted
 `config dump --format json --json-only` reply into provider source enums only.
 The dump contract was verified with Linux CLI 0.83.0: `providers[].id` identifies
 providers; a known `source` selects the saved mode, and an absent `source` means
