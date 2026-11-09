@@ -1697,6 +1697,12 @@ author as well as the marker. An unchanged report makes no write request.
 This report supplements the existing Sonnet code review. Required `check`,
 `smoke`, and `pr-title` checks still decide merge readiness.
 
+`scripts/ci_report.py` owns event handling and publication. Its focused
+`scripts/lib/ci_report_data.py`, `ci_report_github.py`, and `ci_report_markdown.py`
+modules own validation/collection, credential-separated HTTP transport, and
+comment rendering respectively. They keep the same trust boundaries in local
+probes and Actions.
+
 The comment shows the CI job conclusions, recorded popup successes/failures,
 the panel-matrix record count, and links to the run and graphical artifacts.
 Editorial-only runs explicitly explain their omitted runtime checks. A failed
