@@ -804,6 +804,10 @@ text and starts the supervised command through `Guards.supervisedShellCommand`.
 The helper's bounded `LoginStream` frames events without effects; `login_event`
 classifies each event from explicit pending/terminal state. The process loop
 applies those decisions, retaining ownership of dialog stdin, timers and cleanup.
+Cookie and clear commands also own a separate CLI process group, retired on
+every outcome. Their selector loop watches parent loss through both output
+draining and CLI exit. A dedicated cancellation exception escapes the selector's
+interrupted-system-call handling so signals still reach group cleanup.
 Disconnecting a cached executable source does not stop its process immediately.
 Cancellation sends a credential-free request marker through a short-lived
 DataSource owned by the `credential/LoginCancellation.qml` singleton, so page

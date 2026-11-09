@@ -134,6 +134,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   widget removal, including notifications with a release-page action. Keep the
   forced kill for CLI descendants when their parent exits on the first signal.
 
+- Stop CLI wrapper descendants after cookie saves and credential clears finish,
+  time out, or are interrupted, including when their timeout owner disappears.
+
 - Keep dark provider indicators readable in usage-sharing previews and exported
   images, including abliteration.ai and OpenDesign, while preserving brand colors
   where they already have sufficient contrast.
