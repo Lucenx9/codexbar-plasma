@@ -23,13 +23,10 @@ PlainNote {
     onNoticeScopeChanged: scheduleRefreshNoticeState()
     onStateOwnerChanged: scheduleRefreshNoticeState()
     onPlainTextChanged: syncVisibility()
-    onVisibleChanged: {
-        // The close button hides the note directly. Convert that
-        // effect into semantic state before a refresh can show it again. An
-        // invisible presentation means ordinary tab navigation, not a close
-        // action.
-        if (!visible
-                && presentationVisible
+    onClosed: {
+        // Effective visibility also changes when an ancestor hides. Only the
+        // note's explicit close action may change persistent dismissal state.
+        if (presentationVisible
                 && plainText.length > 0
                 && noticeState.shouldShow === true) {
             dismissNotice()

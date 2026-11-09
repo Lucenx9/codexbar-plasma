@@ -1031,7 +1031,8 @@ and clipboard content remain under your control after closing the window.
   lacked final usage. Closing a
   notice suppresses the same meaning for that provider or the aggregate Spend
   view across refreshes and popup reopenings; a materially different warning is
-  shown again. A changed count of excluded requests describes the same warning
+  shown again. Switching tabs or closing the popup leaves an open notice
+  available when returning. A changed count of excluded requests describes the same warning
   and stays closed.
 - Recent-day history rows, model rows, and a selected day in a provider's cost
   details state how many incomplete requests the CLI excluded from that row's
