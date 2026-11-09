@@ -581,8 +581,6 @@ class CostTest(unittest.TestCase):
             "function scheduleRefreshNoticeState()",
             "noticeRefresh.restart()",
             "onTriggered: noticeRoot.refreshNoticeState()",
-            "onVisibleChanged: {",
-            "&& presentationVisible",
             'i18n("%1 %2"',
             'i18n("The displayed range total',
             'i18np(',

@@ -129,6 +129,10 @@ qualifies provider and global amounts with one shared notice. Missing legacy
 metadata stays quiet. Keep pricing coverage separate from history collection
 coverage and never expose raw provenance in QML.
 
+Only pressing the notice's close button records a semantic dismissal. Hiding a
+tab or closing the popup preserves an open notice, including when the popup is
+recreated. Pointer and keyboard activation of the close button share that action.
+
 The shared pricing notice keeps cost provenance scoped to the selected currency.
 A foreign-currency snapshot with a finite cost is excluded from this notice,
 including its incomplete-request count, although its tokens enter the global
