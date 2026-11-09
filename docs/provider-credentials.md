@@ -95,6 +95,11 @@ cover cancellation before startup, and are removed on completion. Late markers
 are pruned after 20 minutes on the next request. Each login has a different
 request ID, so old cancellations cannot affect a newer login.
 Cookie entry retains the existing separate input and save timeouts.
+Cookie saves and credential clears run the CLI in its own process group and
+retire that group on completion, timeout, or interruption, including descendants
+of a CLI wrapper. The helper watches its parent while draining output and waiting
+for CLI exit, so loss of the timeout owner also stops the group. Cancellation
+escapes the selector's interrupted-system-call handling before cleanup runs.
 
 Only safe completion records return to the page. Successful writes retire old
 diagnostics and increment the existing configuration revision so usage refreshes.

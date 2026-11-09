@@ -10,6 +10,7 @@ import sys
 import tempfile
 import time
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts/lib'))
@@ -22,7 +23,7 @@ PENDING = {"status": "authorization_pending", "verificationURI": "https://github
            "userCode": "ABCD-1234", "expiresIn": 30}
 
 CLI = r'''#!/usr/bin/env python3
-import json, os, signal, sys, time
+import json, os, signal, subprocess, sys, time
 from pathlib import Path
 root = Path(os.environ['AUTH_FIXTURE'])
 root.joinpath('cli.pid').write_text(str(os.getpid()))
@@ -32,6 +33,15 @@ if sys.argv[2] != 'login':
     value = sys.stdin.buffer.read()
     root.joinpath('input').write_bytes(value)
     provider = sys.argv[sys.argv.index('--provider') + 1]
+    if mode.startswith('child-'):
+        child = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(60)'],
+                                 stdin=subprocess.DEVNULL,
+                                 stdout=None if mode == 'child-pipe' else subprocess.DEVNULL)
+        root.joinpath('child.pid').write_text(str(child.pid))
+        if mode == 'child-closed-pipes':
+            os.close(1)
+        if mode in ('child-hang', 'child-closed-pipes'):
+            time.sleep(60)
     if mode == 'refuse':
         print(json.dumps({'error': {'message': value.decode()}}))
         print(value.decode(), file=sys.stderr)
@@ -142,7 +152,18 @@ class ProviderAuthTests(unittest.TestCase):
             return
         pid = int(pid_file.read_text())
         stat = Path(f"/proc/{pid}/stat")
-        self.assertTrue(not stat.exists() or stat.read_text().split(') ')[1].startswith('Z'))
+        # Descendants are not waitable children of the helper. SIGKILL is
+        # asynchronous, so allow the kernel to finish their termination.
+        deadline = time.monotonic() + 2
+        while True:
+            try:
+                state = stat.read_text().split(') ')[1]
+            except (FileNotFoundError, ProcessLookupError):
+                return
+            if state.startswith('Z'):
+                return
+            self.assertLess(time.monotonic(), deadline, name + ' is still running')
+            time.sleep(.01)
 
     def test_authorized_stream_shows_only_projected_event_in_private_dialog(self):
         self.assertEqual(self.run_helper([PENDING, .2, {"status": "authorized"}])['status'], 'ok')
@@ -215,6 +236,67 @@ class ProviderAuthTests(unittest.TestCase):
         while not self.root.joinpath('dialog.text').exists() and time.monotonic() < deadline:
             time.sleep(.02)
         self.assertTrue(self.root.joinpath('dialog.text').exists())
+
+    def stop_fixture_process(self, name):
+        path = self.root / (name + '.pid')
+        if path.exists():
+            try:
+                os.kill(int(path.read_text()), signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+
+    def wait_credential_child(self):
+        deadline = time.monotonic() + 5
+        while not self.root.joinpath('child.pid').exists() and time.monotonic() < deadline:
+            time.sleep(.02)
+        self.assertTrue(self.root.joinpath('child.pid').exists())
+
+    def test_credential_completion_stops_wrapper_descendants(self):
+        self.addCleanup(self.stop_fixture_process, 'child')
+        self.assertEqual(self.run_helper(action='clear-credential', mode='child-exit')['status'], 'ok')
+        self.assert_stopped('child')
+
+    def test_credential_timeout_stops_pipe_holding_descendants(self):
+        self.addCleanup(self.stop_fixture_process, 'child')
+        # Advance the real helper deadline without waiting 55 seconds or changing
+        # production bounds. Its selector still drives the actual subprocess pipes.
+        clock = time.monotonic
+        with patch.dict(os.environ, {**self.env, 'AUTH_MODE': 'child-pipe'}), \
+                patch.object(auth.time, 'monotonic', side_effect=lambda: clock() * 100):
+            self.assertEqual(auth.credential(str(self.root / 'codexbar'), 'clear-credential', 'copilot'),
+                             {'status': 'failed'})
+        self.assert_stopped('child')
+
+    def test_credential_interruption_stops_wrapper_and_descendants(self):
+        for mode in ('child-hang', 'child-closed-pipes'):
+            for interruption in ('signal', 'timeout-signal', 'lost-parent'):
+                with self.subTest(mode=mode, interruption=interruption):
+                    self.root.joinpath('child.pid').unlink(missing_ok=True)
+                    arguments = self.arguments(action='clear-credential')
+                    if interruption != 'signal':
+                        arguments = ['timeout', '--kill-after=2s', '60s', *arguments]
+                    process = subprocess.Popen(arguments,
+                                               env={**self.env, 'AUTH_MODE': mode}, stdout=subprocess.PIPE,
+                                               stderr=subprocess.PIPE, text=True)
+                    try:
+                        self.wait_credential_child()
+                        if interruption == 'lost-parent':
+                            process.kill()
+                        else:
+                            process.send_signal(signal.SIGTERM)
+                        out, err = process.communicate(timeout=5)
+                        self.assertEqual(json.loads(out)['status'], 'failed')
+                        self.assertEqual(err, '')
+                        self.assert_stopped('cli')
+                        self.assert_stopped('child')
+                    finally:
+                        if process.poll() is None:
+                            process.kill()
+                            process.wait()
+                        self.stop_fixture_process('cli')
+                        self.stop_fixture_process('child')
+                        process.stdout.close()
+                        process.stderr.close()
 
     def test_signal_cancellation_stops_both_children(self):
         self.root.joinpath('events').write_text(json.dumps([PENDING]))

@@ -23,6 +23,10 @@ MAX_BYTES = 65536
 LOGIN_SECONDS = 900
 
 
+class RequestInterrupted(Exception):
+    pass
+
+
 def cancellation_path(request):
     """Private, credential-free tombstones also cover cancellation before startup."""
     if not re.fullmatch(r"[a-f0-9]{20,100}", request):
@@ -155,13 +159,14 @@ def spawn(arguments, **kwargs):
 
 
 def credential(cli, action, provider):
+    parent = os.getppid()
     value = sys.stdin.buffer.read(MAX_BYTES + 1) if action == "set-cookie" else b""
     if action == "set-cookie" and (not value.strip() or len(value) > MAX_BYTES):
         return {"status": "failed"}
     arguments = [cli, "config", action, "--provider", provider, "--format", "json", "--json-only"]
     if action == "set-cookie":
         arguments.append("--stdin")
-    process = spawn(arguments, stdin=subprocess.PIPE, stdout=subprocess.PIPE, start_new_session=False)
+    process = spawn(arguments, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
     try:
         # Drain bounded output while feeding stdin; neither pipe may block
         # the other, including a CLI that refuses before reading the cookie.
@@ -172,8 +177,10 @@ def credential(cli, action, provider):
         with selectors.DefaultSelector() as selector:
             selector.register(process.stdout, selectors.EVENT_READ)
             selector.register(process.stdin, selectors.EVENT_WRITE)
-            while selector.get_map():
-                if time.monotonic() >= deadline:
+            # Keep watching the owner even after stdout closes: a wrapper may
+            # still be running, or leave a descendant holding the output pipe.
+            while selector.get_map() or process.poll() is None:
+                if os.getppid() != parent or time.monotonic() >= deadline:
                     return {"status": "failed"}
                 for key, _mask in selector.select(0.1):
                     if key.fileobj is process.stdin:
@@ -192,7 +199,7 @@ def credential(cli, action, provider):
                         output.extend(block)
                         if len(output) > MAX_BYTES:
                             return {"status": "failed"}
-        if process.wait(timeout=max(0.01, deadline - time.monotonic())) != 0:
+        if process.returncode != 0:
             return {"status": "failed"}
         result = json.loads(output)
         if not isinstance(result, dict) or result.get("provider") != provider or "error" in result:
@@ -204,7 +211,7 @@ def credential(cli, action, provider):
             return {"status": "ok"}
         return {"status": "failed"}
     finally:
-        stop(process, group=False)
+        stop(process)
 
 
 def login(cli, title, message, supervised, request=""):
@@ -289,7 +296,9 @@ def main():
     args = parser.parse_args()
 
     def interrupt(_signum, _frame):
-        raise InterruptedError
+        # selectors.select() catches InterruptedError internally. Use a
+        # distinct exception so cancellation reaches process-group cleanup.
+        raise RequestInterrupted
 
     signal.signal(signal.SIGTERM, interrupt)
     signal.signal(signal.SIGINT, interrupt)
@@ -303,7 +312,7 @@ def main():
                 result = login(args.cli, args.title, args.message, args.supervised, args.request)
         else:
             result = credential(args.cli, args.action, args.provider)
-    except (OSError, ValueError, UnicodeError, subprocess.TimeoutExpired):
+    except (OSError, ValueError, UnicodeError, subprocess.TimeoutExpired, RequestInterrupted):
         pass
     # No raw CLI error, URI, user code, credential or config path is returned.
     print(json.dumps({**result, "provider": args.provider}))

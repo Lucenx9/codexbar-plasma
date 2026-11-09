@@ -55,7 +55,8 @@ TestCase {
         configSecretPromptDialogTimeoutSeconds = 3;
         configSecretPromptDialogKillAfterSeconds = 0.5;
         configSecretCommandTimeoutSeconds = 3;
-        configSecretCommandKillAfterSeconds = 0.5;
+        // The credential helper needs its one-second TERM grace before KILL.
+        configSecretCommandKillAfterSeconds = 2;
         setApiKey("codex");
         promptDescriptorSecret("codex", {id: "apiKey", title: "API key", kind: "secret",
             writeCommand: ["codexbar", "config", "set-api-key", "--provider", "codex", "--stdin"]});

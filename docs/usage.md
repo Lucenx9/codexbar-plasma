@@ -776,6 +776,8 @@ Provider-specific editable settings depend on the official CLI contract.
   accounts. In particular, it does not sign out a Copilot token account.
   Both credential actions invalidate old diagnostics and refresh usage on
   success; cancellation and refusal preserve the previous data.
+  Completion, timeout, or interruption also stops any remaining CLI wrapper
+  processes instead of leaving them running after the action ends.
 - **Sign in with GitHub…** appears for Copilot with CLI 0.80.0 or later,
   alongside **Set API key…**. It starts only when selected, running the
   official `config login --provider copilot --json` command. A KDE dialog
