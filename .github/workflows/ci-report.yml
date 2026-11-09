@@ -41,6 +41,8 @@ jobs:
     timeout-minutes: 10
     # Only events for the same source PR share a pending slot. Manual dispatch
     # resolves the same group, so it cannot race automatic comment creation.
+    # Each publisher reconciles to that source's latest eligible completed run,
+    # including when a stale request replaces a newer pending event.
     concurrency:
       group: ci-report-${{ needs.source.outputs.group }}
       cancel-in-progress: false

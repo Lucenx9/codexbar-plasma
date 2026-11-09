@@ -32,7 +32,8 @@ PR = {"number": 12, "state": "open", "head": {"sha": HEAD, "ref": "feature", "re
 
 
 def result():
-    return {"schemaVersion": 1, "runId": 42, "runAttempt": 2, "headSha": HEAD,
+    return {"schemaVersion": 2, "runId": 42, "runAttempt": 2, "headSha": HEAD,
+            "baseRef": "main", "baseSha": BASE,
             "testedSha": "c" * 40, "image": "d" * 64, "fixture": "e" * 64,
             "popup": [{"scenario": "popup-basic", "passed": True, "seconds": 1.5}], "panelCases": 24}
 
@@ -74,8 +75,8 @@ class FakeGitHub:
             return {"user": {"login": BOT, "type": "Bot"}, "html_url": "https://example.test/comment"}
         if path == "actions/workflows/ci.yml":
             return {"id": 9}
-        if path == "actions/runs/42":
-            return self.run
+        if re.fullmatch(r"actions/runs/\d+", path):
+            return next(run for run in [self.run] + self.latest if run["id"] == int(path.split("/")[-1]))
         if path == "pulls/12":
             return self.pr
         if "event=pull_request" in path:
@@ -85,9 +86,11 @@ class FakeGitHub:
         raise AssertionError(path)
 
     def pages(self, path, key=None):
-        if path.startswith("commits/"):
-            return self.pulls
-        if path == "actions/runs/42/jobs?filter=all" and key == "jobs":
+        if path == "pulls?state=open":
+            return deepcopy(self.pulls)
+        if key == "workflow_runs" and "event=pull_request" in path:
+            return self.latest
+        if re.fullmatch(r"actions/runs/\d+/jobs\?filter=all", path) and key == "jobs":
             return self.jobs
         if path == "issues/12/comments":
             if self.before_comments:
@@ -97,7 +100,8 @@ class FakeGitHub:
 
     def artifact(self, run, expected_attempt=None):
         self.requested_attempts.append(expected_attempt)
-        value = self.measurements if run["id"] == 42 else self.baseline
+        source_ids = {item["id"] for item in [self.run] + self.latest}
+        value = self.measurements if run["id"] in source_ids else self.baseline
         if isinstance(value, Exception):
             raise value
         return value
@@ -135,9 +139,20 @@ class ArtifactTests(unittest.TestCase):
             schema.read_archive(archive(retained), RUN, expected_attempt=2)
         self.assertEqual(schema.read_archive(archive(retained), RUN), retained)
 
+    def test_scope_identity_record_does_not_claim_a_smoke_attempt(self):
+        record = dict(result(), runAttempt=1, popup=None, panelCases=None)
+        self.assertEqual(schema.read_archive(archive(record), RUN, expected_attempt=2), record)
+
+    def test_push_records_have_no_pr_target_and_partial_targets_are_rejected(self):
+        self.assertEqual(schema.validate(dict(result(), baseRef=None, baseSha=None))["baseRef"], None)
+        for change in ({"baseRef": None}, {"baseSha": None}):
+            with self.assertRaises(ValueError):
+                schema.validate(dict(result(), **change))
+
     def test_strict_schema_types_bounds_and_text(self):
-        bad = [("schemaVersion", True), ("schemaVersion", 2), ("runId", True), ("runAttempt", 0),
+        bad = [("schemaVersion", True), ("schemaVersion", 1), ("runId", True), ("runAttempt", 0),
                ("headSha", "x" * 40), ("testedSha", ""), ("image", "unverified"),
+               ("baseRef", "bad\nbranch"), ("baseSha", "invalid"),
                ("fixture", 123), ("panelCases", True), ("panelCases", -1),
                ("panelCases", 10001), ("popup", []), ("popup", "success")]
         for key, value in bad:
@@ -174,7 +189,7 @@ class ArtifactTests(unittest.TestCase):
 
     def test_rejects_duplicate_json_fields_and_unexpected_compression(self):
         for compression, text in ((zipfile.ZIP_STORED, json.dumps(result()).replace(
-                '"schemaVersion": 1', '"schemaVersion": 2, "schemaVersion": 1')),
+                '"schemaVersion": 2', '"schemaVersion": 1, "schemaVersion": 2')),
                                   (zipfile.ZIP_LZMA, json.dumps(result()))):
             raw = io.BytesIO()
             with zipfile.ZipFile(raw, "w", compression) as bundle:
@@ -186,10 +201,13 @@ class ArtifactTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             (root / "scripts/smoke").mkdir(parents=True)
-            for path in ("scripts/smoke_popup.py", "scripts/panel_matrix.py", "scripts/smoke/fixture.qml"):
+            (root / ".github/workflows").mkdir(parents=True)
+            for path in ("scripts/smoke_popup.py", "scripts/panel_matrix.py", "scripts/smoke/fixture.qml",
+                         "Makefile", ".github/workflows/ci.yml"):
                 (root / path).write_text("fixture")
             env = {"GITHUB_RUN_ID": "42", "GITHUB_RUN_ATTEMPT": "2", "GITHUB_SHA": "c" * 40,
-                   "CI_REPORT_HEAD_SHA": HEAD, "CI_REPORT_IMAGE": "d" * 64}
+                   "CI_REPORT_HEAD_SHA": HEAD, "CI_REPORT_IMAGE": "d" * 64,
+                   "GITHUB_BASE_REF": "main", "CI_REPORT_BASE_SHA": BASE}
             empty = schema.collect(root, env)
             self.assertIsNone(empty["popup"])
             self.assertIsNone(empty["panelCases"])
@@ -203,11 +221,40 @@ class ArtifactTests(unittest.TestCase):
             self.assertFalse(data["popup"][0]["passed"])
             self.assertNotIn("raw diagnostic", json.dumps(data))
             self.assertEqual(data["fixture"], empty["fixture"])
+            self.assertEqual((data["baseRef"], data["baseSha"]), ("main", BASE))
+            for source in ("Makefile", ".github/workflows/ci.yml"):
+                path = root / source
+                original = path.read_text()
+                path.write_text(original + " --renderer opengl --theme dark")
+                self.assertNotEqual(report.collect(root, env)["fixture"], data["fixture"])
+                path.write_text(original)
             (root / "scripts/smoke/fixture.qml").write_text("changed fixture")
             self.assertNotEqual(schema.collect(root, env)["fixture"], data["fixture"])
 
 
 class RenderTests(unittest.TestCase):
+    def test_identity_only_record_does_not_claim_retained_runtime_measurements(self):
+        record = dict(result(), runAttempt=1, popup=None, panelCases=None)
+        body = Report(REPO, RUN, [], record).render()
+        self.assertIn("No runtime measurements", body)
+        self.assertNotIn("the smoke job was not rerun", body)
+        self.assertNotIn("### Runtime measurements", body)
+    def test_large_valid_measurements_keep_job_conclusions_and_artifact_link(self):
+        current = result()
+        current["popup"] = [{"scenario": f"case-{index:03d}-" + "x" * 92, "passed": False, "seconds": 1.5}
+                            for index in range(512)]
+        baseline = deepcopy(current)
+        for case in baseline["popup"]:
+            case["passed"] = True
+        schema.validate(current)
+        self.assertLess(len(json.dumps(current).encode()), schema.MAX_RESULT)
+        jobs = [{"name": "smoke", "conclusion": "failure"}]
+        body = Report(REPO, RUN, jobs, current, baseline=baseline).render()
+        self.assertLessEqual(len(body.encode()), 60000)
+        self.assertIn("| `smoke` | failure |", body)
+        self.assertIn("Scenario details were omitted", body)
+        self.assertIn("#artifacts", body)
+
     def test_reports_real_statuses_and_measurements_without_inventing_metrics(self):
         api = FakeGitHub()
         api.jobs[0]["conclusion"] = "failure"
@@ -281,12 +328,86 @@ class PublishTests(unittest.TestCase):
                 report.publish(api, 42, BOT)
             self.assertFalse(api.writes)
 
-    def test_incomplete_and_superseded_event_attempts_skip_without_failure(self):
-        for status, event_attempt in (("in_progress", 2), ("completed", 1)):
+    def test_incomplete_attempt_skips_and_old_event_reconciles_to_completed_attempt(self):
+        api = FakeGitHub()
+        api.run["status"] = "in_progress"
+        self.assertIsNone(report.publish(api, 42, BOT, expected_attempt=2))
+        self.assertFalse(api.writes)
+        api.run["status"] = "completed"
+        self.assertIsNotNone(report.publish(api, 42, BOT, expected_attempt=1))
+        self.assertIn("ci-report-run:42:2", api.writes[0][2]["body"])
+
+    def test_stale_queued_request_reports_the_latest_head_instead_of_losing_it(self):
+        api = FakeGitHub()
+        new_head = "f" * 40
+        api.pr["head"]["sha"] = new_head
+        api.latest.append(dict(RUN, id=43, head_sha=new_head, run_number=101, run_attempt=1))
+        api.measurements.update(runId=43, headSha=new_head, runAttempt=1)
+        for job in api.jobs:
+            job["run_attempt"] = 1
+        self.assertIsNotNone(report.publish(api, 42, BOT, expected_attempt=2))
+        self.assertIn("ci-report-run:43:1", api.writes[0][2]["body"])
+        self.assertIn(f"Commit `{new_head[:12]}`", api.writes[0][2]["body"])
+
+    def test_newer_completed_run_for_same_head_is_reconciled(self):
+        api = FakeGitHub()
+        api.latest.append(dict(RUN, id=43, run_number=101))
+        api.measurements["runId"] = 43
+        self.assertIsNotNone(report.publish(api, 42, BOT))
+        self.assertIn("ci-report-run:43:2", api.writes[0][2]["body"])
+
+    def test_other_branches_and_forks_with_same_sha_cannot_suppress_this_report(self):
+        for change in ({"head_branch": "another"}, {"head_repository": {"id": 8}}):
             api = FakeGitHub()
-            api.run["status"] = status
-            self.assertIsNone(report.publish(api, 42, BOT, expected_attempt=event_attempt))
+            api.latest.append(dict(RUN, id=43, run_number=101, **change))
+            self.assertIsNotNone(report.publish(api, 42, BOT))
+            self.assertIn("ci-report-run:42:2", api.writes[0][2]["body"])
+
+    def test_retargeted_pr_rejects_old_artifact_even_if_run_pr_metadata_updates(self):
+        for change in ({"ref": "release"}, {"sha": "f" * 40}):
+            api = FakeGitHub()
+            api.pr["base"].update(change)
+            api.run["pull_requests"] = [deepcopy(api.pr)]
+            self.assertIsNone(report.publish(api, 42, BOT))
             self.assertFalse(api.writes)
+
+    def test_retargeting_while_rendering_is_rechecked_before_publication(self):
+        api = FakeGitHub()
+        api.before_comments = lambda: api.pr["base"].update(ref="release")
+        self.assertIsNone(report.publish(api, 42, BOT))
+        self.assertFalse(api.writes)
+
+    def test_unavailable_target_provenance_is_labeled_without_hiding_job_status(self):
+        api = FakeGitHub()
+        api.measurements = None
+        report.publish(api, 42, BOT)
+        body = api.writes[0][2]["body"]
+        self.assertIn("Tested target unverified", body)
+        self.assertIn("| `smoke` | success |", body)
+
+    def test_baseline_listing_failures_do_not_hide_job_conclusions(self):
+        for exact in (True, False):
+            for error in (ValueError("response exceeds limit"),
+                          urllib.error.HTTPError("https://api.github.com", 503, "unavailable", {}, None)):
+                api = FakeGitHub()
+                original_api = api.api
+                def fail_listing(path, body=None, method=None):
+                    if "event=push" in path and ("head_sha=" in path) == exact:
+                        raise error
+                    return original_api(path, body, method)
+                api.api = fail_listing
+                self.assertIsNotNone(report.publish(api, 42, BOT))
+                self.assertIn("| `smoke` | success |", api.writes[0][2]["body"])
+
+    def test_identity_only_base_artifacts_do_not_hide_a_measured_baseline(self):
+        api = FakeGitHub()
+        api.exact_runs = [dict(RUN, id=40, head_sha=BASE)]
+        api.baseline_runs = [dict(RUN, id=39, head_sha="f" * 40)]
+        identity_only = dict(result(), popup=None, panelCases=None)
+        with patch.object(api, "artifact", side_effect=[result(), identity_only, result()]):
+            report.publish(api, 42, BOT)
+        self.assertIn("/actions/runs/39", api.writes[0][2]["body"])
+        self.assertIn("<summary>Scenario timings", api.writes[0][2]["body"])
 
     def test_partial_rerun_uses_latest_job_per_name_and_retains_earlier_smoke(self):
         api = FakeGitHub()
@@ -340,8 +461,7 @@ class PublishTests(unittest.TestCase):
                        lambda api: api.pr["head"]["repo"].update(id=8),
                        lambda api: api.pr["base"]["repo"].update(full_name="other/repo"),
                        lambda api: api.pr["head"].update(ref="other"),
-                       lambda api: api.pulls.append(deepcopy(api.pr)),
-                       lambda api: api.latest.append(dict(RUN, id=43, run_number=101))):
+                       lambda api: api.pulls.append(deepcopy(api.pr))):
             api = FakeGitHub()
             mutate(api)
             self.assertIsNone(report.publish(api, 42, BOT))

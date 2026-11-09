@@ -17,6 +17,7 @@ JOBS = ("scope", "lint", "check-runtime", "smoke-runtime", "check", "smoke")
 SHA = re.compile(r"[0-9a-f]{40}")
 DIGEST = re.compile(r"[0-9a-f]{64}")
 CASE = re.compile(r"[a-zA-Z0-9][a-zA-Z0-9_-]{0,100}")
+BRANCH = re.compile(r"[^\x00-\x20\x7f]{1,1024}")
 ARTIFACT_ERRORS = (ValueError, KeyError, zipfile.BadZipFile, RecursionError, zlib.error, OSError)
 
 
@@ -78,10 +79,18 @@ def validate_popup(cases):
     require(len(set(names)) == len(names), "Duplicate scenario")
 
 
+def validate_target(result):
+    if result["baseRef"] is None:
+        require(result["baseSha"] is None, "Incomplete tested target")
+        return
+    patterned_text(result["baseRef"], BRANCH)
+    patterned_text(result["baseSha"], SHA)
+
+
 def validate(result):
     exact(result, ("schemaVersion", "runId", "runAttempt", "headSha", "testedSha",
-                   "image", "fixture", "popup", "panelCases"))
-    integer(result["schemaVersion"], 1, 1)
+                   "baseRef", "baseSha", "image", "fixture", "popup", "panelCases"))
+    integer(result["schemaVersion"], 2, 2)
     for key in ("runId", "runAttempt"):
         positive(result[key])
     for key in ("headSha", "testedSha"):
@@ -89,6 +98,7 @@ def validate(result):
     for key in ("image", "fixture"):
         patterned_text(result[key], DIGEST)
     validate_popup(result["popup"])
+    validate_target(result)
     if result["panelCases"] is not None:
         integer(result["panelCases"], 0, 10000)
     return result
@@ -121,7 +131,8 @@ def panel_count(root):
 
 def fixture_digest(root):
     digest = hashlib.sha256()
-    inputs = [root / "scripts/smoke_popup.py", root / "scripts/panel_matrix.py"]
+    inputs = [root / "scripts/smoke_popup.py", root / "scripts/panel_matrix.py",
+              root / "Makefile", root / ".github/workflows/ci.yml"]
     inputs += sorted(path for path in (root / "scripts/smoke").rglob("*")
                      if path.is_file() and "__pycache__" not in path.parts)
     for path in inputs:
@@ -130,9 +141,11 @@ def fixture_digest(root):
 
 
 def collect(root, env):
-    return validate({"schemaVersion": 1, "runId": int(env["GITHUB_RUN_ID"]),
+    return validate({"schemaVersion": 2, "runId": int(env["GITHUB_RUN_ID"]),
                      "runAttempt": int(env["GITHUB_RUN_ATTEMPT"]), "headSha": env["CI_REPORT_HEAD_SHA"],
                      "testedSha": env["GITHUB_SHA"], "image": env["CI_REPORT_IMAGE"],
+                     "baseRef": env.get("GITHUB_BASE_REF") or None,
+                     "baseSha": env.get("CI_REPORT_BASE_SHA") or None,
                      "fixture": fixture_digest(root), "popup": popup_results(root),
                      "panelCases": panel_count(root)})
 
@@ -154,7 +167,7 @@ def bind_result(result, run, expected_attempt):
     require((result["runId"], result["headSha"]) == (run["id"], run["head_sha"]),
             "Artifact does not belong to this run and head")
     require(result["runAttempt"] <= run["run_attempt"], "Artifact belongs to a future attempt")
-    if expected_attempt is not None:
+    if expected_attempt is not None and has_measurements(result):
         require(result["runAttempt"] == expected_attempt, "Artifact does not match the smoke job attempt")
     return result
 
@@ -164,6 +177,10 @@ def read_archive(raw, run, expected_attempt=None):
     with zipfile.ZipFile(io.BytesIO(raw)) as archive:
         result = validate(json.loads(archive.read(result_entry(archive)), object_pairs_hook=json_object))
     return bind_result(result, run, expected_attempt)
+
+
+def has_measurements(result):
+    return any(result[key] is not None for key in ("popup", "panelCases"))
 
 
 def has_popup(result):

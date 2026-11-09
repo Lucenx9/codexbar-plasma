@@ -1710,19 +1710,26 @@ or cancelled run still reports its job conclusions. Missing or rejected
 measurements never become passing test results. Panel records can be partial
 when capture fails; they are not a separate visual approval.
 
-`scripts/ci_report.py collect` runs in the unprivileged smoke job, including
-after test failures, and uploads `dist/ci-results.json` as the `ci-results`
-artifact for 30 days. Its ZIP contains `ci-results.json` at the root. The
-compact schema records the run ID/attempt, PR head SHA, tested merge SHA,
+`scripts/ci_report.py collect` first runs in the unprivileged scope job, including
+after coverage-selection failures. It records the original event's tested base
+branch and SHA even for editorial-only runs. The smoke job then replaces that
+record with runtime measurements, including after test failures. Both upload
+`dist/ci-results.json` as the `ci-results` artifact for 30 days. Its ZIP contains
+`ci-results.json` at the root. Schema version 2 records the run ID/attempt,
+PR head SHA, tested base branch/SHA, tested merge SHA,
 reported runtime-image and smoke-fixture fingerprints, popup scenario outcomes
 and seconds, and panel record count. Screenshots and full logs keep their
-existing seven-day retention. No artifact is required for reporting job status.
+existing seven-day retention. Missing or invalid artifacts still allow reporting
+historical job status, with an explicit warning that the tested PR target could
+not be verified. A record for a different current target is rejected.
 
 The publisher first looks for measurements from a successful push CI run at
 the exact PR base commit, then a recent successful base-branch run. It labels
 the selected baseline in the comment. Timing deltas and new popup failures
 appear only when both reports have the same schema, image/fixture fingerprints,
-and scenario IDs. Scenario seconds include setup and process startup. They are
+and scenario IDs. The fixture fingerprint includes the smoke harness, Makefile,
+and CI workflow, so renderer, theme, language, or invocation changes suppress
+incompatible comparisons. Scenario seconds include setup and process startup. They are
 diagnostic smoke timings, not a Plasmoid update-latency benchmark or a regression
 threshold. QtTest/Python totals, RAM usage, and code coverage are not collected
 by this report. Check the job logs for individual test suites, and inspect
@@ -1736,22 +1743,28 @@ It never checks out or executes the PR in this privileged job. ZIP input must
 contain exactly one bounded JSON file; paths, symlinks, unknown fields,
 unexpected types, duplicate scenario IDs, and invalid values are rejected.
 Artifact download requests never forward the GitHub token to signed storage.
-Measurement data still comes from the PR's CI and is not an independent audit.
+Measurement and tested-target data still come from the PR's CI and are not an
+independent audit. Oversized measurement details are omitted from the comment
+while job conclusions and artifact links remain available.
 
 Before writing, the publisher verifies the CI workflow ID, completed PR event,
-run attempt, head SHA, head repository/branch, and associated open PR. It checks
-again immediately before writing and skips superseded runs or event attempts.
+run attempt, head SHA, head repository/branch, associated open PR, and recorded
+tested target. It uses the immutable target record from the CI artifact because
+GitHub's PR fields on historical runs can change as the PR changes. Target changes
+during preparation are checked again immediately before writing.
 After a partial rerun it uses the latest job execution for each check. A retained
 measurement must match the latest smoke job's attempt, which the report labels
 when older than the overall run. Invalid JSON/compression and expired downloads
-omit measurements while preserving job conclusions; unavailable baselines do
-not abort publication.
+omit measurements while preserving job conclusions; unavailable baseline listings
+or downloads do not abort publication.
 
 A read-only source resolver derives a concurrency key from the head repository
 ID and branch. Automatic events and manual dispatches for the same source share
 that key, so comment creation cannot race. Different PR sources do not replace
-each other's pending publishers. New pending events for the same source can
-supersede older pending ones under GitHub's concurrency policy. These
+each other's pending publishers. Each request reconciles to the latest completed
+CI run for the source's current head, so a late stale request cannot discard a
+newer pending report. A newer in-progress run is awaited instead. Runs from other
+branches or forks at the same SHA cannot supersede this source. These
 checks support PRs from forks without giving the fork CI write credentials.
 
 Maintainer setup uses the existing GitHub App installation for this repository:

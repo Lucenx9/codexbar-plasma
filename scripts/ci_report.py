@@ -11,20 +11,36 @@ import re
 import urllib.parse
 
 from lib.ci_report_data import (ARTIFACT_ERRORS, JOBS, MARKER, MAX_RESULT, RESULT_FILE,
-                                SHA, collect, load_json, positive, require)
+                                SHA, collect, has_popup, load_json, positive, require)
 from lib.ci_report_github import GitHub
 from lib.ci_report_markdown import Report
 
 
 def current_run(api, run, pr):
     fresh = api.api(f"pulls/{pr['number']}")
-    if (fresh["state"], fresh["head"]["sha"]) != ("open", run["head_sha"]):
+    if not matching_pr(api.repo, run, fresh):
+        return False
+    if pr_target(fresh) != pr_target(pr):
         return False
     current = api.api(f"actions/runs/{run['id']}")
     if (current["run_attempt"], current["status"]) != (run["run_attempt"], "completed"):
         return False
     recent = api.api(f"actions/workflows/{run['workflow_id']}/runs?event=pull_request&head_sha={run['head_sha']}&per_page=100")
-    return not any(item["run_number"] > run["run_number"] for item in recent["workflow_runs"])
+    return not any(supersedes(item, run) for item in recent["workflow_runs"])
+
+
+def run_source(run):
+    if not run["head_repository"]:
+        return None
+    return positive(run["head_repository"]["id"]), run["head_branch"]
+
+
+def supersedes(candidate, run):
+    return run_source(candidate) == run_source(run) and candidate["run_number"] > run["run_number"]
+
+
+def pr_target(pr):
+    return pr["base"]["repo"]["full_name"], pr["base"]["ref"], pr["base"]["sha"]
 
 
 def latest_jobs(jobs, attempt):
@@ -49,19 +65,22 @@ def source_key(run):
     return hashlib.sha256(source.encode()).hexdigest()
 
 
-def matching_pr(repo, run, pr):
+def matching_source(repo, run, pr):
     if pr["state"] != "open":
         return False
     if not pr["head"]["repo"] or not run["head_repository"]:
         return False
-    actual = (pr["head"]["sha"], pr["base"]["repo"]["full_name"],
-              pr["head"]["repo"]["id"], pr["head"]["ref"])
-    expected = (run["head_sha"], repo, run["head_repository"]["id"], run["head_branch"])
+    actual = pr["base"]["repo"]["full_name"], (pr["head"]["repo"]["id"], pr["head"]["ref"])
+    expected = repo, run_source(run)
     return actual == expected
 
 
+def matching_pr(repo, run, pr):
+    return matching_source(repo, run, pr) and pr["head"]["sha"] == run["head_sha"]
+
+
 def associated_pr(api, run):
-    candidates = [pr for pr in api.pages(f"commits/{run['head_sha']}/pulls") if matching_pr(api.repo, run, pr)]
+    candidates = [pr for pr in api.pages("pulls?state=open") if matching_source(api.repo, run, pr)]
     if len(candidates) != 1:
         return None
     return candidates[0]
@@ -73,6 +92,27 @@ def attempt_current(run, expected_attempt):
     if expected_attempt is None:
         return True
     return run["run_attempt"] == positive(expected_attempt)
+
+
+def eligible_source(candidate, requested, pr):
+    return run_source(candidate) == run_source(requested) and candidate["head_sha"] == pr["head"]["sha"]
+
+
+def latest_source_run(api, requested, pr):
+    branch = urllib.parse.quote(requested["head_branch"], safe="")
+    query = f"actions/workflows/{requested['workflow_id']}/runs?event=pull_request&head_sha={pr['head']['sha']}&branch={branch}"
+    candidates = (item for item in api.pages(query, "workflow_runs") if eligible_source(item, requested, pr))
+    latest = max(candidates, key=lambda item: item["run_number"], default=None)
+    if latest is None:
+        return None
+    current = source_run(api, latest["id"])
+    if not eligible_source(current, requested, pr) or not attempt_current(current, None):
+        return None
+    return current
+
+
+def tested_target_matches(result, pr):
+    return (result["baseRef"], result["baseSha"]) == (pr["base"]["ref"], pr["base"]["sha"])
 
 
 def bot_author(comment, login):
@@ -100,9 +140,15 @@ class Publisher:
     def baseline_candidates(self):
         branch = urllib.parse.quote(self.pr["base"]["ref"], safe="")
         query = f"actions/workflows/{self.run['workflow_id']}/runs?event=push&branch={branch}&status=success"
-        recent = self.api.api(query + "&per_page=20")["workflow_runs"]
-        exact = self.api.api(query + f"&head_sha={self.pr['base']['sha']}&per_page=20")["workflow_runs"]
+        recent = self.baseline_runs(query + "&per_page=20")
+        exact = self.baseline_runs(query + f"&head_sha={self.pr['base']['sha']}&per_page=20")
         return (exact + [run for run in recent if run["head_sha"] != self.pr["base"]["sha"]])[:20]
+
+    def baseline_runs(self, query):
+        try:
+            return self.api.api(query)["workflow_runs"]
+        except ARTIFACT_ERRORS:
+            return []
 
     def baseline(self):
         for candidate in self.baseline_candidates():
@@ -110,7 +156,7 @@ class Publisher:
                 result = self.api.artifact(candidate)
             except ARTIFACT_ERRORS:
                 continue
-            if result:
+            if has_popup(result):
                 return result, dict(candidate, exact_base=candidate["head_sha"] == self.pr["base"]["sha"])
         return None, None
 
@@ -134,21 +180,27 @@ class Publisher:
         jobs = latest_jobs(self.api.pages(f"actions/runs/{self.run['id']}/jobs?filter=all", "jobs"),
                            self.run["run_attempt"])
         result, rejected = self.measurements(jobs)
+        if result is not None and not tested_target_matches(result, self.pr):
+            print("Skipping CI results for a different tested PR target.")
+            return None
         baseline, baseline_run = self.baseline()
         body = Report(self.api.repo, self.run, jobs, result, baseline=baseline,
-                      baseline_run=baseline_run, rejected=rejected).render()
+                      baseline_run=baseline_run, rejected=rejected, target_verified=result is not None).render()
         return self.write_comment(body)
 
 
 def publish(api, run_id, expected_login, expected_attempt=None):
     require(re.fullmatch(r"[a-zA-Z0-9-]+\[bot\]", expected_login), "Invalid bot login")
-    run = source_run(api, run_id)
-    if not attempt_current(run, expected_attempt):
-        print("Skipping incomplete or superseded CI attempt.")
-        return None
-    pr = associated_pr(api, run)
-    if pr is None or not current_run(api, run, pr):
+    requested = source_run(api, run_id)
+    if expected_attempt is not None:
+        positive(expected_attempt)
+    pr = associated_pr(api, requested)
+    if pr is None:
         print("Skipping stale, closed, or ambiguous PR result.")
+        return None
+    run = latest_source_run(api, requested, pr)
+    if run is None or not current_run(api, run, pr):
+        print("No completed current CI run for this PR source.")
         return None
     return Publisher(api, run, pr, expected_login).publish()
 

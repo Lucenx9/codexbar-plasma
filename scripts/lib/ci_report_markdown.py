@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from lib.ci_report_data import JOBS, MARKER, comparable, require
+from lib.ci_report_data import JOBS, MARKER, comparable, has_measurements, require
 
 STATUSES = {"success", "failure", "cancelled", "skipped", "timed_out", "action_required", "neutral"}
 
@@ -58,13 +58,20 @@ class Report:
     baseline: dict | None = None
     baseline_run: dict | None = None
     rejected: bool = False
+    target_verified: bool = True
 
     def run_url(self):
         return f"https://github.com/{self.repo}/actions/runs/{self.run['id']}/attempts/{self.run['run_attempt']}"
 
     def header(self):
-        return [MARKER, f"<!-- ci-report-run:{self.run['id']}:{self.run['run_attempt']} -->", "## CI report", "",
-                f"Commit `{self.run['head_sha'][:12]}` · [CI run]({self.run_url()}) · {self.run['conclusion']}", ""]
+        lines = [MARKER, f"<!-- ci-report-run:{self.run['id']}:{self.run['run_attempt']} -->", "## CI report", "",
+                 f"Commit `{self.run['head_sha'][:12]}` · [CI run]({self.run_url()}) · {self.run['conclusion']}", ""]
+        if not self.target_verified:
+            lines += ["Tested target unverified: these are historical run results, not confirmation for the current PR target.", ""]
+        return lines
+
+    def retained_measurements(self):
+        return self.result["runAttempt"] != self.run["run_attempt"] and has_measurements(self.result)
 
     def check_table(self):
         statuses = {job["name"]: job["conclusion"] for job in self.jobs if job["name"] in JOBS}
@@ -80,8 +87,11 @@ class Report:
         if self.result is None:
             return ["", "Measurement artifact unavailable or rejected by validation." if self.rejected else
                     "No measurement artifact was produced; check the job results above."]
+        if not has_measurements(self.result):
+            return ["", "No runtime measurements were produced; check the job results above.",
+                    f"Reported tested tree: `{self.result['testedSha'][:12]}`."]
         lines = ["", "### Runtime measurements", ""]
-        if self.result["runAttempt"] != self.run["run_attempt"]:
+        if self.retained_measurements():
             lines += [f"Measurements retained from CI attempt {self.result['runAttempt']}; the smoke job was not rerun.", ""]
         lines += popup_summary(self.result["popup"])
         count = self.result["panelCases"]
@@ -98,11 +108,17 @@ class Report:
                 "Exact PR base commit." if run.get("exact_base") else
                 "Latest successful base-branch run with measurements; the exact PR base has no available measurements."]
 
-    def render(self):
-        lines = self.header() + self.check_table() + self.measurement_lines() + self.baseline_lines()
+    def report_lines(self, measurements):
+        lines = self.header() + self.check_table() + measurements + self.baseline_lines()
         lines += ["", "[Popup and panel artifacts](" + self.run_url() + "#artifacts)", "",
                   "Results are reported by trusted code; PR artifacts are data, never executed. "
                   "Existing required CI checks remain the merge gates. Screenshots require human visual review."]
-        body = "\n".join(lines)
+        return lines
+
+    def render(self):
+        body = "\n".join(self.report_lines(self.measurement_lines()))
+        if len(body.encode()) > 60000:
+            body = "\n".join(self.report_lines([
+                "", "Scenario details were omitted to fit the comment size limit. Full results are in the artifacts."]))
         require(len(body.encode()) <= 60000, "Rendered report exceeds the comment size limit")
         return body
