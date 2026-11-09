@@ -114,9 +114,10 @@ function dashboardRows(source, seen, depth) {
 }
 
 function row(labelKey, label, parts, name) {
+    var displayLabel = label ? Normalizer.boundedDisplayText(label, 120) : "";
     return {
-        labelKey: label ? "" : labelKey,
-        label: label ? Normalizer.boundedDisplayText(label, 120) : "",
+        labelKey: displayLabel.length > 0 ? "" : labelKey,
+        label: displayLabel,
         parts: parts,
         name: name || ""
     };

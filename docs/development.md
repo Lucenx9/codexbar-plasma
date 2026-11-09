@@ -205,6 +205,11 @@ synchronized.
   precedence, totals, qualifiers, count plurals, dashboard bounds and regional
   format changes. Catalog and integration fixtures exercise the production
   component through its root adapters, including all six shipped languages.
+  `LegacyUsageDashboard.js` normalizes compatibility dashboard rows before
+  localization. A custom period label replaces its semantic label key only
+  after bounding and validation leave displayable text; otherwise the existing
+  translated label remains available. Direct dashboard QtTests and the
+  UsageResponse-to-CostText tests cover malformed labels without losing amounts.
   The direct `tst_cost_presentation.qml` suite exercises each pure module through
   the same interfaces used by production callers. It covers finite drawing
   coordinates and clamped corners, overflow, sparse dates, currency precedence,

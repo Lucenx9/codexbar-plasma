@@ -11,6 +11,38 @@ TestCase {
         });
     }
 
+    function test_unusablePeriodLabelsKeepTheSemanticFallback_data() {
+        var cases = [];
+        var labels = [{}, [], ["Ignored label"], {toString: null}, "   ", "\n", "\u0000"];
+        for (var period of ["last30Days", "daily", "usageBreakdown"]) {
+            for (var i = 0; i < labels.length; i++)
+                cases.push({tag: period + "-" + i, period: period, label: labels[i]});
+        }
+        return cases;
+    }
+
+    function test_unusablePeriodLabelsKeepTheSemanticFallback(data) {
+        var source;
+        var key;
+        if (data.period === "last30Days") {
+            source = {historyWindowLabel: data.label, last30Days: {costUSD: 7}};
+            key = "last30Days";
+        } else if (data.period === "daily") {
+            source = {daily: [{label: data.label, costUSD: 7}]};
+            key = "latest";
+        } else {
+            source = {usageBreakdown: [{day: data.label, costUSD: 7}]};
+            key = "latestDashboardDay";
+        }
+        var before = JSON.stringify(source);
+        var result = normalizeSource(source);
+        compare(result.rows.length, 1);
+        compare(result.rows[0].parts, [{kind: "currency", value: 7, currency: "USD"}]);
+        compare(result.rows[0].label, "");
+        compare(result.rows[0].labelKey, key);
+        compare(JSON.stringify(source), before);
+    }
+
     function test_missingAndMalformedEnvelopes_data() {
         return [
             {

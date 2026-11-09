@@ -1248,6 +1248,8 @@ fields; track proposed extensions in the issue tracker.
 - **Popup** independently controls pace text/markers, credits/reset credits, and
   additional provider details/billing dashboards. These are visible by default;
   changing them does not refetch data or change panel metrics or alerts.
+  Legacy billing-dashboard rows keep their translated period labels when an
+  optional CLI label is blank or malformed; valid custom labels take precedence.
 - **Popup → Show reset times as clock time** names the weekday and time for a
   reset within the next six days, and the date and time for one further away,
   such as a monthly limit or a weekly limit that just reset. Day and month

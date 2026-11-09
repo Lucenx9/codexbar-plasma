@@ -1,6 +1,7 @@
 import QtQuick
 import QtTest
 import "../contents/ui/CostAmounts.js" as CostAmounts
+import "../contents/ui/UsageResponse.js" as UsageResponse
 import "../contents/ui/components" as Components
 
 TestCase {
@@ -275,6 +276,29 @@ TestCase {
             },
             { totals: { cost: 9, tokens: 400, currency: "EUR" } }
         ]), "$2.00 (estimated) subtotal \u00b7 500 tokens");
+    }
+
+    function test_dashboardPeriodLabelSurvivesUsageNormalization_data() {
+        return [
+            {tag: "object", label: {toString: null}, expected: "30d"},
+            {tag: "array", label: ["Ignored label"], expected: "30d"},
+            {tag: "whitespace", label: "   ", expected: "30d"},
+            {tag: "missing", label: null, expected: "30d"},
+            {tag: "custom", label: "Custom period", expected: "Custom period"}
+        ];
+    }
+
+    function test_dashboardPeriodLabelSurvivesUsageNormalization(data) {
+        regionalFormat = CostAmounts.numberFormat(",", ".");
+        var response = UsageResponse.response(JSON.stringify([{provider: "codex",
+            usage: {primary: {usedPercent: 42}},
+            openaiDashboard: {historyWindowLabel: data.label, last30Days: {costUSD: 7}}}]),
+            "", "", 1000, 0);
+        compare(response.outcome, "success");
+        compare(response.items[0].rows[0].usedPercent, 42);
+        var displayed = subject.dashboardDisplayRow(response.items[0].usageDashboard.rows[0]);
+        compare(displayed.label, data.expected);
+        compare(displayed.value, "$7.00");
     }
 
     function test_dashboardRowsPreferNameFirstPartAndBoundText() {

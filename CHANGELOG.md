@@ -99,6 +99,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep translated period labels beside legacy billing-dashboard amounts when
+  optional CLI labels are blank or malformed.
 - Keep a successful empty provider list authoritative during startup: clear
   saved quotas before delayed cache verification can restore removed providers.
   Failed startup refreshes still restore last-known usage.
