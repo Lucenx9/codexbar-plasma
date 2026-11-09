@@ -29,6 +29,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Center each popup tab's icon and label within the tab, end the Overview
+  row chevron on the same edge as its percentages, and start the Usage & Spend
+  heatmap on the same line as the first provider row.
 - Rename the panel styles to **Provider colors** and **Monochrome**. Label the
   separate preset **Show only icons and meters** and explain that it switches
   to monochrome, enables meters, and hides names, usage text, and credits.

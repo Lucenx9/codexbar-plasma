@@ -23,6 +23,14 @@ Rectangle {
         ? Kirigami.Theme.textColor
         : applet.withAlpha(Kirigami.Theme.textColor, 0.72)
     readonly property bool textTruncated: tabLabel.truncated
+    // Split the width reserved around the label evenly, so the icon and label
+    // sit centered in the selection surface instead of hugging its leading
+    // edge. A tab too narrow for its label keeps the minimum inset.
+    readonly property real contentInset: showLabel
+        ? Math.max(Kirigami.Units.smallSpacing, Math.floor((width
+            - Kirigami.Units.iconSizes.small - Kirigami.Units.smallSpacing
+            - Math.ceil(tabLabelSizing.implicitWidth)) / 2))
+        : Kirigami.Units.smallSpacing
 
     signal activated()
 
@@ -137,6 +145,8 @@ Rectangle {
 
         anchors.fill: parent
         anchors.margins: Kirigami.Units.smallSpacing
+        anchors.leftMargin: tab.contentInset
+        anchors.rightMargin: tab.contentInset
         // Spacing around the empty centering spacers would push the icon
         // off-center in narrow icon-only tabs.
         spacing: tab.showLabel ? Kirigami.Units.smallSpacing : 0

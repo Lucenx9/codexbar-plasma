@@ -290,6 +290,13 @@ Item {
                     // together; a tab without a quota centers its icon. Labels
                     // stay on the same line as the global tab labels.
                     readonly property real gaugeShift: meter >= 0 ? (gaugeGap + gaugeHeight) / 2 : 0
+                    // Center the icon and label in the tab, as GlobalTab does. A
+                    // title capped at the maximum tab width keeps the minimum inset.
+                    readonly property real contentInset: applet.showPopupTabLabels
+                        ? Math.max(Kirigami.Units.smallSpacing, Math.floor((width
+                            - Kirigami.Units.iconSizes.small - Kirigami.Units.smallSpacing
+                            - Math.ceil(providerTabLabelSizing.implicitWidth)) / 2))
+                        : Kirigami.Units.smallSpacing
 
                     function activate() {
                         fullRoot.closeAiInsights(false, false)
@@ -407,8 +414,8 @@ Item {
                         id: providerTabContent
 
                         anchors.fill: parent
-                        anchors.leftMargin: Kirigami.Units.smallSpacing
-                        anchors.rightMargin: Kirigami.Units.smallSpacing
+                        anchors.leftMargin: providerTab.contentInset
+                        anchors.rightMargin: providerTab.contentInset
                         // Rows center vertically, so the full height only gives the
                         // raised icon room in short strips without moving labels.
                         // Spacing around the empty centering spacers would push

@@ -370,6 +370,9 @@ ColumnLayout {
                         text: i18n("Activity heatmap")
                         font.weight: Font.DemiBold
                         Layout.fillWidth: true
+                        // Match the Providers column's heading gap, so the grid
+                        // and the first provider row start on the same line.
+                        Layout.bottomMargin: Kirigami.Units.smallSpacing / 2
                         elide: Text.ElideRight
                     }
 

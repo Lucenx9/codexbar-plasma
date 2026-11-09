@@ -159,6 +159,9 @@ Rectangle {
                 Layout.alignment: Qt.AlignVCenter
                 Layout.preferredWidth: Kirigami.Units.iconSizes.small
                 Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                // The chevron is drawn inset in its icon box; pull the box out
+                // so the glyph ends on the same edge as the percentages below.
+                Layout.rightMargin: -Kirigami.Units.smallSpacing
                 Accessible.role: Accessible.Graphic
                 Accessible.ignored: true
             }
