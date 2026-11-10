@@ -346,6 +346,9 @@ def main():
     def interrupt(_signum, _frame):
         # selectors.select() catches InterruptedError internally. Use a
         # distinct exception so cancellation reaches process-group cleanup.
+        # Repeated timeout/group signals must not interrupt that cleanup.
+        signal.signal(signal.SIGTERM, signal.SIG_IGN)
+        signal.signal(signal.SIGINT, signal.SIG_IGN)
         raise RequestInterrupted
 
     signal.signal(signal.SIGTERM, interrupt)

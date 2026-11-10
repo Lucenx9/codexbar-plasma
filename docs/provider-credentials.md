@@ -91,6 +91,7 @@ malformed, repeated or oversized records fail closed. The pinned conflict error
 maps to a localized retry message; other CLI prose is discarded. Input cancellation
 performs no write. Separate prompt and CLI deadlines, CLI process-group cleanup,
 pending locks, executable signatures and command nonces reuse the cookie path.
+Repeated termination signals cannot interrupt the helper's process-group cleanup.
 Retired or timed-out replies cannot change enablement or refresh revisions.
 Synthetic process and QML tests cover successful import, validation failure,
 conflict, cancellation, timeout, stale replies and stdin-only secret handling.

@@ -113,6 +113,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Finish credential process cleanup even when repeated cancellation signals arrive.
+
 - Tidy the Popup settings provider lists: keep the order buttons near each
   provider name and on the same edge as the restore actions, separate provider
   order from the Overview choice, and keep the Automatic hint with its option.

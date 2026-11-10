@@ -34,13 +34,15 @@ if sys.argv[2] != 'login':
     root.joinpath('input').write_bytes(value)
     provider = sys.argv[sys.argv.index('--provider') + 1]
     if mode.startswith('child-'):
+        if mode == 'child-resistant':
+            signal.signal(signal.SIGTERM, lambda *_: root.joinpath('stopping').touch())
         child = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(60)'],
                                  stdin=subprocess.DEVNULL,
                                  stdout=None if mode == 'child-pipe' else subprocess.DEVNULL)
         root.joinpath('child.pid').write_text(str(child.pid))
         if mode == 'child-closed-pipes':
             os.close(1)
-        if mode in ('child-hang', 'child-closed-pipes'):
+        if mode in ('child-hang', 'child-closed-pipes', 'child-resistant'):
             time.sleep(60)
     if mode == 'refuse':
         print(json.dumps({'error': {'message': value.decode()}}))
@@ -277,11 +279,34 @@ class ProviderAuthTests(unittest.TestCase):
             except ProcessLookupError:
                 pass
 
-    def wait_credential_child(self):
+    def wait_credential_child(self, marker='child.pid'):
         deadline = time.monotonic() + 5
-        while not self.root.joinpath('child.pid').exists() and time.monotonic() < deadline:
+        while not self.root.joinpath(marker).exists() and time.monotonic() < deadline:
             time.sleep(.02)
-        self.assertTrue(self.root.joinpath('child.pid').exists())
+        self.assertTrue(self.root.joinpath(marker).exists())
+
+    def test_repeated_signals_do_not_interrupt_credential_cleanup(self):
+        self.addCleanup(self.stop_fixture_process, 'cli')
+        self.addCleanup(self.stop_fixture_process, 'child')
+        process = subprocess.Popen(self.arguments(action='clear-credential'),
+                                   env={**self.env, 'AUTH_MODE': 'child-resistant'},
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        try:
+            self.wait_credential_child()
+            process.send_signal(signal.SIGTERM)
+            self.wait_credential_child('stopping')
+            process.send_signal(signal.SIGINT)
+            out, err = process.communicate(timeout=5)
+            self.assertEqual(json.loads(out)['status'], 'failed')
+            self.assertEqual(err, '')
+            self.assert_stopped('cli')
+            self.assert_stopped('child')
+        finally:
+            if process.poll() is None:
+                process.kill()
+                process.wait()
+            process.stdout.close()
+            process.stderr.close()
 
     def test_credential_completion_stops_wrapper_descendants(self):
         self.addCleanup(self.stop_fixture_process, 'child')
