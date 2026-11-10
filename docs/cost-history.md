@@ -14,6 +14,10 @@ snapshot without a usable `updatedAt` keeps its Today amounts.
 
 ## Data and display rules
 
+- Repeated provider IDs in one cost reply prefer a snapshot with measured
+  amounts over an empty one, including measured zero, then keep the first
+  successful measurement. Later duplicates cannot erase its amounts. Failed
+  records still report the refresh error and never block a successful sibling.
 - Day models come from the selected `cost.daily[].modelBreakdowns[]` record.
   Missing day models never fall back to period totals.
 - Display at most six models per day and report truncation. Period models also

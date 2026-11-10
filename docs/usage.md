@@ -992,7 +992,9 @@ and clipboard content remain under your control after closing the window.
   snapshot scanned before midnight shows today as unavailable until a scan from
   today arrives. Malformed provider error messages use a generic
   warning while healthy providers update and failed providers keep their
-  previous costs. Malformed period metadata also keeps the day-range fallback
+  previous costs. Repeated provider IDs in one reply keep the first successful
+  measurement in preference to empty records, including measured zero.
+  Malformed period metadata also keeps the day-range fallback
   and any legacy range label usable while healthy providers update.
 - Dated history stays inside the selected period even when duplicate or
   malformed records prevent filling gaps. Incomplete scans retain observed
