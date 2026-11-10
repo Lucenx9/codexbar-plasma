@@ -174,8 +174,10 @@ work and upstream contract requirements.
   quota resetting in ten days shows `4.00% per day until reset`. This is an even
   allocation of the remainder, independent of pace forecasts. It requires an
   explicit 28–31-day window and a future reset from the CLI, uses at least one
-  day, and handles local daylight-saving changes. Missing, estimated, unknown,
-  or retained readings show no daily allowance. Numeric quota presentation
+  day, and handles local daylight-saving changes. Reset timestamps must be valid
+  ISO-8601 dates with an explicit timezone; impossible dates and ambiguous local
+  times show no daily allowance, including in privacy mode. Missing, estimated,
+  unknown, or retained readings show no daily allowance. Numeric quota presentation
   remains available in privacy mode. This option is off by default and never
   combines currency or quota units.
 - Enable **Panel → Additional information → Name the quota chosen by Automatic**

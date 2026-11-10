@@ -2,6 +2,7 @@
 .import "Guards.js" as Guards
 .import "CostPresentation.js" as CostPresentation
 .import "ProviderNormalizer.js" as Normalizer
+.import "SubscriptionDates.js" as SubscriptionDates
 
 // This is a presentation boundary over normalized snapshots. Private mode
 // retains numeric observations and drops provider prose instead of trying to
@@ -25,8 +26,8 @@ function known(value, options, fallback) {
 }
 
 function timestamp(value) {
-    var parsed = typeof value === "string" ? Date.parse(value) : NaN
-    return isFinite(parsed) ? new Date(parsed).toISOString() : ""
+    var parsed = SubscriptionDates.date(value, false, "")
+    return parsed ? new Date(parsed.timestampMs).toISOString() : ""
 }
 
 function errorText(value, enabled, hiddenText) {

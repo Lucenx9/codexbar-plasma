@@ -10,6 +10,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Fixed
+
+- Reject impossible or ambiguous reset timestamps when calculating the remaining
+  monthly quota per day, including in privacy mode, instead of silently moving
+  invalid dates into the next month.
+
 ## 0.2.55 - 2026-11-10
 
 ### Added

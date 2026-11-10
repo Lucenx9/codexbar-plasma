@@ -1,6 +1,7 @@
 .pragma library
 .import "ProviderNormalizer.js" as Normalizer
 .import "Guards.js" as Guards
+.import "SubscriptionDates.js" as SubscriptionDates
 
 function monthlyWindow(row) {
     if (!Normalizer.canPresentQuotaDetails(row) || row.hasPercent !== true) return false;
@@ -15,8 +16,8 @@ function measuredRemainder(row) {
 }
 
 function resetTimestamp(row) {
-    return typeof row.resetsAt === "string" && row.resetsAt.length <= 128
-        ? Date.parse(row.resetsAt) : NaN;
+    var reset = SubscriptionDates.date(row.resetsAt, false, "reset");
+    return reset ? reset.timestampMs : NaN;
 }
 
 // An even division of the measured remainder, never a consumption forecast.
