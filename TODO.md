@@ -8,14 +8,15 @@ Issues linked below preserve discussion; this file owns parity status.
 
 ## Review baseline
 
-- Last release reviewed: [CodexBar 0.83.0](https://github.com/steipete/CodexBar/releases/tag/v0.83.0),
-  commit `348e2fa8d36ae8e452739ca07a79e83ab9d25e98`, checked 2026-11-01.
-- Coverage: the [0.83.0 review](docs/research/2026-11-01-macos-parity-0.83.0.md)
-  against Plasma `59d45ba` verifies the 111-provider registry with OpenDesign,
-  the new inventory `authentication` record against the writers, the identified
-  Codex ledger schema 2 that Plasma's decoder rejected at that commit, and
-  unchanged carried blockers. Schema 1/2 support was implemented after that
-  review. Authenticated output remains unverified.
+- Last release reviewed: [CodexBar 0.84.0](https://github.com/steipete/CodexBar/releases/tag/v0.84.0),
+  commit `5bebf9a05e68059eae11d5031c7239f1aa1d49ef`, checked 2026-11-10.
+- Coverage: the [0.84.0 review](docs/research/2026-11-10-macos-parity-0.84.0.md)
+  against Plasma `ad1d246` verifies the 113-provider registry, SiliconFlow and
+  Tripo key writers, Claude Platform stdin-login validation/failure, Codex
+  ordinary symlinked-history accounting and the remaining identified-discovery
+  bug, schema 2 decoder compatibility, OpenCode Go's
+  unavailable-cost output, and scoped carried blockers. New setup gaps are
+  below; authenticated balances and successful Console login remain unverified.
 - Earlier reviews: each dated note in the
   [documentation index](docs/README.md#maintained-references) records its own
   release coverage, probes, and unverified cases. Shared payload structs retain
@@ -25,6 +26,34 @@ Issues linked below preserve discussion; this file owns parity status.
   Later probes verify only their named cases. Older blockers below retain their
   last verified version; source inspection is not authenticated output evidence.
 
+## Plasma-native and implementable now
+
+- [ ] Add version-gated SiliconFlow and Tripo single-key setup and tested
+  fallback metadata. Official Linux 0.84.0 discovers both providers, advertises
+  API-key support, stores synthetic keys through `set-api-key --stdin`, and
+  reaches the API under Auto and API. Plasma discovers both but its curated
+  key policy rejects them. Done when CLI 0.84.0 or later offers secure key
+  prompts, older/unknown versions hide them, and names/links remain useful
+  without inventory metadata. SiliconFlow's China origin is the default;
+  the optional international-origin editor remains CLI-blocked below.
+  [Evidence](docs/research/2026-11-10-macos-parity-0.84.0.md#linux-cli-contract-changes).
+- [ ] Add WorkBuddy to the verified Linux manual-cookie action allowlist with
+  CLI 0.84.0 or later. Its supported stdin writer and stored-cookie Web dispatch
+  were verified, but Plasma hides the action. Done when the existing private
+  cookie prompt is version/capability-gated and covered by lifecycle tests.
+  Successful billing remains unverified; the optional User-Agent editor is a
+  separate CLI blocker below.
+  [Evidence](docs/research/2026-11-10-macos-parity-0.84.0.md#linux-cli-contract-changes).
+- [ ] Offer Claude Platform's validated session import through official
+  `config login --provider claudeplatform --stdin --json` with CLI 0.84.0 or
+  later. Existing Set cookie stores without validation; the new command
+  validates before saving. Only `promptDescriptorSecret` may carry the cookie;
+  no secret may enter QML or process arguments. Done when a private prompt
+  handles authorized, failed, cancelled, conflict and stale outcomes with
+  bounded lifecycle tests and documented behavior. Successful authenticated
+  authorization remains unverified; preserve existing cookie setup meanwhile.
+  [Contract and limits](docs/research/2026-11-10-macos-parity-0.84.0.md#linux-cli-contract-changes).
+
 ## Blocked on official Linux CLI contracts
 
 These are useful Linux features once the named contract exists. Do not fill
@@ -33,10 +62,10 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Private account selection
 
 - [ ] Avoid passing account labels, which may be email addresses, in usage
-  process arguments. Official Linux CLI 0.79.0 advertises `--account` and
+  process arguments. Official Linux CLI 0.84.0 advertises `--account` and
   `--account-index`, but rejects `usage --account-stdin --format json --json-only`
   with `Unknown option --account-stdin` (isolated empty configuration,
-  2026-10-21, exit 1). A private-input selector would close this exposure.
+  2026-11-10, exit 1). A private-input selector would close this exposure.
   Before choosing an index workaround, verify a supported mapping from the
   discovered account identities to CLI indexes across refreshes and config
   changes; the frontend currently deduplicates account options by identity.
@@ -55,7 +84,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   [Future AGI](docs/research/2026-10-17-macos-parity-0.77.0.md#linux-cli-contract-changes).
 
 - [ ] Enable generic settings and token-account editing through official
-  descriptors and writes. Linux 0.83.0 still rejects `config providers
+  descriptors and writes. Linux 0.84.0 still rejects `config providers
   --descriptors`; its read-only `authentication` record (see the
   [provider settings guide](docs/usage.md#providers-and-accounts)) names source
   modes, key/cookie support, and environment variables,
@@ -87,15 +116,27 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   [0.83.0 inventory](docs/research/2026-11-01-macos-parity-0.83.0.md#linux-cli-contract-changes);
   [prior discussion #167](https://github.com/Lucenx9/codexbar-plasma/issues/167).
 
+- [ ] Support WorkBuddy's manual User-Agent and SiliconFlow's optional regional
+  API origin through official writers. Linux 0.84.0 rejects `set-cookie
+  --provider workbuddy --user-agent` and `set-api-key --provider siliconflow
+  --base-url`. Source reads `workBuddyUserAgent` from config, without a CLI
+  writer; SiliconFlow accepts `SILICONFLOW_BASE_URL` in the environment and
+  defaults to the China API. Done when released descriptors/writers cover
+  these fields and Plasma can save them without editing config or passing
+  secrets in arguments. WorkBuddy's stored synthetic cookie reaches the Linux
+  Web fetch, but authenticated behavior with a matching User-Agent is unverified.
+  [Evidence](docs/research/2026-11-10-macos-parity-0.84.0.md#linux-cli-contract-changes).
+
 ### Provider onboarding
 
 - [ ] Add CLI-described browser-cookie import, local-file setup, OAuth/device
-  flow, CLI-auth setup, and token-account actions. Linux 0.83.0 still has no
+  flow, CLI-auth setup, and token-account actions. Linux 0.84.0 still has no
   generic `config action` command (`set-api-key`, `set-source`, `set-cookie`,
-  and `clear-credential` are field writers; the 0.83.0 inventory names only
+  and `clear-credential` are field writers; the 0.84.0 inventory names only
   Copilot's `loginCommand`; the `usage_updated` hook event
-  is CLI automation surface, not a setup action). The Copilot-only `config login`
-  has a version-gated Plasma action; generic provider login actions remain
+  is CLI automation surface, not a setup action). Copilot device login
+  has a version-gated Plasma action; 0.84.0 adds the separate Claude Platform
+  stdin session import tracked above. Generic provider login actions remain
   blocked. Trae CN browser import remains macOS-only; its manual-cookie setup
   is available through the supported writer. Done when supported actions expose
   validated
@@ -149,7 +190,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Cursor cost
 
 - [ ] Show Cursor cost history through the generic Linux `cost` path. Linux
-  0.83.0 still rejects Cursor and lists Antigravity, Claude, Codex, Muse
+  0.84.0 still rejects Cursor and lists Antigravity, Claude, Codex, Muse
   Code, OpenCode Go, and Pi as supported; the 0.74.0 `cursor-agent` login
   (#4397) changes usage authentication only;
   the descriptor gate keeps the new cookie-source availability errors unreachable.
@@ -170,6 +211,18 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   establish attribution, with regressions for account changes and late cost
   replies. Do not infer identity from usage labels or scan provider logs in QML.
   [Evidence](docs/cost-history.md#pinned-cli-evidence).
+
+### Identified history discovery
+
+- [ ] Restore identified-token collection through symlinked Codex session
+  roots in the official CLI. In isolated Linux 0.83.0 and 0.84.0, the same
+  dated native file yields one identified request and 111 tokens in a normal
+  `sessions` directory, but an empty schema 2 ledger with `partial: false`
+  when that root is a symlink. The 0.84.0 ordinary-cost symlink fix does not
+  fix this separate command. Done when a released CLI produces the same
+  identified records through both roots and the widget's existing decoder is
+  verified against them. Do not scan native logs or infer missing tokens in QML.
+  [Evidence](docs/research/2026-11-10-macos-parity-0.84.0.md#linux-cli-contract-changes).
 
 ### Service-tier totals
 
@@ -196,6 +249,9 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   out invalid model-breakdown and daily totals instead of emitting them, which
   keeps unknown amounts out of the JSON without supplying an explicit
   unavailable-versus-zero field.
+  With OpenCode Go absent, Linux 0.84.0 omits totals and returns exit
+  0 instead of the 0.83.0 error; Plasma preserves null amounts. That scoped
+  case does not resolve the Antigravity established-empty ambiguity.
   Done when verified
   Linux fields distinguish unavailable from measured zero, with old-payload compatibility and
   usable token charts. [Prior discussion #173](https://github.com/Lucenx9/codexbar-plasma/issues/173).
@@ -218,7 +274,8 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 - [ ] Offer display-currency selection and conversion through an official Linux
   contract. The 0.56.2 audit records no display-currency setter or descriptor;
   the scoped 0.57.0, 0.58.0, 0.60.4, 0.67.0, 0.69.0, 0.72.0, 0.73.0,
-  0.74.0, 0.74.1, 0.75.0, 0.76.0, 0.77.0, 0.80.0, 0.81.0, 0.82.0, and 0.83.0 config probes expose neither,
+  0.74.0, 0.74.1, 0.75.0, 0.76.0, 0.77.0, 0.80.0, 0.81.0, 0.82.0,
+  0.83.0, and 0.84.0 config probes expose neither,
   although macOS 0.67.0 adds twelve spend-estimate currencies. Plasma currently
   displays the CLI-emitted currency. Done when released settings and converted
   amounts define currency, rate provenance, and unavailable-conversion behavior,
@@ -243,6 +300,9 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   but authenticated Linux output is unverified and Plasma currently discards
   its explicit `balance` field. Do not infer balance semantics from its period
   text.
+  The 0.84.0 Neuralwatt plugin also adds a typed `providerCost.balance`, while
+  SiliconFlow and Tripo expose balance/credit detail text; none was observed
+  with authenticated Linux output in this review.
   Done when the widget can display
   that record without parsing provider text,
   overriding a real quota, or treating a balance as an allowance.
@@ -320,6 +380,15 @@ These are unresolved Linux candidates, not confirmed missing features.
   unavailable spend, and the Claude unavailable model breakdown. Done when
   emitted Linux output shows whether Plasma's generic paths suffice.
   [Limits](docs/research/2026-11-01-macos-parity-0.83.0.md#unverified-in-this-review).
+- [ ] Verify 0.84.0 authenticated output: SiliconFlow regional balances, Tripo
+  available/reserved credits, Synthetic weekly credits and regeneration,
+  Neuralwatt's typed balance, TypeSafe billing, Kiro token recovery/Pro+,
+  Bedrock measured zero days, and Claude weekly-only/model-breakdown states.
+  Compare current window names, including Cursor's monthly Auto allowance,
+  with Plasma's static lane-label table before changing labels. Done when
+  emitted Linux records establish whether generic details, quota and cost
+  paths suffice and any label change has a bounded contract.
+  [Limits](docs/research/2026-11-10-macos-parity-0.84.0.md#unverified-in-this-review).
 
 - [ ] Verify authenticated Claude Platform output from an official Linux CLI
   with a 0.82.0 `set-cookie` manual cookie. Confirm primary API credits,

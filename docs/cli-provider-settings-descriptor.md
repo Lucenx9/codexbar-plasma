@@ -23,7 +23,9 @@ fields with only environment fallbacks and no writer.
 The scoped [0.74.1 review](research/2026-10-14-macos-parity-0.74.1.md)
 rechecks descriptor/action absence and the ClinePass labeled-write restriction;
 registry and command help are unchanged.
-Scoped checks through 0.83.0 still find no descriptors. Plasma separately
+Scoped checks through 0.84.0 still find no descriptors. The
+[0.84.0 review](research/2026-11-10-macos-parity-0.84.0.md) also finds no writers
+for WorkBuddy's manual User-Agent or SiliconFlow's regional origin. Plasma separately
 offers [manual cookies, credential clearing and Copilot device sign-in](provider-credentials.md)
 through released, version-gated commands; these do not establish a generic
 descriptor or action contract.

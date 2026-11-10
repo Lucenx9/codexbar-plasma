@@ -183,6 +183,13 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
   checked against the writers, the identified Codex ledger schema 2 that the
   reviewed widget rejected, and isolated carried-blocker checks. Schema 1/2
   support was implemented after that review.
+- [0.84.0 release review](research/2026-11-10-macos-parity-0.84.0.md): the
+  113-provider registry, SiliconFlow/Tripo key-setup gaps, Claude Platform
+  stdin-login validation, WorkBuddy cookie setup and User-Agent/regional-origin
+  writer blockers, Codex
+  ordinary symlinked-history fix, remaining identified-history discovery bug,
+  schema 2 compatibility, OpenCode Go unavailable costs, and scoped
+  carried-blocker checks.
 - [0.75.0 Codex contract verification](research/2026-10-15-codex-contracts-0.75.0.md):
   synthetic native partial-priced cost output, identified-request local/remote
   merge and failure semantics, authoritative reset-credit inventory, and the
