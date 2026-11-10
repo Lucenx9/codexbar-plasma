@@ -2,11 +2,21 @@ import QtQuick
 import "../ResetPresentation.js" as ResetPresentation
 import "../PacePresentation.js" as PacePresentation
 import "../ProviderNormalizer.js" as Normalizer
+import "../MonthlyAllowance.js" as MonthlyAllowance
 
 QtObject {
     id: root
 
     property TimeLabels dateLabels
+
+    function dailyAllowanceText(row, nowMs) {
+        var value = MonthlyAllowance.dailyPercent(row, nowMs);
+        if (value === null) return "";
+        var amount = value.percent.toLocaleString(Qt.locale(), "f", 2);
+        return value.percent > 0 && value.percent < 0.01
+            ? i18n("Less than %1% per day until reset", (0.01).toLocaleString(Qt.locale(), "f", 2))
+            : i18n("%1% per day until reset", amount);
+    }
 
     function percentText(row, showUsed) {
         if (!row || !row.hasPercent) return "";

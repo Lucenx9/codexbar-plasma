@@ -130,9 +130,11 @@ TestCase {
         page.cfg_showProviderInPanel = true;
         page.cfg_showPercentInPanel = true;
         page.cfg_showCreditsInPanel = true;
+        page.cfg_showSpendInPanel = true;
         verify(page.additionalSummary.indexOf("Provider name") >= 0);
         verify(page.additionalSummary.indexOf("Reset time") >= 0);
         verify(page.additionalSummary.indexOf("Credits") >= 0);
+        verify(page.additionalSummary.indexOf("Spend budget") >= 0);
         // Hidden controls remain bound when Plasma restores defaults.
         page.cfg_panelQuotaLane = page.cfg_panelQuotaLaneDefault;
         page.cfg_menuBarDisplayMode = page.cfg_menuBarDisplayModeDefault;

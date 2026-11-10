@@ -141,6 +141,10 @@ KCM.SimpleKCM {
     property string cfg_panelProviderIDsDefault: ""
     property bool cfg_showCreditsInPanel
     property bool cfg_showCreditsInPanelDefault: false
+    property bool cfg_showMonthlyDailyAllowance
+    property bool cfg_showMonthlyDailyAllowanceDefault: false
+    property bool cfg_showSpendInPanel
+    property bool cfg_showSpendInPanelDefault: false
     property bool cfg_aiInsightsEnabled
     property bool cfg_aiInsightsEnabledDefault: false
     property string cfg_aiInsightsProvider
@@ -383,6 +387,8 @@ KCM.SimpleKCM {
             [cfg_popupHiddenUsageRows, cfg_popupHiddenUsageRowsDefault],
             [cfg_panelProviderIDs, cfg_panelProviderIDsDefault],
             [cfg_showCreditsInPanel, cfg_showCreditsInPanelDefault],
+            [cfg_showMonthlyDailyAllowance, cfg_showMonthlyDailyAllowanceDefault],
+            [cfg_showSpendInPanel, cfg_showSpendInPanelDefault],
             [cfg_aiInsightsEnabled, cfg_aiInsightsEnabledDefault],
             [cfg_aiInsightsProvider, cfg_aiInsightsProviderDefault],
             [cfg_aiInsightsModel, cfg_aiInsightsModelDefault],
@@ -453,6 +459,8 @@ KCM.SimpleKCM {
         cfg_popupHiddenUsageRows = cfg_popupHiddenUsageRowsDefault
         cfg_panelProviderIDs = cfg_panelProviderIDsDefault
         cfg_showCreditsInPanel = cfg_showCreditsInPanelDefault
+        cfg_showMonthlyDailyAllowance = cfg_showMonthlyDailyAllowanceDefault
+        cfg_showSpendInPanel = cfg_showSpendInPanelDefault
         cfg_aiInsightsEnabled = cfg_aiInsightsEnabledDefault
         cfg_aiInsightsProvider = cfg_aiInsightsProviderDefault
         cfg_aiInsightsModel = cfg_aiInsightsModelDefault

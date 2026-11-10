@@ -26,6 +26,8 @@ Item {
             hideable: fullRoot.applet.popupUsageRowHideable(rowData)
             percentText: fullRoot.applet.usagePercentText(rowData)
             paceText: fullRoot.applet.usagePaceText(rowData)
+            dailyAllowanceText: fullRoot.applet.showMonthlyDailyAllowance === true
+                ? fullRoot.applet.usageDailyAllowanceText(rowData) : ""
             resetText: fullRoot.applet.resetLabel(fullRoot.applet.usageResetText(rowData))
             confidenceText: fullRoot.applet.usageConfidenceText(rowData)
             shownPercent: fullRoot.applet.displayPercent(rowData)

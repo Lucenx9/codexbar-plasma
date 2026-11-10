@@ -3,6 +3,8 @@ import QtTest
 import "../contents/ui/PanelText.js" as PanelTextPlan
 import "../contents/ui/PanelTextFit.js" as PanelTextFit
 import "../contents/ui/CostAmounts.js" as CostAmounts
+import "../contents/ui/ProviderCostPresentation.js" as ProviderCostPresentation
+import "../contents/ui/PrivacyPresentation.js" as Privacy
 import "../contents/ui/components" as Components
 
 TestCase {
@@ -36,6 +38,7 @@ TestCase {
         presentation.showProvider = true;
         presentation.showPercent = true;
         presentation.showCredits = true;
+        presentation.showSpend = false;
         presentation.showAutoQuotaLabel = false;
         currentItem = null;
     }
@@ -43,6 +46,26 @@ TestCase {
     function item(credits) {
         return {provider: "unknown-provider", title: "Example", credits: credits,
             hasIncident: false, statusKnown: true, status: ""};
+    }
+
+    function test_spendBudgetSurvivesFittingAndRemainsInTooltip() {
+        var provider = item(null);
+        provider.panelBudget = ProviderCostPresentation.panelBudget("bifrost",
+            {used: 12, limit: 20, currencyCode: "USD"});
+        presentation.showSpend = true;
+        var segments = presentation.segments(provider, true, false, "43% used", true);
+        compare(presentation.fullText(segments), "Example 43% used Spend $12.00 / $20.00");
+        compare(PanelTextFit.segmentTexts(segments), [
+            "Example 43% used Spend $12.00 / $20.00", "43% used Spend $12.00 / $20.00", "43% used"]);
+        verify(presentation.providerToolTipText(provider, "Quota").indexOf("Spend $12.00 / $20.00") >= 0);
+        presentation.showPercent = false;
+        presentation.showProvider = false;
+        compare(presentation.fullText(presentation.segments(provider, true, false, "", true)), "Spend $12.00 / $20.00");
+        provider.usageStale = true;
+        compare(presentation.budgetText(provider), "");
+        provider.usageStale = false;
+        provider = Privacy.provider(provider, true, {title: "Example"});
+        compare(presentation.budgetText(provider), "");
     }
 
     function test_segmentsKeepDisplayOrderAndRecoverableIdentity() {

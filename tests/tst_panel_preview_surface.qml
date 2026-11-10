@@ -44,6 +44,7 @@ TestCase {
             property bool cfg_showPercentInPanel: false
             property bool cfg_showAutoQuotaLabel: false
             property bool cfg_showCreditsInPanel: false
+            property bool cfg_showSpendInPanel: false
             property string cfg_panelProviderIDs: ""
             property var orderedPanelProviderRoster: []
         }
@@ -99,6 +100,17 @@ TestCase {
         compare(settings.cfg_panelQuotaLane, "secondary");
         compare(settings.cfg_showMultiProviderInPanel, false);
         verify(renderer.width > 0 && renderer.height > 0);
+    }
+
+    function test_spendOnlyPreviewUsesPendingSettingAndHidesUnavailableBudget() {
+        var settings = createTemporaryObject(settingsComponent, testCase, {cfg_showSpendInPanel: true});
+        var preview = createPreview(settings);
+        if (!preview) return;
+        var renderer = findChild(preview, "panelPreviewRenderer");
+        tryCompare(renderer, "primaryText", "Spend $12.00 / $20.00");
+        preview.scenario = "missing";
+        tryCompare(renderer, "primaryText", "");
+        verify(settings.cfg_showSpendInPanel);
     }
 
     function test_autoQuotaLabelTracksPendingSettingsAndExplicitLanes() {

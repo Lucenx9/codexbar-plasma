@@ -959,6 +959,10 @@ msgid "Example data. Panel changes appear here before you apply them."
 msgstr ""
 
 #: contents/ui/components/PanelText.qml
+msgid "Spend %1 / %2"
+msgstr ""
+
+#: contents/ui/components/PanelText.qml
 msgid "At pace"
 msgstr ""
 
@@ -2129,6 +2133,16 @@ msgctxt ""
 msgid "%1 %2, %3"
 msgstr ""
 
+#: contents/ui/components/UsageWindowText.qml
+#, kde-format
+msgid "Less than %1% per day until reset"
+msgstr ""
+
+#: contents/ui/components/UsageWindowText.qml
+#, kde-format
+msgid "%1% per day until reset"
+msgstr ""
+
 #: contents/ui/components/UsageWindowText.qml scripts/smoke/Capture.qml
 msgid "%1 (confidence unknown)"
 msgstr ""
@@ -2926,7 +2940,11 @@ msgid "Provider name"
 msgstr ""
 
 #: contents/ui/configPanel.qml
-msgid "Provider name, usage text and credits are hidden"
+msgid "Spend budget"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Additional panel text is hidden"
 msgstr ""
 
 #: contents/ui/configPanel.qml
@@ -3070,6 +3088,10 @@ msgid "Name the quota chosen by Automatic"
 msgstr ""
 
 #: contents/ui/configPanel.qml
+msgid "Appears only with a monetary budget. Prepaid balances are excluded."
+msgstr ""
+
+#: contents/ui/configPanel.qml
 msgid "Panel providers"
 msgstr ""
 
@@ -3181,6 +3203,10 @@ msgstr ""
 
 #: contents/ui/configPopup.qml
 msgid "Show pace forecasts"
+msgstr ""
+
+#: contents/ui/configPopup.qml
+msgid "Show remaining monthly quota per day"
 msgstr ""
 
 #: contents/ui/configPopup.qml

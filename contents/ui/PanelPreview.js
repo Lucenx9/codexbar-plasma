@@ -22,6 +22,10 @@ function quota(lane, usedPercent, pacePercent, resetMinutes, nearLimit, nowMs) {
     };
 }
 
+function budgetForScenario(value) {
+    return value === "missing" ? null : {used: 12, limit: 20, currency: "USD"};
+}
+
 // Quotas, credits, and incidents are fixed examples, never live observations.
 function providersForScenario(value, nowMs) {
     var nearLimit = value === "nearLimit";
@@ -31,6 +35,7 @@ function providersForScenario(value, nowMs) {
             provider: "codex",
             title: "Codex",
             credits: missing ? null : 125,
+            panelBudget: budgetForScenario(value),
             hasIncident: value === "incident",
             statusSeverity: value === "incident" ? "minor" : "",
             rows: missing ? [] : [quota("primary", nearLimit ? 98 : 42, 45, nearLimit ? 30 : 180, nearLimit, nowMs), quota("secondary", nearLimit ? 88 : 27, 35, 5760, nearLimit, nowMs), quota("tertiary", nearLimit ? 97 : 33, 40, 720, nearLimit, nowMs)]
@@ -69,6 +74,7 @@ function scenarioProviders(scenario, nowMs, roster) {
             provider: id,
             title: title || id,
             credits: id === "codex" ? sample.credits : null,
+            panelBudget: sample.panelBudget,
             hasIncident: sample.hasIncident,
             statusSeverity: sample.statusSeverity,
             rows: sample.rows

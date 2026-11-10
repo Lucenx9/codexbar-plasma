@@ -18,7 +18,7 @@ import smoke_popup as smoke
 DEFAULTS = {
     "panelStyle": "standard", "showProviderInPanel": False,
     "showPercentInPanel": False, "showCreditsInPanel": False,
-    "showAutoQuotaLabel": False,
+    "showAutoQuotaLabel": False, "showSpendInPanel": False,
     "showMultiProviderInPanel": True, "panelQuotaLane": "auto",
     "panelElementOrder": "identity,status,text,meters", "panelVisibilityRules": "{}",
     "menuBarDisplayMode": "percent", "autoSelectProvider": False,
@@ -56,6 +56,8 @@ def matrix_cases(vertical=False):
         for extent in (24, 48, 64):
             add(style + "-height-" + str(extent), all_text | {"panelStyle": style}, extent=extent)
         add(style + "-long-name", all_text | {"panelStyle": style}, longName=True)
+        add(style + "-spend-budget", all_text | {"panelStyle": style, "showSpendInPanel": True})
+        add(style + "-spend-only", {"panelStyle": style, "showSpendInPanel": True})
     for lane in ("primary", "secondary", "tertiary"):
         add("quota-" + lane, all_text | {"panelQuotaLane": lane})
     for edge in ("missing-secondary", "no-quotas", "exhausted"):
@@ -64,6 +66,7 @@ def matrix_cases(vertical=False):
     for target in ("text", "meters"):
         add("hidden-" + target, all_text | {"panelVisibilityRules": json.dumps({
             target: {"condition": "usageAtLeast", "usedPercent": 100}})})
+    add("spend-unavailable", {"showSpendInPanel": True, "autoSelectProvider": True}, selected="claude")
     add("credits-unavailable", {"showCreditsInPanel": True, "autoSelectProvider": True}, selected="claude")
     add("order-text-only", {"showPercentInPanel": True,
         "panelElementOrder": "identity,text,status,meters", "autoSelectProvider": True}, selected="claude")
@@ -101,6 +104,7 @@ def validate_record(record, count):
         expected = "" if record["id"] == "credits-unavailable" else "72% used"
         if record["text"] != expected:
             raise RuntimeError("Incorrect selected-provider content: " + record["id"])
+    validate_budget_record(record)
     flags = re.fullmatch(r"(?:standard|minimal)-([01]{4})", record["id"])
     if not flags:
         return
@@ -115,6 +119,13 @@ def validate_record(record, count):
         raise RuntimeError("Missing or unexpected quota capsule: " + record["id"])
     if len(icons) != (count if meters else 1):
         raise RuntimeError("Missing or duplicated provider icon: " + record["id"])
+
+
+def validate_budget_record(record):
+    expected = {"standard-spend-only": "Spend $12.00 / $20.00",
+                "minimal-spend-only": "Spend $12.00 / $20.00", "spend-unavailable": ""}
+    if record["id"] in expected and record["text"] != expected[record["id"]]:
+        raise RuntimeError("Incorrect monetary budget: " + record["id"])
 
 
 def capture_batch(output, theme, count, vertical):

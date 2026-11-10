@@ -50,6 +50,8 @@ KCM.SimpleKCM {
     property bool cfg_autoSelectProviderDefault: false
     property alias cfg_showCreditsInPanel: showCreditsCheck.checked
     property bool cfg_showCreditsInPanelDefault: false
+    property alias cfg_showSpendInPanel: showSpendCheck.checked
+    property bool cfg_showSpendInPanelDefault: false
     readonly property var panelVisibilityRules: PanelRules.normalizedRules(cfg_panelVisibilityRules)
     readonly property var presentationConfig: Plasmoid.configuration || ({})
     readonly property bool usageBarsShowUsed: presentationConfig.usageBarsShowUsed !== false
@@ -88,7 +90,8 @@ KCM.SimpleKCM {
         if (cfg_showProviderInPanel) parts.push(i18n("Provider name"))
         if (cfg_showPercentInPanel) parts.push(displayModeCombo.currentText)
         if (cfg_showCreditsInPanel) parts.push(i18n("Credits"))
-        return parts.length > 0 ? parts.join(" · ") : i18n("Provider name, usage text and credits are hidden")
+        if (cfg_showSpendInPanel) parts.push(i18n("Spend budget"))
+        return parts.length > 0 ? parts.join(" · ") : i18n("Additional panel text is hidden")
     }
 
     property bool advancedExpanded: false
@@ -184,6 +187,7 @@ KCM.SimpleKCM {
         cfg_showProviderInPanel = false
         cfg_showPercentInPanel = false
         cfg_showCreditsInPanel = false
+        cfg_showSpendInPanel = false
         cfg_showMultiProviderInPanel = true
     }
 
@@ -353,7 +357,8 @@ KCM.SimpleKCM {
             objectName: "minimalPanelPresetButton"
             icon.name: "color-management"
             enabled: page.cfg_panelStyle !== "minimal" || page.cfg_showProviderInPanel
-                || page.cfg_showPercentInPanel || page.cfg_showCreditsInPanel || !page.cfg_showMultiProviderInPanel
+                || page.cfg_showPercentInPanel || page.cfg_showCreditsInPanel || page.cfg_showSpendInPanel
+                || !page.cfg_showMultiProviderInPanel
             plainText: i18n("Show only icons and meters")
             Accessible.description: minimalPresetDescription.text
             onClicked: page.applyMinimalPanelPreset()
@@ -506,6 +511,25 @@ KCM.SimpleKCM {
                 implicitWidth: 0
                 Layout.fillWidth: true
                 text: i18n("Credits")
+            }
+
+            Controls.CheckBox {
+                id: showSpendCheck
+                objectName: "panelSpendCheck"
+                implicitWidth: 0
+                Layout.fillWidth: true
+                text: i18n("Spend budget")
+            }
+
+            Components.PlainControlsLabel {
+                visible: showSpendCheck.checked
+                Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+                Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                text: i18n("Appears only with a monetary budget. Prepaid balances are excluded.")
+                font: Kirigami.Theme.smallFont
+                opacity: 0.7
+                wrapMode: Text.WordWrap
             }
 
 

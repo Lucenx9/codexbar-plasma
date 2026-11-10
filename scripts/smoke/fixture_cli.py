@@ -15,7 +15,7 @@ SCENARIOS = ("normal", "tabs-overflow", "provider-settings", "provider-header", 
 SCENARIOS += ("settings-general", "settings-panel", "settings-panel-information", "settings-panel-advanced", "settings-panel-narrow", "settings-popup", "settings-notifications", "settings-diagnostics")
 SCENARIOS += ("settings-general-updates", "settings-general-updates-narrow", "settings-providers-default",
               "settings-providers-wide")
-SCENARIOS += ("settings-panel-scrolled",)
+SCENARIOS += ("settings-panel-scrolled", "monthly-allowance")
 SCENARIOS += ("settings-providers", "settings-providers-narrow", "settings-providers-error",
               "settings-general-narrow", "settings-popup-narrow", "settings-notifications-narrow",
               "settings-diagnostics-narrow", "settings-diagnostics-error")
@@ -142,6 +142,15 @@ def usage(provider, scenario, now):
                                         "expectedUsedPercent": 30, "willLastToReset": False,
                                         "etaSeconds": 3600,
                                         "summary": "13% in deficit | Expected 30% used | Runs out in 1h"}}
+    budget = {"used": 12, "limit": 20, "currencyCode": "USD", "period": "Budget"}
+    display_fields = {
+        ("codex", "monthly-allowance"): {"extraRateWindows": [{"id": "monthly-allowance",
+            "title": "Monthly allowance", "window": {"usedPercent": 60, "windowMinutes": 43200,
+            "resetsAt": (now + timedelta(days=10)).isoformat()}}]},
+        ("codex", "panel-matrix-one"): {"providerCost": budget},
+        ("codex", "panel-matrix-four"): {"providerCost": budget},
+    }
+    snapshot["usage"].update(display_fields.get((provider, scenario), {}))
     return snapshot
 
 

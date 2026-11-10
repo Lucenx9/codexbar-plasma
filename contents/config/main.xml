@@ -33,6 +33,10 @@
       <label>Show pace forecasts in the popup.</label>
       <default>true</default>
     </entry>
+    <entry name="showMonthlyDailyAllowance" type="Bool">
+      <label>Show the remaining monthly quota per local calendar day until reset.</label>
+      <default>false</default>
+    </entry>
     <entry name="showPopupCredits" type="Bool">
       <label>Show credits and extra usage in the popup.</label>
       <default>true</default>
@@ -259,6 +263,10 @@
     </entry>
     <entry name="showCreditsInPanel" type="Bool">
       <label>Show credits in the panel when available.</label>
+      <default>false</default>
+    </entry>
+    <entry name="showSpendInPanel" type="Bool">
+      <label>Show the selected provider's monetary spend budget in the panel.</label>
       <default>false</default>
     </entry>
     <entry name="providerConfigRevision" type="Int">

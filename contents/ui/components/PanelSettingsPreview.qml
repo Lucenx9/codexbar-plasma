@@ -118,6 +118,7 @@ ColumnLayout {
 
     PanelText {
         id: panelTextLabels
+        showSpend: preview.configPage.cfg_showSpendInPanel === true
         usageBarsShowUsed: preview.usageBarsShowUsed
     }
 
@@ -209,6 +210,10 @@ ColumnLayout {
                     && isFinite(provider.credits)) {
                 segments.push({ id: "credits",
                     text: i18n("%1cr", provider.credits.toLocaleString(Qt.locale(), "f", 0)) });
+            }
+            if (preview.configPage.cfg_showSpendInPanel === true) {
+                var spend = panelTextLabels.budgetText(provider);
+                if (spend.length > 0) segments.push({id: "spend", text: spend});
             }
             return segments;
         }

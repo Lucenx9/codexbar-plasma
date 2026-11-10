@@ -14,6 +14,7 @@ ColumnLayout {
     required property string paceText
     required property string resetText
     required property string confidenceText
+    property string dailyAllowanceText: ""
     required property real shownPercent
     required property real markerPercent
     required property color meterColor
@@ -326,6 +327,16 @@ ColumnLayout {
         objectName: "usageConfidenceLabel"
         visible: usageRow.confidenceText.length > 0
         text: usageRow.confidenceText
+        font: Kirigami.Theme.smallFont
+        opacity: usageRow.secondaryTextOpacity
+        Layout.fillWidth: true
+        wrapMode: Text.WordWrap
+    }
+
+    PlainPlasmaLabel {
+        objectName: "usageDailyAllowanceLabel"
+        visible: usageRow.dailyAllowanceText.length > 0
+        text: usageRow.dailyAllowanceText
         font: Kirigami.Theme.smallFont
         opacity: usageRow.secondaryTextOpacity
         Layout.fillWidth: true

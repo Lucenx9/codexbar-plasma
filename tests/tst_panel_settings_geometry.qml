@@ -226,6 +226,19 @@ TestCase {
         verify(waitForRendering(page));
     }
 
+    function test_spendBudgetCanBeEnabledFromKeyboard() {
+        var page = createPage({additionalExpanded: true});
+        if (!page) return;
+        var check = findChild(page, "panelSpendCheck");
+        verify(check !== null && check.visible);
+        compare(page.cfg_showSpendInPanel, false);
+        check.forceActiveFocus();
+        keyClick(Qt.Key_Space);
+        compare(page.cfg_showSpendInPanel, true);
+        page.applyMinimalPanelPreset();
+        compare(page.cfg_showSpendInPanel, false);
+    }
+
     function test_autoQuotaLabelCanBeToggledAndRetainsHiddenPendingValue() {
         var page = createPage({additionalExpanded: true, cfg_showPercentInPanel: true});
         if (!page) return;

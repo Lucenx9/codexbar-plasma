@@ -2195,10 +2195,6 @@ msgid "Provider name"
 msgstr "Nome del provider"
 
 #: contents/ui/configPanel.qml
-msgid "Provider name, usage text and credits are hidden"
-msgstr "Nome del provider, testo di utilizzo e crediti nascosti"
-
-#: contents/ui/configPanel.qml
 msgid "Quota: %1"
 msgstr "Quota: %1"
 
@@ -4412,3 +4408,32 @@ msgstr "Sessione Claude Platform convalidata e salvata."
 #: contents/ui/configProviders.qml
 msgid "Validate and import session…"
 msgstr "Convalida e importa sessione…"
+
+
+#: contents/ui/components/PanelText.qml
+msgid "Spend %1 / %2"
+msgstr "Spesa %1 / %2"
+
+#: contents/ui/configPanel.qml
+msgid "Spend budget"
+msgstr "Budget di spesa"
+
+#: contents/ui/configPanel.qml
+msgid "Additional panel text is hidden"
+msgstr "Il testo aggiuntivo del pannello è nascosto"
+
+#: contents/ui/configPanel.qml
+msgid "Appears only with a monetary budget. Prepaid balances are excluded."
+msgstr "Compare solo con un budget monetario. I saldi prepagati sono esclusi."
+
+#: contents/ui/configPopup.qml
+msgid "Show remaining monthly quota per day"
+msgstr "Mostra la quota mensile rimanente al giorno"
+
+#: contents/ui/components/UsageWindowText.qml
+msgid "Less than %1% per day until reset"
+msgstr "Meno del %1% al giorno fino al reset"
+
+#: contents/ui/components/UsageWindowText.qml
+msgid "%1% per day until reset"
+msgstr "%1% al giorno fino al reset"

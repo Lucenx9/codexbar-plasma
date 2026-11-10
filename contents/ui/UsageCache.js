@@ -101,6 +101,7 @@ function staleSnapshot(item) {
     next.providerDetails = []
     next.usageDashboard = null
     next.providerCost = null
+    next.panelBudget = null
     next.resetCredits = null
     next.tokenCost = null
     next.codexCreditLimit = null

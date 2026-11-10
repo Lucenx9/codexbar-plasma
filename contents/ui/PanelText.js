@@ -19,9 +19,13 @@ function segments(item, visible, selectionActive, options, text) {
             unlabelledText: text.labelledDisplay ? text.display : "",
             compactText: text.compactDisplay });
     }
-    if (options.showCredits && item.credits !== null) {
-        result.push({ id: "credits", text: text.credits });
-    }
+    return result.concat(supplementalSegments(item, options, text));
+}
+
+function supplementalSegments(item, options, text) {
+    var result = [];
+    if (options.showCredits && item.credits !== null) result.push({id: "credits", text: text.credits});
+    if (options.showSpend && text.spend.length > 0) result.push({id: "spend", text: text.spend});
     return result;
 }
 

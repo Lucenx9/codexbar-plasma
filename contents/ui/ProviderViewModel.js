@@ -1,5 +1,6 @@
 .pragma library
 .import "ProviderNormalizer.js" as Normalizer
+.import "ProviderCostPresentation.js" as ProviderCostPresentation
 
 // A normalized semantic snapshot plus QML-localized/enriched fields. Never copy
 // arbitrary input fields into the view model or the persisted quota contract.
@@ -23,6 +24,7 @@ function presented(snapshot, display) {
         subscriptionDates: Array.from(snapshot.subscriptionDates),
         usageDashboard: display.usageDashboard,
         providerCost: display.providerCost,
+        panelBudget: ProviderCostPresentation.panelBudget(snapshot.provider, snapshot.providerCost),
         resetCredits: display.resetCredits,
         tokenCost: display.tokenCost,
         codexCreditLimit: snapshot.codexCreditLimit,

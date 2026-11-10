@@ -67,6 +67,7 @@ PlasmoidItem {
     property bool includeStatus: Plasmoid.configuration.includeStatus
     property bool refreshOnOpen: Plasmoid.configuration.refreshOnOpen === true
     property bool showPopupPace: Plasmoid.configuration.showPopupPace !== false
+    property bool showMonthlyDailyAllowance: Plasmoid.configuration.showMonthlyDailyAllowance === true
     property bool showPopupCredits: Plasmoid.configuration.showPopupCredits !== false
     property bool showPopupProviderDetails: Plasmoid.configuration.showPopupProviderDetails !== false
     property bool privacyMode: Plasmoid.configuration.privacyMode === true
@@ -1702,6 +1703,11 @@ PlasmoidItem {
         return usageWindowText.percentText(row, usageBarsShowUsed)
     }
 
+    function usageDailyAllowanceText(row) {
+        return presentedProviderData && presentedProviderData.usageStale !== true
+            ? usageWindowText.dailyAllowanceText(row, panelClockMs) : ""
+    }
+
     function usageConfidenceText(row) {
         return usageWindowText.confidenceText(row)
     }
@@ -1998,6 +2004,7 @@ PlasmoidItem {
         showProvider: Plasmoid.configuration.showProviderInPanel
         showPercent: Plasmoid.configuration.showPercentInPanel
         showCredits: Plasmoid.configuration.showCreditsInPanel
+        showSpend: Plasmoid.configuration.showSpendInPanel === true
         showAutoQuotaLabel: Plasmoid.configuration.showAutoQuotaLabel === true
         numberFormat: root.costNumberFormat
     }

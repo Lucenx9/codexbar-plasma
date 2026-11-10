@@ -49,10 +49,10 @@ work and upstream contract requirements.
 - Panel width is bounded, so a crowded meter row can leave the optional text
   less room than every enabled item needs. Whole items are dropped rather than
   cut short, in a fixed order: the provider name first, because the icon beside
-  it already identifies the provider, then the credit balance, keeping the usage
+  it already identifies the provider, then the credit balance and spend budget, keeping the usage
   text last. For a provider the widget has no icon for, the panel draws a
   generic icon shared with every other such provider, so there the name is the
-  only identification and outlives the credit balance instead.
+  only identification and outlives credits and spend instead.
 - Panel text uses regular-weight, tabular numerals. If combined usage and pace
   text still does not fit after dropping the name and credits, it falls back to
   the complete usage percentage when on pace, or **Behind pace** when the
@@ -68,7 +68,7 @@ work and upstream contract requirements.
 
 - **Show only icons and meters** in **Panel → Appearance** selects
   Monochrome and enables provider meters, including with a single
-  provider, and hides panel names, usage text and credits. The style selector
+  provider, and hides panel names, usage text, credits and spend budgets. The style selector
   changes appearance alone. Existing installations keep their style, explicit
   quota choice, and visibility settings. Automatic meters gain the second quota
   without a new setting or additional CLI calls.
@@ -154,7 +154,29 @@ work and upstream contract requirements.
 - Choose the automatic, primary, secondary, or tertiary quota for panel text and
   meters in **Panel → Quota, order and visibility**. An explicit primary, secondary, or tertiary
   choice shows one capsule. Automatic text and popup tabs retain their existing
-  quota preference; automatic capsules use the pair described above.
+  quota preference for ordinary windows. Authoritative exhausted windows take
+  priority, followed by known CLI run-out forecasts, shortest ETA first. Factory
+  and exhausted Perplexity/Cursor alternate-pool choices remain unchanged.
+  Automatic provider selection retains its highest-used-percent policy;
+  automatic capsules use the pair described above.
+- Enable **Panel → Additional information → Spend budget** to show the selected
+  provider's monetary usage and budget, for example `Spend $12.00 / $20.00`.
+  This option is off by default and applies to horizontal panels. It requires
+  a positive allowance in a reported currency; prepaid balances, quota counts,
+  retained data and private amounts are omitted. Each provider keeps its own
+  currency. Spend follows the existing panel text visibility rule and grouping.
+  When space is tight, spend yields after names and credits, before usage.
+  A generic provider icon's identifying name outlives spend. Full enabled budget
+  text remains in the tooltip and accessible name.
+- Enable **Popup → Show remaining monthly quota per day** to divide a monthly
+  window's remaining percentage by local calendar days until reset. A 60%-used
+  quota resetting in ten days shows `4.00% per day until reset`. This is an even
+  allocation of the remainder, independent of pace forecasts. It requires an
+  explicit 28–31-day window and a future reset from the CLI, uses at least one
+  day, and handles local daylight-saving changes. Missing, estimated, unknown,
+  or retained readings show no daily allowance. Numeric quota presentation
+  remains available in privacy mode. This option is off by default and never
+  combines currency or quota units.
 - Enable **Panel → Additional information → Name the quota chosen by Automatic**
   to prefix automatic usage text with the selected quota's popup caption when
   multiple windows are available. This option is off by default and applies to
@@ -1617,7 +1639,8 @@ and 95% critical thresholds. Reset notifications are off until enabled.
 | Plasma notifications | On; quota warnings on; predicted exhaustion and limit-reset notices off |
 | Widget updates | Check and install automatically every 24 hours, with notifications; restart Plasma to apply installed updates |
 | Panel appearance | Provider colors style with colored provider icons and automatic quota capsules, including a single provider |
-| Extra panel content | Provider names, usage text and credit balances off |
+| Extra panel content | Provider names, usage text, credit balances and spend budgets off |
+| Monthly daily allowance | Off |
 | Panel element order | Default grouping of selected text with its meters; custom orders retain separate elements |
 | Panel quota and visibility | Automatic quota pair for meters and automatic text quota; enabled elements always visible |
 | Provider selection | Keep the selected provider; automatic highest-usage selection off |

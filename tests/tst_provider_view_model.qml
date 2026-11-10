@@ -5,6 +5,16 @@ import "../contents/ui/ProviderViewModel.js" as View
 
 TestCase {
     name: "ProviderViewModel"
+
+    function test_monetaryBudgetIsBuiltFromNormalizedSnapshot() {
+        var snapshot = Snapshot.normalize({provider: "bifrost", usage: {
+            providerCost: {used: 2, limit: 10, currencyCode: "USD", period: "Budget"}
+        }}, 1000);
+        var result = View.presented(snapshot, {rows: [], title: "Bifrost", planText: "", status: ""});
+        compare(result.panelBudget.used, 2);
+        compare(result.panelBudget.limit, 10);
+        compare(result.panelBudget.currency, "USD");
+    }
     property list<var> nativeDetails: [{title: "Synthetic details", rows: []}]
     property list<var> nativeDates: [{kind: "renews", date: "2026-11-01"}]
     function test_projectionBoundsDisplayFieldsAndKeepsSemanticMetadata() {

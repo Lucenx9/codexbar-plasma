@@ -25,11 +25,11 @@ TestCase {
 
     function test_candidatePreference_data() {
         return [
-            {tag: "generic", key: "codex", exhausted: false, order: "primary,secondary,tertiary,extra"},
+            {tag: "generic", key: "codex", exhausted: false, order: "secondary,primary,tertiary,extra"},
             {tag: "unknown", key: "future-provider", exhausted: true, order: "primary,secondary,tertiary,extra"},
             {tag: "factory", key: "factory", exhausted: false, order: "secondary,primary,extra,tertiary"},
             {tag: "factory-exhausted", key: "factory", exhausted: true, order: "secondary,primary,extra,tertiary"},
-            {tag: "perplexity-healthy", key: "perplexity", exhausted: false, order: "primary,secondary,tertiary,extra"},
+            {tag: "perplexity-healthy", key: "perplexity", exhausted: false, order: "secondary,primary,tertiary,extra"},
             {tag: "perplexity-exhausted", key: "perplexity", exhausted: true, order: "secondary,tertiary,primary,extra"}
         ];
     }
@@ -47,6 +47,39 @@ TestCase {
         compare(result[result.indexOf(extra)], extra);
         compare(JSON.stringify(input), before);
         verify(result !== input);
+    }
+
+    function test_automaticTextExposesExhaustedSecondaryWithoutChangingMetersOrManualLane() {
+        // Official Linux 0.84.0 Bifrost output from two synthetic budgets.
+        var primary = usageRow({lane: "primary", hasPercent: true, usedPercent: 20, leftPercent: 80});
+        var secondary = usageRow({lane: "secondary", hasPercent: true, usedPercent: 100, leftPercent: 0});
+        var rows = [primary, secondary];
+        var candidates = PanelDisplay.candidateRows(rows, "bifrost", null, "Plan");
+        compare(PanelDisplay.rowForMode(candidates, "percent"), secondary);
+        compare(PanelDisplay.rowForMode(candidates, "percent", "primary"), primary);
+        compare(PanelDisplay.meterRows(candidates, "auto"), rows);
+        compare(PanelDisplay.overviewMeterRows(candidates), rows);
+        primary.pacePercent = 30;
+        compare(PanelDisplay.rowForMode(candidates, "both"), secondary);
+        secondary.dataConfidence = "percentOnly";
+        compare(PanelDisplay.candidateRows(rows, "bifrost", null, "Plan")[0], primary);
+    }
+
+    function test_onlyExplicitTrustedCliForecastsChangeAutomaticPreference() {
+        var primary = usageRow({lane: "primary", hasPercent: true, usedPercent: 80, leftPercent: 20});
+        var secondary = usageRow({lane: "secondary", hasPercent: true, usedPercent: 60, leftPercent: 40,
+            paceKnown: true, paceOnTop: false, paceEtaSeconds: 7200});
+        var extra = usageRow({lane: "extra", paceKnown: true, paceOnTop: false, paceEtaSeconds: 3600});
+        var rows = [primary, secondary, extra];
+        compare(PanelDisplay.candidateRows(rows, "future", null, "")[0], extra);
+        extra.dataConfidence = "estimated";
+        compare(PanelDisplay.candidateRows(rows, "future", null, "")[0], secondary);
+        secondary.paceKnown = false;
+        compare(PanelDisplay.candidateRows(rows, "future", null, "")[0], primary);
+        secondary.paceKnown = true;
+        primary.usedPercent = 100;
+        primary.leftPercent = 0;
+        compare(PanelDisplay.candidateRows(rows, "future", null, "")[0], primary);
     }
     function test_missingLanesAndReferenceDeduplication() {
         compare(PanelDisplay.candidateRows(null, "factory", null, "Plan"), []);
