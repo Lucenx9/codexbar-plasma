@@ -10,6 +10,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+## 0.2.55 - 2026-11-10
+
 ### Added
 
 - Add optional monetary spend budgets to panel text and remaining monthly quota
@@ -215,6 +217,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   a short, faint provider-tinted bar under it, centered together with the icon.
   Unselected tabs dim icon and gauge together, including empty gauges. Icon-only
   tabs keep their icons centered with small fonts.
+
+[Full diff](https://github.com/Lucenx9/codexbar-plasma/compare/v0.2.54...v0.2.55)
 
 ## 0.2.54 - 2026-11-05
 
