@@ -227,16 +227,20 @@ TestCase {
     }
 
     function test_spendBudgetCanBeEnabledFromKeyboard() {
-        var page = createPage({additionalExpanded: true});
+        var page = createPage({additionalExpanded: true, advancedExpanded: true});
         if (!page) return;
         var check = findChild(page, "panelSpendCheck");
         verify(check !== null && check.visible);
         compare(page.cfg_showSpendInPanel, false);
+        var condition = findChild(page, "textVisibilityCondition");
+        verify(condition !== null && !condition.enabled);
         check.forceActiveFocus();
         keyClick(Qt.Key_Space);
         compare(page.cfg_showSpendInPanel, true);
+        verify(condition.enabled);
         page.applyMinimalPanelPreset();
         compare(page.cfg_showSpendInPanel, false);
+        verify(!condition.enabled);
     }
 
     function test_autoQuotaLabelCanBeToggledAndRetainsHiddenPendingValue() {

@@ -15,6 +15,15 @@ TestCase {
         compare(result.panelBudget.limit, 10);
         compare(result.panelBudget.currency, "USD");
     }
+    function test_missingCurrencyCannotBecomePanelMoneyAfterNormalization() {
+        for (var currency of [undefined, null, false, 123, "", {}, "Quota", "Credits"]) {
+            var raw = {provider: "future", usage: {providerCost: {used: 2, limit: 10}}};
+            if (currency !== undefined) raw.usage.providerCost.currencyCode = currency;
+            var snapshot = Snapshot.normalize(raw, 1000);
+            var result = View.presented(snapshot, {rows: [], title: "Future", planText: "", status: ""});
+            compare(result.panelBudget, null, "currency " + JSON.stringify(currency));
+        }
+    }
     property list<var> nativeDetails: [{title: "Synthetic details", rows: []}]
     property list<var> nativeDates: [{kind: "renews", date: "2026-11-01"}]
     function test_projectionBoundsDisplayFieldsAndKeepsSemanticMetadata() {

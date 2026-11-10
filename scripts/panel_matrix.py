@@ -58,6 +58,8 @@ def matrix_cases(vertical=False):
         add(style + "-long-name", all_text | {"panelStyle": style}, longName=True)
         add(style + "-spend-budget", all_text | {"panelStyle": style, "showSpendInPanel": True})
         add(style + "-spend-only", {"panelStyle": style, "showSpendInPanel": True})
+        add(style + "-spend-labelled-pace", all_text | {"panelStyle": style,
+            "showSpendInPanel": True, "showAutoQuotaLabel": True, "menuBarDisplayMode": "both"})
     for lane in ("primary", "secondary", "tertiary"):
         add("quota-" + lane, all_text | {"panelQuotaLane": lane})
     for edge in ("missing-secondary", "no-quotas", "exhausted"):

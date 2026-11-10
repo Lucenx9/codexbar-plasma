@@ -799,7 +799,8 @@ KCM.SimpleKCM {
                 Layout.fillWidth: true
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 24
                 Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-                enabled: showProviderCheck.checked || showPercentCheck.checked || showCreditsCheck.checked
+                enabled: showProviderCheck.checked || showPercentCheck.checked
+                    || showCreditsCheck.checked || showSpendCheck.checked
             }
 
             Components.PanelRuleEditor {

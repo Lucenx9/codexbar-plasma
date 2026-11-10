@@ -13,7 +13,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 ### Added
 
 - Add optional monetary spend budgets to panel text and remaining monthly quota
-  per local calendar day to the popup. Both options default to off.
+  per local calendar day to the popup. Both options default to off. Panel budgets
+  require an explicitly reported currency and preserve the complete compact pace
+  fallback when all optional text is enabled.
 - Prioritize fresh, authoritative exhausted quotas and explicit CLI run-out forecasts
   for automatic panel text and tab gauges, preserving manual lanes, dual
   capsules and provider-specific alternate-pool choices. Retained measurements

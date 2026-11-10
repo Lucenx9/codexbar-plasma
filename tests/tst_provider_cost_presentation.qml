@@ -18,6 +18,7 @@ TestCase {
         compare(Presentation.panelBudget("future", Object.assign({}, cost, {limit: 0})), null);
         compare(Presentation.panelBudget("future", Object.assign({}, cost, {used: -1})), null);
         compare(Presentation.panelBudget("future", null), null);
+        compare(Presentation.panelBudget("future", {used: 2, limit: 10}), null);
     }
 
     function test_invalidRecords() {

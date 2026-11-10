@@ -66,7 +66,9 @@ function resetCount(providerID, resetCredits) {
 // The panel accepts monetary allowances only, with the same balance exceptions
 // as the popup. Credits and quota counts keep their existing presentations.
 function panelBudget(providerID, cost) {
+    if (!Normalizer.isCliRecord(cost)) return null
+    if (typeof cost.currencyCode !== "string") return null
+    if (!/^[A-Z]{3}$/.test(cost.currencyCode)) return null
     var value = section(providerID, cost)
-    return value && value.kind === "allowance" && value.used >= 0
-        && /^[A-Z]{3}$/.test(value.currency) ? value : null
+    return value && value.kind === "allowance" && value.used >= 0 ? value : null
 }

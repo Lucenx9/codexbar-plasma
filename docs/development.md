@@ -2069,12 +2069,12 @@ isolated using the smoke runner. The installed widget and real credentials are
 not used. The temporary applet runs the production normalization, settings
 adapters, and compact renderer.
 
-The default run saves 442 captures: 128 base combinations plus targeted cases
+The default run saves 450 captures: 128 base combinations plus targeted cases
 for all 24 element orders, five text formats with and without automatic quota
 labels, explicit quotas, visibility rules,
 missing data, long names, exhausted quotas, and 24/48/64-pixel panel heights.
-The targeted cases also cover optional monetary spend budgets and spend-only
-text in both styles, unavailable budgets, tiny readings, warning colors, stale quotas with
+The targeted cases also cover optional monetary spend budgets, spend-only
+text and all six labelled-pace compositions in both styles, unavailable budgets, tiny readings, warning colors, stale quotas with
 confidence and incident markers, and real pointer hover/press and keyboard-focus
 states in both styles. `--vertical` adds 176 captures covering the base
 combinations and those states on vertical panels. The capture harness uses

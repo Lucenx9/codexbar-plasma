@@ -144,6 +144,7 @@ TestCase {
         property string usageUnlabelledText: ""
         property string usageCompactText: ""
         property string creditsText: ""
+        property string spendText: ""
         function compactTextSegments() {
             var segments = [];
             if (providerNameText.length > 0)
@@ -153,6 +154,8 @@ TestCase {
                     unlabelledText: usageUnlabelledText, compactText: usageCompactText});
             if (creditsText.length > 0)
                 segments.push({id: "credits", text: creditsText});
+            if (spendText.length > 0)
+                segments.push({id: "spend", text: spendText});
             return segments;
         }
         function compactText() {
@@ -341,6 +344,7 @@ TestCase {
         applet.usageUnlabelledText = "";
         applet.usageCompactText = "";
         applet.creditsText = "";
+        applet.spendText = "";
     }
 
     function test_panelMetersStayCenteredWithSpareWidth_data() {
@@ -626,14 +630,16 @@ TestCase {
         applet.usageUnlabelledText = "30% used, behind pace";
         applet.usageCompactText = "Behind pace";
         applet.creditsText = "125cr";
+        applet.spendText = "Spend $12.00 / $20.00";
         applet.meterCount = 4;
         var panel = createControl("CompactRepresentation", {applet: applet, height: 32});
         if (!panel) return;
         tryCompare(panel, "primaryText", "Behind pace");
+        compare(panel.textCompositionWidths.length, 6);
         var label = findItem(panel, item => item.visible && item.objectName === "panelProviderText");
         verify(label !== null);
         tryVerify(() => !label.truncated);
-        compare(label.Accessible.name, "Codex Session 30% used, behind pace 125cr");
+        compare(label.Accessible.name, "Codex Session 30% used, behind pace 125cr Spend $12.00 / $20.00");
     }
 
     // Grows the usage segment until the full composition is as wide as the

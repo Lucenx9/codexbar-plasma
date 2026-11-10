@@ -51,7 +51,9 @@ separate [0.76.0 Linux evidence](research/2026-10-15-claude-details-0.76.0.md).
 
 - **Panel spend budget:** opt-in horizontal text for the selected provider,
   using the existing provider-cost allowance classification. Show used and
-  limit in the same reported three-letter uppercase currency. Hide it without
+  limit in the same reported three-letter uppercase currency. Normalization
+  preserves currency absence; the popup's legacy USD fallback cannot qualify a
+  panel budget. Hide it without
   a positive allowance, with negative used amounts, for non-monetary units,
   during retained-data fallback, and in privacy mode. Preserve known balance
   exceptions. Do not aggregate providers or currencies. This extends the
@@ -90,7 +92,9 @@ appearance because both new options default to off.
 Direct QtTests cover budget classification, fitting and tooltip recovery,
 privacy and stale-data suppression, automatic/manual lane selection, confidence,
 monthly input validation, local calendar boundaries and DST. The panel matrix
-adds both styles, spend-only and unavailable-budget cases. The
+adds both styles, spend-only and unavailable-budget cases, and the six
+compositions needed when spend, credits, automatic quota labels and compact
+pace text are all enabled. The
 `monthly-allowance` smoke scenario renders the production popup with a synthetic
 60%-used monthly window resetting in ten days and checks its 4% daily reading.
 These checks establish the frontend contract, not provider authentication.

@@ -74,7 +74,8 @@ function costFields(cost) {
         used: Normalizer.strictFiniteNumber(cost.used),
         limit: Normalizer.strictFiniteNumber(cost.limit),
         personalUsed: Normalizer.strictFiniteNumber(cost.personalUsed),
-        currencyCode: Normalizer.boundedDisplayText(cost.currencyCode || "USD", 12),
+        currencyCode: typeof cost.currencyCode === "string"
+            ? Normalizer.boundedDisplayText(cost.currencyCode, 12) : "",
         period: cost.period ? Normalizer.boundedDisplayText(cost.period, 120) : null
     };
 }
