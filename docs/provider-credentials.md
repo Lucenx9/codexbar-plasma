@@ -37,8 +37,8 @@ Earlier probes establish version boundaries and Linux fetch behavior:
   separately accepts `config login --provider claudeplatform --stdin --json`.
   Isolated Linux probes verify malformed-input rejection and a failed synthetic
   validation without a config write. Successful authenticated authorization
-  remains unverified. Plasma still offers the existing Set cookie action;
-  validated import is [tracked in TODO](../TODO.md#plasma-native-and-implementable-now).
+  remains unverified. Plasma offers **Validate and import session…** with CLI
+  0.84.0 or later alongside the existing **Set cookie…** action.
   The 0.84.0 inventory still names only Copilot's login command.
 
 The existing bounded `--version` probe gates all actions. Unknown versions,
@@ -60,7 +60,7 @@ this does not establish successful authenticated usage.
 
 The [0.84.0 probe](research/2026-11-10-macos-parity-0.84.0.md#linux-cli-contract-changes)
 also verifies WorkBuddy's stdin cookie writer and Linux Web dispatch. Its
-Plasma action is still [pending](../TODO.md#plasma-native-and-implementable-now).
+Plasma action requires CLI 0.84.0 or later, bringing the allowlist to 15 providers.
 Its optional matching User-Agent has no supported writer; successful
 authenticated billing was not measured.
 
@@ -73,6 +73,34 @@ remain unverified and cannot acquire an action from inventory metadata alone.
 Credential clearing has no provider allowlist: the official CLI validates any
 listed provider. Confirmation explains that token accounts and environment
 variables are outside its scope. It does not sign out a Copilot token account.
+
+## Validated Console session import
+
+The explicit Claude Platform action is separately version-gated at 0.84.0 and
+requires cookie support when inventory authentication metadata is present.
+Only the exact `config login --provider claudeplatform --stdin --json` command
+is allowed as a secret descriptor; generic field writers and actions reject it.
+`promptDescriptorSecret` reads the cookie inside the native password-prompt
+process and pipes it to the helper. The helper invokes the official login command
+with stdin, drains at most 64 KiB, suppresses stderr and returns only a semantic
+result. No cookie enters QML, argv, files or diagnostics.
+
+Unlike Copilot, this command has no pending device-code event. Exactly one
+`authorized` record without an error and CLI exit 0 constitutes success. Failed,
+malformed, repeated or oversized records fail closed. The pinned conflict error
+maps to a localized retry message; other CLI prose is discarded. Input cancellation
+performs no write. Separate prompt and CLI deadlines, CLI process-group cleanup,
+pending locks, executable signatures and command nonces reuse the cookie path.
+Repeated termination signals cannot interrupt the helper's process-group cleanup.
+Retired or timed-out replies cannot change enablement or refresh revisions.
+Synthetic process and QML tests cover successful import, validation failure,
+conflict, cancellation, timeout, stale replies and stdin-only secret handling.
+
+SiliconFlow and Tripo single-key prompts also require 0.84.0, through the existing
+API-key writer. Dedicated icons, brand colors, fallback names and
+documentation/dashboard links remain available
+without inventory metadata. SiliconFlow's regional origin and WorkBuddy's
+User-Agent remain [CLI writer blockers](../TODO.md#provider-settings).
 
 ## Private native login prompt
 

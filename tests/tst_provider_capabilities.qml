@@ -11,6 +11,8 @@ TestCase {
             {tag: "commandcode-fal", provider: "commandcode", key: "commandCodeFal", before: "0.74.9", at: "0.75.0"},
             {tag: "munito", provider: "munito", key: "munito", before: "0.76.9", at: "0.77.0"},
             {tag: "soniox", provider: "soniox", key: "soniox", before: "0.79.9", at: "0.80.0"},
+            {tag: "siliconflow", provider: "siliconflow", key: "siliconflowTripo", before: "0.83.9", at: "0.84.0"},
+            {tag: "tripo", provider: "tripo", key: "siliconflowTripo", before: "0.83.9", at: "0.84.0"},
             {tag: "chatbox", provider: "chatbox", key: "abliterationChatbox", before: "0.80.9", at: "0.81.0"}]
     }
     function test_releasedVersionBoundaries(data) {
@@ -51,8 +53,8 @@ TestCase {
 
     function test_providerAndAuthenticationRestrictions() {
         var old = Capabilities.versionCapabilities("0.53.0", 0)
-        var current = Capabilities.versionCapabilities("0.83.0", 0)
-        for (var provider of ["fireworks", "soniox", "chatbox", "abliteration", "munito", "commandcode", "fal"]) {
+        var current = Capabilities.versionCapabilities("0.84.0", 0)
+        for (var provider of ["siliconflow", "tripo", "fireworks", "soniox", "chatbox", "abliteration", "munito", "commandcode", "fal"]) {
             verify(!Capabilities.supportsApiKey(provider, null, old), provider)
             verify(Capabilities.supportsApiKey(provider, null, current), provider)
             verify(!Capabilities.supportsApiKey(provider, {supportsConfigAPIKey: false}, current), provider)

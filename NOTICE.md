@@ -36,6 +36,12 @@ https://github.com/steipete/CodexBar/tree/v0.83.0/Sources/CodexBar/Resources
 They use the same retained MIT notice:
 https://github.com/steipete/CodexBar/blob/v0.83.0/LICENSE
 
+The SiliconFlow and Tripo icons are copied unchanged from CodexBar v0.84.0,
+commit 5bebf9a05e68059eae11d5031c7239f1aa1d49ef:
+https://github.com/steipete/CodexBar/tree/v0.84.0/Sources/CodexBar/Resources
+They use the same retained MIT notice:
+https://github.com/steipete/CodexBar/blob/v0.84.0/LICENSE
+
 The Poe provider icon (contents/icons/providers/poe.svg) is adapted from
 "Poe App Logo" by SVG Stack for theme coloring:
 https://svgstack.com/icon/poe-app-logo-3748

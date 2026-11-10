@@ -24,7 +24,7 @@ import "SOURCE_URL/config/ProviderCapabilities.js" as ProviderCapabilities
 TestCase {
     name: "SecretPromptCommands"
     property string commandPath: CLI_PATH
-    property string credentialCliVersion: "CodexBar 0.83.0"
+    property string credentialCliVersion: "CodexBar 0.84.0"
     property url credentialScriptUrl: HELPER_URL
     property string errorText: ""
     property string statusText: ""
@@ -67,9 +67,13 @@ TestCase {
             writeCommand: ["codexbar", "config", "set-api-key", "--provider", "codex", "--stdin"]});
         compare(errorText, "");
         compare(captured.length, 3);
-        for (var id of ["soniox", "abliteration", "chatbox"]) setApiKey(id);
+        for (var id of ["soniox", "abliteration", "chatbox", "siliconflow", "tripo"]) setApiKey(id);
         promptDescriptorSecret("claude", {id:"cookieHeader", title:"Cookie header", kind:"secret",
             writeCommand:["codexbar", "config", "set-cookie", "--provider", "claude", "--stdin"]});
+        promptDescriptorSecret("workbuddy", {id:"cookieHeader", title:"Cookie header", kind:"secret",
+            writeCommand:["codexbar", "config", "set-cookie", "--provider", "workbuddy", "--stdin"]});
+        promptDescriptorSecret("claudeplatform", {id:"sessionImport", title:"Cookie header containing sessionKey", kind:"secret",
+            writeCommand:["codexbar", "config", "login", "--provider", "claudeplatform", "--stdin", "--json"]});
         console.log("PROMPT_FIXTURE:" + JSON.stringify({production: production, commands: captured}));
     }
 }
@@ -102,7 +106,11 @@ else:
         time.sleep(30)
     if mode == "late":
         time.sleep(2)
-    print(json.dumps({"provider":"claude", "enabled":True} if "set-cookie" in sys.argv else {"ok": True}))
+    provider = sys.argv[sys.argv.index("--provider") + 1]
+    result = {"provider": provider, "enabled": True} if "set-cookie" in sys.argv else {"ok": True}
+    if "login" in sys.argv:
+        result = {"status": "authorized"}
+    print(json.dumps(result))
 '''
 
 
@@ -175,7 +183,7 @@ class SecretPromptLifecycleTests(unittest.TestCase):
         self.assertEqual(hostile_argv, ["--password", self.hostile_prompt])
 
     def test_new_provider_prompts_use_stdin_and_correct_key_names(self):
-        for entry in self.fixture["commands"][3:6]:
+        for entry in self.fixture["commands"][3:8]:
             provider = entry["descriptor"]["provider"]
             with self.subTest(provider=provider):
                 self.run_prompt(entry, "success")
@@ -190,22 +198,36 @@ class SecretPromptLifecycleTests(unittest.TestCase):
                     self.assertIn("License key", prompt)
                     self.assertIn("authorize AI requests", prompt)
                 else:
-                    self.assertEqual(prompt, "API key for abliteration")
+                    self.assertEqual(prompt, "API key for " + provider)
 
-    def test_cookie_prompt_passes_secret_only_through_stdin(self):
-        entry = self.fixture["commands"][-1]
-        self.assertEqual(entry["descriptor"]["kind"], "credential")
-        self.assertEqual(entry["descriptor"]["action"], "set-cookie")
-        for mode in ("success", "cancel", "cli-term", "cli-kill"):
-            self.run_prompt(entry, mode)
-        argv = json.loads((self.directory / "codexbar.argv").read_text())
-        self.assertEqual(argv, ["config", "set-cookie", "--provider", "claude", "--format", "json", "--json-only", "--stdin"])
+    def test_cookie_and_import_prompts_pass_secrets_only_through_stdin(self):
+        for entry in self.fixture["commands"][8:]:
+            action, provider = entry["descriptor"]["action"], entry["descriptor"]["provider"]
+            with self.subTest(action=action, provider=provider):
+                self.assertEqual(entry["descriptor"]["kind"], "credential")
+                for mode in ("success", "cancel", "cli-term", "cli-kill"):
+                    self.run_prompt(entry, mode)
+                argv = json.loads((self.directory / "codexbar.argv").read_text())
+                expected = ['config', 'login', '--provider', provider, '--json', '--stdin'] if action == 'import-session' else [
+                    'config', 'set-cookie', '--provider', provider, '--format', 'json', '--json-only', '--stdin']
+                self.assertEqual(argv, expected)
 
     def test_generated_scripts_cancel_finish_and_leave_no_running_children(self):
         for entry in self.fixture["commands"][:3]:
             for mode in ("cancel", "dialog-term", "dialog-kill", "late", "cli-term", "cli-kill"):
                 with self.subTest(kind=entry["descriptor"]["kind"], mode=mode):
                     self.run_prompt(entry, mode)
+
+    def expected_prompt_result(self, entry, mode):
+        if mode not in ("late", "success"):
+            return {"cancelled": True}
+        descriptor = entry["descriptor"]
+        if descriptor["kind"] != "credential":
+            return {"ok": True}
+        result = {"status": "ok", "provider": descriptor["provider"]}
+        if descriptor["action"] == "set-cookie":
+            result["enabled"] = True
+        return result
 
     def run_prompt(self, entry, mode):
         for marker in self.directory.glob("*.pid"):
@@ -223,8 +245,7 @@ class SecretPromptLifecycleTests(unittest.TestCase):
                 self.assertIn(process.returncode, (124, 137), stderr)
             else:
                 self.assertEqual(process.returncode, 0, stderr)
-                expected = {"status":"ok", "provider":"claude", "enabled":True} if entry["descriptor"]["kind"] == "credential" else {"ok":True}
-                self.assertEqual(json.loads(stdout), expected if mode in ("late", "success") else {"cancelled": True})
+                self.assertEqual(json.loads(stdout), self.expected_prompt_result(entry, mode))
             self.assertEqual((self.directory / "received").exists(), mode in ("late", "success") or mode.startswith("cli-"))
             for marker in self.directory.glob("*.pid"):
                 status = Path("/proc") / marker.read_text() / "stat"
@@ -278,6 +299,7 @@ TestCase {
     property bool providerDescriptorsUnavailable: false
     property bool fireworksSingleKeySetupSupported: false
     property bool sonioxApiKeySetupSupported: false
+    property bool siliconflowTripoKeySetupSupported: false
     property bool abliterationChatboxKeySetupSupported: false
     property bool munitoApiKeySetupSupported: false
     property bool commandCodeFalApiKeySetupSupported: false

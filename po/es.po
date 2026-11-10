@@ -4394,3 +4394,23 @@ msgstr "No se reconoce la fuente guardada. Elija una fuente y guárdela para ree
 #: contents/ui/configProviders.qml
 msgid "Select Save to store this source. Apply is not needed. Automatic restores the provider default."
 msgstr "Seleccione Guardar para almacenar esta fuente. No es necesario pulsar Aplicar. Automática restaura la fuente predeterminada del proveedor."
+
+#: contents/ui/components/ProviderNames.qml
+msgid "SiliconFlow"
+msgstr "SiliconFlow"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Tripo"
+msgstr "Tripo"
+
+#: contents/ui/configProviders.qml
+msgid "Cookie header containing sessionKey"
+msgstr "Cabecera Cookie que contiene sessionKey"
+
+#: contents/ui/configProviders.qml
+msgid "Claude Platform session validated and saved."
+msgstr "Sesión de Claude Platform validada y guardada."
+
+#: contents/ui/configProviders.qml
+msgid "Validate and import session…"
+msgstr "Validar e importar sesión…"

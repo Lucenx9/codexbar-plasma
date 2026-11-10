@@ -16,6 +16,8 @@ QtObject {
         var names = {
             "traecn": i18n("Trae CN"),
             "opendesign": i18n("OpenDesign"),
+            "siliconflow": i18n("SiliconFlow"),
+            "tripo": i18n("Tripo"),
             "soniox": i18n("Soniox"),
             "abliteration": i18n("abliteration.ai"),
             "chatbox": i18n("Chatbox AI"),

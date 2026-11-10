@@ -3,15 +3,18 @@
 .import "../ProviderIdentity.js" as Identity
 .import "ProviderConfigProtocol.js" as Protocol
 
-// Linux fetches verified at 0.82.0; OpenDesign joins at 0.83.0. Writer
+// Linux fetches verified at 0.82.0; OpenDesign joins at 0.83.0, WorkBuddy at 0.84.0. Writer
 // acceptance alone is insufficient (several accepted providers are macOS-only).
-var cookieProviders = ["claude", "claudeplatform", "commandcode", "cursor", "mistral",
-    "ollama", "opencodego", "parallel", "raycast", "tinyapi", "traecn", "typesafe", "xapi"]
+var cookieMinimumVersions = {
+    claude: 82, claudeplatform: 82, commandcode: 82, cursor: 82, mistral: 82,
+    ollama: 82, opencodego: 82, parallel: 82, raycast: 82, tinyapi: 82,
+    traecn: 82, typesafe: 82, xapi: 82, opendesign: 83, workbuddy: 84
+}
 
 function supportsCookie(provider, version, authentication) {
     var id = Identity.normalizedProviderID(provider)
-    return Protocol.cliVersionAtLeast(version, 0, id === "opendesign" ? 83 : 82, 0)
-        && (id === "opendesign" || cookieProviders.indexOf(id) >= 0)
+    return Guards.hasOwnKey(cookieMinimumVersions, id)
+        && Protocol.cliVersionAtLeast(version, 0, cookieMinimumVersions[id], 0)
         && (authentication === null || authentication === undefined
             || authentication.supportsConfigCookieHeader === true)
 }
@@ -25,11 +28,22 @@ function supportsLogin(provider, version) {
         && Protocol.cliVersionAtLeast(version, 0, 80, 0)
 }
 
+function supportsSessionImport(provider, version, authentication) {
+    return Identity.normalizedProviderID(provider) === "claudeplatform"
+        && Protocol.cliVersionAtLeast(version, 0, 84, 0)
+        && supportsCookie(provider, version, authentication)
+}
+
+var helperProviders = {
+    "set-cookie": "*", "clear-credential": "*", login: "copilot",
+    "cancel-login": "copilot", "import-session": "claudeplatform"
+}
+
 function helperCommand(scriptUrl, commandPath, action, provider) {
-    if (["set-cookie", "clear-credential", "login", "cancel-login"].indexOf(action) < 0
-            || typeof commandPath !== "string" || !commandPath.trim()
+    if (!Guards.hasOwnKey(helperProviders, action)) return ""
+    if (typeof commandPath !== "string" || !commandPath.trim()
             || Protocol.boundedProviderID(provider) !== provider || !provider
-            || ((action === "login" || action === "cancel-login") && provider !== "copilot")) return ""
+            || (helperProviders[action] !== "*" && helperProviders[action] !== provider)) return ""
     var script = String(scriptUrl)
     try {
         script = script.indexOf("file:///") === 0 ? decodeURIComponent(script.slice(7)) : ""

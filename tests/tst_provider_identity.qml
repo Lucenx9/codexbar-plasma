@@ -10,6 +10,20 @@ TestCase {
         "ai&": "aiand"
     })
 
+    function test_registry084Fallbacks() {
+        for (var id of ["siliconflow", "tripo"]) {
+            compare(ProviderIdentity.providerCliArgument(id), id);
+            verify(ProviderIdentity.providerDocsUrl(id).endsWith("/" + id + ".md"));
+            compare(ProviderIdentity.providerIconFileName(id), id + ".svg");
+            compare(ProviderIdentity.providerBrandColorChannels(id).length, 3);
+        }
+        compare(ProviderIdentity.providerDashboardUrl("siliconflow"), "https://cloud.siliconflow.cn");
+        compare(ProviderIdentity.providerDashboardUrl("tripo"), "https://developers.tripo3d.ai/en/billing");
+        compare(ProviderIdentity.providerStatusUrl("tripo"), "https://tripo3d.statuspage.io");
+        compare(ProviderIdentity.providerStatusUrl("siliconflow"), "");
+        compare(ProviderIdentity.providerBrandColorChannels("siliconflow"), [110 / 255, 41 / 255, 245 / 255]);
+        compare(ProviderIdentity.providerBrandColorChannels("tripo"), [248 / 255, 207 / 255, 0]);
+    }
     function test_registry083Identities() {
         var dashboards = {soniox: "https://console.soniox.com", traecn: "https://www.trae.cn/dashboard#usage",
             chatbox: "https://chatboxai.app", abliteration: "https://abliteration.ai",
@@ -290,7 +304,7 @@ TestCase {
     function test_official0720RegistryProvidersHaveBundledMetadata() {
         // Official 0.72.0 addition in `config providers` output, with the
         // upstream descriptor color and dashboard and no status page.
-        // WorkBuddy is cookie-only with a macOS-only web source on Linux.
+        // WorkBuddy was macOS-gated at 0.72.0; manual cookies work at 0.84.0.
         var added = {
             "workbuddy": { dashboard: "https://www.workbuddy.cn/profile/plans-usage",
                 channels: [13 / 255, 200 / 255, 166 / 255] }

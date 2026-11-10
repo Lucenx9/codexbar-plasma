@@ -4375,3 +4375,23 @@ msgstr "A fonte salva não é reconhecida. Escolha uma fonte e salve-a para subs
 #: contents/ui/configProviders.qml
 msgid "Select Save to store this source. Apply is not needed. Automatic restores the provider default."
 msgstr "Selecione Salvar para armazenar esta fonte. Não é necessário selecionar Aplicar. Automática restaura a fonte padrão do provedor."
+
+#: contents/ui/components/ProviderNames.qml
+msgid "SiliconFlow"
+msgstr "SiliconFlow"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Tripo"
+msgstr "Tripo"
+
+#: contents/ui/configProviders.qml
+msgid "Cookie header containing sessionKey"
+msgstr "Cabeçalho Cookie contendo sessionKey"
+
+#: contents/ui/configProviders.qml
+msgid "Claude Platform session validated and saved."
+msgstr "Sessão do Claude Platform validada e salva."
+
+#: contents/ui/configProviders.qml
+msgid "Validate and import session…"
+msgstr "Validar e importar sessão…"

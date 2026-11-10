@@ -1939,6 +1939,28 @@ Item {
                 }
 
             }
+            if (scenario.indexOf("settings-providers-0840") === 0) {
+                var setupPage = preview.page;
+                if (setupPage.providers.length !== 4 || setupPage.loading || setupPage.providerSourcesLoading) return false;
+                var setupTarget = scenario.endsWith("-keys") ? "siliconflow"
+                    : scenario.endsWith("-cookie") ? "workbuddy" : "claudeplatform";
+                if (!navigationVerified) {
+                    setupPage.selectedProviderID = setupTarget;
+                    navigationVerified = true;
+                    return false;
+                }
+                // Check every provider even though each capture selects only one.
+                for (var setupID of ["siliconflow", "tripo", "workbuddy", "claudeplatform"]) {
+                    var setupAction = setupID === "claudeplatform" ? "import-session"
+                        : setupID === "workbuddy" ? "set-cookie" : "set-api-key";
+                    verifyScenario(setupPage.providerActionRows(setupPage.providerByID(setupID)).some(function(row) {
+                        return row.action === setupAction && row.enabled;
+                    }), "missing 0.84.0 action for " + setupID);
+                }
+                verifyScenario(hasVisibleText(setupPage, setupTarget === "claudeplatform" ? i18n("Validate and import session…")
+                    : setupTarget === "workbuddy" ? i18n("Set cookie…") : i18n("Set API key…")), "setup action is not visible");
+                return true;
+            }
             if (scenario.indexOf("settings-providers-keys") === 0) {
                 var keyPage = preview.page;
                 if (keyPage.providers.length !== 3 || !keyPage.abliterationChatboxKeySetupSupported) return false;

@@ -9,6 +9,7 @@ function versionCapabilities(version, exitCode) {
         fireworks: success && Protocol.cliVersionAtLeast(version, 0, 54, 0),
         soniox: success && Protocol.cliVersionAtLeast(version, 0, 80, 0),
         abliterationChatbox: success && Protocol.cliVersionAtLeast(version, 0, 81, 0),
+        siliconflowTripo: success && Protocol.cliVersionAtLeast(version, 0, 84, 0),
         munito: success && Protocol.cliVersionAtLeast(version, 0, 77, 0),
         commandCodeFal: success && Protocol.cliVersionAtLeast(version, 0, 75, 0),
         source: success && Protocol.cliVersionAtLeast(version, 0, 73, 0)
@@ -16,6 +17,7 @@ function versionCapabilities(version, exitCode) {
 }
 
 var keyCapabilities = {
+    siliconflow: "siliconflowTripo", tripo: "siliconflowTripo",
     soniox: "soniox", abliteration: "abliterationChatbox", chatbox: "abliterationChatbox",
     munito: "munito", fireworks: "fireworks", commandcode: "commandCodeFal", fal: "commandCodeFal"
 }

@@ -158,14 +158,72 @@ def spawn(arguments, **kwargs):
     return subprocess.Popen(arguments, stderr=subprocess.DEVNULL, **kwargs)
 
 
+def session_import_result(output, exit_code):
+    """Console import emits one terminal event, without a device-code phase."""
+    event = json.loads(output)
+    if not isinstance(event, dict):
+        return {"status": "failed"}
+    if event.get("status") == "authorized":
+        valid = exit_code == 0 and "error" not in event
+        return {"status": "ok" if valid else "failed"}
+    if event.get("status") == "failed" and exit_code != 0:
+        if event.get("error") == "Config changed during login. Please try again.":
+            return {"status": "conflict"}
+    return {"status": "failed"}
+
+
+def credential_arguments(cli, action, provider):
+    """Choose the released writer and its input/output contract."""
+    if action == "import-session":
+        if provider != "claudeplatform":
+            raise ValueError
+        arguments = [cli, "config", "login", "--provider", provider, "--json"]
+    else:
+        arguments = [cli, "config", action, "--provider", provider, "--format", "json", "--json-only"]
+    if action in ("set-cookie", "import-session"):
+        arguments.append("--stdin")
+    return arguments
+
+
+def credential_result(output, exit_code, provider, action):
+    """Discard private CLI details and require the writer's terminal contract."""
+    if action == "import-session":
+        return session_import_result(output, exit_code)
+    if exit_code != 0:
+        return {"status": "failed"}
+    result = json.loads(output)
+    if not isinstance(result, dict):
+        return {"status": "failed"}
+    if result.get("provider") != provider:
+        return {"status": "failed"}
+    if "error" in result:
+        return {"status": "failed"}
+    return stored_credential_result(result, action)
+
+
+def stored_credential_result(result, action):
+    """Validate the provider-matched cookie or clear result without its private fields."""
+    if action == "set-cookie":
+        if type(result.get("enabled")) is bool:
+            return {"status": "ok", "enabled": result["enabled"]}
+        return {"status": "failed"}
+    if action != "clear-credential":
+        return {"status": "failed"}
+    cleared = result.get("cleared")
+    if not isinstance(cleared, list):
+        return {"status": "failed"}
+    if any(item not in ("apiKey", "cookieHeader") for item in cleared):
+        return {"status": "failed"}
+    return {"status": "ok"}
+
+
 def credential(cli, action, provider):
     parent = os.getppid()
-    value = sys.stdin.buffer.read(MAX_BYTES + 1) if action == "set-cookie" else b""
-    if action == "set-cookie" and (not value.strip() or len(value) > MAX_BYTES):
+    secret_input = action in ("set-cookie", "import-session")
+    value = sys.stdin.buffer.read(MAX_BYTES + 1) if secret_input else b""
+    if secret_input and (not value.strip() or len(value) > MAX_BYTES):
         return {"status": "failed"}
-    arguments = [cli, "config", action, "--provider", provider, "--format", "json", "--json-only"]
-    if action == "set-cookie":
-        arguments.append("--stdin")
+    arguments = credential_arguments(cli, action, provider)
     process = spawn(arguments, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
     try:
         # Drain bounded output while feeding stdin; neither pipe may block
@@ -199,17 +257,7 @@ def credential(cli, action, provider):
                         output.extend(block)
                         if len(output) > MAX_BYTES:
                             return {"status": "failed"}
-        if process.returncode != 0:
-            return {"status": "failed"}
-        result = json.loads(output)
-        if not isinstance(result, dict) or result.get("provider") != provider or "error" in result:
-            return {"status": "failed"}
-        if action == "set-cookie" and type(result.get("enabled")) is bool:
-            return {"status": "ok", "enabled": result["enabled"]}
-        if action == "clear-credential" and isinstance(result.get("cleared"), list) and all(
-                item in ("apiKey", "cookieHeader") for item in result["cleared"]):
-            return {"status": "ok"}
-        return {"status": "failed"}
+        return credential_result(output, process.returncode, provider, action)
     finally:
         stop(process)
 
@@ -287,7 +335,7 @@ def login(cli, title, message, supervised, request=""):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--cli", required=True)
-    parser.add_argument("--action", choices=("set-cookie", "clear-credential", "login", "cancel-login"), required=True)
+    parser.add_argument("--action", choices=("set-cookie", "clear-credential", "login", "cancel-login", "import-session"), required=True)
     parser.add_argument("--provider", required=True)
     parser.add_argument("--title", default="")
     parser.add_argument("--message", default="")
@@ -298,6 +346,9 @@ def main():
     def interrupt(_signum, _frame):
         # selectors.select() catches InterruptedError internally. Use a
         # distinct exception so cancellation reaches process-group cleanup.
+        # Repeated timeout/group signals must not interrupt that cleanup.
+        signal.signal(signal.SIGTERM, signal.SIG_IGN)
+        signal.signal(signal.SIGINT, signal.SIG_IGN)
         raise RequestInterrupted
 
     signal.signal(signal.SIGTERM, interrupt)

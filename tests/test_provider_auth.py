@@ -34,13 +34,15 @@ if sys.argv[2] != 'login':
     root.joinpath('input').write_bytes(value)
     provider = sys.argv[sys.argv.index('--provider') + 1]
     if mode.startswith('child-'):
+        if mode == 'child-resistant':
+            signal.signal(signal.SIGTERM, lambda *_: root.joinpath('stopping').touch())
         child = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(60)'],
                                  stdin=subprocess.DEVNULL,
                                  stdout=None if mode == 'child-pipe' else subprocess.DEVNULL)
         root.joinpath('child.pid').write_text(str(child.pid))
         if mode == 'child-closed-pipes':
             os.close(1)
-        if mode in ('child-hang', 'child-closed-pipes'):
+        if mode in ('child-hang', 'child-closed-pipes', 'child-resistant'):
             time.sleep(60)
     if mode == 'refuse':
         print(json.dumps({'error': {'message': value.decode()}}))
@@ -53,6 +55,9 @@ if sys.argv[2] != 'login':
                      'enabled': True, 'cleared': ['apiKey', 'cookieHeader'],
                      'configPath': '/private/path', 'cookie': value.decode()}))
     sys.exit(0)
+if '--stdin' in sys.argv:
+    value = sys.stdin.buffer.read()
+    root.joinpath('input').write_bytes(value)
 lines = json.loads(root.joinpath('events').read_text())
 for line in lines:
     if isinstance(line, (int, float)):
@@ -133,9 +138,9 @@ class ProviderAuthTests(unittest.TestCase):
                 "--action", action, "--provider", provider, "--title", "Sign in",
                 "--message", "Visit %1\nCode %2\nExpires in %3"]
 
-    def run_helper(self, events=(), mode="ok", action="login", value="", request=""):
+    def run_helper(self, events=(), mode="ok", action="login", value="", request="", provider="copilot"):
         self.root.joinpath('events').write_text(json.dumps(events))
-        arguments = self.arguments(action) + (["--request", request] if request else [])
+        arguments = self.arguments(action, provider) + (["--request", request] if request else [])
         result = subprocess.run(arguments, env={**self.env, "AUTH_MODE": mode},
                                 input=value, text=True, capture_output=True, timeout=10)
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -176,6 +181,35 @@ class ProviderAuthTests(unittest.TestCase):
                          ['config', 'login', '--provider', 'copilot', '--json'])
         self.assert_stopped('dialog')
         self.assert_stopped('cli')
+
+    def test_session_import_uses_stdin_and_requires_one_successful_terminal_record(self):
+        cases = [([{"status": "authorized"}], "ok", "ok"),
+                 ([{"status": "authorized"}], "exit1", "failed"),
+                 ([{"status": "authorized", "error": "synthetic-cookie"}], "ok", "failed"),
+                 ([{"status": "failed", "error": "synthetic-cookie"}], "exit1", "failed"),
+                 ([{"status": "failed", "error": "Config changed during login. Please try again."}], "exit1", "conflict"),
+                 ([PENDING, {"status": "authorized"}], "ok", "failed"),
+                 ([{"status": "authorized"}, {"status": "failed"}], "ok", "failed"),
+                 ([{"status": "authorization_pending"}], "ok", "failed"),
+                 ([None], "ok", "failed"), (["x" * 70000], "ok", "failed")]
+        for events, mode, expected in cases:
+            with self.subTest(events=str(events)[:100], mode=mode):
+                result = self.run_helper(events, mode, action="import-session",
+                                         provider="claudeplatform", value="synthetic-cookie")
+                self.assertEqual(result, {"status": expected, "provider": "claudeplatform"})
+                self.assertEqual(self.root.joinpath('input').read_text(), 'synthetic-cookie')
+                self.assertEqual(json.loads(self.root.joinpath('cli.argv').read_text()),
+                                 ['config', 'login', '--provider', 'claudeplatform', '--json', '--stdin'])
+                self.assertFalse(self.root.joinpath('dialog.pid').exists())
+                self.assert_stopped('cli')
+
+    def test_session_import_rejects_other_providers_and_empty_or_oversized_input(self):
+        for provider, value in [('copilot', 'synthetic-cookie'), ('claudeplatform', ''),
+                                ('claudeplatform', 'x' * 65537)]:
+            with self.subTest(provider=provider, size=len(value)):
+                self.assertEqual(self.run_helper(action='import-session', provider=provider,
+                                                 value=value)['status'], 'failed')
+                self.assertFalse(self.root.joinpath('cli.pid').exists())
 
     def test_cancellation_stops_cli_and_never_reports_authorized(self):
         self.assertEqual(self.run_helper([PENDING, 3, {"status": "authorized"}], mode='cancel')['status'], 'cancelled')
@@ -245,11 +279,34 @@ class ProviderAuthTests(unittest.TestCase):
             except ProcessLookupError:
                 pass
 
-    def wait_credential_child(self):
+    def wait_credential_child(self, marker='child.pid'):
         deadline = time.monotonic() + 5
-        while not self.root.joinpath('child.pid').exists() and time.monotonic() < deadline:
+        while not self.root.joinpath(marker).exists() and time.monotonic() < deadline:
             time.sleep(.02)
-        self.assertTrue(self.root.joinpath('child.pid').exists())
+        self.assertTrue(self.root.joinpath(marker).exists())
+
+    def test_repeated_signals_do_not_interrupt_credential_cleanup(self):
+        self.addCleanup(self.stop_fixture_process, 'cli')
+        self.addCleanup(self.stop_fixture_process, 'child')
+        process = subprocess.Popen(self.arguments(action='clear-credential'),
+                                   env={**self.env, 'AUTH_MODE': 'child-resistant'},
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        try:
+            self.wait_credential_child()
+            process.send_signal(signal.SIGTERM)
+            self.wait_credential_child('stopping')
+            process.send_signal(signal.SIGINT)
+            out, err = process.communicate(timeout=5)
+            self.assertEqual(json.loads(out)['status'], 'failed')
+            self.assertEqual(err, '')
+            self.assert_stopped('cli')
+            self.assert_stopped('child')
+        finally:
+            if process.poll() is None:
+                process.kill()
+                process.wait()
+            process.stdout.close()
+            process.stderr.close()
 
     def test_credential_completion_stops_wrapper_descendants(self):
         self.addCleanup(self.stop_fixture_process, 'child')

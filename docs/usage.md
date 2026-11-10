@@ -774,15 +774,35 @@ Provider-specific editable settings depend on the official CLI contract.
   an advertised key-writer flag must also allow them when metadata is present.
   ![Synthetic Chatbox license-key setup and guidance](codexbar-plasma-chatbox-key-setup.png)
 
+- SiliconFlow and Tripo offer **Set API key…** with CLI 0.84.0 or later.
+  Keys stay in the native password prompt and CLI stdin. Both have fallback
+  names, documentation and dashboard links, with dedicated icons and brand colors.
+  SiliconFlow uses the China API by default; selecting its international origin
+  still requires external CLI environment configuration (`SILICONFLOW_BASE_URL`).
+  The widget has no regional-origin writer. Older or unknown CLI versions hide
+  both key actions, and inventory metadata can further restrict availability.
 - Claude Platform has its own fallback name, the shared Claude icon and brand
   color, and Console billing, login, status and documentation links. Its
   `claude-platform` alias resolves to `claudeplatform`, separately from Claude.
   With CLI 0.82.0 or later, **Set cookie…** stores a manual Console cookie.
+  With CLI 0.84.0 or later, **Validate and import session…** privately prompts
+  for a platform.claude.com Cookie header containing `sessionKey`. The official
+  CLI validates it before saving and enabling the provider. **Set cookie…**
+  remains available without validation. Cancelling the prompt performs no write;
+  failed validation or a concurrent config change reports a retryable failure.
+  The input and CLI phases have separate deadlines; late results from retired
+  requests cannot update settings. Only a successful terminal event and exit 0
+  refresh usage. No cookie or raw CLI failure enters QML or displayed errors.
+  This action requires `python3`, GNU `timeout` and `kdialog`. Successful
+  authorization with a real account remains unverified in the pinned Linux
+  evidence; synthetic tests cover success and failure handling.
   Opening the login page alone does not configure CLI authentication.
 - **Set cookie…** uses `config set-cookie --stdin` with CLI 0.82.0 or later
   for Claude, Claude Platform, Command Code, Cursor, Mistral, Ollama, OpenCode
   Go, Parallel, Raycast, TinyApi, Trae CN, TypeSafe, and X API. OpenDesign
-  requires CLI 0.83.0. The native password prompt sends the cookie only over
+  requires CLI 0.83.0; WorkBuddy requires 0.84.0. WorkBuddy’s optional User-Agent
+  has no CLI writer and its authenticated billing response remains unverified.
+  The native password prompt sends the cookie only over
   stdin; no cookie enters QML, command arguments, logs, or displayed errors.
   Saving enables the provider and selects its manual-cookie mode. Existing
   saved source choices and the global Diagnostics source override still apply.
@@ -809,8 +829,8 @@ Provider-specific editable settings depend on the official CLI contract.
   cache. Success refreshes Copilot; late replies cannot replace a newer request.
   This flow requires `python3`, GNU `timeout` and `kdialog`; no browser opens
   automatically. See [credential command contracts](provider-credentials.md).
-- Fallback names, icons, and documentation links for all 111 providers in the
-  official CodexBar 0.83.0 registry, plus colors, links, and aliases where
+- Fallback names, icons, and documentation links for all 113 providers in the
+  official CodexBar 0.84.0 registry, plus colors, links, and aliases where
   upstream defines them; fork-only provider assets, and those for providers a
   later CLI retired, remain available for compatibility.
   Providers without bundled artwork use the theme's generic statistics icon

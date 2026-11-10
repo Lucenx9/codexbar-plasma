@@ -15,8 +15,8 @@ Issues linked below preserve discussion; this file owns parity status.
   Tripo key writers, Claude Platform stdin-login validation/failure, Codex
   ordinary symlinked-history accounting and the remaining identified-discovery
   bug, schema 2 decoder compatibility, OpenCode Go's
-  unavailable-cost output, and scoped carried blockers. New setup gaps are
-  below; authenticated balances and successful Console login remain unverified.
+  unavailable-cost output, and scoped carried blockers. The new setup actions
+  are implemented; authenticated balances and successful Console login remain unverified.
 - Earlier reviews: each dated note in the
   [documentation index](docs/README.md#maintained-references) records its own
   release coverage, probes, and unverified cases. Shared payload structs retain
@@ -28,31 +28,9 @@ Issues linked below preserve discussion; this file owns parity status.
 
 ## Plasma-native and implementable now
 
-- [ ] Add version-gated SiliconFlow and Tripo single-key setup and tested
-  fallback metadata. Official Linux 0.84.0 discovers both providers, advertises
-  API-key support, stores synthetic keys through `set-api-key --stdin`, and
-  reaches the API under Auto and API. Plasma discovers both but its curated
-  key policy rejects them. Done when CLI 0.84.0 or later offers secure key
-  prompts, older/unknown versions hide them, and names/links remain useful
-  without inventory metadata. SiliconFlow's China origin is the default;
-  the optional international-origin editor remains CLI-blocked below.
-  [Evidence](docs/research/2026-11-10-macos-parity-0.84.0.md#linux-cli-contract-changes).
-- [ ] Add WorkBuddy to the verified Linux manual-cookie action allowlist with
-  CLI 0.84.0 or later. Its supported stdin writer and stored-cookie Web dispatch
-  were verified, but Plasma hides the action. Done when the existing private
-  cookie prompt is version/capability-gated and covered by lifecycle tests.
-  Successful billing remains unverified; the optional User-Agent editor is a
-  separate CLI blocker below.
-  [Evidence](docs/research/2026-11-10-macos-parity-0.84.0.md#linux-cli-contract-changes).
-- [ ] Offer Claude Platform's validated session import through official
-  `config login --provider claudeplatform --stdin --json` with CLI 0.84.0 or
-  later. Existing Set cookie stores without validation; the new command
-  validates before saving. Only `promptDescriptorSecret` may carry the cookie;
-  no secret may enter QML or process arguments. Done when a private prompt
-  handles authorized, failed, cancelled, conflict and stale outcomes with
-  bounded lifecycle tests and documented behavior. Successful authenticated
-  authorization remains unverified; preserve existing cookie setup meanwhile.
-  [Contract and limits](docs/research/2026-11-10-macos-parity-0.84.0.md#linux-cli-contract-changes).
+No confirmed frontend implementation gaps remain in this review. Completed
+0.84.0 provider setup is documented in the [usage guide](docs/usage.md#providers-and-accounts);
+authenticated verification and CLI blockers remain below.
 
 ## Blocked on official Linux CLI contracts
 
@@ -136,7 +114,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   Copilot's `loginCommand`; the `usage_updated` hook event
   is CLI automation surface, not a setup action). Copilot device login
   has a version-gated Plasma action; 0.84.0 adds the separate Claude Platform
-  stdin session import tracked above. Generic provider login actions remain
+  stdin session import supported by Plasma. Generic provider login actions remain
   blocked. Trae CN browser import remains macOS-only; its manual-cookie setup
   is available through the supported writer. Done when supported actions expose
   validated
@@ -381,7 +359,8 @@ These are unresolved Linux candidates, not confirmed missing features.
   emitted Linux output shows whether Plasma's generic paths suffice.
   [Limits](docs/research/2026-11-01-macos-parity-0.83.0.md#unverified-in-this-review).
 - [ ] Verify 0.84.0 authenticated output: SiliconFlow regional balances, Tripo
-  available/reserved credits, Synthetic weekly credits and regeneration,
+  available/reserved credits, successful Claude Platform session authorization,
+  Synthetic weekly credits and regeneration,
   Neuralwatt's typed balance, TypeSafe billing, Kiro token recovery/Pro+,
   Bedrock measured zero days, and Claude weekly-only/model-breakdown states.
   Compare current window names, including Cursor's monthly Auto allowance,
