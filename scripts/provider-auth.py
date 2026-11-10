@@ -207,14 +207,14 @@ def stored_credential_result(result, action):
         if type(result.get("enabled")) is bool:
             return {"status": "ok", "enabled": result["enabled"]}
         return {"status": "failed"}
-    if action == "clear-credential":
-        cleared = result.get("cleared")
-        if not isinstance(cleared, list):
-            return {"status": "failed"}
-        if any(item not in ("apiKey", "cookieHeader") for item in cleared):
-            return {"status": "failed"}
-        return {"status": "ok"}
-    return {"status": "failed"}
+    if action != "clear-credential":
+        return {"status": "failed"}
+    cleared = result.get("cleared")
+    if not isinstance(cleared, list):
+        return {"status": "failed"}
+    if any(item not in ("apiKey", "cookieHeader") for item in cleared):
+        return {"status": "failed"}
+    return {"status": "ok"}
 
 
 def credential(cli, action, provider):
