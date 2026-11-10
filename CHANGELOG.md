@@ -12,7 +12,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Added
 
-- Add SiliconFlow and Tripo secure key setup and fallback names/links with CLI
+- Add SiliconFlow and Tripo secure key setup, dedicated icons, brand colors and
+  fallback names/links with CLI
   0.84.0 or later, plus Claude Platform session import that validates before saving.
 - Publish one updating CI comment per pull request from `codexbar-review-bot`,
   with job status, popup outcomes, panel capture counts, and comparable smoke
@@ -20,8 +21,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Optionally name the quota chosen by Automatic panel text when multiple
   windows are available. Crowded panels omit the name before shortening usage;
   the full text remains available to assistive technology and in tooltips.
-- Bundle dedicated Soniox, Trae CN, Chatbox AI, abliteration.ai, and OpenDesign
-  icons and identity metadata, covering the official CLI 0.83.0 registry.
+- Bundle dedicated SiliconFlow, Tripo, Soniox, Trae CN, Chatbox AI, abliteration.ai,
+  and OpenDesign icons and identity metadata, covering the official CLI 0.84.0 registry.
 - Offer secure manual-cookie setup for 15 verified Linux providers and
   confirmation before clearing stored keys/cookies with CLI 0.82.0 or later.
   OpenDesign requires 0.83.0 and WorkBuddy 0.84.0; Gemini remains excluded pending

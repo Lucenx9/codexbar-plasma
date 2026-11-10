@@ -776,7 +776,7 @@ Provider-specific editable settings depend on the official CLI contract.
 
 - SiliconFlow and Tripo offer **Set API key…** with CLI 0.84.0 or later.
   Keys stay in the native password prompt and CLI stdin. Both have fallback
-  names, documentation and dashboard links, with the generic provider icon.
+  names, documentation and dashboard links, with dedicated icons and brand colors.
   SiliconFlow uses the China API by default; selecting its international origin
   still requires external CLI environment configuration (`SILICONFLOW_BASE_URL`).
   The widget has no regional-origin writer. Older or unknown CLI versions hide
@@ -829,8 +829,8 @@ Provider-specific editable settings depend on the official CLI contract.
   cache. Success refreshes Copilot; late replies cannot replace a newer request.
   This flow requires `python3`, GNU `timeout` and `kdialog`; no browser opens
   automatically. See [credential command contracts](provider-credentials.md).
-- Fallback names, icons, and documentation links for all 111 providers in the
-  official CodexBar 0.83.0 registry, plus colors, links, and aliases where
+- Fallback names, icons, and documentation links for all 113 providers in the
+  official CodexBar 0.84.0 registry, plus colors, links, and aliases where
   upstream defines them; fork-only provider assets, and those for providers a
   later CLI retired, remain available for compatibility.
   Providers without bundled artwork use the theme's generic statistics icon

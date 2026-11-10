@@ -96,7 +96,8 @@ Synthetic process and QML tests cover successful import, validation failure,
 conflict, cancellation, timeout, stale replies and stdin-only secret handling.
 
 SiliconFlow and Tripo single-key prompts also require 0.84.0, through the existing
-API-key writer. Fallback names and documentation/dashboard links remain available
+API-key writer. Dedicated icons, brand colors, fallback names and
+documentation/dashboard links remain available
 without inventory metadata. SiliconFlow's regional origin and WorkBuddy's
 User-Agent remain [CLI writer blockers](../TODO.md#provider-settings).
 

@@ -176,8 +176,9 @@ For private CLI selection, updates, and rollback, see
 - English, Italian, French, German, Spanish, and Brazilian Portuguese, selected
   through your Plasma language preferences.
 
-Bundled names and icons cover all 111 providers in the official CLI 0.83.0
-registry, including Soniox, Trae CN, Chatbox AI, abliteration.ai, and OpenDesign.
+Bundled names and icons cover all 113 providers in the official CLI 0.84.0
+registry, including SiliconFlow, Tripo, Soniox, Trae CN, Chatbox AI, abliteration.ai,
+and OpenDesign.
 Newer CLI providers use generic presentation where needed. Provider settings
 offer secure manual-cookie setup for 15 verified Linux providers, stored-key/cookie
 clearing, on-demand Copilot GitHub sign-in, and Claude Platform validated session
@@ -185,8 +186,8 @@ import with CLI 0.84.0 or later; see [provider setup](docs/usage.md#providers-an
 Secure key setup also supports Soniox with CLI 0.80.0 or later, and
 abliteration.ai and Chatbox AI with CLI 0.81.0 or later. Soniox requires an
 organization API key; Chatbox requires a license key. SiliconFlow and Tripo key
-setup requires CLI 0.84.0 or later and includes fallback names and links with
-generic icons. SiliconFlow defaults to its China API; the regional editor remains
+setup requires CLI 0.84.0 or later and includes dedicated icons, brand colors,
+fallback names and links. SiliconFlow defaults to its China API; the regional editor remains
 unavailable. See the
 [provider setup notes](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/usage.md#providers-and-accounts).
 

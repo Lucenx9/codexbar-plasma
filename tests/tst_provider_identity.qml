@@ -14,11 +14,15 @@ TestCase {
         for (var id of ["siliconflow", "tripo"]) {
             compare(ProviderIdentity.providerCliArgument(id), id);
             verify(ProviderIdentity.providerDocsUrl(id).endsWith("/" + id + ".md"));
-            compare(ProviderIdentity.providerIconFileName(id), "");
-            compare(ProviderIdentity.providerStatusUrl(id), "");
+            compare(ProviderIdentity.providerIconFileName(id), id + ".svg");
+            compare(ProviderIdentity.providerBrandColorChannels(id).length, 3);
         }
         compare(ProviderIdentity.providerDashboardUrl("siliconflow"), "https://cloud.siliconflow.cn");
-        compare(ProviderIdentity.providerDashboardUrl("tripo"), "https://developers.tripo3d.ai");
+        compare(ProviderIdentity.providerDashboardUrl("tripo"), "https://developers.tripo3d.ai/en/billing");
+        compare(ProviderIdentity.providerStatusUrl("tripo"), "https://tripo3d.statuspage.io");
+        compare(ProviderIdentity.providerStatusUrl("siliconflow"), "");
+        compare(ProviderIdentity.providerBrandColorChannels("siliconflow"), [110 / 255, 41 / 255, 245 / 255]);
+        compare(ProviderIdentity.providerBrandColorChannels("tripo"), [248 / 255, 207 / 255, 0]);
     }
     function test_registry083Identities() {
         var dashboards = {soniox: "https://console.soniox.com", traecn: "https://www.trae.cn/dashboard#usage",

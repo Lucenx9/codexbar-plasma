@@ -152,6 +152,8 @@ var providerCliArguments = {
 // Brand colours as red/green/blue channels in 0..1. Providers with no entry fall
 // back to the theme highlight, which is the caller's decision to make.
 var providerBrandChannels = {
+    "siliconflow": [110 / 255, 41 / 255, 245 / 255],
+    "tripo": [248 / 255, 207 / 255, 0],
     "soniox": [37 / 255, 55 / 255, 114 / 255],
     "traecn": [77 / 255, 124 / 255, 254 / 255],
     "chatbox": [34 / 255, 139 / 255, 230 / 255],
@@ -265,7 +267,7 @@ var providerBrandChannels = {
 
 var providerDashboardUrls = {
     "siliconflow": "https://cloud.siliconflow.cn",
-    "tripo": "https://developers.tripo3d.ai",
+    "tripo": "https://developers.tripo3d.ai/en/billing",
     "soniox": "https://console.soniox.com",
     "traecn": "https://www.trae.cn/dashboard#usage",
     "chatbox": "https://chatboxai.app",
@@ -397,6 +399,7 @@ var providerLoginUrls = {
 }
 
 var providerStatusUrls = {
+    "tripo": "https://tripo3d.statuspage.io",
     "soniox": "https://status.soniox.com",
     "alibaba": "https://status.aliyun.com",
     "alibabatokenplan": "https://status.aliyun.com",
@@ -555,6 +558,8 @@ var providerDocsPaths = {
 // Only bundled assets belong here. A missing local URL does not trigger
 // Kirigami.Icon's theme fallback, so unknown providers must return no file.
 var providerIconFiles = {
+    "siliconflow": "siliconflow.svg",
+    "tripo": "tripo.svg",
     "soniox": "soniox.svg",
     "traecn": "traecn.svg",
     "chatbox": "chatbox.svg",
