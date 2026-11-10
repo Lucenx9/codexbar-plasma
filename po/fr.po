@@ -2196,10 +2196,6 @@ msgid "Provider name"
 msgstr "Nom du fournisseur"
 
 #: contents/ui/configPanel.qml
-msgid "Provider name, usage text and credits are hidden"
-msgstr "Nom du fournisseur, texte d’utilisation et crédits masqués"
-
-#: contents/ui/configPanel.qml
 msgid "Quota: %1"
 msgstr "Quota : %1"
 
@@ -4378,12 +4374,8 @@ msgstr[0] "%1 jour UTC"
 msgstr[1] "%1 jours UTC"
 
 #: contents/ui/configPanel.qml
-msgid ""
-"Switches to monochrome, enables provider meters, and hides names, usage "
-"text, and credits."
-msgstr ""
-"Active le mode monochrome et les jauges des fournisseurs, et masque les "
-"noms, le texte d’utilisation et les crédits."
+msgid "Switches to monochrome, enables provider meters, and hides names, usage text, credits, and spend budgets."
+msgstr "Active le style monochrome et les jauges des fournisseurs, et masque les noms, le texte d'utilisation, les crédits et les budgets de dépenses."
 
 #: contents/ui/configProviders.qml
 msgid "Loading saved source…"
@@ -4420,3 +4412,32 @@ msgstr "Session Claude Platform validée et enregistrée."
 #: contents/ui/configProviders.qml
 msgid "Validate and import session…"
 msgstr "Valider et importer la session…"
+
+
+#: contents/ui/components/PanelText.qml
+msgid "Spend %1 / %2"
+msgstr "Dépenses %1 / %2"
+
+#: contents/ui/configPanel.qml
+msgid "Spend budget"
+msgstr "Budget de dépenses"
+
+#: contents/ui/configPanel.qml
+msgid "Additional panel text is hidden"
+msgstr "Le texte supplémentaire du panneau est masqué"
+
+#: contents/ui/configPanel.qml
+msgid "Appears only with a monetary budget. Prepaid balances are excluded."
+msgstr "Apparaît uniquement avec un budget monétaire. Les soldes prépayés sont exclus."
+
+#: contents/ui/configPopup.qml
+msgid "Show remaining monthly quota per day"
+msgstr "Afficher le quota mensuel restant par jour"
+
+#: contents/ui/components/UsageWindowText.qml
+msgid "Less than %1% per day until reset"
+msgstr "Moins de %1 % par jour avant la réinitialisation"
+
+#: contents/ui/components/UsageWindowText.qml
+msgid "%1% per day until reset"
+msgstr "%1 % par jour avant la réinitialisation"

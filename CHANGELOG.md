@@ -12,6 +12,15 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Added
 
+- Add optional monetary spend budgets to panel text and remaining monthly quota
+  per local calendar day to the popup. Both options default to off. Panel budgets
+  require an explicitly reported currency and preserve the complete compact pace
+  fallback when all optional text is enabled. Settings previews use the live
+  panel's regional number format, and the minimal preset describes all hidden text.
+- Prioritize fresh, authoritative exhausted quotas and explicit CLI run-out forecasts
+  for automatic panel text and tab gauges, preserving manual lanes, dual
+  capsules and provider-specific alternate-pool choices. Retained measurements
+  keep the ordinary quota preference.
 - Add SiliconFlow and Tripo secure key setup, dedicated icons, brand colors and
   fallback names/links with CLI
   0.84.0 or later, plus Claude Platform session import that validates before saving.

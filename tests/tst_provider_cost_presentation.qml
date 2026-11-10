@@ -6,6 +6,21 @@ import "../contents/ui/ProviderSnapshot.js" as ProviderSnapshot
 TestCase {
     name: "ProviderCostPresentation"
 
+    function test_panelBudgetKeepsMoneySeparateFromBalancesAndQuotaUnits() {
+        var cost = {used: 12, limit: 20, currencyCode: "USD", period: "Budget"};
+        compare(Presentation.panelBudget("bifrost", cost).used, 12);
+        compare(Presentation.panelBudget("future", Object.assign({}, cost, {currencyCode: "CNY"})).currency, "CNY");
+        for (var currency of ["Credits", "Quota", "usd", "<b>USD</b>"]) {
+            compare(Presentation.panelBudget("future", Object.assign({}, cost, {currencyCode: currency})), null);
+        }
+        compare(Presentation.panelBudget("factory", Object.assign({}, cost, {period: "Extra usage balance"})), null);
+        compare(Presentation.panelBudget("opencodego", Object.assign({}, cost, {period: "Zen balance"})), null);
+        compare(Presentation.panelBudget("future", Object.assign({}, cost, {limit: 0})), null);
+        compare(Presentation.panelBudget("future", Object.assign({}, cost, {used: -1})), null);
+        compare(Presentation.panelBudget("future", null), null);
+        compare(Presentation.panelBudget("future", {used: 2, limit: 10}), null);
+    }
+
     function test_invalidRecords() {
         for (var value of [null, undefined, [], "cost", 42, true]) {
             compare(Presentation.section("codex", value), null);

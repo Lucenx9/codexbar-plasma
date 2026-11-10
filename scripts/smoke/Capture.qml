@@ -797,6 +797,10 @@ Item {
         var snapshots = applet.providers;
         var serial = usageLifecycle.commandRunSerial;
         var liveStyle = applet.Plasmoid.configuration.panelStyle;
+        page.cfg_showSpendInPanel = true;
+        verifyScenario(renderer.fullText === i18n("Spend %1 / %2", applet.amountString(12, "USD"),
+            applet.amountString(20, "USD")), "spend preview differs from live number formatting");
+        page.cfg_showSpendInPanel = false;
         page.cfg_showPercentInPanel = true;
         page.cfg_showProviderInPanel = true;
         page.cfg_panelElementOrder = "meters,text,identity,status";
@@ -2375,7 +2379,7 @@ Item {
             return false;
         var codex = applet.providers[applet.providerIndexForID("codex")];
         var claude = applet.providers[applet.providerIndexForID("claude")];
-        if (!codex || codex.rows.length !== 2 || codex.error.length > 0)
+        if (!codex || codex.rows.length !== (scenario === "monthly-allowance" ? 3 : 2) || codex.error.length > 0)
             return false;
         if (panelAppearanceScenario) {
             if (scenario === "estimated-panel" || scenario === "unknown-panel") {
@@ -2613,6 +2617,10 @@ Item {
         }
         if (scenario === "long-text")
             return applet.selectedProviderID === "codex" && !applet.accountLoadingForProvider("codex") && applet.accountOptionsForProvider("codex").length === 2 && codex.account.length > 50;
+        if (scenario === "monthly-allowance") {
+            return applet.selectedProviderID === "codex"
+                && hasVisibleText(applet.fullRepresentationItem, "4.00% per day until reset");
+        }
         if (scenario.indexOf("provider-header") === 0)
             return applet.selectedProviderID === "codex" && codex.hasIncident;
         if (scenario.indexOf("project-") === 0) {
@@ -2783,6 +2791,9 @@ Item {
                         return;
                     popup.Window.window.width = 640;
                     popup.Window.window.height = 880;
+                    capture.applet.openProviderFromPanel("codex");
+                } else if (capture.scenario === "monthly-allowance") {
+                    capture.applet.Plasmoid.configuration.showMonthlyDailyAllowance = true;
                     capture.applet.openProviderFromPanel("codex");
                 } else if (capture.scenario === "percent-only-usage" || capture.scenario === "percent-only-pace") {
                     capture.applet.openProviderFromPanel("claude");

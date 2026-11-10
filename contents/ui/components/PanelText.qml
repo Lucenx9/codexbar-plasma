@@ -14,9 +14,18 @@ QtObject {
     property bool showProvider: false
     property bool showPercent: false
     property bool showCredits: false
+    property bool showSpend: false
     property bool showAutoQuotaLabel: false
     property var numberFormat: ({})
     property UsageWindowText usageLabels: UsageWindowText {}
+
+    function budgetText(item) {
+        var budget = item && root.showSpend && item.usageStale !== true
+            ? item.panelBudget : null
+        return budget ? i18n("Spend %1 / %2",
+            CostAmounts.amountString(root.numberFormat, budget.used, budget.currency),
+            CostAmounts.amountString(root.numberFormat, budget.limit, budget.currency)) : ""
+    }
 
     function displayText(row, mode, resetText, runOutText) {
         if (mode === "pace") {
@@ -74,6 +83,7 @@ QtObject {
             showProvider: root.showProvider,
             showPercent: root.showPercent,
             showCredits: root.showCredits,
+            showSpend: root.showSpend,
             iconIdentifies: iconIdentifies
         }, {
             fallback: root.loading ? i18n("Loading") : "CodexBar",
@@ -81,6 +91,7 @@ QtObject {
             labelledDisplay: root.showAutoQuotaLabel && quotaLabel
                 ? i18nc("Quota name %1 before panel usage text %2", "%1 %2", quotaLabel, display) : "",
             compactDisplay: compactDisplay,
+            spend: budgetText(item),
             credits: item && root.showCredits && item.credits !== null
                 ? i18n("%1cr", CostAmounts.formatCount(root.numberFormat, item.credits)) : ""
         })
@@ -101,6 +112,10 @@ QtObject {
         }
         if (parts.credits !== null) {
             details.push(i18n("%1cr", CostAmounts.formatCount(root.numberFormat, parts.credits)))
+        }
+        var spend = budgetText(item)
+        if (spend.length > 0) {
+            details.push(spend)
         }
         if (Normalizer.usageConfidence(item.dataConfidence) === "percentOnly") {
             details.push(i18n("The source provides usage percentages; some details may be unavailable."))

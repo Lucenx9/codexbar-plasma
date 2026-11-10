@@ -49,6 +49,10 @@ Spanish instructions use the formal address consistently. Panel style labels
 describe the color choice: "Provider colors" and "Monochrome". The separate
 "Show only icons and meters" preset also changes which panel contents are visible.
 
+Panel budget previews and the live panel use the same regional decimal and
+group separators. The minimal preset description lists spend budgets among
+the text it hides.
+
 Use each catalog's translated AI Insights name in connection results as well as
 settings. French uses "jetons" for usage tokens and "fournisseur" for providers;
 German uses "Anbieter" for providers. French, Spanish, and Brazilian Portuguese

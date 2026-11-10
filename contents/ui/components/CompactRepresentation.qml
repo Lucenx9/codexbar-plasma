@@ -38,7 +38,8 @@ Item {
         Math.ceil(secondCompositionMeasurer.implicitWidth),
         Math.ceil(thirdCompositionMeasurer.implicitWidth),
         Math.ceil(fourthCompositionMeasurer.implicitWidth),
-        Math.ceil(fifthCompositionMeasurer.implicitWidth)
+        Math.ceil(fifthCompositionMeasurer.implicitWidth),
+        Math.ceil(sixthCompositionMeasurer.implicitWidth)
     ].slice(0, textCompositions.length)
     readonly property string fullText: textCompositions.length > 0 ? textCompositions[0] : ""
     // What the row spends before any text, so the budget offers the label every
@@ -195,7 +196,7 @@ Item {
     // Measure outside the Loader so its layout-assigned width cannot feed back
     // into the label's preferred width and collapse the compact representation.
     // Every candidate composition gets its own measurer, so choosing one cannot
-    // feed its own width back into the choice. There are at most five: the
+    // feed its own width back into the choice. There are at most six: the
     // full composition, optional quota name removal, surrendered segments,
     // and compact usage. These are the same
     // label type the panel renders, because shaped label widths and raw font
@@ -239,6 +240,14 @@ Item {
         visible: false
         font.features: { "tnum": 1 }
         text: compactRoot.textCompositions.length > 4 ? compactRoot.textCompositions[4] : ""
+    }
+
+    PlainPlasmaLabel {
+        id: sixthCompositionMeasurer
+
+        visible: false
+        font.features: { "tnum": 1 }
+        text: compactRoot.textCompositions.length > 5 ? compactRoot.textCompositions[5] : ""
     }
 
     GridLayout {

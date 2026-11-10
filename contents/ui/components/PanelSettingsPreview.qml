@@ -7,6 +7,7 @@ import "../PanelTextFit.js" as PanelTextFit
 import "../ProviderIdentity.js" as ProviderIdentity
 import "../QuotaThresholds.js" as QuotaThresholds
 import "../ThemeContrast.js" as ThemeContrast
+import "../CostAmounts.js" as CostAmounts
 
 ColumnLayout {
     id: preview
@@ -118,6 +119,8 @@ ColumnLayout {
 
     PanelText {
         id: panelTextLabels
+        showSpend: preview.configPage.cfg_showSpendInPanel === true
+        numberFormat: CostAmounts.numberFormat(Qt.locale().groupSeparator, Qt.locale().decimalPoint)
         usageBarsShowUsed: preview.usageBarsShowUsed
     }
 
@@ -209,6 +212,10 @@ ColumnLayout {
                     && isFinite(provider.credits)) {
                 segments.push({ id: "credits",
                     text: i18n("%1cr", provider.credits.toLocaleString(Qt.locale(), "f", 0)) });
+            }
+            if (preview.configPage.cfg_showSpendInPanel === true) {
+                var spend = panelTextLabels.budgetText(provider);
+                if (spend.length > 0) segments.push({id: "spend", text: spend});
             }
             return segments;
         }

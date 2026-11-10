@@ -71,8 +71,7 @@ function candidateRows(rows, providerKey, providerCost, includedPlanLabel) {
     if (providerKey === "factory") {
         appendUniqueRow(preferred, secondary);
         appendUniqueRow(preferred, primary);
-    } else if (providerKey === "perplexity" && primary && primary.hasPercent
-            && primary.leftPercent <= 0) {
+    } else if (providerKey === "perplexity" && exhausted(primary)) {
         appendUniqueRow(preferred, secondary);
         appendUniqueRow(preferred, tertiary);
         appendUniqueRow(preferred, primary);
@@ -81,7 +80,7 @@ function candidateRows(rows, providerKey, providerCost, includedPlanLabel) {
         appendUniqueRow(preferred, secondary);
         appendUniqueRow(preferred, tertiary);
     }
-    if (providerKey === "cursor" && primary && primary.hasPercent && primary.leftPercent <= 0
+    if (providerKey === "cursor" && exhausted(primary)
             && providerCost && providerCost.percentUsed >= 0) {
         var used = Math.max(0, Math.min(100, Number(providerCost.percentUsed)));
         preferred.unshift({
@@ -99,7 +98,41 @@ function candidateRows(rows, providerKey, providerCost, includedPlanLabel) {
     for (var i = 0; i < rows.length; i++) {
         appendUniqueRow(preferred, rows[i]);
     }
-    return preferred;
+    return preservesAlternatePool(providerKey, primary) ? preferred : prioritizedRows(preferred);
+}
+
+function exhausted(row) {
+    return row && row.hasPercent && row.leftPercent <= 0;
+}
+
+// These established choices move from an exhausted included pool to another
+// pool. Generic urgency must not override them.
+function preservesAlternatePool(providerKey, primary) {
+    if (providerKey === "factory") return true;
+    return exhausted(primary) && (providerKey === "perplexity" || providerKey === "cursor");
+}
+
+function prioritizedRows(rows) {
+    return rows.map(function(row, index) {
+        var firstInLane = row.lane === "extra" || rowForLane(rows, row.lane) === row;
+        return {row: row, index: index, priority: firstInLane ? attentionPriority(row) : 0};
+    }).sort(compareAttention).map(function(entry) { return entry.row; });
+}
+
+function compareAttention(a, b) {
+    var priority = b.priority - a.priority;
+    if (priority !== 0) return priority;
+    if (a.priority === 1 && a.row.paceEtaSeconds !== b.row.paceEtaSeconds) {
+        return a.row.paceEtaSeconds - b.row.paceEtaSeconds;
+    }
+    return a.index - b.index;
+}
+
+function attentionPriority(row) {
+    if (row && row.usageStale === true) return 0;
+    if (!Normalizer.authoritativeQuota(row)) return 0;
+    if (rowHasPercent(row) && row.usedPercent >= 100) return 2;
+    return row.paceKnown === true && rowHasRunOut(row) ? 1 : 0;
 }
 
 function rowForLane(rows, lane) {
@@ -128,19 +161,21 @@ function rowForMode(rows, value, laneValue) {
         rows = rows.filter(function(row) { return row && row.lane === lane; });
     }
     var mode = safeMode(value);
-    if (mode === bothMode) {
-        for (var i = 0; i < rows.length; i++) {
-            if (rowHasPercent(rows[i]) && rowHasPace(rows[i])) {
-                return rows[i];
-            }
-        }
-    }
+    if (mode === bothMode) return rowForCombinedMode(rows);
     for (var j = 0; j < rows.length; j++) {
         if (rowSupportsMode(rows[j], mode)) {
             return rows[j];
         }
     }
     return null;
+}
+
+function rowForCombinedMode(rows) {
+    var available = rows.filter(function(row) { return rowSupportsMode(row, bothMode); });
+    if (available.length === 0) return null;
+    if (attentionPriority(available[0]) > 0) return available[0];
+    var complete = available.find(function(row) { return rowHasPercent(row) && rowHasPace(row); });
+    return complete || available[0];
 }
 
 function autoQuotaLabel(rows, mode, laneValue) {

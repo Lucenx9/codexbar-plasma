@@ -162,7 +162,9 @@ For private CLI selection, updates, and rollback, see
   configurable warnings and Plasma notifications.
 - Provider colors and Monochrome panel styles, up to two quota capsules per provider,
   spaced provider groups, readable stacked meters on vertical panels, optional
-  text with optional automatic quota names, and a live settings preview.
+  text with optional automatic quota names and monetary spend budgets, and a live settings preview.
+- Optional remaining monthly quota per day in the popup, using explicit CLI
+  window lengths and reset dates.
 - **Usage & Spend** with cost and token charts, history ranges, an activity
   heatmap, and provider, model, and project breakdowns when the CLI supplies them.
 - Local agent **Sessions**. Transcript paths and working directories are never

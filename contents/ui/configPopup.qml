@@ -34,6 +34,8 @@ KCM.SimpleKCM {
     property bool cfg_showQuotaWarningMarkersDefault: true
     property alias cfg_showPopupPace: showPopupPaceCheck.checked
     property bool cfg_showPopupPaceDefault: true
+    property alias cfg_showMonthlyDailyAllowance: monthlyDailyAllowanceCheck.checked
+    property bool cfg_showMonthlyDailyAllowanceDefault: false
     property alias cfg_showPopupCredits: showPopupCreditsCheck.checked
     property bool cfg_showPopupCreditsDefault: true
     property alias cfg_showPopupProviderDetails: showPopupProviderDetailsCheck.checked
@@ -253,6 +255,14 @@ KCM.SimpleKCM {
             implicitWidth: 0
             Layout.fillWidth: true
             text: i18n("Show pace forecasts")
+        }
+
+        Controls.CheckBox {
+            id: monthlyDailyAllowanceCheck
+            objectName: "monthlyDailyAllowanceCheck"
+            implicitWidth: 0
+            Layout.fillWidth: true
+            text: i18n("Show remaining monthly quota per day")
         }
 
         Controls.CheckBox {

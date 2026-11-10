@@ -327,15 +327,6 @@ These are unresolved Linux candidates, not confirmed missing features.
   Done when emitted Linux output establishes whether existing generic fields
   suffice; retain setup blockers until official writers exist.
   [Limits](docs/research/2026-10-21-macos-parity-0.79.0.md#unverified-in-this-review).
-- [ ] Decide whether to show a daily target for monthly allowances. macOS
-  0.80.0 divides the remaining allowance by local days until reset, in the
-  app, for windows of 28 to 31 days and monthly `providerCost` budgets.
-  Linux emits no target. Plasma has `windowMinutes`, `resetsAt`, and
-  `usedPercent`, but drops `quotaLimit`, `quotaUnit`, and
-  `providerCost.resetsAt`, and the descriptor's inferred monthly durations are
-  not exposed. Done when a bounded accept/reject decision exists; any accepted
-  work uses only emitted fields and keeps currencies and units separate.
-  [Comparison](docs/research/2026-10-23-macos-parity-0.80.0.md#linux-cli-contract-changes).
 - [ ] Verify 0.80.0 authenticated changes: Soniox balance and budget meter,
   Kimi gift balances and lapsed Code pools, Grok zero-usage weekly Credits,
   Cursor X Subscription weekly pool, Tavily null pay-as-you-go limits, and
@@ -489,22 +480,14 @@ These are unresolved Linux candidates, not confirmed missing features.
   deciding that no work is required. The companion `grokResetCredits` property
   is live-only and never encoded.
   [Source evidence](docs/research/2026-09-18-macos-parity-0.61.0.md#linux-cli-contract-changes-since-0605).
-- [ ] Compare exhausted automatic text/popup quota selection with the exact
-  0.56.6 cases. Automatic panel capsules and Overview rows already show primary
-  and secondary.
-  Keep direct lane choices and independent quota pools. Include OpenCode Go,
-  whose macOS 0.74.0 automatic text picks the most constrained five-hour,
-  weekly, or monthly window (#3349). macOS 0.77.0 ranks Auto windows and the
-  highest-usage icon by exhausted windows, then the shortest projected
-  depletion before reset, then usage (#4491); Plasma's automatic provider
-  ranks by highest used percentage (`ProviderAutoSelect.bestIndex`, skipping
-  error-only entries, ties by incident severity), and
-  `PanelDisplay.candidateRows` orders lanes primary, secondary, tertiary with
-  Factory, Perplexity, and Cursor exceptions. Plasma already receives CLI
-  `paceOnTop`/`paceEtaSeconds`; compare using only CLI pace, never a local
-  projection. Accept a change only
-  after reproducing a useful difference with existing Linux fields.
-  [Comparison](docs/research/2026-09-09-macos-parity-0.57.0.md#review-automatic-exhausted-quota-selection).
+- [ ] Evaluate pace-aware automatic provider selection against macOS 0.77.0
+  (#4491). Automatic text and tab gauges now prioritize trusted exhausted
+  windows and explicit CLI run-out forecasts; manual lanes, paired capsules and
+  provider-specific alternate-pool choices are preserved. Provider selection
+  still ranks highest used percentage, skipping error-only entries and breaking
+  ties by incident severity. Accept a provider-ranking change only after a
+  useful Linux reproduction using emitted CLI pace, with no local projection.
+  [Display decisions and Linux 0.84.0 evidence](docs/panel-budget-and-monthly-allowance.md).
 - [ ] Verify account identity and stale-data behavior against the 0.56.3–0.57.0
   changes: same-email workspaces, measurement timestamps, and transient
   multi-account failures. Compare official Linux records with Plasma account
@@ -522,13 +505,6 @@ These are unresolved Linux candidates, not confirmed missing features.
   [Projection source](https://github.com/steipete/CodexBar/blob/348e2fa8d36ae8e452739ca07a79e83ab9d25e98/Sources/CodexBarCore/Providers/Codex/CodexVisibleAccountProjection.swift);
   [usage source](https://github.com/steipete/CodexBar/blob/2d8b1409a1649dce60f3610ebe4eab52b92545de/Sources/CodexBarCLI/CLIUsageCommand.swift).
   [Release coverage](docs/research/2026-09-09-macos-parity-0.57.0.md#release-coverage).
-- [ ] Evaluate a panel Spend item for providers that report a spend budget.
-  macOS 0.77.0 adds Spend layout items and conditional rules (#4530). Plasma's
-  panel has identity, status, text, and meter elements and no spend item,
-  although the popup already derives an allowance from `providerCost` used and
-  limit. Accept only a bounded design that keeps currencies separate, hides
-  the item without a budget, and never treats a balance as an allowance.
-  [Comparison](docs/research/2026-10-17-macos-parity-0.77.0.md#plasma-comparison).
 - [ ] Verify the 0.77.0 claude-swap and tcr account pools, per-account Claude
   local cost directories, and Munito/Future AGI windows and spend rows in
   official Linux output. None was observable without accounts. Done when

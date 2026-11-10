@@ -4,6 +4,8 @@ import "../contents/ui/UsageCache.js" as Cache
 import "../contents/ui/ProviderNormalizer.js" as Normalizer
 import "../contents/ui/ProviderSnapshot.js" as ProviderSnapshot
 import "../contents/ui/PopupHiddenRows.js" as PopupHiddenRows
+import "../contents/ui/PanelDisplay.js" as PanelDisplay
+import "../contents/ui/PrivacyPresentation.js" as Privacy
 
 TestCase {
     name: "UsageCache"
@@ -304,6 +306,7 @@ TestCase {
     function test_staleRetentionDropsSupplementalSections() {
         var item = snapshot("codex", 72);
         item.providerCost = { percentUsed: 32 };
+        item.panelBudget = {used: 12, limit: 20, currency: "USD"};
         item.resetCredits = { availableCount: 2 };
         item.codexCreditLimit = { title: "t", used: 1, limit: 2, remaining: 1, usedPercent: 50, leftPercent: 50, resetsAt: "" };
         item.providerDetails = [{ title: "t", rows: [] }];
@@ -314,10 +317,29 @@ TestCase {
         compare(retained.providerDetails.length, 0);
         verify(retained.usageDashboard === null);
         verify(retained.providerCost === null);
+        compare(retained.panelBudget, null);
         verify(retained.resetCredits === null);
         verify(retained.tokenCost === null);
         verify(retained.codexCreditLimit === null);
         verify(retained.credits === null);
+    }
+
+    function test_retainedExhaustedQuotaDoesNotGainAutomaticPriority() {
+        var item = snapshot("codex", 40);
+        var secondary = Object.assign({}, item.rows[0], {lane: "secondary", usedPercent: 100, leftPercent: 0});
+        item.rows.push(secondary);
+        var live = Cache.reconcile([], [item], nowMs);
+        compare(PanelDisplay.candidateRows(live[0].rows, "codex", null, "")[0].lane, "secondary");
+        var retained = Cache.reconcile(live, [failed("codex")], nowMs)[0];
+        compare(PanelDisplay.candidateRows(retained.rows, "codex", null, "")[0].lane, "primary");
+        var privateRows = retained.rows.map(function(row) {return Privacy.quota(row, true, "Usage");});
+        compare(PanelDisplay.candidateRows(privateRows, "codex", null, "")[0].lane, "primary");
+        var restored = Cache.restore(live, [], nowMs);
+        compare(PanelDisplay.candidateRows(restored[0].rows, "codex", null, "")[0].lane, "primary");
+        var merged = Cache.restore(live, [snapshot("claude", 20)], nowMs);
+        compare(PanelDisplay.candidateRows(merged[1].rows, "codex", null, "")[0].lane, "primary");
+        var fresh = Cache.reconcile([retained], [item], nowMs + 1000);
+        compare(PanelDisplay.candidateRows(fresh[0].rows, "codex", null, "")[0].lane, "secondary");
     }
 
     function test_ancientMeasurementCannotStampFresh() {

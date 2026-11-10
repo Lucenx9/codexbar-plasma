@@ -2,7 +2,7 @@
 .import "SafeText.js" as SafeText
 
 // Panel text is a composition of the optional segments enabled in settings:
-// the provider name, the usage figure, and the credit balance. A horizontal
+// the provider name, the usage figure, the credit balance, and a spend budget. A horizontal
 // panel keeps a bounded width, so a crowded meter row can leave the label less
 // room than the full composition needs.
 //
@@ -12,20 +12,20 @@
 // different value. Whole segments are surrendered instead, in a fixed priority
 // order, so every rendered segment stays complete and truthful. The provider
 // icon sits beside the label and already identifies the provider, so the name
-// is surrendered first; the credit balance is a secondary reading; the usage
+// is surrendered first; credits and spend are secondary readings; the usage
 // figure is the reading the widget exists for, so it is kept last. Callers
 // keep the full composition for tooltips and accessible names.
-var segmentIDs = ["name", "usage", "credits"];
+var segmentIDs = ["name", "usage", "credits", "spend"];
 
 // Ascending importance: the first entry present is surrendered first.
-var dropOrder = ["name", "credits", "usage"];
+var dropOrder = ["name", "credits", "spend", "usage"];
 
 // The provider name leads that order only while the icon beside the label is
 // distinctive. A provider the widget has no bundled icon for renders as one
 // generic icon in the theme highlight, shared with every other such provider,
 // so its name is the only identification the panel has left. Callers mark the
 // name segment `identifying` in that case and it then outlives the balance.
-var identifyingNameDropOrder = ["credits", "name", "usage"];
+var identifyingNameDropOrder = ["credits", "spend", "name", "usage"];
 
 var maximumSegmentLength = 200;
 

@@ -12,6 +12,9 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
 - [Design direction](../DESIGN.md): reference sources, Plasma-native visual
   roles, panel/popup/settings composition, interaction states, and UI review
   criteria. It guides future changes without changing supported behavior.
+- [Panel budgets and monthly allowance](panel-budget-and-monthly-allowance.md):
+  official Linux 0.84.0 synthetic budget evidence and bounded display decisions
+  for panel spend, automatic quota priority, and monthly percentage per day.
 - [Linux parity TODO](../TODO.md): open Plasma work, official CLI blockers, and
   the last reviewed upstream release. Agents update it with each release.
 

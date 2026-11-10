@@ -2187,10 +2187,6 @@ msgid "Provider name"
 msgstr "Nome do provedor"
 
 #: contents/ui/configPanel.qml
-msgid "Provider name, usage text and credits are hidden"
-msgstr "Nome do provedor, texto de uso e créditos ocultos"
-
-#: contents/ui/configPanel.qml
 msgid "Quota: %1"
 msgstr "Cota: %1"
 
@@ -4353,12 +4349,8 @@ msgstr[0] "%1 dia UTC"
 msgstr[1] "%1 dias UTC"
 
 #: contents/ui/configPanel.qml
-msgid ""
-"Switches to monochrome, enables provider meters, and hides names, usage "
-"text, and credits."
-msgstr ""
-"Ativa o modo monocromático e os indicadores dos provedores e oculta nomes, "
-"texto de uso e créditos."
+msgid "Switches to monochrome, enables provider meters, and hides names, usage text, credits, and spend budgets."
+msgstr "Muda para monocromático, ativa os indicadores dos provedores e oculta nomes, texto de uso, créditos e orçamentos de gastos."
 
 #: contents/ui/configProviders.qml
 msgid "Loading saved source…"
@@ -4395,3 +4387,32 @@ msgstr "Sessão do Claude Platform validada e salva."
 #: contents/ui/configProviders.qml
 msgid "Validate and import session…"
 msgstr "Validar e importar sessão…"
+
+
+#: contents/ui/components/PanelText.qml
+msgid "Spend %1 / %2"
+msgstr "Gasto %1 / %2"
+
+#: contents/ui/configPanel.qml
+msgid "Spend budget"
+msgstr "Orçamento de gastos"
+
+#: contents/ui/configPanel.qml
+msgid "Additional panel text is hidden"
+msgstr "O texto adicional do painel está oculto"
+
+#: contents/ui/configPanel.qml
+msgid "Appears only with a monetary budget. Prepaid balances are excluded."
+msgstr "Aparece apenas com um orçamento monetário. Saldos pré-pagos são excluídos."
+
+#: contents/ui/configPopup.qml
+msgid "Show remaining monthly quota per day"
+msgstr "Mostrar a cota mensal restante por dia"
+
+#: contents/ui/components/UsageWindowText.qml
+msgid "Less than %1% per day until reset"
+msgstr "Menos de %1% por dia até a redefinição"
+
+#: contents/ui/components/UsageWindowText.qml
+msgid "%1% per day until reset"
+msgstr "%1% por dia até a redefinição"
