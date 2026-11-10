@@ -140,6 +140,22 @@ function normalizeSnapshot(item, requestedHistoryDays) {
     };
 }
 
+function hasMeasuredAmounts(snapshot) {
+    var amounts = [snapshot.today, snapshot.totals].concat(
+        snapshot.daily, snapshot.models, snapshot.projects.rows);
+    return amounts.some(function(row) {
+        return CostAmounts.hasMetricValue(row, false) || CostAmounts.hasMetricValue(row, true);
+    });
+}
+
+function preferredSnapshot(costs, candidate) {
+    if (!Normalizer.hasOwnKey(costs, candidate.provider)) return candidate;
+    var previous = costs[candidate.provider];
+    // Prefer a measurement to an empty duplicate in either order.
+    // Otherwise keep the first success without mixing snapshots.
+    return !hasMeasuredAmounts(previous) && hasMeasuredAmounts(candidate) ? candidate : previous;
+}
+
 // Only success and partial results contain replacement data. Other outcomes
 // leave the controller's last completed snapshot untouched.
 function response(stdoutValue, stderrValue, requestedHistoryDays, exitCode) {
@@ -166,7 +182,7 @@ function response(stdoutValue, stderrValue, requestedHistoryDays, exitCode) {
             }
         } else {
             var cost = normalizeSnapshot(item, requestedHistoryDays);
-            costs[cost.provider] = cost;
+            costs[cost.provider] = preferredSnapshot(costs, cost);
         }
     }
     // Argument rejection describes the entire command, not a failed provider.

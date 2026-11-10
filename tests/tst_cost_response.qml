@@ -217,6 +217,60 @@ TestCase {
         compare(result.costs.codex.totals.cost, 5);
         compare(result.costs.codex.totals.tokens, 10);
     }
+    function test_duplicateProvidersKeepFirstSuccessfulSnapshot_data() {
+        var cases = [];
+        for (var provider of ["codex", "CODEX"])
+            for (var cost of [0, 2])
+                for (var error of [undefined, null, false, 0, "", "   "])
+                    cases.push({tag: provider + "-" + cost + "-" + String(error),
+                        provider: provider, cost: cost, error: error});
+        return cases;
+    }
+    function test_duplicateProvidersKeepFirstSuccessfulSnapshot(data) {
+        var healthy = {provider: "codex", sessionCostUSD: data.cost, sessionTokens: 100,
+            totals: {totalCost: data.cost, totalTokens: 100}};
+        var duplicate = {provider: data.provider, error: data.error};
+        var sibling = {provider: "claude", sessionCostUSD: 3};
+        var expected = parse([healthy, sibling]);
+        compare(parse([healthy, duplicate, sibling]).costs, expected.costs);
+        compare(parse([duplicate, healthy, sibling]).costs, expected.costs);
+        // A later successful duplicate with different amounts also keeps the
+        // first result; zero is a measured amount, not an empty snapshot.
+        duplicate.totals = {totalCost: 99, totalTokens: 999};
+        compare(parse([healthy, duplicate, sibling]).costs, expected.costs);
+    }
+    function test_duplicateMeasurementsOutsideTotals_data() {
+        return [
+            {tag: "today", fields: {sessionTokens: 0}},
+            {tag: "totals", fields: {totals: {totalTokens: 0}}},
+            {tag: "daily", fields: {daily: [{date: "2026-10-01", totalTokens: 0}]}},
+            {tag: "models", fields: {daily: [{date: "2026-10-01",
+                modelBreakdowns: [{modelName: "synthetic", totalTokens: 0}]}]}},
+            {tag: "projects", fields: {projects: [{name: "synthetic", totalTokens: 0}]}}
+        ];
+    }
+    function test_duplicateMeasurementsOutsideTotals(data) {
+        var measured = Object.assign({provider: "codex"}, data.fields);
+        var empty = {provider: "CODEX"};
+        var expected = parse([measured]).costs;
+        compare(parse([measured, empty]).costs, expected);
+        compare(parse([empty, measured]).costs, expected);
+        // Empty successful replies still replace previous scans normally.
+        compare(parse([empty, empty]).costs, parse([empty]).costs);
+    }
+    function test_failedDuplicateDoesNotBlockSuccessfulSnapshot_data() {
+        return [{tag: "failure-first", failureFirst: true},
+            {tag: "failure-last", failureFirst: false}];
+    }
+    function test_failedDuplicateDoesNotBlockSuccessfulSnapshot(data) {
+        var healthy = {provider: "codex", sessionCostUSD: 2, sessionTokens: 100};
+        var failure = {provider: "CODEX", error: {message: "Synthetic scan failure"}};
+        var result = parse(data.failureFirst ? [failure, healthy] : [healthy, failure]);
+        compare(result.outcome, "partial");
+        compare(result.costs.codex, parse([healthy]).costs.codex);
+        compare(result.failedProviders, ["codex"]);
+        compare(result.message, "Synthetic scan failure");
+    }
     function test_nullErrorIsHealthyAndMessageIsBounded() {
         var result = parse([
             {
