@@ -107,7 +107,9 @@ TestCase {
         var preview = createPreview(settings);
         if (!preview) return;
         var renderer = findChild(preview, "panelPreviewRenderer");
-        tryCompare(renderer, "primaryText", "Spend $12.00 / $20.00");
+        var expected = Qt.locale().decimalPoint === ","
+            ? "Spend $12,00 / $20,00" : "Spend $12.00 / $20.00";
+        tryCompare(renderer, "primaryText", expected);
         preview.scenario = "missing";
         tryCompare(renderer, "primaryText", "");
         verify(settings.cfg_showSpendInPanel);

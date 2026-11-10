@@ -1375,6 +1375,9 @@ observers, and explicit/XDG config paths with quoted filenames.
 observations and input bounds. Surface checks preserve the minute poll and
 cache-restore/invalidation ordering in the applet.
 
+Panel preview spend checks also run under German and Italian locales; the
+settings smoke compares the preview with the live monetary formatter.
+
 `tests/tst_monthly_allowance.qml` covers monthly percentage allocation, invalid
 inputs, local calendar boundaries, DST and privacy. The `monthly-allowance`
 smoke scenario checks the production popup reading.

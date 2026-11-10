@@ -797,6 +797,10 @@ Item {
         var snapshots = applet.providers;
         var serial = usageLifecycle.commandRunSerial;
         var liveStyle = applet.Plasmoid.configuration.panelStyle;
+        page.cfg_showSpendInPanel = true;
+        verifyScenario(renderer.fullText === i18n("Spend %1 / %2", applet.amountString(12, "USD"),
+            applet.amountString(20, "USD")), "spend preview differs from live number formatting");
+        page.cfg_showSpendInPanel = false;
         page.cfg_showPercentInPanel = true;
         page.cfg_showProviderInPanel = true;
         page.cfg_panelElementOrder = "meters,text,identity,status";

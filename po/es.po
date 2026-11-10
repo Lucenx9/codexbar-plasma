@@ -4368,12 +4368,8 @@ msgstr[0] "%1 día UTC"
 msgstr[1] "%1 días UTC"
 
 #: contents/ui/configPanel.qml
-msgid ""
-"Switches to monochrome, enables provider meters, and hides names, usage "
-"text, and credits."
-msgstr ""
-"Activa el modo monocromático y los indicadores de los proveedores, y oculta "
-"los nombres, el texto de uso y los créditos."
+msgid "Switches to monochrome, enables provider meters, and hides names, usage text, credits, and spend budgets."
+msgstr "Cambia al estilo monocromo, activa los indicadores de los proveedores y oculta nombres, texto de uso, créditos y presupuestos de gasto."
 
 #: contents/ui/configProviders.qml
 msgid "Loading saved source…"

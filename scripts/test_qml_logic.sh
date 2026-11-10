@@ -23,6 +23,13 @@ run_qml_tests() {
 TZ=America/Los_Angeles QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
   run_qml_tests -input "$ROOT_DIR/tests"
 
+# Spend in the settings preview must use the live panel's decimal separator.
+for preview_locale in de_DE.UTF-8 it_IT.UTF-8; do
+  LC_ALL="$preview_locale" QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
+    run_qml_tests -input "$ROOT_DIR/tests/tst_panel_preview_surface.qml" \
+    PanelPreviewSurface::test_spendOnlyPreviewUsesPendingSettingAndHidesUnavailableBudget
+done
+
 # An RTL application must not reverse the inherited action-row mirroring twice.
 QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
   run_qml_tests -reverse -input "$ROOT_DIR/tests/tst_identified_tokens_section.qml"

@@ -369,7 +369,7 @@ KCM.SimpleKCM {
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            text: i18n("Switches to monochrome, enables provider meters, and hides names, usage text, and credits.")
+            text: i18n("Switches to monochrome, enables provider meters, and hides names, usage text, credits, and spend budgets.")
             font: Kirigami.Theme.smallFont
             opacity: 0.7
             wrapMode: Text.WordWrap

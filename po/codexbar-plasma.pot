@@ -958,7 +958,7 @@ msgstr ""
 msgid "Example data. Panel changes appear here before you apply them."
 msgstr ""
 
-#: contents/ui/components/PanelText.qml
+#: contents/ui/components/PanelText.qml scripts/smoke/Capture.qml
 msgid "Spend %1 / %2"
 msgstr ""
 
@@ -3016,7 +3016,7 @@ msgstr ""
 #: contents/ui/configPanel.qml
 msgid ""
 "Switches to monochrome, enables provider meters, and hides names, usage "
-"text, and credits."
+"text, credits, and spend budgets."
 msgstr ""
 
 #: contents/ui/configPanel.qml
