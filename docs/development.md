@@ -1379,7 +1379,11 @@ Panel preview spend checks also run under German and Italian locales; the
 settings smoke compares the preview with the live monetary formatter.
 
 `tests/tst_monthly_allowance.qml` covers monthly percentage allocation, invalid
-inputs, local calendar boundaries, DST and privacy. The `monthly-allowance`
+inputs, local calendar boundaries, DST and privacy. Its snapshot-to-allowance
+cases reject impossible dates, overflowing times and missing/invalid timezones
+before and after privacy projection, while retaining valid leap days and offsets.
+Both paths reuse the ISO-8601 validator in `SubscriptionDates.js` rather than
+accepting `Date.parse` calendar rollover. The `monthly-allowance`
 smoke scenario checks the production popup reading.
 
 `tests/tst_provider_cost_presentation.qml` covers monetary panel budgets, malformed amounts, balance

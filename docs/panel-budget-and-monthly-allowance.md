@@ -75,7 +75,10 @@ separate [0.76.0 Linux evidence](research/2026-10-15-claude-details-0.76.0.md).
   window of 28–31 days with a measured percentage and future reset. Divide its
   remaining percentage by local calendar days until reset, with a minimum of
   one day. Count calendar dates across DST instead of dividing elapsed hours
-  by 24. A reset beyond the window length plus one day is rejected. Show zero
+  by 24. A reset beyond the window length plus one day is rejected. Accept
+  only a valid ISO-8601 timestamp with an explicit timezone. Validate
+  calendar and time components before parsing so impossible dates cannot roll
+  into the next month, including during privacy projection. Show zero
   for an exhausted window, omit missing/estimated/unknown-confidence data and
   retained measurements, and preserve numeric-only privacy presentation.
   This is an even allocation of the remainder, not a CLI consumption forecast.
