@@ -72,6 +72,7 @@ KCM.SimpleKCM {
     property bool fireworksSingleKeySetupSupported: false
     property bool sonioxApiKeySetupSupported: false
     property bool abliterationChatboxKeySetupSupported: false
+    property bool siliconflowTripoKeySetupSupported: false
     property bool munitoApiKeySetupSupported: false
     property bool commandCodeFalApiKeySetupSupported: false
     property bool providerSourceSetupSupported: false
@@ -380,6 +381,13 @@ KCM.SimpleKCM {
         startCredentialCommand(providerID, "clear-credential")
     }
 
+    function importSession(providerID) {
+        if (!credentialWriteAllowed(providerID)
+                || !ProviderCredentials.supportsSessionImport(providerID, credentialCliVersion, providerByID(providerID).authentication)) return
+        promptDescriptorSecret(providerID, {id: "sessionImport", kind: "secret", title: i18n("Cookie header containing sessionKey"),
+            writeCommand: ["codexbar", "config", "login", "--provider", providerCliArgument(providerID), "--stdin", "--json"]})
+    }
+
     function startDeviceLogin(providerID) {
         if (!credentialWriteAllowed(providerID) || !ProviderCredentials.supportsLogin(providerID, credentialCliVersion)) return
         startCredentialCommand(providerID, "login")
@@ -438,12 +446,13 @@ KCM.SimpleKCM {
         var result = ProviderCredentials.result(stdoutText, exitCode, providerCliArgument(descriptor.provider), descriptor.action)
         if (result.status === "ok") {
             if (descriptor.action !== "clear-credential") {
-                updateProviderEnabled(descriptor.provider, descriptor.action === "login" || result.enabled)
+                updateProviderEnabled(descriptor.provider, descriptor.action === "login" || descriptor.action === "import-session" || result.enabled)
             }
             invalidateProviderDiagnostic(descriptor.provider)
             bumpProviderConfigRevision()
             errorText = ""
             statusText = descriptor.action === "login" ? i18n("Copilot sign-in completed.")
+                : descriptor.action === "import-session" ? i18n("Claude Platform session validated and saved.")
                 : descriptor.action === "set-cookie" ? i18n("%1 cookie saved", displayNameForProvider(descriptor.provider))
                 : i18n("%1 stored credentials cleared", displayNameForProvider(descriptor.provider))
             reload(true)
@@ -648,6 +657,7 @@ KCM.SimpleKCM {
         fireworksSingleKeySetupSupported = value.fireworks
         sonioxApiKeySetupSupported = value.soniox
         abliterationChatboxKeySetupSupported = value.abliterationChatbox
+        siliconflowTripoKeySetupSupported = value.siliconflowTripo
         munitoApiKeySetupSupported = value.munito
         commandCodeFalApiKeySetupSupported = value.commandCodeFal
         providerSourceSetupSupported = value.source
@@ -1014,6 +1024,9 @@ KCM.SimpleKCM {
         if (ProviderCredentials.supportsCookie(item.provider, credentialCliVersion, item.authentication)) {
             rows.push({title: i18n("Set cookie…"), icon: "document-encrypt", action: "set-cookie", enabled: canWrite})
         }
+        if (ProviderCredentials.supportsSessionImport(item.provider, credentialCliVersion, item.authentication)) {
+            rows.push({title: i18n("Validate and import session…"), icon: "dialog-password", action: "import-session", enabled: canWrite})
+        }
         if (ProviderCredentials.supportsLogin(item.provider, credentialCliVersion)) {
             rows.push({title: i18n("Sign in with GitHub…"), icon: "dialog-password", action: "device-login", enabled: canWrite})
             if (deviceLoginActive()) {
@@ -1174,6 +1187,10 @@ KCM.SimpleKCM {
             setCookie(selectedProvider.provider)
             return
         }
+        if (row.action === "import-session") {
+            importSession(selectedProvider.provider)
+            return
+        }
         if (row.action === "clear-credential") {
             clearCredentialDialog.providerID = selectedProvider.provider
             clearCredentialDialog.commandSignature = commandPath
@@ -1236,8 +1253,11 @@ KCM.SimpleKCM {
             return
         }
         var cookie = field.writeCommand[2] === "set-cookie"
+        var sessionImport = field.writeCommand[2] === "login"
         if (cookie && (!credentialWriteAllowed(providerID)
                 || !ProviderCredentials.supportsCookie(providerID, credentialCliVersion, providerByID(providerID).authentication))) return
+        if (sessionImport && (!credentialWriteAllowed(providerID)
+                || !ProviderCredentials.supportsSessionImport(providerID, credentialCliVersion, providerByID(providerID).authentication))) return
         var plan = ProviderDescriptor.planSecretPrompt(field, commandPath)
         if (!plan.ok) {
             errorText = i18n("%1 returned an unsupported descriptor command.", displayNameForProvider(providerID))
@@ -1245,10 +1265,11 @@ KCM.SimpleKCM {
         }
         errorText = ""
         statusText = ""
-        if (cookie) {
+        if (cookie || sessionImport) {
             retireProviderDiagnostic(providerID)
             markPending(providerID, true, providerByID(providerID).enabled)
-            plan.commandLine = ProviderCredentials.helperCommand(credentialScriptUrl, commandPath, "set-cookie", providerCliArgument(providerID))
+            plan.commandLine = ProviderCredentials.helperCommand(credentialScriptUrl, commandPath,
+                sessionImport ? "import-session" : "set-cookie", providerCliArgument(providerID))
         } else {
             markFieldPending(providerID, field.id, true)
         }
@@ -1271,8 +1292,8 @@ KCM.SimpleKCM {
         ].join("; ")
         var command = ["sh", "-c", shellQuote(script), "_", shellQuote(prompt)].join(" ")
         runCommand(command, {
-            kind: cookie ? "credential" : "descriptorField",
-            action: cookie ? "set-cookie" : "",
+            kind: cookie || sessionImport ? "credential" : "descriptorField",
+            action: sessionImport ? "import-session" : cookie ? "set-cookie" : "",
             provider: providerID,
             fieldID: field.id,
             timeoutMs: configSecretPromptTimeoutMs
@@ -1337,6 +1358,7 @@ KCM.SimpleKCM {
             fireworks: fireworksSingleKeySetupSupported,
             soniox: sonioxApiKeySetupSupported,
             abliterationChatbox: abliterationChatboxKeySetupSupported,
+            siliconflowTripo: siliconflowTripoKeySetupSupported,
             munito: munitoApiKeySetupSupported,
             commandCodeFal: commandCodeFalApiKeySetupSupported
         })

@@ -30,6 +30,35 @@ TestCase {
         verify(!Credentials.supportsLogin("claude", "CodexBar 0.83.0"));
         verify(Credentials.supportsLogin("COPILOT", "CodexBar 0.80.0"));
     }
+    function test_sessionImportIsVersionGatedAndSecretOnly() {
+        for (var version of ["", "0.83.0", "0.84.0-rc.1", "unknown"]) {
+            verify(!Credentials.supportsSessionImport("claudeplatform", version, null));
+            verify(!Credentials.supportsCookie("workbuddy", version, null));
+        }
+        verify(Credentials.supportsSessionImport("claudeplatform", "0.84.0", null));
+        verify(Credentials.supportsCookie("workbuddy", "0.84.0", {supportsConfigCookieHeader: true}));
+        verify(!Credentials.supportsCookie("workbuddy", "0.84.0", {supportsConfigCookieHeader: false}));
+        verify(!Credentials.supportsSessionImport("claudeplatform", "0.84.0", {supportsConfigCookieHeader: false}));
+        for (var id of ["claude", "copilot", "future", "__proto__"])
+            verify(!Credentials.supportsSessionImport(id, "0.84.0", null));
+        var field = {kind: "secret", writeCommand: ["codexbar", "config", "login", "--provider", "claudeplatform", "--stdin", "--json"]};
+        verify(Descriptor.planSecretPrompt(field, "codexbar").ok);
+        verify(!Descriptor.planFieldWrite(field, "private", "codexbar").ok);
+        verify(!Descriptor.planAction({command: field.writeCommand}, "codexbar").ok);
+        field.kind = "text";
+        verify(!Descriptor.planSecretPrompt(field, "codexbar").ok);
+        verify(!Descriptor.planFieldWrite(field, "private", "codexbar").ok);
+        field.kind = "secret";
+        for (var id of ["copilot", "claude", "future"]) {
+            field.writeCommand[4] = id;
+            verify(!Descriptor.planSecretPrompt(field, "codexbar").ok);
+        }
+        field.writeCommand[4] = "claudeplatform";
+        field.writeCommand.push("{value}");
+        verify(!Descriptor.planSecretPrompt(field, "codexbar").ok);
+        compare(Credentials.helperCommand("file:///tmp/auth.py", "codexbar", "import-session", "copilot"), "");
+        verify(Credentials.helperCommand("file:///tmp/auth.py", "codexbar", "import-session", "claudeplatform").length > 0);
+    }
     function test_cookieWriterIsSecretOnly() {
         var field = {kind: "secret", writeCommand: ["codexbar", "config", "set-cookie", "--provider", "claude", "--stdin"]};
         verify(Descriptor.planSecretPrompt(field, "codexbar").ok);

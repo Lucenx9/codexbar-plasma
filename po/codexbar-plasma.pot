@@ -1195,6 +1195,14 @@ msgid "OpenDesign"
 msgstr ""
 
 #: contents/ui/components/ProviderNames.qml
+msgid "SiliconFlow"
+msgstr ""
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Tripo"
+msgstr ""
+
+#: contents/ui/components/ProviderNames.qml
 msgid "Soniox"
 msgstr ""
 
@@ -3316,6 +3324,10 @@ msgid "Cookie header"
 msgstr ""
 
 #: contents/ui/configProviders.qml
+msgid "Cookie header containing sessionKey"
+msgstr ""
+
+#: contents/ui/configProviders.qml
 msgid "Sign in to GitHub Copilot"
 msgstr ""
 
@@ -3337,6 +3349,10 @@ msgstr ""
 
 #: contents/ui/configProviders.qml
 msgid "Copilot sign-in completed."
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Claude Platform session validated and saved."
 msgstr ""
 
 #: contents/ui/configProviders.qml
@@ -3409,8 +3425,12 @@ msgstr ""
 msgid "Set license key…"
 msgstr ""
 
-#: contents/ui/configProviders.qml
+#: contents/ui/configProviders.qml scripts/smoke/Capture.qml
 msgid "Set cookie…"
+msgstr ""
+
+#: contents/ui/configProviders.qml scripts/smoke/Capture.qml
+msgid "Validate and import session…"
 msgstr ""
 
 #: contents/ui/configProviders.qml

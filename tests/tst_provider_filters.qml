@@ -829,7 +829,9 @@ TestCase {
         if (!page) return;
         page.providers = ProviderConfigProtocol.response(JSON.stringify([
             {provider:"copilot", enabled:false}, {provider:"claude", enabled:false},
-            {provider:"future-provider", enabled:false}, {provider:"helmcode", enabled:false}]), "", 0, "list", page.providerTitle).value;
+            {provider:"future-provider", enabled:false}, {provider:"helmcode", enabled:false},
+            {provider:"siliconflow", enabled:false}, {provider:"tripo", enabled:false},
+            {provider:"workbuddy", enabled:false}, {provider:"claudeplatform", enabled:false}]), "", 0, "list", page.providerTitle).value;
         function actions(provider) {
             return page.providerActionRows(page.providerByID(provider)).map(function(row) { return row.action; });
         }
@@ -853,7 +855,24 @@ TestCase {
         verify(page.selectedProviderLinkRows.every(function(row) { return row.url.length > 0; }));
         compare(page.providerLinkRow("docs").action, "docs");
         compare(page.providerLinkRow("missing"), null);
-        page.handleCliVersionResult("CodexBar 0.83.0", 1);
+        page.handleCliVersionResult("CodexBar 0.83.0", 0);
+        verify(actions("siliconflow").indexOf("set-api-key") < 0);
+        verify(actions("tripo").indexOf("set-api-key") < 0);
+        verify(actions("workbuddy").indexOf("set-cookie") < 0);
+        verify(actions("claudeplatform").indexOf("import-session") < 0);
+        page.handleCliVersionResult("CodexBar 0.84.0", 0);
+        verify(actions("siliconflow").indexOf("set-api-key") >= 0);
+        verify(actions("tripo").indexOf("set-api-key") >= 0);
+        verify(actions("workbuddy").indexOf("set-cookie") >= 0);
+        verify(actions("claudeplatform").indexOf("import-session") >= 0);
+        verify(actions("claudeplatform").indexOf("set-cookie") >= 0);
+        compare(page.providerTitle("siliconflow"), "SiliconFlow");
+        compare(page.providerTitle("tripo"), "Tripo");
+        page.handleCliVersionResult("CodexBar 0.84.0", 1);
+        verify(actions("siliconflow").indexOf("set-api-key") < 0);
+        verify(actions("tripo").indexOf("set-api-key") < 0);
+        verify(actions("workbuddy").indexOf("set-cookie") < 0);
+        verify(actions("claudeplatform").indexOf("import-session") < 0);
         verify(actions("copilot").indexOf("device-login") < 0);
         compare(Object.keys(page.commands).length, 0);
     }

@@ -34,7 +34,8 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
 - [Parity review skill](../.claude/skills/parity-review/SKILL.md): agent command
   sequence for an upstream release review, including the isolated CLI probe.
 - [Provider credential commands](provider-credentials.md): version gates, verified
-  cookie allowlist, clear semantics, Copilot event bridge and regression coverage.
+  cookie allowlist, clear semantics, Copilot event bridge, validated Claude Platform
+  session import and regression coverage.
 - [Provider settings descriptor](cli-provider-settings-descriptor.md): proposed
   upstream CLI contract for generic settings. It is not a shipped contract.
 - [Cost history](cost-history.md): daily model data, selection, currency and

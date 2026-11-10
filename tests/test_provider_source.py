@@ -35,6 +35,7 @@ TestCase {
             property url credentialScriptUrl: "file:///tmp/provider-auth.py"
             property bool fireworksSingleKeySetupSupported: false
             property bool sonioxApiKeySetupSupported: false
+            property bool siliconflowTripoKeySetupSupported: false
             property bool abliterationChatboxKeySetupSupported: false
             property bool munitoApiKeySetupSupported: false
             property bool commandCodeFalApiKeySetupSupported: false
@@ -502,7 +503,8 @@ TestCase {
     function credentialPage() {
         var page = createTemporaryObject(harness, this);
         page.providers = [{provider: "copilot", enabled: false}, {provider: "claude", enabled: false},
-            {provider: "future", enabled: true}, {provider: "helmcode", enabled: false}];
+            {provider: "future", enabled: true}, {provider: "helmcode", enabled: false},
+            {provider: "claudeplatform", enabled: false}, {provider: "workbuddy", enabled: false}];
         page.credentialCliVersion = "CodexBar 0.83.0";
         return page;
     }
@@ -536,11 +538,13 @@ TestCase {
         compare(Object.keys(page.commands).length, 0);
     }
     function test_credentialCompletionInvalidatesDiagnosticsAndRefreshes() {
-        for (var action of ["login", "set-cookie", "clear-credential"]) {
+        for (var action of ["login", "set-cookie", "clear-credential", "import-session"]) {
             var page = credentialPage();
-            var provider = action === "set-cookie" ? "claude" : "copilot";
+            page.credentialCliVersion = "CodexBar 0.84.0";
+            var provider = action === "import-session" ? "claudeplatform" : action === "set-cookie" ? "claude" : "copilot";
             if (action === "set-cookie") page.setCookie(provider);
             else if (action === "login") page.startDeviceLogin(provider);
+            else if (action === "import-session") page.importSession(provider);
             else page.clearCredentials(provider);
             var source = Object.keys(page.commands)[0];
             verify(source !== undefined);
@@ -584,6 +588,45 @@ TestCase {
         page.handleData(source, '{"status":"ok","provider":"copilot"}', "", 0);
         compare(page.revisions, 0);
         compare(page.credentialCancelSource.requests.length, 2);
+    }
+    function test_sessionImportGuardsFailureAndRetirement() {
+        for (var action of ["import-session", "set-cookie"]) {
+            var page = credentialPage();
+            var provider = action === "import-session" ? "claudeplatform" : "workbuddy";
+            function start() {
+                if (action === "import-session") page.importSession(provider);
+                else page.setCookie(provider);
+            }
+            start();
+            compare(Object.keys(page.commands).length, 0);
+            page.credentialCliVersion = "CodexBar 0.84.0";
+            for (var status of ["failed", "conflict", "cancelled"]) {
+                start();
+                var source = Object.keys(page.commands)[0];
+                verify(page.isPending(provider));
+                start();
+                page.clearCredentials(provider);
+                compare(Object.keys(page.commands).length, 1);
+                page.handleData(source, JSON.stringify({provider:provider, status:status}), "private", 0);
+                verify(!page.isPending(provider));
+                compare(page.revisions, 0);
+                compare(page.writes, 0);
+                verify(page.errorText.indexOf("private") < 0);
+            }
+            start();
+            var retired = Object.keys(page.commands)[0];
+            page.expireConfigCommands(Date.now() + 1000000);
+            start();
+            var current = Object.keys(page.commands)[0];
+            verify(current !== retired);
+            page.handleData(retired, JSON.stringify({provider:provider, status:"ok", enabled:true}), "", 0);
+            verify(page.isPending(provider));
+            compare(page.revisions, 0);
+            page.retireAllConfigCommands();
+            page.handleData(current, JSON.stringify({provider:provider, status:"ok", enabled:true}), "", 0);
+            compare(page.revisions, 0);
+            verify(!page.isPending(provider));
+        }
     }
     function test_reloadDuringLoginKeepsLoginActive() {
         var page = credentialPage();
@@ -633,7 +676,7 @@ class ProviderSourceTests(unittest.TestCase):
     def test_source_writes_and_lifecycle(self):
         source = (ROOT / "contents/ui/configProviders.qml").read_text()
         surface = Surface("providers", ROOT)
-        names = ("syncProviderSourceSelection", "runProviderSourcesCommand", "handleProviderSourcesResult", "hasCredentialWrite", "credentialWriteAllowed", "setCookie", "clearCredentials",
+        names = ("syncProviderSourceSelection", "runProviderSourcesCommand", "handleProviderSourcesResult", "hasCredentialWrite", "credentialWriteAllowed", "setCookie", "importSession", "clearCredentials",
                  "startDeviceLogin", "startCredentialCommand", "cancelDeviceLogin", "deviceLoginActive",
                  "handleCredentialResult", "setProviderSource", "handleSetSourceResult", "setApiKey", "apiKeyPrompt", "visualEnabled",
                  "retireProviderDiagnostic", "invalidateProviderDiagnostic",

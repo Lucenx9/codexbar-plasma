@@ -19,6 +19,7 @@ SCENARIOS += ("settings-panel-scrolled",)
 SCENARIOS += ("settings-providers", "settings-providers-narrow", "settings-providers-error",
               "settings-general-narrow", "settings-popup-narrow", "settings-notifications-narrow",
               "settings-diagnostics-narrow", "settings-diagnostics-error")
+SCENARIOS += ("settings-providers-0840", "settings-providers-0840-keys", "settings-providers-0840-cookie")
 SCENARIOS += ("settings-providers-auth", "settings-providers-auth-legacy")
 SCENARIOS += ("settings-providers-keys-soniox", "settings-providers-keys-chatbox")
 SCENARIOS += ("readme-overview", "readme-spend", "readme-sessions", "readme-codex")
@@ -184,6 +185,24 @@ def source_settings_response(args, scenario, now):
     return {"provider": "openrouter", "enabled": True, "source": "api"}
 
 
+KEY_SETUP_ROWS = [{"provider": key, "enabled": False, "authentication": {
+    "sourceModes": ["api", "auto"], "supportsConfigAPIKey": True,
+    "supportsConfigCookieHeader": False, "environmentVariables": []}}
+    for key in ("soniox", "abliteration", "chatbox")]
+SETUP_0840_ROWS = [{"provider": key, "enabled": False, "authentication": {
+    "sourceModes": ["api", "auto"], "supportsConfigAPIKey": True,
+    "supportsConfigCookieHeader": False, "environmentVariables": []}}
+    for key in ("siliconflow", "tripo")]
+SETUP_0840_ROWS += [{"provider": key, "enabled": False, "authentication": {
+    "sourceModes": ["web", "auto"], "supportsConfigAPIKey": False,
+    "supportsConfigCookieHeader": True, "environmentVariables": []}}
+    for key in ("claudeplatform", "workbuddy")]
+SETUP_SCENARIOS = {name: ("0.84.0", SETUP_0840_ROWS) for name in (
+    "settings-providers-0840", "settings-providers-0840-keys", "settings-providers-0840-cookie")}
+SETUP_SCENARIOS.update({name: ("0.83.0", KEY_SETUP_ROWS) for name in (
+    "settings-providers-keys-soniox", "settings-providers-keys-chatbox")})
+
+
 def response(args, scenario, now):
     """Synthetic reads and the source write used by authentication scenarios."""
     if args == ["config", "providers", "--descriptors", "--format", "json", "--json-only"]:
@@ -191,19 +210,16 @@ def response(args, scenario, now):
     if args[:2] in (["config", "dump"], ["config", "set-source"]):
         return source_settings_response(args, scenario, now)
     if args == ["--version"]:
-        if scenario.startswith("settings-providers-keys"):
-            return "CodexBar 0.83.0"
+        if scenario in SETUP_SCENARIOS:
+            return "CodexBar " + SETUP_SCENARIOS[scenario][0]
         if scenario.startswith("settings-providers-auth"):
             return "CodexBar " + ("0.82.0" if scenario.endswith("-legacy") else "0.83.0")
         if scenario.startswith("settings-providers"):
             return "CodexBar 0.73.0 (synthetic smoke fixture)"
         return "CodexBar 0.56.2 (synthetic smoke fixture)"
     if args == ["config", "providers", "--format", "json", "--json-only"]:
-        if scenario.startswith("settings-providers-keys"):
-            return [{"provider": key, "enabled": False, "authentication": {
-                "sourceModes": ["api", "auto"], "supportsConfigAPIKey": True,
-                "supportsConfigCookieHeader": False, "environmentVariables": []}}
-                for key in ("soniox", "abliteration", "chatbox")]
+        if scenario in SETUP_SCENARIOS:
+            return copy.deepcopy(SETUP_SCENARIOS[scenario][1])
         if scenario.startswith("settings-providers-auth"):
             rows = [{"provider": key, "enabled": key in ("codex", "copilot", "openrouter")}
                     for key in ("codex", "copilot", "openrouter", "moonshot", "flora", "helmcode", "future-provider")]

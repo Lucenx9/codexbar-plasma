@@ -4400,3 +4400,23 @@ msgstr "La source enregistrée n’est pas reconnue. Choisissez une source et en
 #: contents/ui/configProviders.qml
 msgid "Select Save to store this source. Apply is not needed. Automatic restores the provider default."
 msgstr "Sélectionnez Enregistrer pour mémoriser cette source. Appliquer n’est pas nécessaire. Automatique rétablit la source par défaut du fournisseur."
+
+#: contents/ui/components/ProviderNames.qml
+msgid "SiliconFlow"
+msgstr "SiliconFlow"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Tripo"
+msgstr "Tripo"
+
+#: contents/ui/configProviders.qml
+msgid "Cookie header containing sessionKey"
+msgstr "En-tête Cookie contenant sessionKey"
+
+#: contents/ui/configProviders.qml
+msgid "Claude Platform session validated and saved."
+msgstr "Session Claude Platform validée et enregistrée."
+
+#: contents/ui/configProviders.qml
+msgid "Validate and import session…"
+msgstr "Valider et importer la session…"

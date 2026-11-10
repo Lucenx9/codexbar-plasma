@@ -264,6 +264,8 @@ var providerBrandChannels = {
 }
 
 var providerDashboardUrls = {
+    "siliconflow": "https://cloud.siliconflow.cn",
+    "tripo": "https://developers.tripo3d.ai",
     "soniox": "https://console.soniox.com",
     "traecn": "https://www.trae.cn/dashboard#usage",
     "chatbox": "https://chatboxai.app",
@@ -432,6 +434,8 @@ var providerStatusUrls = {
 
 // Paths under `documentationBaseUrl`.
 var providerDocsPaths = {
+    "siliconflow": "siliconflow.md",
+    "tripo": "tripo.md",
     "traecn": "traecn.md",
     "opendesign": "opendesign.md",
     "soniox": "soniox.md",

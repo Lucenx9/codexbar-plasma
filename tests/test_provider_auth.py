@@ -53,6 +53,9 @@ if sys.argv[2] != 'login':
                      'enabled': True, 'cleared': ['apiKey', 'cookieHeader'],
                      'configPath': '/private/path', 'cookie': value.decode()}))
     sys.exit(0)
+if '--stdin' in sys.argv:
+    value = sys.stdin.buffer.read()
+    root.joinpath('input').write_bytes(value)
 lines = json.loads(root.joinpath('events').read_text())
 for line in lines:
     if isinstance(line, (int, float)):
@@ -133,9 +136,9 @@ class ProviderAuthTests(unittest.TestCase):
                 "--action", action, "--provider", provider, "--title", "Sign in",
                 "--message", "Visit %1\nCode %2\nExpires in %3"]
 
-    def run_helper(self, events=(), mode="ok", action="login", value="", request=""):
+    def run_helper(self, events=(), mode="ok", action="login", value="", request="", provider="copilot"):
         self.root.joinpath('events').write_text(json.dumps(events))
-        arguments = self.arguments(action) + (["--request", request] if request else [])
+        arguments = self.arguments(action, provider) + (["--request", request] if request else [])
         result = subprocess.run(arguments, env={**self.env, "AUTH_MODE": mode},
                                 input=value, text=True, capture_output=True, timeout=10)
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -176,6 +179,35 @@ class ProviderAuthTests(unittest.TestCase):
                          ['config', 'login', '--provider', 'copilot', '--json'])
         self.assert_stopped('dialog')
         self.assert_stopped('cli')
+
+    def test_session_import_uses_stdin_and_requires_one_successful_terminal_record(self):
+        cases = [([{"status": "authorized"}], "ok", "ok"),
+                 ([{"status": "authorized"}], "exit1", "failed"),
+                 ([{"status": "authorized", "error": "synthetic-cookie"}], "ok", "failed"),
+                 ([{"status": "failed", "error": "synthetic-cookie"}], "exit1", "failed"),
+                 ([{"status": "failed", "error": "Config changed during login. Please try again."}], "exit1", "conflict"),
+                 ([PENDING, {"status": "authorized"}], "ok", "failed"),
+                 ([{"status": "authorized"}, {"status": "failed"}], "ok", "failed"),
+                 ([{"status": "authorization_pending"}], "ok", "failed"),
+                 ([None], "ok", "failed"), (["x" * 70000], "ok", "failed")]
+        for events, mode, expected in cases:
+            with self.subTest(events=str(events)[:100], mode=mode):
+                result = self.run_helper(events, mode, action="import-session",
+                                         provider="claudeplatform", value="synthetic-cookie")
+                self.assertEqual(result, {"status": expected, "provider": "claudeplatform"})
+                self.assertEqual(self.root.joinpath('input').read_text(), 'synthetic-cookie')
+                self.assertEqual(json.loads(self.root.joinpath('cli.argv').read_text()),
+                                 ['config', 'login', '--provider', 'claudeplatform', '--json', '--stdin'])
+                self.assertFalse(self.root.joinpath('dialog.pid').exists())
+                self.assert_stopped('cli')
+
+    def test_session_import_rejects_other_providers_and_empty_or_oversized_input(self):
+        for provider, value in [('copilot', 'synthetic-cookie'), ('claudeplatform', ''),
+                                ('claudeplatform', 'x' * 65537)]:
+            with self.subTest(provider=provider, size=len(value)):
+                self.assertEqual(self.run_helper(action='import-session', provider=provider,
+                                                 value=value)['status'], 'failed')
+                self.assertFalse(self.root.joinpath('cli.pid').exists())
 
     def test_cancellation_stops_cli_and_never_reports_authorized(self):
         self.assertEqual(self.run_helper([PENDING, 3, {"status": "authorized"}], mode='cancel')['status'], 'cancelled')

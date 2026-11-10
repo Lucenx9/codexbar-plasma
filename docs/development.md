@@ -815,6 +815,8 @@ allowlist, quoted helper commands and bounded semantic results. The Providers
 page owns prompts, nonces, pending locks, confirmation, command retirement,
 configuration revisions and diagnostics invalidation. Cookie values enter only
 `promptDescriptorSecret`'s shell process and the official writer through stdin.
+Claude Platform session import uses the same private path; its exact stdin-login
+command is secret-only, and the helper requires one authorized event plus exit 0.
 `ProviderDescriptor.js` refuses credential writers through non-secret fields.
 
 `scripts/provider-auth.py` is a transport adapter for released CLI commands,
@@ -828,7 +830,8 @@ text and starts the supervised command through `Guards.supervisedShellCommand`.
 The helper's bounded `LoginStream` frames events without effects; `login_event`
 classifies each event from explicit pending/terminal state. The process loop
 applies those decisions, retaining ownership of dialog stdin, timers and cleanup.
-Cookie and clear commands also own a separate CLI process group, retired on
+Cookie, validated Console session import and clear commands also own a separate
+CLI process group, retired on
 every outcome. Their selector loop watches parent loss through both output
 draining and CLI exit. A dedicated cancellation exception escapes the selector's
 interrupted-system-call handling so signals still reach group cleanup.
@@ -1872,6 +1875,11 @@ python3 scripts/smoke_popup.py --scenario panel-minimal --renderer opengl
 python3 scripts/smoke_popup.py --scenario readme-overview --renderer opengl --output /tmp/codexbar-readme
 python3 scripts/smoke_popup.py --scenario settings-providers --renderer opengl --theme dark --language it
 ```
+
+`settings-providers-0840`, `settings-providers-0840-keys` and
+`settings-providers-0840-cookie` capture validated Console import, SiliconFlow key
+setup and WorkBuddy cookie setup. Each checks all four provider actions, including
+Tripo, against a synthetic 0.84.0 inventory without sending credentials.
 
 `settings-popup` and `settings-popup-narrow` verify the initially collapsed
 hidden-item restore controls and that opening, restoring, and closing them keep

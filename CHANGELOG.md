@@ -12,6 +12,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Added
 
+- Add SiliconFlow and Tripo secure key setup and fallback names/links with CLI
+  0.84.0 or later, plus Claude Platform session import that validates before saving.
 - Publish one updating CI comment per pull request from `codexbar-review-bot`,
   with job status, popup outcomes, panel capture counts, and comparable smoke
   timings when a matching base-branch measurement is available.
@@ -20,9 +22,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   the full text remains available to assistive technology and in tooltips.
 - Bundle dedicated Soniox, Trae CN, Chatbox AI, abliteration.ai, and OpenDesign
   icons and identity metadata, covering the official CLI 0.83.0 registry.
-- Offer secure manual-cookie setup for 14 verified Linux providers and
+- Offer secure manual-cookie setup for 15 verified Linux providers and
   confirmation before clearing stored keys/cookies with CLI 0.82.0 or later.
-  OpenDesign requires 0.83.0; Gemini remains excluded pending Web quota verification.
+  OpenDesign requires 0.83.0 and WorkBuddy 0.84.0; Gemini remains excluded pending
+  Web quota verification.
 - Add on-demand Copilot GitHub device sign-in with CLI 0.80.0 or later,
   a private native dialog, cancellation, expiry and conflict handling. Keep
   API-key setup available and refresh usage after successful setup.

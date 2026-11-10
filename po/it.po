@@ -4392,3 +4392,23 @@ msgstr "La sorgente salvata non è riconosciuta. Scegli una sorgente e salvala p
 #: contents/ui/configProviders.qml
 msgid "Select Save to store this source. Apply is not needed. Automatic restores the provider default."
 msgstr "Premi Salva per memorizzare questa sorgente. Applica non è necessario. Automatica ripristina la sorgente predefinita del provider."
+
+#: contents/ui/components/ProviderNames.qml
+msgid "SiliconFlow"
+msgstr "SiliconFlow"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Tripo"
+msgstr "Tripo"
+
+#: contents/ui/configProviders.qml
+msgid "Cookie header containing sessionKey"
+msgstr "Intestazione Cookie contenente sessionKey"
+
+#: contents/ui/configProviders.qml
+msgid "Claude Platform session validated and saved."
+msgstr "Sessione Claude Platform convalidata e salvata."
+
+#: contents/ui/configProviders.qml
+msgid "Validate and import session…"
+msgstr "Convalida e importa sessione…"

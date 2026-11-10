@@ -174,7 +174,7 @@ function commandTokensContainToken(commandTokens, expectedToken) {
 // Credential writers store a secret, so only a secret field, which writes through
 // stdin, may use it. Any other kind would put the typed key in the command line.
 function isCredentialCommand(commandTokens) {
-    return ["set-api-key", "set-cookie"].indexOf(String(commandTokens[2])) >= 0
+    return ["set-api-key", "set-cookie", "login"].indexOf(String(commandTokens[2])) >= 0
 }
 
 function fieldCommandMatchesKind(kind, commandTokens) {
@@ -281,12 +281,22 @@ function isAllowedCommand(commandTokens, purpose) {
 
     var subcommand = String(commandTokens[2])
     if (purpose === "field") {
-        return subcommand === "set" || subcommand === "set-api-key" || subcommand === "set-cookie"
+        return isAllowedFieldCommand(commandTokens)
     }
     if (purpose === "action") {
         return subcommand === "action"
     }
     return false
+}
+
+function isAllowedFieldCommand(commandTokens) {
+    if (commandTokens[2] !== "login") {
+        return ["set", "set-api-key", "set-cookie"].indexOf(commandTokens[2]) >= 0
+    }
+    var sessionCommand = ["codexbar", "config", "login",
+        "--provider", "claudeplatform", "--stdin", "--json"]
+    return commandTokens.length === sessionCommand.length
+        && commandTokens.every(function(token, index) { return token === sessionCommand[index] })
 }
 
 function valueText(value) {
