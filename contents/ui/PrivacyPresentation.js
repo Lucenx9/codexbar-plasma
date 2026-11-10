@@ -112,15 +112,16 @@ function averageDaily(value) {
     if (!Normalizer.isCliRecord(value)) {
         return null
     }
-    var average = function (entry) {
+    var average = function (entry, requiresCurrency) {
         var amount = numeric(entry, "value", null)
         var currency = field(entry, "currency", "")
-        return amount === null ? null : {
+        var hasCurrency = typeof currency === "string" && /^[A-Z]{3}$/.test(currency)
+        return amount === null || (requiresCurrency && !hasCurrency) ? null : {
             value: amount,
-            currency: typeof currency === "string" && /^[A-Z]{3}$/.test(currency) ? currency : "USD"
+            currency: hasCurrency ? currency : ""
         }
     }
-    return { cost: average(field(value, "cost", null)), tokens: average(field(value, "tokens", null)) }
+    return { cost: average(field(value, "cost", null), true), tokens: average(field(value, "tokens", null), false) }
 }
 
 function costTrust(value) {

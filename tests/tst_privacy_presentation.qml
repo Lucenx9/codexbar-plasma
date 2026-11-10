@@ -1,6 +1,7 @@
 import QtQuick
 import QtTest
 import "../contents/ui/PrivacyPresentation.js" as Privacy
+import "../contents/ui/CostResponse.js" as CostResponse
 
 TestCase {
     name: "PrivacyPresentation"
@@ -278,6 +279,67 @@ TestCase {
         compare(result.totals.cost, null)
         compare(result.totals.tokens, 20)
         compare(result.totals.currency, "")
+    }
+
+    function test_averageCurrency_data() {
+        return [
+            {tag: "private-text", currency: "confidential", accepted: false},
+            {tag: "missing", currency: undefined, accepted: false},
+            {tag: "empty", currency: "", accepted: false},
+            {tag: "object", currency: {name: "USD"}, accepted: false},
+            {tag: "array", currency: ["USD"], accepted: false},
+            {tag: "lowercase", currency: "usd", accepted: false},
+            {tag: "dollars", currency: "USD", accepted: true},
+            {tag: "euros", currency: "EUR", accepted: true}
+        ]
+    }
+
+    function test_averageCurrency(data) {
+        for (var amount of [0, 100]) {
+            var source = { averageDaily: {
+                cost: { value: amount, currency: data.currency },
+                tokens: { value: amount, currency: data.currency }
+            } }
+            var before = JSON.stringify(source)
+            compare(Privacy.cost(source, false), source)
+            var result = Privacy.cost(source, true)
+            compare(result.averageDaily.cost,
+                data.accepted ? {value: amount, currency: data.currency} : null)
+            compare(result.averageDaily.tokens.value, amount)
+            verify(JSON.stringify(result).indexOf("confidential") === -1)
+            compare(JSON.stringify(source), before)
+        }
+    }
+
+    function test_allHistoryPrivacyKeepsCurrencyValidationAcrossChartBound_data() {
+        return [
+            {tag: "charted", days: 30},
+            {tag: "dense-average", days: 400},
+            {tag: "sparse-average", days: 2500}
+        ]
+    }
+
+    function test_allHistoryPrivacyKeepsCurrencyValidationAcrossChartBound(data) {
+        var scan = new Date(Date.UTC(2026, 9, 21))
+        var first = new Date(scan.getTime() - (data.days - 1) * 86400000)
+        var payload = [{provider: "codex", reportingPeriod: "all",
+            currencyCode: "confidential", updatedAt: scan.toISOString().slice(0, 10),
+            totals: {totalCost: 100, totalTokens: 200},
+            daily: [{date: first.toISOString().slice(0, 10), totalCost: 100, totalTokens: 200}]}]
+        var response = CostResponse.response(JSON.stringify(payload), "", 30, 0)
+        compare(response.outcome, "success")
+        var source = response.costs.codex
+        var result = Privacy.cost(source, true)
+        compare(result.totals.cost, null)
+        verify(result.daily.every(function(day) { return day.cost === null }))
+        if (data.days > 365) {
+            compare(source.averageDaily.cost.currency, "confidential")
+            compare(source.averageDaily.cost.value, 100 / data.days)
+            compare(result.averageDaily.cost, null)
+            compare(result.averageDaily.tokens.value, 200 / data.days)
+        } else {
+            compare(result.averageDaily, null)
+        }
     }
 
     function test_errorsAreHiddenOnlyWhileModeIsEnabled() {

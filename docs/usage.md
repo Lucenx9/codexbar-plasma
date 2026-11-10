@@ -1041,6 +1041,8 @@ and clipboard content remain under your control after closing the window.
   outside the numeric range is omitted. The daily average stays visible for a
   range measured as zero, and the peak still names a day only once something
   was spent.
+  In privacy mode, monetary averages with a missing or invalid currency are
+  omitted instead of being labelled as USD; token averages remain available.
 - Monetary amounts use two decimal places; amounts that round to zero omit
   the negative sign. This formatting does not change the underlying totals.
 - **Quota weeks** in the expanded provider details split the local history by
