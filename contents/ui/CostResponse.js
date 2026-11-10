@@ -148,6 +148,14 @@ function hasMeasuredAmounts(snapshot) {
     });
 }
 
+function preferredSnapshot(costs, candidate) {
+    if (!Normalizer.hasOwnKey(costs, candidate.provider)) return candidate;
+    var previous = costs[candidate.provider];
+    // Prefer a measurement to an empty duplicate in either order.
+    // Otherwise keep the first success without mixing snapshots.
+    return !hasMeasuredAmounts(previous) && hasMeasuredAmounts(candidate) ? candidate : previous;
+}
+
 // Only success and partial results contain replacement data. Other outcomes
 // leave the controller's last completed snapshot untouched.
 function response(stdoutValue, stderrValue, requestedHistoryDays, exitCode) {
@@ -174,11 +182,7 @@ function response(stdoutValue, stderrValue, requestedHistoryDays, exitCode) {
             }
         } else {
             var cost = normalizeSnapshot(item, requestedHistoryDays);
-            // Prefer a measurement to an empty duplicate in either order.
-            // Otherwise keep the first success without mixing snapshots.
-            if (!Normalizer.hasOwnKey(costs, cost.provider)
-                    || (!hasMeasuredAmounts(costs[cost.provider]) && hasMeasuredAmounts(cost)))
-                costs[cost.provider] = cost;
+            costs[cost.provider] = preferredSnapshot(costs, cost);
         }
     }
     // Argument rejection describes the entire command, not a failed provider.
