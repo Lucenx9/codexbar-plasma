@@ -155,7 +155,8 @@ work and upstream contract requirements.
   meters in **Panel → Quota, order and visibility**. An explicit primary, secondary, or tertiary
   choice shows one capsule. Automatic text and popup tabs retain their existing
   quota preference for ordinary windows. Authoritative exhausted windows take
-  priority, followed by known CLI run-out forecasts, shortest ETA first. Factory
+  priority, followed by known CLI run-out forecasts, shortest ETA first. Retained
+  measurements keep the ordinary preference order. Factory
   and exhausted Perplexity/Cursor alternate-pool choices remain unchanged.
   Automatic provider selection retains its highest-used-percent policy;
   automatic capsules use the pair described above.

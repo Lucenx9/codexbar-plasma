@@ -61,7 +61,8 @@ separate [0.76.0 Linux evidence](research/2026-10-15-claude-details-0.76.0.md).
   budget remains in the tooltip while enabled.
 - **Automatic quota text and tab gauge:** prefer an authoritative exhausted
   window, then an authoritative window with a known CLI run-out forecast,
-  shortest CLI ETA first. Preserve the prior order for ties and ordinary
+  shortest CLI ETA first. Retained measurements keep ordinary preference order,
+  including in privacy mode. Preserve the prior order for ties and ordinary
   windows. Preserve Factory, exhausted Perplexity and exhausted Cursor
   alternate-pool preferences. Manual lanes and the primary/secondary capsule
   pair keep their existing behavior. Percentage-only readings do not gain

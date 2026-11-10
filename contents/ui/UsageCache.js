@@ -89,6 +89,7 @@ function staleSnapshot(item) {
     // A retained measurement cannot support live forecasts or supplemental data.
     next.rows = next.rows.map(function(row) {
         var copy = Guards.copyObject(row)
+        copy.usageStale = true
         copy.paceKnown = false
         copy.pace = ""
         copy.paceParts = []
@@ -140,7 +141,7 @@ function restore(cached, live, nowMs, accounts) {
         return cached.map(function(item) {
             var copy = Guards.copyObject(item)
             copy.usageStale = true
-            return copy
+            return staleSnapshot(copy)
         })
     }
     var reconciled = reconcile(cached, live, nowMs).map(function(item, index) {
@@ -159,7 +160,7 @@ function restore(cached, live, nowMs, accounts) {
             seen[item.provider] = true
             var staleItem = Guards.copyObject(item)
             staleItem.usageStale = true
-            result.push(staleItem)
+            result.push(staleSnapshot(staleItem))
         }
     }
     return result

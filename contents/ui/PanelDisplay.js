@@ -129,6 +129,7 @@ function compareAttention(a, b) {
 }
 
 function attentionPriority(row) {
+    if (row && row.usageStale === true) return 0;
     if (!Normalizer.authoritativeQuota(row)) return 0;
     if (rowHasPercent(row) && row.usedPercent >= 100) return 2;
     return row.paceKnown === true && rowHasRunOut(row) ? 1 : 0;

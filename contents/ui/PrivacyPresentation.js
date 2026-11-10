@@ -69,6 +69,7 @@ function quota(row, enabled, label) {
         lane: known(field(row, "lane", ""), ["primary", "secondary", "tertiary", "extra", "monthlyCredits"], "extra"),
         label: label,
         dataConfidence: Normalizer.usageConfidence(field(row, "dataConfidence", undefined)),
+        usageStale: field(row, "usageStale", false) === true,
         hasPercent: field(row, "hasPercent", false) === true && isFinite(used) && isFinite(left),
         usedPercent: numeric(row, "usedPercent", 0),
         leftPercent: numeric(row, "leftPercent", 0),
