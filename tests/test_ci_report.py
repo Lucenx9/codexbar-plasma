@@ -438,7 +438,9 @@ class PublishTests(unittest.TestCase):
         corrupt = bytearray(hostile[1])
         corrupt[30 + len(schema.RESULT_FILE)] = 0x07  # Reserved deflate block type.
         hostile[1] = bytes(corrupt)
-        for raw, error in zip(hostile, (RecursionError, zlib.error)):
+        # Python decoders differ in whether malformed nesting reaches the
+        # recursion limit before detecting the missing closing brackets.
+        for raw, error in zip(hostile, ((ValueError, RecursionError), zlib.error)):
             with self.assertRaises(error):
                 schema.read_archive(raw, RUN)
             api = FakeGitHub()

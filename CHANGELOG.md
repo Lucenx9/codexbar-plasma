@@ -115,6 +115,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 - Omit All history daily cost averages with invalid currencies in privacy mode
   instead of relabelling them as USD; keep token averages available.
+- Restore CI report publication on Python 3.14 hosted runners by accepting
+  either safe JSON rejection mode in the malformed-artifact test.
 - Keep measured costs and token counts when a CLI reply repeats a provider
   with an empty snapshot, regardless of record order.
 - Finish credential process cleanup even when repeated cancellation signals arrive.

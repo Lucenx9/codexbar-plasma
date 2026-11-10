@@ -1800,7 +1800,10 @@ It still rejects stale, closed, ambiguous, or non-PR runs. Baselines become
 available after a successful full CI push run produces the new artifact.
 `tests/test_ci_report.py` covers artifact validation, transport credentials,
 baseline compatibility, real job statuses, stale/retried runs, and bot-comment
-creation, updates, and unchanged-body handling.
+creation, updates, and unchanged-body handling. The publisher tests run on both
+the Plasma image's Python and the hosted runner's Python, including 3.14.
+Malformed JSON can trigger decoder-specific rejection exceptions; the test
+checks rejection without requiring one parser error to be raised first.
 
 ## Popup smoke tests
 
