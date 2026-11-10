@@ -45,6 +45,10 @@ snapshot without a usable `updatedAt` keeps its Today amounts.
   If very large finite daily costs or token counts overflow the sum, an
   incremental mean supplies the average. Ordinary sums retain their existing
   rounding behavior.
+  Privacy applies the same three-uppercase-letter currency validation to
+  whole-range daily cost averages as to totals and daily rows. An average
+  with an invalid currency stays unavailable, without a USD fallback; its
+  currency-free token average remains available.
 - Average cost per million tokens retains finite rates even when scaling the
   cost total first would overflow. Rates outside the numeric range are omitted;
   the underlying cost and token totals remain unchanged.

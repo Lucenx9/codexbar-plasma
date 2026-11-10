@@ -113,6 +113,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Omit All history daily cost averages with invalid currencies in privacy mode
+  instead of relabelling them as USD; keep token averages available.
 - Keep measured costs and token counts when a CLI reply repeats a provider
   with an empty snapshot, regardless of record order.
 - Finish credential process cleanup even when repeated cancellation signals arrive.
