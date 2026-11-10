@@ -33,6 +33,13 @@ Earlier probes establish version boundaries and Linux fetch behavior:
   of overwriting the change. Authorization stores a token account, enables
   Copilot and clears its single API key. The source emits pending once, before
   polling, and authorized only after saving configuration. Tokens are never emitted.
+- [0.84.0 Console session import](research/2026-11-10-macos-parity-0.84.0.md#linux-cli-contract-changes)
+  separately accepts `config login --provider claudeplatform --stdin --json`.
+  Isolated Linux probes verify malformed-input rejection and a failed synthetic
+  validation without a config write. Successful authenticated authorization
+  remains unverified. Plasma still offers the existing Set cookie action;
+  validated import is [tracked in TODO](../TODO.md#plasma-native-and-implementable-now).
+  The 0.84.0 inventory still names only Copilot's login command.
 
 The existing bounded `--version` probe gates all actions. Unknown versions,
 failed probes and matching prereleases fail closed. Same-executable reloads
@@ -50,6 +57,12 @@ Ollama, OpenCode Go, Parallel, Raycast, TinyApi, Trae CN, TypeSafe and X API.
 OpenDesign additionally requires 0.83.0. These 14 providers reached their
 fetch or provider-specific cookie validation under Auto in the pinned probes;
 this does not establish successful authenticated usage.
+
+The [0.84.0 probe](research/2026-11-10-macos-parity-0.84.0.md#linux-cli-contract-changes)
+also verifies WorkBuddy's stdin cookie writer and Linux Web dispatch. Its
+Plasma action is still [pending](../TODO.md#plasma-native-and-implementable-now).
+Its optional matching User-Agent has no supported writer; successful
+authenticated billing was not measured.
 
 Gemini remains excluded by product decision until its Web quota labels are
 verified. Its cookie reaches a fetch only with Web; Auto selects CLI OAuth.

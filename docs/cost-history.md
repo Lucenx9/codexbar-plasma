@@ -244,6 +244,16 @@ that both stop, including after settings changes or controller destruction.
 
 ## Pinned CLI evidence
 
+A scoped [0.84.0 review](research/2026-11-10-macos-parity-0.84.0.md) on
+2026-11-10 verifies that the current decoder accepts one schema 2 request with
+111 tokens from both official Linux 0.83.0 and 0.84.0. With that same dated
+file behind a symlinked `sessions` root, both CLIs return an empty ledger with
+`partial: false`. Plasma cannot distinguish the omission from empty history;
+identified discovery remains [CLI-blocked](../TODO.md#identified-history-discovery).
+The 0.84.0 ordinary-cost scanner separately restores the symlinked-history
+tokens. Its absent OpenCode Go installation returns successful unavailable
+history with omitted amounts, which the current cost decoder keeps null.
+
 A scoped 2026-11-01 check used the official Linux CodexBar 0.83.0 glibc
 x86_64 archive, SHA-256
 `e278eb0a1b6d620b5c84c157dfb16860a82477af6ec7330b6b6fb5c7f2729b5b`,

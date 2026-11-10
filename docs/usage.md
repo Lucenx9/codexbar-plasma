@@ -695,7 +695,7 @@ Provider-specific editable settings depend on the official CLI contract.
   docs/dashboard/login links.
 - The widget also has a renderer for the proposed
   [provider settings descriptor](cli-provider-settings-descriptor.md).
-  Scoped checks through CLI 0.83.0 still find no descriptors, so base URL,
+  Scoped checks through CLI 0.84.0 still find no descriptors, so base URL,
   workspace/project, region, and other descriptor-backed editors remain
   unavailable. Manual cookies and credential clearing use the separate
   released commands described below. CLI 0.73.0 separately supports persistent source writes through
@@ -878,6 +878,14 @@ as less than $0.01. Local-only ledgers and schema 1 results
 supply no estimate; the widget never calculates prices from model metadata.
 Tokens and estimates remain separate from cost totals, charts, sharing,
 AI Insights, and quota data. The widget continues to support one optional SSH host.
+
+Known CLI limitation: official Linux 0.83.0 and 0.84.0 return an empty identified
+ledger when the Codex `sessions` root is a symbolic link, even when a normal
+directory containing the same request is counted. The widget cannot identify
+that omission from the returned payload. Ordinary cost history's 0.84.0 symlink
+fix does not cover this command. See the
+[verified case](research/2026-11-10-macos-parity-0.84.0.md#linux-cli-contract-changes)
+and [CLI blocker](../TODO.md#identified-history-discovery).
 
 Unavailable local or SSH data leaves the other source's validated subtotal
 visible with a warning. Conflicting or excluded requests have a separate
