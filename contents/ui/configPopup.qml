@@ -342,6 +342,8 @@ KCM.SimpleKCM {
                     onYChanged: page.revealFocusedOrderButton(upButton, downButton)
 
                     Layout.fillWidth: true
+                    // Keep the move buttons near the name, on the restore rows' action edge.
+                    Layout.maximumWidth: Kirigami.Units.gridUnit * 18
                     spacing: Kirigami.Units.smallSpacing
 
                     Components.PlainControlsLabel {
@@ -402,6 +404,10 @@ KCM.SimpleKCM {
             }
         }
 
+        Item {
+            Kirigami.FormData.isSection: true
+        }
+
         ColumnLayout {
             id: overviewProviderSelection
 
@@ -448,6 +454,8 @@ KCM.SimpleKCM {
                 opacity: 0.7
                 leftPadding: page.mirrored ? 0 : overviewAutomaticRadio.indicator.width + overviewAutomaticRadio.spacing
                 rightPadding: page.mirrored ? overviewAutomaticRadio.indicator.width + overviewAutomaticRadio.spacing : 0
+                // Sit closer to its own option than to the next one.
+                Layout.bottomMargin: Kirigami.Units.smallSpacing
                 wrapMode: Text.WordWrap
             }
 
