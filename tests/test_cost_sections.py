@@ -545,20 +545,40 @@ class CostSectionTests(unittest.TestCase):
                 && updated.indexOf("≈ at least USD 42 · at least 4200 tokens") >= 0;
         });
 
-        // Date.parse rolls an impossible reset day into October and reads a
-        // zoneless one as local time; neither may define a quota week.
-        fakeApplet.panelClockMs = local(2026, 9, 28, 12);
-        for (var invalid of ["2026-09-31T12:22:00Z", "2026-09-30T12:22:00"]) {
-            testCase.providerData = { provider: "codex", tokenCost: tokenCost,
-                rows: [{ lane: "secondary", windowMinutes: 10080, resetsAt: invalid }] };
-            compare(section.windows.length, 0, invalid);
-        }
-        fakeApplet.panelClockMs = local(2026, 9, 22, 12);
-
         // Without a weekly row there is nothing honest to split.
         testCase.providerData = { provider: "codex", tokenCost: tokenCost,
             rows: [{ lane: "primary", windowMinutes: 300, resetsAt: new Date(reset).toISOString() }] };
         tryVerify(function() { return section.windows.length === 0 && !section.visible; });
+    }
+    ''')
+
+    def test_quota_weeks_reject_invalid_reset_timestamps(self):
+        self.run_fixture('''
+    function test_invalidQuotaReset_data() {
+        return [
+            { tag: "impossible-day", reset: "2026-09-31T12:22:00Z" },
+            { tag: "missing-timezone", reset: "2026-09-30T12:22:00" }
+        ];
+    }
+    function test_invalidQuotaReset(data) {
+        fakeApplet.panelClockMs = new Date(2026, 8, 28, 12).getTime();
+        var tokenCost = Object.assign({}, testCase.providerTokenCost, {
+            daily: [{ label: "2026-09-21", cost: 1, tokens: 100 },
+                { label: "2026-09-28", cost: 1, tokens: 100 }], currency: "USD"
+        });
+        testCase.providerData = { provider: "codex", tokenCost: tokenCost,
+            rows: [{ lane: "secondary", windowMinutes: 10080, resetsAt: "2026-09-30T12:22:00Z" }] };
+        var subject = createTemporaryObject(providerFactory, testCase);
+        verify(subject !== null);
+        var all = [];
+        walkTree(subject, all);
+        var section = all.filter(function(item) { return item.objectName === "quotaWindowSection"; })[0];
+        verify(section !== undefined);
+        verify(section.windows.length > 0);
+        testCase.providerData = { provider: "codex", tokenCost: tokenCost,
+            rows: [{ lane: "secondary", windowMinutes: 10080, resetsAt: data.reset }] };
+        compare(section.windows.length, 0);
+        verify(!section.visible);
     }
     ''')
 
