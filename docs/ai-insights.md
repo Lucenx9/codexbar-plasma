@@ -140,6 +140,9 @@ object from an allowlist. It never copies an input record.
   `estimated`, and partial amounts (unpriced or unmetered requests) or days
   with incomplete requests set `incomplete`. Opening the popup or generating
   an insight never starts a cost scan.
+- `resetsInHours` requires a valid ISO reset timestamp with an explicit
+  timezone. An impossible or ambiguous date is omitted, so the quota is sent
+  without a reset time.
 - Signals are deterministic: exhausted quota, forecast exhaustion before reset,
   quota at or above the warning threshold, a spend or token change of at least
   25% between the two periods, and a known service incident. Quota percentages

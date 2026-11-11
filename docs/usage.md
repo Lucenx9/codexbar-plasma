@@ -1083,7 +1083,8 @@ and clipboard content remain under your control after closing the window.
   upcoming reset. Right after a reset, the current week holds no full day yet
   and is left out until it does. The boundaries come from the weekly usage
   row's reset time and window length, so the list appears once a live usage
-  refresh reports them. History is kept per day, so when the reset
+  refresh reports them. A reset that is not a valid ISO timestamp with an
+  explicit timezone yields no list. History is kept per day, so when the reset
   falls inside a day that whole day counts toward one week, and the totals are
   marked `≈`. Unknown or missing days, and days with requests excluded from
   the CLI totals, make a total read "at least". Cost totals keep their currency

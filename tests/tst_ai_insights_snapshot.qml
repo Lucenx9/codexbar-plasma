@@ -305,6 +305,25 @@ TestCase {
         ])
     }
 
+    // Date.parse rolls an impossible day into the next month and reads a
+    // zoneless time as local; neither may reach the request as a reset.
+    function test_invalidResetTimestampsAreOmitted_data() {
+        return [
+            {tag: "impossible-day", resetsAt: "2026-09-31T12:00:00Z"},
+            {tag: "impossible-hour", resetsAt: "2026-09-23T24:30:00Z"},
+            {tag: "missing-zone", resetsAt: "2026-09-24T12:00:00"}
+        ]
+    }
+
+    function test_invalidResetTimestampsAreOmitted(data) {
+        var item = provider("codex")
+        item.rows = [{lane: "primary", hasPercent: true, usedPercent: 100, windowMinutes: 10080,
+            resetsAt: data.resetsAt, paceKnown: false}]
+        var snapshot = JSON.parse(build([item]).text)
+        compare(snapshot.providers[0].quotas, [{window: "primary", usedPercent: 100, windowHours: 168}])
+        compare(snapshot.signals, [{kind: "quotaExhausted", provider: "codex", window: "primary"}])
+    }
+
     function test_forecastEtaIsMeasuredFromTheObservationTime() {
         var aged = provider("codex")
         aged.rows[0].paceObservedAtMs = now - 1800000

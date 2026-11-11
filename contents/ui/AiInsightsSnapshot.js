@@ -1,6 +1,7 @@
 .pragma library
 .import "ProviderNormalizer.js" as Normalizer
 .import "Guards.js" as Guards
+.import "SubscriptionDates.js" as SubscriptionDates
 
 // Builds the only data AI Insights may send: an explicit allowlist of
 // numeric facts and deterministic signals over already-normalized provider
@@ -41,9 +42,9 @@ function quota(row, nowMs) {
     if (finite(minutes) && minutes > 0) {
         result.windowHours = hours(minutes * 60000)
     }
-    var resetsAtMs = typeof field(row, "resetsAt") === "string" ? Date.parse(row.resetsAt) : NaN
-    if (isFinite(resetsAtMs) && resetsAtMs > nowMs) {
-        result.resetsInHours = hours(resetsAtMs - nowMs)
+    var reset = SubscriptionDates.date(field(row, "resetsAt"), false, "reset")
+    if (reset && reset.timestampMs > nowMs) {
+        result.resetsInHours = hours(reset.timestampMs - nowMs)
     }
     // Forecasts come from the CLI pace record; nothing is extrapolated here.
     if (field(row, "paceKnown") === true) {
