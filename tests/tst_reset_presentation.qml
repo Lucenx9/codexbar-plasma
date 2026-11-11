@@ -257,6 +257,31 @@ TestCase {
         }, Date.parse(data.from), false), data.expected);
     }
 
+    function test_invalidResetDateStaysLiteral_data() {
+        return [
+            {tag: "impossible-day", timestamp: "2026-02-30T12:00:00Z"},
+            {tag: "non-leap-year", timestamp: "2026-02-29T12:00:00Z"},
+            {tag: "month-overflow", timestamp: "2026-13-01T12:00:00Z"},
+            {tag: "hour-overflow", timestamp: "2026-03-01T24:00:00Z"},
+            {tag: "invalid-offset", timestamp: "2026-03-01T12:00:00+14:01"},
+            {tag: "local-time", timestamp: "2026-03-01T12:00:00"},
+            {tag: "date-only", timestamp: "2026-03-01"},
+            {tag: "ambiguous-date", timestamp: "03/01/2026"},
+            {tag: "numeric-text", timestamp: "1"}
+        ];
+    }
+
+    function test_invalidResetDateStaysLiteral(data) {
+        var timestamp = data.timestamp;
+        for (var absolute of [false, true]) {
+            compare(JSON.stringify(ResetPresentation.parts({resetsAt: timestamp},
+                Date.parse("2026-02-28T12:00:00Z"), absolute)), JSON.stringify({
+                kind: "text",
+                text: timestamp
+            }));
+        }
+    }
+
     function test_missingAndMalformedMetadata() {
         for (var value of [null, undefined, false, 12, "text", [],
             {

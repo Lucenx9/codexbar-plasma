@@ -1,6 +1,7 @@
 .pragma library
 .import "Guards.js" as Guards
 .import "ProviderNormalizer.js" as Normalizer
+.import "SubscriptionDates.js" as SubscriptionDates
 
 var maximumAgeMs = 24 * 60 * 60 * 1000
 var maximumEntries = 64
@@ -197,10 +198,10 @@ function windowRecord(value) {
             || !isFinite(value.usedPercent) || value.usedPercent < 0 || value.usedPercent > 100) {
         return null
     }
-    var resetMs = timestamp(value.resetsAt)
+    var reset = SubscriptionDates.date(value.resetsAt, false, "reset")
     return {
         usedPercent: value.usedPercent,
-        resetsAt: isFinite(resetMs) ? new Date(resetMs).toISOString() : ""
+        resetsAt: reset ? new Date(reset.timestampMs).toISOString() : ""
     }
 }
 

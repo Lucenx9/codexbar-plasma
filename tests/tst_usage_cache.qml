@@ -55,6 +55,34 @@ TestCase {
         return Cache.reconcile([], [snapshot("codex", 72), snapshot("claude", 28)], nowMs);
     }
 
+    function test_invalidResetCannotBecomeValidThroughCache_data() {
+        return [
+            {tag: "impossible-day", reset: "2026-09-31T12:00:00Z"},
+            {tag: "hour-overflow", reset: "2026-09-10T24:00:00Z"},
+            {tag: "invalid-offset", reset: "2026-09-10T12:00:00+14:01"},
+            {tag: "local-time", reset: "2026-09-10T12:00:00"},
+            {tag: "date-only", reset: "2026-09-10"},
+            {tag: "numeric-text", reset: "1"}
+        ];
+    }
+
+    function test_invalidResetCannotBecomeValidThroughCache(data) {
+        var live = fresh();
+        live[0].rows[0].resetsAt = data.reset;
+        var encoded = Cache.encode(live, context, nowMs);
+        var saved = JSON.parse(encoded);
+        compare(saved.snapshots[0].windows.primary.usedPercent, 72);
+        compare(saved.snapshots[0].windows.primary.resetsAt, "");
+        compare(live[0].rows[0].resetsAt, data.reset);
+
+        // Older or edited cache records must not bypass the live validation.
+        saved.snapshots[0].windows.primary.resetsAt = data.reset;
+        var restored = Cache.decode(JSON.stringify(saved), context, nowMs);
+        compare(restored[0].usage.primary.usedPercent, 72);
+        compare(restored[0].usage.primary.resetsAt, "");
+        compare(restored[1].usage.primary.usedPercent, 28);
+    }
+
     function test_failureKeepsMeasurementTimeAndDoesNotMutateInputs() {
         var previous = fresh();
         var next = Cache.reconcile(previous, [failed("codex"), snapshot("claude", 45)], nowMs + 60000);

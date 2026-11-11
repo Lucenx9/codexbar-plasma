@@ -1,6 +1,7 @@
 import QtQuick
 import QtTest
 import "../contents/ui/components" as Components
+import "../contents/ui/ProviderSnapshot.js" as ProviderSnapshot
 
 TestCase {
     name: "UsageWindowText"
@@ -71,6 +72,19 @@ TestCase {
         compare(JSON.stringify(parts), before);
         compare(subject.paceSummaryPartsText([]), "");
     }
+    function test_invalidCliResetStaysLiteralAfterNormalization() {
+        var timestamp = "2026-09-31T12:00:00Z";
+        var snapshot = ProviderSnapshot.normalize({provider: "codex", usage: {
+            primary: {usedPercent: 50, resetsAt: timestamp}
+        }}, nowMs);
+        var row = snapshot.rows[0];
+        compare(row.usedPercent, 50);
+        for (var reset of [row.resetValue, row.resetsAt]) {
+            compare(subject.resetText({resetsAt: reset}, nowMs, false), timestamp);
+            compare(subject.resetText({resetsAt: reset}, nowMs, true), timestamp);
+        }
+    }
+
     function test_resetMetadataKeepsTimestampPrecedenceAndInputs() {
         var window = {
             resetsAt: nowMs + 3600000,
