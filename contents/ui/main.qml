@@ -2160,6 +2160,8 @@ PlasmoidItem {
             root.refreshNow(true)
         }
         onChanged: {
+            var revision = root.boundedConfigRevision(Plasmoid.configuration.managedCliRevision)
+            Plasmoid.configuration.managedCliRevision = revision >= 2147480000 ? 0 : revision + 1
             if (activeAction === "install") return
             // A new CLI version can change which providers support accounts.
             accountsController.reset()

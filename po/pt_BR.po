@@ -2953,6 +2953,10 @@ msgid "No previous CLI version is available."
 msgstr "Nenhuma versão anterior da CLI está disponível."
 
 #: contents/ui/controllers/ManagedCliController.qml
+msgid "The managed CLI changed to %1. Check the version to restore and try again."
+msgstr "A CLI gerenciada mudou para a versão %1. Confira a versão a restaurar e tente novamente."
+
+#: contents/ui/controllers/ManagedCliController.qml
 msgid "Could not reach the release server. Try again later."
 msgstr ""
 "Não foi possível acessar o servidor de versões. Tente novamente mais tarde."

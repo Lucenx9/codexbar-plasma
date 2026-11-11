@@ -187,7 +187,7 @@ TestCase {
         compare(page.cfg_commandPath, "EXPECTED_PATH");
         tryVerify(function() { return probe.checked && !probe.busy; });
         verify(!findChild(page, "cliReleaseController").checked);
-        verify(!page.cfg_cliAutomaticUpdates);
+        verify(page.cfg_cliAutomaticUpdates);
     }
 }
 '''

@@ -15,11 +15,12 @@ TestCase {
     function i18n(text, arg) { return text.replace("%1", arg === undefined ? "%1" : arg) }
     SignalSpy { id: selected; target: subject; signalName: "installed" }
     SignalSpy { id: changed; target: subject; signalName: "changed" }
+    SignalSpy { id: results; target: subject; signalName: "resultChanged" }
     function create(options) {
         var factory = Qt.createComponent("CONTROLLER");
         compare(factory.status, Component.Ready, factory.errorString());
         subject = createTemporaryObject(factory, testCase, Object.assign({scriptUrl: "FIXTURE", commandPath: "codexbar"}, options || {}));
-        verify(subject !== null); selected.clear(); changed.clear();
+        verify(subject !== null); selected.clear(); changed.clear(); results.clear();
         return subject;
     }
     function test_exitStatusValidation_data() {
@@ -87,6 +88,40 @@ TestCase {
         compare(selected.count, 0);
         updater.checkIfDue(); verify(!updater.busy);
     }
+    function test_rollbackUsesTheDisplayedVersion() {
+        var updater = create();
+        updater.run("status"); tryCompare(updater, "busy", false);
+        var displayed = updater.result.previous;
+        updater.run("rollback");
+        verify(!updater.busy);
+        updater.run("rollback", displayed);
+        tryCompare(changed, "count", 1);
+        compare(updater.result.status, "restored");
+        compare(updater.result.version, displayed);
+        compare(selected.count, 0);
+    }
+    function test_backgroundStatusRefreshWaitsForTheActiveAction() {
+        var updater = create();
+        updater.run("install");
+        updater.refreshStatus(); updater.refreshStatus();
+        tryVerify(function() { return !updater.busy && updater.result.status === "ready"; });
+        compare(results.count, 2);
+        compare(selected.count, 1);
+        compare(changed.count, 1);
+    }
+    function test_queuedStatusKeepsTheRejectedRollbackNotice() {
+        var updater = create();
+        updater.run("rollback", "0.60.0");
+        updater.refreshStatus();
+        tryVerify(function() { return !updater.busy && updater.serial === 2; });
+        compare(updater.result.status, "stale");
+        compare(updater.result.version, "0.62.0");
+        compare(updater.result.previous, "0.61.0");
+        verify(updater.statusText.indexOf("0.62.0") >= 0);
+        updater.run("rollback", updater.result.previous);
+        tryCompare(updater, "busy", false);
+        compare(updater.result.status, "restored");
+    }
 }
 '''
 
@@ -98,8 +133,10 @@ class ManagedCliControllerTests(unittest.TestCase):
             script.write_text('''import sys, time, json
 time.sleep(0.2)
 action = sys.argv[sys.argv.index("--action") + 1]
-print(json.dumps(dict(status="installed" if action == "install" else "ready", version="0.62.0",
-    previous="0.61.0", path="/home/test/.local/share/codexbar-plasma/cli/current/codexbar")))
+restored = action == "rollback" and "--expected-previous" in sys.argv and sys.argv[sys.argv.index("--expected-previous") + 1] == "0.61.0"
+print(json.dumps(dict(status="restored" if restored else "stale" if action == "rollback" else "installed" if action == "install" else "ready",
+    version="0.61.0" if restored else "0.62.0", previous="0.62.0" if restored else "0.61.0",
+    path="/home/test/.local/share/codexbar-plasma/cli/current/codexbar")))
 ''')
             qml = QML.replace("CONTROLLER", (ROOT / "contents/ui/controllers/ManagedCliController.qml").as_uri()).replace("FIXTURE", script.as_uri())
             (path / "tst_cli.qml").write_text(qml)

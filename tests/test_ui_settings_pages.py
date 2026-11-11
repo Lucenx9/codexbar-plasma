@@ -71,6 +71,7 @@ class SettingsPagesTest(unittest.TestCase):
             "widgetUpdateRequest",
             "lastNotifiedUpdateVersion",
             "providerConfigRevision",
+            "managedCliRevision",
             "aiInsightsCache",
             "aiInsightsLastAttempt",
             "aiInsightsRateLimit",

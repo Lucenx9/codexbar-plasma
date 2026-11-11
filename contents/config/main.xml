@@ -129,7 +129,11 @@
     </entry>
     <entry name="cliAutomaticUpdates" type="Bool">
       <label>Automatically update the selected widget-managed CLI daily.</label>
-      <default>false</default>
+      <default>true</default>
+    </entry>
+    <entry name="managedCliRevision" type="Int">
+      <label>Internal revision bumped after background managed CLI changes.</label>
+      <default>0</default>
     </entry>
     <entry name="cliUpdateChecksEnabled" type="Bool">
       <label>Check upstream CLI releases daily.</label>
