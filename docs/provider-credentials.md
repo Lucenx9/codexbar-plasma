@@ -147,5 +147,5 @@ diagnostics and increment the existing configuration revision so usage refreshes
 Late replies from a cancelled or replaced request cannot commit. API-key setup
 and the read-only CLI command hints remain available.
 
-See [Development](development.md#provider-credential-commands) for tests and
+See [the implementation reference](implementation.md#provider-credential-commands) for tests and
 [Usage](usage.md#providers-and-accounts) for user-facing behavior and requirements.

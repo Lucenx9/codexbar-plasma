@@ -28,10 +28,17 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
   Soniox organization-key and Chatbox license-key guidance, usage confidence,
   data freshness and quota cache limits, cost history,
   notifications, and widget defaults.
-- [Development](development.md): QML ownership, regression checks, runtime
-  verification, CI image maintenance, coverage gates and sticky bot reports, PR delivery and CI
-  follow-up, repository maintenance, and agent
-  instructions. Read before code or tooling changes.
+- [Development](development.md): checkout setup, task-specific implementation and
+  verification links, PR delivery, release procedures, repository maintenance,
+  and agent instructions. Start here before code or tooling changes.
+- [Implementation reference](implementation.md): QML and JavaScript ownership,
+  provider credential processes, sharing, behavioral contracts, and QML conventions.
+- [Regression checks and CI](testing.md): behavioral and static checks, CI image
+  maintenance, coverage selection, and sticky CI reports.
+- [Smoke tests](smoke-tests.md): isolated popup and settings scenarios, capture
+  requirements, and the panel configuration matrix.
+- [Runtime verification and CLI probes](runtime-verification.md): installed-widget
+  diagnostics, pinned CLI response contracts, isolated probes, and packaging.
 - [Release skill](../.claude/skills/release/SKILL.md): agent command sequence
   for a widget release, from changelog reconciliation to the verified tag run.
 - [Parity review skill](../.claude/skills/parity-review/SKILL.md): agent command
@@ -222,7 +229,7 @@ when the product changes instead of adding dated before/after copies.
 - [Popup tour](codexbar-plasma-tour.gif): the README animation stepping through
   Overview, Usage & Spend, Sessions, and a provider detail tab. Rebuild it from
   the `readme-` popup smoke scenarios; see
-  [runtime verification](development.md#runtime-verification).
+  [runtime verification](runtime-verification.md#runtime-verification).
 - [Overview](codexbar-plasma-overview.png)
 - [Provider details](codexbar-plasma-codex.png)
 - [Hidden usage rows](codexbar-plasma-hidden-usage-rows.png): synthetic provider tab showing the inline restore list.

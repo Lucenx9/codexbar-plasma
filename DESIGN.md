@@ -248,7 +248,7 @@ must preserve the same final state and feedback without waiting for motion.
 Read the owning component, normalization/presentation helper, config schema,
 and nearest regression check before changing a surface. Keep effects in the
 owning QML page and non-trivial pure decisions in focused JS modules, following
-[Development](docs/development.md#ownership-and-implementation). Do not install
+[the implementation reference](docs/implementation.md#ownership-and-implementation). Do not install
 web component systems or translate website CSS into QML.
 
 A visual change is reviewable when the relevant checks demonstrate:
@@ -270,8 +270,8 @@ A visual change is reviewable when the relevant checks demonstrate:
 
 Use existing checks such as `tst_theme_contrast.qml`, `tst_usage_row_layout.qml`,
 `tst_popup_tab_strip.qml`, and `tst_interactive_chart.qml` for their respective
-contracts. Follow [runtime verification](docs/development.md#runtime-verification),
-the [panel matrix](docs/development.md#panel-configuration-matrix), and
+contracts. Follow [runtime verification](docs/runtime-verification.md#runtime-verification),
+the [panel matrix](docs/smoke-tests.md#panel-configuration-matrix), and
 `make check` as applicable. State actual failures, skipped checks, and unavailable
 tools. Keep temporary review captures in ignored `dist/review/`; update the
 maintained guides and synthetic product images only when delivered behavior
