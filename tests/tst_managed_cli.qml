@@ -42,6 +42,17 @@ TestCase {
         compare(ManagedCli.nextResponse({status: "ready", path: "/tmp/private"}, "").path, "")
         var cyclic = {}; cyclic.previous = cyclic
         compare(ManagedCli.nextResponse(cyclic, "").path, "")
+        var changed = Object.assign({}, prior, {status: "stale", version: "0.63.0", previous: "0.62.0"})
+        compare(ManagedCli.nextResponse(prior, JSON.stringify(changed)), changed)
+        compare(ManagedCli.response('{"status":"stale"}').status, "error")
+        var fresh = Object.assign({}, changed, {status: "ready", version: "0.64.0", previous: "0.63.0"})
+        compare(ManagedCli.nextResponse(changed, JSON.stringify(fresh), true), Object.assign({}, fresh, {status: "stale"}))
+        compare(ManagedCli.nextResponse(changed, JSON.stringify(fresh)), fresh)
+        compare(ManagedCli.nextResponse(prior, JSON.stringify(fresh), true), fresh)
+        var other = Object.assign({}, fresh, {path: "/home/other/.local/share/codexbar-plasma/cli/current/codexbar"})
+        compare(ManagedCli.nextResponse(changed, JSON.stringify(other), true), other)
+        var restored = Object.assign({}, fresh, {status: "restored"})
+        compare(ManagedCli.nextResponse(changed, JSON.stringify(restored), true), restored)
     }
     function test_installConfirmation() {
         var managedPath = "/home/test/.local/share/codexbar-plasma/cli/current/codexbar"
@@ -66,5 +77,9 @@ TestCase {
         verify(command.indexOf("'" + "/tmp/helper a.py" + "'") >= 0)
         verify(command.indexOf("--action 'update'") >= 0)
         verify(command.indexOf("'\\''") >= 0)
+        var rollback = ManagedCli.command("file:///tmp/helper.py", "rollback", "/tmp/codexbar", "0.61.0")
+        verify(rollback.indexOf("--expected-previous '0.61.0'") >= 0)
+        for (var invalid of [undefined, null, false, [], {}, "", "0.61.0-beta", "00.61.0", "0.61.0\n", "$(touch nope)"])
+            compare(ManagedCli.command("file:///tmp/helper.py", "rollback", "/tmp/codexbar", invalid), "")
     }
 }

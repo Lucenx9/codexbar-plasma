@@ -470,15 +470,18 @@ def _reuse_installation(root):
     return status(root)
 
 
-def _rollback(root):
+def _rollback(root, expected_previous):
     state = state_record(root)
     previous = installed(root, state.get("previous", ""))
     current = installed(root)
     if not previous or not current:
         return {"status": "no_previous"}
+    if expected_previous != previous["version"]:
+        return {**status(root), "status": "stale"}
     if not _probe_installed_release(root, previous):
         return {"status": "no_previous"}
     activate(root, previous["target"], state, current["target"], current["version"])
+    _prune_if_possible(root)
     return {**status(root), "status": "restored"}
 
 
@@ -489,7 +492,17 @@ def _prune_if_possible(root):
         pass  # Cleanup must not prevent retry/rollback or invalidate a completed activation.
 
 
-def run(action, command=""):
+def _run_locked(root, action, expected_previous):
+    """Execute a mutating action while the shared installation lock is held."""
+    if action == "rollback":
+        return _rollback(root, expected_previous)
+    _prune_if_possible(root)
+    result = install(root, automatic=action == "automatic")
+    _prune_if_possible(root)
+    return result
+
+
+def run(action, command="", expected_previous=""):
     root = root_path()
     if action == "status":
         return status(root)
@@ -507,9 +520,4 @@ def run(action, command=""):
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError:
             return {"status": "busy"}
-        _prune_if_possible(root)
-        if action == "rollback":
-            return _rollback(root)
-        result = install(root, automatic=action == "automatic")
-        _prune_if_possible(root)
-        return result
+        return _run_locked(root, action, expected_previous)

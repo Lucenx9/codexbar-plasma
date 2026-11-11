@@ -10,7 +10,19 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Changed
+
+- Enable daily updates for the widget-managed CLI by default, only while that
+  copy is selected. Saved preferences are preserved; instances without a saved
+  value adopt the new default. System and package-manager CLI installations
+  continue to use their original update method.
+
 ### Fixed
+
+- Bind managed-CLI rollback to the version shown in settings. If a background
+  update changes the previous version, refuse the stale request and show the
+  current versions instead of restoring a different release. Open settings
+  refresh their installation status after this widget's background updates.
 
 - Reject invalid calendar dates, times, and timezone offsets in panel reset-within
   visibility rules instead of activating them from silently normalized dates.

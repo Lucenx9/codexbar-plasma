@@ -1,6 +1,11 @@
 .pragma library
 .import "Guards.js" as Guards
 
+function isStableVersion(value) {
+    return typeof value === "string" && value.length <= 20 && value === value.trim()
+        && /^(0|[1-9][0-9]{0,5})\.(0|[1-9][0-9]{0,5})\.(0|[1-9][0-9]{0,5})$/.test(value)
+}
+
 function response(text) {
     var empty = {status: "error", version: "", previous: "", path: ""}
     if (typeof text !== "string" || text.length > 16384) return empty
@@ -8,28 +13,38 @@ function response(text) {
     try { value = JSON.parse(text) } catch (error) { return empty }
     if (!value || typeof value !== "object" || Array.isArray(value)) return empty
     var statuses = ["ready", "absent", "installed", "restored", "external", "busy",
-        "no_previous", "network", "unsupported", "unverified", "unusable", "error"]
+        "no_previous", "stale", "network", "unsupported", "unverified", "unusable", "error"]
     if (statuses.indexOf(value.status) < 0) return empty
     if (value.status === "absent") return {status: "absent", path: "", version: "", previous: ""}
-    var version = /^(0|[1-9][0-9]{0,5})\.(0|[1-9][0-9]{0,5})\.(0|[1-9][0-9]{0,5})$/
     var path = typeof value.path === "string" && value.path.length <= 4096
         && /^\/[^\x00-\x1f\x7f]+\/codexbar-plasma\/cli\/current\/codexbar$/.test(value.path)
         && value.path.split("/").indexOf("..") < 0 ? value.path : ""
-    if (["ready", "installed", "restored"].indexOf(value.status) >= 0
-            && (typeof value.version !== "string" || !version.test(value.version) || !path)) return empty
+    if (["ready", "installed", "restored", "stale"].indexOf(value.status) >= 0
+            && (!isStableVersion(value.version) || !path)) return empty
     return {status: value.status, path: path,
-        version: typeof value.version === "string" && version.test(value.version) ? value.version : "",
-        previous: value.status !== "no_previous" && typeof value.previous === "string" && version.test(value.previous) ? value.previous : ""}
+        version: isStableVersion(value.version) ? value.version : "",
+        previous: value.status !== "no_previous" && isStableVersion(value.previous) ? value.previous : ""}
 }
 
-function nextResponse(previous, text) {
+function refreshedStatus(previous, fresh) {
+    if (previous.status !== "stale") return fresh.status
+    if (previous.path !== fresh.path) return fresh.status
+    if (fresh.status === "ready") return "stale"
+    return fresh.status
+}
+
+function nextResponse(previous, text, preserveStale) {
     var parsed = response(text)
-    // A failed attempt reports only its reason, so the known installation stays visible.
-    var keepPrior = ["error", "busy", "external", "no_previous", "network", "unsupported", "unverified", "unusable"]
-    if (parsed.path || keepPrior.indexOf(parsed.status) < 0) return parsed
     var prior
     try { prior = response(JSON.stringify(previous)) }
     catch (error) { prior = response("") }
+    if (parsed.path) {
+        if (preserveStale === true) parsed.status = refreshedStatus(prior, parsed)
+        return parsed
+    }
+    // A failed attempt reports only its reason, so the known installation stays visible.
+    var keepPrior = ["error", "busy", "external", "no_previous", "network", "unsupported", "unverified", "unusable"]
+    if (keepPrior.indexOf(parsed.status) < 0) return parsed
     return {status: parsed.status, path: prior.path, version: prior.version,
         previous: parsed.status === "no_previous" ? "" : prior.previous}
 }
@@ -47,13 +62,19 @@ function needsInstallConfirmation(managed, updater) {
     return externalPath !== managed.path
 }
 
-function command(scriptUrl, action, commandPath) {
-    if (["status", "install", "update", "automatic", "rollback"].indexOf(action) < 0) return ""
+function localScriptPath(scriptUrl) {
     var url = String(scriptUrl)
-    var script
-    try { script = url.indexOf("file:///") === 0 ? decodeURIComponent(url.slice(7)) : "" }
+    if (url.indexOf("file:///") !== 0) return ""
+    try { return decodeURIComponent(url.slice(7)) }
     catch (error) { return "" }
+}
+
+function command(scriptUrl, action, commandPath, expectedPrevious) {
+    if (["status", "install", "update", "automatic", "rollback"].indexOf(action) < 0) return ""
+    if (action === "rollback" && !isStableVersion(expectedPrevious)) return ""
+    var script = localScriptPath(scriptUrl)
     if (!script || typeof commandPath !== "string") return ""
     return "timeout --kill-after=2s 610s python3 " + Guards.shellQuote(script)
         + " --action " + Guards.shellQuote(action) + " --command " + Guards.shellQuote(commandPath.trim())
+        + (action === "rollback" ? " --expected-previous " + Guards.shellQuote(expectedPrevious) : "")
 }
