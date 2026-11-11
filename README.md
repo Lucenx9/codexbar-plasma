@@ -253,7 +253,9 @@ and recovery details, see
 CLI updates are separate. Update a system or package-manager CLI through its
 original installation method. **General → Updates → CodexBar CLI** can check for official
 releases; daily checks are off by default. **General → Updates → CodexBar CLI → Managed CLI** can update
-or restore the private copy. Its automatic daily updates are also off by default.
+or restore the private copy. Its automatic daily updates are enabled by default
+and run only while that managed copy is selected. You can disable them in the
+same settings section.
 See [CLI release checks](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/usage.md#cli-release-checks-and-installed-versions)
 and [managed CLI settings](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/usage.md#managed-cli).
 

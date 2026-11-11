@@ -1453,13 +1453,21 @@ and provider configuration are unchanged.
 To return to an external copy, enter its path or `codexbar` in **Diagnostics**
 and apply. **Check versions** identifies the managed copy offline.
 
-**Update now** changes the managed copy immediately. The optional **Automatically
-update the managed CLI daily** setting is off by default and takes effect after
-applying settings. It operates only while that exact managed path is selected,
+**Update now** changes the managed copy immediately. **Automatically
+update the managed CLI daily** is enabled by default. Clear it and apply settings
+to opt out. It operates only while that exact managed path is selected,
 independently of release-check notifications. Selecting another command dims the
 setting once it is off, and leaves it switchable while it is still on. Widget
 instances using the same user data directory share one installation, lock and
 daily attempt timestamp.
+
+Existing instances without a saved value adopt the new default; explicitly
+saved choices are kept. Plasma may have omitted the previous off setting because
+it matched the old default. **Restore all defaults** also enables automatic
+managed-CLI updates when applied. Installing or selecting the managed copy keeps
+the current preference, including a saved opt-out. External CLI installations
+are never updated by this setting.
+
 An invalid stored attempt timestamp reports a managed-CLI failure without
 rewriting the state file or changing the active version.
 Any instance with automatic updates enabled can update that shared copy. Failed
@@ -1640,7 +1648,7 @@ and 95% critical thresholds. Reset notifications are off until enabled.
 | Local usage and spend history | On, 30 days, cost metric |
 | Quota display | Percent used; warning markers on; thresholds at 80% and 95% used |
 | CLI release checks | Off; manual checks available in General |
-| Managed CLI automatic updates | Off; requires the managed copy to be selected |
+| Managed CLI automatic updates | On; runs only while the managed copy is selected |
 | Plasma notifications | On; quota warnings on; predicted exhaustion and limit-reset notices off |
 | Widget updates | Check and install automatically every 24 hours, with notifications; restart Plasma to apply installed updates |
 | Panel appearance | Provider colors style with colored provider icons and automatic quota capsules, including a single provider |

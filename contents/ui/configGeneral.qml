@@ -69,8 +69,8 @@ KCM.SimpleKCM {
     property int cfg_quotaWarningPercentDefault: 80
     property int cfg_quotaCriticalPercent
     property int cfg_quotaCriticalPercentDefault: 95
-    property bool cfg_cliAutomaticUpdates: false
-    property bool cfg_cliAutomaticUpdatesDefault: false
+    property bool cfg_cliAutomaticUpdates: true
+    property bool cfg_cliAutomaticUpdatesDefault: true
     property alias cfg_cliUpdateChecksEnabled: cliUpdateChecksEnabledCheck.checked
     property bool cfg_cliUpdateChecksEnabledDefault: false
     property alias cfg_cliUpdateNotificationsEnabled: cliUpdateNotificationsEnabledCheck.checked

@@ -103,8 +103,14 @@ TestCase {
         wait(0);
     }
 
-    function test_existingManagedCopyNeedsSuccessfulVerification() {
-        var page = createPage("../contents/ui/configGeneral.qml", {cfg_commandPath: "/usr/bin/codexbar"});
+    function test_existingManagedCopyNeedsSuccessfulVerification_data() {
+        return [{tag: "default", properties: {}, expectedUpdates: true},
+                {tag: "saved opt-out", properties: {cfg_cliAutomaticUpdates: false}, expectedUpdates: false}];
+    }
+
+    function test_existingManagedCopyNeedsSuccessfulVerification(data) {
+        var page = createPage("../contents/ui/configGeneral.qml",
+            Object.assign({cfg_commandPath: "/usr/bin/codexbar"}, data.properties));
         if (!page) return;
         var managed = findChild(page, "managedCliController");
         managed.activeAction = "status";
@@ -128,7 +134,7 @@ TestCase {
         verify(!managed.busy);
         verify(managed.selected);
         compare(button.text, "Update now");
-        compare(page.cfg_cliAutomaticUpdates, false);
+        compare(page.cfg_cliAutomaticUpdates, data.expectedUpdates);
     }
 
     function test_installWithWorkingExternalCliAsksForConfirmation() {
@@ -507,7 +513,7 @@ TestCase {
             cfg_source: "cli",
             cfg_refreshInterval: 900,
             cfg_privacyMode: true,
-            cfg_cliAutomaticUpdates: true,
+            cfg_cliAutomaticUpdates: false,
             cfg_refreshOnOpen: false,
             cfg_includeStatus: true,
             cfg_costUsageEnabled: false,
@@ -544,7 +550,7 @@ TestCase {
         compare(page.cfg_source, "");
         compare(page.cfg_refreshInterval, 300);
         compare(page.cfg_privacyMode, false);
-        compare(page.cfg_cliAutomaticUpdates, false);
+        compare(page.cfg_cliAutomaticUpdates, true);
         compare(page.cfg_refreshOnOpen, true);
         compare(page.cfg_includeStatus, false);
         compare(page.cfg_costUsageEnabled, true);

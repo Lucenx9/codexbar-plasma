@@ -168,12 +168,15 @@ Item {
         verifyScenario(!config.showProviderInPanel && !config.showPercentInPanel
             && config.showMultiProviderInPanel && !applet.minimalPanel,
             "fresh defaults must show Standard icons and meters without panel text");
+        verifyScenario(config.cliAutomaticUpdates && !config.cliUpdateChecksEnabled,
+            "fresh defaults must enable managed CLI updates and leave release checks opt-in");
         config.usageBarsShowUsed = false;
         config.notifyLimitResets = true;
         config.panelStyle = "minimal";
         config.showProviderInPanel = true;
         config.showPercentInPanel = true;
         config.showMultiProviderInPanel = false;
+        config.cliAutomaticUpdates = false;
         verifyScenario(applet.displayPercent(row) === 57 && applet.notifyLimitResets,
             "explicit preferences must override the defaults");
         page.cfg_usageBarsShowUsed = false;
@@ -182,9 +185,12 @@ Item {
         page.cfg_showProviderInPanel = true;
         page.cfg_showPercentInPanel = true;
         page.cfg_showMultiProviderInPanel = false;
+        page.cfg_cliAutomaticUpdates = false;
         page.restoreUserDefaults();
         verifyScenario(page.defaultValuesPrepared && page.cfg_usageBarsShowUsed && !page.cfg_notifyLimitResets,
             "Restore all defaults did not prepare the new defaults");
+        verifyScenario(page.cfg_cliAutomaticUpdates && !config.cliAutomaticUpdates,
+            "restoring pending managed CLI updates must preserve the live opt-out until Apply");
         verifyScenario(!config.usageBarsShowUsed && config.notifyLimitResets,
             "restoring pending defaults changed the live configuration before Apply");
         verifyScenario(page.cfg_panelStyle === "standard" && !page.cfg_showProviderInPanel
@@ -195,6 +201,7 @@ Item {
             "restoring pending panel defaults changed the live configuration before Apply");
         config.usageBarsShowUsed = true;
         config.notifyLimitResets = false;
+        config.cliAutomaticUpdates = true;
         config.panelStyle = "standard";
         config.showProviderInPanel = false;
         config.showPercentInPanel = false;
@@ -1904,8 +1911,8 @@ Item {
                 managed.activeSource = "synthetic-managed";
                 managed.accept("synthetic-managed", {"exit code": 0, stdout: JSON.stringify({
                     status: "ready", version: "0.61.0", previous: "0.60.4", path: preview.page.cfg_commandPath})});
-                verifyScenario(managed.selected && !preview.page.cfg_cliAutomaticUpdates,
-                    "Managed CLI selection must keep automatic updates opt-in");
+                verifyScenario(managed.selected && preview.page.cfg_cliAutomaticUpdates,
+                    "Managed CLI selection must keep automatic updates enabled by default");
                 var releaseChecker = findItem(preview.page, "cliReleaseController");
                 verifyScenario(releaseChecker !== null, "General must expose CLI release checks");
                 releaseChecker.activeSource = "synthetic-release";
