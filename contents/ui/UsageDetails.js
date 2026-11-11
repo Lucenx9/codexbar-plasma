@@ -58,6 +58,73 @@ function optionalProgress(value) {
     }
 }
 
+function normalizeRows(rawRows) {
+    var source = Array.isArray(rawRows) ? rawRows : []
+    var rows = []
+    var rowLimit = Math.min(source.length, maximumRowsPerSection)
+    for (var rowIndex = 0; rowIndex < rowLimit; rowIndex++) {
+        var rawRow = source[rowIndex]
+        if (!rawRow || typeof rawRow !== "object" || Array.isArray(rawRow)) {
+            continue
+        }
+        var label = optionalText(rawRow.label)
+        var value = optionalText(rawRow.value)
+        if (label.length === 0 || value.length === 0) {
+            continue
+        }
+        rows.push({
+            label: label,
+            value: value,
+            secondaryValue: optionalText(rawRow.secondaryValue),
+            severity: optionalSeverity(rawRow.severity),
+            usageValue: optionalNumber(rawRow.usageValue),
+            progress: optionalProgress(rawRow.progress)
+        })
+    }
+    return rows
+}
+
+function normalizePoints(rawPoints) {
+    var source = Array.isArray(rawPoints) ? rawPoints : []
+    var points = []
+    var pointLimit = Math.min(source.length, maximumPointsPerChart)
+    for (var pointIndex = 0; pointIndex < pointLimit; pointIndex++) {
+        var rawPoint = source[pointIndex]
+        if (!rawPoint || typeof rawPoint !== "object" || Array.isArray(rawPoint)) {
+            continue
+        }
+        var pointLabel = optionalText(rawPoint.label)
+        if (pointLabel.length === 0
+                || typeof rawPoint.value !== "number"
+                || !isFinite(rawPoint.value)) {
+            continue
+        }
+        points.push({
+            label: pointLabel,
+            value: rawPoint.value
+        })
+    }
+    return points
+}
+
+function normalizeChart(rawChart) {
+    if (!rawChart
+            || typeof rawChart !== "object"
+            || Array.isArray(rawChart)
+            || (rawChart.kind !== "bars" && rawChart.kind !== "line")) {
+        return null
+    }
+    var points = normalizePoints(rawChart.points)
+    var chart = {
+        kind: rawChart.kind,
+        title: optionalText(rawChart.title),
+        unit: optionalText(rawChart.unit),
+        points: points
+    }
+    return chart.title.length === 0 && chart.unit.length === 0 && points.length === 0
+        ? null : chart
+}
+
 function normalizeSections(rawSections) {
     if (!Array.isArray(rawSections)) {
         return []
@@ -71,64 +138,8 @@ function normalizeSections(rawSections) {
             continue
         }
 
-        var rows = []
-        var rawRows = Array.isArray(rawSection.rows) ? rawSection.rows : []
-        var rowLimit = Math.min(rawRows.length, maximumRowsPerSection)
-        for (var rowIndex = 0; rowIndex < rowLimit; rowIndex++) {
-            var rawRow = rawRows[rowIndex]
-            if (!rawRow || typeof rawRow !== "object" || Array.isArray(rawRow)) {
-                continue
-            }
-            var label = optionalText(rawRow.label)
-            var value = optionalText(rawRow.value)
-            if (label.length === 0 || value.length === 0) {
-                continue
-            }
-            rows.push({
-                label: label,
-                value: value,
-                secondaryValue: optionalText(rawRow.secondaryValue),
-                severity: optionalSeverity(rawRow.severity),
-                usageValue: optionalNumber(rawRow.usageValue),
-                progress: optionalProgress(rawRow.progress)
-            })
-        }
-
-        var rawChart = rawSection.chart
-        var chart = null
-        if (rawChart
-                && typeof rawChart === "object"
-                && !Array.isArray(rawChart)
-                && (rawChart.kind === "bars" || rawChart.kind === "line")) {
-            var points = []
-            var rawPoints = Array.isArray(rawChart.points) ? rawChart.points : []
-            var pointLimit = Math.min(rawPoints.length, maximumPointsPerChart)
-            for (var pointIndex = 0; pointIndex < pointLimit; pointIndex++) {
-                var rawPoint = rawPoints[pointIndex]
-                if (!rawPoint || typeof rawPoint !== "object" || Array.isArray(rawPoint)) {
-                    continue
-                }
-                var pointLabel = optionalText(rawPoint.label)
-                if (pointLabel.length === 0
-                        || typeof rawPoint.value !== "number"
-                        || !isFinite(rawPoint.value)) {
-                    continue
-                }
-                points.push({
-                    label: pointLabel,
-                    value: rawPoint.value
-                })
-            }
-            chart = {
-                kind: rawChart.kind,
-                title: optionalText(rawChart.title),
-                unit: optionalText(rawChart.unit),
-                points: points
-            }
-            if (chart.title.length === 0 && chart.unit.length === 0 && points.length === 0) {
-                chart = null
-            }
-        }
+        var rows = normalizeRows(rawSection.rows)
+        var chart = normalizeChart(rawSection.chart)
 
         var title = optionalText(rawSection.title)
         if (title.length === 0 && rows.length === 0 && chart === null) {

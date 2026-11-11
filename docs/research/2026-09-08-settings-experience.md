@@ -103,7 +103,7 @@ The same review moved the preview into
 The preview remains visible while the options scroll, including with larger
 text and right-to-left layouts. It uses the existing synthetic model and pending
 settings; this introduces no configuration key or effect. The
-[repeatable matrix](../development.md#panel-configuration-matrix) separates
+[repeatable matrix](../smoke-tests.md#panel-configuration-matrix) separates
 automated content/geometry checks from visual approval of the captures.
 
 The element-order layout has a plain Item boundary. FormLayout reads its cached

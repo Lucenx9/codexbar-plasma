@@ -38,8 +38,8 @@ make check
 make install
 ```
 
-[Development](docs/development.md) covers dependencies, code ownership, QML
-conventions, regression checks, packaging, and runtime verification.
+[Development](docs/development.md) covers checkout setup and delivery and links to
+implementation, regression checks, graphical captures, and runtime verification.
 [AGENTS.md](AGENTS.md) states the project boundaries and required checks that
 apply to every change, human or agent. To add or improve a language, follow the
 [translation guide](docs/translations.md).

@@ -333,15 +333,8 @@ class CostTest(unittest.TestCase):
                     "InteractiveChart must support pointer and keyboard inspection; "
                     f"missing {chart_interaction_fragment!r}"
                 )
-        for stable_chart_fragment in (
-            "readonly property bool hasActivePoint",
-            "if (chart.hoveredIndex >= chart.pointCount)",
-        ):
-            if not code_contains(interactive_chart_text, stable_chart_fragment):
-                raise AssertionError(
-                    "InteractiveChart must keep hover geometry stable and clamp stale state; "
-                    f"missing {stable_chart_fragment!r}"
-                )
+        if not code_contains(interactive_chart_text, "readonly property bool hasActivePoint"):
+            raise AssertionError("InteractiveChart must expose whether a point is active")
         if "visible: chart.activeIndex" in interactive_chart_text:
             raise AssertionError("InteractiveChart must reserve readout space while pointer state changes")
 

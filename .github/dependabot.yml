@@ -16,7 +16,7 @@ updates:
         patterns:
           - "*"
   # The CI image recipe pins its base images by digest. A monthly PR is the
-  # reminder to rebuild the image; see "CI image" in docs/development.md.
+  # reminder to rebuild the image; see "CI image" in docs/testing.md.
   - package-ecosystem: docker
     directory: /ci
     schedule:

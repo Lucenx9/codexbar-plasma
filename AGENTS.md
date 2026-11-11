@@ -28,8 +28,9 @@ relevant sections; ordinary links here are on-demand reading, not bulk imports.
   [Design](DESIGN.md) before planning or editing. Apply its visual, interaction,
   and accessibility criteria.
 - For QML, JavaScript, configuration, tests, packaging, or runtime diagnosis, read
-  [Development](docs/development.md). Then read the owning implementation, config
-  schema, and nearest regression check before editing.
+  [Development](docs/development.md) and follow its relevant implementation or
+  verification links. Then read the owning implementation, config schema, and
+  nearest regression check before editing.
 - For feature behavior, provider changes, CLI contracts, or macOS parity, read
   the relevant [usage guide](docs/usage.md), contract/evidence links in the
   [documentation index](docs/README.md), and [TODO.md](TODO.md). TODO owns the
@@ -139,7 +140,7 @@ or **macOS-only/non-goal**. Screenshots and Swift models are not CLI contracts.
   for the CI environment.
 - For packaging changes, also run `make package`. For component/delegate
   extraction, install or upgrade the local plasmoid and inspect recent Plasma
-  logs as described in [Development](docs/development.md#runtime-verification).
+  logs as described in [runtime verification](docs/runtime-verification.md#runtime-verification).
   Packaging and runtime checks count only when actually performed.
 - Use `codexbar` as the default executable. Discover an absolute path with
   `command -v codexbar`; do not assume an installation-specific location.
