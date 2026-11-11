@@ -1,8 +1,10 @@
 # Implementation reference
 
 Read the relevant ownership, behavior, and QML sections before changing the applet.
-Paths are relative to the repository root. [Development](development.md) owns
-checkout setup, delivery, and repository maintenance.
+Paths are relative to the repository root. Applet QML and JavaScript references
+may omit `contents/ui/`; for example, `components/FullRepresentation.qml` means
+`contents/ui/components/FullRepresentation.qml`. [Development](development.md)
+owns checkout setup, delivery, and repository maintenance.
 
 ## Ownership and implementation
 
