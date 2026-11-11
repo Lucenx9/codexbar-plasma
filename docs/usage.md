@@ -195,7 +195,9 @@ work and upstream contract requirements.
   when either displayed quota meets its
   condition; both capsules remain together. Text uses its own displayed quota.
   Conditions respect existing visibility checkboxes and need no extra CLI calls.
-  Missing data does not satisfy a condition. Reset conditions update each minute;
+  Missing data does not satisfy a condition. Reset-within rules require a valid
+  ISO timestamp with an explicit timezone; impossible dates, times, and offsets
+  cannot activate them. Reset conditions update each minute;
   the provider icon remains available when all conditional elements are hidden.
 - Auto-select highest-usage provider for the compact panel and provider detail
   focus. Measured consumption takes precedence even for fractional percentage

@@ -151,6 +151,19 @@ TestCase {
         }, now));
     }
 
+    function test_invalidCalendarResetCannotTriggerVisibility_data() {
+        return [
+            {tag: "impossible-day", reset: "2026-02-30T12:00:00Z", now: "2026-03-02T11:45:00Z"},
+            {tag: "overflow-hour", reset: "2026-11-30T24:00:00Z", now: "2026-11-30T23:45:00Z"},
+            {tag: "invalid-zone", reset: "2026-11-30T12:00:00+14:01", now: "2026-11-29T21:44:00Z"}
+        ];
+    }
+
+    function test_invalidCalendarResetCannotTriggerVisibility(data) {
+        verify(!PanelRules.matches({condition: "resetWithin", resetMinutes: 30},
+            {resetsAt: data.reset}, Date.parse(data.now)));
+    }
+
     function test_forecastConditionRequiresTheCliPrediction() {
         var rule = {
             condition: "runOut"
