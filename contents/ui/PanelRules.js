@@ -3,6 +3,7 @@
 .import "Guards.js" as Guards
 .import "PanelDisplay.js" as PanelDisplay
 .import "ProviderNormalizer.js" as Normalizer
+.import "SubscriptionDates.js" as SubscriptionDates
 
 var conditions = ["always", "usageAtLeast", "resetWithin", "runOut"];
 var maximumResetMinutes = 10080;
@@ -81,7 +82,9 @@ function matches(value, row, nowMs) {
             || typeof nowMs !== "number" || !isFinite(nowMs)) {
         return false;
     }
-    var remainingMs = Date.parse(row.resetsAt) - nowMs;
+    var reset = SubscriptionDates.date(row.resetsAt, false, "reset");
+    if (!reset) return false;
+    var remainingMs = reset.timestampMs - nowMs;
     return isFinite(remainingMs) && remainingMs > 0 && remainingMs <= rule.resetMinutes * 60000;
 }
 

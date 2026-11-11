@@ -12,6 +12,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Reject invalid calendar dates, times, and timezone offsets in panel reset-within
+  visibility rules instead of activating them from silently normalized dates.
+
 - Reject impossible or ambiguous reset timestamps when calculating the remaining
   monthly quota per day, including in privacy mode, instead of silently moving
   invalid dates into the next month.
