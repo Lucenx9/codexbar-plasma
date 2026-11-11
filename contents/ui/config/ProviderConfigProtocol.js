@@ -268,13 +268,10 @@ function commandOutcome(payload, stderrText, exitCode) {
     if (cancelled) {
         return ({ outcome: "cancelled", message: "" })
     }
-    if (statusFailed) {
-        return ({
-            outcome: "statusError",
-            message: record.message ? boundedCliMessage(record.message) : ""
-        })
-    }
-    return ({ outcome: "success", message: "" })
+    return ({
+        outcome: "statusError",
+        message: record.message ? boundedCliMessage(record.message) : ""
+    })
 }
 
 // Linux CLI 0.74.1 diagnostic schema 1.0 reports failed provider fetches in
