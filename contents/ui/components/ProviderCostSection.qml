@@ -7,6 +7,7 @@ import "../CostAmounts.js" as CostAmounts
 import "../CostChart.js" as CostChart
 import "../CostTrust.js" as CostTrust
 import "../QuotaWindowCost.js" as QuotaWindowCost
+import "../SubscriptionDates.js" as SubscriptionDates
 
 ColumnLayout {
     id: tokenCostSection
@@ -442,8 +443,10 @@ ColumnLayout {
             }
             return null;
         }
-        readonly property var windows: weeklyRow && tokenCostSection.tokenCost
-            ? QuotaWindowCost.windows(tokenCostSection.tokenCost.daily, Date.parse(weeklyRow.resetsAt),
+        // Date.parse would roll an impossible reset date into another week.
+        readonly property var weeklyReset: weeklyRow ? SubscriptionDates.date(weeklyRow.resetsAt, false, "reset") : null
+        readonly property var windows: weeklyReset && tokenCostSection.tokenCost
+            ? QuotaWindowCost.windows(tokenCostSection.tokenCost.daily, weeklyReset.timestampMs,
                 weeklyRow.windowMinutes, applet.panelClockMs)
             : []
         readonly property bool anyEstimated: windows.some(function(window) {

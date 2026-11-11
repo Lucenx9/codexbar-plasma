@@ -545,6 +545,16 @@ class CostSectionTests(unittest.TestCase):
                 && updated.indexOf("≈ at least USD 42 · at least 4200 tokens") >= 0;
         });
 
+        // Date.parse rolls an impossible reset day into October and reads a
+        // zoneless one as local time; neither may define a quota week.
+        fakeApplet.panelClockMs = local(2026, 9, 28, 12);
+        for (var invalid of ["2026-09-31T12:22:00Z", "2026-09-30T12:22:00"]) {
+            testCase.providerData = { provider: "codex", tokenCost: tokenCost,
+                rows: [{ lane: "secondary", windowMinutes: 10080, resetsAt: invalid }] };
+            compare(section.windows.length, 0, invalid);
+        }
+        fakeApplet.panelClockMs = local(2026, 9, 22, 12);
+
         // Without a weekly row there is nothing honest to split.
         testCase.providerData = { provider: "codex", tokenCost: tokenCost,
             rows: [{ lane: "primary", windowMinutes: 300, resetsAt: new Date(reset).toISOString() }] };
