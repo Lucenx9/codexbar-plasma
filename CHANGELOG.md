@@ -19,6 +19,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep invalid or ambiguous reset dates as literal text instead of showing
+  invented countdowns or formatted dates. Omit those resets from saved and
+  restored quota caches while preserving valid percentages.
+
 - Bind managed-CLI rollback to the version shown in settings. If a background
   update changes the previous version, refuse the stale request and show the
   current versions instead of restoring a different release. Open settings

@@ -290,6 +290,9 @@ work and upstream contract requirements.
   the forecast. Long forecast words wrap inside the popup, and an abbreviated
   reset still reveals its full text on hover. Short reset countdowns remain
   complete when space is available.
+  Reset timestamps must include a valid calendar date, time, and timezone.
+  Impossible dates and ambiguous strings remain literal fallback text instead
+  of becoming countdowns or formatted dates; healthy quota values stay visible.
 - Hover a quota meter to identify its visible warning and critical markers.
   A small margin around the track also activates the tooltip, making thin
   meters easier to target.
@@ -620,6 +623,8 @@ bounded semantic usage confidence, reset timestamps, measurement timestamps,
 identifier-shaped extra window IDs, and an opaque configuration fingerprint. It contains no account identities, credentials,
 provider prose, cost history, session data, or paths. Entries older than 24 hours,
 future-dated entries, corrupt records, and unsupported cache versions are ignored.
+Invalid or ambiguous reset timestamps are omitted on cache save and restore
+without dropping their quota percentages.
 Supplemental sections (cost, credits, detail views, token costs) are hidden
 while usage is stale, including after cost refreshes and history-range changes,
 and are not restored from disk; only the retained quotas carry the last-known

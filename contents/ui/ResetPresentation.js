@@ -1,5 +1,12 @@
 .pragma library
 .import "ProviderNormalizer.js" as Normalizer
+.import "SubscriptionDates.js" as SubscriptionDates
+
+function timestamp(value) {
+    if (typeof value === "number") return new Date(value).getTime();
+    var parsed = SubscriptionDates.date(value, false, "reset");
+    return parsed ? parsed.timestampMs : NaN;
+}
 
 // The caller supplies its live clock. QML owns locale-specific date formatting
 // and translations; a malformed optional reset must not discard a healthy quota.
@@ -23,7 +30,7 @@ function parts(window, nowMs, absolute) {
         };
     }
 
-    var timestampMs = new Date(resetsAt).getTime();
+    var timestampMs = timestamp(resetsAt);
     if (!isFinite(timestampMs)) {
         return {
             kind: "text",

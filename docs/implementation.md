@@ -587,6 +587,11 @@ owns checkout setup, delivery, and repository maintenance.
   `Qt.formatDateTime` pattern would always write English names. Valid
   timestamps take precedence over descriptions; missing or invalid metadata
   preserves the existing text fallback without discarding healthy quotas.
+  String reset timestamps use `SubscriptionDates.date` to reject impossible
+  calendar components and missing/invalid timezones before formatting. Numeric
+  epoch milliseconds retain their existing compatibility path. `UsageCache`
+  applies the same string validation on both save and restore so persistence
+  cannot turn an invalid reset into a valid-looking date; percentages survive.
 - `SubscriptionDates.js` validates only the official usage renewal/expiration
   fields and true date-only flags, returning at most two semantic dates. It
   rejects impossible calendar values before ISO timestamp parsing. The shared
