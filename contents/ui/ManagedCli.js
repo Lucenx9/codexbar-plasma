@@ -26,14 +26,20 @@ function response(text) {
         previous: value.status !== "no_previous" && isStableVersion(value.previous) ? value.previous : ""}
 }
 
+function refreshedStatus(previous, fresh) {
+    if (previous.status !== "stale") return fresh.status
+    if (previous.path !== fresh.path) return fresh.status
+    if (fresh.status === "ready") return "stale"
+    return fresh.status
+}
+
 function nextResponse(previous, text, preserveStale) {
     var parsed = response(text)
     var prior
     try { prior = response(JSON.stringify(previous)) }
     catch (error) { prior = response("") }
     if (parsed.path) {
-        if (preserveStale === true && parsed.status === "ready"
-                && prior.status === "stale" && prior.path === parsed.path) parsed.status = "stale"
+        if (preserveStale === true) parsed.status = refreshedStatus(prior, parsed)
         return parsed
     }
     // A failed attempt reports only its reason, so the known installation stays visible.
@@ -56,13 +62,17 @@ function needsInstallConfirmation(managed, updater) {
     return externalPath !== managed.path
 }
 
+function localScriptPath(scriptUrl) {
+    var url = String(scriptUrl)
+    if (url.indexOf("file:///") !== 0) return ""
+    try { return decodeURIComponent(url.slice(7)) }
+    catch (error) { return "" }
+}
+
 function command(scriptUrl, action, commandPath, expectedPrevious) {
     if (["status", "install", "update", "automatic", "rollback"].indexOf(action) < 0) return ""
     if (action === "rollback" && !isStableVersion(expectedPrevious)) return ""
-    var url = String(scriptUrl)
-    var script
-    try { script = url.indexOf("file:///") === 0 ? decodeURIComponent(url.slice(7)) : "" }
-    catch (error) { return "" }
+    var script = localScriptPath(scriptUrl)
     if (!script || typeof commandPath !== "string") return ""
     return "timeout --kill-after=2s 610s python3 " + Guards.shellQuote(script)
         + " --action " + Guards.shellQuote(action) + " --command " + Guards.shellQuote(commandPath.trim())

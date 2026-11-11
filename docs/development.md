@@ -335,12 +335,18 @@ synchronized.
   invalid or changed target returns `stale` with current installation metadata;
   the active copy and state stay unchanged. General passes the displayed target
   through `ManagedCli.command`; other actions never receive that argument.
+  The previous receipt already guarantees a stable version, so exact equality
+  also rejects malformed targets. Successful rollback owns its post-activation
+  cleanup inside the same lock; stale requests never prune releases.
   The applet increments runtime-owned `managedCliRevision` after a successful
   installation change. General observes it and requests a fresh offline status;
   the controller coalesces requests made while another action is running and
   executes them after that action retires. Settings must not declare or save a
   `cfg_managedCliRevision` property. Direct helper/QtTests and the General smoke
   scenario cover stale targets, lock acquisition ordering and deferred refresh.
+  `tests/test_managed_cli_rollback.py` owns rollback verification and target-race
+  regressions; it shares isolated installations and synthetic release archives
+  with `test_managed_cli.py` through `managed_cli_test_support.py`.
   Offline status replies update installation facts while preserving an earlier
   stale-rollback notice; a subsequent install/update/rollback result replaces it.
   Receipt identity, asset selection and checksum/VERSION text validation are

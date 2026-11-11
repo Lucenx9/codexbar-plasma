@@ -48,6 +48,11 @@ TestCase {
         var fresh = Object.assign({}, changed, {status: "ready", version: "0.64.0", previous: "0.63.0"})
         compare(ManagedCli.nextResponse(changed, JSON.stringify(fresh), true), Object.assign({}, fresh, {status: "stale"}))
         compare(ManagedCli.nextResponse(changed, JSON.stringify(fresh)), fresh)
+        compare(ManagedCli.nextResponse(prior, JSON.stringify(fresh), true), fresh)
+        var other = Object.assign({}, fresh, {path: "/home/other/.local/share/codexbar-plasma/cli/current/codexbar"})
+        compare(ManagedCli.nextResponse(changed, JSON.stringify(other), true), other)
+        var restored = Object.assign({}, fresh, {status: "restored"})
+        compare(ManagedCli.nextResponse(changed, JSON.stringify(restored), true), restored)
     }
     function test_installConfirmation() {
         var managedPath = "/home/test/.local/share/codexbar-plasma/cli/current/codexbar"
