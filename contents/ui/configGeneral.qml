@@ -203,6 +203,12 @@ KCM.SimpleKCM {
         && userSettingsAreDefault()
     readonly property string autoUpdateLastCheck: Plasmoid.configuration
         ? Plasmoid.configuration.autoUpdateLastCheck || "" : ""
+    readonly property int managedCliRevision: Plasmoid.configuration
+        ? Plasmoid.configuration.managedCliRevision || 0 : 0
+    onManagedCliRevisionChanged: Qt.callLater(function() {
+        cliUpdater.reset()
+        managedCli.refreshStatus()
+    })
     readonly property string widgetUpdateLastStatus: Plasmoid.configuration
         ? Plasmoid.configuration.widgetUpdateLastStatus || "" : ""
     readonly property string widgetUpdateLastError: Plasmoid.configuration
@@ -224,6 +230,9 @@ KCM.SimpleKCM {
             page.cfg_commandPath = path
         }
         onChanged: cliUpdater.reset()
+        onResultChanged: {
+            if (result.status === "stale") cliUpdater.reset()
+        }
         Component.onCompleted: Qt.callLater(function() { managedCli.run("status") })
     }
 
@@ -1129,7 +1138,7 @@ KCM.SimpleKCM {
                     icon.name: "edit-undo"
                     visible: managedCli.selected && managedCli.result.previous.length > 0
                     enabled: !managedCli.busy
-                    onClicked: managedCli.run("rollback")
+                    onClicked: managedCli.run("rollback", managedCli.result.previous)
                 }
             }
         }

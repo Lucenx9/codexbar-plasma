@@ -329,6 +329,20 @@ synchronized.
   rollback. Only the exact managed command is eligible for update/rollback.
   `run` keeps the shared lock around cleanup, install and
   rollback; offline reuse still bypasses that lock and all release requests.
+  Rollback requires the stable `--expected-previous` version shown by General.
+  The helper compares it with the previous receipt only after acquiring the
+  installation lock and before probing, pruning or activating anything. A missing,
+  invalid or changed target returns `stale` with current installation metadata;
+  the active copy and state stay unchanged. General passes the displayed target
+  through `ManagedCli.command`; other actions never receive that argument.
+  The applet increments runtime-owned `managedCliRevision` after a successful
+  installation change. General observes it and requests a fresh offline status;
+  the controller coalesces requests made while another action is running and
+  executes them after that action retires. Settings must not declare or save a
+  `cfg_managedCliRevision` property. Direct helper/QtTests and the General smoke
+  scenario cover stale targets, lock acquisition ordering and deferred refresh.
+  Offline status replies update installation facts while preserving an earlier
+  stale-rollback notice; a subsequent install/update/rollback result replaces it.
   Receipt identity, asset selection and checksum/VERSION text validation are
   separate checks inside the helper; installation and recovery retain their
   existing lock and filesystem ownership.

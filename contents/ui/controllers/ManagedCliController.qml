@@ -14,6 +14,7 @@ Item {
     property string activeAction: ""
     property int serial: 0
     property double nextAttempt: 0
+    property bool statusRefreshPending: false
     readonly property bool busy: activeSource.length > 0
     readonly property bool selected: result.path.length > 0 && commandPath.trim() === result.path && result.version.length > 0
     signal installed(string path)
@@ -29,6 +30,7 @@ Item {
         case "external": return i18n("Select the managed CLI before updating it.")
         case "busy": return i18n("Another widget is updating the managed CLI. Try again shortly.")
         case "no_previous": return i18n("No previous CLI version is available.")
+        case "stale": return i18n("The managed CLI changed to %1. Check the version to restore and try again.", result.version)
         case "network": return i18n("Could not reach the release server. Try again later.")
         case "unsupported": return i18n("No official CLI build is available for this system.")
         case "unverified": return i18n("The downloaded CLI failed verification and was discarded.")
@@ -43,9 +45,9 @@ Item {
         deadline.stop()
         if (source.length > 0) processSource.disconnectSource(source)
     }
-    function run(action) {
+    function run(action, expectedPrevious) {
         if (busy) return
-        var command = ManagedCli.command(scriptUrl, action, commandPath)
+        var command = ManagedCli.command(scriptUrl, action, commandPath, expectedPrevious)
         if (!command) return
         activeAction = action
         serial += 1
@@ -53,11 +55,21 @@ Item {
         deadline.restart()
         processSource.connectSource(activeSource)
     }
+    function refreshStatus() {
+        statusRefreshPending = true
+        if (busy) return
+        statusRefreshPending = false
+        run("status")
+    }
+    onBusyChanged: {
+        if (!busy && statusRefreshPending) Qt.callLater(refreshStatus)
+    }
     function accept(sourceName, data) {
         if (sourceName !== activeSource) return
         var action = activeAction
         retire()
-        result = ManagedCli.nextResponse(result, data && Guards.exitCode(data["exit code"]) === 0 ? data["stdout"] : "")
+        result = ManagedCli.nextResponse(result,
+            data && Guards.exitCode(data["exit code"]) === 0 ? data["stdout"] : "", action === "status")
         if (action === "install" && ["installed", "ready"].indexOf(result.status) >= 0) installed(result.path)
         if (["installed", "restored"].indexOf(result.status) >= 0) changed()
     }

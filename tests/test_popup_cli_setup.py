@@ -43,6 +43,7 @@ TestCase {
                 id: configuration
                 property string commandPath: "codexbar"
                 property bool cliAutomaticUpdates: false
+                property int managedCliRevision: 0
             }
             SOURCE_FUNCTION
             Controllers.ManagedCliController { SOURCE_CONTROLLER }
@@ -75,6 +76,16 @@ TestCase {
         tryCompare(subject, "refreshes", 1);
         compare(subject.accountsController.resets, 1);
         verify(!subject.cliSetupBusy);
+    }
+    function test_backgroundInstallPublishesTheSettingsRevision() {
+        var subject = create("/home/test/.local/share/codexbar-plasma/cli/current/codexbar");
+        subject.controller.activeAction = "automatic";
+        subject.controller.activeSource = "synthetic-background";
+        subject.controller.accept("synthetic-background", {"exit code": 0, stdout: JSON.stringify({
+            status: "installed", version: "0.63.0", previous: "0.62.0", path: subject.config.commandPath})});
+        compare(subject.config.managedCliRevision, 1);
+        compare(subject.refreshes, 1);
+        compare(subject.accountsController.resets, 1);
     }
     function test_failuresPreserveSelectionAndAllowRetry_data() {
         return [{tag: "network", command: "network"}, {tag: "unusable copy", command: "unusable"}, {tag: "malformed", command: "malformed"},
@@ -144,7 +155,9 @@ class PopupCliSetupTests(unittest.TestCase):
         properties = re.search(r"property bool cliSetupRequested:.*?onCommandPathChanged:[^\n]+", source, re.S)
         self.assertIsNotNone(properties)
         qml = qml.replace("SOURCE_SETUP_PROPERTIES", properties.group(0))
-        qml = qml.replace("SOURCE_FUNCTION", signature + " {" + surface.function_body("prepareCli") + "}")
+        qml = qml.replace("SOURCE_FUNCTION", signature + " {" + surface.function_body("prepareCli") + "}"
+                          + "\nfunction boundedConfigRevision(value) {"
+                          + surface.function_body("boundedConfigRevision") + "}")
         qml = qml.replace("SOURCE_CONTROLLER", surface.id_block("managedCli")).replace(
             "Plasmoid.configuration", "configuration")
         with tempfile.TemporaryDirectory(prefix="codexbar-popup-cli-") as directory:

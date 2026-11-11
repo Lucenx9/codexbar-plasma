@@ -13,10 +13,11 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--action", choices=("status", "install", "update", "automatic", "rollback"), required=True)
     parser.add_argument("--command", default="")
+    parser.add_argument("--expected-previous", default="", help="Displayed stable version required for rollback")
     args = parser.parse_args()
     signal.alarm(600)
     try:
-        result = run(args.action, args.command)
+        result = run(args.action, args.command, args.expected_previous)
     except (OSError, ValueError, http.client.HTTPException, tarfile.TarError,
             subprocess.SubprocessError) as error:
         result = {"status": failure_status(error)}

@@ -1902,9 +1902,22 @@ Item {
             if (preview === null || !preview.ready)
                 return false;
             if (scenario.indexOf("settings-general") === 0 && !navigationVerified) {
-                verifyGeneralDefaults(preview.page);
                 var managed = findItem(preview.page, "managedCliController");
                 verifyScenario(managed !== null, "General must expose the managed CLI controller");
+                if (scenario.indexOf("settings-general-updates") === 0 && settingsBehaviorStep === 0) {
+                    if (managed.busy) return false;
+                    settingsCommandSerial = managed.serial;
+                    applet.Plasmoid.configuration.managedCliRevision += 1;
+                    settingsBehaviorStep = 1;
+                    return false;
+                }
+                if (scenario.indexOf("settings-general-updates") === 0 && settingsBehaviorStep === 1) {
+                    if (managed.serial === settingsCommandSerial || managed.busy) return false;
+                    verifyScenario(managed.activeAction === "status",
+                        "General must refresh installed versions after a background managed CLI change");
+                    settingsBehaviorStep = 2;
+                }
+                verifyGeneralDefaults(preview.page);
                 preview.page.cfg_commandPath = "/home/demo/.local/share/codexbar-plasma/cli/current/codexbar";
                 managed.retire();
                 managed.activeAction = "status";
@@ -1923,6 +1936,16 @@ Item {
                     findItem(preview.page, "widgetUpdatesDisclosure").clicked();
                     findItem(preview.page, "cliUpdatesDisclosure").clicked();
                     preview.page.cfg_identifiedTokensEnabled = true;
+                    var rollback = findItem(preview.page, "rollbackManagedCliButton");
+                    rollback.clicked();
+                    verifyScenario(managed.activeSource.indexOf("--expected-previous '0.60.4'") >= 0,
+                        "rollback must send the version displayed by its button");
+                    managed.accept(managed.activeSource, {"exit code": 0, stdout: JSON.stringify({
+                        status: "stale", version: "0.62.0", previous: "0.61.0", path: preview.page.cfg_commandPath})});
+                    verifyScenario(rollback.text.indexOf("0.61.0") >= 0 && managed.result.status === "stale",
+                        "a stale rollback must refresh the displayed target and explain why it did not restore");
+                    verifyScenario(managed.statusText.indexOf("0.62.0") >= 0 && !releaseChecker.checked,
+                        "a stale rollback must show the current version and invalidate older release feedback");
                 }
                 navigationVerified = true;
                 return false;

@@ -63,14 +63,16 @@ class ManagedCliTests(unittest.TestCase):
         archive(self.payload, version, **kwargs)
         self.release = release(self.payload, version)
 
-    def operation(self, action, command=None):
+    def operation(self, action, command=None, expected_previous=None):
+        if action == "rollback" and expected_previous is None:
+            expected_previous = cli.status(self.root)["previous"]
         def download(asset, target):
             path = self.payload.with_suffix(".sha256") if asset["name"].endswith(".sha256") else self.payload
             target.write_bytes(path.read_bytes())
         with patch.object(cli.cli_release, "latest_release", return_value=self.release), \
                 patch.object(cli, "platform_suffix", return_value="linux-x86_64"), \
                 patch.object(cli, "download", side_effect=download):
-            return cli.run(action, self.command if command is None else command)
+            return cli.run(action, self.command if command is None else command, expected_previous or "")
 
     def test_install_update_and_rollback_skip_replaced_release(self):
         initial = self.operation("install")
@@ -110,7 +112,7 @@ class ManagedCliTests(unittest.TestCase):
                 else:
                     binary.write_text('#!/bin/sh\nexit 1\n')
                 with patch.object(cli.cli_release, "latest_release") as remote:
-                    result = cli.run("rollback", self.command)
+                    result = cli.run("rollback", self.command, "0.62.0")
                 self.assertEqual(result, {"status": "no_previous"})
                 self.assertEqual(os.readlink(self.root / "current"), before)
                 self.assertEqual((self.root / "state.json").read_bytes(), state)
@@ -123,8 +125,72 @@ class ManagedCliTests(unittest.TestCase):
         self.operation("update")
         before = cli.status(self.root)
         with patch.object(cli.cli_release, "bounded_command", side_effect=ValueError("command_timeout")):
-            self.assertEqual(cli.run("rollback", self.command), {"status": "no_previous"})
+            self.assertEqual(cli.run("rollback", self.command, "0.62.0"), {"status": "no_previous"})
         self.assertEqual(cli.status(self.root), before)
+
+    def test_rollback_requires_a_displayed_target_without_changing_installation(self):
+        self.operation("install")
+        self.publish("0.63.0")
+        self.operation("update")
+        before = cli.status(self.root)
+        state = (self.root / "state.json").read_bytes()
+        result = cli.run("rollback", self.command)
+        self.assertEqual(result, {**before, "status": "stale"})
+        self.assertEqual(cli.status(self.root), before)
+        self.assertEqual((self.root / "state.json").read_bytes(), state)
+
+    def test_rollback_rechecks_the_displayed_target_after_acquiring_the_lock(self):
+        self.operation("install")
+        self.publish("0.63.0")
+        self.operation("update")
+        displayed = cli.status(self.root)["previous"]
+        self.publish("0.64.0")
+        acquire = cli.fcntl.flock
+        after_update = {}
+
+        def background_update_then_lock(descriptor, flags):
+            with patch.object(cli.fcntl, "flock", side_effect=acquire):
+                self.operation("update")
+            after_update["status"] = cli.status(self.root)
+            after_update["state"] = (self.root / "state.json").read_bytes()
+            acquire(descriptor, flags)
+
+        with patch.object(cli.fcntl, "flock", side_effect=background_update_then_lock):
+            result = cli.run("rollback", self.command, displayed)
+        self.assertEqual(result, {**after_update["status"], "status": "stale"})
+        self.assertEqual(cli.status(self.root)["version"], "0.64.0")
+        self.assertEqual(cli.status(self.root)["previous"], "0.63.0")
+        self.assertEqual((self.root / "state.json").read_bytes(), after_update["state"])
+        restored = cli.run("rollback", self.command, result["previous"])
+        self.assertEqual(restored["status"], "restored")
+        self.assertEqual(restored["version"], "0.63.0")
+
+    def test_rollback_rejects_malformed_target_without_changing_installation(self):
+        self.operation("install")
+        self.publish("0.63.0")
+        self.operation("update")
+        before = cli.status(self.root)
+        state = (self.root / "state.json").read_bytes()
+        for target in (None, False, [], {}, "", "0.62.0-beta", "00.62.0", "0.62.0\n", "x" * 20000):
+            with self.subTest(target=repr(target)[:80]):
+                self.assertEqual(cli.run("rollback", self.command, target), {**before, "status": "stale"})
+                self.assertEqual(cli.status(self.root), before)
+                self.assertEqual((self.root / "state.json").read_bytes(), state)
+
+    def test_helper_cli_restores_only_the_requested_version(self):
+        self.operation("install")
+        self.publish("0.63.0")
+        self.operation("update")
+        helper = Path(__file__).resolve().parents[1] / "scripts/manage-cli.py"
+        command = [sys.executable, str(helper), "--action", "rollback", "--command", self.command]
+        for expected, status in (("0.61.0", "stale"), ("0.62.0", "restored")):
+            result = subprocess.run(command + ["--expected-previous", expected],
+                                    capture_output=True, text=True, timeout=10)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            reply = json.loads(result.stdout)
+            self.assertEqual(reply["status"], status)
+            self.assertEqual(reply["version"], "0.63.0" if status == "stale" else "0.62.0")
+            self.assertEqual(result.stderr, "")
 
     def test_owns_command_resolves_canonical_probe_paths(self):
         self.operation("install")
