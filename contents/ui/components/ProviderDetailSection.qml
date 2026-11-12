@@ -238,7 +238,7 @@ ColumnLayout {
                 Layout.preferredHeight: detailSection.applet.compactMeterTrackHeight
                 Layout.bottomMargin: Kirigami.Units.smallSpacing / 2
                 radius: height / 2
-                color: detailSection.applet.withAlpha(Kirigami.Theme.textColor, 0.1)
+                color: Qt.alpha(Kirigami.Theme.textColor, 0.1)
                 clip: true
 
                 Rectangle {
