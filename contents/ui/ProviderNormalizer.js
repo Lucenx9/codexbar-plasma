@@ -849,11 +849,10 @@ function costDayLabel(item) {
 
 function normalizedCostDay(item, currency) {
     var row = normalizeCostTotals(item, item.costUSD, item.tokens, currency)
-    var modelSummary = costModelSummary([item], currency)
     row.label = costDayLabel(item)
     row.incompleteRequests = normalizedIncompleteRequestCount(item.incompleteRequestCount)
-    row.models = modelSummary.rows
-    row.modelsTruncated = modelSummary.truncated
+    row.models = []
+    row.modelsTruncated = false
     return row
 }
 
@@ -868,9 +867,8 @@ function costHistorySelection(items, options) {
     }
 }
 
-function normalizeCostDaily(items, currency, options) {
-    if (!Array.isArray(items)) return []
-    var selection = costHistorySelection(items, options || ({}))
+function selectedCostDays(items, currency, options, modelSources) {
+    var selection = costHistorySelection(items, options)
     var historyDays = selection.historyDays
     var blockedDateKeys = ({})
     var firstInspectedItem = selection.firstInspectedItem
@@ -879,7 +877,9 @@ function normalizeCostDaily(items, currency, options) {
         var item = items[i]
         if (!isCliRecord(item)) continue
         if (costRecordHasAmounts(item)) {
-            result.unshift(normalizedCostDay(item, currency))
+            var row = normalizedCostDay(item, currency)
+            result.unshift(row)
+            if (modelSources) modelSources.set(row, item)
             continue
         }
         var blockedDate = parsedCalendarDateKey(costDayLabel(item))
@@ -887,11 +887,31 @@ function normalizeCostDaily(items, currency, options) {
     }
     // An incomplete scan cannot establish safe zero-activity gaps.
     if (firstInspectedItem > 0) {
-        return costHistoryRowsWithinWindow(result,
-            selection.window).slice(-historyDays)
+        result = costHistoryRowsWithinWindow(result, selection.window)
+    } else {
+        result = fillMissingCostDays(result, currency, selection, blockedDateKeys)
     }
-    return fillMissingCostDays(result, currency, selection, blockedDateKeys)
-        .slice(-historyDays)
+    return result.slice(-historyDays)
+}
+
+function normalizeCostDaily(items, currency, options) {
+    if (!Array.isArray(items)) return []
+    options = options || ({})
+    // Keep raw records local; only selected display rows need model summaries.
+    // Averages use the same calendar rules without inspecting model data.
+    var modelSources = options.includeModels === false ? null : new Map()
+    var result = selectedCostDays(items, currency, options, modelSources)
+    if (modelSources) {
+        var modelLabels = new Map()
+        for (var j = 0; j < result.length; j++) {
+            var source = modelSources.get(result[j])
+            if (!source) continue
+            var summary = costModelSummary([source], currency, false, modelLabels)
+            result[j].models = summary.rows
+            result[j].modelsTruncated = summary.truncated
+        }
+    }
+    return result
 }
 
 function normalizeCostTotals(totals, fallbackCost, fallbackTokens, currency) {
@@ -970,12 +990,15 @@ function costModelName(breakdown) {
     return nonEmptyString(name) ? name : ownField(breakdown, "model")
 }
 
-function normalizedCostModelBreakdown(breakdown) {
+function normalizedCostModelBreakdown(breakdown, modelLabels) {
     if (!isCliRecord(breakdown)) return null
     var rawName = costModelName(breakdown)
     // Aggregate by raw identity: bounded, redacted labels can collide.
     if (!nonEmptyString(rawName) || isUnsafeObjectKey(rawName)) return null
-    var name = boundedDisplayText(rawName, 120)
+    // Repeated model identities share only validated display text for this
+    // normalization call. Amounts and incomplete counts stay per record.
+    if (!modelLabels.has(rawName)) modelLabels.set(rawName, boundedDisplayText(rawName, 120))
+    var name = modelLabels.get(rawName)
     if (name.length === 0) return null
     return {
         key: rawName,
@@ -1062,22 +1085,23 @@ function costModelTokenRanking(rows, truncated, hasUnknownCost) {
     }
 }
 
-function accumulateCostModelDay(aggregation, item, currency) {
+function accumulateCostModelDay(aggregation, item, currency, modelLabels) {
     var breakdowns = hasOwnKey(item, "modelBreakdowns") && Array.isArray(item.modelBreakdowns)
         ? item.modelBreakdowns : []
     var breakdownLimit = Math.min(breakdowns.length, maximumModelBreakdownsPerDay)
     aggregation.truncated = aggregation.truncated || breakdowns.length > breakdownLimit
     for (var i = 0; i < breakdownLimit; i++) {
         addCostModelBreakdown(aggregation.byName, aggregation.incompleteByName,
-            normalizedCostModelBreakdown(breakdowns[i]), currency)
+            normalizedCostModelBreakdown(breakdowns[i], modelLabels), currency)
     }
 }
 
-function costModelSummary(modelDays, currency, includeTokenRanking) {
+function costModelSummary(modelDays, currency, includeTokenRanking, modelLabels) {
     // Excluded-only records contribute counts without manufacturing measured amounts.
     var aggregation = { byName: ({}), incompleteByName: ({}), truncated: false }
+    modelLabels = modelLabels || new Map()
     for (var i = 0; i < modelDays.length; i++) {
-        accumulateCostModelDay(aggregation, modelDays[i], currency)
+        accumulateCostModelDay(aggregation, modelDays[i], currency, modelLabels)
     }
     var hasUnknownCost = false
     var rows = Object.keys(aggregation.byName).map(function(key) {

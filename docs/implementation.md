@@ -95,6 +95,12 @@ owns checkout setup, delivery, and repository maintenance.
   These modules take explicit inputs and contain no localization or process
   effects. The applet retains range selection, privacy projection,
   provider attachment, trust-notice state, configuration and refresh effects.
+  `ProviderNormalizer.normalizeCostDaily` selects and gap-fills amount rows
+  before projecting models for retained days. `CostResponse` requests
+  `includeModels: false` for averages, preserving the same calendar rules.
+  Raw records stay in a bounded call-local map; model-label memoization is
+  keyed by exact raw model identity and discarded after each normalization.
+  Only validated labels are reused, never amounts, currencies or counts.
   Root adapters preserve the existing popup and chart interfaces. Executed
   tests in `tests/tst_cost_text.qml` cover snapshot immutability, period-label
   precedence, totals, qualifiers, count plurals, dashboard bounds and regional

@@ -135,6 +135,10 @@ See [QML conventions](implementation.md#qml-conventions).
 
 See [Regression checks](testing.md#regression-checks).
 
+For cost-normalization changes, also run `make benchmark-cost` separately from
+the parallel check suite. Its repeated synthetic measurements and CI budgets
+are described in [cost response performance](testing.md#cost-response-performance).
+
 ### Sticky CI report
 
 See [Sticky CI report](testing.md#sticky-ci-report).

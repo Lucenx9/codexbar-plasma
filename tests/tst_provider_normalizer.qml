@@ -1570,6 +1570,51 @@ TestCase {
         compare(Normalizer.normalizeCostDaily("2026-08-01", "USD", { days: 30 }).length, 0)
     }
 
+    function test_dailyAmountsCanOmitModelProjection() {
+        var measured = { date: "2026-08-28", totalCost: 4, totalTokens: 40,
+            incompleteRequestCount: 2 }
+        Object.defineProperty(measured, "modelBreakdowns", { get: function() {
+            throw new Error("Amount-only history must not inspect model breakdowns")
+        } })
+        var rows = Normalizer.normalizeCostDaily([measured], "EUR", {
+            days: 2, updatedAt: "2026-08-29", includeModels: false
+        })
+        compare(rows.length, 2)
+        compare(rows[0].cost, 4)
+        compare(rows[0].tokens, 40)
+        compare(rows[0].incompleteRequests, 2)
+        compare(rows[0].models, [])
+        compare(rows[0].modelsTruncated, false)
+        compare(rows[1].cost, 0)
+        compare(rows[1].tokens, 0)
+    }
+
+    function test_dailyModelsOnlyInspectRetainedDays_data() {
+        return [
+            { tag: "old-date", date: "2026-08-20", updatedAt: "2026-08-29" },
+            { tag: "future-date", date: "2026-08-30", updatedAt: "2026-08-29" },
+            { tag: "invalid-date-before-tail", date: "invalid", updatedAt: "2026-08-29" },
+            { tag: "duplicate-before-tail", date: "2026-08-29", updatedAt: "2026-08-29" },
+            { tag: "legacy-tail", date: "old", updatedAt: "" }
+        ]
+    }
+
+    function test_dailyModelsOnlyInspectRetainedDays(data) {
+        var excluded = { date: data.date, totalCost: 100 }
+        Object.defineProperty(excluded, "modelBreakdowns", { get: function() {
+            throw new Error("Discarded days must not inspect model breakdowns")
+        } })
+        var rows = Normalizer.normalizeCostDaily([excluded, {
+            date: "2026-08-29", totalCost: 4,
+            modelBreakdowns: [{ modelName: "retained", cost: 4 }]
+        }], "EUR", { days: 1, updatedAt: data.updatedAt })
+        compare(rows.length, 1)
+        compare(rows[0].label, "2026-08-29")
+        compare(rows[0].cost, 4)
+        compare(rows[0].models, [{ label: "retained", cost: 4, tokens: null,
+            currency: "EUR", incompleteRequests: 0 }])
+    }
+
     function test_dailyCostModelsStayWithTheirOwnDayAndPreservePeriodTotals() {
         var items = [
             { date: "2026-08-28", totalCost: 4, totalTokens: 40, modelBreakdowns: [

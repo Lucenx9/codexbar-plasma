@@ -10,6 +10,7 @@ TestCase {
         var cases = [
             { tag: "truncated", names: [prefix + "-a", prefix + "-b"], count: 2 },
             { tag: "whitespace", names: ["synthetic  model", "synthetic model"], count: 2 },
+            { tag: "redacted", names: ["token=synthetic-model-a", "token=synthetic-model-b"], count: 2 },
             { tag: "ordinary", names: ["synthetic-a", "synthetic-b"], count: 2 },
             { tag: "identical", names: ["synthetic-a", "synthetic-a"], count: 1 }
         ]
@@ -21,6 +22,32 @@ TestCase {
                 names: cases[i].names, count: cases[i].count, daily: false })
         }
         return result
+    }
+
+    function test_repeatedLabelsDoNotReuseAmountsAcrossDaysOrRefreshes() {
+        var items = [
+            { date: "2026-08-28", totalCost: 4,
+                modelBreakdowns: [{ modelName: "shared", cost: 4, incompleteRequestCount: 2 }] },
+            { date: "2026-08-29", totalCost: 5,
+                modelBreakdowns: [{ modelName: "shared", cost: 5, totalTokens: 50 }] }
+        ]
+        var options = { days: 2, updatedAt: "2026-08-29" }
+        var original = JSON.stringify(items)
+        var daily = Normalizer.normalizeCostDaily(items, "EUR", options)
+        compare(daily[0].models[0], { label: "shared", cost: 4, tokens: null,
+            incompleteRequests: 2, currency: "EUR" })
+        compare(daily[1].models[0], { label: "shared", cost: 5, tokens: 50,
+            incompleteRequests: 0, currency: "EUR" })
+        compare(JSON.stringify(items), original)
+        items[0].modelBreakdowns[0].cost = 9
+        var refreshed = Normalizer.normalizeCostDaily(items, "USD", options)
+        compare(refreshed[0].models[0].cost, 9)
+        compare(refreshed[0].models[0].currency, "USD")
+        compare(daily[0].models[0].cost, 4)
+        compare(daily[0].models[0].currency, "EUR")
+        refreshed[0].models[0].label = "changed"
+        compare(refreshed[1].models[0].label, "shared")
+        compare(daily[0].models[0].label, "shared")
     }
 
     function test_displayLabelsDoNotMergeDistinctModels(data) {
