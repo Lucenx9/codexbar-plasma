@@ -107,6 +107,7 @@ TestCase {
         property real secondaryTextOpacity: 0.7
         property real valueTextOpacity: 0.85
         property real compactMeterTrackHeight: 8
+        property real roundedSurfaceRadius: 8
         property real nestedSurfaceRadius: 4
         property string metricSet: ""
         property string daysSet: ""

@@ -235,7 +235,7 @@ ColumnLayout {
 
                     Layout.fillWidth: true
                     Layout.preferredHeight: sessionRow.implicitHeight + Kirigami.Units.largeSpacing * 2
-                    radius: view.applet.nestedSurfaceRadius
+                    radius: view.applet.roundedSurfaceRadius
                     // The card reveals its copy action on hover, so the
                     // surface confirms the hover the same way overview rows do.
                     color: view.applet.withAlpha(Kirigami.Theme.textColor,
@@ -274,6 +274,8 @@ ColumnLayout {
 
                         anchors.fill: parent
                         anchors.margins: Kirigami.Units.largeSpacing
+                        anchors.leftMargin: Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing
+                        anchors.rightMargin: Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing
                         spacing: Kirigami.Units.largeSpacing
 
                         Item {

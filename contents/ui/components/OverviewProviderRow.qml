@@ -113,7 +113,9 @@ Rectangle {
                     + Kirigami.Units.smallSpacing * 2
                 Layout.preferredHeight: Layout.preferredWidth
                 radius: overviewRow.applet.nestedSurfaceRadius
-                color: overviewRow.applet.withAlpha(overviewRow.accent, 0.1)
+                color: overviewRow.applet.withAlpha(overviewRow.accent, 0.12)
+                border.width: 1
+                border.color: overviewRow.applet.withAlpha(Kirigami.Theme.textColor, 0.1)
 
                 Kirigami.Icon {
                     anchors.centerIn: parent
@@ -202,7 +204,6 @@ Rectangle {
 
                         text: overviewMeter.modelData.label || ""
                         font.weight: Font.DemiBold
-                        opacity: overviewRow.applet.valueTextOpacity
                         anchors.left: parent.left
                         anchors.baseline: parent.baseline
                         width: Math.min(implicitWidth, Math.max(0,

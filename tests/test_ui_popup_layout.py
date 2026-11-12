@@ -34,6 +34,18 @@ full_representation_text = full_representation_qml.read_text(encoding="utf-8")
 
 
 class PopupLayoutTest(unittest.TestCase):
+    def test_top_level_cards_match_overview_geometry(self):
+        # Sessions and Spend provider cards are top-level surfaces like
+        # Overview rows: same outer radius and horizontal content inset.
+        fragments = (
+            "radius: view.applet.roundedSurfaceRadius",
+            "anchors.leftMargin: Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing",
+            "anchors.rightMargin: Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing",
+        )
+        for card_text in (sessions_view_text, spend_view_text):
+            missing = [fragment for fragment in fragments if not code_contains(card_text, fragment)]
+            self.assertEqual(missing, [], "cards must match overview card geometry")
+
     def test_overview_rows(self):
         # Overview selection stores canonical provider IDs (legacy raw CLI spellings,
         # e.g. groqcloud, alibaba-coding-plan, still resolve) matched at runtime
@@ -84,7 +96,8 @@ class PopupLayoutTest(unittest.TestCase):
             "radius: applet.roundedSurfaceRadius",
             "id: overviewProviderIdentitySurface",
             "radius: overviewRow.applet.nestedSurfaceRadius",
-            "applet.withAlpha(overviewRow.accent, 0.1)",
+            "applet.withAlpha(overviewRow.accent, 0.12)",
+            "border.color: overviewRow.applet.withAlpha(Kirigami.Theme.textColor, 0.1)",
         ):
             if not code_contains(overview_row_body, polished_overview_fragment):
                 raise AssertionError(

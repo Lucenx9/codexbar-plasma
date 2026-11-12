@@ -28,6 +28,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   below it, separate Providers diagnostics from source mode and move Inspect
   redacted settings into that disclosure, and separate the Panel icons-and-meters
   preset from the panel-style note.
+- Give Sessions and Usage & Spend provider cards the same corner radius and
+  side inset as Overview cards, show Overview quota names at the same weight
+  as on provider pages, and outline Overview provider icons like the header.
 
 ### Fixed
 
