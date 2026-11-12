@@ -197,7 +197,11 @@ and [Dependabot](../.github/dependabot.yml) checks for updates each Monday at
 Both the GitHub Actions and Docker entries configure a seven-day
 [cooldown](https://docs.github.com/en/code-security/reference/supply-chain-security/dependabot-options-reference#cooldown)
 for version updates. The schedule controls when checks run; the cooldown filters
-recent releases using available publication dates. Security updates are exempt.
+recent releases using available publication dates. Security updates are exempt
+where GitHub supports them. Docker has no Dependabot security updates: its
+automated digest refreshes follow the version-update schedule and cooldown.
+For urgent Ubuntu base updates, use the manual image rebuild and digest refresh
+procedure in [Regression checks and CI](testing.md#regression-checks).
 Review the referenced release before merging such a PR, and keep the
 version comment beside each pinned SHA.
 
