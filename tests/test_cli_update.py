@@ -240,7 +240,7 @@ class CliUpdateTests(unittest.TestCase):
         root = Path(__file__).resolve().parents[1]
         main = (root / "contents/ui/main.qml").read_text()
         controller = main.split("Controllers.CliUpdateController {", 1)[1].split("Controllers.WidgetUpdateController {", 1)[0]
-        self.assertIn("updateNotifications.notifyAvailableCliUpdate(version, releaseUrl)", controller)
+        self.assertIn("updateNotifications.notifyAvailableCliUpdate(version, releaseUrl, manager)", controller)
         owner = (root / "contents/ui/controllers/UpdateNotificationsController.qml").read_text()
         for guard in ("!enableNotifications", "cliUpdateNotificationsEnabled === false",
                       "cliUpdateLastNotifiedVersion === version", "UpdateNotificationState.usableSource(sourceName)",

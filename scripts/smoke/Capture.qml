@@ -168,8 +168,8 @@ Item {
         verifyScenario(!config.showProviderInPanel && !config.showPercentInPanel
             && config.showMultiProviderInPanel && !applet.minimalPanel,
             "fresh defaults must show Standard icons and meters without panel text");
-        verifyScenario(config.cliAutomaticUpdates && !config.cliUpdateChecksEnabled,
-            "fresh defaults must enable managed CLI updates and leave release checks opt-in");
+        verifyScenario(config.cliAutomaticUpdates && config.cliUpdateChecksEnabled,
+            "fresh defaults must enable managed CLI updates and daily release checks");
         config.usageBarsShowUsed = false;
         config.notifyLimitResets = true;
         config.panelStyle = "minimal";

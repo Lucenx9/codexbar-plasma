@@ -1380,12 +1380,16 @@ fields; track proposed extensions in the issue tracker.
 
 In **General → Updates → CodexBar CLI**, **Check CLI releases now** compares the selected
 executable's `--version` with the latest stable official GitHub release. The
-manual check works even when daily checks are disabled. Daily checks are opt-in,
-run independently of quota refreshes, and retry failures after one hour.
+manual check works even when daily checks are disabled. Daily checks are on by
+default, run independently of quota refreshes, and retry failures after one hour.
+Clear **Check upstream CLI releases daily** and apply to opt out; existing instances
+without a saved value adopt the new default, and explicitly saved choices are kept.
 Failures after changing the selected command also retry after one hour, even
 if the previous command was checked recently. CLI
 release notifications have their own switch, respect the global notification
 setting and privacy mode, and announce each version once per widget instance.
+A selected widget-managed copy with automatic updates enabled is not announced,
+because it updates itself; the settings status still shows the available release.
 Clicking a notification opens the corresponding official release page where
 notification actions are supported.
 
@@ -1663,7 +1667,7 @@ and 95% critical thresholds. Reset notifications are off until enabled.
 | Provider service status | Off; incident notifications become active when status fetching is enabled |
 | Local usage and spend history | On, 30 days, cost metric |
 | Quota display | Percent used; warning markers on; thresholds at 80% and 95% used |
-| CLI release checks | Off; manual checks available in General |
+| CLI release checks | Daily, with notifications; not announced for a self-updating managed copy |
 | Managed CLI automatic updates | On; runs only while the managed copy is selected |
 | Plasma notifications | On; quota warnings on; predicted exhaustion and limit-reset notices off |
 | Widget updates | Check and install automatically every 24 hours, with notifications; restart Plasma to apply installed updates |

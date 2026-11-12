@@ -187,7 +187,8 @@ owns checkout setup, delivery, and repository maintenance.
   daily scheduling. General runs manual release checks and a separate local-only
   probe on opening/command changes for managed-install confirmation; Diagnostics uses its
   local-only mode; `main.qml` persists background check timestamps, while
-  `UpdateNotificationsController.qml` persists notification deduplication.
+  `UpdateNotificationsController.qml` persists notification deduplication and
+  skips announcements for a managed copy while its automatic updates are on.
   Both this controller and `ManagedCliController.qml` validate process results
   with `Guards.exitCode`: only numeric zero or an integer-string zero accepts
   stdout. Null, booleans, blank strings, arrays, and missing codes fail without
