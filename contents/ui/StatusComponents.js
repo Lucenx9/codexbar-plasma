@@ -3,14 +3,16 @@
 .import "SafeText.js" as SafeText
 
 // Validates the bounded status-component record printed by
-// scripts/status-components.py. Only Claude and OpenAI pages are supported.
+// scripts/status-components.py. Only Claude, OpenAI and xAI pages are supported.
 var feeds = {
     "claude": "claude",
     "claudeplatform": "claude",
     "codex": "openai",
-    "openai": "openai"
+    "openai": "openai",
+    "grok": "xai",
+    "xai": "xai"
 }
-var indicators = ["none", "minor", "major", "critical", "maintenance", "unknown"]
+var indicators = ["none", "info", "minor", "major", "critical", "maintenance", "unknown"]
 var maximumComponents = 64
 var maximumName = 120
 
@@ -23,7 +25,7 @@ function command(scriptUrl, feedID) {
     var script = ""
     try { script = url.indexOf("file:///") === 0 ? decodeURIComponent(url.slice(7)) : "" }
     catch (error) { return "" }
-    if (!script || ["claude", "openai"].indexOf(feedID) < 0) return ""
+    if (!script || ["claude", "openai", "xai"].indexOf(feedID) < 0) return ""
     return "timeout --kill-after=2s 25s python3 " + Guards.shellQuote(script) + " --provider " + feedID
 }
 

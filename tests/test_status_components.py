@@ -19,10 +19,80 @@ def incidentio(items, affected=()):
 
 
 class StatusComponentsTests(unittest.TestCase):
+    def test_xai_summary_reports_available_components(self):
+        raw = json.dumps({"status": {"indicator": "none"}, "components": [
+            {"id": "grok-com", "name": "grok.com", "status": "available"},
+            {"id": "api-global", "name": "Global (api.x.ai)", "status": "available"},
+        ], "incidents": []})
+        self.assertEqual(status.parse("xai", raw), [
+            {"name": "grok.com", "indicator": "none", "children": []},
+            {"name": "Global (api.x.ai)", "indicator": "none", "children": []},
+        ])
+
     def test_feeds_are_fixed_https_urls(self):
-        self.assertEqual(sorted(status.FEEDS), ["claude", "openai"])
+        self.assertEqual(sorted(status.FEEDS), ["claude", "openai", "xai"])
         for _, url in status.FEEDS.values():
-            self.assertTrue(url.startswith("https://status."))
+            self.assertTrue(url.startswith("https://"))
+
+    def test_xai_helper_uses_public_summary_and_its_component_states(self):
+        raw = json.dumps({"components": [
+            {"id": "web", "name": "Grok Web", "status": "available"},
+            {"id": "app", "name": "Grok App", "status": "info"},
+            {"id": "voice", "name": "Voice", "status": "disruption"},
+            {"id": "api", "name": "API", "status": "outage"},
+            {"id": "missing", "name": "No data", "status": "no_data"},
+        ]})
+        output = io.StringIO()
+        with patch.object(status, "fetch", return_value=raw.encode()) as fetch, \
+                patch.object(sys, "argv", ["status-components.py", "--provider", "xai"]), \
+                redirect_stdout(output):
+            status.main()
+        fetch.assert_called_once_with("https://data.x.ai/status/summary.json")
+        self.assertEqual(json.loads(output.getvalue()), {"status": "ok", "components": [
+            {"name": "Grok Web", "indicator": "none", "children": []},
+            {"name": "Grok App", "indicator": "info", "children": []},
+            {"name": "Voice", "indicator": "minor", "children": []},
+            {"name": "API", "indicator": "critical", "children": []},
+            {"name": "No data", "indicator": "unknown", "children": []},
+        ]})
+
+    def test_xai_malformed_components_preserve_healthy_siblings(self):
+        for bad_status in (None, False, 1, [], {}, "future_state", "operational"):
+            with self.subTest(status=bad_status):
+                rows = status.parse("xai", json.dumps({"components": [
+                    None, [], "invalid", {"name": 42}, {"name": "\n"},
+                    {"id": "bad", "name": "Unknown service", "status": bad_status},
+                    {"id": "good", "name": " Grok\nWeb ", "status": "available"},
+                ]}))
+                self.assertEqual(rows, [
+                    {"name": "Unknown service", "indicator": "unknown", "children": []},
+                    {"name": "Grok Web", "indicator": "none", "children": []},
+                ])
+
+    def test_xai_missing_or_invalid_id_cannot_claim_operational(self):
+        for component_id in (None, "", " ", False, 1, [], {}):
+            with self.subTest(id=component_id):
+                rows = status.parse("xai", json.dumps({"components": [
+                    {"id": component_id, "name": "Grok Web", "status": "available"}]}))
+                self.assertEqual(rows[0]["indicator"], "unknown")
+
+    def test_xai_invalid_or_empty_components_print_only_error(self):
+        for payload in ({}, [], None, {"components": None}, {"components": {}},
+                        {"components": "invalid"}, {"components": []}, {"components": [None, {}]}):
+            with self.subTest(payload=payload):
+                output = io.StringIO()
+                with patch.object(status, "fetch", return_value=json.dumps(payload).encode()), \
+                        patch.object(sys, "argv", ["status-components.py", "--provider", "xai"]), \
+                        redirect_stdout(output):
+                    status.main()
+                self.assertEqual(json.loads(output.getvalue()), {"status": "error"})
+
+    def test_xai_bounds_names_and_counts_without_emitting_incident_text(self):
+        rows = status.parse("xai", json.dumps({"components": [
+            {"id": str(i), "name": "x" * 500, "status": "available", "extra": "ignored"}
+            for i in range(100)], "incidents": [{"description": "not component data"}]}))
+        self.assertEqual(len(rows), status.MAXIMUM_COMPONENTS)
+        self.assertEqual(rows[0], {"name": "x" * status.MAXIMUM_NAME, "indicator": "none", "children": []})
 
     def test_incidentio_groups_take_the_worst_child(self):
         rows = status.parse("incidentio", incidentio([
@@ -210,14 +280,15 @@ class StatusComponentsTests(unittest.TestCase):
                 status.parse(kind, raw)
 
     def test_every_failure_prints_only_the_error_record(self):
-        def run(error):
+        def run(provider, error):
             output = io.StringIO()
-            with patch.object(sys, "argv", ["status-components.py", "--provider", "openai"]), \
+            with patch.object(sys, "argv", ["status-components.py", "--provider", provider]), \
                     patch.object(status, "fetch", side_effect=error), redirect_stdout(output):
                 status.main()
             return json.loads(output.getvalue())
-        for error in [OSError("offline https://status.openai.com"), ValueError("size"), TimeoutError()]:
-            self.assertEqual(run(error), {"status": "error"})
+        for provider in ("openai", "xai"):
+            for error in [OSError("offline"), ValueError("size"), TimeoutError()]:
+                self.assertEqual(run(provider, error), {"status": "error"})
 
 
 if __name__ == "__main__":

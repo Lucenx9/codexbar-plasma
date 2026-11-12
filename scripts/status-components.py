@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Print the public service components of the Claude or OpenAI status page.
+"""Print the public service components of the Claude, OpenAI or xAI status page.
 
-The official CLI reports only the overall status. Both pages publish their
+The official CLI reports only the overall status. These pages publish their
 component lists without authentication, so this helper reads one fixed feed
 per provider and prints a bounded record. Remote prose other than component
 names is never emitted.
@@ -15,6 +15,7 @@ import urllib.request
 FEEDS = {
     "claude": ("statuspage", "https://status.claude.com/api/v2/components.json"),
     "openai": ("incidentio", "https://status.openai.com/proxy/status.openai.com"),
+    "xai": ("xai", "https://data.x.ai/status/summary.json"),
 }
 MAXIMUM_BYTES = 1024 * 1024
 MAXIMUM_COMPONENTS = 64
@@ -32,6 +33,8 @@ INDICATORS = {
 }
 # Upstream ranks unknown with maintenance when a group takes its worst child.
 RANK = {"none": 0, "maintenance": 1, "unknown": 1, "minor": 2, "major": 3, "critical": 4}
+# xAI labels disruption as degraded and info as informational, not maintenance.
+XAI_INDICATORS = {"available": "none", "info": "info", "disruption": "minor", "outage": "critical"}
 
 
 class NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -110,6 +113,23 @@ def parse_incidentio(payload):
     return rows
 
 
+def parse_xai(payload):
+    components = payload["components"]
+    if not isinstance(components, list):
+        raise ValueError("components")
+    rows = []
+    for component in components:
+        if not isinstance(component, dict) or not name_text(component.get("name")):
+            continue
+        state = component.get("status")
+        component_id = component.get("id")
+        indicator = (XAI_INDICATORS.get(state, "unknown")
+                     if isinstance(state, str) and isinstance(component_id, str) and component_id.strip()
+                     else "unknown")
+        rows.append({"name": name_text(component["name"]), "indicator": indicator, "children": []})
+    return rows
+
+
 def within_output(rows):
     """Keep leading rows and children whose printed record fits the reader's limit.
 
@@ -136,7 +156,8 @@ def within_output(rows):
 
 
 def parse(kind, raw):
-    rows = (parse_incidentio if kind == "incidentio" else parse_statuspage)(json.loads(raw))
+    parser = {"incidentio": parse_incidentio, "statuspage": parse_statuspage, "xai": parse_xai}[kind]
+    rows = parser(json.loads(raw))
     if not rows:
         raise ValueError("empty")
     return within_output(rows[:MAXIMUM_COMPONENTS])

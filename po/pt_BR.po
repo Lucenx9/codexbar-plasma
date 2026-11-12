@@ -4420,3 +4420,8 @@ msgstr "Menos de %1% por dia até a redefinição"
 #: contents/ui/components/UsageWindowText.qml
 msgid "%1% per day until reset"
 msgstr "%1% por dia até a redefinição"
+
+#: contents/ui/components/StatusComponentsList.qml
+msgctxt "Status of one service component"
+msgid "Information"
+msgstr "Informação"

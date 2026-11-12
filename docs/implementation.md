@@ -317,8 +317,8 @@ owns checkout setup, delivery, and repository maintenance.
   request and refetches on the next expansion, and a late
   result for a provider that is no longer expanded is ignored. The official CLI
   emits only overall status, so `scripts/status-components.py` is a deliberate
-  exception to CLI ownership: it reads one fixed public feed for Claude or
-  OpenAI without credentials and prints bounded names and indicator values,
+  exception to CLI ownership: it reads one fixed public feed for Claude,
+  OpenAI or xAI without credentials and prints bounded names and indicator values,
   never other remote text or errors. `StatusComponents.js` maps providers to
   feeds, builds the command, and validates the record;
   `components/StatusComponentsList.qml` localizes states. Widget QML still
@@ -327,11 +327,22 @@ owns checkout setup, delivery, and repository maintenance.
   `statusComponentGroups` so a usage refresh that rebuilds the rows restores
   them. Component states use the page's scale (degraded, partial, major) and a
   separate translation context from the provider status pill. `tests/tst_status_components.qml`
-  and `tests/test_status_components.py` cover validation and both feed formats
+  and `tests/test_status_components.py` cover validation and all three feed formats
   offline, including malformed OpenAI group collections through the helper's
   JSON output. Such groups stay unknown without discarding healthy siblings.
   A malformed affected-component collection preserves the service tree with
   unknown states; absent, null, or empty collections retain the operational fallback.
+  Grok and xAI use `https://data.x.ai/status/summary.json`, linked by
+  [xAI's status page](https://status.x.ai/), verified on 2026-11-12.
+  Its flat `components` contain `id`, `name`, and `status`. The page's published
+  JavaScript schema accepts `available`, `info`, `disruption`, `outage`, and
+  `no_data`; its labels identify disruption as Degraded and info as Info.
+  The helper maps these to `none`, `info`, `minor`, `critical`, and `unknown`.
+  Unknown states or unusable IDs remain unknown; malformed entries do not erase
+  valid siblings. The component-only `info` indicator has a localized Information
+  label and a theme-neutral dot, without affecting provider incident severity.
+  The feed was observed with available components; other states are covered by
+  synthetic fixtures based on that page schema, not a live outage observation.
   `tests/tst_status_components_list.qml` covers long-name elision and
   keyboard toggling. `tests/test_usage_recovery.py` executes the popup navigation
   and status handlers together, covering cancellation on entering AI Insights,

@@ -28,6 +28,8 @@ ColumnLayout {
         switch (indicator) {
         case "none":
             return i18nc("Status of one service component", "Operational")
+        case "info":
+            return i18nc("Status of one service component", "Information")
         case "minor":
             return i18nc("Status of one service component", "Degraded performance")
         case "major":
@@ -42,6 +44,7 @@ ColumnLayout {
     }
 
     function indicatorColor(indicator) {
+        if (indicator === "info") return Kirigami.Theme.neutralTextColor
         return indicator === "none" ? Kirigami.Theme.positiveTextColor : statusList.applet.statusBadgeColor(indicator)
     }
 

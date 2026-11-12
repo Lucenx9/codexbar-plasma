@@ -554,25 +554,30 @@ TestCase {
         root.performAction({action: "status"});
         compare(root.openedUrls, [item.statusUrl]);
     }
-    // Claude and OpenAI pages expand into components; other providers keep
+    // Supported pages expand into components; other providers keep
     // opening the page. A late result for a collapsed list is ignored.
-    function test_statusComponentsExpandOnlyForSupportedPages() {
+    function test_statusComponentsExpandOnlyForSupportedPages_data() {
+        return [{tag: "codex", provider: "codex", feed: "openai"},
+                {tag: "grok", provider: "grok", feed: "xai"},
+                {tag: "xai", provider: "xai", feed: "xai"}];
+    }
+    function test_statusComponentsExpandOnlyForSupportedPages(data) {
         var cursor = menuItem("cursor");
         compare(root.actionRows(cursor).filter(function(row) { return row.action === "status"; })[0].expandable, false);
-        var codex = menuItem("codex");
-        root.selectedProviderData = codex;
+        var providerItem = menuItem(data.provider);
+        root.selectedProviderData = providerItem;
         root.openedUrls = [];
-        var row = root.actionRows(codex).filter(function(row) { return row.action === "status"; })[0];
+        var row = root.actionRows(providerItem).filter(function(row) { return row.action === "status"; })[0];
         compare(row.expandable, true);
         verify(!("expanded" in row));
-        compare(root.statusComponentsExpanded(codex), false);
+        compare(root.statusComponentsExpanded(providerItem), false);
         root.performAction(row);
         compare(root.openedUrls, []);
-        compare(root.statusComponents.provider, "codex");
+        compare(root.statusComponents.provider, data.provider);
         compare(root.statusComponents.loading, true);
         var request = statusComponentsProcess.started[statusComponentsProcess.started.length - 1];
-        verify(/--provider openai$/.test(request.command));
-        compare(root.statusComponentsExpanded(codex), true);
+        verify(request.command.endsWith("--provider " + data.feed));
+        compare(root.statusComponentsExpanded(providerItem), true);
         compare(root.statusComponentsExpanded(menuItem("claude")), false);
         root.finishStatusComponents({provider: "claude"}, [{name: "Late", indicator: "none", children: []}]);
         compare(root.statusComponents.loading, true);
@@ -584,7 +589,7 @@ TestCase {
         root.toggleStatusComponentGroup("__proto__");
         compare(root.statusComponentGroups, ["APIs"]);
         root.performAction("status-page");
-        compare(root.openedUrls, [root.providerStatusUrl("codex")]);
+        compare(root.openedUrls, [root.providerStatusUrl(data.provider)]);
         root.performAction(row);
         compare(root.statusComponents.provider, "");
         compare(root.statusComponentGroups, []);
