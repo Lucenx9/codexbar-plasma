@@ -140,7 +140,8 @@ gh workflow run ci-image.yml --ref main -f revision=codex/update-ci-image
 ```
 
 [Dependabot](../.github/dependabot.yml) opens a monthly PR when the digest of
-the pinned Ubuntu 24.04 base moves; it ignores newer Ubuntu releases. It
+the pinned Ubuntu 24.04 base moves, with the seven-day version-update cooldown
+described in [delivery and CI](development.md#delivery-and-ci); it ignores newer Ubuntu releases. It
 excludes the Neon stage, which is pinned by digest without a tag. Re-resolve
 the `user` tag by hand during every rebuild: KDE's registry prunes superseded
 digests, so an old Neon pin stops resolving and the image build fails. Such a PR changes a recipe input, so its runtime jobs fail the

@@ -4,6 +4,8 @@ updates:
   # current. One grouped pull request per week keeps the noise low.
   - package-ecosystem: github-actions
     directory: /
+    cooldown:
+      default-days: 7
     schedule:
       interval: weekly
       day: monday
@@ -19,6 +21,8 @@ updates:
   # reminder to rebuild the image; see "CI image" in docs/testing.md.
   - package-ecosystem: docker
     directory: /ci
+    cooldown:
+      default-days: 7
     schedule:
       interval: monthly
       time: "09:00"
