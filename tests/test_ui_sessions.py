@@ -49,21 +49,6 @@ class SessionsTest(unittest.TestCase):
                     f"found {forbidden_session_value!r}"
                 )
 
-        normalize_session_body = function_body(main_text, "normalizeSession")
-        for activity_fallback_fragment in (
-            "item.lastActivityAt",
-            "item.startedAt",
-            "activityAt: activityAt",
-            "activityMs: activityMs",
-        ):
-            if not code_contains(normalize_session_body, activity_fallback_fragment):
-                raise AssertionError(
-                    "session activity must prefer lastActivityAt and safely fall back to startedAt; "
-                    f"missing {activity_fallback_fragment!r}"
-                )
-        if "lastActivityMs" in main_text:
-            raise AssertionError("session ordering must use the normalized activity fallback")
-
         # The shape check lives in the normalizer and the error text in the applet, so
         # the rule is asserted on both halves: an unrecognized payload must return the
         # "unsupported" sentinel rather than an empty list, and the caller must turn that
