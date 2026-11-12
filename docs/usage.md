@@ -59,6 +59,11 @@ work and upstream contract requirements.
   forecast calls for slower consumption. Pace-only text keeps the verdict
   (**At pace** or **Behind pace**) before its expected percentage. The complete
   reading remains available through accessible text and the tooltip.
+- Usage refreshes keep panel provider icons, retained quota readings, and incident
+  markers visible without a continuously rotating panel icon. The tooltip says
+  **Refreshing usage…** while a request is running; the popup keeps its loading
+  feedback, including on first load and manual refresh. Refresh intervals and
+  last-known-data rules are unchanged.
 - Nothing that is dropped becomes unreachable. Accessible names keep the whole
   text, the panel tooltip reports each provider's quotas, incidents, and its
   credit balance while panel credits are enabled, and the popup keeps every

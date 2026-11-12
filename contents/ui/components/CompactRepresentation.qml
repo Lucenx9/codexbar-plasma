@@ -383,24 +383,14 @@ Item {
                 anchors.centerIn: parent
                 width: compactRoot.meterIconSize
                 height: width
-                source: compactRoot.applet.loading ? "view-refresh" : compactRoot.applet.providerIconSource(parent.compactProvider)
+                source: compactRoot.applet.providerIconSource(parent.compactProvider)
                 fallback: "view-statistics"
-                isMask: !compactRoot.applet.loading && (compactRoot.minimalStyle || compactRoot.applet.providerIconIsMask(parent.compactProvider))
-                color: compactRoot.applet.loading || compactRoot.minimalStyle
+                isMask: compactRoot.minimalStyle || compactRoot.applet.providerIconIsMask(parent.compactProvider)
+                color: compactRoot.minimalStyle
                     ? Kirigami.Theme.textColor
                     : ThemeContrast.readableAccentColor(
                         compactRoot.applet.providerReadableColor(parent.compactProvider, Kirigami.Theme.backgroundColor),
                         Kirigami.Theme.backgroundColor, Kirigami.Theme.textColor, 4.5)
-
-                RotationAnimator {
-                    target: compactIdentityIcon
-                    running: compactRoot.animationsEnabled && compactRoot.applet.loading && Kirigami.Units.longDuration > 0
-                    from: 0
-                    to: 360
-                    duration: 1250
-                    loops: Animation.Infinite
-                    onStopped: compactIdentityIcon.rotation = 0
-                }
 
                 Rectangle {
                     id: compactVerticalStatusBadge
@@ -408,10 +398,7 @@ Item {
 
                     // Without meters this icon is the only anchor, so it may
                     // carry the badge only for its own provider's incident.
-                    // Loading replaces the icon with a refresh spinner, so the
-                    // badge waits for the provider icon to come back.
                     visible: compactRoot.identityCarriesIncidentBadge
-                        && !compactRoot.applet.loading
                     anchors.top: parent.top
                     anchors.right: parent.right
                     width: Math.round(compactRoot.meterIconSize / 3)

@@ -18,6 +18,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Keep provider icons and incident markers visible during usage refreshes without
+  continuously rotating the panel icon. Loading feedback remains in the tooltip
+  and popup.
 - Check upstream CLI releases daily by default and notify once per new version,
   so CLI installations from PATH learn about releases the widget may rely on.
   A selected managed copy with automatic updates on is not announced, because
