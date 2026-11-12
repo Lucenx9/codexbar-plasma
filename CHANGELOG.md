@@ -19,7 +19,6 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Space the provider Cost section more evenly: keep the Cost/Tokens switch
   clear of the divider and separate daily history from the summary figures
   and from its source note.
-
 - Align settings disclosure labels and their summaries with the text of
   neighbouring check boxes, center the quota color preview on its label, keep
   the threshold note beside its legend, and give the Providers page notice
