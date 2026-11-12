@@ -33,6 +33,7 @@ TestCase {
         quotaCriticalPercent = 95;
         selectedAccounts = ({});
         notificationRefreshPending = ({});
+        notifyPredictivePaceWarnings = false;
         providers = [];
     }
     function item(account, severity, error, used, statusEnvelope) {
@@ -164,6 +165,47 @@ TestCase {
         compare(reset.intents[0].kind, "reset");
         compare(reset.intents[0].rowIndex, 1);
         compare(observe("observe", reset.nextMemo).intents.length, 0);
+    }
+    function test_missingResetDoesNotRepeatPaceWarning() {
+        notifyPredictivePaceWarnings = true;
+        var payload = {provider: "codex", usage: {
+            primary: {usedPercent: 60, resetsAt: "2026-11-12T18:00:00Z"}
+        }, pace: {primary: {willLastToReset: false, etaSeconds: 3600}}};
+        providers = [ProviderSnapshot.normalize(payload, 1000)];
+        var initial = observe("prime");
+        compare(initial.intents.length, 0);
+
+        delete payload.usage.primary.resetsAt;
+        providers = [ProviderSnapshot.normalize(payload, 2000)];
+        verify(observations()[0].rows[0].paceActive);
+        var missing = observe("observe", initial.nextMemo);
+        compare(missing.intents.length, 0);
+
+        payload.usage.primary.resetsAt = "2026-11-12T18:00:00Z";
+        providers = [ProviderSnapshot.normalize(payload, 3000)];
+        compare(observe("observe", missing.nextMemo).intents.length, 0);
+    }
+    function test_paceRecoveryWithoutResetAllowsNextWarning() {
+        notifyPredictivePaceWarnings = true;
+        var payload = {provider: "codex", usage: {
+            primary: {usedPercent: 60, resetsAt: "2026-11-12T18:00:00Z"}
+        }, pace: {primary: {willLastToReset: false, etaSeconds: 3600}}};
+        providers = [ProviderSnapshot.normalize(payload, 1000)];
+        var initial = observe("prime");
+
+        delete payload.usage.primary.resetsAt;
+        payload.pace.primary.willLastToReset = true;
+        providers = [ProviderSnapshot.normalize(payload, 2000)];
+        var recovered = observe("observe", initial.nextMemo);
+        compare(recovered.intents.length, 0);
+
+        payload.usage.primary.resetsAt = "2026-11-12T18:00:00Z";
+        payload.pace.primary.willLastToReset = false;
+        providers = [ProviderSnapshot.normalize(payload, 3000)];
+        var recurring = observe("observe", recovered.nextMemo);
+        compare(recurring.intents.length, 1);
+        compare(recurring.intents[0].kind, "pace");
+        compare(observe("observe", recurring.nextMemo).intents.length, 0);
     }
     function test_oldSuccessfulQuotaPreservesNotificationBaseline_data() {
         return [

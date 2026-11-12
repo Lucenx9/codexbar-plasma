@@ -2,6 +2,7 @@
 .import "ProviderNormalizer.js" as Normalizer
 .import "Guards.js" as Guards
 .import "NotificationMemo.js" as NotificationMemo
+.import "SubscriptionDates.js" as SubscriptionDates
 
 // Pure transition kernel for provider notifications. Callers supply normalized
 // observations and keep ownership of localization, timers, refresh lifecycle,
@@ -37,26 +38,23 @@ function scopePrimedKey(observation) {
     return "scope:" + String(observation.scopeID || "")
 }
 
-function rowIdentityValue(row, useResetTimestamp) {
+function rowIdentityValue(row) {
     if (!row) {
         return ""
     }
     var windowID = row.lane === "extra" ? Normalizer.extraWindowID(row.windowId) : ""
-    var value = String(useResetTimestamp
-        ? (row.resetsAt ? row.resetsAt : "")
-        : (row.label ? row.label : ""))
-    return JSON.stringify([windowID, windowID.length > 0 && !useResetTimestamp ? "" : value])
+    return JSON.stringify([windowID, windowID.length > 0 ? "" : String(row.label || "")])
 }
 
-// Named extra windows use their CLI ID; legacy rows fall back to label/reset.
+// Named extra windows use their CLI ID; legacy rows fall back to their label.
 // Numbering duplicate identities instead of keying on the absolute index keeps
 // baseline state stable when the CLI inserts or reorders unrelated windows.
-function rowOccurrence(rows, index, useResetTimestamp) {
+function rowOccurrence(rows, index) {
     var lane = rows[index] && rows[index].lane ? String(rows[index].lane) : ""
-    var identity = rowIdentityValue(rows[index], useResetTimestamp)
+    var identity = rowIdentityValue(rows[index])
     var occurrences = 0
     for (var i = 0; i < index; i++) {
-        if (rowIdentityValue(rows[i], useResetTimestamp) !== identity) {
+        if (rowIdentityValue(rows[i]) !== identity) {
             continue
         }
         var priorLane = rows[i] && rows[i].lane ? String(rows[i].lane) : ""
@@ -67,28 +65,28 @@ function rowOccurrence(rows, index, useResetTimestamp) {
     return occurrences
 }
 
-function rowIdentity(observation, row, index, useResetTimestamp) {
+function rowIdentity(observation, row, index) {
     var rows = Array.isArray(observation && observation.rows)
         ? observation.rows
         : []
     var lane = row && row.lane ? String(row.lane) : ""
-    return lane + ":" + rowIdentityValue(row, useResetTimestamp)
-        + ":" + rowOccurrence(rows, index, useResetTimestamp)
+    return lane + ":" + rowIdentityValue(row)
+        + ":" + rowOccurrence(rows, index)
 }
 
 function quotaKey(observation, row, index) {
     return "quota:" + String(observation.scopeID || "") + ":"
-        + rowIdentity(observation, row, index, false)
+        + rowIdentity(observation, row, index)
 }
 
 function paceKey(observation, row, index) {
     return "pace:" + String(observation.scopeID || "") + ":"
-        + rowIdentity(observation, row, index, true)
+        + rowIdentity(observation, row, index)
 }
 
 function resetKey(observation, row, index) {
     return "reset:" + String(observation.scopeID || "") + ":"
-        + rowIdentity(observation, row, index, false)
+        + rowIdentity(observation, row, index)
 }
 
 function currentMemoKeys(observations) {
@@ -197,7 +195,7 @@ function primeRow(nextMemo, observation, index, settings) {
         nextMemo[quotaKey(observation, row, index)] = level
     }
     if (settings.paceEnabled && paceActive(row, false)) {
-        nextMemo[paceKey(observation, row, index)] = "1"
+        nextMemo[paceKey(observation, row, index)] = {reset: paceReset(row)}
     }
     if (settings.resetEnabled && resetDecision(row, false, settings).armed) {
         nextMemo[resetKey(observation, row, index)] = "1"
@@ -273,16 +271,38 @@ function processPace(previousMemo, nextMemo, observation) {
     var rows = Array.isArray(observation.rows) ? observation.rows : []
     for (var i = 0; i < rows.length; i++) {
         var key = paceKey(observation, rows[i], i)
-        var wasActive = !!previousMemo && previousMemo[key] === "1"
-        if (!paceActive(rows[i], wasActive)) {
+        var decision = paceDecision(rows[i], previousMemo && previousMemo[key])
+        if (!decision) {
             continue
         }
-        if (!wasActive) {
+        if (decision.notify) {
             intents.push({kind: "pace", rowIndex: i})
         }
-        nextMemo[key] = "1"
+        nextMemo[key] = {reset: decision.reset}
     }
     return intents
+}
+
+function paceDecision(row, previous) {
+    var reset = Normalizer.authoritativeQuota(row) ? paceReset(row) : ""
+    var changedWindow = paceWindowChanged(previous, reset)
+    if (!paceActive(row, !!previous && !changedWindow)) {
+        return null
+    }
+    // Missing reset metadata is not a new window. Keep its last known
+    // identity while allowing a measured recovery to clear the row state.
+    return {reset: reset || (previous ? previous.reset : ""),
+        notify: !previous || changedWindow}
+}
+
+function paceWindowChanged(previous, reset) {
+    return !!previous && previous.reset.length > 0
+        && reset.length > 0 && previous.reset !== reset
+}
+
+function paceReset(row) {
+    var reset = SubscriptionDates.date(row && row.resetsAt, false, "reset")
+    return reset ? String(reset.timestampMs) : ""
 }
 
 function resetDecision(row, wasArmed, settings) {

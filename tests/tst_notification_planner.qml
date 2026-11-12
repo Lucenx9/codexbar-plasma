@@ -464,6 +464,61 @@ TestCase {
         compare(regressed.intents[0].rowIndex, 0)
     }
 
+    function test_paceResetIdentity_data() {
+        return [
+            {tag: "missing", reset: "", expected: ""},
+            {tag: "invalid", reset: "invalid", expected: ""},
+            {tag: "impossible-date", reset: "2026-02-30T00:00:00Z", expected: ""},
+            {tag: "same-instant", reset: "2026-08-24T02:00:00+02:00", expected: ""},
+            {tag: "new-window", reset: "2026-08-31T00:00:00Z", expected: "pace"}
+        ]
+    }
+
+    function test_paceResetIdentity(data) {
+        var active = usageRow("", 60, true)
+        var initial = transition("prime", [observation("", "", [active])])
+        active.resetsAt = data.reset
+        var originalMemo = JSON.stringify(initial.nextMemo)
+        var changed = transition("observe", [observation("", "", [active])], initial.nextMemo)
+        compare(intentKinds(changed), data.expected)
+        compare(JSON.stringify(initial.nextMemo), originalMemo)
+        compare(transition("observe", [observation("", "", [active])], changed.nextMemo).intents.length, 0)
+
+        // Unknown metadata cannot erase the known window identity.
+        active.resetsAt = ""
+        var missing = transition("observe", [observation("", "", [active])], changed.nextMemo)
+        compare(missing.intents.length, 0)
+        active.resetsAt = "2026-09-07T00:00:00Z"
+        var nextWindow = transition("observe", [observation("", "", [active])], missing.nextMemo)
+        compare(intentKinds(nextWindow), "pace")
+    }
+
+    function test_untrustedResetCannotReplacePaceIdentity() {
+        var active = usageRow("", 60, true)
+        var initial = transition("prime", [observation("", "", [active])])
+        active.dataConfidence = "estimated"
+        active.resetsAt = "2026-08-31T00:00:00Z"
+        var untrusted = transition("observe", [observation("", "", [active])], initial.nextMemo)
+        compare(untrusted.intents.length, 0)
+        active.dataConfidence = "exact"
+        var measured = transition("observe", [observation("", "", [active])], untrusted.nextMemo)
+        compare(intentKinds(measured), "pace")
+    }
+
+    function test_newResetWithoutForecastWaitsForMeasuredPace() {
+        var active = usageRow("", 60, true)
+        var initial = transition("prime", [observation("", "", [active])])
+        active.resetsAt = "2026-08-31T00:00:00Z"
+        active.paceActive = false
+        active.paceKnown = false
+        var unknown = transition("observe", [observation("", "", [active])], initial.nextMemo)
+        compare(unknown.intents.length, 0)
+        active.paceActive = true
+        active.paceKnown = true
+        var measured = transition("observe", [observation("", "", [active])], unknown.nextMemo)
+        compare(intentKinds(measured), "pace")
+    }
+
     function test_limitResetNeedsAnArmedHighUsageBaselineAndFiresOnce() {
         var primed = transition(
             "prime",

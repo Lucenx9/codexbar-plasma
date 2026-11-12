@@ -10,6 +10,13 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Fixed
+
+- Keep predictive quota notifications consistent when a refresh omits a reset
+  date: an ongoing forecast no longer repeats its warning, and a confirmed
+  recovery still allows a later warning. Equivalent reset timestamps no longer
+  count as different quota windows.
+
 ## 0.2.56 - 2026-11-12
 
 ### Added
