@@ -16,6 +16,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   copy is selected. Saved preferences are preserved; instances without a saved
   value adopt the new default. System and package-manager CLI installations
   continue to use their original update method.
+- Space the provider Cost section more evenly: keep the Cost/Tokens switch
+  clear of the divider and separate daily history from the summary figures
+  and from its source note.
 
 ### Fixed
 
