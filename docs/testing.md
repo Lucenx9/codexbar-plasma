@@ -553,6 +553,8 @@ kept and reverted experiments in the PR. A budget failure needs fresh baseline
 measurements and investigation, not an automatic threshold increase.
 Direct normalizer tests also reject model reads for discarded dates and
 amount-only rows, giving a deterministic guard independent of CPU speed.
+Cost-response tests count model reads across both All-history average paths
+to ensure only the period summary inspects models outside the chart window.
 
 ### Sticky CI report
 

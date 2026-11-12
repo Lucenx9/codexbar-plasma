@@ -510,6 +510,35 @@ TestCase {
         compare(rolling.averageDaily, null);
         compare(rolling.models[0].cost, 30);
     }
+    function test_allHistoryAveragesDoNotRevisitOldModels_data() {
+        return [
+            {tag: "bounded-span", first: "2025-08-16", scan: "2026-09-19", days: 400},
+            {tag: "long-sparse-span", first: "2020-01-01", scan: "2026-10-21", days: 2486}
+        ];
+    }
+
+    function test_allHistoryAveragesDoNotRevisitOldModels(data) {
+        var oldModelReads = 0;
+        var older = {cost: 10, totalTokens: 100};
+        Object.defineProperty(older, "modelName", {get: function() {
+            oldModelReads++;
+            return "older";
+        }});
+        var cost = CostResponse.normalizeSnapshot({provider: "codex", reportingPeriod: "all",
+            updatedAt: data.scan, daily: [
+                {date: data.first, totalCost: 10, totalTokens: 100, modelBreakdowns: [older]},
+                {date: data.scan, totalCost: 20, totalTokens: 200,
+                    modelBreakdowns: [{modelName: "recent", cost: 20, totalTokens: 200}]}
+            ]}, 30);
+        compare(cost.models.map(function(row) { return row.label; }), ["recent", "older"]);
+        compare(cost.daily.length, 365);
+        compare(cost.daily[364].models[0].label, "recent");
+        compare(cost.averageDaily.cost.value, 30 / data.days);
+        compare(cost.averageDaily.tokens.value, 300 / data.days);
+        // The period summary needs this model once; chart and averages do not.
+        compare(oldModelReads, 1);
+    }
+
     function test_sparseAllHistorySpansMoreCalendarDaysThanTheRecordBudget() {
         var daily = [
             {date: "2020-01-01", totalCost: 10, totalTokens: 100,
