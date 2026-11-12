@@ -528,6 +528,32 @@ Repeater to verify that changed usage preserves its focused delegate and updates
 its meter and accessible name. Reordered, replaced, and removed providers must
 activate the current provider without binding or lifecycle warnings.
 
+### Cost response performance
+
+`make benchmark-cost` runs `tests/bench_cost_response.qml` directly through
+QtTest, outside the parallel `make check` suite. CI runs it after that suite
+in `check-runtime`. The fixture's `bench_` filename prevents directory-based
+QtTest discovery from running it under concurrent correctness-test load.
+Override `QMLTESTRUNNER` if Qt 6 is installed elsewhere.
+
+The public `CostResponse.response` call is measured after one warm-up, with
+nine samples averaging 20, 2 and 1 calls for the three fixtures. JSON fixture
+construction and serialization happen before timing. Each fixture checks its
+normalized result and logs the raw timings, median and budget. Median limits
+are 100 ms for 30 days with four models per day, 1,000 ms for 365 days with
+16 models per day, and 2,000 ms for All history with 2,048 days and 16 models
+per day. These are coarse regression ceilings with scheduling headroom,
+calibrated on Qt 6.8.2 on an Intel N95; they are not interaction-latency goals.
+The benchmark excludes CLI I/O and rendering, so it cannot establish popup
+frame latency or replace profiling a reproduced desktop stall.
+
+Run on an otherwise idle machine for comparisons. Compare the same Qt build,
+fixture, sample count and warm-up conditions; preserve all samples and record
+kept and reverted experiments in the PR. A budget failure needs fresh baseline
+measurements and investigation, not an automatic threshold increase.
+Direct normalizer tests also reject model reads for discarded dates and
+amount-only rows, giving a deterministic guard independent of CPU speed.
+
 ### Sticky CI report
 
 After a pull-request CI run completes, [ci-report.yml](../.github/workflows/ci-report.yml)

@@ -60,7 +60,7 @@ function longHistoryAverage(items, currency, recordedDays, scanDay) {
     });
     var daily = Normalizer.normalizeCostDaily(retained, currency, {
         days: Normalizer.maximumCostHistoryScanItems,
-        maximumDays: Normalizer.maximumCostHistoryScanItems
+        maximumDays: Normalizer.maximumCostHistoryScanItems, includeModels: false
     });
     var zeroDays = canFill && daily.length > 0 ? Math.max(0, recordedDays - daily.length) : 0;
     return {
@@ -99,7 +99,8 @@ function normalizeSnapshot(item, requestedHistoryDays) {
     });
     var aggregateDaily = aggregateDays > historyDays && aggregateDays <= aggregateBound
         ? Normalizer.normalizeCostDaily(item.daily, currency, {
-            days: aggregateDays, updatedAt: item.updatedAt, maximumDays: aggregateBound
+            days: aggregateDays, updatedAt: item.updatedAt, maximumDays: aggregateBound,
+            includeModels: false
         }) : null;
     return {
         provider: provider,

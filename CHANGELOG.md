@@ -12,6 +12,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Reduce UI pauses when loading long cost histories by projecting daily models
+  only for retained chart days, omitting model work from daily averages, and
+  reusing validated model labels within each normalization call.
+
 - Keep predictive quota notifications consistent when a refresh omits a reset
   date: an ongoing forecast no longer repeats its warning, and a confirmed
   recovery still allows a later warning. Equivalent reset timestamps no longer

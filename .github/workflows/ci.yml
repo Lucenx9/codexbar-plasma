@@ -115,6 +115,9 @@ jobs:
       - name: make check
         run: make check
 
+      - name: Cost response performance budget
+        run: make benchmark-cost
+
       - name: make package
         run: make package
 

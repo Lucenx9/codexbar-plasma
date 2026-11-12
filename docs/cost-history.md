@@ -22,6 +22,9 @@ snapshot without a usable `updatedAt` keeps its Today amounts.
   Missing day models never fall back to period totals.
 - Display at most six models per day and report truncation. Period models also
   expose truncation and an explicit empty state.
+  Daily model projection runs only after the chart's calendar selection and
+  row cap. Average-only rows omit that projection; they still use the same
+  amount, missing-day and calendar validation as chart rows.
 - Missing costs and token counts remain unknown. Measured zero stays zero;
   filling calendar gaps only fills metrics actually observed in the snapshot.
   Valid calendar dates remain inside the selected window even when duplicate

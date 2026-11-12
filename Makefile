@@ -1,10 +1,11 @@
-.PHONY: check todo-gate smoke install restart package translations compile-translations update
+.PHONY: check benchmark-cost todo-gate smoke install restart package translations compile-translations update
 
 PACKAGE_FILES := metadata.json contents docs/codexbar-plasma-overview.png docs/codexbar-plasma-codex.png docs/codexbar-plasma-usage-spend.png docs/codexbar-plasma-sessions.png docs/codexbar-plasma-panel-standard.png docs/codexbar-plasma-panel-minimal.png docs/codexbar-plasma-tour.gif scripts/update-widget.sh scripts/check-cli-update.py scripts/collect-support-report.py scripts/manage-cli.py scripts/ai-insights.py scripts/status-components.py scripts/provider-auth.py scripts/lib/cli_release.py scripts/lib/managed_cli.py scripts/lib/ai_insights.py scripts/lib/ai_insights_input.py LICENSE NOTICE.md README.md CHANGELOG.md
 
 # Override on distros where Qt6 ships QML modules elsewhere (e.g. Debian/Ubuntu
 # multiarch: make check QML_IMPORT_DIR=/usr/lib/x86_64-linux-gnu/qt6/qml).
 QMLLINT ?= /usr/lib/qt6/bin/qmllint
+QMLTESTRUNNER ?= /usr/lib/qt6/bin/qmltestrunner
 # Empty when dpkg-architecture is absent: the `uname -m`-linux-gnu candidate
 # below already covers that case, while a raw `uname -m` fallback would build
 # a dead `/usr/lib/<arch>/qt6/qml` candidate that never exists.
@@ -111,6 +112,10 @@ check-cli-descriptor-contract:
 
 check-qml-logic:
 	scripts/test_qml_logic.sh
+
+# Keep timing budgets out of the parallel correctness suite.
+benchmark-cost:
+	QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software TZ=UTC $(QMLTESTRUNNER) -input tests/bench_cost_response.qml
 
 # `discover` with a single-module pattern keeps the import semantics of the
 # whole-suite run: tests/ stays the top-level directory on the path.
