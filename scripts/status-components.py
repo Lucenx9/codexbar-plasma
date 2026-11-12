@@ -8,7 +8,12 @@ names is never emitted.
 """
 import argparse
 import json
+import os
 import re
+import selectors
+import shutil
+import subprocess
+import time
 import urllib.request
 
 # incident.io serves OpenAI's grouped native feed; Claude uses Atlassian Statuspage.
@@ -18,6 +23,7 @@ FEEDS = {
     "xai": ("xai", "https://data.x.ai/status/summary.json"),
 }
 MAXIMUM_BYTES = 1024 * 1024
+FETCH_DEADLINE_SECONDS = 12
 MAXIMUM_COMPONENTS = 64
 MAXIMUM_NAME = 120
 # StatusComponents.js rejects longer stdout; print() adds one newline.
@@ -163,7 +169,48 @@ def parse(kind, raw):
     return within_output(rows[:MAXIMUM_COMPONENTS])
 
 
+def read_bounded_output(stream, maximum, deadline):
+    raw = bytearray()
+    with selectors.DefaultSelector() as selector:
+        selector.register(stream, selectors.EVENT_READ)
+        while True:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0 or not selector.select(remaining):
+                raise ValueError("timeout")
+            chunk = os.read(stream.fileno(), min(65536, maximum + 1 - len(raw)))
+            if not chunk:
+                return bytes(raw)
+            raw.extend(chunk)
+            if len(raw) > maximum:
+                raise ValueError("size")
+
+
+def fetch_curl(curl, url):
+    # curl races address families instead of waiting ten seconds per dead IPv6
+    # address. Keep its own bounds and enforce a second byte/deadline limit here.
+    command = [curl, "--disable", "--silent", "--fail", "--proto", "=https",
+               "--connect-timeout", "5", "--max-time", "10", "--max-filesize", str(MAXIMUM_BYTES),
+               "--header", "Accept: application/json", "--user-agent", "codexbar-plasma",
+               "--write-out", "\n%{http_code}", url]
+    with subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                          stderr=subprocess.DEVNULL) as process:
+        deadline = time.monotonic() + FETCH_DEADLINE_SECONDS
+        maximum = MAXIMUM_BYTES + 4  # Newline and three-digit HTTP status.
+        try:
+            raw = read_bounded_output(process.stdout, maximum, deadline)
+            code = process.wait(timeout=max(0.01, deadline - time.monotonic()))
+            if code != 0 or not raw.endswith(b"\n200"):
+                raise ValueError("http")
+            return raw[:-4]
+        finally:
+            if process.poll() is None:
+                process.kill()
+
+
 def fetch(url):
+    curl = shutil.which("curl")
+    if curl:
+        return fetch_curl(curl, url)
     request = urllib.request.Request(url, headers={"Accept": "application/json", "User-Agent": "codexbar-plasma"})
     with urllib.request.build_opener(NoRedirect).open(request, timeout=10) as response:
         raw = response.read(MAXIMUM_BYTES + 1)

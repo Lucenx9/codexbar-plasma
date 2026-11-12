@@ -319,7 +319,18 @@ owns checkout setup, delivery, and repository maintenance.
   emits only overall status, so `scripts/status-components.py` is a deliberate
   exception to CLI ownership: it reads one fixed public feed for Claude,
   OpenAI or xAI without credentials and prints bounded names and indicator values,
-  never other remote text or errors. `StatusComponents.js` maps providers to
+  never other remote text or errors. It prefers installed `curl` for
+  [Happy Eyeballs connection fallback](https://curl.se/docs/manpage.html#--happy-eyeballs-timeout-ms),
+  avoiding serial timeouts on unreachable IPv6 addresses. The request disables
+  curl configuration, requires verified HTTPS and HTTP 200 without redirects,
+  and sets 5-second connection and 10-second transfer limits. Python separately
+  caps the body at 1 MiB and kills the child at a 12-second deadline, including
+  when an older curl cannot enforce a streaming size limit. The existing
+  bounded, non-redirecting urllib path remains available without curl; the
+  outer process deadline and cancellation still cover either transport.
+  `tests/test_status_fetch.py` uses synthetic subprocesses to cover success,
+  HTTP failures, oversized bodies, stalled transfers, and the urllib fallback
+  without network access. `StatusComponents.js` maps providers to
   feeds, builds the command, and validates the record;
   `components/StatusComponentsList.qml` localizes states. Widget QML still
   sends no HTTP itself. Expansion stays out of the action-row model so a

@@ -35,7 +35,8 @@ and GNU gettext; see [Development](#development).
 | Plasma notifications | `notify-send` |
 | Usage sharing, file picker, and image clipboard | `QtQuick.Dialogs` and KDE Declarative's `org.kde.kquickcontrolsaddons` QML modules |
 | Terminate hung background CLI reads and bound writes after a secret prompt | GNU `timeout` |
-| Offline support reports and service status components | `python3` and GNU `timeout` |
+| Offline support reports | `python3` and GNU `timeout` |
+| Service status components | `python3` and GNU `timeout`; optional `curl` avoids slow IPv6 connection fallback |
 | Manual cookies and credential clearing | CLI 0.82.0 or later (0.83.0 for OpenDesign; 0.84.0 for WorkBuddy), `python3`, GNU `timeout`; `kdialog` for cookies |
 | Claude Platform validated session import | CLI 0.84.0 or later, `python3`, GNU `timeout`, and `kdialog` |
 | Copilot GitHub device sign-in | CLI 0.80.0 or later, `python3`, GNU `timeout`, and `kdialog` |
