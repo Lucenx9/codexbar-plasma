@@ -34,6 +34,18 @@ full_representation_text = full_representation_qml.read_text(encoding="utf-8")
 
 
 class PopupLayoutTest(unittest.TestCase):
+    def test_top_level_cards_match_overview_geometry(self):
+        # Sessions and Spend provider cards are top-level surfaces like
+        # Overview rows: same outer radius and horizontal content inset.
+        fragments = (
+            "radius: view.applet.roundedSurfaceRadius",
+            "anchors.leftMargin: Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing",
+            "anchors.rightMargin: Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing",
+        )
+        for card_text in (sessions_view_text, spend_view_text):
+            missing = [fragment for fragment in fragments if not code_contains(card_text, fragment)]
+            self.assertEqual(missing, [], "cards must match overview card geometry")
+
     def test_overview_rows(self):
         # Overview selection stores canonical provider IDs (legacy raw CLI spellings,
         # e.g. groqcloud, alibaba-coding-plan, still resolve) matched at runtime
@@ -92,16 +104,6 @@ class PopupLayoutTest(unittest.TestCase):
                     "overview rows must retain the rounded provider identity treatment; "
                     f"missing {polished_overview_fragment!r}"
                 )
-        # Sessions and Spend provider cards are top-level surfaces like
-        # Overview rows: same outer radius and horizontal content inset.
-        for card_text, card_name in ((sessions_view_text, "session"), (spend_view_text, "spend provider")):
-            for card_fragment in (
-                "radius: view.applet.roundedSurfaceRadius",
-                "anchors.leftMargin: Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing",
-                "anchors.rightMargin: Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing",
-            ):
-                if not code_contains(card_text, card_fragment):
-                    raise AssertionError(f"{card_name} cards must match overview card geometry: {card_fragment}")
         for interaction_fragment in (
             "activeFocusOnTab: true",
             "Accessible.role: Accessible.Button",
