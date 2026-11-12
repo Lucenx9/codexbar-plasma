@@ -23,6 +23,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   neighbouring check boxes, center the quota color preview on its label, keep
   the threshold note beside its legend, and give the Providers page notice
   room below its filter tabs.
+- Polish settings layout: align the AI Insights provider label with its first
+  option, give the Diagnostics command path the full field width with Use PATH
+  below it, separate Providers diagnostics from source mode and move Inspect
+  redacted settings into that disclosure, and separate the Panel icons-and-meters
+  preset from the panel-style note.
 
 ### Fixed
 
