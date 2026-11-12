@@ -110,8 +110,11 @@ ColumnLayout {
         opacity: tokenCostSection.applet.secondaryTextOpacity
     }
 
+    // Matches the gap above the separator so the metric toggle does not
+    // crowd the rule.
     RowLayout {
         Layout.fillWidth: true
+        Layout.topMargin: Kirigami.Units.smallSpacing
 
         PlainHeading {
             text: i18n("Cost")
@@ -211,7 +214,8 @@ ColumnLayout {
         kind: "bar"
         showPeak: true
         accessibleTitle: tokenCostSection.costHistoryShowsTokens ? i18n("Daily token history") : i18n("Daily cost history")
-        Layout.topMargin: Kirigami.Units.smallSpacing / 2
+        // History is a separate group from the summary figures above it.
+        Layout.topMargin: Kirigami.Units.largeSpacing
     }
 
     // The source note qualifies the figures above, so it stays beside them
@@ -222,7 +226,7 @@ ColumnLayout {
         font: Kirigami.Theme.smallFont
         opacity: applet.secondaryTextOpacity
         Layout.fillWidth: true
-        Layout.topMargin: Kirigami.Units.smallSpacing / 2
+        Layout.topMargin: Kirigami.Units.smallSpacing
         wrapMode: Text.WordWrap
     }
 
