@@ -1182,7 +1182,10 @@ fields; track proposed extensions in the issue tracker.
   as Unknown. This list does not change CLI-owned panel badges or notifications.
   The list is read when expanded,
   through `scripts/status-components.py`, because the official CLI reports only
-  the overall status. Open Status Page at the end of the list opens the site;
+  the overall status. When available, `curl` avoids long waits on unreachable
+  IPv6 addresses by trying alternative connections promptly; without it, the
+  helper uses Python's HTTP client.
+  Open Status Page at the end of the list opens the site;
   other providers keep opening it directly. A page that cannot be read shows
   the status as unavailable and leaves the provider's CLI status unchanged.
   Switching tabs, opening AI Insights, or closing the popup closes the list
