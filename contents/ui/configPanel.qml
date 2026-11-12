@@ -402,8 +402,8 @@ KCM.SimpleKCM {
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             text: page.additionalSummary
-            leftPadding: page.mirrored ? 0 : Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing
-            rightPadding: page.mirrored ? Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing : 0
+            leftPadding: page.mirrored ? 0 : Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing
+            rightPadding: page.mirrored ? Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing : 0
             visible: !page.additionalExpanded
             font: Kirigami.Theme.smallFont
             opacity: 0.7
@@ -551,8 +551,8 @@ KCM.SimpleKCM {
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             text: page.providersSummary
-            leftPadding: page.mirrored ? 0 : Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing
-            rightPadding: page.mirrored ? Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing : 0
+            leftPadding: page.mirrored ? 0 : Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing
+            rightPadding: page.mirrored ? Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing : 0
             visible: !page.providersExpanded
             font: Kirigami.Theme.smallFont
             opacity: 0.7
@@ -649,8 +649,8 @@ KCM.SimpleKCM {
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             text: page.advancedSummary
-            leftPadding: page.mirrored ? 0 : Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing
-            rightPadding: page.mirrored ? Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing : 0
+            leftPadding: page.mirrored ? 0 : Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing
+            rightPadding: page.mirrored ? Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing : 0
             font: Kirigami.Theme.smallFont
             opacity: 0.7
             wrapMode: Text.WordWrap

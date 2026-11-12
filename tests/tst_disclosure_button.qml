@@ -51,6 +51,8 @@ TestCase {
         verify(button.Accessible.checkable);
         verify(!button.Accessible.checked);
         compare(button.icon.name, "arrow-right");
+        // The label joins the form's text column instead of the style's flat inset.
+        verify(button.transform[0].x < 0);
 
         button.forceActiveFocus();
         keyClick(Qt.Key_Space);
@@ -67,6 +69,7 @@ TestCase {
     function test_collapsedArrowFollowsLayoutDirection() {
         var host = createTemporaryObject(mirroredComponent, this);
         compare(host.button.icon.name, "arrow-left");
+        verify(host.button.transform[0].x > 0);
         host.button.expanded = true;
         compare(host.button.icon.name, "arrow-down");
     }
