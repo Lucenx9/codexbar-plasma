@@ -260,6 +260,7 @@ TestCase {
         function withAlpha(c, a) {
             return Qt.rgba(c.r, c.g, c.b, a);
         }
+        property real roundedSurfaceRadius: 8
         property real nestedSurfaceRadius: 4
         property bool sessionHostsVary: false
         function capitalize(value) {
