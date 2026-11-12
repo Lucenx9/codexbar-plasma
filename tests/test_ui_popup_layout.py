@@ -84,13 +84,24 @@ class PopupLayoutTest(unittest.TestCase):
             "radius: applet.roundedSurfaceRadius",
             "id: overviewProviderIdentitySurface",
             "radius: overviewRow.applet.nestedSurfaceRadius",
-            "applet.withAlpha(overviewRow.accent, 0.1)",
+            "applet.withAlpha(overviewRow.accent, 0.12)",
+            "border.color: overviewRow.applet.withAlpha(Kirigami.Theme.textColor, 0.1)",
         ):
             if not code_contains(overview_row_body, polished_overview_fragment):
                 raise AssertionError(
                     "overview rows must retain the rounded provider identity treatment; "
                     f"missing {polished_overview_fragment!r}"
                 )
+        # Sessions and Spend provider cards are top-level surfaces like
+        # Overview rows: same outer radius and horizontal content inset.
+        for card_text, card_name in ((sessions_view_text, "session"), (spend_view_text, "spend provider")):
+            for card_fragment in (
+                "radius: view.applet.roundedSurfaceRadius",
+                "anchors.leftMargin: Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing",
+                "anchors.rightMargin: Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing",
+            ):
+                if not code_contains(card_text, card_fragment):
+                    raise AssertionError(f"{card_name} cards must match overview card geometry: {card_fragment}")
         for interaction_fragment in (
             "activeFocusOnTab: true",
             "Accessible.role: Accessible.Button",

@@ -714,7 +714,7 @@ ColumnLayout {
 
                             Layout.fillWidth: true
                             implicitHeight: spendProviderRow.implicitHeight + Kirigami.Units.largeSpacing * 2
-                            radius: view.applet.nestedSurfaceRadius
+                            radius: view.applet.roundedSurfaceRadius
                             // A passive display row: no hover state, because every
                             // other highlighted surface in the popup acts on click
                             // or reveals actions, and this one does neither.
@@ -739,6 +739,8 @@ ColumnLayout {
 
                                 anchors.fill: parent
                                 anchors.margins: Kirigami.Units.largeSpacing
+                                anchors.leftMargin: Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing
+                                anchors.rightMargin: Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing
                                 spacing: Kirigami.Units.largeSpacing
 
                                 Rectangle {
