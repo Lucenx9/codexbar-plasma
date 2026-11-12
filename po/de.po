@@ -4466,3 +4466,8 @@ msgstr "Weniger als %1 % pro Tag bis zum Zurücksetzen"
 #: contents/ui/components/UsageWindowText.qml
 msgid "%1% per day until reset"
 msgstr "%1 % pro Tag bis zum Zurücksetzen"
+
+#: contents/ui/components/StatusComponentsList.qml
+msgctxt "Status of one service component"
+msgid "Information"
+msgstr "Information"

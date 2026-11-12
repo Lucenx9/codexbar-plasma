@@ -10,6 +10,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Added
+
+- Show Grok and xAI service components inside the expandable Status Page
+  action, using xAI's public feed. Informational notices have their own label;
+  missing or unrecognized states remain unknown.
+
 ### Changed
 
 - Check upstream CLI releases daily by default and notify once per new version,

@@ -293,7 +293,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   `usage --status` record and the v0.83.0 `ProviderStatusPayload` source emit
   only `indicator`, `description`, `updatedAt`, and `url`, although the macOS
   app's `ProviderStatusComponent` model carries grouped components for Claude,
-  Codex, and Augment. Plasma reads Claude and OpenAI components through
+  Codex, and Augment. Plasma reads Claude, OpenAI, and xAI components through
   `scripts/status-components.py` meanwhile. Done when a released CLI emits the
   component tree and the widget consumes it, removing the helper and covering
   every provider the CLI describes.

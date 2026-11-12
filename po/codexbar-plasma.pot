@@ -2079,6 +2079,11 @@ msgstr ""
 
 #: contents/ui/components/StatusComponentsList.qml
 msgctxt "Status of one service component"
+msgid "Information"
+msgstr ""
+
+#: contents/ui/components/StatusComponentsList.qml
+msgctxt "Status of one service component"
 msgid "Degraded performance"
 msgstr ""
 

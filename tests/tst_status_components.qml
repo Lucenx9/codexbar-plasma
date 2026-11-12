@@ -9,11 +9,13 @@ TestCase {
         return JSON.stringify({status: "ok", components: components})
     }
 
-    function test_feedsOnlyClaudeAndOpenAI() {
+    function test_supportedFeeds() {
         compare(StatusComponents.feed("claude"), "claude")
         compare(StatusComponents.feed("claudeplatform"), "claude")
         compare(StatusComponents.feed("codex"), "openai")
         compare(StatusComponents.feed("openai"), "openai")
+        compare(StatusComponents.feed("grok"), "xai")
+        compare(StatusComponents.feed("xai"), "xai")
         compare(StatusComponents.feed("cursor"), "")
         compare(StatusComponents.feed("toString"), "")
         compare(StatusComponents.feed(undefined), "")
@@ -22,10 +24,18 @@ TestCase {
     function test_commandQuotesScriptAndRejectsUnknownFeeds() {
         compare(StatusComponents.command("file:///opt/my%20widget/status-components.py", "openai"),
             "timeout --kill-after=2s 25s python3 '/opt/my widget/status-components.py' --provider openai")
+        compare(StatusComponents.command("file:///widget/status-components.py", "xai"),
+            "timeout --kill-after=2s 25s python3 '/widget/status-components.py' --provider xai")
         compare(StatusComponents.command("file:///s.py", "cursor"), "")
         compare(StatusComponents.command("file:///s.py", "openai; rm -rf ~"), "")
         compare(StatusComponents.command("https://example.test/s.py", "claude"), "")
         compare(StatusComponents.command("file:///bad%E0%A4%A", "claude"), "")
+    }
+
+    function test_informationalComponentIsNotAnOutage() {
+        compare(StatusComponents.response(record([
+            {name: "Grok Web", indicator: "info", children: []}])),
+            [{name: "Grok Web", indicator: "info", children: []}])
     }
 
     function test_acceptsGroupsAndFlattensNames() {

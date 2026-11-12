@@ -56,6 +56,17 @@ TestCase {
         return found
     }
 
+    function test_informationalStateHasItsOwnLabelAndVisibleIndicator() {
+        var list = createTemporaryObject(listComponent, testCase, {
+            statusState: {loading: false, failed: false, rows: [
+                {name: "Grok Web", indicator: "info", children: []}]}
+        })
+        waitForRendering(list)
+        compare(labelsWithText(list, "Information", []).length, 1)
+        verify(list.indicatorColor("info").a > 0)
+        verify(list.indicatorColor("info") !== list.indicatorColor("critical"))
+    }
+
     // A long remote group name elides inside the popup width and keeps its
     // status text visible instead of widening the row.
     function test_longNamesElideWithinTheList() {

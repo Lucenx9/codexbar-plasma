@@ -1155,8 +1155,9 @@ fields; track proposed extensions in the issue tracker.
   evidence of recovery. Current status can still report an incident when quota
   fetching fails.
 - Status Page in the provider actions expands, for Claude, Claude Platform,
-  Codex, and OpenAI, into the service components of the public status page:
-  status.claude.com for Claude and status.openai.com for Codex and OpenAI, whose
+  Codex, OpenAI, Grok, and xAI, into the service components of the public status page:
+  status.claude.com for Claude, status.x.ai for Grok and xAI, and
+  status.openai.com for Codex and OpenAI, whose
   groups such as APIs, ChatGPT, and Codex expand into their components. Each
   Status Page header is one clickable row, with its disclosure arrow inside
   the hover and keyboard-focus highlight. Click the title or arrow, or use
@@ -1170,6 +1171,10 @@ fields; track proposed extensions in the issue tracker.
   unknown, while other groups and components remain visible.
   If OpenAI's affected-component collection has an invalid type, service names
   remain visible with unknown states instead of being reported as operational.
+  Grok and xAI share the flat service list from xAI's public summary feed.
+  Informational notices read as Information, degradation as Degraded performance,
+  and outages as Major outage. Missing, malformed, or unrecognized states read
+  as Unknown. This list does not change CLI-owned panel badges or notifications.
   The list is read when expanded,
   through `scripts/status-components.py`, because the official CLI reports only
   the overall status. Open Status Page at the end of the list opens the site;
