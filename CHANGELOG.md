@@ -18,6 +18,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Configure a seven-day Dependabot cooldown for GitHub Actions and Docker
+  version updates; security updates remain exempt.
 - Keep provider icons and incident markers visible during usage refreshes without
   continuously rotating the panel icon. Loading feedback remains in the tooltip
   and popup.
