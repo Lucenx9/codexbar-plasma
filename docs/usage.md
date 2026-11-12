@@ -395,6 +395,10 @@ work and upstream contract requirements.
   Rescans with an unchanged session count update cards in place,
   preserving hover and keyboard focus at the same list position. A changed
   session count recreates the cards. Ages use the current clock after each scan.
+  Activity ages and ordering use valid ISO-8601 timestamps with an explicit
+  timezone. An invalid last-activity timestamp falls back to the start time;
+  if neither is valid, the session stays visible without an age. Impossible
+  calendar dates are never rolled into a different day.
 - Overview providers can be limited to a chosen set of up to 3 providers, or
   left automatic (the first 3 eligible providers). **Popup → Overview providers**
   makes this choice explicit: **Automatic: first 3 providers** follows the

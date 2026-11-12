@@ -112,6 +112,78 @@ TestCase {
         verify(malformed.message.indexOf("synthetic-session-secret") === -1);
     }
 
+    function test_invalidActivityFallsBackToStart_data() {
+        return [
+            {tag: "impossible-day", value: "2026-02-30T12:00:00Z"},
+            {tag: "non-leap-day", value: "2026-02-29T12:00:00Z"},
+            {tag: "overflowing-hour", value: "2026-03-01T24:00:00Z"},
+            {tag: "missing-zone", value: "2026-03-01T12:00:00"},
+            {tag: "date-only", value: "2026-03-01"},
+            {tag: "invalid-offset", value: "2026-03-01T12:00:00+14:30"},
+            {tag: "control-character", value: "2026-03-01T12:00:00\u200bZ"},
+            {tag: "trailing-space", value: "2026-03-01T12:00:00Z "},
+            {tag: "empty", value: ""},
+            {tag: "null", value: null},
+            {tag: "wrong-type", value: ["2026-03-01T12:00:00Z"]}
+        ];
+    }
+
+    function test_invalidActivityFallsBackToStart(data) {
+        var result = SessionResponse.response(JSON.stringify([{
+            provider: "codex", projectName: "Synthetic project",
+            lastActivityAt: data.value,
+            startedAt: "2026-02-27T12:00:00Z"
+        }]), "", 0);
+        compare(result.outcome, "success");
+        compare(result.sessions[0].activityAt, "2026-02-27T12:00:00Z");
+        compare(result.sessions[0].activityMs, Date.UTC(2026, 1, 27, 12));
+    }
+
+    function test_invalidStartPreservesUndatedSession_data() {
+        return test_invalidActivityFallsBackToStart_data();
+    }
+
+    function test_invalidStartPreservesUndatedSession(data) {
+        var result = SessionResponse.response(JSON.stringify({sessions: [{
+            provider: "codex", projectName: "Synthetic project", startedAt: data.value
+        }]}), "", 0);
+        compare(result.outcome, "success");
+        compare(result.sessions.length, 1);
+        compare(result.sessions[0].projectName, "Synthetic project");
+        compare(result.sessions[0].activityAt, "");
+        compare(result.sessions[0].activityMs, 0);
+    }
+
+    function test_validActivity_data() {
+        return [
+            {tag: "utc", value: "2024-02-29T12:00:00Z", ms: Date.UTC(2024, 1, 29, 12)},
+            {tag: "fractional", value: "2024-02-29T12:00:00.123Z", ms: Date.UTC(2024, 1, 29, 12, 0, 0, 123)},
+            {tag: "positive-offset", value: "2024-02-29T14:00:00+02:00", ms: Date.UTC(2024, 1, 29, 12)},
+            {tag: "negative-offset", value: "2024-02-29T07:00:00-05:00", ms: Date.UTC(2024, 1, 29, 12)}
+        ];
+    }
+
+    function test_validActivity(data) {
+        for (var field of ["lastActivityAt", "startedAt"]) {
+            var item = {provider: "codex", projectName: "Synthetic project"};
+            item[field] = data.value;
+            var result = SessionResponse.response(JSON.stringify([item]), "", 0);
+            compare(result.outcome, "success");
+            compare(result.sessions[0].activityAt, data.value);
+            compare(result.sessions[0].activityMs, data.ms);
+        }
+    }
+
+    function test_invalidActivityDoesNotReorderSessions() {
+        var result = SessionResponse.response(JSON.stringify([
+            {provider: "codex", projectName: "Fallback", lastActivityAt: "2026-02-30T12:00:00Z", startedAt: "2026-02-27T12:00:00Z"},
+            {provider: "codex", projectName: "Undated", startedAt: "2026-02-30T12:00:00Z"},
+            {provider: "codex", projectName: "Recent", lastActivityAt: "2026-03-01T12:00:00Z"}
+        ]), "", 0);
+        compare(result.outcome, "success");
+        compare(result.sessions.map(function(item) { return item.projectName; }), ["Recent", "Fallback", "Undated"]);
+    }
+
     function test_snapshotUsesTheBoundedDisplayContract() {
         var items = [];
         for (var i = 0; i < 150; i++) {

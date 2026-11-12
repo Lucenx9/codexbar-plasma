@@ -19,6 +19,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Validate session activity and start timestamps before calculating ages or
+  sorting cards. Invalid activity dates fall back to a valid start time;
+  sessions with neither remain visible without an invented age.
+
 - Keep invalid or ambiguous reset dates as literal text instead of showing
   invented countdowns or formatted dates. Omit those resets from saved and
   restored quota caches while preserving valid percentages.

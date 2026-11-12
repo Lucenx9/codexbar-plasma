@@ -2,6 +2,7 @@
 .import "Guards.js" as Guards
 .import "ProviderIdentity.js" as ProviderIdentity
 .import "SafeText.js" as SafeText
+.import "SubscriptionDates.js" as SubscriptionDates
 
 // Pure normalization of untrusted `codexbar` CLI payloads.
 // QML owns effects and localization; these helpers return bounded semantic data.
@@ -475,15 +476,11 @@ function normalizeSession(item) {
     var dialect = boundedDisplayText(item.dialect, 40).toLowerCase()
     var state = boundedDisplayText(item.state, 40).toLowerCase()
     var sourceName = boundedDisplayText(item.source, 80)
-    var activityAt = boundedDisplayText(item.lastActivityAt, 128)
-    var activityMs = Date.parse(activityAt)
-    if (!isFinite(activityMs)) {
-        activityAt = boundedDisplayText(item.startedAt, 128)
-        activityMs = Date.parse(activityAt)
-    }
-    if (!isFinite(activityMs)) {
-        activityAt = ""
-        activityMs = 0
+    var activityAt = item.lastActivityAt
+    var activity = SubscriptionDates.date(activityAt, false, "activity")
+    if (!activity) {
+        activityAt = item.startedAt
+        activity = SubscriptionDates.date(activityAt, false, "activity")
     }
     if (providerID.length === 0 && projectName.length === 0 && sessionName.length === 0) {
         return null
@@ -497,8 +494,8 @@ function normalizeSession(item) {
         host: host,
         state: state,
         source: sourceName,
-        activityAt: activityAt,
-        activityMs: activityMs
+        activityAt: activity ? activityAt : "",
+        activityMs: activity ? activity.timestampMs : 0
     }
 }
 
