@@ -136,7 +136,10 @@ work and upstream contract requirements.
   notify again. Unverified readings disarm pending limit-reset notifications.
   An announced pace warning also survives incomplete readings of the same
   window, so returning complete data does not repeat it. A measured recovery
-  or a new reset window can establish a new warning.
+  or a new reset window can establish a new warning. A missing or invalid reset
+  date keeps the last known window identity; it neither repeats an ongoing
+  warning nor prevents a measured recovery. Equivalent timestamps with different
+  UTC offsets identify the same reset.
   Confidence, including percentage-only readings, survives privacy mode, failed-refresh
   retention, and newly saved quota caches. Older CLI payloads and caches without the field keep their
   existing behavior; OpenCode Go estimates already saved by an older widget

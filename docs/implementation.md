@@ -133,6 +133,10 @@ owns checkout setup, delivery, and repository maintenance.
   observation/row indexes and status, quota, pace, reset ordering. Bounded memo
   selection protects current keys before retaining recent stale scopes,
   preserving source insertion order.
+  Pace memo entries use stable row identities and retain the last validated
+  reset instant as their value. Missing reset metadata cannot split an ongoing
+  warning or hide a measured recovery; only distinct known reset instants start
+  a new window. Untrusted rows cannot update that identity.
   Direct `tst_notification_planner.qml` tests these contracts, input immutability
   and notification toggles. Localization and dispatch remain in QML.
 - `contents/ui/components/ProviderNotificationText.qml` builds localized status,
