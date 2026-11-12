@@ -48,6 +48,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Avoid QML errors when a container holding dynamic provider detail sections
+  is destroyed; progress tracks keep their existing theme color and opacity.
 - Avoid long waits while loading service status when some IPv6 endpoints are
   unreachable, using `curl` when installed to try alternative connections promptly.
 - Keep popup disclosure buttons, including Show details and Provider actions,

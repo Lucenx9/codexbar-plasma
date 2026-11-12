@@ -1800,6 +1800,26 @@ TestCase {
         mouseMove(testCase, 600, 220);
     }
 
+    function test_providerDetailDestructionDoesNotReadRetiredSection() {
+        failOnWarning(/TypeError|ReferenceError/);
+        var layout = createTemporaryQmlObject(
+            'import QtQuick; import QtQuick.Layouts; ColumnLayout { width: 540 }',
+            testCase, String(Qt.resolvedUrl("DetailLifecycleTest.qml")));
+        var section = UsageDetails.normalizeSections([{
+            rows: [{label: "Metric", value: "42", progress: {used: 1, total: 2}}]
+        }])[0];
+        var view = createControl("ProviderDetailSection", {
+            applet: applet, providerData: {provider: "codex"}, modelData: section
+        }, layout);
+        if (!view) return;
+        wait(0);
+        var meter = findChild(view, "detailProgressMeter");
+        verify(meter !== null);
+        compare(meter.color, applet.withAlpha(meter.Kirigami.Theme.textColor, 0.1));
+        layout.destroy();
+        wait(0);
+    }
+
     function test_providerDetailValuesStayWithinPopup_data() {
         return [
             { tag: "primary-narrow", field: "value", width: 240 },

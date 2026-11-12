@@ -53,6 +53,11 @@ keyboard/pointer activation with the KDE desktop style at narrow and normal
 widths in LTR/RTL layouts. `tst_disclosure_button.qml` separately preserves the
 settings-only alignment with neighbouring check boxes.
 
+`tst_visual_layout.qml` also destroys a container holding a dynamic provider
+detail section and fails on JavaScript warnings during teardown. The progress
+track must retain its theme color without reading a section that has already
+been destroyed.
+
 Run the relevant check during iteration, then the required `make check` gate.
 Read its output for tool failures and skips. CI uses the pinned Plasma image in
 [the workflow](../.github/workflows/ci.yml), with explicit import warnings and
