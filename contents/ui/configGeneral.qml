@@ -72,7 +72,7 @@ KCM.SimpleKCM {
     property bool cfg_cliAutomaticUpdates: true
     property bool cfg_cliAutomaticUpdatesDefault: true
     property alias cfg_cliUpdateChecksEnabled: cliUpdateChecksEnabledCheck.checked
-    property bool cfg_cliUpdateChecksEnabledDefault: false
+    property bool cfg_cliUpdateChecksEnabledDefault: true
     property alias cfg_cliUpdateNotificationsEnabled: cliUpdateNotificationsEnabledCheck.checked
     property bool cfg_cliUpdateNotificationsEnabledDefault: true
     property alias cfg_updateChecksEnabled: updateChecksEnabledCheck.checked

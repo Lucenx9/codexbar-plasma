@@ -137,7 +137,7 @@
     </entry>
     <entry name="cliUpdateChecksEnabled" type="Bool">
       <label>Check upstream CLI releases daily.</label>
-      <default>false</default>
+      <default>true</default>
     </entry>
     <entry name="cliUpdateNotificationsEnabled" type="Bool">
       <label>Notify when an upstream CLI release is available.</label>

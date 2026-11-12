@@ -12,6 +12,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Check upstream CLI releases daily by default and notify once per new version,
+  so CLI installations from PATH learn about releases the widget may rely on.
+  A selected managed copy with automatic updates on is not announced, because
+  it updates itself. Saved preferences are preserved; instances without a saved
+  value adopt the new default.
 - Enable daily updates for the widget-managed CLI by default, only while that
   copy is selected. Saved preferences are preserved; instances without a saved
   value adopt the new default. System and package-manager CLI installations

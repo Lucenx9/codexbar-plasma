@@ -21,6 +21,7 @@ TestCase {
         QtObject {
             property bool updateNotificationsEnabled: true
             property bool cliUpdateNotificationsEnabled: true
+            property bool cliAutomaticUpdates: true
             property string lastNotifiedUpdateVersion: ""
             property string cliUpdateLastNotifiedVersion: ""
         }
@@ -60,6 +61,17 @@ TestCase {
         subject.notifyAvailableUpdate("v1", "asset", "https://github.com/widget/v1")
         subject.notifyAvailableCliUpdate("v1", "https://github.com/cli/v1")
         compare(sent.length, 2)
+    }
+    function test_selfUpdatingManagedCliStaysQuiet() {
+        subject.notifyAvailableCliUpdate("v1", "https://github.com/cli/v1", "managed")
+        compare(sent.length, 0)
+        compare(config.cliUpdateLastNotifiedVersion, "")
+        subject.notifyAvailableCliUpdate("v1", "https://github.com/cli/v1", "pacman")
+        compare(sent.length, 1)
+        config.cliAutomaticUpdates = false
+        subject.notifyAvailableCliUpdate("v2", "https://github.com/cli/v2", "managed")
+        compare(sent.length, 2)
+        compare(config.cliUpdateLastNotifiedVersion, "v2")
     }
     function test_dispatchFailureAndUnsafeSource_data() {
         return [{tag: "not-started", source: ""}, {tag: "unsafe", source: "__proto__"}]

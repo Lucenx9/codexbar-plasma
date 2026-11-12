@@ -23,7 +23,7 @@ Item {
     property bool initialized: false
     property bool forceNextCheck: false
     signal checkedRelease(string timestamp)
-    signal updateAvailable(string version, string releaseUrl)
+    signal updateAvailable(string version, string releaseUrl, string manager)
 
     // General hosts the managed CLI controls itself, so its guidance points to
     // that section instead of naming the page the reader is already on.
@@ -114,7 +114,7 @@ Item {
         if (successfulReleaseCheck) {
             completedCheck = new Date().toISOString()
             checkedRelease(completedCheck)
-            if (result.status === "available") updateAvailable(result.latest, result.releaseUrl)
+            if (result.status === "available") updateAvailable(result.latest, result.releaseUrl, result.manager)
         }
     }
     Plasma5Support.DataSource {
