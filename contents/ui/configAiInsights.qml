@@ -303,10 +303,12 @@ KCM.SimpleKCM {
 
         ColumnLayout {
             Kirigami.FormData.label: i18n("AI provider:")
+            Kirigami.FormData.buddyFor: ollamaRadio
             enabled: enabledCheck.checked
             spacing: 0
 
             Controls.RadioButton {
+                id: ollamaRadio
                 objectName: "aiInsightsOllamaRadio"
                 text: i18n("Ollama (local)")
                 checked: page.provider === "ollama"

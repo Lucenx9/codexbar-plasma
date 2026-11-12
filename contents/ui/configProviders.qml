@@ -2038,6 +2038,7 @@ KCM.SimpleKCM {
                         id: providerSettingsActions
 
                         Layout.fillWidth: true
+                        Layout.topMargin: Kirigami.Units.largeSpacing
                         spacing: Kirigami.Units.smallSpacing
 
                         Components.DisclosureButton {
@@ -2056,16 +2057,6 @@ KCM.SimpleKCM {
                             width: Kirigami.Units.iconSizes.small
                             height: Kirigami.Units.iconSizes.small
                         }
-
-                        Controls.Button {
-                            text: i18n("Inspect redacted settings")
-                            icon.name: "view-refresh"
-                            visible: providerSettingsToggle.expanded
-                            enabled: page.selectedProvider
-                                && !page.isPending(page.selectedProvider.provider)
-                                && !page.providerDiagnosticLoadingFor(page.selectedProvider.provider)
-                            onClicked: if (page.selectedProvider) page.loadProviderSettings(page.selectedProvider.provider)
-                        }
                     }
 
                     ColumnLayout {
@@ -2074,6 +2065,15 @@ KCM.SimpleKCM {
                         Layout.fillWidth: true
                         spacing: Kirigami.Units.smallSpacing
                         visible: providerSettingsToggle.expanded
+
+                        Controls.Button {
+                            text: i18n("Inspect redacted settings")
+                            icon.name: "view-refresh"
+                            enabled: page.selectedProvider
+                                && !page.isPending(page.selectedProvider.provider)
+                                && !page.providerDiagnosticLoadingFor(page.selectedProvider.provider)
+                            onClicked: if (page.selectedProvider) page.loadProviderSettings(page.selectedProvider.provider)
+                        }
 
                         Components.PlainControlsLabel {
                             Layout.fillWidth: true

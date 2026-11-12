@@ -353,26 +353,36 @@ KCM.SimpleKCM {
             wrapMode: Text.WordWrap
         }
 
-        Components.PlainButton {
-            objectName: "minimalPanelPresetButton"
-            icon.name: "color-management"
-            enabled: page.cfg_panelStyle !== "minimal" || page.cfg_showProviderInPanel
-                || page.cfg_showPercentInPanel || page.cfg_showCreditsInPanel || page.cfg_showSpendInPanel
-                || !page.cfg_showMultiProviderInPanel
-            plainText: i18n("Show only icons and meters")
-            Accessible.description: minimalPresetDescription.text
-            onClicked: page.applyMinimalPanelPreset()
-        }
-
-        Components.PlainControlsLabel {
-            id: minimalPresetDescription
+        // FormLayout ignores margins on its direct children, so this column
+        // carries the gap that detaches the preset from the panel-style note.
+        ColumnLayout {
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            text: i18n("Switches to monochrome, enables provider meters, and hides names, usage text, credits, and spend budgets.")
-            font: Kirigami.Theme.smallFont
-            opacity: 0.7
-            wrapMode: Text.WordWrap
+            spacing: Kirigami.Units.smallSpacing
+
+            Components.PlainButton {
+                objectName: "minimalPanelPresetButton"
+                Layout.topMargin: Kirigami.Units.largeSpacing
+                icon.name: "color-management"
+                enabled: page.cfg_panelStyle !== "minimal" || page.cfg_showProviderInPanel
+                    || page.cfg_showPercentInPanel || page.cfg_showCreditsInPanel || page.cfg_showSpendInPanel
+                    || !page.cfg_showMultiProviderInPanel
+                plainText: i18n("Show only icons and meters")
+                Accessible.description: minimalPresetDescription.text
+                onClicked: page.applyMinimalPanelPreset()
+            }
+
+            Components.PlainControlsLabel {
+                id: minimalPresetDescription
+                Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+                Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                text: i18n("Switches to monochrome, enables provider meters, and hides names, usage text, credits, and spend budgets.")
+                font: Kirigami.Theme.smallFont
+                opacity: 0.7
+                wrapMode: Text.WordWrap
+            }
         }
 
         Kirigami.Separator {
