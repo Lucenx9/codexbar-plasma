@@ -160,7 +160,6 @@ class PanelTest(unittest.TestCase):
         for vertical_badge_fragment in (
             "objectName: \"panelIdentityBadge\"",
             "visible: compactRoot.identityCarriesIncidentBadge",
-            "!compactRoot.applet.loading",
             "statusBadgeColor(compactRoot.selectedProvider.statusSeverity)",
             "border.width: 1",
             "border.color: Kirigami.Theme.backgroundColor",

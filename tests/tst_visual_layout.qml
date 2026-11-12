@@ -516,6 +516,14 @@ TestCase {
         wait(0);
         var icon = findItem(panel, item => item.objectName === "panelIdentityIcon");
         verify(icon !== null && icon.visible);
+        var restingSource = icon.source;
+        var restingMask = icon.isMask;
+        var restingColor = icon.color;
+        applet.loading = true;
+        wait(0);
+        compare(icon.source, restingSource);
+        compare(icon.isMask, restingMask);
+        compare(icon.color, restingColor);
         var focusBorder = findItem(panel, item => item.objectName === "panelIdentityFocusBorder");
         verify(focusBorder !== null);
         verify(!focusBorder.visible);
@@ -1321,6 +1329,13 @@ TestCase {
                 incidentOnMeter: true,
                 vertical: true,
                 metersHidden: true
+            },
+            {
+                tag: "vertical identity badge persists during a refresh",
+                incidentOnMeter: true,
+                vertical: true,
+                metersHidden: true,
+                loading: true
             },
             {
                 tag: "vertical standalone fallback for a foreign incident",
