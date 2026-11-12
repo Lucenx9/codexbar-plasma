@@ -1608,6 +1608,7 @@ KCM.SimpleKCM {
             Layout.fillWidth: true
             Layout.leftMargin: Kirigami.Units.smallSpacing
             Layout.rightMargin: Kirigami.Units.smallSpacing
+            Layout.topMargin: Kirigami.Units.smallSpacing
             Layout.bottomMargin: Kirigami.Units.smallSpacing
             font: Kirigami.Theme.smallFont
             opacity: page.secondaryTextOpacity

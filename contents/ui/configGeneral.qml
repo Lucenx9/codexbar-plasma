@@ -743,8 +743,8 @@ KCM.SimpleKCM {
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             visible: !widgetUpdatesDisclosure.expanded
-            leftPadding: page.mirrored ? 0 : Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing
-            rightPadding: page.mirrored ? Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing : 0
+            leftPadding: page.mirrored ? 0 : Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing
+            rightPadding: page.mirrored ? Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing : 0
             objectName: "widgetUpdatesSummary"
             text: page.widgetUpdateBusy ? i18n("Widget update in progress…")
                 : page.widgetUpdateLastError.length > 0 ? page.widgetUpdateLastError.slice(0, 500)
@@ -767,9 +767,9 @@ KCM.SimpleKCM {
             ColumnLayout {
                 Layout.fillWidth: true
                 Layout.leftMargin: page.mirrored || page.width < Kirigami.Units.gridUnit * 28
-                    ? 0 : Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing
+                    ? 0 : Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing
                 Layout.rightMargin: !page.mirrored || page.width < Kirigami.Units.gridUnit * 28
-                    ? 0 : Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing
+                    ? 0 : Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing
                 spacing: Kirigami.Units.smallSpacing
                 Controls.CheckBox {
                     id: updateChecksEnabledCheck
@@ -915,8 +915,8 @@ KCM.SimpleKCM {
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             objectName: "cliUpdatesSummary"
             visible: !cliUpdatesDisclosure.expanded
-            leftPadding: page.mirrored ? 0 : Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing
-            rightPadding: page.mirrored ? Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing : 0
+            leftPadding: page.mirrored ? 0 : Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing
+            rightPadding: page.mirrored ? Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing : 0
             text: managedCli.busy || ["ready", "absent"].indexOf(managedCli.result.status) < 0
                 ? managedCli.statusText
                 : cliUpdater.busy || cliUpdater.checked ? cliUpdater.statusText : managedCli.statusText
@@ -933,9 +933,9 @@ KCM.SimpleKCM {
             ColumnLayout {
                 Layout.fillWidth: true
                 Layout.leftMargin: page.mirrored || page.width < Kirigami.Units.gridUnit * 28
-                    ? 0 : Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing
+                    ? 0 : Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing
                 Layout.rightMargin: !page.mirrored || page.width < Kirigami.Units.gridUnit * 28
-                    ? 0 : Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing
+                    ? 0 : Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing
                 spacing: Kirigami.Units.smallSpacing
                 Controls.CheckBox {
                     id: cliUpdateChecksEnabledCheck

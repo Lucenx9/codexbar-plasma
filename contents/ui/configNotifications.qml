@@ -101,12 +101,19 @@ KCM.SimpleKCM {
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             spacing: Kirigami.Units.smallSpacing
 
+            FontMetrics {
+                id: formLabelMetrics
+                font: Kirigami.Theme.defaultFont
+            }
+
             Rectangle {
                 id: colorScale
                 objectName: "quotaColorScale"
                 Layout.fillWidth: true
                 Layout.maximumWidth: Kirigami.Units.gridUnit * 10
                 Layout.preferredHeight: Kirigami.Units.smallSpacing * 2
+                // Center the scale on the top-aligned form label's line.
+                Layout.topMargin: Math.max(0, Math.round((formLabelMetrics.height - Layout.preferredHeight) / 2))
                 radius: height / 2
                 Accessible.ignored: true
                 readonly property real firstBoundary: page.mirrored
@@ -182,16 +189,14 @@ KCM.SimpleKCM {
                     }
                 }
             }
-        }
 
-        Components.PlainControlsLabel {
-            text: i18n("Thresholds also set warning colors and markers on usage meters.")
-            font: Kirigami.Theme.smallFont
-            opacity: 0.7
-            Layout.fillWidth: true
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            wrapMode: Text.WordWrap
+            Components.PlainControlsLabel {
+                text: i18n("Thresholds also set warning colors and markers on usage meters.")
+                font: Kirigami.Theme.smallFont
+                opacity: 0.7
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+            }
         }
 
         Kirigami.Separator {
