@@ -10,6 +10,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+## 0.2.56 - 2026-11-12
+
 ### Added
 
 - Show Grok and xAI service components inside the expandable Status Page
@@ -81,6 +83,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Reject impossible or ambiguous reset timestamps when calculating the remaining
   monthly quota per day, including in privacy mode, instead of silently moving
   invalid dates into the next month.
+
+[Full diff](https://github.com/Lucenx9/codexbar-plasma/compare/v0.2.55...v0.2.56)
 
 ## 0.2.55 - 2026-11-10
 
