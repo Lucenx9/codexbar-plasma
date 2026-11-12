@@ -669,6 +669,7 @@ KCM.SimpleKCM {
         }
         Components.DisclosureButton {
             id: supportPreviewDisclosure
+            alignWithForm: true
             objectName: "supportPreviewDisclosure"
             plainText: i18n("Report preview")
             expanded: false

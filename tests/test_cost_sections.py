@@ -47,6 +47,7 @@ TestCase {
     }
 
     property bool stillBuilding: true
+    property bool mirrored: false
     property var projectCosts: [{
         provider: "codex",
         projects: { rows: [
@@ -179,6 +180,8 @@ TestCase {
         id: providerScrollFactory
         PlasmaComponents.ScrollView {
             id: providerScroll
+            LayoutMirroring.enabled: testCase.mirrored
+            LayoutMirroring.childrenInherit: true
             width: 580
             height: 500
             contentWidth: availableWidth
@@ -194,7 +197,9 @@ TestCase {
                     providerData: testCase.providerData
                 }
                 Components.DisclosureButton {
+                    objectName: "providerActionsToggle"
                     plainText: "Provider actions"
+                    onClicked: expanded = !expanded
                 }
             }
         }
@@ -242,6 +247,50 @@ TestCase {
 
 
 class CostSectionTests(unittest.TestCase):
+    def test_provider_disclosures_keep_focus_inside_viewport(self):
+        self.run_fixture('''
+    function test_disclosureFocusBounds_data() {
+        var cases = [];
+        for (var width of [240, 540]) {
+            for (var mirrored of [false, true]) {
+                for (var name of ["costDetailsToggle", "providerActionsToggle"]) {
+                    cases.push({tag: name + "-" + width + "-" + mirrored,
+                        width: width, mirrored: mirrored, name: name});
+                }
+            }
+        }
+        return cases;
+    }
+    function test_disclosureFocusBounds(data) {
+        testCase.mirrored = data.mirrored;
+        var subject = createTemporaryObject(providerScrollFactory, testCase,
+            {width: data.width, height: 800});
+        verify(subject !== null);
+        verify(waitForPolish(testCase.Window.window));
+        var toggle = findChild(subject, data.name);
+        verify(toggle !== null);
+        // Both translated labels must fit with their complete native frame.
+        toggle.plainText = data.name === "costDetailsToggle"
+            ? "Mostra dettagli" : "Azioni del provider";
+        toggle.forceActiveFocus(Qt.TabFocusReason);
+        verify(waitForPolish(testCase.Window.window));
+        verify(toggle.visualFocus);
+        for (var item of [toggle, toggle.background]) {
+            verify(item !== null);
+            verify(item.mapToItem(subject, 0, 0).x >= 0,
+                data.name + " starts outside the clipped viewport");
+            verify(item.mapToItem(subject, item.width, 0).x <= subject.availableWidth,
+                data.name + " ends outside the clipped viewport");
+        }
+        keyClick(Qt.Key_Space);
+        verify(toggle.expanded);
+        keyClick(Qt.Key_Space);
+        verify(!toggle.expanded);
+        mouseClick(toggle, 1, toggle.height / 2);
+        verify(toggle.expanded, "The leading edge must remain clickable");
+    }
+    ''', style="org.kde.desktop")
+
     def test_provider_history_has_no_empty_project_tail(self):
         self.run_fixture('''
     function test_noEmptyProjectTail_data() {
@@ -1011,14 +1060,17 @@ class CostSectionTests(unittest.TestCase):
     }
     ''')
 
-    def run_fixture(self, snippet):
+    def run_fixture(self, snippet, style=None):
         qml = QML_TEMPLATE.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
         qml = qml.replace("/*TESTS*/", snippet)
         with tempfile.TemporaryDirectory(prefix="codexbar-cost-sections-") as temporary:
             fixture = Path(temporary) / "tst_cost_sections.qml"
             fixture.write_text(qml)
+            environment = {**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software"}
+            if style is not None:
+                environment["QT_QUICK_CONTROLS_STYLE"] = style
             result = subprocess.run(
                 [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],
-                env={**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software"},
+                env=environment,
                 capture_output=True, text=True, timeout=60)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)

@@ -732,6 +732,7 @@ KCM.SimpleKCM {
         }
         Components.DisclosureButton {
             id: widgetUpdatesDisclosure
+            alignWithForm: true
             objectName: "widgetUpdatesDisclosure"
             plainText: i18n("Widget updates")
             expanded: false
@@ -903,6 +904,7 @@ KCM.SimpleKCM {
 
         Components.DisclosureButton {
             id: cliUpdatesDisclosure
+            alignWithForm: true
             objectName: "cliUpdatesDisclosure"
             plainText: i18n("CodexBar CLI")
             expanded: false

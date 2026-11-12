@@ -266,7 +266,9 @@ work and upstream contract requirements.
   action becomes hidden; focus on another visible control stays there.
   Provider icons stay centered in icon-only tabs, including when their quota
   gauge is visible. Expanded rows keep their full native hover and
-  focus outlines visible inside the scrollable popup.
+  focus outlines visible inside the scrollable popup. Disclosure buttons,
+  including **Show details** and **Provider actions**, keep their complete focus
+  frames inside the viewport too.
 - Overview and provider quota percentages use the same slightly larger type
   size and align with the end of their meters. Quota names, inline resets and
   percentages share a text baseline. Quota percentages, cost summaries,

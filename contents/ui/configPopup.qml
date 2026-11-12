@@ -526,6 +526,7 @@ KCM.SimpleKCM {
 
         Components.DisclosureButton {
             id: hiddenItemsDisclosure
+            alignWithForm: true
             objectName: "hiddenItemsDisclosure"
             Layout.alignment: page.mirrored ? Qt.AlignRight : Qt.AlignLeft
             plainText: i18n("%1, %2",

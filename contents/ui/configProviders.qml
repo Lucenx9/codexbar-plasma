@@ -2043,6 +2043,7 @@ KCM.SimpleKCM {
 
                         Components.DisclosureButton {
                             id: providerSettingsToggle
+                            alignWithForm: true
                             objectName: "providerSettingsToggle"
 
                             plainText: i18n("Settings and diagnostics")
@@ -2186,6 +2187,7 @@ KCM.SimpleKCM {
 
                         Components.DisclosureButton {
                             id: providerCliCommandsToggle
+                            alignWithForm: true
 
                             plainText: i18n("CLI commands")
                             expanded: false
