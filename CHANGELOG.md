@@ -39,6 +39,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep popup disclosure buttons, including Show details and Provider actions,
+  inside the scrollable viewport so their keyboard-focus frames are not clipped.
+  Settings disclosures retain their alignment with neighbouring check boxes.
 - Validate session activity and start timestamps before calculating ages or
   sorting cards. Invalid activity dates fall back to a valid start time;
   sessions with neither remain visible without an invented age.

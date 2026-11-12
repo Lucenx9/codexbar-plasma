@@ -398,6 +398,7 @@ KCM.SimpleKCM {
         }
 
         Components.DisclosureButton {
+            alignWithForm: true
             objectName: "panelAdditionalButton"
             plainText: i18n("Additional information")
             expanded: page.additionalExpanded
@@ -546,6 +547,7 @@ KCM.SimpleKCM {
         }
 
         Components.DisclosureButton {
+            alignWithForm: true
             objectName: "panelProvidersButton"
             plainText: i18n("Panel providers")
             expanded: page.providersExpanded
@@ -644,6 +646,7 @@ KCM.SimpleKCM {
 
         Components.DisclosureButton {
             id: advancedButton
+            alignWithForm: true
             objectName: "panelAdvancedButton"
             plainText: i18n("Quota, order and visibility")
             expanded: page.advancedExpanded

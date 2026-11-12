@@ -48,6 +48,11 @@ uncovered QML/JS files.
   `tests/tst_guards.qml` covers behavior; `scripts/test_security_regressions.sh`
   rejects implementations duplicated elsewhere.
 
+`test_cost_sections.py` checks provider disclosure focus-frame bounds and
+keyboard/pointer activation with the KDE desktop style at narrow and normal
+widths in LTR/RTL layouts. `tst_disclosure_button.qml` separately preserves the
+settings-only alignment with neighbouring check boxes.
+
 Run the relevant check during iteration, then the required `make check` gate.
 Read its output for tool failures and skips. CI uses the pinned Plasma image in
 [the workflow](../.github/workflows/ci.yml), with explicit import warnings and

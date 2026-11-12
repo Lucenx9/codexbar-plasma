@@ -1,5 +1,6 @@
 import QtQuick
 import QtTest
+import org.kde.kirigami as Kirigami
 import "../contents/ui/components" as Components
 
 TestCase {
@@ -51,8 +52,7 @@ TestCase {
         verify(button.Accessible.checkable);
         verify(!button.Accessible.checked);
         compare(button.icon.name, "arrow-right");
-        // The label joins the form's text column instead of the style's flat inset.
-        verify(button.transform[0].x < 0);
+        compare(button.mapToItem(host, 0, 0).x, 0);
 
         button.forceActiveFocus();
         keyClick(Qt.Key_Space);
@@ -69,8 +69,22 @@ TestCase {
     function test_collapsedArrowFollowsLayoutDirection() {
         var host = createTemporaryObject(mirroredComponent, this);
         compare(host.button.icon.name, "arrow-left");
-        verify(host.button.transform[0].x > 0);
+        compare(host.button.mapToItem(host, 0, 0).x, 0);
         host.button.expanded = true;
         compare(host.button.icon.name, "arrow-down");
+    }
+
+    function test_formAlignmentIsExplicit_data() {
+        return [{tag: "ltr", mirrored: false}, {tag: "rtl", mirrored: true}];
+    }
+
+    function test_formAlignmentIsExplicit(data) {
+        var host = createTemporaryObject(data.mirrored ? mirroredComponent : disclosureComponent, this);
+        var button = host.button;
+        button.alignWithForm = true;
+        compare(button.mapToItem(host, 0, 0).x,
+            data.mirrored ? Kirigami.Units.smallSpacing : -Kirigami.Units.smallSpacing);
+        button.alignWithForm = false;
+        compare(button.mapToItem(host, 0, 0).x, 0);
     }
 }

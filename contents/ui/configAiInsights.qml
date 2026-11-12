@@ -532,6 +532,7 @@ KCM.SimpleKCM {
 
         Components.DisclosureButton {
             id: dataDisclosure
+            alignWithForm: true
             plainText: i18n("What is sent")
             visible: page.cloudProvider
             expanded: false
