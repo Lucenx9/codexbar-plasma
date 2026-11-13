@@ -1,8 +1,8 @@
 """Exercise worker scheduling through the production cost controller's public state.
 
-A deterministic worker delays delivery and announces when it begins a message.
-Only that announcement is intercepted by the harness; result delivery, process
-execution, refresh policy and deadlines use the production controller.
+The harness controls message delivery at the WorkerScript boundary without
+CPU-dependent sleeps. Process execution, refresh policy and deadlines use the
+production controller; tst_cost_worker.qml covers the real worker separately.
 """
 
 import os
@@ -15,24 +15,37 @@ from test_cost_context import CLI
 
 ROOT = Path(__file__).resolve().parents[1]
 
-WORKER = '''import * as CostResponse from "RESPONSE_URL";
-WorkerScript.onMessage = function(message) {
-    WorkerScript.sendMessage({testStarted: message.serial});
-    var until = Date.now() + (message.historyDays === 90 ? 2500 : 800);
-    while (Date.now() < until) {}
-    WorkerScript.sendMessage({serial: message.serial, result: CostResponse.response(
-        message.stdoutText, message.stderrText, message.historyDays, message.exitCode)});
-};
+WORKER = '''import QtQuick
+QtObject {
+    id: worker
+    property bool ready: true
+    property url source
+    signal message(var messageObject)
+    function sendMessage(request) {
+        testCase.starts = testCase.starts.concat([request.serial]);
+        testCase.pending.push({worker: worker, request: request});
+    }
+}
 '''
 
 QML = '''import QtQuick
 import QtTest
+import "RESPONSE_URL" as CostResponse
 TestCase {
     id: testCase
     name: "CostNormalization"
     property var starts: []
+    property var pending: []
+    property int cliReplies: 0
     function i18n(text, first) { return text.replace("%1", first); }
-    function init() { starts = []; }
+    function init() { starts = []; pending = []; cliReplies = 0; }
+    function deliver() {
+        verify(pending.length > 0);
+        var job = pending.shift();
+        var request = job.request;
+        job.worker.message({serial: request.serial, result: CostResponse.response(
+            request.stdoutText, request.stderrText, request.historyDays, request.exitCode)});
+    }
     function create() {
         var factory = Qt.createComponent("Controller.qml");
         if (factory.status === Component.Error && /module "org\\.kde\\.[^"]+" is not installed/.test(factory.errorString()))
@@ -43,8 +56,11 @@ TestCase {
         return subject;
     }
     function finished(subject, label) {
-        tryVerify(function() { return !subject.loading && subject.costs.codex
-            && subject.costs.codex.historyLabel === label; }, 8000);
+        tryVerify(function() {
+            if (pending.length) deliver();
+            return !subject.loading && subject.costs.codex
+                && subject.costs.codex.historyLabel === label;
+        }, 8000);
     }
     function test_loadingCoversNormalizationAndPublishesBeforeCompletion() {
         var subject = create();
@@ -64,10 +80,11 @@ TestCase {
         var subject = create();
         tryVerify(function() { return starts.length === 1; });
         verify(subject.refresh(true));
-        wait(300); // The second CLI reply waits while the first worker is running.
+        tryCompare(testCase, "cliReplies", 2);
         verify(subject.loading);
         compare(subject.costs, {});
         verify(subject.refresh(true));
+        tryCompare(testCase, "cliReplies", 3);
         finished(subject, "normal 3");
         compare(starts.length, 2);
         compare(subject.errorText, "");
@@ -85,10 +102,10 @@ TestCase {
         var subject = create();
         tryVerify(function() { return starts.length === 1; });
         verify(subject.refresh(true));
-        wait(300);
+        tryCompare(testCase, "cliReplies", 2);
         subject.costUsageEnabled = false;
         verify(!subject.loading);
-        wait(1000);
+        deliver();
         compare(subject.costs, {});
         compare(subject.errorText, "");
         compare(starts.length, 1);
@@ -130,7 +147,7 @@ TestCase {
         tryVerify(function() { return !subject.loading && subject.errorText.length > 0; }, 5000);
         verify(subject.errorText.indexOf("timed out") >= 0);
         compare(subject.costs, {});
-        wait(1200);
+        deliver();
         compare(subject.costs, {});
         verify(subject.errorText.indexOf("timed out") >= 0);
         subject.historyDays = 30;
@@ -148,19 +165,16 @@ class CostNormalizationTests(unittest.TestCase):
             cli = directory / "normal"
             cli.write_text(CLI)
             cli.chmod(0o700)
-            worker = directory / "Worker.mjs"
-            worker.write_text(WORKER.replace("RESPONSE_URL", (ROOT / "contents/ui/CostResponse.mjs").as_uri()))
+            (directory / "ControlledWorker.qml").write_text(WORKER)
             controller = (ROOT / "contents/ui/controllers/CostController.qml").read_text()
             controller = controller.replace('import "../', 'import "' + (ROOT / "contents/ui").as_uri() + '/')
             controller = controller.replace('import QtQuick\n', 'import QtQuick\nimport "' + (ROOT / "contents/ui/controllers").as_uri() + '"\n', 1)
-            controller = controller.replace('source: "../CostWorker.mjs"', 'source: "' + worker.as_uri() + '"')
-            controller = controller.replace('lifecycle.acceptResult(messageObject);',
-                'if (messageObject.testStarted !== undefined) testCase.starts = testCase.starts.concat([messageObject.testStarted]); '
-                'else lifecycle.acceptResult(messageObject);')
+            controller = controller.replace('    WorkerScript {', '    ControlledWorker {')
+            controller = controller.replace('lifecycle.acceptReply(context,', 'testCase.cliReplies += 1; lifecycle.acceptReply(context,')
             controller = controller.replace('commandTimeoutMs: 120000', 'commandTimeoutMs: 1800')
             (directory / "Controller.qml").write_text(controller)
             fixture = directory / "tst_worker.qml"
-            fixture.write_text(QML.replace("CLI_PATH", str(cli)))
+            fixture.write_text(QML.replace("CLI_PATH", str(cli)).replace("RESPONSE_URL", (ROOT / "contents/ui/CostResponse.mjs").as_uri()))
             result = subprocess.run(
                 [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],
                 env={**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software"},
