@@ -334,7 +334,8 @@ work and upstream contract requirements.
   or keyboard inspection shows daily values for each provider. Provider pages
   retain their bar charts. Selecting a provider filters local analytics
   and stays selected across range changes, including empty results;
-  selecting a day scopes provider and model details, while headline
+  the provider dropdown also follows selections and resets made through cards.
+  Selecting a day scopes provider and model details, while headline
   totals keep the selected period and projects appear only with **All days**. **All days** or Escape clears the day selection and returns keyboard inspection
   to the chart. Selecting a day does not move the plot. Provider hover readouts
   follow the configured provider order and stay inside the plot; pinned-day

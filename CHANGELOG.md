@@ -32,7 +32,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 - Keep aggregate daily chart readouts unavailable when an eligible provider has
   duplicate records for that date, matching its line and day details. Clear a
-  pinned day that becomes ambiguous after a refresh.
+  pinned day that becomes ambiguous after a refresh. Validate all 256 supported
+  snapshots even beyond the chart's 128-series limit. Keep the provider dropdown
+  synchronized after card selections, and preserve line contrast over fills.
 
 - Keep Usage & Spend summary values aligned with wrapped labels and show full
   comparison status text. Show history requirements for unavailable comparisons

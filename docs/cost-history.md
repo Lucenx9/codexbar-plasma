@@ -14,10 +14,13 @@ provider eligible for the metric also makes the aggregate daily readout
 unavailable and clears that day if it was pinned before a refresh. Healthy
 provider lines remain visible; an excluded foreign-currency provider cannot
 invalidate the money readout.
+Aggregation and ambiguity checks share the normalizer's 256-snapshot bound;
+the separate 128-series drawing limit does not weaken the total's validation.
 Daily lines compare providers on a shared zero-based scale with readable tick
 values and headroom. `ChartLines.mjs` preserves calendar spacing, breaks lines
 at missing or ambiguous dates, and uses monotone curves without new extrema.
-Subtle fills sit below all strokes and inspection markers. Money stays in the
+Subtle fills sit below all strokes and inspection markers. A narrow theme-surface
+outline keeps lines and markers readable over overlapping fills. Money stays in the
 selected currency and token totals can include all currencies. Hover or keyboard
 inspection reports each provider for the selected day. Provider pages retain bars.
 

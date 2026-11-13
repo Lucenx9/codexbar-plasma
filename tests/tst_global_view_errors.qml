@@ -483,6 +483,28 @@ TestCase {
         compare(applet.refreshes, 0);
     }
 
+    function test_providerPickKeepsComboInSyncWithCardAndReset() {
+        applet.costs = [{provider: "codex", totals: {cost: 2, tokens: 10, currency: "USD"}},
+            {provider: "claude", totals: {cost: 3, tokens: 20, currency: "USD"}}];
+        var view = createView("SpendView");
+        if (!view) return;
+        var filter = findChild(view, "analysisProviderFilter");
+        filter.incrementCurrentIndex();
+        filter.activated(filter.currentIndex);
+        compare(view.selectedProvider, "codex");
+        var card = findItem(view, function(item) { return item.modelData && item.modelData.provider === "codex" && item.checked !== undefined; });
+        card.clicked();
+        compare(view.selectedProvider, "");
+        compare(filter.currentIndex, 0);
+        filter.incrementCurrentIndex();
+        filter.activated(filter.currentIndex);
+        applet.costs = [applet.costs[1]];
+        var empty = findItem(view, function(item) { return item.plainText === "No history for this provider"; });
+        empty.helpfulAction.trigger();
+        compare(view.selectedProvider, "");
+        compare(filter.currentIndex, 0);
+    }
+
     function spendChart(points) {
         applet.dailyPoints = points;
         var view = createView("SpendView");

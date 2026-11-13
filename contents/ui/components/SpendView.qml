@@ -246,7 +246,14 @@ ColumnLayout {
                 return item.value === view.selectedProvider
             }))
             Accessible.name: i18n("Provider filter")
-            onActivated: function(index) { view.selectedProvider = view.providerOptions[index].value }
+            onActivated: function(index) {
+                view.selectedProvider = view.providerOptions[index].value
+                currentIndex = Qt.binding(function() {
+                    return Math.max(0, view.providerOptions.findIndex(function(item) {
+                        return item.value === view.selectedProvider
+                    }))
+                })
+            }
         }
         Item { visible: historyControlsRow.columns === 4; Layout.fillWidth: true; Layout.maximumWidth: view.expandedView ? Infinity : 0 }
 

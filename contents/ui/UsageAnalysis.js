@@ -39,7 +39,7 @@ function selectedDayCost(snapshot, day) {
 }
 
 function dailyPoints(format, costs, showsTokens) {
-    var items = filterCosts(costs, "")
+    var items = filterCosts(costs, "").slice(0, Normalizer.maximumCostSnapshots)
     var ambiguous = ambiguousDates(items, showsTokens)
     var points = Costs.spendDailyPoints(format, items, showsTokens).filter(function(point) {
         return !Guards.hasOwnKey(ambiguous, point.label)
@@ -66,7 +66,7 @@ function hasCalendarHistory(points) {
 function ambiguousDates(items, showsTokens) {
     var currency = Currency.spendCurrency(items)
     var result = ({})
-    items.slice(0, 128).filter(function(item) {
+    items.filter(function(item) {
         return showsTokens || Currency.costMatchesSpendCurrency(item, currency)
     }).forEach(function(item) {
         var dates = Snapshot.historyDates(Array.isArray(item.daily) ? item.daily : [])

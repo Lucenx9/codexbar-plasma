@@ -46,6 +46,7 @@ ColumnLayout {
     readonly property var valueDomain: hasLineSeries ? ChartLines.domain(lineSeries) : ChartScale.domain(points)
     readonly property real lineMarkerInset: 3.5
     readonly property color guideColor: Kirigami.Theme.textColor
+    readonly property color lineBackdrop: Kirigami.Theme.backgroundColor
 
     Layout.fillWidth: true
     spacing: Kirigami.Units.smallSpacing / 2
@@ -119,16 +120,22 @@ ColumnLayout {
                 context.fill()
             }
         }
-        context.lineWidth = 2
         context.lineCap = "round"
         context.lineJoin = "round"
         for (var stroke of projected) {
-            context.strokeStyle = applet.canvasColor(stroke.color, 1)
             for (var run of stroke.runs) {
                 traceRun(context, run)
+                // Restore the surface used for accent contrast underneath each
+                // line, including where several translucent fills overlap.
+                context.lineWidth = 6
+                context.strokeStyle = applet.canvasColor(lineBackdrop, 1)
+                context.stroke()
+                context.lineWidth = 2
+                context.strokeStyle = applet.canvasColor(stroke.color, 1)
                 context.stroke()
             }
         }
+        context.lineWidth = 4
         for (var marker of projected) {
             context.fillStyle = applet.canvasColor(marker.color, 1)
             for (var dots of marker.runs) {
@@ -136,6 +143,8 @@ ColumnLayout {
                     if (point.index !== activeIndex && dots.length > 1) continue
                     context.beginPath()
                     context.arc(point.x, point.y, point.index === activeIndex ? lineMarkerInset : 2, 0, Math.PI * 2)
+                    context.strokeStyle = applet.canvasColor(lineBackdrop, 1)
+                    context.stroke()
                     context.fill()
                 }
             }
@@ -344,6 +353,7 @@ ColumnLayout {
             function onSelectedIndexChanged() { plot.requestPaint() }
             function onHoveredIndexChanged() { plot.requestPaint() }
             function onGuideColorChanged() { plot.requestPaint() }
+            function onLineBackdropChanged() { plot.requestPaint() }
         }
 
         onPaint: {

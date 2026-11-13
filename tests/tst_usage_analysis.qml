@@ -78,6 +78,31 @@ TestCase {
         compare(Analysis.modelRows([cost], "2026-11-12", false).rows.length, 0)
     }
 
+    function test_ambiguityBeyondRenderedProviders_data() {
+        return [{tag: "129-cost", count: 129, tokens: false, foreign: false, expected: null},
+            {tag: "256-tokens", count: 256, tokens: true, foreign: false, expected: null},
+            {tag: "129-foreign-cost", count: 129, tokens: false, foreign: true, expected: 128},
+            {tag: "129-foreign-tokens", count: 129, tokens: true, foreign: true, expected: null},
+            {tag: "outside-snapshot-bound", count: 257, tokens: false, foreign: false, expected: 256}]
+    }
+
+    function test_ambiguityBeyondRenderedProviders(data) {
+        var costs = []
+        for (var i = 0; i < data.count; i++) {
+            var currency = data.foreign && i === data.count - 1 ? "EUR" : "USD"
+            var day = {label: "2026-11-13", cost: 1, tokens: 1, currency: currency}
+            costs.push({provider: "provider-" + i, currency: currency, totals: day, daily: [day]})
+        }
+        var last = costs[costs.length - 1]
+        last.daily.push(last.daily[0])
+        var original = JSON.stringify(costs)
+        var points = Analysis.dailyPoints(null, costs, data.tokens)
+        compare(points.length, 1)
+        compare(points[0].value, data.expected)
+        compare(Analysis.providerLines(null, costs, points, data.tokens).length, 128)
+        compare(JSON.stringify(costs), original)
+    }
+
     function test_comparisonRequiresCompleteCompatibleEvidence() {
         var usd = snapshot("codex", "USD", 2, 1)
         var eur = snapshot("claude", "EUR", 5, 1)
