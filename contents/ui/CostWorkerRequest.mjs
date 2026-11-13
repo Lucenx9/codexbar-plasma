@@ -14,4 +14,3 @@ export function message(run, stdoutValue, stderrValue, exitCode) {
         exitCode: typeof exitCode === "number" || typeof exitCode === "string" ? exitCode : null
     };
 }
-
