@@ -166,8 +166,8 @@ For private CLI selection, updates, and rollback, see
   text with optional automatic quota names and monetary spend budgets, and a live settings preview.
 - Optional remaining monthly quota per day in the popup, using explicit CLI
   window lengths and reset dates.
-- **Usage & Spend** with provider filters, stacked cost/token charts, complete-week
-  comparisons, current limits, and compact or expanded layouts. Inspect a day,
+- **Usage & Spend** with provider filters, provider cost/token lines, complete-week
+  comparisons, and compact or expanded layouts. Inspect a day,
   model/token composition, project breakdowns, or the optional activity heatmap
   when the CLI supplies those details.
 - Local agent **Sessions**. Transcript paths and working directories are never

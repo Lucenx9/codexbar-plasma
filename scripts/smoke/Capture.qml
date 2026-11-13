@@ -1312,7 +1312,8 @@ Item {
         var chart = findItem(view, "analysisHistoryChart");
         if (!view || !chart || chart.points.length === 0) return false;
         if (analysisStep === 0) {
-            verifyScenario(chart.points.some(function(point) { return point.segments.length > 0; }), "provider chart segments missing");
+            verifyScenario(chart.kind === "line" && chart.lineSeries.length > 0
+                && chart.lineSeries[0].points.length === chart.points.length, "provider line series missing");
             chart.selectedIndex = 0;
             verifyScenario(view.selectedDay === chart.points[0].label, "selected day lost");
             findItem(view, "analysisProviderFilter").activated(1);
@@ -1326,10 +1327,8 @@ Item {
             verifyScenario(view.selectedProvider === settingsProviderSnapshot
                 && findItem(view, "analysisProviderFilter").currentValue === settingsProviderSnapshot,
                 "changing the history range cleared the provider filter");
-            findItem(view, "analysisLimitsButton").clicked();
-            verifyScenario(view.limitsSelected, "limits did not open");
             findItem(view, "analysisMetricToggle").activated(1);
-            verifyScenario(!view.limitsSelected && applet.costHistoryShowsTokens, "token selection did not leave limits");
+            verifyScenario(applet.costHistoryShowsTokens, "token selection did not update the metric");
             findItem(view, "analysisProviderFilter").activated(0);
             if (scenario !== "usage-analysis-narrow") findItem(view, "analysisExpandButton").clicked();
             analysisStep = 2;
@@ -1337,11 +1336,6 @@ Item {
         }
         verifyScenario(view.expandedView === (scenario !== "usage-analysis-narrow") && view.selectedProvider === "" && view.providerCosts.length === view.allProviderCosts.length, "expanded comparison lost providers");
         verifyScenario(!applet.aiInsightsBusy, "analysis navigation started AI generation");
-        if (scenario === "usage-analysis-limits") {
-            if (!view.limitsSelected) findItem(view, "analysisLimitsButton").clicked();
-            verifyScenario(findItem(view, "analysisLimits").visible, "current limits are hidden");
-            verifyScenario(!findItem(view, "analysisMetricToggle").selectionActive, "two metrics look selected");
-        }
         if (scenario === "usage-analysis-models") findItem(view, "analysisModels").expanded = true;
         return true;
     }
@@ -2835,6 +2829,13 @@ Item {
                         "analysis navigation must not generate in manual mode");
                     var assistant = capture.visibleAnalysisAssistants()[0];
                     capture.verifyScenario(assistant !== undefined, "integrated assistant is missing");
+                    if (capture.scenario === "ai-insights-no-history") {
+                        capture.verifyScenario(assistant.answerExpanded
+                            && !capture.findItem(popup, "spendHistoryScroll").visible
+                            && !capture.findItem(popup, "analysisProviderFilter").visible
+                            && Object.keys(capture.applet.tokenCosts).length === 0,
+                            "assistant-only analysis must open without history controls or scans");
+                    }
                     assistant.answerExpanded = true;
                     var generate = capture.findItem(assistant, "aiInsightsGenerateButton");
                     generate.requested();

@@ -1,15 +1,17 @@
 # Popup smoke tests and panel captures
 
 The `usage-analysis` scenario checks provider/day selection, retaining the
-provider filter through a history-range refresh, switching from
-Limits to Tokens, returning to all providers, expanding the layout, and avoiding
-AI generation during navigation. The `usage-analysis-limits`,
-`usage-analysis-models`, and `usage-analysis-narrow` variants inspect current
-quotas, expanded model details, and larger text in a compact window. The `ai-insights` scenarios exercise the
-integrated assistant with a synthetic helper. `readme-spend` captures its compact
+provider filter through a history-range refresh, switching to Tokens, returning
+to all providers, expanding the layout, and avoiding AI generation during
+navigation. The `usage-analysis-models` and `usage-analysis-narrow` variants
+inspect expanded model details and larger text in a compact window.
+`ai-insights-no-history` verifies that the assistant opens directly with both
+history sources disabled, without history controls or a cost scan.
+The `ai-insights` scenarios exercise the integrated assistant with a synthetic helper. `readme-spend` captures its compact
 resting state. Pure `tst_usage_analysis.qml` tests cover mixed currencies,
-unknown/zero/duplicate dates, incomplete and sub-cent comparisons, model bounds, and stacked
-bar validation.
+unknown/zero/duplicate dates, incomplete and sub-cent comparisons, model bounds, and provider
+line projection (calendar gaps, zero values, readable scales, bounded monotone
+curves, and finite extreme values).
 
 Use these isolated graphical scenarios to inspect the popup, settings, and panel.
 [Regression checks and CI](testing.md) describes the automated suite.

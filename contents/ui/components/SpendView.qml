@@ -18,8 +18,6 @@ ColumnLayout {
     property string selectedProvider: ""
     property bool expandedView: false
     readonly property bool historyAvailable: applet.costUsageEnabled !== false || applet.identifiedTokensEnabled === true
-    property bool limitsSelected: !historyAvailable
-    onHistoryAvailableChanged: { if (!historyAvailable) limitsSelected = true }
     property bool activityExpanded: false
     readonly property var allProviderCosts: applet.spendProviderCosts()
     readonly property var filterProviderCosts: selectedProvider
@@ -42,7 +40,8 @@ ColumnLayout {
     readonly property string spendCurrency: applet.spendCurrency(providerCosts)
     readonly property bool hasMixedCostCurrencies: CostCurrency.spendHasMixedCostCurrencies(providerCosts)
     readonly property real heatmapMaximum: chartMaximum(dailyPoints)
-    readonly property var heatmapDays: CostChart.spendHeatmapDays(dailyPoints, providerCosts)
+    readonly property var heatmapDays: CostChart.spendHeatmapDays(
+        dailyPoints.filter(function(point) { return point.value !== null }), providerCosts)
     readonly property int heatmapFirstWeekday: Qt.locale().firstDayOfWeek
     readonly property var heatmapRowWeekdays: CostChart.spendHeatmapRowWeekdays(
         heatmapDays, heatmapFirstWeekday)
@@ -128,7 +127,7 @@ ColumnLayout {
                 id: spendMetaLabel
 
                 visible: view.applet.costUsageEnabled !== false
-                text: i18n("Local history, current limits and optional AI analysis")
+                text: i18n("Local history and optional AI analysis")
                 font: Kirigami.Theme.smallFont
                 opacity: view.applet.secondaryTextOpacity
                 Layout.fillWidth: true
@@ -157,7 +156,7 @@ ColumnLayout {
 
         PlasmaComponents.ToolButton {
             id: shareButton
-            visible: !view.limitsSelected && view.applet.costUsageEnabled !== false
+            visible: view.applet.costUsageEnabled !== false
             objectName: "shareUsageButton"
             Layout.alignment: Qt.AlignTop
             icon.name: "document-share"
@@ -173,20 +172,17 @@ ColumnLayout {
 
         Components.RefreshButton {
             objectName: "analysisRefreshButton"
-            visible: view.limitsSelected || view.applet.costUsageEnabled !== false
+            visible: view.applet.costUsageEnabled !== false
             Layout.alignment: Qt.AlignTop
-            busy: view.limitsSelected ? view.applet.loading === true : view.applet.costLoading
-            label: view.limitsSelected ? i18n("Refresh") : i18n("Refresh local history")
-            onRequested: {
-                if (view.limitsSelected) view.applet.refreshNow(true)
-                else view.applet.refreshCost(true)
-            }
+            busy: view.applet.costLoading
+            label: i18n("Refresh local history")
+            onRequested: view.applet.refreshCost(true)
         }
     }
 
     RowLayout {
         id: historyControlsRow
-        visible: true
+        visible: view.applet.costUsageEnabled !== false
 
         Layout.fillWidth: true
         Layout.rightMargin: Kirigami.Units.smallSpacing
@@ -194,7 +190,7 @@ ColumnLayout {
 
         Components.PlainComboBox {
             objectName: "analysisProviderFilter"
-            visible: !view.limitsSelected && view.applet.costUsageEnabled !== false
+            visible: view.applet.costUsageEnabled !== false
             Layout.fillWidth: true
             Layout.minimumWidth: 0
             Layout.maximumWidth: view.expandedView ? Kirigami.Units.gridUnit * 18 : Infinity
@@ -207,31 +203,19 @@ ColumnLayout {
             Accessible.name: i18n("Provider filter")
             onActivated: function(index) { view.selectedProvider = view.providerOptions[index].value }
         }
-        Item { visible: view.expandedView || view.limitsSelected || view.applet.costUsageEnabled === false; Layout.fillWidth: true }
+        Item { visible: view.expandedView; Layout.fillWidth: true }
 
         Components.CostMetricToggle {
             id: metricToggle
             objectName: "analysisMetricToggle"
             enabled: view.applet.costUsageEnabled !== false
-            selectionActive: !view.limitsSelected
 
             applet: view.applet
         }
 
-        PlainButton {
-            objectName: "analysisLimitsButton"
-            plainText: i18n("Limits")
-            checkable: true
-            checked: view.limitsSelected
-            onClicked: {
-                view.limitsSelected = !view.limitsSelected || !view.historyAvailable
-                checked = Qt.binding(function() { return view.limitsSelected })
-            }
-        }
-
         Components.PlainComboBox {
             id: rangeCombo
-            visible: !view.limitsSelected && view.applet.costUsageEnabled !== false
+            visible: view.applet.costUsageEnabled !== false
 
             Layout.minimumHeight: metricToggle.implicitHeight
             textRole: "text"
@@ -256,24 +240,9 @@ ColumnLayout {
         }
     }
 
-    Connections {
-        target: metricToggle
-        function onActivated(index) { view.limitsSelected = false }
-    }
-
-    Connections {
-        target: view.applet
-        function onCostHistoryMetricChanged() { view.limitsSelected = false }
-    }
-
-    Components.AnalysisLimits {
-        visible: view.limitsSelected
-        applet: view.applet
-    }
-
     PlasmaComponents.ScrollView {
         id: spendHistoryScroll
-        visible: !view.limitsSelected
+        visible: view.historyAvailable
         objectName: "spendHistoryScroll"
         Layout.fillWidth: true
         Layout.fillHeight: true
@@ -419,6 +388,7 @@ ColumnLayout {
                 onPointsChanged: {
                     var index = CostChart.costDayIndexAfterRefresh(
                         view.daySelectionMemo.points, view.daySelectionMemo.index, points)
+                    if (index >= 0 && points[index].value === null) index = -1
                     view.daySelectionMemo = { points: points, index: index }
                     selectedIndex = index
                     hoveredIndex = -1
@@ -434,9 +404,19 @@ ColumnLayout {
                 accent: view.applet.readableAccentColor(
                     Kirigami.Theme.highlightColor,
                     Kirigami.Theme.backgroundColor)
-                kind: "bar"
+                kind: "line"
+                lineSeries: Analysis.providerLines(view.applet.costNumberFormat, view.providerCosts,
+                    view.dailyPoints, view.applet.costHistoryShowsTokens).map(function(series) {
+                        return Object.assign({}, series, {label: view.applet.providerDisplayTitle(series.provider)})
+                    })
+                axisLabels: [historyChart.valueDomain.maximum, historyChart.valueDomain.maximum / 2, 0]
+                    .map(function(value, index) {
+                        return historyChart.valueDomain.maximum === 0 && index < 2 ? ""
+                            : CostAmounts.metricText(view.applet.costNumberFormat, value,
+                                view.spendCurrency, view.applet.costHistoryShowsTokens)
+                    })
                 showPeak: true
-                // This chart plots the whole selected range, up to 365 bars, and
+                // This chart plots the whole selected range, up to 365 days, and
                 // is the primary view here: it outranks the heatmap below it.
                 plotHeight: Kirigami.Units.gridUnit * (view.expandedView ? 10 : 6)
                 accessibleTitle: view.applet.costHistoryShowsTokens
@@ -957,12 +937,16 @@ ColumnLayout {
 
     PlasmaComponents.ScrollView {
         Layout.fillWidth: true
-        Layout.preferredHeight: Math.min(analysisAssistant.implicitHeight, view.height * 0.42)
+        Layout.fillHeight: !view.historyAvailable
+        Layout.minimumHeight: 0
+        Layout.preferredHeight: view.historyAvailable
+            ? Math.min(analysisAssistant.implicitHeight, view.height * 0.42) : analysisAssistant.implicitHeight
         contentWidth: availableWidth
         clip: true
         PlasmaComponents.ScrollBar.horizontal.policy: PlasmaComponents.ScrollBar.AlwaysOff
         Components.AnalysisAssistant {
             id: analysisAssistant
+            answerExpanded: !view.historyAvailable
             width: parent.width
             applet: view.applet
         }

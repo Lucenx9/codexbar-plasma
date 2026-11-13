@@ -815,19 +815,13 @@ class CostSectionTests(unittest.TestCase):
     }
     ''')
 
-    def test_analysis_refresh_uses_the_visible_data_source(self):
+    def test_analysis_refresh_only_updates_history(self):
         self.run_fixture('''
     function test_analysisRefresh() {
         var subject = createTemporaryObject(spendFactory, testCase);
-        var view = findChild(subject, "testAnalysis");
         var refresh = findChild(subject, "analysisRefreshButton");
-        view.limitsSelected = true;
         refresh.requested();
-        compare(fakeApplet.usageRefreshCount, 1);
-        compare(fakeApplet.refreshCount, 0);
-        view.limitsSelected = false;
-        refresh.requested();
-        compare(fakeApplet.usageRefreshCount, 1);
+        compare(fakeApplet.usageRefreshCount, 0);
         compare(fakeApplet.refreshCount, 1);
     }
     ''')

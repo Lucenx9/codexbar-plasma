@@ -195,10 +195,9 @@ class PopupLayoutTest(unittest.TestCase):
         if ".focusReason =" in applet.id_block("overviewRowMouse"):
             raise AssertionError("overview rows must use a supported focus transition")
         for fragment in (
-            "busy: view.limitsSelected ? view.applet.loading === true : view.applet.costLoading",
+            "busy: view.applet.costLoading",
             "busy: view.applet.sessionsLoading",
-            "if (view.limitsSelected) view.applet.refreshNow(true)",
-            "else view.applet.refreshCost(true)",
+            "onRequested: view.applet.refreshCost(true)",
             "onRequested: view.applet.refreshSessions()",
         ):
             applet.require(fragment, "history and sessions must retain scoped refresh feedback and actions")

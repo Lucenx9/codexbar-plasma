@@ -56,7 +56,7 @@ network requests and returns semantic JSON records.
 | Process, nonce, deadline, stale replies, interval timer | `contents/ui/controllers/AiInsightsController.qml` |
 | Persistence and localized error text | `main.qml` and `components/AiInsightsMessages.qml` |
 | Guided questions and saved-answer presentation | `components/AnalysisAssistant.qml` |
-| Analytics selection and presentation | `UsageAnalysis.js`, `ChartStack.mjs`, and `components/SpendView.qml` |
+| Analytics selection and presentation | `UsageAnalysis.js`, `ChartLines.mjs`, and `components/SpendView.qml` |
 | Secret Service, HTTP, provider differences, output validation | `scripts/lib/ai_insights.py` via `scripts/ai-insights.py` |
 | Settings, key prompt, model discovery | `configAiInsights.qml` |
 

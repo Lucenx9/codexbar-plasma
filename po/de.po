@@ -341,7 +341,6 @@ msgstr "CLI installieren und verwenden"
 msgid "Plasma could not run '%1'. Install or reuse a private official CLI for this widget and use it immediately. If your CLI is installed elsewhere, set its path in Settings > Diagnostics."
 msgstr "Plasma konnte „%1“ nicht ausführen. Installieren Sie eine private Kopie der offiziellen CLI für dieses Widget oder verwenden Sie eine vorhandene Kopie sofort. Falls Ihre CLI an einem anderen Ort installiert ist, legen Sie den Pfad unter Einstellungen > Diagnose fest."
 
-#: contents/ui/components/AnalysisLimits.qml
 #: contents/ui/components/FullRepresentation.qml
 msgid "No provider data"
 msgstr "Keine Anbieterdaten"
@@ -3360,7 +3359,7 @@ msgstr "Konto ausgeblendet"
 msgid "No usage yet"
 msgstr "Noch keine Nutzung"
 
-#: contents/ui/components/AnalysisLimits.qml contents/ui/main.qml
+#: contents/ui/main.qml
 msgid "Limits not available"
 msgstr "Limits nicht verfügbar"
 
@@ -4451,14 +4450,6 @@ msgstr ""
 "Gespeicherte Antworten beschreiben die Messwerte zum Erstellungszeitpunkt. "
 "Kontonamen, Projekte, Pfade und Prompts werden nie gesendet."
 
-#: contents/ui/components/AnalysisLimits.qml
-msgid ""
-"Current limits have different capacities and reset windows. Their "
-"percentages are not additive."
-msgstr ""
-"Aktuelle Limits haben unterschiedliche Kapazitäten und Rücksetzzeiträume. "
-"Ihre Prozentsätze lassen sich nicht addieren."
-
 #: contents/ui/components/AnalysisModels.qml
 msgid "Models and token composition"
 msgstr "Modelle und Token-Zusammensetzung"
@@ -4476,8 +4467,8 @@ msgid "Last 7 days vs previous 7"
 msgstr "Letzte 7 Tage im Vergleich zu den 7 davor"
 
 #: contents/ui/components/SpendView.qml
-msgid "Local history, current limits and optional AI analysis"
-msgstr "Lokaler Verlauf, aktuelle Limits und optionale KI-Analyse"
+msgid "Local history and optional AI analysis"
+msgstr "Lokaler Verlauf und optionale KI-Analyse"
 
 #: contents/ui/components/SpendView.qml
 msgid "Compact analysis"
@@ -4490,10 +4481,6 @@ msgstr "Analyse erweitern"
 #: contents/ui/components/SpendView.qml
 msgid "Provider filter"
 msgstr "Anbieterfilter"
-
-#: contents/ui/components/SpendView.qml
-msgid "Limits"
-msgstr "Limits"
 
 #: contents/ui/components/SpendView.qml
 msgid "Providers on %1"

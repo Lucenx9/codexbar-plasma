@@ -326,7 +326,8 @@ owns checkout setup, delivery, and repository maintenance.
   The controller binds the validated question to the private snapshot and saved
   answer; automatic generation remains a summary. `UsageAnalysis.js` projects
   filtered history, complete-week comparisons, day details, and bounded model
-  rows. `ChartStack.mjs` validates and projects provider bar segments; QML owns
+  rows. `ChartLines.mjs` bounds calendar runs, computes readable scales and projects
+  monotone provider curves without joining missing days; QML owns
   drawing, localization, and interaction.
 - `contents/ui/main.qml` owns the Status Page component list: its expanded
   provider, the single `CliProcess` request, and the 30-second deadline.

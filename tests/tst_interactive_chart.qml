@@ -27,7 +27,7 @@ TestCase {
             var holder = Qt.createQmlObject('import QtQuick; import org.kde.kirigami as Kirigami; '
                 + 'import "../contents/ui/components" as Components; '
                 + 'QtObject { property Component chartComponent: Component {'
-                + ' Components.InteractiveChart { function i18n(text) { return text } '
+                + ' Components.InteractiveChart { function i18n(text) { for (var i = 1; i < arguments.length; i++) text = text.replace("%" + i, String(arguments[i])); return text } '
                 + 'function setThemeTextColor(value) { Kirigami.Theme.inherit = false; Kirigami.Theme.textColor = value } '
                 + '} } }', this, Qt.resolvedUrl("InteractiveChartTest.qml"))
             component = holder.chartComponent
@@ -42,6 +42,49 @@ TestCase {
         var chart = createTemporaryObject(component, this, properties)
         verify(chart !== null)
         return chart
+    }
+
+    function test_providerLinesInspectValuesAndGapsWithoutChangingGeometry() {
+        function points(values) {
+            return values.map(function(value, index) {
+                return {label: "2026-11-" + (10 + index), value: value,
+                    displayValue: value === null ? null : String(value)}
+            })
+        }
+        var chart = createChart({
+            applet: {secondaryTextOpacity: 0.7, canvasColor: function(color, alpha) {
+                return Qt.rgba(color.r, color.g, color.b, alpha).toString()
+            }},
+            width: 300, kind: "line", showPeak: true, accent: "blue",
+            points: points([20, 10, 3, 21]), axisLabels: ["25", "12.5", "0"],
+            lineSeries: [{provider: "a", label: "Codex", points: points([0, 10, null, 20])},
+                {provider: "b", label: "Claude", points: points([20, 0, 3, 1])},
+                {provider: "c", label: "Gemini", points: points([0, 0, 0, 0])}],
+            seriesColors: {a: Qt.rgba(0, 0.6, 0.8, 1), b: Qt.rgba(0.8, 0.4, 0.2, 1), c: Qt.rgba(0.6, 0.2, 0.7, 1)}
+        })
+        if (!chart) return
+        failOnWarning(/.*/)
+        var focusTarget = chart.nextItemInFocusChain(true)
+        var plot = focusTarget.parent
+        var paints = createTemporaryObject(paintSpyComponent, this, {target: plot})
+        tryCompare(plot, "available", true)
+        tryVerify(function() { return paints.count > 0 })
+        var originalHeight = chart.height
+        var originalWidth = plot.width
+        mouseMove(plot, chart.lineMarkerInset, plot.height / 2)
+        tryCompare(chart, "hoveredIndex", 0)
+        compare(chart.selectedIndex, -1)
+        compare(focusTarget.Accessible.description, new Date(2026, 10, 10).toLocaleDateString(Qt.locale(), Locale.ShortFormat) + ": 20\nCodex: 0\nClaude: 20\nGemini: 0")
+        focusTarget.forceActiveFocus(Qt.TabFocusReason)
+        keyClick(Qt.Key_End)
+        compare(chart.selectedIndex, 3)
+        compare(chart.hoveredIndex, -1)
+        compare(focusTarget.Accessible.description, new Date(2026, 10, 13).toLocaleDateString(Qt.locale(), Locale.ShortFormat) + ": 21\nCodex: 20\nClaude: 1\nGemini: 0")
+        keyClick(Qt.Key_Left)
+        compare(focusTarget.Accessible.description, new Date(2026, 10, 12).toLocaleDateString(Qt.locale(), Locale.ShortFormat) + ": 3\nCodex: Unavailable\nClaude: 3\nGemini: 0")
+        compare(chart.height, originalHeight)
+        compare(plot.width, originalWidth)
+        verify(waitForRendering(chart))
     }
 
     function test_firstInspectionKeepsPlotGeometry_data() {

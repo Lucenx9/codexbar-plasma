@@ -324,13 +324,15 @@ work and upstream contract requirements.
   stay in place.
   Overview, Usage & Spend, Sessions and provider headers use the theme's smaller
   text for summary and update metadata beneath their titles.
-- Global **Usage & Spend** tab with a provider filter, Cost/Tokens and Limits controls, and a range selector
+- Global **Usage & Spend** tab with a provider filter, a Cost/Tokens switch, and a range selector
   (7, 30, or 90 days, **Month to date**, or **All history**), interactive daily chart, activity heatmap, and provider totals that
   keep different currencies separate. The range selector matches the metric
   toggle's minimum height and includes its current value in its accessible name.
   **Expand analysis** widens the popup for a taller, side-by-side chart and provider list;
-  **Compact analysis** restores the stacked layout. Bars use provider colors
-  when the full split is known. Selecting a provider filters local analytics
+  **Compact analysis** restores the stacked layout. Each provider has a colored
+  line with a subtle fill, readable scale, and gaps for unavailable days. Hover
+  or keyboard inspection shows daily values for each provider. Provider pages
+  retain their bar charts. Selecting a provider filters local analytics
   and stays selected across range changes, including empty results;
   selecting a day scopes provider and model details, while headline
   totals keep the selected period and projects appear only with **All days**. **All days** clears the day selection.
@@ -340,9 +342,10 @@ work and upstream contract requirements.
   unavailable instead of extrapolating, with the history requirements shown below
   the totals. Summary values stay aligned when labels wrap, and comparison
   statuses wrap instead of being truncated. Different currencies are not converted.
-  **Limits** shows current provider quotas and reset windows independently of
-  history filters; percentages are not additive across providers. Refresh updates
-  current usage in Limits and local history in Cost/Tokens.
+  Current quotas and reset windows stay in **Overview** and provider details.
+  Refresh updates local history. If both history sources are disabled but AI is
+  enabled, this tab opens the assistant directly without history controls.
+  The assistant can still use current quotas to explain remaining headroom.
   Chart and heatmap dates use the system
   locale's short date format. Chart guide lines follow theme text-color changes
   while the popup stays open. Hovering or using the arrow keys to inspect a
