@@ -379,11 +379,11 @@ class CostSectionTests(unittest.TestCase):
         var secondary = findChild(subject, "spendProviderSecondary");
         var title = findChild(subject, "spendProviderTitle");
         verify(primary && secondary && title);
-        compare(primary.text, "USD 5");
+        compare(primary.text, "$5.00");
         compare(secondary.text, "100 tokens");
         fakeApplet.costHistoryShowsTokens = true;
         compare(primary.text, "100 tokens");
-        compare(secondary.text, "USD 5");
+        compare(secondary.text, "$5.00");
         compare(fakeApplet.refreshCount, 0);
 
         // Unknown is distinct from measured zero in either metric order.
@@ -403,7 +403,7 @@ class CostSectionTests(unittest.TestCase):
             totals: {cost: 123456789, tokens: null, currency: "EUR"}, valueMode: "estimated"}];
         tryVerify(function() {
             primary = findChild(subject, "spendProviderPrimary");
-            return primary && primary.text === "EUR 123456789 (estimated)";
+            return primary && primary.text === "EUR 123,456,789.00 (estimated)";
         });
         secondary = findChild(subject, "spendProviderSecondary");
         title = findChild(subject, "spendProviderTitle");
@@ -896,7 +896,7 @@ class CostSectionTests(unittest.TestCase):
             return charts[0].accessibleTitle === "Daily token history";
         });
         fakeApplet.costHistoryShowsTokens = false;
-        verify(texts.indexOf("Activity heatmap") >= 0);
+        verify(all.some(function(item) { return item.plainText === "Activity heatmap" && item.visible; }));
         // Every rendered day must sit on the row whose weekday label names it.
         var dayNames = [];
         for (var weekday = 0; weekday < 7; weekday++)

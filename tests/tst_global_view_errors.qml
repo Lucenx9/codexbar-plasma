@@ -389,6 +389,72 @@ TestCase {
         verify(value.mapToItem(scroll, 0, 0).y < scroll.availableHeight / 2, "Short provider totals must stay near the top of the body");
     }
 
+    function test_selectionKeepsGeometryAndReturnsVisibleFocus() {
+        applet.dailyPoints = [day("2026-10-16", 2), day("2026-10-17", 3)];
+        var view = createView("SpendView");
+        if (!view) return;
+        var chart = findChild(view, "analysisHistoryChart");
+        var y = chart.mapToItem(view, 0, 0).y;
+        chart.focusPlot(Qt.TabFocusReason);
+        keyClick(Qt.Key_End);
+        verify(waitForPolish(view));
+        compare(chart.mapToItem(view, 0, 0).y, y);
+        var reset = findChild(view, "analysisAllDaysButton");
+        reset.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Space);
+        compare(chart.selectedIndex, -1);
+        verify(!reset.activeFocus);
+        keyClick(Qt.Key_Home);
+        compare(chart.selectedIndex, 0);
+        keyClick(Qt.Key_Escape);
+        compare(chart.selectedIndex, -1);
+    }
+
+    function test_assistantAndKeyboardUseOneScrollViewport() {
+        applet.dailyPoints = [day("2026-10-16", 2), day("2026-10-17", 3)];
+        var view = createView("SpendView");
+        if (!view) return;
+        var scroll = findChild(view, "spendHistoryScroll");
+        var toggle = findChild(view, "analysisAssistantToggle");
+        var height = scroll.height;
+        toggle.forceActiveFocus(Qt.TabFocusReason);
+        tryVerify(function() {
+            var pos = toggle.mapToItem(scroll, 0, 0);
+            return pos.y >= 0 && pos.y + toggle.height <= scroll.height + 1;
+        });
+        keyClick(Qt.Key_Space);
+        verify(waitForPolish(view));
+        compare(scroll.height, height);
+        var assistant = findChild(view, "analysisAssistant");
+        verify(assistant.answerExpanded);
+        tryVerify(function() {
+            var top = assistant.mapToItem(scroll, 0, 0).y;
+            return top >= -1 && top + Math.min(assistant.height, scroll.height) <= scroll.height + 1;
+        }, 1000, "Opening the assistant reveals its content after layout, not only its toggle: "
+            + JSON.stringify({top: assistant.mapToItem(scroll, 0, 0).y, height: assistant.height,
+                viewport: scroll.height, available: scroll.availableHeight, content: scroll.contentItem.contentHeight,
+                offset: scroll.contentItem.contentY}));
+    }
+
+    function test_providerFilterRetainsVisibleFocusAfterRowRebuild() {
+        applet.costs = [{provider: "codex", totals: {cost: 2, tokens: 10, currency: "USD"}},
+            {provider: "claude", totals: {cost: 3, tokens: 20, currency: "USD"}}];
+        var view = createView("SpendView");
+        if (!view) return;
+        var card = findItem(view, function(item) { return item.modelData && item.modelData.provider === "claude" && item.checked !== undefined; });
+        verify(card !== null);
+        card.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Space);
+        compare(view.selectedProvider, "claude");
+        verify(findChild(view, "analysisProviderFilter").activeFocus);
+        applet.costs = [applet.costs[0]];
+        var empty = findItem(view, function(item) { return item.plainText === "No history for this provider"; });
+        verify(empty !== null && empty.visible);
+        empty.helpfulAction.trigger();
+        compare(view.selectedProvider, "");
+        verify(findChild(view, "analysisProviderFilter").activeFocus);
+    }
+
     function test_providerFilterSurvivesRangeReplacement() {
         var codex = {provider: "codex", totals: {cost: 2, tokens: 100, currency: "USD"}, valueMode: "plain"};
         var claude = {provider: "claude", totals: {cost: 3, tokens: 200, currency: "USD"}, valueMode: "plain"};

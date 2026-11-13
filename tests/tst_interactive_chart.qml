@@ -87,6 +87,42 @@ TestCase {
         verify(waitForRendering(chart))
     }
 
+    function test_linePreviewStaysInsidePlotAndClosesAfterPointerExit() {
+        var chart = createChart({applet: {secondaryTextOpacity: 0.7, canvasColor: function() { return "#000000" }},
+            width: 300, kind: "line", accent: "blue", points: [{label: "2026-11-13", value: 1}],
+            lineSeries: [{provider: "codex", points: [{label: "2026-11-13", value: 1}]}]});
+        if (!chart) return;
+        failOnWarning(/.*/);
+        var focus = chart.nextItemInFocusChain(true);
+        var plot = focus.parent;
+        var preview = findChild(chart, "chartLinePreview");
+        mouseMove(plot, plot.width / 2, plot.height / 2);
+        tryCompare(preview, "visible", true);
+        verify(preview.x >= 0 && preview.x + preview.width <= plot.width);
+        verify(preview.y >= 0 && preview.y + preview.height <= plot.height);
+        mouseClick(plot, plot.width / 2, plot.height / 2);
+        mouseMove(this, 330, 230);
+        tryCompare(preview, "visible", false);
+        compare(chart.selectedIndex, 0);
+        keyClick(Qt.Key_Escape);
+        compare(chart.selectedIndex, -1);
+    }
+
+    function test_axisLabelsStayInsideMirroredChart() {
+        var chart = createChart({applet: {secondaryTextOpacity: 0.7, canvasColor: function() { return "#000000" }},
+            width: 300, kind: "line", accent: "blue", points: [{label: "2026-11-13", value: 1}],
+            axisLabels: ["$2", "$1", "$0"], lineSeries: []});
+        if (!chart) return;
+        chart.LayoutMirroring.enabled = true;
+        chart.LayoutMirroring.childrenInherit = true;
+        verify(waitForRendering(chart));
+        var plot = chart.nextItemInFocusChain(true).parent;
+        var labels = plot.children.filter(function(item) { return item.text === "$2"; });
+        compare(labels.length, 1);
+        var x = labels[0].mapToItem(chart, 0, 0).x;
+        verify(x >= 0 && x + labels[0].width <= chart.width + 1);
+    }
+
     function test_firstInspectionKeepsPlotGeometry_data() {
         return [{tag: "hover", keyboard: false}, {tag: "keyboard", keyboard: true}]
     }

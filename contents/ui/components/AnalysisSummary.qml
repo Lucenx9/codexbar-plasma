@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import "../UsageAnalysis.js" as Analysis
+import "../AnalysisAmounts.mjs" as AnalysisAmounts
 import "../CostPresentation.mjs" as Costs
 import "../CostTrust.mjs" as Trust
 
@@ -17,7 +18,7 @@ GridLayout {
         : comparison.changePercent !== undefined ? i18n("%1%", (comparison.changePercent > 0 ? "+" : "")
             + comparison.changePercent.toLocaleString(Qt.locale(), 'f', 0)) : i18n("No baseline")
     Layout.fillWidth: true
-    columns: width >= Kirigami.Units.gridUnit * 24 ? 3 : 1
+    columns: width >= Math.max(Kirigami.Units.gridUnit * 24, summaryFont.height * 24) ? 3 : 1
     columnSpacing: Kirigami.Units.largeSpacing
     rowSpacing: Kirigami.Units.smallSpacing
     visible: totals !== null
@@ -25,7 +26,7 @@ GridLayout {
     readonly property string comparisonHelp: i18n("Comparison excludes today and needs 14 complete days plus a scan from today.")
     readonly property var metrics: [
         {label: i18n("Cost"), value: summary.totals && summary.totals.cost !== null
-            ? applet.qualifiedCostValue(applet.amountString(summary.totals.cost, summary.totals.currency),
+            ? applet.qualifiedCostValue(AnalysisAmounts.metricText(applet.costNumberFormat, summary.totals.cost, summary.totals.currency, false),
                 summary.trust ? summary.trust.valueMode : "plain") : i18n("Cost unavailable")},
         {label: i18n("Tokens"), value: summary.totals && summary.totals.tokens !== null
             ? applet.usageCountText(summary.totals.tokens, "tokens") : i18n("Tokens unavailable")},
@@ -33,6 +34,8 @@ GridLayout {
             ? applet.qualifiedCostValue(summary.changeText, "estimated") : summary.changeText,
             help: summary.comparisonHelp}
     ]
+
+    FontMetrics { id: summaryFont; font: Kirigami.Theme.defaultFont }
 
     Repeater {
         model: summary.metrics
@@ -69,7 +72,7 @@ GridLayout {
             font.weight: Font.DemiBold
             font.pointSize: Kirigami.Theme.defaultFont.pointSize * 1.15
             font.features: { "tnum": 1 }
-            wrapMode: Text.Wrap
+            wrapMode: modelData.help ? Text.WordWrap : Text.Wrap
             Accessible.name: i18n("%1: %2", modelData.label, text)
             Accessible.description: modelData.help || ""
             HoverHandler { id: valueHover }

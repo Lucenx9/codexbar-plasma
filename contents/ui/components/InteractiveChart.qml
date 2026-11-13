@@ -165,6 +165,10 @@ ColumnLayout {
             Math.floor(positionX * pointCount / plot.width)))
     }
 
+    function focusPlot(reason) {
+        plotFocus.forceActiveFocus(reason)
+    }
+
     function moveSelection(delta) {
         if (pointCount === 0) {
             return
@@ -258,7 +262,7 @@ ColumnLayout {
                 required property var modelData
                 text: modelData
                 width: Math.max(0, chart.axisWidth - Kirigami.Units.smallSpacing * 2)
-                x: -chart.axisWidth
+                x: chart.LayoutMirroring.enabled ? plot.width + Kirigami.Units.smallSpacing * 2 : -chart.axisWidth
                 y: Math.max(0, Math.min(plot.height - implicitHeight,
                     CostChart.chartLineY(plot.height, 1 - index / 2, chart.lineMarkerInset) - implicitHeight / 2))
                 horizontalAlignment: Text.AlignRight
@@ -291,6 +295,11 @@ ColumnLayout {
 
             Keys.onPressed: function(event) {
                 switch (event.key) {
+                case Qt.Key_Escape:
+                    if (chart.selectedIndex < 0) return
+                    chart.selectedIndex = -1
+                    event.accepted = true
+                    break
                 case Qt.Key_Left:
                     chart.moveSelection(-1)
                     event.accepted = true
@@ -461,11 +470,39 @@ ColumnLayout {
 
         PlainToolTip {
             parent: plot
-            visible: chart.hasActivePoint
-                && (chart.hasLineSeries || chartPointLabel.truncated || chartPointValue.truncated)
+            visible: !chart.hasLineSeries && chart.hasActivePoint
+                && (chartPointLabel.truncated || chartPointValue.truncated)
                 && (plotMouse.containsMouse || plotFocus.activeFocus)
             plainText: chart.hasActivePoint
                 ? chart.pointInspectionText(chart.activeIndex) : ""
+        }
+
+        // A clipped child stays inside the plot and its scroll viewport. Unlike
+        // an overlay tooltip, it cannot float over navigation after scrolling.
+        Rectangle {
+            id: linePreview
+            objectName: "chartLinePreview"
+            visible: chart.hasLineSeries && chart.hoveredIndex >= 0 && plotMouse.containsMouse
+            width: Math.min(plot.width, previewText.implicitWidth + Kirigami.Units.smallSpacing * 2)
+            height: Math.min(plot.height, previewText.implicitHeight + Kirigami.Units.smallSpacing * 2)
+            x: Math.max(0, Math.min(plot.width - width,
+                CostChart.chartLineX(plot.width, chart.pointCount, chart.hoveredIndex, chart.lineMarkerInset) - width / 2))
+            y: 0
+            color: Kirigami.Theme.backgroundColor
+            border.color: Kirigami.Theme.disabledTextColor
+            radius: Kirigami.Units.cornerRadius
+            clip: true
+            Accessible.ignored: true
+            PlainPlasmaLabel {
+                id: previewText
+                anchors.fill: parent
+                anchors.margins: Kirigami.Units.smallSpacing
+                text: chart.pointInspectionText(chart.hoveredIndex)
+                font: Kirigami.Theme.smallFont
+                wrapMode: Text.Wrap
+                elide: Text.ElideRight
+                Accessible.ignored: true
+            }
         }
     }
 

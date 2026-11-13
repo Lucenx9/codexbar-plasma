@@ -335,7 +335,10 @@ work and upstream contract requirements.
   retain their bar charts. Selecting a provider filters local analytics
   and stays selected across range changes, including empty results;
   selecting a day scopes provider and model details, while headline
-  totals keep the selected period and projects appear only with **All days**. **All days** clears the day selection.
+  totals keep the selected period and projects appear only with **All days**. **All days** or Escape clears the day selection and returns keyboard inspection
+  to the chart. Selecting a day does not move the plot. Provider hover readouts
+  follow the configured provider order and stay inside the plot; pinned-day
+  cards and the accessible description retain all provider values.
   **Models and token composition** and **Activity heatmap** expand on demand.
   **Last 7 days vs previous 7** excludes today and requires fourteen complete
   days plus a current scan. Short, partial, stale, or ambiguous histories show
@@ -346,12 +349,16 @@ work and upstream contract requirements.
   Refresh updates local history. If both history sources are disabled but AI is
   enabled, this tab opens the assistant directly without history controls.
   The assistant can still use current quotas to explain remaining headroom.
+  The optional assistant shares the history scroll area; opening it does not
+  shrink the chart viewport. Keyboard focus reveals controls as needed. Large
+  text can stack the filters and summary metrics. An empty provider filter
+  offers **Show all providers** when other history remains available.
   Chart and heatmap dates use the system
   locale's short date format. Chart guide lines follow theme text-color changes
   while the popup stays open. Hovering or using the arrow keys to inspect a
   chart point shows a vertical guide, including for zero values and entirely
   zero-valued series. Abbreviated point labels or values reveal their full text
-  in a tooltip while hovering the plot or keeping keyboard focus there.
+  in provider-detail tooltips while hovering the plot or keeping keyboard focus there.
   Keyboard inspection shows the readout immediately. Charts show a focus
   outline when reached with Tab or Shift+Tab; clicking a chart selects a day
   without the outline and still allows arrow-key inspection.
@@ -361,7 +368,9 @@ work and upstream contract requirements.
   existing readout behavior.
   Provider totals emphasize the selected Cost or Tokens metric, with the other
   figure on a smaller line beneath it. Missing amounts read as unavailable;
-  measured zero stays zero. Long provider names and figures reveal their full
+  measured zero stays zero. Positive spend below one cent reads **< $0.01**
+  (in the reported currency), and chart ticks use finer precision when needed.
+  Long provider names and figures reveal their full
   text on hover. The heatmap groups the range into weekday
   rows, labelled with the system locale's short day names and starting on its
   first day of the week, so each weekday keeps its row as the range moves. Week
@@ -369,9 +378,8 @@ work and upstream contract requirements.
   in the loaded calendar and padding at either end of the range. Measured zero
   remains a tinted, recorded day. The heatmap stays hidden for ranges that fill
   a single column. A **Less–More** key directly below the grid shows the cell
-  shades from the lowest to the highest daily value. For ranges up to five weeks,
-  a wide popup places provider totals beside the heatmap; longer ranges and
-  narrow popups stack them vertically.
+  shades from the lowest to the highest daily value. Provider totals remain
+  with the daily chart above the heatmap.
   The heatmap is one keyboard Tab stop. Left/Right moves between weeks on the
   same weekday (mirrored for RTL); Up/Down moves within the week. Missing days
   are skipped, and Home/End select the first/last visible measured day. A readout

@@ -70,7 +70,9 @@ snapshot without a usable `updatedAt` keeps its Today amounts.
   Valid calendar dates remain inside the selected window even when duplicate
   dates, malformed records or the scan budget prevent gap filling. Those
   fallbacks retain observed rows without inventing zero days. Undated legacy
-  labels keep their bounded sequence behavior.
+  labels keep their bounded sequence behavior, using aggregate bars in Usage &
+  Spend when labels do not all name calendar dates. Invalid calendar dates are not
+  treated as legacy labels.
   Calendar keys accept only strings in `YYYY-MM-DD` form. Object and array
   date fields cannot extend All history or interrupt healthy provider snapshots.
   Quota-week sums mark trailing days after a stale snapshot, the last scanned
@@ -145,7 +147,14 @@ CLI scan for the provider and history range, independently of the account
 selected in the widget. Changing accounts does not filter this scan or establish
 that its totals belong to that account. The Codex cost hint states this scope.
 
-Hover previews stay inside the chart. Pointer or keyboard selection pins a day
+Hover previews stay inside the chart. Usage & Spend previews appear immediately
+while the pointer is over a day and are clipped to the plot and scroll viewport;
+long previews may elide, while pinning the day exposes the full provider details.
+Keyboard inspection uses the readout, accessible description and provider rows.
+All days and Escape clear the pin and leave keyboard focus on the chart. The
+reset action occupies the provider heading row without shifting the plot.
+Positive sub-cent amounts use an explicit less-than-one-cent notation; axis
+labels retain the precision needed to distinguish ticks. Pointer or keyboard selection pins a day
 without fetching data. While a day is pinned, the chart readout and the
 drill-down heading name it, so the latest-day summary under the chart is hidden. A background refresh retains the pinned date even when
 its chart position changes; a missing or ambiguous date clears the pin.

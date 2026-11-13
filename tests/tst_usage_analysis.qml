@@ -1,12 +1,48 @@
 import QtQuick
 import QtTest
 import "../contents/ui/UsageAnalysis.js" as Analysis
+import "../contents/ui/AnalysisAmounts.mjs" as Display
 import "../contents/ui/ChartLines.mjs" as Chart
 import "../contents/ui/PrivacyPresentation.js" as Privacy
 
 TestCase {
     name: "UsageAnalysis"
     readonly property double now: new Date(2026, 10, 13, 12).getTime()
+
+    function test_smallAmountsAndScalePrecision() {
+        var format = {group: ".", decimal: ","}
+        compare(Display.metricText(format, 0.003, "USD", false), "< $0,01")
+        compare(Display.metricText(format, 0, "USD", false), "$0,00")
+        compare(Display.metricText(format, "0.003", "USD", false), "-")
+        compare(Display.metricText(format, 0.01, "EUR", false), "EUR 0,01")
+        compare(Display.axisText(format, 0.005, {step: 0.0025, currency: "USD", showsTokens: false}), "$0,0050")
+        compare(Display.axisText(format, 0.0025, {step: 0.0025, currency: "USD", showsTokens: false}), "$0,0025")
+        compare(Display.axisText(format, 20000, {step: 10000, currency: "USD", showsTokens: false}), "$20.000")
+        verify(Display.axisText(format, Number.MIN_VALUE, {step: Number.MIN_VALUE, currency: "USD", showsTokens: false}).indexOf("e-") > 0)
+        compare(Display.axisText(format, 120000, {step: 60000, currency: "USD", showsTokens: true}), "120K")
+        var cost = snapshot("codex", "USD", 0.003, 0.003)
+        var points = Analysis.dailyPoints(format, [cost], false)
+        compare(points[0].displayValue, "< $0,01")
+        compare(Analysis.providerLines(format, [cost], points, false)[0].points[0].displayValue, "< $0,01")
+    }
+
+    function test_legacySequenceRemainsInspectable() {
+        var cost = snapshot("codex", "USD", 1, 1)
+        cost.daily = [{label: "Mon", cost: 2, tokens: 20, currency: "USD"},
+            {label: "Tue", cost: 3, tokens: 30, currency: "USD"}]
+        var points = Analysis.dailyPoints(null, [cost], false)
+        compare(points.length, 2)
+        compare(Analysis.hasCalendarHistory(points), false)
+        compare(points[0].label, "Mon")
+        compare(points[0].displayValue, "$2.00")
+        compare(Analysis.dayCosts([cost], "Tue")[0].totals.cost, 3)
+        cost.daily.push({label: "2026-11-13", cost: 4, currency: "USD"})
+        points = Analysis.dailyPoints(null, [cost], false)
+        compare(points.length, 3)
+        compare(Analysis.hasCalendarHistory(points), false)
+        cost.daily = [{label: "2026-02-30", cost: 2, currency: "USD"}]
+        compare(Analysis.dailyPoints(null, [cost], false).length, 0)
+    }
 
     function snapshot(provider, currency, current, previous) {
         var daily = []

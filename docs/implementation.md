@@ -326,9 +326,12 @@ owns checkout setup, delivery, and repository maintenance.
   The controller binds the validated question to the private snapshot and saved
   answer; automatic generation remains a summary. `UsageAnalysis.js` projects
   filtered history, complete-week comparisons, day details, and bounded model
-  rows. `ChartLines.mjs` bounds calendar runs, computes readable scales and projects
+  rows. `AnalysisAmounts.mjs` formats sub-cent measurements and step-aware axis ticks. `ChartLines.mjs` bounds calendar runs, computes readable scales and projects
   monotone provider curves without joining missing days; QML owns
-  drawing, localization, and interaction.
+  drawing, localization, and interaction. Non-calendar legacy histories retain
+  aggregate bars instead of assigning calendar positions. SpendView owns one
+  scroll area, focus reveal and selection handoff; line hover previews remain
+  clipped children of the plot, never window overlays.
 - `contents/ui/main.qml` owns the Status Page component list: its expanded
   provider, the single `CliProcess` request, and the 30-second deadline.
   Collapsing, closing the popup, switching tab or view, or expanding another provider cancels the

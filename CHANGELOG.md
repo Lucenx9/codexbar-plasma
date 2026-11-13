@@ -23,6 +23,13 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep Usage & Spend day selection stable, restore visible keyboard focus after
+  filtering or clearing a day, and reveal focused controls in one shared scroll
+  area with the optional assistant. Confine pointer previews to the chart, keep
+  RTL axes visible, distinguish sub-cent spend from zero, strengthen heatmap
+  focus, and retain legacy labelled history. Adapt filters and summaries to
+  enlarged text and distinguish an empty provider filter from missing history.
+
 - Keep aggregate daily chart readouts unavailable when an eligible provider has
   duplicate records for that date, matching its line and day details. Clear a
   pinned day that becomes ambiguous after a refresh.

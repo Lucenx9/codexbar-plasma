@@ -4529,3 +4529,19 @@ msgstr ""
 #: contents/ui/components/AnalysisSummary.qml
 msgid "Comparison excludes today and needs 14 complete days plus a scan from today."
 msgstr "Il confronto esclude oggi e richiede 14 giorni completi e una scansione effettuata oggi."
+
+#: contents/ui/components/SpendView.qml
+msgid "No history for this provider"
+msgstr "Nessuno storico per questo provider"
+
+#: contents/ui/components/SpendView.qml
+msgid "Choose another provider or show all providers."
+msgstr "Scegli un altro provider o mostra tutti i provider."
+
+#: contents/ui/components/SpendView.qml
+msgid "Show all providers"
+msgstr "Mostra tutti i provider"
+
+#: contents/ui/components/SpendView.qml
+msgid "Use the arrow keys to inspect days"
+msgstr "Usa i tasti freccia per esaminare i giorni"

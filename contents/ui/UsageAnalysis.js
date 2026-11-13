@@ -1,10 +1,12 @@
 .pragma library
 .import "Guards.js" as Guards
 .import "CostAmounts.mjs" as Amounts
+.import "AnalysisAmounts.mjs" as Display
 .import "CostCurrency.mjs" as Currency
 .import "CostPresentation.mjs" as Costs
 .import "AiInsightsSnapshot.js" as Snapshot
 .import "ChartLines.mjs" as Lines
+.import "ProviderNormalizer.mjs" as Normalizer
 
 // Presentation projections over normalized CLI snapshots. No fetching, pricing,
 // localization, or account attribution belongs to an analysis selection.
@@ -46,7 +48,19 @@ function dailyPoints(format, costs, showsTokens) {
     // A partial sum from healthy providers cannot establish this day's total.
     Object.keys(ambiguous).forEach(function(label) { points.push({label: label, value: null}) })
     points.sort(function(a, b) { return a.label.localeCompare(b.label) })
-    return Lines.calendarPoints(points.slice(-365))
+    var currency = Currency.spendCurrency(items)
+    var formatted = points.slice(-365).filter(function(point) {
+        return !/^\d{4}-\d{2}-\d{2}$/.test(point.label)
+            || Normalizer.parsedCalendarDateKey(point.label) !== null
+    }).map(function(point) {
+        return Object.assign({}, point, {displayValue: point.value === null ? null
+            : Display.metricText(format, point.value, currency, showsTokens)})
+    })
+    return hasCalendarHistory(formatted) ? Lines.calendarPoints(formatted) : formatted
+}
+
+function hasCalendarHistory(points) {
+    return points.length > 0 && points.every(function(point) { return Normalizer.parsedCalendarDateKey(point.label) !== null })
 }
 
 function ambiguousDates(items, showsTokens) {
@@ -83,7 +97,7 @@ function providerAmount(format, day, currency, showsTokens) {
     var value = known ? Amounts.metricValue(day, showsTokens) : null
     if (value < 0) value = null
     return {value: value,
-        displayValue: value === null ? null : Amounts.metricText(format, value, currency, showsTokens)}
+        displayValue: value === null ? null : Display.metricText(format, value, currency, showsTokens)}
 }
 
 // A fixed, explicitly labelled comparison of the last two complete weeks.

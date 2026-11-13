@@ -2831,7 +2831,9 @@ Item {
                     capture.verifyScenario(assistant !== undefined, "integrated assistant is missing");
                     if (capture.scenario === "ai-insights-no-history") {
                         capture.verifyScenario(assistant.answerExpanded
-                            && !capture.findItem(popup, "spendHistoryScroll").visible
+                            && capture.findItem(popup, "spendHistoryScroll").visible
+                            && !capture.findItem(popup, "analysisHistoryChart").visible
+                            && !capture.findItem(popup, "analysisExpandButton").visible
                             && !capture.findItem(popup, "analysisProviderFilter").visible
                             && Object.keys(capture.applet.tokenCosts).length === 0,
                             "assistant-only analysis must open without history controls or scans");
