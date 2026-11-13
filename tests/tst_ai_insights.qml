@@ -243,7 +243,9 @@ TestCase {
         compare(AiInsightsProtocol.command(script, "generate", {provider: "openai", model: "gpt-x", request: "../private"}), "")
         compare(AiInsightsProtocol.command(script, "generate", {provider: "openai", model: "gpt-x",
             snapshot: new Array(AiInsightsProtocol.maximumSnapshotLength + 2).join("x")}), "")
-        compare(AiInsightsProtocol.command(script, "shell", {provider: "openai"}), "")
+        for (var action of ["shell", "__proto__", "constructor", "toString", ["models"], {action: "models"}, null]) {
+            compare(AiInsightsProtocol.command(script, action, {provider: "openai"}), "")
+        }
         compare(AiInsightsProtocol.command("https://example.com/x.py", "models", {provider: "openai"}), "")
         var ollama = AiInsightsProtocol.command(script, "models", {provider: "ollama", endpoint: "http://x'; id; '"})
         verify(ollama.indexOf("--endpoint 'http://x'\\''; id; '\\'''") > 0, ollama)
@@ -259,7 +261,7 @@ TestCase {
             "file:///tmp/test%20'dir/codexbar-plasma-ai-1000/" + request + "/payload.ini")
         compare(AiInsightsProtocol.preparedInput(descriptor, 1, 0), null)
         compare(AiInsightsProtocol.preparedInput(descriptor, 0, 1), null)
-        for (var path of ["https://host/" + request + "/payload.ini", "/tmp/other.ini", "/tmp/\n/" + request + "/payload.ini",
+        for (var path of [null, 7, [], "/".repeat(4097), "https://host/" + request + "/payload.ini", "/tmp/other.ini", "/tmp/\n/" + request + "/payload.ini",
                 "/tmp/" + request + "/payload.ini", "/tmp/other/" + request + "/payload.ini",
                 "/tmp/codexbar-plasma-ai-1000/../../home/user/codexbar-plasma-ai-1000/" + request + "/payload.ini",
                 "/tmp/./codexbar-plasma-ai-1000/" + request + "/payload.ini",
@@ -302,7 +304,13 @@ TestCase {
             {tag: "unknown process result", text: JSON.stringify({status: "ok", summary: "Unconfirmed insight"}),
                 exitCode: NaN, outcome: "error", reason: "unavailable"},
             {tag: "normal exit 9", text: "", exitCode: 9, exitStatus: 0, outcome: "error", reason: "format"},
-            {tag: "helper exit", text: "", exitCode: 1, outcome: "error", reason: "format"}
+            {tag: "helper exit", text: "", exitCode: 1, outcome: "error", reason: "format"},
+            {tag: "retry on helper error", text: JSON.stringify({status: "error", reason: "rate_limited", retryAfter: 60}),
+                exitCode: 1, outcome: "error", reason: "rate_limited", retryAfterSeconds: 60},
+            {tag: "timeout discards retry", text: JSON.stringify({status: "error", reason: "rate_limited", retryAfter: 60}),
+                exitCode: 124, outcome: "error", reason: "timeout"},
+            {tag: "failed success discards retry", text: JSON.stringify({status: "ok", summary: "Unconfirmed", retryAfter: 60}),
+                exitCode: 1, outcome: "error", reason: "unavailable"}
         ]
     }
 

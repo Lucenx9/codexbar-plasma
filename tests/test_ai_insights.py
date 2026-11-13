@@ -173,7 +173,7 @@ class RequestContractTests(HelperTestCase):
         root = Path(__file__).resolve().parents[1]
         script = (root / "contents/ui/AiInsightsProtocol.js").read_text()
         controller = (root / "contents/ui/controllers/AiInsightsController.qml").read_text()
-        shell = int(re.search(r'action === "generate" \? "(\d+)s"', script).group(1))
+        shell = int(re.search(r'"generate": "(\d+)s"', script).group(1))
         deadline = int(re.search(r'objectName: "aiInsightsDeadline"\s+interval: (\d+)', controller).group(1))
         # The whole generation, not only one HTTP call, reports its own timeout
         # before the shell kills it, and the shell stops the process before the

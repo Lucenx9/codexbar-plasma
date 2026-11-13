@@ -209,13 +209,19 @@ function commandStatus(record) {
     return status === "ok" ? "success" : "statusError"
 }
 
-function commandPayloadOutcome(payload) {
+function commandEnvelopeError(payload) {
     var envelope = Array.isArray(payload) ? payload[0] : payload
     var envelopeMessage = commandError(payload)
     // An error record establishes failure even without a readable message.
     if ((isCliRecord(envelope) && isCliRecord(envelope.error)) || envelopeMessage.length > 0) {
         return { outcome: "envelopeError", message: envelopeMessage }
     }
+    return null
+}
+
+function commandPayloadOutcome(payload) {
+    var error = commandEnvelopeError(payload)
+    if (error) return error
     if (!commandPayloadIsSupported(payload)) {
         return { outcome: payload === undefined ? "empty" : "invalidPayload", message: "" }
     }

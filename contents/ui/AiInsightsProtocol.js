@@ -24,45 +24,50 @@ function scriptPath(scriptUrl) {
 
 function generationArguments(provider, value) {
     if (!AiInsights.validModel(provider, value.model)) return null
+    var request = requestArguments(value.request)
+    if (!request) return null
     var parts = ["--model", Guards.shellQuote(value.model), "--language", AiInsights.languageTag(value.language)]
     if (provider === "openrouter" && value.zdr === false) parts.push("--no-zdr")
-    return parts
+    return parts.concat(request)
 }
+
+function requestArguments(request) {
+    return validInputRequest(request) ? ["--request", request] : null
+}
+
+function actionArguments(action, provider, value) {
+    switch (action) {
+    case "generate": return generationArguments(provider, value)
+    case "discard": return requestArguments(value.request)
+    case "set-key": return ["--prompt", Guards.shellQuote(AiInsights.plainText(value.prompt, 200))]
+    default: return []
+    }
+}
+
+function endpointArguments(action, provider, value) {
+    if (provider !== "ollama") return []
+    if (["models", "generate"].indexOf(action) < 0) return []
+    if (typeof value.endpoint === "string" && value.endpoint.length > maximumEndpointLength) return null
+    return ["--endpoint", Guards.shellQuote(AiInsights.endpointText(value.endpoint))]
+}
+
+// A dialog waits for the user; network actions are bounded well below it.
+var actionDeadlines = {"key-status": "45s", "set-key": "330s", "clear-key": "45s",
+    "models": "45s", "generate": "180s", "prepare": "45s", "discard": "45s"}
 
 // The helper reads API keys itself; no secret is ever part of this command.
 function command(scriptUrl, action, options) {
     var script = scriptPath(scriptUrl)
-    if (!script || ["key-status", "set-key", "clear-key", "models", "generate", "prepare", "discard"].indexOf(action) < 0) {
-        return ""
-    }
+    if (!script || typeof action !== "string") return ""
+    if (!Guards.hasOwnKey(actionDeadlines, action)) return ""
     var value = options || ({})
     var provider = AiInsights.safeProvider(value.provider)
-    // A dialog waits for the user; network actions are bounded well below it.
-    var limit = action === "set-key" ? "330s" : (action === "generate" ? "180s" : "45s")
-    var parts = ["exec", "timeout", "--kill-after=2s", limit, "python3", Guards.shellQuote(script),
+    var endpoint = endpointArguments(action, provider, value)
+    var args = actionArguments(action, provider, value)
+    if (!endpoint || !args) return ""
+    var parts = ["exec", "timeout", "--kill-after=2s", actionDeadlines[action], "python3", Guards.shellQuote(script),
         "--action", action, "--provider", provider]
-    if (provider === "ollama" && (action === "models" || action === "generate")) {
-        if (typeof value.endpoint === "string" && value.endpoint.length > maximumEndpointLength) {
-            return ""
-        }
-        parts.push("--endpoint", Guards.shellQuote(AiInsights.endpointText(value.endpoint)))
-    }
-    if (action === "generate") {
-        var generation = generationArguments(provider, value)
-        if (!generation) return ""
-        parts = parts.concat(generation)
-    }
-    if (action === "generate" || action === "discard") {
-        if (!validInputRequest(value.request)) {
-            return ""
-        }
-        parts.push("--request", value.request)
-    }
-    if (action === "set-key") {
-        parts.push("--prompt", Guards.shellQuote(AiInsights.plainText(value.prompt, 200)))
-    }
-    parts.push("--supervised")
-    return parts.join(" ")
+    return parts.concat(endpoint, args, ["--supervised"]).join(" ")
 }
 
 function validInputRequest(value) {
@@ -70,7 +75,7 @@ function validInputRequest(value) {
 }
 
 function encodedSnapshot(text) {
-    if (typeof text !== "string" || text.length === 0 || text.length > maximumSnapshotLength) {
+    if (!boundedText(text, maximumSnapshotLength)) {
         return ""
     }
     var bytes = []
@@ -82,21 +87,36 @@ function encodedSnapshot(text) {
     return bytes.join("")
 }
 
+function boundedText(value, maximumLength) {
+    return typeof value === "string" && value.length > 0 && value.length <= maximumLength
+}
+
+function inputPathSegments(path) {
+    if (!boundedText(path, 4096)) return null
+    if (path.charAt(0) !== "/" || /[\x00-\x1f\x7f]/.test(path)) return null
+    var segments = path.split("/")
+    // QtCore.Settings resolves dot segments, so they could escape the private file.
+    var unsafe = segments.slice(1).some(function(segment) {
+        return ["", ".", ".."].indexOf(segment) >= 0
+    })
+    return unsafe ? null : segments
+}
+
+function matchesInputRequest(segments, request) {
+    return /^codexbar-plasma-ai-[0-9]+$/.test(segments[segments.length - 3])
+        && segments[segments.length - 2] === request
+        && segments[segments.length - 1] === "payload.ini"
+}
+
 function preparedInput(text, exitCode, exitStatus) {
-    var value = successfulExit(exitCode, exitStatus) ? parseReply(text) : null
-    var segments = value && typeof value.path === "string" ? value.path.split("/") : []
-    // QtCore.Settings resolves dot segments, so they could move the write
-    // outside the helper's private `codexbar-plasma-ai-<uid>/<request>` file.
-    if (!value || value.status !== "ready" || !validInputRequest(value.request)
-            || typeof value.path !== "string" || value.path.length > 4096
-            || value.path.charAt(0) !== "/" || /[\x00-\x1f\x7f]/.test(value.path)
-            || segments.slice(1).some(function(segment) { return segment === "" || segment === "." || segment === ".." })
-            || !/^codexbar-plasma-ai-[0-9]+$/.test(segments[segments.length - 3])
-            || segments[segments.length - 2] !== value.request || segments[segments.length - 1] !== "payload.ini") {
-        return null
-    }
+    if (!successfulExit(exitCode, exitStatus)) return null
+    var value = parseReply(text)
+    if (!value || value.status !== "ready") return null
+    if (!validInputRequest(value.request)) return null
+    var segments = inputPathSegments(value.path)
+    if (!segments || !matchesInputRequest(segments, value.request)) return null
     return {request: value.request,
-        location: "file://" + value.path.split("/").map(encodeURIComponent).join("/")}
+        location: "file://" + segments.map(encodeURIComponent).join("/")}
 }
 
 function safeReason(value) {
@@ -104,12 +124,12 @@ function safeReason(value) {
 }
 
 function parseReply(text) {
-    if (typeof text !== "string" || text.length === 0 || text.length > AiInsights.maximumReplyLength * 4) {
+    if (!boundedText(text, AiInsights.maximumReplyLength * 4)) {
         return null
     }
     try {
         var value = JSON.parse(text)
-        return value && typeof value === "object" && !Array.isArray(value) ? value : null
+        return Guards.isRecord(value) ? value : null
     } catch (error) {
         return null
     }
@@ -118,16 +138,17 @@ function parseReply(text) {
 // GNU timeout's normal deadline is 124; shell-wrapped SIGKILL is 137.
 // With exec, Qt reports a killed owner as signal 9 with CrashExit (1).
 function timeoutExit(exitCode, exitStatus) {
-    return exitCode === 124 || exitCode === 137 || (exitCode === 9 && exitStatus === 1)
+    return [124, 137].indexOf(exitCode) >= 0 || (exitCode === 9 && exitStatus === 1)
 }
 
 // Reads the executable engine's process result. Only a number or an integer
 // string counts; null, booleans, blank strings, arrays and missing fields stay
 // NaN, so they can never coerce to a successful exit.
 function processResult(data) {
+    var result = data || ({})
     return {
-        exitCode: data ? Guards.exitCode(data["exit code"]) : Number.NaN,
-        exitStatus: data ? Guards.exitCode(data["exit status"]) : Number.NaN
+        exitCode: Guards.exitCode(result["exit code"]),
+        exitStatus: Guards.exitCode(result["exit status"])
     }
 }
 
@@ -135,49 +156,38 @@ function successfulExit(exitCode, exitStatus) {
     return exitCode === 0 && (exitStatus === undefined || exitStatus === 0)
 }
 
-function generationReply(text, exitCode, exitStatus) {
-    if (timeoutExit(exitCode, exitStatus)) {
-        return {outcome: "error", reason: "timeout", retryAfterSeconds: 0}
-    }
+// Timeout and malformed output outrank helper status; a claimed success also
+// requires a clean process exit. Keep the error payload for retry metadata.
+function helperReply(text, exitCode, exitStatus) {
+    if (timeoutExit(exitCode, exitStatus)) return {reason: "timeout", value: null}
     var value = parseReply(text)
-    if (!value) {
-        return {outcome: "error", reason: "format", retryAfterSeconds: 0}
-    }
-    if (value.status === "ok") {
-        if (!successfulExit(exitCode, exitStatus)) {
-            return {outcome: "error", reason: "unavailable", retryAfterSeconds: 0}
-        }
-        var summary = AiInsights.plainText(value.summary, AiInsights.maximumSummaryLength)
-        return summary.length > 0
-            ? {outcome: "ok", summary: summary, highlights: AiInsights.highlights(value.highlights)}
-            : {outcome: "error", reason: "format", retryAfterSeconds: 0}
-    }
-    var retry = Number(value.retryAfter)
-    return {
-        outcome: "error",
-        reason: safeReason(value.reason),
-        retryAfterSeconds: isFinite(retry) && retry > 0 ? Math.min(retry, AiInsights.maximumRetryAfterSeconds) : 0
-    }
+    if (!value) return {reason: "format", value: null}
+    if (value.status !== "ok") return {reason: safeReason(value.reason), value: value}
+    if (!successfulExit(exitCode, exitStatus)) return {reason: "unavailable", value: null}
+    return {reason: "", value: value}
 }
 
-function modelsReply(text, exitCode, exitStatus) {
-    if (timeoutExit(exitCode, exitStatus)) {
-        return {outcome: "error", reason: "timeout", models: [], key: ""}
+function retryAfterSeconds(value) {
+    if (!value) return 0
+    var retry = Number(value.retryAfter)
+    return isFinite(retry) && retry > 0 ? Math.min(retry, AiInsights.maximumRetryAfterSeconds) : 0
+}
+
+function generationReply(text, exitCode, exitStatus) {
+    var reply = helperReply(text, exitCode, exitStatus)
+    if (reply.reason) {
+        return {outcome: "error", reason: reply.reason, retryAfterSeconds: retryAfterSeconds(reply.value)}
     }
-    var value = parseReply(text)
-    if (!value) {
-        return {outcome: "error", reason: "format", models: [], key: ""}
-    }
-    if (value.status !== "ok") {
-        return {outcome: "error", reason: safeReason(value.reason),
-            models: [], key: ""}
-    }
-    if (!successfulExit(exitCode, exitStatus)) {
-        return {outcome: "error", reason: "unavailable", models: [], key: ""}
-    }
+    var summary = AiInsights.plainText(reply.value.summary, AiInsights.maximumSummaryLength)
+    return summary.length > 0
+        ? {outcome: "ok", summary: summary, highlights: AiInsights.highlights(reply.value.highlights)}
+        : {outcome: "error", reason: "format", retryAfterSeconds: 0}
+}
+
+function modelIds(value) {
     var models = []
     var seen = ({})
-    var items = Array.isArray(value.models) ? value.models : []
+    var items = Array.isArray(value) ? value : []
     for (var i = 0; i < items.length && models.length < 500; i++) {
         var id = items[i] && typeof items[i].id === "string" ? items[i].id : ""
         if (AiInsights.modelPattern.test(id) && !Guards.hasOwnKey(seen, id)) {
@@ -185,8 +195,14 @@ function modelsReply(text, exitCode, exitStatus) {
             models.push(id)
         }
     }
-    return {outcome: "ok", reason: "", models: models,
-        key: ["valid", "none"].indexOf(value.key) >= 0 ? value.key : ""}
+    return models
+}
+
+function modelsReply(text, exitCode, exitStatus) {
+    var reply = helperReply(text, exitCode, exitStatus)
+    if (reply.reason) return {outcome: "error", reason: reply.reason, models: [], key: ""}
+    return {outcome: "ok", reason: "", models: modelIds(reply.value.models),
+        key: ["valid", "none"].indexOf(reply.value.key) >= 0 ? reply.value.key : ""}
 }
 
 function statusReply(text, allowed, exitCode, exitStatus) {
