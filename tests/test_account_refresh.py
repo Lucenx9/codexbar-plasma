@@ -20,7 +20,7 @@ FUNCTIONS = (
 
 QML = '''import QtQuick
 import QtTest
-import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
+import "SOURCE_URL/ProviderNormalizer.mjs" as Normalizer
 import "SOURCE_URL/Guards.js" as Guards
 import "SOURCE_URL/controllers" as Controllers
 TestCase {

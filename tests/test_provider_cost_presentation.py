@@ -78,7 +78,7 @@ class ProviderCostPresentationTests(unittest.TestCase):
                               "monthlySummary": text("Used: %1, remaining: %2 of %3", "0", "1,000", "1,000")})
             qml = '''import QtQuick
 import QtTest
-import "SOURCE_URL/CostAmounts.js" as CostAmounts
+import "SOURCE_URL/CostAmounts.mjs" as CostAmounts
 import "SOURCE_URL/components" as Components
 TestCase {
     id: testCase
@@ -142,7 +142,7 @@ TestCase {
 import QtTest
 import org.kde.kirigami as Kirigami
 import "SOURCE_URL/components" as Components
-import "SOURCE_URL/CostAmounts.js" as CostAmounts
+import "SOURCE_URL/CostAmounts.mjs" as CostAmounts
 TestCase {
     id: fullRoot
     property alias applet: applet
@@ -342,7 +342,7 @@ TestCase {
 
 COST_METRIC_QML = '''import QtQuick
 import QtTest
-import "SOURCE_URL/CostPresentation.js" as CostPresentation
+import "SOURCE_URL/CostPresentation.mjs" as CostPresentation
 TestCase {
     name: "MainCostMetric"
     // QML rejects a property named Plasmoid, so the harness rewrites the

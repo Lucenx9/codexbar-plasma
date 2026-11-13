@@ -1,11 +1,10 @@
-.pragma library
 
-var maximumCliMessageLength = 500
-var maximumDiagnosticLength = 65536
-var maximumCliJsonLength = 4 * 1024 * 1024
-var credentialRedactionLookaheadLength = 64
+export var maximumCliMessageLength = 500
+export var maximumDiagnosticLength = 65536
+export var maximumCliJsonLength = 4 * 1024 * 1024
+export var credentialRedactionLookaheadLength = 64
 
-function safeLimit(maximumLength, fallback) {
+export function safeLimit(maximumLength, fallback) {
     var limit = Number(maximumLength)
     if (!isFinite(limit) || limit <= 0) {
         limit = fallback
@@ -13,7 +12,7 @@ function safeLimit(maximumLength, fallback) {
     return Math.max(1, Math.min(maximumDiagnosticLength, Math.floor(limit)))
 }
 
-function boundedInspectionText(value, inspectionLimit, lookaheadLength) {
+export function boundedInspectionText(value, inspectionLimit, lookaheadLength) {
     var text = value === null || value === undefined ? "" : String(value)
     var windowLength = safeLimit(inspectionLimit, maximumCliMessageLength)
     var lookahead = Math.max(0, Math.min(credentialRedactionLookaheadLength, Number(lookaheadLength) || 0))
@@ -30,7 +29,7 @@ function boundedInspectionText(value, inspectionLimit, lookaheadLength) {
     return ""
 }
 
-function redactCredentials(value, inspectionLimit) {
+export function redactCredentials(value, inspectionLimit) {
     var limit = safeLimit(inspectionLimit, maximumCliMessageLength)
     var inspectionLength = Math.min(maximumDiagnosticLength, limit * 8)
     var text = boundedInspectionText(value, inspectionLength)
@@ -38,7 +37,7 @@ function redactCredentials(value, inspectionLimit) {
     return redactCredentialWindow(text, lookaheadText)
 }
 
-function redactCredentialsWithinSourceLimit(value, sourceLimit) {
+export function redactCredentialsWithinSourceLimit(value, sourceLimit) {
     var limit = safeLimit(sourceLimit, maximumCliMessageLength)
     var text = value === null || value === undefined ? "" : String(value)
     var boundedText = text.slice(0, limit)
@@ -46,7 +45,7 @@ function redactCredentialsWithinSourceLimit(value, sourceLimit) {
     return redactCredentialWindow(boundedText, inspectionText).slice(0, limit)
 }
 
-function redactCredentialWindow(text, lookaheadText) {
+export function redactCredentialWindow(text, lookaheadText) {
     var redactedText = redactCredentialText(text)
     var redactedLookaheadText = redactCredentialText(lookaheadText)
 
@@ -71,7 +70,7 @@ function redactCredentialWindow(text, lookaheadText) {
 // Keys and values inside a JSON string that embeds another JSON document carry
 // backslash-escaped quotes, once per encoding level. Parsing such an escaped
 // value cannot reliably find its end, so it redacts the rest of the line.
-function redactCredentialText(text) {
+export function redactCredentialText(text) {
     return text
         .replace(/((?:proxy-)?authorization\\*["']?\s*[:=]\s*)(?:"(?:\\(?:[\s\S]|$)|[^"\\])*(?:"|$)|'(?:\\(?:[\s\S]|$)|[^'\\])*(?:'|$)|[^\r\n]*)/gi, "$1[redacted]")
         .replace(/\bbearer\s+(?:"(?:\\(?:[\s\S]|$)|[^"\\])*(?:"|$)|'(?:\\(?:[\s\S]|$)|[^'\\])*(?:'|$)|\\+["'][^\r\n]*|[^\s,;]+)/gi, "Bearer [redacted]")
@@ -85,7 +84,7 @@ function redactCredentialText(text) {
 // had really labelled something that way. Display text drops it so the caller's
 // own fallback shows instead. Diagnostics deliberately keep coercing: there,
 // seeing the malformed shape beats seeing nothing.
-function isStructuredValue(value) {
+export function isStructuredValue(value) {
     return value !== null && typeof value === "object"
 }
 
@@ -93,7 +92,7 @@ function isStructuredValue(value) {
 // textFormat. Wrap escaped plain text in harmless rich text so CLI-controlled
 // tags stay visible as text instead of becoming images or links. This helper
 // escapes display-ready text; CLI adapters still own bounding and redaction.
-function plainTextAsRichText(value) {
+export function plainTextAsRichText(value) {
     if (isStructuredValue(value) || value === null || value === undefined) {
         return ""
     }
@@ -118,7 +117,7 @@ function plainTextAsRichText(value) {
 // corrupt the entities emitted above ("&lt;" becomes "lt;"). Doubling entity
 // ampersands preserves one for the rich-text parser while still keeping the
 // provider text escaped.
-function plainTextAsMnemonicRichText(value) {
+export function plainTextAsMnemonicRichText(value) {
     return plainTextAsRichText(value).replace(/&/g, "&&")
 }
 
@@ -126,7 +125,7 @@ function plainTextAsMnemonicRichText(value) {
 // item instead of a QML Text item, so feeding it a rich-text wrapper prints the
 // wrapper literally. Keep markup as ordinary text and escape only mnemonic
 // ampersands for that native label path.
-function plainTextAsMnemonicLabel(value) {
+export function plainTextAsMnemonicLabel(value) {
     if (isStructuredValue(value) || value === null || value === undefined) {
         return ""
     }
@@ -136,7 +135,7 @@ function plainTextAsMnemonicLabel(value) {
         .replace(/&/g, "&&")
 }
 
-function plainButtonText(value, hasContentItem) {
+export function plainButtonText(value, hasContentItem) {
     return hasContentItem === true
         ? plainTextAsMnemonicRichText(value)
         : plainTextAsMnemonicLabel(value)
@@ -145,13 +144,13 @@ function plainButtonText(value, hasContentItem) {
 // Never end on the first half of a surrogate pair, whether this cut or the
 // earlier inspection bound split it: a lone half renders as a replacement
 // character.
-function truncatedText(text, limit) {
+export function truncatedText(text, limit) {
     var result = text.length > limit ? text.slice(0, limit) : text
     var code = result.charCodeAt(result.length - 1)
     return code >= 0xD800 && code <= 0xDBFF ? result.slice(0, -1) : result
 }
 
-function boundedDisplayText(value, maximumLength) {
+export function boundedDisplayText(value, maximumLength) {
     if (isStructuredValue(value)) {
         return ""
     }
@@ -170,10 +169,10 @@ function boundedDisplayText(value, maximumLength) {
 // glibc build (linked against Debian's versioned libcurl) runs on a distro that
 // ships libcurl without symbol versioning. They are non-fatal and say nothing
 // about why a command failed, so drop them and let the real message surface.
-var loaderDiagnosticMarker = "no version information available"
-var loaderDiagnosticPattern = /^.*:\s*no version information available\s*\(required by .*\)$/
+export var loaderDiagnosticMarker = "no version information available"
+export var loaderDiagnosticPattern = /^.*:\s*no version information available\s*\(required by .*\)$/
 
-function stripLoaderDiagnostics(value, maximumLength) {
+export function stripLoaderDiagnostics(value, maximumLength) {
     var limit = safeLimit(maximumLength, maximumCliMessageLength)
     var inspectionLength = Math.min(maximumDiagnosticLength, limit * 8)
     var text = boundedInspectionText(value, inspectionLength)
@@ -184,7 +183,7 @@ function stripLoaderDiagnostics(value, maximumLength) {
     return redactCredentialWindow(filteredLoaderDiagnostics(text), filteredLoaderDiagnostics(lookaheadText))
 }
 
-function filteredLoaderDiagnostics(text) {
+export function filteredLoaderDiagnostics(text) {
     if (text.indexOf(loaderDiagnosticMarker) === -1) {
         return text
     }
@@ -203,14 +202,14 @@ function filteredLoaderDiagnostics(text) {
     return stripped.trim().length > 0 ? stripped : text
 }
 
-function cliJsonText(value) {
+export function cliJsonText(value) {
     var text = typeof value === "string"
         ? value
         : (value === null || value === undefined ? "" : String(value))
     return text.length <= maximumCliJsonLength ? text : null
 }
 
-function cliMessage(value, maximumLength) {
+export function cliMessage(value, maximumLength) {
     if (isStructuredValue(value)) {
         return ""
     }
@@ -218,7 +217,7 @@ function cliMessage(value, maximumLength) {
     return boundedDisplayText(redactCredentials(value, limit), limit)
 }
 
-function cliDiagnostic(value, maximumLength) {
+export function cliDiagnostic(value, maximumLength) {
     var limit = safeLimit(maximumLength, maximumDiagnosticLength)
     var text = redactCredentials(value, limit)
         .replace(/\r\n?/g, "\n")

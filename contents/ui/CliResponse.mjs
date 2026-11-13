@@ -1,8 +1,7 @@
-.pragma library
-.import "SafeText.js" as SafeText
-.import "ProviderNormalizer.js" as Normalizer
+import * as SafeText from "./SafeText.mjs";
+import * as Normalizer from "./ProviderNormalizer.mjs";
 
-function message(value) {
+export function message(value) {
     return SafeText.cliMessage(SafeText.stripLoaderDiagnostics(value), SafeText.maximumCliMessageLength);
 }
 
@@ -12,9 +11,9 @@ function message(value) {
 // unexplained success payload. Provider errors carry kind provider, runtime,
 // or none (cost); the `cli` record explains the exit only for rejected
 // arguments. Limit the scan to the records the caller will consume.
-var structuredErrorExitCodes = [1, 2, 3, 4];
+export var structuredErrorExitCodes = [1, 2, 3, 4];
 
-function explainsExit(item, exitCode) {
+export function explainsExit(item, exitCode) {
     if (!Normalizer.isCliRecord(item))
         return false;
     var provider = Normalizer.normalizedProviderID(item.provider);
@@ -26,7 +25,7 @@ function explainsExit(item, exitCode) {
     return provider !== "cli" && (error.kind === undefined || error.kind === "provider" || error.kind === "runtime");
 }
 
-function hasStructuredError(payload, exitCode, recordLimit) {
+export function hasStructuredError(payload, exitCode, recordLimit) {
     var items = Array.isArray(payload) ? payload : [payload];
     for (var i = 0; i < Math.min(items.length, recordLimit); i++) {
         if (explainsExit(items[i], exitCode))
@@ -37,7 +36,7 @@ function hasStructuredError(payload, exitCode, recordLimit) {
 
 // A positive record limit opts into structured failure results. All other
 // callers require exit 0. Unknown/missing statuses fail closed.
-function decode(stdoutValue, stderrValue, exitCode, errorRecordLimit) {
+export function decode(stdoutValue, stderrValue, exitCode, errorRecordLimit) {
     var acceptsErrors = typeof errorRecordLimit === "number" && isFinite(errorRecordLimit) && errorRecordLimit > 0 && errorRecordLimit <= Normalizer.maximumProviderSnapshots;
     var structuredExit = acceptsErrors && structuredErrorExitCodes.indexOf(exitCode) !== -1;
     if (exitCode !== 0 && !structuredExit)

@@ -1066,6 +1066,9 @@ and clipboard content remain under your control after closing the window.
   Switching the Cost/Tokens metric or inspecting a day reuses the loaded data and
   starts no scan. Cost settings applied together start a single scan using the
   final executable, provider, and history range; disabling costs starts none.
+  History is processed in the background so large scans keep the popup responsive.
+  Loading remains active until the updated data is ready; a superseded scan cannot
+  replace the current range or a newer refresh.
   A selected day in the **Usage & Spend** chart stays on that date through a
   refresh. Removing the day or changing the history range or metric clears the
   selection.

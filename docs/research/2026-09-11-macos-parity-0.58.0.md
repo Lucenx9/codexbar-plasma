@@ -48,7 +48,7 @@ so it is not a Linux contract.
   (`totalTokens`, `requestCount`, `totalCost`), a display calendar, and
   `historyCoverageIsEstablished`. Plasma already renders interactive daily
   cost/token charts with explicit day selection. Its cost normalization in
-  [ProviderNormalizer.js](../../contents/ui/ProviderNormalizer.js) keeps only
+  [ProviderNormalizer.mjs](../../contents/ui/ProviderNormalizer.mjs) keeps only
   cost and token metrics and drops a request-only day, and no nonempty Linux
   output was probed for per-day request counts, so the request-count ledger
   stays inside the existing richer-usage blocker in TODO. The

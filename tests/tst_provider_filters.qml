@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls as Controls
 import QtTest
-import "../contents/ui/SafeText.js" as SafeText
+import "../contents/ui/SafeText.mjs" as SafeText
 import "../contents/ui/ThemeContrast.js" as ThemeContrast
 import "../contents/ui/config/ProviderConfigProtocol.js" as ProviderConfigProtocol
 

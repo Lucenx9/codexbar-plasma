@@ -538,19 +538,17 @@ for body in (usage.function_body("handleCommandTimeout"), applet.id_block("usage
         raise AssertionError("cost processes must leave the shared usage dispatcher")
 require_all(
     cost_text,
-    ("CliProcess {", "readonly property bool loading: request.busy", "request.cancel()",
+    ("CliProcess {", "WorkerScript {", 'source: "../CostWorker.mjs"',
      "onCompleted:", "onTimedOut:", "Loading cost data timed out. Try again.",
      "interval: CostRefreshPolicy.automaticRefreshCheckIntervalMs", "running: lifecycle.commandSource.length > 0",
      "running: controller.active", "CostRefreshPolicy.isNewBucketDay(lifecycle.lastAttemptAtMs, Date.now())",
      "snapshotContext === lifecycle.commandSource", "Qt.callLater(refreshChangedSource)"),
     "cost must adapt the shared process and retain refresh and context policies",
 )
-require_ordered(
-    controller_function(cost_text, "requestRefresh"),
-    ("CostRefreshPolicy.refreshAction(", "request.cancel()", "lastAttemptAtMs = nowMs",
-     "request.start(commandSource", "historyDays: controller.historyDays", "commandSource: commandSource"),
-    "cost runs must apply refresh policy and capture their immutable response context",
-)
+# Public controller tests exercise refresh/context ordering and loading through
+# normalization. Keep the GUI/worker effect boundary here, not private state layout.
+if "CostResponse.response(" in cost_text:
+    raise AssertionError("cost normalization must run in the worker, not on the GUI thread")
 for text in (cost_text, sessions_text):
     for forbidden in ("Plasma5Support", "CommandLedger", "connectSource(", "disconnectSource("):
         if forbidden in text:

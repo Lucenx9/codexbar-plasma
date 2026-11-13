@@ -306,7 +306,7 @@ class PanelTest(unittest.TestCase):
             raise AssertionError("the run-out token must advance from the usage observation time")
 
         # Every file that calls this unqualified must declare it: QML and JS share no
-        # function scope, so a surface-wide search would be satisfied by SafeText.js while
+        # function scope, so a surface-wide search would be satisfied by SafeText.mjs while
         # the applet root's callers were left with an undefined function.
         applet.require_definition_where_used("boundedDisplayText")
 

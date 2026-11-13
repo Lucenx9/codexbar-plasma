@@ -1,7 +1,7 @@
 import QtQuick
 import "../ResetPresentation.js" as ResetPresentation
 import "../PacePresentation.js" as PacePresentation
-import "../ProviderNormalizer.js" as Normalizer
+import "../ProviderNormalizer.mjs" as Normalizer
 import "../MonthlyAllowance.js" as MonthlyAllowance
 
 QtObject {

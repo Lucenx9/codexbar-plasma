@@ -1,9 +1,9 @@
 import QtQuick
 import QtTest
-import "../contents/ui/CostResponse.js" as CostResponse
-import "../contents/ui/CostAmounts.js" as CostAmounts
-import "../contents/ui/ProviderNormalizer.js" as Normalizer
-import "../contents/ui/SafeText.js" as SafeText
+import "../contents/ui/CostResponse.mjs" as CostResponse
+import "../contents/ui/CostAmounts.mjs" as CostAmounts
+import "../contents/ui/ProviderNormalizer.mjs" as Normalizer
+import "../contents/ui/SafeText.mjs" as SafeText
 
 TestCase {
     name: "CostResponse"

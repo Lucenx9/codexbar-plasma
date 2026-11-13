@@ -1,6 +1,6 @@
 .pragma library
 .import "../Guards.js" as Guards
-.import "../ProviderIdentity.js" as Identity
+.import "../ProviderIdentity.mjs" as Identity
 
 // Ephemeral page state only. QML retains the command ledger and supplies whether
 // source writes remain active; no command, payload or secret is stored here.

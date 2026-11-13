@@ -4,7 +4,7 @@
 .import "PanelProviders.js" as PanelProviders
 .import "PanelRules.js" as PanelRules
 .import "ProviderOrder.js" as ProviderOrder
-.import "SafeText.js" as SafeText
+.import "SafeText.mjs" as SafeText
 
 var scenarios = ["normal", "nearLimit", "incident", "missing"];
 

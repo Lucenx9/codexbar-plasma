@@ -3,7 +3,7 @@ import org.kde.plasma.plasma5support as Plasma5Support
 import "../CommandLedger.js" as CommandLedger
 import "../Guards.js" as Guards
 import "../ProviderRoster.js" as ProviderRoster
-import "../SafeText.js" as SafeText
+import "../SafeText.mjs" as SafeText
 
 // Owns the read-only enabled-provider roster for settings pages: one CLI
 // `config providers` list command per load, with nonce, timeout, and stale

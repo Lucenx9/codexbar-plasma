@@ -3,7 +3,7 @@ import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import "../components" as Components
-import "../SafeText.js" as SafeText
+import "../SafeText.mjs" as SafeText
 
 // Render one normalized CLI field. The settings page owns validation, prompts,
 // command execution and persistence; signals carry requests without credentials.

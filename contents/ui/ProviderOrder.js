@@ -1,5 +1,5 @@
 .pragma library
-.import "ProviderIdentity.js" as ProviderIdentity
+.import "ProviderIdentity.mjs" as ProviderIdentity
 .import "Guards.js" as Guards
 
 var maximumProviderItems = 256;

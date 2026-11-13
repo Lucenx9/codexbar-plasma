@@ -1,6 +1,6 @@
 import QtQuick
 import QtTest
-import "../contents/ui/ProviderIdentity.js" as ProviderIdentity
+import "../contents/ui/ProviderIdentity.mjs" as ProviderIdentity
 
 TestCase {
     name: "ProviderMetadata"

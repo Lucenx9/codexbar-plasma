@@ -1,6 +1,6 @@
 import QtQuick
 import QtTest
-import "../contents/ui/ProviderNormalizer.js" as Normalizer
+import "../contents/ui/ProviderNormalizer.mjs" as Normalizer
 
 TestCase {
     name: "CostModelIdentity"

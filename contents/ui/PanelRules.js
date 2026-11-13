@@ -2,8 +2,8 @@
 
 .import "Guards.js" as Guards
 .import "PanelDisplay.js" as PanelDisplay
-.import "ProviderNormalizer.js" as Normalizer
-.import "SubscriptionDates.js" as SubscriptionDates
+.import "ProviderNormalizer.mjs" as Normalizer
+.import "SubscriptionDates.mjs" as SubscriptionDates
 
 var conditions = ["always", "usageAtLeast", "resetWithin", "runOut"];
 var maximumResetMinutes = 10080;

@@ -130,7 +130,7 @@ while IFS= read -r qml_source; do
     echo "QML source is not covered by any glob in scripts/lib/qml_surfaces.py: ${qml_source}" >&2
     exit 1
   fi
-done < <(cd "$ROOT_DIR" && find contents -type f \( -name '*.qml' -o -name '*.js' \) -print | sort)
+done < <(cd "$ROOT_DIR" && find contents -type f \( -name '*.qml' -o -name '*.js' -o -name '*.mjs' \) -print | sort)
 
 # Older Qt 6.7 QML parsers treat the ECMAScript future-reserved words as
 # reserved, while newer Qt builds parse them as ordinary identifiers.

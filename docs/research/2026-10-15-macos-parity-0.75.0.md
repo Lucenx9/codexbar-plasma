@@ -22,7 +22,7 @@ The installed `/usr/local/bin/codexbar` reports 0.74.1 and was not replaced.
   `provider`, `displayName`, `enabled`, `defaultEnabled`. Parallel, fal, and
   FLORA are new. Plasma's generic discovery remains usable, but their static
   names, links, colors, and original icons have no mappings in
-  `ProviderIdentity.js` and `ProviderNames.qml`. Those mappings are
+  `ProviderIdentity.mjs` and `ProviderNames.qml`. Those mappings are
   implementable independently of authentication, with generic fallbacks retained.
 - Command Code and fal accept `config set-api-key --stdin`. Command Code also
   accepts `config set-source --source api`; synthetic-key usage reaches
@@ -44,7 +44,7 @@ The installed `/usr/local/bin/codexbar` reports 0.74.1 and was not replaced.
   now treats `input_audio_tokens` and `output_audio_tokens` as breakdowns of
   the already inclusive `input_tokens` and `output_tokens`, rather than adding
   them again, in both daily/model history and live buckets. Plasma's
-  `ProviderNormalizer.js` prefers explicit `totalTokens` and has no audio-field
+  `ProviderNormalizer.mjs` prefers explicit `totalTokens` and has no audio-field
   addition, so no frontend arithmetic change is established. Verify nonzero
   audio breakdowns together with the pending OpenAI Linux output case before
   claiming corrected end-to-end totals. This review inspected the tagged

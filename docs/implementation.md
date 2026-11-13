@@ -84,12 +84,12 @@ owns checkout setup, delivery, and repository maintenance.
 - `contents/ui/components/CostText.qml` localizes normalized token-cost snapshots,
   history labels, qualified cost values, count plurals, spend totals and legacy
   dashboard rows. It receives regional number formatting explicitly and takes
-  already selected costs for totals. `CostPresentation.js` builds bounded rows
-  and range-matched aggregates. `CostAmounts.js` owns locale-explicit formatting,
+  already selected costs for totals. `CostPresentation.mjs` builds bounded rows
+  and range-matched aggregates. `CostAmounts.mjs` owns locale-explicit formatting,
   missing-versus-zero arithmetic, averages and current-day amounts.
-  `CostCurrency.js` selects the monetary currency and excludes foreign amounts
-  without dropping currency-free tokens. `CostTrust.js` folds pricing confidence
-  and returns bounded semantic notice transitions. `CostChart.js` owns geometry,
+  `CostCurrency.mjs` selects the monetary currency and excludes foreign amounts
+  without dropping currency-free tokens. `CostTrust.mjs` folds pricing confidence
+  and returns bounded semantic notice transitions. `CostChart.mjs` owns geometry,
   point memoization, date-preserving selection and calendar heatmap slots; its
   drawing method receives a canvas, explicit bounds and a corner radius.
   These modules take explicit inputs and contain no localization or process
@@ -610,7 +610,7 @@ owns checkout setup, delivery, and repository maintenance.
   localizes those semantic sections, reset-credit counts, and the Codex monthly
   credit-limit row, using an explicit regional number format. Its cost/reset
   inputs pass through the existing pure module; monthly credit limits retain
-  the dedicated `ProviderNormalizer.js` contract. The applet keeps snapshot
+  the dedicated `ProviderNormalizer.mjs` contract. The applet keeps snapshot
   coordination and privacy; the popup owns section visibility. Direct component
   tests cover formatting, optional fields and normalized limits, and the production
   component is exercised directly with all six catalogs in
@@ -635,7 +635,7 @@ owns checkout setup, delivery, and repository maintenance.
   epoch milliseconds retain their existing compatibility path. `UsageCache`
   applies the same string validation on both save and restore so persistence
   cannot turn an invalid reset into a valid-looking date; percentages survive.
-- `SubscriptionDates.js` validates only the official usage renewal/expiration
+- `SubscriptionDates.mjs` validates only the official usage renewal/expiration
   fields and true date-only flags, returning at most two semantic dates. It
   rejects impossible calendar values before ISO timestamp parsing. The shared
   `TimeLabels` formats full regional dates and clocks; flagged dates use their
@@ -648,7 +648,7 @@ owns checkout setup, delivery, and repository maintenance.
   Pacific/Apia, including a valid calendar day skipped by the local time zone.
   The `subscription-dates` smoke scenario verifies the real popup,
   privacy toggle, failed refresh, quota-empty snapshot, and cached account path.
-- Pure applet modules live in `contents/ui/*.js`; their public interfaces have
+- Pure applet modules live in `contents/ui/*.js` and `contents/ui/*.mjs`; their public interfaces have
   direct tests in `tests/tst_*.qml`. Configuration is declared in
   `contents/config/main.xml` and bound through `cfg_*` in config pages and
   `Plasmoid.configuration` at runtime.
@@ -704,9 +704,24 @@ child owns executable requests and deadlines. Source changes
 retire obsolete commands synchronously and coalesce settings through
 `Qt.callLater`. Only snapshots for the current command context reach `main.qml`,
 which supplies them to `CostText` for localization and attaches them to fresh
-provider usage. `CostResponse.js`
+provider usage. `CostResponse.mjs`
 returns bounded snapshots and semantic failure outcomes without effects or
-localization. `tests/test_cost_context.py` exercises the production controller
+localization. `CostWorker.mjs` runs it in a Qt WorkerScript, keeping parsing and
+history aggregation off the GUI thread. `CostWorkerRequest.mjs` bounds copies
+across the thread boundary, retaining the diagnostic inspection window and
+credential-redaction lookahead even after leading whitespace. The controller
+keeps loading active through publication, and owns a 120-second deadline spanning
+the process and normalization. Each run has a serial: settings changes, forced
+refreshes, disabling costs and timeouts invalidate earlier worker replies.
+Only one normalization runs at a time, with one replaceable pending reply, so
+repeated refreshes cannot accumulate stale messages in the worker queue.
+The shared normalization dependency graph uses ECMAScript modules (`.mjs`),
+which QML and WorkerScript both import. `Guards.js` retains the existing QML
+entry point and delegates to `Guards.mjs`; validation has one implementation.
+`tests/test_cost_normalization.py` controls worker delivery to exercise loading,
+coalescing, invalidation and deadlines; `tests/tst_cost_worker.qml` tests the real
+thread boundary with successful, partial, malformed and oversized replies.
+`tests/test_cost_context.py` exercises the production controller
 with isolated CLI processes; `tests/tst_cost_response.qml` covers adversarial
 response normalization. Together they cover batched settings, partial failures,
 late replies, disabled costs, timeout retention, and forced manual refreshes.
@@ -826,7 +841,7 @@ records the Gemini exclusion. Never test credentials against the user's config.
 
 ## Usage sharing
 
-`ProviderNormalizer.js` validates model breakdowns before accumulating amounts
+`ProviderNormalizer.mjs` validates model breakdowns before accumulating amounts
 and excluded-request counts by raw model identity. Separate helpers handle
 overflow-safe sums, cost-first ordering, and optional token ranking. Display
 labels never become aggregation keys. Daily rows and period models share a
@@ -841,7 +856,7 @@ collisions, excluded-only records before and after measured records, saturated
 counts, input immutability, and partially unpriced token rankings.
 
 `ShareUsage.js` projects range-matched cost snapshots into bounded aggregate
-fields. `CostResponse.js` retains a separate bounded token ranking before the
+fields. `CostResponse.mjs` retains a separate bounded token ranking before the
 normalizer caps its existing cost-first list. Both rankings pass through the
 privacy projection. The export never serializes a provider record, account, project, or raw error.
 `ShareUsage.js` redacts whole model labels containing absolute paths, including
@@ -1146,7 +1161,7 @@ session, pace, and count adapters against all compiled catalogs. Localized smoke
 scenarios also verify these adapters through Plasma's actual translation domain.
 When changing provider identity, check keys, CLI aliases, title, color,
 docs/dashboard/login URLs, icon assets, and `scripts/test_provider_icons.sh`.
-Register bundled icon filenames in `ProviderIdentity.js`'s `providerIconFiles`
+Register bundled icon filenames in `ProviderIdentity.mjs`'s `providerIconFiles`
 table. Unknown providers return no asset filename so QML selects a theme icon;
 a nonexistent local file URL does not activate Kirigami's icon fallback.
 Repeat this comparison during official CLI release audits. The pinned 0.56.2

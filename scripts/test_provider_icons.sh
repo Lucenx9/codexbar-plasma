@@ -22,13 +22,13 @@ from pathlib import Path
 root = Path(sys.argv[1])
 
 # Both the popup and the config page use these shared aliases and bundled
-# filenames, so this check reads ProviderIdentity.js rather than a QML body.
-text = (root / "contents/ui/ProviderIdentity.js").read_text(encoding="utf-8")
+# filenames, so this check reads ProviderIdentity.mjs rather than a QML body.
+text = (root / "contents/ui/ProviderIdentity.mjs").read_text(encoding="utf-8")
 
 for kind, table_name in (("provider", "providerAliases"), ("icon", "providerIconFiles")):
     table = re.search(r"var " + table_name + r" = \{(.*?)\n\}", text, re.S)
     if not table:
-        raise SystemExit(f"missing {table_name} table in ProviderIdentity.js")
+        raise SystemExit(f"missing {table_name} table in ProviderIdentity.mjs")
     for key, value in re.findall(r'"([^"]+)":\s*"([^"]+)"', table.group(1)):
         print(f"{kind}\t{key}\t{value}")
 PY

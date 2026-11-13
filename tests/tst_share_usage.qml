@@ -1,9 +1,9 @@
 import QtQuick
 import QtTest
 import "../contents/ui/ShareUsage.js" as ShareUsage
-import "../contents/ui/CostResponse.js" as CostResponse
+import "../contents/ui/CostResponse.mjs" as CostResponse
 import "../contents/ui/PrivacyPresentation.js" as Privacy
-import "../contents/ui/ProviderNormalizer.js" as Normalizer
+import "../contents/ui/ProviderNormalizer.mjs" as Normalizer
 
 TestCase {
     name: "ShareUsage"

@@ -1,6 +1,6 @@
 .pragma library
 .import "Guards.js" as Guards
-.import "ProviderNormalizer.js" as Normalizer
+.import "ProviderNormalizer.mjs" as Normalizer
 
 function validResponseContext(context) {
     return !!context && typeof context === "object" && !Array.isArray(context)

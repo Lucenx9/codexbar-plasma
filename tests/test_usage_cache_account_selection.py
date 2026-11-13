@@ -22,7 +22,7 @@ FUNCTIONS = (
 QML = '''import QtQuick
 import QtTest
 import "SOURCE_URL/Guards.js" as Guards
-import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
+import "SOURCE_URL/ProviderNormalizer.mjs" as Normalizer
 import "SOURCE_URL/ProviderOrder.js" as ProviderOrder
 import "SOURCE_URL/ProviderSnapshot.js" as ProviderSnapshot
 import "SOURCE_URL/UsageCache.js" as UsageCache

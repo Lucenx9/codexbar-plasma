@@ -1,8 +1,8 @@
 .pragma library
 .import "Guards.js" as Guards
-.import "ProviderNormalizer.js" as Normalizer
+.import "ProviderNormalizer.mjs" as Normalizer
 .import "ProviderSnapshot.js" as ProviderSnapshot
-.import "CliResponse.js" as CliResponse
+.import "CliResponse.mjs" as CliResponse
 .import "AccountResponse.js" as AccountResponse
 
 // Provider-scoped commands may only replace their requested provider. An

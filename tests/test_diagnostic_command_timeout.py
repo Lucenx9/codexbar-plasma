@@ -34,7 +34,7 @@ QML = '''import QtQuick
 import QtTest
 import "SOURCE_URL/Guards.js" as Guards
 import "SOURCE_URL/CommandLedger.js" as CommandLedger
-import "SOURCE_URL/SafeText.js" as SafeText
+import "SOURCE_URL/SafeText.mjs" as SafeText
 TestCase {
     name: "DiagnosticCommandTimeout"
     property string commandPath: CLI_PATH
@@ -108,7 +108,7 @@ LIVE_QML = '''import QtQuick
 import QtTest
 import "SOURCE_URL/Guards.js" as Guards
 import "SOURCE_URL/CommandLedger.js" as CommandLedger
-import "SOURCE_URL/SafeText.js" as SafeText
+import "SOURCE_URL/SafeText.mjs" as SafeText
 TestCase {
     name: "DiagnosticLiveCompletion"
     property string commandPath: CLI_PATH

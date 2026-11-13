@@ -1,13 +1,13 @@
 import QtQuick
 import QtTest
-import "../contents/ui/CostPresentation.js" as CostPresentation
-import "../contents/ui/CostAmounts.js" as CostAmounts
-import "../contents/ui/CostChart.js" as CostChart
-import "../contents/ui/CostCurrency.js" as CostCurrency
-import "../contents/ui/CostTrust.js" as CostTrust
-import "../contents/ui/CostResponse.js" as CostResponse
+import "../contents/ui/CostPresentation.mjs" as CostPresentation
+import "../contents/ui/CostAmounts.mjs" as CostAmounts
+import "../contents/ui/CostChart.mjs" as CostChart
+import "../contents/ui/CostCurrency.mjs" as CostCurrency
+import "../contents/ui/CostTrust.mjs" as CostTrust
+import "../contents/ui/CostResponse.mjs" as CostResponse
 import "../contents/ui/PrivacyPresentation.js" as Privacy
-import "../contents/ui/ProviderNormalizer.js" as Normalizer
+import "../contents/ui/ProviderNormalizer.mjs" as Normalizer
 
 TestCase {
     name: "CostPresentation"

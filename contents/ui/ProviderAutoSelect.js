@@ -1,7 +1,7 @@
 .pragma library
 .import "NotificationMemo.js" as NotificationMemo
 .import "OverviewProviders.js" as OverviewProviders
-.import "ProviderNormalizer.js" as Normalizer
+.import "ProviderNormalizer.mjs" as Normalizer
 
 // The automatic provider selection: the one a user opening the popup most
 // likely came for. Consumption decides it; incident severity only ranks

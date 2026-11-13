@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls as Controls
 import org.kde.kirigami as Kirigami
-import "../SafeText.js" as SafeText
+import "../SafeText.mjs" as SafeText
 
 Controls.CheckBox {
     property string plainText: ""

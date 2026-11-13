@@ -95,8 +95,8 @@ import QtTest
 import "SOURCE_URL/PanelProviders.js" as PanelProviders
 import "SOURCE_URL/PanelRules.js" as PanelRules
 import "SOURCE_URL/PanelDisplay.js" as PanelDisplay
-import "SOURCE_URL/ProviderIdentity.js" as ProviderIdentity
-import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
+import "SOURCE_URL/ProviderIdentity.mjs" as ProviderIdentity
+import "SOURCE_URL/ProviderNormalizer.mjs" as Normalizer
 TestCase {
     name: "CompactProviders"
     property var providers: []

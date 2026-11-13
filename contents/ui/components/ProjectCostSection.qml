@@ -1,8 +1,8 @@
 import QtQuick
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
-import "../CostPresentation.js" as CostPresentation
-import "../CostAmounts.js" as CostAmounts
+import "../CostPresentation.mjs" as CostPresentation
+import "../CostAmounts.mjs" as CostAmounts
 
 ColumnLayout {
     id: section

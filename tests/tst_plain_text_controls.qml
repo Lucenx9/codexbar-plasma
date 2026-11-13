@@ -2,7 +2,7 @@ import QtQuick
 import QtTest
 import org.kde.kirigami as Kirigami
 import "../contents/ui/components" as Components
-import "../contents/ui/SafeText.js" as SafeText
+import "../contents/ui/SafeText.mjs" as SafeText
 
 TestCase {
     name: "PlainTextControls"

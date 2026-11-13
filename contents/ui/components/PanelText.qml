@@ -1,8 +1,8 @@
 import QtQuick
 import "../PanelText.js" as PanelText
 import "../PanelTextFit.js" as PanelTextFit
-import "../CostAmounts.js" as CostAmounts
-import "../ProviderNormalizer.js" as Normalizer
+import "../CostAmounts.mjs" as CostAmounts
+import "../ProviderNormalizer.mjs" as Normalizer
 
 // Localized panel text only. The applet supplies privacy-filtered providers,
 // row text, visibility and selection; this object never reaches its root.

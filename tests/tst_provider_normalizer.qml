@@ -1,6 +1,6 @@
 import QtQuick
 import QtTest
-import "../contents/ui/ProviderNormalizer.js" as Normalizer
+import "../contents/ui/ProviderNormalizer.mjs" as Normalizer
 
 // The normalizer is the only place that turns untrusted `codexbar` JSON into the
 // structures the popup renders, so these tests are written from the payload the

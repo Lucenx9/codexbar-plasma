@@ -1,7 +1,7 @@
 import QtQuick
 import QtTest
 import "../contents/ui/QuotaWindowCost.js" as QuotaWindowCost
-import "../contents/ui/ProviderNormalizer.js" as Normalizer
+import "../contents/ui/ProviderNormalizer.mjs" as Normalizer
 import "../contents/ui/PrivacyPresentation.js" as Privacy
 
 // The suite runs with TZ=America/Los_Angeles, so local midnights and the

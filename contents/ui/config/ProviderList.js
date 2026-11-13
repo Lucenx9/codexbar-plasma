@@ -1,5 +1,5 @@
 .pragma library
-.import "../ProviderIdentity.js" as ProviderIdentity
+.import "../ProviderIdentity.mjs" as ProviderIdentity
 .import "../ProviderOrder.js" as ProviderOrder
 
 // Search is a local projection of the normalized roster. Keep original records

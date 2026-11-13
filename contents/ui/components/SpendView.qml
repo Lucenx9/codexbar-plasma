@@ -4,10 +4,10 @@ import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.components as PlasmaComponents
 import "." as Components
-import "../CostAmounts.js" as CostAmounts
-import "../CostChart.js" as CostChart
-import "../CostCurrency.js" as CostCurrency
-import "../CostTrust.js" as CostTrust
+import "../CostAmounts.mjs" as CostAmounts
+import "../CostChart.mjs" as CostChart
+import "../CostCurrency.mjs" as CostCurrency
+import "../CostTrust.mjs" as CostTrust
 import "../HeatmapNavigation.js" as HeatmapNavigation
 
 ColumnLayout {

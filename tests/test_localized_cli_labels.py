@@ -243,7 +243,7 @@ TestCase {
             fixture = directory / "tst_labels.qml"
             fixture.write_text(qml.replace("PACE_PATH", json.dumps((ROOT / "contents/ui/PacePresentation.js").as_uri()))
                                .replace("PRIVACY_PATH", json.dumps((ROOT / "contents/ui/PrivacyPresentation.js").as_uri()))
-                               .replace("COST_PATH", json.dumps((ROOT / "contents/ui/CostAmounts.js").as_uri()))
+                               .replace("COST_PATH", json.dumps((ROOT / "contents/ui/CostAmounts.mjs").as_uri()))
                                .replace("COMPONENTS_PATH", json.dumps((ROOT / "contents/ui/components").as_uri()))
                                .replace("ADAPTERS", adapters).replace("CASES", json.dumps(cases)), encoding="utf-8")
             result = subprocess.run(

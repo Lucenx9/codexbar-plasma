@@ -1,5 +1,5 @@
 .pragma library
-.import "ProviderNormalizer.js" as Normalizer
+.import "ProviderNormalizer.mjs" as Normalizer
 .import "ProviderCostPresentation.js" as ProviderCostPresentation
 
 // A normalized semantic snapshot plus QML-localized/enriched fields. Never copy

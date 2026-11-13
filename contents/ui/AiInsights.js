@@ -1,5 +1,5 @@
 .pragma library
-.import "SafeText.js" as SafeText
+.import "SafeText.mjs" as SafeText
 
 // Pure AI Insights policy: language, request context, persisted cache,
 // scheduling, and presentation. QML owns the process,

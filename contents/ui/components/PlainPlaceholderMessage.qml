@@ -1,6 +1,6 @@
 import QtQuick
 import org.kde.kirigami as Kirigami
-import "../SafeText.js" as SafeText
+import "../SafeText.mjs" as SafeText
 
 Kirigami.PlaceholderMessage {
     property string plainText: ""

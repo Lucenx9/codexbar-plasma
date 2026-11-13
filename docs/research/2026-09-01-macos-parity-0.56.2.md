@@ -33,8 +33,8 @@ Linux CLI.
 Plasma already requests and parses the generic cost envelope, so no new process
 lifecycle or raw JSON parser is needed. One bounded presentation correction is
 still required before Antigravity history is truthful. The current
-[`normalizeCostDaily`](../../contents/ui/ProviderNormalizer.js) and
-[`normalizeCostTotals`](../../contents/ui/ProviderNormalizer.js) paths convert a
+[`normalizeCostDaily`](../../contents/ui/ProviderNormalizer.mjs) and
+[`normalizeCostTotals`](../../contents/ui/ProviderNormalizer.mjs) paths convert a
 missing cost to `0`. That makes token-only Antigravity rows look like zero-dollar
 history in totals and cost-mode charts. The normalizer must preserve
 "unavailable" separately from numeric zero, while the existing tokens metric

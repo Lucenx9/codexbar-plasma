@@ -24,8 +24,8 @@ whose behavior is already covered that way is removed, not duplicated: it fails
 on a rename that changes nothing and passes on an edit that changes behavior.
 
 `scripts/lib/qml_surfaces.py` defines QML/JS file groups for the Makefile,
-hardening checks, and translation extraction. Existing globs cover new files;
-add a glob only for a new directory. `scripts/test_qml_hardening.sh` rejects
+hardening checks, and translation extraction. Existing globs cover QML, JavaScript and ECMAScript modules (`.mjs`);
+add a glob for a new directory or source extension. `scripts/test_qml_hardening.sh` rejects
 uncovered QML/JS files.
 
 - Use `require_in_surface` / `reject_in_surface` in shell, or `Surface.require`,
@@ -44,7 +44,8 @@ uncovered QML/JS files.
   A plain search for `function foo(` anywhere in a group can miss broken callers.
 - Local bindings for `hasOwnKey`, `isUnsafeObjectKey`, `copyObject`, and
   `shellQuote` delegate to `contents/ui/Guards.js`. Share the implementation
-  through that `.pragma library` module, including in config pages.
+  through that QML entry point, including in config pages. The implementation
+is in `Guards.mjs` so WorkerScript uses the same guards.
   `tests/tst_guards.qml` covers behavior; `scripts/test_security_regressions.sh`
   rejects implementations duplicated elsewhere.
 
@@ -52,6 +53,18 @@ uncovered QML/JS files.
 keyboard/pointer activation with the KDE desktop style at narrow and normal
 widths in LTR/RTL layouts. `tst_disclosure_button.qml` separately preserves the
 settings-only alignment with neighbouring check boxes.
+
+`test_cost_context.py` and `test_command_source_isolation.py` use
+`qml_runtime_support.py` to reject controller warnings except one Qt 6.11.1
+initialization diagnostic (cost-context cancellation exceptions remain local):
+`QObject::connect(QJSEngine, QtObject): invalid nullptr parameter`. A dynamically
+created empty WorkerScript reproduces it without applet code. In Qt 6.11.1,
+[`QtObject` connects `uiLanguageChanged`](https://github.com/qt/qtdeclarative/blob/v6.11.1/src/qml/qml/qqmlbuiltinfunctions.cpp#L267)
+to the null public engine used by
+[`WorkerScript`](https://github.com/qt/qtdeclarative/blob/v6.11.1/src/qmlworkerscript/qquickworkerscript.cpp#L232).
+The test accepts only that exact diagnostic on that exact Qt version; it does
+not suppress runtime logging or relax worker outcome assertions. Recheck the
+exception when updating the CI Qt version.
 
 `tst_popup_tab_strip.qml` checks manual keyboard activation and mirrored arrow
 navigation, including wrapping and Home/End. Resize and label-growth cases keep
@@ -210,7 +223,7 @@ settings smoke compares the preview with the live monetary formatter.
 inputs, local calendar boundaries, DST and privacy. Its snapshot-to-allowance
 cases reject impossible dates, overflowing times and missing/invalid timezones
 before and after privacy projection, while retaining valid leap days and offsets.
-Both paths reuse the ISO-8601 validator in `SubscriptionDates.js` rather than
+Both paths reuse the ISO-8601 validator in `SubscriptionDates.mjs` rather than
 accepting `Date.parse` calendar rollover. The `monthly-allowance`
 smoke scenario checks the production popup reading.
 
@@ -453,7 +466,7 @@ backslashes, including a quoted directory's final separator and Unicode
 backslash escapes, remain subject to the conservative path filter.
 Common executable startup failures retain
 only a fixed reason, never the personal path or library filename.
-`SafeText.js` redacts secret-key and secret-access-key assignments alongside
+`SafeText.mjs` redacts secret-key and secret-access-key assignments alongside
 the existing credential names, including environment-variable and SDK spellings.
 It also matches keys whose quotes are backslash-escaped by one or more JSON
 encodings, and removes the rest of the line after an escaped quoted value

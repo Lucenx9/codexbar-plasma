@@ -1,8 +1,8 @@
 .pragma library
-.import "ProviderNormalizer.js" as Normalizer
+.import "ProviderNormalizer.mjs" as Normalizer
 .import "Guards.js" as Guards
 .import "NotificationMemo.js" as NotificationMemo
-.import "SubscriptionDates.js" as SubscriptionDates
+.import "SubscriptionDates.mjs" as SubscriptionDates
 
 // Pure transition kernel for provider notifications. Callers supply normalized
 // observations and keep ownership of localization, timers, refresh lifecycle,

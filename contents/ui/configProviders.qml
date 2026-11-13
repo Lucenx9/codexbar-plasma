@@ -9,9 +9,9 @@ import org.kde.plasma.plasmoid
 import "components" as Components
 import "CommandLedger.js" as CommandLedger
 import "Guards.js" as Guards
-import "ProviderIdentity.js" as ProviderIdentity
+import "ProviderIdentity.mjs" as ProviderIdentity
 import "ProviderOrder.js" as ProviderOrder
-import "SafeText.js" as SafeText
+import "SafeText.mjs" as SafeText
 import "ThemeContrast.js" as ThemeContrast
 import "config" as ProviderConfig
 import "credential" as Credential

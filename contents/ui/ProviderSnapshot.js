@@ -1,11 +1,11 @@
 .pragma library
 .import "Guards.js" as Guards
-.import "ProviderNormalizer.js" as Normalizer
+.import "ProviderNormalizer.mjs" as Normalizer
 .import "UsageDetails.js" as UsageDetails
 .import "LegacyUsageDashboard.js" as LegacyUsageDashboard
 .import "PacePresentation.js" as PacePresentation
-.import "SafeText.js" as SafeText
-.import "SubscriptionDates.js" as SubscriptionDates
+.import "SafeText.mjs" as SafeText
+.import "SubscriptionDates.mjs" as SubscriptionDates
 
 function message(value) {
     return SafeText.cliMessage(SafeText.stripLoaderDiagnostics(value), SafeText.maximumCliMessageLength);

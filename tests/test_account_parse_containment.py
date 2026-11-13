@@ -21,13 +21,13 @@ FUNCTIONS = (
 
 QML = '''import QtQuick
 import QtTest
-import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
+import "SOURCE_URL/ProviderNormalizer.mjs" as Normalizer
 import "SOURCE_URL/ProviderSnapshot.js" as ProviderSnapshot
 import "SOURCE_URL/ProviderViewModel.js" as ProviderViewModel
 import "SOURCE_URL/AccountResponse.js" as AccountResponse
-import "SOURCE_URL/ProviderIdentity.js" as ProviderIdentity
+import "SOURCE_URL/ProviderIdentity.mjs" as ProviderIdentity
 import "SOURCE_URL/Guards.js" as Guards
-import "SOURCE_URL/SafeText.js" as SafeText
+import "SOURCE_URL/SafeText.mjs" as SafeText
 import "SOURCE_URL/CommandLedger.js" as CommandLedger
 import "SOURCE_URL/UsageDetails.js" as UsageDetails
 import "SOURCE_URL/UsageCache.js" as UsageCache

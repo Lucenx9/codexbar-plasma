@@ -1,15 +1,14 @@
-.pragma library
-.import "Guards.js" as Guards
-.import "CostAmounts.js" as CostAmounts
-.import "CostCurrency.js" as CostCurrency
+import * as Guards from "./Guards.mjs";
+import * as CostAmounts from "./CostAmounts.mjs";
+import * as CostCurrency from "./CostCurrency.mjs";
 
 // Semantic pricing confidence and bounded notice-dismissal transitions.
 // QML owns localization and commits the returned notice state.
 
-var maximumCostTrustNoticeScopes = 128
-var maximumIncompleteRequests = 1000000000
+export var maximumCostTrustNoticeScopes = 128
+export var maximumIncompleteRequests = 1000000000
 
-function acceptedCostCoverage(value) {
+export function acceptedCostCoverage(value) {
     if (!Guards.isRecord(value)) return null
     var fields = ["priced", "unpriced", "unmetered", "estimated"]
     for (var i = 0; i < fields.length; i++) {
@@ -21,7 +20,7 @@ function acceptedCostCoverage(value) {
 // Excluded requests are counted, never summed into an amount. Keep the total
 // bounded so a saturated upstream count cannot overflow the joined notice.
 // Accepts a trust record, a daily point, or a model aggregate alike.
-function acceptedIncompleteRequests(trust) {
+export function acceptedIncompleteRequests(trust) {
     if (!Guards.isRecord(trust)) return 0
     if (!Guards.hasOwnKey(trust, "incompleteRequests")) return 0
     var count = trust.incompleteRequests
@@ -29,18 +28,18 @@ function acceptedIncompleteRequests(trust) {
     return Math.min(count, maximumIncompleteRequests)
 }
 
-function boundedIncompleteRequests(count) {
+export function boundedIncompleteRequests(count) {
     return Math.min(Math.max(0, count), maximumIncompleteRequests)
 }
 
-function acceptedCostSourceKind(value) {
+export function acceptedCostSourceKind(value) {
     return ["listPrice", "vendor", "mixed", "unknown"].indexOf(value) !== -1 ? value : ""
 }
 
 // Provenance without observed cost, token, daily, or coverage data cannot
 // qualify a displayed total. Missing token totals normalize to zero, so only a
 // positive token count is evidence; explicit finite cost values matter at zero.
-function costTrustSnapshotHasEvidence(item) {
+export function costTrustSnapshotHasEvidence(item) {
     if (!item) return false
     if (hasObservedAmount(item.totals)) return true
     var coverage = trustCoverage(item.trust)
@@ -54,7 +53,7 @@ function costTrustSnapshotHasEvidence(item) {
 // For global spend, currency eligibility deliberately matches `spendTotals()`.
 // Token-only snapshots still qualify a mixed total, but cannot create a notice
 // when there is no finite cost to qualify.
-function costTrustSummary(costs) {
+export function costTrustSummary(costs) {
     var items = Array.isArray(costs) ? costs : []
     var currency = CostCurrency.spendCurrency(items)
     var state = {
@@ -71,7 +70,7 @@ function costTrustSummary(costs) {
     return summarizeTrust(state)
 }
 
-function costTrustNoticeKey(summary) {
+export function costTrustNoticeKey(summary) {
     if (!Guards.isRecord(summary)) return ""
     var sourceKind = acceptedCostSourceKind(ownText(summary, "sourceKind"))
     var flags = [ownFlag(summary, "hasEstimated"), ownFlag(summary, "hasUnpriced"),
@@ -89,7 +88,7 @@ function costTrustNoticeKey(summary) {
 // Keep dismissal state semantic rather than tying it to localized text or a
 // freshly allocated summary object. Refreshes preserve a dismissal; a changed
 // warning meaning becomes visible again, including a return to an older state.
-function costTrustNoticeTransition(summary, previousState, shouldDismiss) {
+export function costTrustNoticeTransition(summary, previousState, shouldDismiss) {
     var key = costTrustNoticeKey(summary)
     if (key.length === 0) return { key: "", dismissed: false, shouldShow: false }
     var previous = Guards.isRecord(previousState) ? previousState : ({})
@@ -101,7 +100,7 @@ function costTrustNoticeTransition(summary, previousState, shouldDismiss) {
 // The popup representation may be destroyed while the compact applet remains
 // alive. Keep each surface's semantic notice state in the applet owner so a
 // recreated notice does not forget that the user closed it.
-function costTrustNoticeStoreTransition(summary, states, scope, shouldDismiss) {
+export function costTrustNoticeStoreTransition(summary, states, scope, shouldDismiss) {
     var safeScope = CostAmounts.boundedText(scope, 120)
     if (Guards.isUnsafeObjectKey(safeScope)) safeScope = ""
     var source = Guards.isRecord(states) ? states : ({})
@@ -118,41 +117,41 @@ function costTrustNoticeStoreTransition(summary, states, scope, shouldDismiss) {
     return { states: nextStates, state: state }
 }
 
-function validCoverageCount(coverage, field) {
+export function validCoverageCount(coverage, field) {
     if (!Guards.hasOwnKey(coverage, field)) return false
     var count = coverage[field]
     return Guards.isNonNegativeInteger(count)
 }
 
-function ownText(item, field) {
+export function ownText(item, field) {
     if (!Guards.hasOwnKey(item, field)) return ""
     return typeof item[field] === "string" ? item[field] : ""
 }
 
-function ownFlag(item, field) {
+export function ownFlag(item, field) {
     return Guards.hasOwnKey(item, field) && item[field] === true
 }
 
-function trustCoverage(trust) {
+export function trustCoverage(trust) {
     if (!Guards.isRecord(trust)) return null
     return Guards.hasOwnKey(trust, "coverage") ? acceptedCostCoverage(trust.coverage) : null
 }
 
-function coverageHasActivity(coverage) {
+export function coverageHasActivity(coverage) {
     if (!coverage) return false
     return [coverage.priced, coverage.unpriced, coverage.unmetered, coverage.estimated]
         .some(function(count) { return count > 0 })
 }
 
-function hasPositiveTokens(amounts) {
+export function hasPositiveTokens(amounts) {
     return CostAmounts.hasMetricValue(amounts, true) && amounts.tokens > 0
 }
 
-function hasObservedAmount(amounts) {
+export function hasObservedAmount(amounts) {
     return CostAmounts.hasMetricValue(amounts, false) || hasPositiveTokens(amounts)
 }
 
-function accumulateTrust(state, item) {
+export function accumulateTrust(state, item) {
     state.hasDisplayedCost = state.hasDisplayedCost || CostAmounts.hasMetricValue(item.totals, false)
     state.hasDisplayedTokens = state.hasDisplayedTokens || hasPositiveTokens(item.totals)
     var trust = Guards.hasOwnKey(item, "trust") ? item.trust : null
@@ -168,7 +167,7 @@ function accumulateTrust(state, item) {
     state.sources[sourceKind || "unclassified"] = true
 }
 
-function summarySource(sources) {
+export function summarySource(sources) {
     if (sources.unknown) return "unknown"
     var known = ["listPrice", "vendor", "mixed"].filter(function(kind) { return sources[kind] })
     if (known.length === 0) return ""
@@ -176,13 +175,13 @@ function summarySource(sources) {
     return known.length > 1 ? "mixed" : known[0]
 }
 
-function trustValueMode(partial, sourceKind, estimated) {
+export function trustValueMode(partial, sourceKind, estimated) {
     if (partial) return "partial"
     if (sourceKind === "unknown") return "approximate"
     return estimated ? "estimated" : "plain"
 }
 
-function summarizeTrust(state) {
+export function summarizeTrust(state) {
     var sourceKind = summarySource(state.sources)
     var estimated = state.hasEstimated || state.sources.listPrice || state.sources.mixed
     var incomplete = qualifiedIncompleteRequests(state)
@@ -197,29 +196,29 @@ function summarizeTrust(state) {
     }
 }
 
-function accumulateCoverage(state, coverage) {
+export function accumulateCoverage(state, coverage) {
     if (!coverage) return
     state.hasEstimated = state.hasEstimated || coverage.estimated > 0
     state.hasUnpriced = state.hasUnpriced || coverage.unpriced > 0
     state.hasUnmetered = state.hasUnmetered || coverage.unmetered > 0
 }
 
-function qualifiedIncompleteRequests(state) {
+export function qualifiedIncompleteRequests(state) {
     return state.hasDisplayedCost || state.hasDisplayedTokens ? state.incompleteRequests : 0
 }
 
-function shouldQualifyAmount(hasCost, incomplete, mode, sourceKind) {
+export function shouldQualifyAmount(hasCost, incomplete, mode, sourceKind) {
     if (!hasCost && incomplete === 0) return false
     return mode !== "plain" || sourceKind.length > 0
 }
 
-function reusableNoticeState(state) {
+export function reusableNoticeState(state) {
     if (!Guards.isRecord(state)) return false
     if (ownText(state, "key").length === 0) return false
     return Guards.hasOwnKey(state, "dismissed") && typeof state.dismissed === "boolean"
 }
 
-function copyOtherNoticeScopes(source, scope) {
+export function copyOtherNoticeScopes(source, scope) {
     var result = ({})
     var count = 0
     for (var key in source) {
@@ -232,7 +231,7 @@ function copyOtherNoticeScopes(source, scope) {
     return result
 }
 
-function noticeStateForScope(source, scope) {
+export function noticeStateForScope(source, scope) {
     if (scope.length === 0) return null
     return Guards.hasOwnKey(source, scope) ? source[scope] : null
 }

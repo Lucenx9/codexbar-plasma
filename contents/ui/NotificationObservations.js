@@ -1,6 +1,6 @@
 .pragma library
 .import "Guards.js" as Guards
-.import "ProviderNormalizer.js" as Normalizer
+.import "ProviderNormalizer.mjs" as Normalizer
 .import "NotificationPlanner.js" as NotificationPlanner
 .import "QuotaThresholds.js" as QuotaThresholds
 

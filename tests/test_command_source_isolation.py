@@ -6,6 +6,8 @@ import subprocess
 import tempfile
 import unittest
 
+from qml_runtime_support import runtime_warnings
+
 ROOT = Path(__file__).resolve().parents[1]
 
 QML = '''import QtQuick
@@ -139,4 +141,4 @@ class CommandSourceIsolationTests(unittest.TestCase):
                 if os.environ.get("QML_TEST_REQUIRE_NO_SKIPS") == "1":
                     self.fail(output)
                 self.skipTest("KDE QML modules unavailable")
-            self.assertNotIn("QWARN", output)
+            self.assertEqual(runtime_warnings(output), [])

@@ -12,7 +12,7 @@ import "PanelProviders.js" as PanelProviders
 import "PanelRules.js" as PanelRules
 import "ProviderOrder.js" as ProviderOrder
 import "QuotaThresholds.js" as QuotaThresholds
-import "SafeText.js" as SafeText
+import "SafeText.mjs" as SafeText
 
 KCM.SimpleKCM {
     id: page

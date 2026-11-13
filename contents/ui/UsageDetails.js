@@ -1,5 +1,5 @@
 .pragma library
-.import "SafeText.js" as SafeText
+.import "SafeText.mjs" as SafeText
 
 var maximumSectionsPerSnapshot = 8
 var maximumRowsPerSection = 24

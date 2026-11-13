@@ -26,22 +26,22 @@ FUNCTIONS = (
 QML = '''import QtQuick
 import QtTest
 import "SOURCE_URL/components" as Components
-import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
+import "SOURCE_URL/ProviderNormalizer.mjs" as Normalizer
 import "SOURCE_URL/ProviderSnapshot.js" as ProviderSnapshot
 import "SOURCE_URL/ProviderViewModel.js" as ProviderViewModel
 import "SOURCE_URL/UsageResponse.js" as UsageResponse
-import "SOURCE_URL/ProviderIdentity.js" as ProviderIdentity
+import "SOURCE_URL/ProviderIdentity.mjs" as ProviderIdentity
 import "SOURCE_URL/ProviderOrder.js" as ProviderOrder
 import "SOURCE_URL/Guards.js" as Guards
-import "SOURCE_URL/SafeText.js" as SafeText
+import "SOURCE_URL/SafeText.mjs" as SafeText
 import "SOURCE_URL/PacePresentation.js" as PacePresentation
 import "SOURCE_URL/ResetPresentation.js" as ResetPresentation
 import "SOURCE_URL/UsageCache.js" as UsageCache
-import "SOURCE_URL/CostPresentation.js" as CostPresentation
-import "SOURCE_URL/CostAmounts.js" as CostAmounts
-import "SOURCE_URL/CostChart.js" as CostChart
-import "SOURCE_URL/CostCurrency.js" as CostCurrency
-import "SOURCE_URL/CostTrust.js" as CostTrust
+import "SOURCE_URL/CostPresentation.mjs" as CostPresentation
+import "SOURCE_URL/CostAmounts.mjs" as CostAmounts
+import "SOURCE_URL/CostChart.mjs" as CostChart
+import "SOURCE_URL/CostCurrency.mjs" as CostCurrency
+import "SOURCE_URL/CostTrust.mjs" as CostTrust
 import "SOURCE_URL/PopupHiddenSections.js" as PopupHiddenSections
 TestCase {
     name: "ProviderMetadata"

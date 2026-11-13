@@ -1,13 +1,12 @@
-.pragma library
-.import "Guards.js" as Guards
+import * as Guards from "./Guards.mjs";
 
-var maximumProviderIDLength = 128
+export var maximumProviderIDLength = 128
 
-function hasOwnKey(item, key) {
+export function hasOwnKey(item, key) {
     return Guards.hasOwnKey(item, key)
 }
 
-function providerKey(value, aliases) {
+export function providerKey(value, aliases) {
     var key = String(value || "codex").toLowerCase()
     if (hasOwnKey(aliases, key) && typeof aliases[key] === "string") {
         return aliases[key]
@@ -15,7 +14,7 @@ function providerKey(value, aliases) {
     return key
 }
 
-function providerMapKey(value) {
+export function providerMapKey(value) {
     var key = String(value || "")
     if (key.length === 0 || key.length > maximumProviderIDLength) {
         return ""
@@ -29,7 +28,7 @@ function providerMapKey(value) {
     return key
 }
 
-function normalizedProviderID(value) {
+export function normalizedProviderID(value) {
     if (typeof value !== "string") {
         return ""
     }
@@ -52,10 +51,10 @@ function normalizedProviderID(value) {
 // QML caller resolves. The one provider table that cannot move is the display
 // name map, because `i18n` needs literal strings in a file gettext scans.
 
-var documentationBaseUrl = "https://github.com/steipete/CodexBar/blob/main/docs/"
+export var documentationBaseUrl = "https://github.com/steipete/CodexBar/blob/main/docs/"
 
 // CLI aliases and historical spellings, mapped to the canonical provider key.
-var providerAliases = {
+export var providerAliases = {
     "trae-cn": "traecn",
     "open-design": "opendesign",
     "11labs": "elevenlabs",
@@ -140,7 +139,7 @@ var providerAliases = {
 }
 
 // Only providers whose CLI argument differs from their canonical key.
-var providerCliArguments = {
+export var providerCliArguments = {
     "abacus": "abacusai",
     "alibaba": "alibaba-coding-plan",
     "alibabatokenplan": "alibaba-token-plan",
@@ -151,7 +150,7 @@ var providerCliArguments = {
 
 // Brand colours as red/green/blue channels in 0..1. Providers with no entry fall
 // back to the theme highlight, which is the caller's decision to make.
-var providerBrandChannels = {
+export var providerBrandChannels = {
     "siliconflow": [110 / 255, 41 / 255, 245 / 255],
     "tripo": [248 / 255, 207 / 255, 0],
     "soniox": [37 / 255, 55 / 255, 114 / 255],
@@ -265,7 +264,7 @@ var providerBrandChannels = {
     "zoommate": [11 / 255, 92 / 255, 1]
 }
 
-var providerDashboardUrls = {
+export var providerDashboardUrls = {
     "siliconflow": "https://cloud.siliconflow.cn",
     "tripo": "https://developers.tripo3d.ai/en/billing",
     "soniox": "https://console.soniox.com",
@@ -374,7 +373,7 @@ var providerDashboardUrls = {
     "zoommate": "https://zoommate.zoom.us/#/?settings=credit-usage"
 }
 
-var providerLoginUrls = {
+export var providerLoginUrls = {
     "traecn": "https://www.trae.cn/dashboard",
     "opendesign": "https://open-design.ai/cloud/login",
     "claude": "https://claude.ai",
@@ -398,7 +397,7 @@ var providerLoginUrls = {
     "v0": "https://v0.app/settings/keys"
 }
 
-var providerStatusUrls = {
+export var providerStatusUrls = {
     "tripo": "https://tripo3d.statuspage.io",
     "soniox": "https://status.soniox.com",
     "alibaba": "https://status.aliyun.com",
@@ -436,7 +435,7 @@ var providerStatusUrls = {
 }
 
 // Paths under `documentationBaseUrl`.
-var providerDocsPaths = {
+export var providerDocsPaths = {
     "siliconflow": "siliconflow.md",
     "tripo": "tripo.md",
     "traecn": "traecn.md",
@@ -557,7 +556,7 @@ var providerDocsPaths = {
 
 // Only bundled assets belong here. A missing local URL does not trigger
 // Kirigami.Icon's theme fallback, so unknown providers must return no file.
-var providerIconFiles = {
+export var providerIconFiles = {
     "siliconflow": "siliconflow.svg",
     "tripo": "tripo.svg",
     "soniox": "soniox.svg",
@@ -676,46 +675,46 @@ var providerIconFiles = {
     "zoommate": "zoommate.svg"
 }
 
-function resolveProviderKey(value) {
+export function resolveProviderKey(value) {
     return providerKey(value, providerAliases)
 }
 
-function providerTableValue(table, value) {
+export function providerTableValue(table, value) {
     var key = resolveProviderKey(value)
     return hasOwnKey(table, key) ? table[key] : ""
 }
 
-function providerCliArgument(value) {
+export function providerCliArgument(value) {
     var key = resolveProviderKey(value)
     return hasOwnKey(providerCliArguments, key) ? providerCliArguments[key] : key
 }
 
 // [] when the provider has no brand colour, so the caller supplies the fallback.
-function providerBrandColorChannels(value) {
+export function providerBrandColorChannels(value) {
     var key = resolveProviderKey(value)
     return hasOwnKey(providerBrandChannels, key) ? providerBrandChannels[key] : []
 }
 
-function providerDashboardUrl(value) {
+export function providerDashboardUrl(value) {
     return providerTableValue(providerDashboardUrls, value)
 }
 
-function providerLoginUrl(value) {
+export function providerLoginUrl(value) {
     return providerTableValue(providerLoginUrls, value)
 }
 
-function providerStatusUrl(value) {
+export function providerStatusUrl(value) {
     return providerTableValue(providerStatusUrls, value)
 }
 
-function providerDocsUrl(value) {
+export function providerDocsUrl(value) {
     var path = providerTableValue(providerDocsPaths, value)
     return path.length > 0 ? documentationBaseUrl + path : ""
 }
 
 // "" when the key cannot name a bundled asset, so the caller falls back to a
 // generic icon rather than resolving an attacker-influenced path.
-function providerIconFileName(value) {
+export function providerIconFileName(value) {
     var key = providerMapKey(resolveProviderKey(value))
     if (!/^[a-z0-9][a-z0-9._-]*$/.test(key) || key.indexOf("..") !== -1) {
         return ""

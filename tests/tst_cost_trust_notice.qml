@@ -1,7 +1,7 @@
 import QtQuick
 import QtTest
 import "../contents/ui/components" as Components
-import "../contents/ui/CostTrust.js" as CostTrust
+import "../contents/ui/CostTrust.mjs" as CostTrust
 
 TestCase {
     name: "CostTrustNotice"

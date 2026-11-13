@@ -1,7 +1,7 @@
 .pragma library
 .import "../Guards.js" as Guards
-.import "../SafeText.js" as SafeText
-.import "../ProviderIdentity.js" as Identity
+.import "../SafeText.mjs" as SafeText
+.import "../ProviderIdentity.mjs" as Identity
 
 var supportedSourceModes = ["auto", "api", "cli", "oauth", "web"]
 var maximumListItems = 64

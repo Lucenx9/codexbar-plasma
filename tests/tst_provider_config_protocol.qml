@@ -1,7 +1,7 @@
 import QtQuick
 import QtTest
 import "../contents/ui/config/ProviderConfigProtocol.js" as ProviderConfigProtocol
-import "../contents/ui/SafeText.js" as SafeText
+import "../contents/ui/SafeText.mjs" as SafeText
 
 TestCase {
     name: "ProviderConfigProtocol"

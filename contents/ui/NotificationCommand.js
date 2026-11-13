@@ -1,6 +1,6 @@
 .pragma library
 .import "Guards.js" as Guards
-.import "SafeText.js" as SafeText
+.import "SafeText.mjs" as SafeText
 
 var maximumTitleLength = 256
 var maximumBodyLength = 1024

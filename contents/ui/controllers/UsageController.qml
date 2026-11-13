@@ -4,8 +4,8 @@ import "../CommandLedger.js" as CommandLedger
 import "../Guards.js" as Guards
 import "../NetworkState.js" as NetworkState
 import "../ProviderFallbackQueue.js" as ProviderFallbackQueue
-import "../ProviderIdentity.js" as ProviderIdentity
-import "../ProviderNormalizer.js" as Normalizer
+import "../ProviderIdentity.mjs" as ProviderIdentity
+import "../ProviderNormalizer.mjs" as Normalizer
 import "../ProviderOrder.js" as ProviderOrder
 import "../ProviderRosterCache.js" as ProviderRosterCache
 import "../ProviderSnapshot.js" as ProviderSnapshot

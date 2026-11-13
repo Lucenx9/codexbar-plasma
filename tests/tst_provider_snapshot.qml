@@ -1,7 +1,7 @@
 import QtQuick
 import QtTest
 import "../contents/ui/ProviderSnapshot.js" as ProviderSnapshot
-import "../contents/ui/ProviderNormalizer.js" as Normalizer
+import "../contents/ui/ProviderNormalizer.mjs" as Normalizer
 import "../contents/ui/UsageCache.js" as UsageCache
 import "../contents/ui/ResetPresentation.js" as ResetPresentation
 

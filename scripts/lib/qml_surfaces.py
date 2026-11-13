@@ -29,6 +29,7 @@ SURFACES: dict[str, tuple[str, ...]] = {
     "applet": (
         "contents/ui/main.qml",
         "contents/ui/*.js",
+        "contents/ui/*.mjs",
         "contents/ui/components/*.qml",
         "contents/ui/controllers/*.qml",
         "contents/ui/controllers/*.js",
@@ -77,6 +78,7 @@ SURFACES: dict[str, tuple[str, ...]] = {
         "contents/ui/config*.qml",
         "contents/ui/credential/*.qml",
         "contents/ui/*.js",
+        "contents/ui/*.mjs",
         "contents/ui/components/*.qml",
         "contents/ui/controllers/*.qml",
         "contents/ui/controllers/*.js",
