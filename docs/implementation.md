@@ -708,7 +708,8 @@ provider usage. `CostResponse.mjs`
 returns bounded snapshots and semantic failure outcomes without effects or
 localization. `CostWorker.mjs` runs it in a Qt WorkerScript, keeping parsing and
 history aggregation off the GUI thread. `CostWorkerRequest.mjs` bounds copies
-across the thread boundary. The controller
+across the thread boundary, retaining the diagnostic inspection window and
+credential-redaction lookahead even after leading whitespace. The controller
 keeps loading active through publication, and owns a 120-second deadline spanning
 the process and normalization. Each run has a serial: settings changes, forced
 refreshes, disabling costs and timeouts invalidate earlier worker replies.

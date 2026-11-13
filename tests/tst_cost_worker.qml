@@ -114,6 +114,28 @@ TestCase {
         compare(reply.result.costs.codex.totals.tokens, 123);
     }
 
+    function test_stderrRedactionAcrossTransferLimit_data() {
+        return [
+            {tag: "key-crosses-old-bound", offset: 65530, text: "sk-abcdefgh123456789", expected: "[redacted]"},
+            {tag: "last-visible-position", offset: 65535, text: "sk-abcdefgh123456789", expected: "[redacted]"},
+            {tag: "authorization", offset: 65530, text: "Authorization: Bearer synthetic-secret", expected: "Authorization: [redacted]"},
+            {tag: "diagnostic", offset: 65535, text: "synthetic command failure", expected: "synthetic command failure"},
+            {tag: "outside-scan", offset: 65536, text: "must remain invisible", expected: ""}
+        ];
+    }
+
+    function test_stderrRedactionAcrossTransferLimit(data) {
+        tryCompare(worker, "ready", true);
+        var request = CostWorkerRequest.message({serial: 11, historyDays: 30}, "",
+            " ".repeat(data.offset) + data.text + " ".repeat(200000), 124);
+        verify(request.stderrText.length <= 2 * SafeText.maximumDiagnosticLength
+            + SafeText.credentialRedactionLookaheadLength);
+        worker.sendMessage(request);
+        tryVerify(function () { return reply !== null; });
+        compare(reply.result.outcome, "commandFailed");
+        compare(reply.result.message, data.expected);
+    }
+
     function test_normalizesOffThread() {
         tryCompare(worker, "ready", true);
         worker.sendMessage({
