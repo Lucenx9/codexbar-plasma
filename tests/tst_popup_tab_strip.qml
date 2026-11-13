@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls as Controls
 import QtTest
 import "../contents/ui/components" as Components
 
@@ -33,6 +34,10 @@ TestCase {
             property int selectedIndex: 0
             property bool showLabels: true
             property string firstTitle: "First tab"
+            property string lastTitle: "Synthetic tab 7"
+            property bool mirrored: false
+            LayoutMirroring.enabled: mirrored
+            LayoutMirroring.childrenInherit: true
 
             Repeater {
                 model: 8
@@ -40,7 +45,8 @@ TestCase {
                     required property int index
                     objectName: "tab" + index
                     applet: appearance
-                    title: index === 0 ? host.firstTitle : "Synthetic tab " + index
+                    title: index === 0 ? host.firstTitle
+                        : (index === 7 ? host.lastTitle : "Synthetic tab " + index)
                     iconName: "view-grid-symbolic"
                     tabHeight: host.tabHeight
                     tabStrip: host
@@ -49,6 +55,14 @@ TestCase {
                     onActivated: host.selectedIndex = index
                 }
             }
+        }
+    }
+
+    Component {
+        id: outsideButtonFactory
+        Controls.Button {
+            y: 80
+            text: "Outside navigation"
         }
     }
 
@@ -155,5 +169,110 @@ TestCase {
         verify(!host.navigateFromTab(testCase, Qt.Key_Right));
         host.ensureVisible(testCase);
         compare(findChild(host, "providerTabsFlickable").contentX, 0);
+    }
+
+    function test_navigationSkipsHiddenAndDisabledTabs() {
+        var host = createStrip();
+        var first = focusFor(host, 0);
+        var third = focusFor(host, 3);
+        findChild(host, "tab1").visible = false;
+        findChild(host, "tab2").enabled = false;
+        wait(0);
+        first.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Right);
+        verify(third.activeFocus, "Right must skip unavailable tabs");
+        keyClick(Qt.Key_Left);
+        verify(first.activeFocus, "Left must skip unavailable tabs");
+    }
+
+    function test_layoutKeepsTheFocusedUnselectedTabVisible_data() {
+        return [
+            { tag: "resize", rename: false },
+            { tag: "label-growth", rename: true }
+        ];
+    }
+
+    function test_layoutKeepsTheFocusedUnselectedTabVisible(data) {
+        var host = createStrip();
+        var last = focusFor(host, 7);
+        last.forceActiveFocus(Qt.TabFocusReason);
+        verifyRevealed(host, 7);
+        if (data.rename) {
+            host.firstTitle = "A much longer synthetic tab title after a refresh";
+        } else {
+            host.width = 240;
+        }
+        waitForPolish(findChild(host, "tab0").parent);
+        wait(0);
+        verify(last.activeFocus);
+        compare(host.selectedIndex, 0);
+        verifyRevealed(host, 7);
+    }
+
+    function test_resizeRevealsSelectionWithoutTakingOutsideFocus() {
+        var host = createStrip();
+        var outside = createTemporaryObject(outsideButtonFactory, testCase);
+        verify(outside !== null);
+        focusFor(host, 7).forceActiveFocus(Qt.TabFocusReason);
+        outside.forceActiveFocus(Qt.TabFocusReason);
+        host.width = 240;
+        waitForPolish(findChild(host, "tab0").parent);
+        wait(0);
+        verify(outside.activeFocus);
+        compare(host.selectedIndex, 0);
+        verifyRevealed(host, 0);
+    }
+
+    function test_labelChangesRevealFocusWhenTotalWidthStaysTheSame() {
+        var host = createStrip();
+        host.lastTitle = "A much longer synthetic tab title after a refresh";
+        waitForPolish(findChild(host, "tab0").parent);
+        wait(0);
+        var focused = focusFor(host, 6);
+        focused.forceActiveFocus(Qt.TabFocusReason);
+        verifyRevealed(host, 6);
+        var viewport = findChild(host, "providerTabsFlickable");
+        var width = viewport.contentWidth;
+        var firstTitle = host.firstTitle;
+        host.firstTitle = host.lastTitle;
+        host.lastTitle = firstTitle;
+        waitForPolish(findChild(host, "tab0").parent);
+        wait(0);
+        verify(Math.abs(viewport.contentWidth - width) < 1);
+        verify(focused.activeFocus);
+        compare(host.selectedIndex, 0);
+        verifyRevealed(host, 6);
+    }
+
+    function test_arrowsFollowMirroredTabPositions() {
+        var host = createStrip();
+        host.mirrored = true;
+        wait(0);
+        var first = focusFor(host, 0);
+        var second = focusFor(host, 1);
+        tryVerify(function () {
+            return findChild(host, "tab0").x > findChild(host, "tab1").x;
+        });
+        first.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Left);
+        verify(second.activeFocus, "Left must move to the visually adjacent RTL tab");
+        compare(host.selectedIndex, 0);
+        verifyRevealed(host, 1);
+        keyClick(Qt.Key_Right);
+        verify(first.activeFocus);
+        keyClick(Qt.Key_Right);
+        verify(focusFor(host, 7).activeFocus, "Right wraps at the RTL start");
+        verifyRevealed(host, 7);
+        keyClick(Qt.Key_Left);
+        verify(first.activeFocus, "Left wraps at the RTL end");
+        keyClick(Qt.Key_End);
+        verify(focusFor(host, 7).activeFocus);
+        keyClick(Qt.Key_Return);
+        compare(host.selectedIndex, 7);
+        keyClick(Qt.Key_Home);
+        verify(first.activeFocus);
+        compare(host.selectedIndex, 7);
+        keyClick(Qt.Key_Space);
+        compare(host.selectedIndex, 0);
     }
 }
