@@ -1,5 +1,5 @@
 import QtQuick
-import "../CostResponse.mjs" as CostResponse
+import "../CostWorkerRequest.mjs" as CostWorkerRequest
 import "../CostRefreshPolicy.js" as CostRefreshPolicy
 import "../Guards.js" as Guards
 import "../ProviderIdentity.mjs" as ProviderIdentity
@@ -139,7 +139,7 @@ Item {
             if (!isCurrent(run)) return;
             // One running normalization and at most one replacement reply. Forced
             // refreshes cannot fill the worker's unbounded internal message queue.
-            queuedReply = CostResponse.workerRequest(run, stdoutText, stderrText, exitCode);
+            queuedReply = CostWorkerRequest.message(run, stdoutText, stderrText, exitCode);
             dispatchReply();
         }
 

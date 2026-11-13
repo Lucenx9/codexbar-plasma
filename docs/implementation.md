@@ -648,7 +648,7 @@ owns checkout setup, delivery, and repository maintenance.
   Pacific/Apia, including a valid calendar day skipped by the local time zone.
   The `subscription-dates` smoke scenario verifies the real popup,
   privacy toggle, failed refresh, quota-empty snapshot, and cached account path.
-- Pure applet modules live in `contents/ui/*.js`; their public interfaces have
+- Pure applet modules live in `contents/ui/*.js` and `contents/ui/*.mjs`; their public interfaces have
   direct tests in `tests/tst_*.qml`. Configuration is declared in
   `contents/config/main.xml` and bound through `cfg_*` in config pages and
   `Plasmoid.configuration` at runtime.
@@ -707,7 +707,8 @@ which supplies them to `CostText` for localization and attaches them to fresh
 provider usage. `CostResponse.mjs`
 returns bounded snapshots and semantic failure outcomes without effects or
 localization. `CostWorker.mjs` runs it in a Qt WorkerScript, keeping parsing and
-history aggregation off the GUI thread. The controller bounds message copies,
+history aggregation off the GUI thread. `CostWorkerRequest.mjs` bounds copies
+across the thread boundary. The controller
 keeps loading active through publication, and owns a 120-second deadline spanning
 the process and normalization. Each run has a serial: settings changes, forced
 refreshes, disabling costs and timeouts invalidate earlier worker replies.

@@ -1,6 +1,6 @@
 import QtQuick
 import QtTest
-import "../contents/ui/CostResponse.mjs" as CostResponse
+import "../contents/ui/CostWorkerRequest.mjs" as CostWorkerRequest
 import "../contents/ui/SafeText.mjs" as SafeText
 
 TestCase {
@@ -69,7 +69,7 @@ TestCase {
     }
     function test_failureOutcomes(data) {
         tryCompare(worker, "ready", true);
-        var request = CostResponse.workerRequest({
+        var request = CostWorkerRequest.message({
             serial: 9,
             historyDays: 30
         }, data.stdout, "", data.exit);
@@ -101,7 +101,7 @@ TestCase {
                 }
             }
         ];
-        worker.sendMessage(CostResponse.workerRequest({
+        worker.sendMessage(CostWorkerRequest.message({
             serial: 10,
             historyDays: 30
         }, JSON.stringify(payload), "", 1));
