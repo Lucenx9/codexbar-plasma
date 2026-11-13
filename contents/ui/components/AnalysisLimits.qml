@@ -42,10 +42,56 @@ PlasmaComponents.ScrollView {
                 required property var modelData
                 Layout.fillWidth: true
                 spacing: Kirigami.Units.largeSpacing
-                PlainButton {
-                    plainText: applet.providerDisplayTitle(provider.modelData.provider)
-                    icon.name: applet.providerIconSource(provider.modelData.provider)
-                    flat: true
+                PlasmaComponents.AbstractButton {
+                    id: providerButton
+                    Layout.fillWidth: true
+                    implicitHeight: providerIdentity.implicitHeight + padding * 2
+                    padding: Kirigami.Units.smallSpacing
+                    Accessible.role: Accessible.Button
+                    Accessible.name: applet.providerDisplayTitle(provider.modelData.provider)
+                    background: Rectangle {
+                        radius: applet.roundedSurfaceRadius
+                        color: providerButton.hovered || providerButton.down
+                            ? applet.withAlpha(Kirigami.Theme.highlightColor, 0.12) : "transparent"
+                        border.width: providerButton.visualFocus ? 2 : 0
+                        border.color: Kirigami.Theme.focusColor
+                    }
+                    contentItem: RowLayout {
+                        id: providerIdentity
+                        spacing: Kirigami.Units.largeSpacing
+                        Rectangle {
+                            Layout.preferredWidth: Kirigami.Units.iconSizes.smallMedium
+                                + Kirigami.Units.smallSpacing * 2
+                            Layout.preferredHeight: Layout.preferredWidth
+                            radius: applet.nestedSurfaceRadius
+                            color: applet.withAlpha(applet.providerReadableColor(
+                                provider.modelData.provider, Kirigami.Theme.backgroundColor), 0.12)
+                            border.width: 1
+                            border.color: applet.withAlpha(Kirigami.Theme.textColor, 0.1)
+                            Kirigami.Icon {
+                                anchors.centerIn: parent
+                                source: applet.providerIconSource(provider.modelData.provider)
+                                fallback: "view-statistics"
+                                isMask: applet.providerIconIsMask(provider.modelData.provider)
+                                color: applet.providerReadableColor(provider.modelData.provider,
+                                    Kirigami.Theme.backgroundColor)
+                                width: Kirigami.Units.iconSizes.smallMedium
+                                height: Kirigami.Units.iconSizes.smallMedium
+                            }
+                        }
+                        PlainPlasmaLabel {
+                            id: providerTitle
+                            Layout.fillWidth: true
+                            Layout.minimumWidth: 0
+                            text: providerButton.Accessible.name
+                            font.weight: Font.DemiBold
+                            elide: Text.ElideRight
+                        }
+                    }
+                    PlainToolTip {
+                        visible: providerTitle.truncated && (providerButton.hovered || providerButton.visualFocus)
+                        plainText: providerButton.Accessible.name
+                    }
                     onClicked: {
                         applet.selectedProviderID = provider.modelData.provider
                         applet.selectionInitialized = true

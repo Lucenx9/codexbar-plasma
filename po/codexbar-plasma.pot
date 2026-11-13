@@ -243,6 +243,11 @@ msgid "No baseline"
 msgstr ""
 
 #: contents/ui/components/AnalysisSummary.qml
+msgid ""
+"Comparison excludes today and needs 14 complete days plus a scan from today."
+msgstr ""
+
+#: contents/ui/components/AnalysisSummary.qml
 #: contents/ui/components/CostMetricToggle.qml
 #: contents/ui/components/CostText.qml
 #: contents/ui/components/ProviderCostSection.qml
@@ -278,14 +283,6 @@ msgid "Last 7 days vs previous 7"
 msgstr ""
 
 #: contents/ui/components/AnalysisSummary.qml
-msgid ""
-"Comparison excludes today and needs 14 complete days plus a scan from today."
-msgstr ""
-
-#: contents/ui/components/CompactRepresentation.qml
-msgid "Open %1"
-msgstr ""
-
 #: contents/ui/components/CompactRepresentation.qml
 #: contents/ui/components/CostText.qml
 #: contents/ui/components/InteractiveChart.qml
@@ -295,6 +292,10 @@ msgstr ""
 #: contents/ui/configProviders.qml contents/ui/main.qml
 #: scripts/smoke/Capture.qml
 msgid "%1: %2"
+msgstr ""
+
+#: contents/ui/components/CompactRepresentation.qml
+msgid "Open %1"
 msgstr ""
 
 #: contents/ui/components/CopyableValue.qml

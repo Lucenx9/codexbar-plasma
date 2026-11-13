@@ -19,47 +19,77 @@ GridLayout {
     Layout.fillWidth: true
     columns: width >= Kirigami.Units.gridUnit * 24 ? 3 : 1
     columnSpacing: Kirigami.Units.largeSpacing
+    rowSpacing: Kirigami.Units.smallSpacing
     visible: totals !== null
 
+    readonly property string comparisonHelp: i18n("Comparison excludes today and needs 14 complete days plus a scan from today.")
+    readonly property var metrics: [
+        {label: i18n("Cost"), value: summary.totals && summary.totals.cost !== null
+            ? applet.qualifiedCostValue(applet.amountString(summary.totals.cost, summary.totals.currency),
+                summary.trust ? summary.trust.valueMode : "plain") : i18n("Cost unavailable")},
+        {label: i18n("Tokens"), value: summary.totals && summary.totals.tokens !== null
+            ? applet.usageCountText(summary.totals.tokens, "tokens") : i18n("Tokens unavailable")},
+        {label: i18n("Last 7 days vs previous 7"), value: summary.comparison && summary.comparison.estimated
+            ? applet.qualifiedCostValue(summary.changeText, "estimated") : summary.changeText,
+            help: summary.comparisonHelp}
+    ]
+
     Repeater {
-        model: [
-            {label: i18n("Cost"), value: summary.totals && summary.totals.cost !== null
-                ? applet.qualifiedCostValue(applet.amountString(summary.totals.cost, summary.totals.currency),
-                    summary.trust ? summary.trust.valueMode : "plain") : i18n("Cost unavailable")},
-            {label: i18n("Tokens"), value: summary.totals && summary.totals.tokens !== null
-                ? applet.usageCountText(summary.totals.tokens, "tokens") : i18n("Tokens unavailable")},
-            {label: i18n("Last 7 days vs previous 7"), value: summary.comparison && summary.comparison.estimated
-                ? applet.qualifiedCostValue(summary.changeText, "estimated") : summary.changeText,
-                help: i18n("Comparison excludes today and needs 14 complete days plus a scan from today.")}
-        ]
-        delegate: ColumnLayout {
+        model: summary.metrics
+        delegate: PlainPlasmaLabel {
+            required property int index
             required property var modelData
+            Layout.row: summary.columns === 3 ? 0 : index * 2
+            Layout.column: summary.columns === 3 ? index : 0
             Layout.fillWidth: true
             Layout.minimumWidth: 0
             Layout.preferredWidth: 1
-            spacing: Kirigami.Units.smallSpacing
-            PlainPlasmaLabel {
-                text: modelData.label
-                font: Kirigami.Theme.smallFont
-                opacity: applet.secondaryTextOpacity
-                Layout.fillWidth: true
-                wrapMode: Text.Wrap
-            }
-            PlainPlasmaLabel {
-                id: summaryValue
-                text: modelData.value
-                font.weight: Font.DemiBold
-                font.pointSize: Kirigami.Theme.defaultFont.pointSize * 1.15
-                font.features: { "tnum": 1 }
-                Layout.fillWidth: true
-                elide: Text.ElideRight
-                Accessible.description: modelData.help || ""
-                HoverHandler { id: valueHover }
-                PlainToolTip {
-                    visible: valueHover.hovered && (summaryValue.truncated || (modelData.help || "").length > 0)
-                    plainText: summaryValue.text + (modelData.help ? "\n" + modelData.help : "")
-                }
+            Layout.alignment: Qt.AlignTop
+            text: modelData.label
+            font: Kirigami.Theme.smallFont
+            opacity: applet.secondaryTextOpacity
+            wrapMode: Text.Wrap
+            Accessible.ignored: true
+        }
+    }
+
+    Repeater {
+        model: summary.metrics
+        delegate: PlainPlasmaLabel {
+            id: summaryValue
+            required property int index
+            required property var modelData
+            Layout.row: summary.columns === 3 ? 1 : index * 2 + 1
+            Layout.column: summary.columns === 3 ? index : 0
+            Layout.fillWidth: true
+            Layout.minimumWidth: 0
+            Layout.preferredWidth: 1
+            Layout.alignment: Qt.AlignBaseline
+            text: modelData.value
+            font.weight: Font.DemiBold
+            font.pointSize: Kirigami.Theme.defaultFont.pointSize * 1.15
+            font.features: { "tnum": 1 }
+            wrapMode: Text.Wrap
+            Accessible.name: i18n("%1: %2", modelData.label, text)
+            Accessible.description: modelData.help || ""
+            HoverHandler { id: valueHover }
+            PlainToolTip {
+                visible: valueHover.hovered && (modelData.help || "").length > 0
+                plainText: summaryValue.text + "\n" + modelData.help
             }
         }
+    }
+
+    PlainPlasmaLabel {
+        visible: summary.comparison === null
+        Layout.row: summary.columns === 3 ? 2 : 6
+        Layout.column: 0
+        Layout.columnSpan: summary.columns
+        Layout.fillWidth: true
+        Layout.topMargin: Kirigami.Units.smallSpacing
+        text: summary.comparisonHelp
+        font: Kirigami.Theme.smallFont
+        opacity: applet.secondaryTextOpacity
+        wrapMode: Text.Wrap
     }
 }

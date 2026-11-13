@@ -23,6 +23,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep Usage & Spend summary values aligned with wrapped labels and show full
+  comparison status text. Show history requirements for unavailable comparisons, give
+  expanded charts more height, and keep provider icons readable in Limits on
+  light themes.
+
 - Process local cost history in the background to reduce popup stalls on long
   histories. Keep loading active until results are ready and discard superseded
   work when settings change or a newer refresh starts.

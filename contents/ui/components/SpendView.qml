@@ -197,6 +197,7 @@ ColumnLayout {
             visible: !view.limitsSelected && view.applet.costUsageEnabled !== false
             Layout.fillWidth: true
             Layout.minimumWidth: 0
+            Layout.maximumWidth: view.expandedView ? Kirigami.Units.gridUnit * 18 : Infinity
             textRole: "text"
             valueRole: "value"
             model: view.providerOptions
@@ -206,7 +207,7 @@ ColumnLayout {
             Accessible.name: i18n("Provider filter")
             onActivated: function(index) { view.selectedProvider = view.providerOptions[index].value }
         }
-        Item { visible: view.limitsSelected || view.applet.costUsageEnabled === false; Layout.fillWidth: true }
+        Item { visible: view.expandedView || view.limitsSelected || view.applet.costUsageEnabled === false; Layout.fillWidth: true }
 
         Components.CostMetricToggle {
             id: metricToggle
@@ -437,7 +438,7 @@ ColumnLayout {
                 showPeak: true
                 // This chart plots the whole selected range, up to 365 bars, and
                 // is the primary view here: it outranks the heatmap below it.
-                plotHeight: Kirigami.Units.gridUnit * 6
+                plotHeight: Kirigami.Units.gridUnit * (view.expandedView ? 10 : 6)
                 accessibleTitle: view.applet.costHistoryShowsTokens
                     ? i18n("Daily token history")
                     : i18n("Daily cost history")

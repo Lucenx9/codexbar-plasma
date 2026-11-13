@@ -328,7 +328,7 @@ work and upstream contract requirements.
   (7, 30, or 90 days, **Month to date**, or **All history**), interactive daily chart, activity heatmap, and provider totals that
   keep different currencies separate. The range selector matches the metric
   toggle's minimum height and includes its current value in its accessible name.
-  **Expand analysis** widens the popup for a side-by-side chart and provider list;
+  **Expand analysis** widens the popup for a taller, side-by-side chart and provider list;
   **Compact analysis** restores the stacked layout. Bars use provider colors
   when the full split is known. Selecting a provider filters local analytics
   and stays selected across range changes, including empty results;
@@ -337,7 +337,9 @@ work and upstream contract requirements.
   **Models and token composition** and **Activity heatmap** expand on demand.
   **Last 7 days vs previous 7** excludes today and requires fourteen complete
   days plus a current scan. Short, partial, stale, or ambiguous histories show
-  unavailable instead of extrapolating. Different currencies are not converted.
+  unavailable instead of extrapolating, with the history requirements shown below
+  the totals. Summary values stay aligned when labels wrap, and comparison
+  statuses wrap instead of being truncated. Different currencies are not converted.
   **Limits** shows current provider quotas and reset windows independently of
   history filters; percentages are not additive across providers. Refresh updates
   current usage in Limits and local history in Cost/Tokens.

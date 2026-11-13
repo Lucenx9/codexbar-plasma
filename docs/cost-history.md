@@ -17,8 +17,10 @@ selected currency and token totals can include all currencies.
 The weekly comparison uses the existing AI snapshot completeness rules without
 calling AI: fourteen complete days before today, a scan reaching today, no
 ambiguous dates, finite values and no partial costs. It never loads extra history
-for a short selection. Privacy mode retains the numeric comparison, using the
-currency preserved in the projected totals. Changes use unrounded weekly sums,
+for a short selection. When the comparison is unavailable, its history
+requirements remain visible below the totals rather than only in a tooltip.
+Privacy mode retains the numeric comparison, using the currency preserved in
+the projected totals. Changes use unrounded weekly sums,
 including sub-cent amounts; only displayed money and AI payloads round to cents.
 Model lists retain a shared 128-row
 bound, mark truncation, and use the already privacy-projected snapshots. Limits
