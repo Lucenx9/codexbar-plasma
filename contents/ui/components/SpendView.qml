@@ -22,12 +22,15 @@ ColumnLayout {
     onHistoryAvailableChanged: { if (!historyAvailable) limitsSelected = true }
     property bool activityExpanded: false
     readonly property var allProviderCosts: applet.spendProviderCosts()
+    readonly property var filterProviderCosts: selectedProvider
+        && !allProviderCosts.some(function(item) { return item.provider === selectedProvider })
+        ? allProviderCosts.concat([{provider: selectedProvider}]) : allProviderCosts
     readonly property var dailyPoints: Analysis.dailyPoints(
         applet.costNumberFormat, providerCosts, applet.costHistoryShowsTokens)
     readonly property string selectedDay: historyChart.selectedIndex >= 0
         && historyChart.selectedIndex < dailyPoints.length ? dailyPoints[historyChart.selectedIndex].label : ""
     readonly property var providerOptions: [{value: "", text: i18n("All providers")}].concat(
-        applet.presentedSpendProviderCosts(allProviderCosts).map(function(item) {
+        applet.presentedSpendProviderCosts(filterProviderCosts).map(function(item) {
             return {value: item.provider, text: view.applet.providerDisplayTitle(item.provider)}
         }))
     property var daySelectionMemo: ({ points: [], index: -1 })
@@ -49,11 +52,6 @@ ColumnLayout {
     Layout.fillWidth: true
     Layout.fillHeight: true
     spacing: Kirigami.Units.largeSpacing
-
-    onAllProviderCostsChanged: {
-        if (selectedProvider && !allProviderCosts.some(function(item) { return item.provider === selectedProvider }))
-            selectedProvider = ""
-    }
 
     onSelectionScopeChanged: {
         if (!historyChart)

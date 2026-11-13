@@ -2473,9 +2473,9 @@ msgstr ""
 
 #: contents/ui/configAiInsights.qml
 msgid ""
-"Use the button on the AI Insights card to generate on request. Automatic "
-"generation never runs more often than the chosen interval, and ordinary "
-"usage refreshes do not trigger it."
+"Choose Generate insight under Ask the data in Usage & Spend or the fixed-"
+"provider view. Automatic generation never runs more often than the chosen "
+"interval, and ordinary usage refreshes do not trigger it."
 msgstr ""
 
 #: contents/ui/configAiInsights.qml

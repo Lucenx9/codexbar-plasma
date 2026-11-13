@@ -24,7 +24,8 @@ that provider quotas or models are interchangeable.
 The saved answer includes its question, generation time, service, model, and
 freshness. A failed request preserves that answer and shows an error. Version-1
 caches without a question remain valid and default to `summary`. The cache has
-a snapshot identifier, not source measurements: live figures are never cited as
+a snapshot identifier for the evidence, independent of the selected question,
+not source measurements: live figures are never cited as
 evidence for an older answer. Missing history means no historical comparison.
 
 ## Boundary decision
@@ -310,6 +311,9 @@ table, honoring the response's `Retry-After`, and a choice that finished with
   the persisted last attempt, so a failed or timed-out request, which the
   provider may already have billed, also waits a full interval, including
   across plasmashell restarts.
+- If the evidence and request context match the saved answer, automatic
+  generation stays idle even after the interval. This also preserves guided
+  answers; selecting a different question does not make evidence new.
 - One request at a time, with a per-request nonce. The helper's HTTP timeout is
   150 seconds, the shell bound 180 seconds, and the QML deadline 185 seconds,
   restarted when generation starts so preparation never shortens it. This

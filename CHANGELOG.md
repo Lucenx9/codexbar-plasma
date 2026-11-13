@@ -17,7 +17,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   and model details, complete-week comparisons (also in privacy mode), current
   limits, and an optional wider layout. AI can summarize usage, explain weekly
   changes or headroom, and suggest evidence to investigate, using the existing
-  aggregated-data boundary.
+  aggregated-data boundary. Provider filters survive range changes, weekly
+  changes retain sub-cent precision, and scheduled generation preserves guided
+  answers while the underlying evidence is unchanged.
 
 ### Fixed
 

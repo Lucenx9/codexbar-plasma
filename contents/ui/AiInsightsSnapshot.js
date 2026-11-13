@@ -147,6 +147,17 @@ function periods(tokenCost, nowMs, metric) {
 }
 
 function spend(tokenCost, nowMs) {
+    var result = unroundedSpend(tokenCost, nowMs)
+    if (!result) return null
+    result.last7Days = Math.round(result.last7Days * 100) / 100
+    result.previous7Days = Math.round(result.previous7Days * 100) / 100
+    // Rounding to cents can overflow a huge-but-finite total; that amount is unknown.
+    return finite(result.last7Days) && finite(result.previous7Days) ? result : null
+}
+
+// Analytics aggregates these totals before calculating the change. The AI
+// snapshot keeps its existing bounded, cent-rounded representation above.
+function unroundedSpend(tokenCost, nowMs) {
     var currency = field(tokenCost, "currency")
     // Amounts stay per provider in their own currency; nothing is summed across.
     if (typeof currency !== "string" || !/^[A-Z]{3}$/.test(currency)) {
@@ -157,12 +168,6 @@ function spend(tokenCost, nowMs) {
         return null
     }
     result.currency = currency
-    result.last7Days = Math.round(result.last7Days * 100) / 100
-    result.previous7Days = Math.round(result.previous7Days * 100) / 100
-    // Rounding to cents can overflow a huge-but-finite total; that amount is unknown.
-    if (!finite(result.last7Days) || !finite(result.previous7Days)) {
-        return null
-    }
     // Keep the qualifier the widget shows beside the amount. Unpriced or
     // unmetered requests make it partial, and an estimated share still makes
     // it an estimate even then.

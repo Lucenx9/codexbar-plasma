@@ -389,6 +389,34 @@ TestCase {
         verify(value.mapToItem(scroll, 0, 0).y < scroll.availableHeight / 2, "Short provider totals must stay near the top of the body");
     }
 
+    function test_providerFilterSurvivesRangeReplacement() {
+        var codex = {provider: "codex", totals: {cost: 2, tokens: 100, currency: "USD"}, valueMode: "plain"};
+        var claude = {provider: "claude", totals: {cost: 3, tokens: 200, currency: "USD"}, valueMode: "plain"};
+        applet.costs = [codex, claude];
+        var view = createView("SpendView");
+        if (!view)
+            return;
+        var filter = findChild(view, "analysisProviderFilter");
+        filter.activated(2);
+        compare(view.selectedProvider, "claude");
+        applet.costHistoryDays = 7;
+        applet.costs = [];
+        compare(view.selectedProvider, "claude");
+        compare(filter.currentValue, "claude");
+        compare(view.providerCosts.length, 0);
+        applet.costs = [codex, claude];
+        compare(view.providerCosts.length, 1);
+        compare(view.providerCosts[0].provider, "claude");
+        applet.costHistoryPeriod = "month-to-date";
+        applet.costs = [codex];
+        compare(filter.currentValue, "claude");
+        compare(view.providerCosts.length, 0);
+        filter.activated(0);
+        compare(view.selectedProvider, "");
+        compare(view.providerCosts.length, 1);
+        compare(applet.refreshes, 0);
+    }
+
     function spendChart(points) {
         applet.dailyPoints = points;
         var view = createView("SpendView");

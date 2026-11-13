@@ -93,7 +93,7 @@ function comparisonPeriod(item, showsTokens, nowMs) {
     if (!Amounts.hasMetricValue(item.totals, showsTokens) || item.valueMode === "partial") return null
     // Privacy projections retain the amounts' currency, not the envelope field.
     var snapshot = Object.assign({}, item, {currency: item.totals.currency})
-    var period = showsTokens ? Snapshot.tokens(snapshot, nowMs) : Snapshot.spend(snapshot, nowMs)
+    var period = showsTokens ? Snapshot.tokens(snapshot, nowMs) : Snapshot.unroundedSpend(snapshot, nowMs)
     return period && !period.incomplete ? period : null
 }
 

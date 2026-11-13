@@ -1736,14 +1736,8 @@ msgid "Daily"
 msgstr "Chaque jour"
 
 #: contents/ui/configAiInsights.qml
-msgid ""
-"Use the button on the AI Insights card to generate on request. Automatic "
-"generation never runs more often than the chosen interval, and ordinary "
-"usage refreshes do not trigger it."
-msgstr ""
-"Utilisez le bouton de la carte Analyses IA pour générer sur demande. La "
-"génération automatique n'a jamais lieu plus souvent que l'intervalle choisi, "
-"et les actualisations ordinaires de l'utilisation ne la déclenchent pas."
+msgid "Choose Generate insight under Ask the data in Usage & Spend or the fixed-provider view. Automatic generation never runs more often than the chosen interval, and ordinary usage refreshes do not trigger it."
+msgstr "Choisissez Générer une analyse sous Interroger les données dans Utilisation et dépenses ou dans la vue du fournisseur fixe. La génération automatique n'a jamais lieu plus souvent que l'intervalle choisi, et les actualisations ordinaires de l'utilisation ne la déclenchent pas."
 
 #: contents/ui/configAiInsights.qml
 msgid "Saved insight:"

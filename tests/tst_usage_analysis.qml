@@ -78,6 +78,22 @@ TestCase {
         compare(Analysis.comparison([projected], false, now), null)
     }
 
+    function test_subCentComparisonUsesUnroundedTotals() {
+        var cost = snapshot("codex", "USD", 0.002, 0.001)
+        var comparison = Analysis.comparison([cost], false, now)
+        compare(comparison.changePercent, 100)
+        fuzzyCompare(comparison.current, 0.014, 0.0000001)
+        fuzzyCompare(comparison.previous, 0.007, 0.0000001)
+        verify(comparison.estimated)
+        var second = snapshot("claude", "USD", 0.001, 0.002)
+        comparison = Analysis.comparison([cost, second], false, now)
+        compare(comparison.changePercent, 0)
+        fuzzyCompare(comparison.current, 0.021, 0.0000001)
+        compare(comparison.providers, 2)
+        cost.daily[1].incompleteRequests = 1
+        compare(Analysis.comparison([cost, second], false, now), null)
+    }
+
     function test_unknownTotalsPartialAndOverflow() {
         var cost = snapshot("codex", "USD", 2, 1)
         cost.valueMode = "partial"

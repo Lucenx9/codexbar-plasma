@@ -330,7 +330,8 @@ work and upstream contract requirements.
   toggle's minimum height and includes its current value in its accessible name.
   **Expand analysis** widens the popup for a side-by-side chart and provider list;
   **Compact analysis** restores the stacked layout. Bars use provider colors
-  when the full split is known. Selecting a provider filters local analytics;
+  when the full split is known. Selecting a provider filters local analytics
+  and stays selected across range changes, including empty results;
   selecting a day scopes provider and model details, while headline
   totals keep the selected period and projects appear only with **All days**. **All days** clears the day selection.
   **Models and token composition** and **Activity heatmap** expand on demand.

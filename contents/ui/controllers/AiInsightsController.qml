@@ -179,7 +179,7 @@ Item {
             errorReason = ""
             serial += 1
             activeContextKey = controller.contextKey
-            activeSnapshotId = AiInsights.question(question) === "summary" ? controller.snapshotId : selection.id
+            activeSnapshotId = controller.snapshotId
             activeQuestion = AiInsights.question(question)
             capturedInput = input
             activeOptions = options

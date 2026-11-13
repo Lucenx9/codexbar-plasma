@@ -248,6 +248,12 @@ TestCase {
         verify(snapshot.providers[0].spend.incomplete)
     }
 
+    function test_subCentAiSnapshotKeepsRoundedAmountsAndExactChange() {
+        var snapshot = JSON.parse(build([provider("claude", {tokenCost: history(20, 0.002, 0.001)})]).text)
+        compare(snapshot.providers[0].spend, {last7Days: 0.01, previous7Days: 0.01,
+            changePercent: 100, currency: "USD", estimated: true})
+    }
+
     function test_spendKeepsTheQualifierTheWidgetShows() {
         // Unpriced requests make the widget show "(partial)"; its estimated
         // share still makes the amount an estimate. Both reach the model.

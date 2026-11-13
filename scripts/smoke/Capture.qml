@@ -1317,13 +1317,22 @@ Item {
             verifyScenario(view.selectedDay === chart.points[0].label, "selected day lost");
             findItem(view, "analysisProviderFilter").activated(1);
             verifyScenario(view.providerCosts.length === 1 && view.selectedDay === "", "provider filter scope is wrong");
+            settingsProviderSnapshot = view.selectedProvider;
+            applet.setCostHistoryDays(7);
+            analysisStep = 1;
+            return false;
+        }
+        if (analysisStep === 1) {
+            verifyScenario(view.selectedProvider === settingsProviderSnapshot
+                && findItem(view, "analysisProviderFilter").currentValue === settingsProviderSnapshot,
+                "changing the history range cleared the provider filter");
             findItem(view, "analysisLimitsButton").clicked();
             verifyScenario(view.limitsSelected, "limits did not open");
             findItem(view, "analysisMetricToggle").activated(1);
             verifyScenario(!view.limitsSelected && applet.costHistoryShowsTokens, "token selection did not leave limits");
             findItem(view, "analysisProviderFilter").activated(0);
             if (scenario !== "usage-analysis-narrow") findItem(view, "analysisExpandButton").clicked();
-            analysisStep = 1;
+            analysisStep = 2;
             return false;
         }
         verifyScenario(view.expandedView === (scenario !== "usage-analysis-narrow") && view.selectedProvider === "" && view.providerCosts.length === view.allProviderCosts.length, "expanded comparison lost providers");
