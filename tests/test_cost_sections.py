@@ -99,6 +99,15 @@ TestCase {
 
     QtObject {
         id: fakeApplet
+        property bool aiInsightsEnabled: false
+        property bool aiInsightsConfigured: false
+        property bool aiInsightsBusy: false
+        property var aiInsightsCache: null
+        property string aiInsightsCacheState: "none"
+        property string aiInsightsErrorReason: ""
+        property var aiInsightsSnapshot: ({sufficient: false})
+        property var presentedProviders: []
+        function aiInsightsErrorText(reason) { return reason; }
         property bool costHistoryShowsTokens: false
         property int costHistoryDays: 30
         property string costHistoryPeriod: ""
@@ -114,6 +123,7 @@ TestCase {
         property string daysSet: ""
         property string periodSet: ""
         property int refreshCount: 0
+        property int usageRefreshCount: 0
         property var costNumberFormat: CostAmounts.numberFormat(",", ".")
         function accountKey(item) { return item.account || ""; }
         function accountLabel(item) { return item.account || ""; }
@@ -133,8 +143,13 @@ TestCase {
         function costChartPoints(points, memo) {
             return CostChart.memoizedChartPoints(memo, costNumberFormat, points, costHistoryShowsTokens);
         }
-        function spendDailyPoints() { return testCase.spendPoints; }
-        function spendProviderCosts() { return testCase.spendCosts; }
+        function spendProviderCosts() {
+            return testCase.spendCosts.map(function(item) {
+                return Object.assign({}, item, {daily: testCase.spendPoints.map(function(point) {
+                    return {label: point.label, cost: point.value, tokens: point.value, currency: "USD"};
+                })});
+            });
+        }
         function presentedSpendProviderCosts(costs) { return testCase.presentedCosts; }
         function spendCurrency(costs) { return "USD"; }
         function spendTotalLine() { return "Total line"; }
@@ -143,6 +158,7 @@ TestCase {
         function setCostHistoryDays(days) { daysSet = String(days); costHistoryDays = days; costHistoryPeriod = ""; }
         function setCostHistoryPeriod(period) { periodSet = period; costHistoryPeriod = period; }
         function refreshCost(full) { refreshCount++; }
+        function refreshNow(full) { usageRefreshCount++; }
         function updateCostTrustNoticeState(scope, summary, dismiss) {
             return { key: scope, dismissed: dismiss, shouldShow: false };
         }
@@ -214,6 +230,8 @@ TestCase {
             function i18np(one, many, count) { return testCase.i18np(one, many, count); }
             function i18nc() { return testCase.i18nc.apply(testCase, arguments); }
             Components.SpendView {
+                objectName: "testAnalysis"
+                activityExpanded: true
                 applet: fakeApplet
             }
         }
@@ -797,6 +815,23 @@ class CostSectionTests(unittest.TestCase):
     }
     ''')
 
+    def test_analysis_refresh_uses_the_visible_data_source(self):
+        self.run_fixture('''
+    function test_analysisRefresh() {
+        var subject = createTemporaryObject(spendFactory, testCase);
+        var view = findChild(subject, "testAnalysis");
+        var refresh = findChild(subject, "analysisRefreshButton");
+        view.limitsSelected = true;
+        refresh.requested();
+        compare(fakeApplet.usageRefreshCount, 1);
+        compare(fakeApplet.refreshCount, 0);
+        view.limitsSelected = false;
+        refresh.requested();
+        compare(fakeApplet.usageRefreshCount, 1);
+        compare(fakeApplet.refreshCount, 1);
+    }
+    ''')
+
     def test_spend_view_presents_costs_and_controls(self):
         self.run_fixture('''
     // The spend view presents the ordered provider costs with its metric
@@ -923,32 +958,27 @@ class CostSectionTests(unittest.TestCase):
 
     def test_activity_layout_breakpoints(self):
         self.run_fixture('''
-    function test_activityLayoutBreakpoints_data() {
+    function test_analysisLayoutBreakpoints_data() {
         var cases = [];
-        for (var days of [7, 8, 35, 36]) {
+        for (var expanded of [false, true]) {
             for (var offset of [-1, 0, 1])
-                cases.push({tag: days + "-days-width-" + offset, days: days, offset: offset});
+                cases.push({tag: expanded + "-width-" + offset, expanded: expanded, offset: offset});
         }
         return cases;
     }
-    function test_activityLayoutBreakpoints(data) {
-        var points = [];
-        for (var i = 0; i < data.days; i++) {
-            var date = new Date(Date.UTC(2026, 8, i + 1)).toISOString().slice(0, 10);
-            points.push({label: date, value: 1, displayValue: "$1"});
-        }
-        spendPoints = points;
+    function test_analysisLayoutBreakpoints(data) {
         var subject = createTemporaryObject(spendFactory, testCase, {
-            width: Kirigami.Units.gridUnit * 28 + data.offset, height: 780});
-        var summary = findChild(subject, "spendActivitySummary");
-        verify(summary !== null);
+            width: Kirigami.Units.gridUnit * 38 + data.offset, height: 780});
+        var view = findChild(subject, "testAnalysis");
+        view.expandedView = data.expanded;
+        var grid = findChild(subject, "analysisChartProviders");
+        verify(grid !== null);
         verify(waitForPolish(subject));
-        var columns = data.days >= 8 && data.days <= 35 && data.offset >= 0 ? 2 : 1;
-        compare(summary.columns, columns);
-        // Height and scrollbar changes must not feed back into the breakpoint.
+        var columns = data.expanded && data.offset >= 0 ? 2 : 1;
+        compare(grid.columns, columns);
         subject.height = 240;
         verify(waitForPolish(subject));
-        compare(summary.columns, columns);
+        compare(grid.columns, columns);
     }
     ''')
 
@@ -1030,7 +1060,7 @@ class CostSectionTests(unittest.TestCase):
         compare(readout.y, readoutY);
         // A refreshed value remains attached to the same date.
         spendPoints = originalPoints.map(function(point) {
-            return Object.assign({}, point, {displayValue: "$99"});
+            return Object.assign({}, point, {value: 99, displayValue: "$99"});
         });
         tryVerify(function() { return readout.text.indexOf("$99") >= 0; });
         compare(grid.selectedDay, "2026-09-02");

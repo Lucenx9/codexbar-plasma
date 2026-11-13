@@ -10,6 +10,17 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Changed
+
+- Replace the separate AI Insights card and page with guided analysis inside
+  Usage & Spend. Add provider filters, stacked daily bars, day-specific provider
+  and model details, complete-week comparisons (also in privacy mode), current
+  limits, and an optional wider layout. AI can summarize usage, explain weekly
+  changes or headroom, and suggest evidence to investigate, using the existing
+  aggregated-data boundary. Provider filters survive range changes, weekly
+  changes retain sub-cent precision, and scheduled generation preserves guided
+  answers while the underlying evidence is unchanged.
+
 ### Fixed
 
 - Process local cost history in the background to reduce popup stalls on long

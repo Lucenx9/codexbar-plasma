@@ -180,8 +180,11 @@ independent pools visible; a low session value must not obscure an exhausted
 weekly quota. Let spacing distinguish providers without surrounding each
 number with another surface.
 
-Usage & Spend keeps metric and range selectors aligned above the scrollable
-content. Totals, dates, and units explain the chart; hover is a preview, and
+Usage & Spend keeps provider, metric, limits, and range controls above the
+scrollable content. Compact mode stacks the chart and provider rows; expanded
+mode can place them side by side. Models, token composition, and the activity
+heatmap use disclosure. AI questions stay in a separate, optional disclosure
+whose scope is explicitly independent of the chart filters. Totals, dates, and units explain the chart; hover is a preview, and
 keyboard selection is a persistent way to inspect a day. Reserve readout space
 so inspection does not resize the chart. Keep estimated/partial/unavailable
 cost explanations near the figures they qualify, and keep currencies separate.

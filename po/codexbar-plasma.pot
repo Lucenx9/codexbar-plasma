@@ -38,61 +38,6 @@ msgstr ""
 msgid "Diagnostics"
 msgstr ""
 
-#: contents/ui/components/AiInsightsCard.qml
-msgid "Choose an AI provider and model in the AI Insights settings."
-msgstr ""
-
-#: contents/ui/components/AiInsightsCard.qml
-#: contents/ui/components/AiInsightsView.qml
-msgid "Not enough current usage data for an insight yet."
-msgstr ""
-
-#: contents/ui/components/AiInsightsCard.qml
-msgid ""
-"The saved insight belongs to other settings or another language. Generate a "
-"new one when needed."
-msgstr ""
-
-#: contents/ui/components/AiInsightsCard.qml
-msgid "No insight generated yet."
-msgstr ""
-
-#: contents/ui/components/AiInsightsCard.qml
-msgid "Out of date"
-msgstr ""
-
-#: contents/ui/components/AiInsightsCard.qml
-msgid "Out of date, %1"
-msgstr ""
-
-#: contents/ui/components/AiInsightsCard.qml
-msgid "Configure…"
-msgstr ""
-
-#: contents/ui/components/AiInsightsCard.qml
-msgid "AI Insights"
-msgstr ""
-
-#: contents/ui/components/AiInsightsCard.qml
-msgid "Beta"
-msgstr ""
-
-#: contents/ui/components/AiInsightsCard.qml
-msgid "Generate insight"
-msgstr ""
-
-#: contents/ui/components/AiInsightsCard.qml
-msgid "Regenerate insight"
-msgstr ""
-
-#: contents/ui/components/AiInsightsCard.qml
-msgid "Generating insight…"
-msgstr ""
-
-#: contents/ui/components/AiInsightsCard.qml
-msgid "Open analysis"
-msgstr ""
-
 #: contents/ui/components/AiInsightsMessages.qml
 msgid "Set an API key in the AI Insights settings."
 msgstr ""
@@ -171,32 +116,170 @@ msgstr ""
 msgid "%1 is temporarily unavailable."
 msgstr ""
 
-#: contents/ui/components/AiInsightsView.qml
+#: contents/ui/components/AnalysisAssistant.qml
+msgid "Summarize usage"
+msgstr ""
+
+#: contents/ui/components/AnalysisAssistant.qml
+msgid "What changed this week?"
+msgstr ""
+
+#: contents/ui/components/AnalysisAssistant.qml
+msgid "How much headroom remains?"
+msgstr ""
+
+#: contents/ui/components/AnalysisAssistant.qml
+msgid "What should I investigate?"
+msgstr ""
+
+#: contents/ui/components/AnalysisAssistant.qml
+msgid "Ask the data"
+msgstr ""
+
+#: contents/ui/components/AnalysisAssistant.qml
+msgid "AI Insights"
+msgstr ""
+
+#: contents/ui/components/AnalysisAssistant.qml
+msgid ""
+"All providers: current quotas and the last 7 complete days versus the "
+"previous 7. Independent of the chart filters."
+msgstr ""
+
+#: contents/ui/components/AnalysisAssistant.qml
+msgid "Analysis question"
+msgstr ""
+
+#: contents/ui/components/AnalysisAssistant.qml
+msgid "Generate insight"
+msgstr ""
+
+#: contents/ui/components/AnalysisAssistant.qml
+msgid "Choose an AI provider and model in the AI Insights settings."
+msgstr ""
+
+#: contents/ui/components/AnalysisAssistant.qml
+msgid "Not enough current usage data for an insight yet."
+msgstr ""
+
+#: contents/ui/components/AnalysisAssistant.qml
+msgid "Configure…"
+msgstr ""
+
+#: contents/ui/components/AnalysisAssistant.qml
 msgid "Generated %1"
 msgstr ""
 
-#: contents/ui/components/AiInsightsView.qml
-msgid "A new insight is generated automatically at most every %1 hour."
-msgid_plural "A new insight is generated automatically at most every %1 hours."
+#: contents/ui/components/AnalysisAssistant.qml
+msgid "Out of date"
+msgstr ""
+
+#: contents/ui/components/AnalysisAssistant.qml
+msgid ""
+"Saved answers describe the measurements at generation time. Account names, "
+"projects, paths and prompts are never sent."
+msgstr ""
+
+#: contents/ui/components/AnalysisLimits.qml
+msgid ""
+"Current limits have different capacities and reset windows. Their "
+"percentages are not additive."
+msgstr ""
+
+#: contents/ui/components/AnalysisLimits.qml
+#: contents/ui/components/FullRepresentation.qml
+msgid "No provider data"
+msgstr ""
+
+#: contents/ui/components/AnalysisLimits.qml contents/ui/main.qml
+msgid "Limits not available"
+msgstr ""
+
+#: contents/ui/components/AnalysisModels.qml
+msgid "Models and token composition"
+msgstr ""
+
+#: contents/ui/components/AnalysisModels.qml
+#: contents/ui/components/ProviderCostSection.qml
+msgid "Model breakdown is partial."
+msgstr ""
+
+#: contents/ui/components/AnalysisModels.qml
+#: contents/ui/components/ProviderCostSection.qml scripts/smoke/Capture.qml
+msgid "No model breakdown for this day."
+msgstr ""
+
+#: contents/ui/components/AnalysisModels.qml
+#: contents/ui/components/ProviderCostSection.qml scripts/smoke/Capture.qml
+msgid "No model breakdown for this period."
+msgstr ""
+
+#: contents/ui/components/AnalysisModels.qml
+#: contents/ui/components/AnalysisSummary.qml
+#: contents/ui/components/ShareUsageWindow.qml
+msgid "Unavailable"
+msgstr ""
+
+#: contents/ui/components/AnalysisModels.qml
+#: contents/ui/components/ProviderCostSection.qml
+msgid "%1 incomplete request excluded"
+msgid_plural "%1 incomplete requests excluded"
 msgstr[0] ""
 msgstr[1] ""
 
-#: contents/ui/components/AiInsightsView.qml
-msgid "A new insight is generated only when you ask for one."
+#: contents/ui/components/AnalysisSummary.qml
+msgid "%1×"
 msgstr ""
 
-#: contents/ui/components/AiInsightsView.qml
+#: contents/ui/components/AnalysisSummary.qml
+#: contents/ui/components/CostText.qml
+#: contents/ui/components/ShareUsageWindow.qml scripts/smoke/Capture.qml
+#, kde-format
+msgid "%1%"
+msgstr ""
+
+#: contents/ui/components/AnalysisSummary.qml
+msgid "No baseline"
+msgstr ""
+
+#: contents/ui/components/AnalysisSummary.qml
+#: contents/ui/components/CostMetricToggle.qml
+#: contents/ui/components/CostText.qml
+#: contents/ui/components/ProviderCostSection.qml
+#: contents/ui/components/RateWindowLabels.qml contents/ui/main.qml
+msgid "Cost"
+msgstr ""
+
+#: contents/ui/components/AnalysisSummary.qml
+#: contents/ui/components/ProjectCostSection.qml
+#: contents/ui/components/ProviderCostSection.qml
+#: contents/ui/components/ShareUsageWindow.qml
+#: contents/ui/components/SpendView.qml scripts/smoke/Capture.qml
+msgid "Cost unavailable"
+msgstr ""
+
+#: contents/ui/components/AnalysisSummary.qml
+#: contents/ui/components/CostMetricToggle.qml
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Tokens"
+msgstr ""
+
+#: contents/ui/components/AnalysisSummary.qml
+#: contents/ui/components/CostText.qml
+#: contents/ui/components/ProjectCostSection.qml
+#: contents/ui/components/ProviderCostSection.qml
+#: contents/ui/components/ShareUsageWindow.qml
+#: contents/ui/components/SpendView.qml scripts/smoke/Capture.qml
+msgid "Tokens unavailable"
+msgstr ""
+
+#: contents/ui/components/AnalysisSummary.qml
+msgid "Last 7 days vs previous 7"
+msgstr ""
+
+#: contents/ui/components/AnalysisSummary.qml
 msgid ""
-"Uses only quota, pace, incident, and 7-day spend and token data. Account "
-"names, projects, and paths are never sent."
-msgstr ""
-
-#: contents/ui/components/AiInsightsView.qml
-msgid "Back to %1"
-msgstr ""
-
-#: contents/ui/components/AiInsightsView.qml
-msgid "About this insight"
+"Comparison excludes today and needs 14 complete days plus a scan from today."
 msgstr ""
 
 #: contents/ui/components/CompactRepresentation.qml
@@ -264,18 +347,6 @@ msgstr ""
 msgid "History metric"
 msgstr ""
 
-#: contents/ui/components/CostMetricToggle.qml
-#: contents/ui/components/CostText.qml
-#: contents/ui/components/ProviderCostSection.qml
-#: contents/ui/components/RateWindowLabels.qml contents/ui/main.qml
-msgid "Cost"
-msgstr ""
-
-#: contents/ui/components/CostMetricToggle.qml
-#: contents/ui/components/RateWindowLabels.qml
-msgid "Tokens"
-msgstr ""
-
 #: contents/ui/components/CostText.qml
 #: contents/ui/components/ProviderCostDetails.qml
 #: contents/ui/components/ProviderCostSection.qml contents/ui/main.qml
@@ -304,14 +375,6 @@ msgid "Last %1 day"
 msgid_plural "Last %1 days"
 msgstr[0] ""
 msgstr[1] ""
-
-#: contents/ui/components/CostText.qml
-#: contents/ui/components/ProjectCostSection.qml
-#: contents/ui/components/ProviderCostSection.qml
-#: contents/ui/components/ShareUsageWindow.qml
-#: contents/ui/components/SpendView.qml scripts/smoke/Capture.qml
-msgid "Tokens unavailable"
-msgstr ""
 
 #: contents/ui/components/CostText.qml
 msgid "%1 subtotal"
@@ -392,12 +455,6 @@ msgstr ""
 
 #: contents/ui/components/CostText.qml
 msgid "Latest dashboard day"
-msgstr ""
-
-#: contents/ui/components/CostText.qml
-#: contents/ui/components/ShareUsageWindow.qml scripts/smoke/Capture.qml
-#, kde-format
-msgid "%1%"
 msgstr ""
 
 #: contents/ui/components/CostText.qml contents/ui/configDiagnostics.qml
@@ -573,10 +630,6 @@ msgid ""
 msgstr ""
 
 #: contents/ui/components/FullRepresentation.qml
-msgid "No provider data"
-msgstr ""
-
-#: contents/ui/components/FullRepresentation.qml
 msgid "Open Providers in widget settings to enable or set up a provider."
 msgstr ""
 
@@ -587,7 +640,8 @@ msgstr[0] ""
 msgstr[1] ""
 
 #: contents/ui/components/FullRepresentation.qml
-#: contents/ui/components/ProviderHeader.qml contents/ui/configGeneral.qml
+#: contents/ui/components/ProviderHeader.qml
+#: contents/ui/components/SpendView.qml contents/ui/configGeneral.qml
 #: contents/ui/main.qml
 msgid "Refresh"
 msgstr ""
@@ -996,13 +1050,6 @@ msgid "Show more tabs"
 msgstr ""
 
 #: contents/ui/components/ProjectCostSection.qml
-#: contents/ui/components/ProviderCostSection.qml
-#: contents/ui/components/ShareUsageWindow.qml
-#: contents/ui/components/SpendView.qml scripts/smoke/Capture.qml
-msgid "Cost unavailable"
-msgstr ""
-
-#: contents/ui/components/ProjectCostSection.qml
 msgid "Projects"
 msgstr ""
 
@@ -1103,12 +1150,6 @@ msgid "Used: %1, remaining: %2 of %3"
 msgstr ""
 
 #: contents/ui/components/ProviderCostSection.qml
-msgid "%1 incomplete request excluded"
-msgid_plural "%1 incomplete requests excluded"
-msgstr[0] ""
-msgstr[1] ""
-
-#: contents/ui/components/ProviderCostSection.qml
 #: contents/ui/components/SpendView.qml
 msgid "Some local history is unavailable: %1"
 msgstr ""
@@ -1136,19 +1177,8 @@ msgid "Details for %1"
 msgstr ""
 
 #: contents/ui/components/ProviderCostSection.qml
+#: contents/ui/components/SpendView.qml
 msgid "All days"
-msgstr ""
-
-#: contents/ui/components/ProviderCostSection.qml scripts/smoke/Capture.qml
-msgid "No model breakdown for this day."
-msgstr ""
-
-#: contents/ui/components/ProviderCostSection.qml scripts/smoke/Capture.qml
-msgid "No model breakdown for this period."
-msgstr ""
-
-#: contents/ui/components/ProviderCostSection.qml
-msgid "Model breakdown is partial."
 msgstr ""
 
 #: contents/ui/components/ProviderCostSection.qml
@@ -1942,10 +1972,6 @@ msgid "Share AI usage"
 msgstr ""
 
 #: contents/ui/components/ShareUsageWindow.qml
-msgid "Unavailable"
-msgstr ""
-
-#: contents/ui/components/ShareUsageWindow.qml
 msgid "%1 more provider included in totals"
 msgid_plural "%1 more providers included in totals"
 msgstr[0] ""
@@ -2001,6 +2027,11 @@ msgstr ""
 msgid "Save PNG…"
 msgstr ""
 
+#: contents/ui/components/SpendView.qml contents/ui/configDiagnostics.qml
+#: contents/ui/configProviders.qml
+msgid "All providers"
+msgstr ""
+
 #: contents/ui/components/SpendView.qml
 msgid "7 days"
 msgstr ""
@@ -2014,11 +2045,27 @@ msgid "90 days"
 msgstr ""
 
 #: contents/ui/components/SpendView.qml
+msgid "Local history, current limits and optional AI analysis"
+msgstr ""
+
+#: contents/ui/components/SpendView.qml
+msgid "Compact analysis"
+msgstr ""
+
+#: contents/ui/components/SpendView.qml
+msgid "Expand analysis"
+msgstr ""
+
+#: contents/ui/components/SpendView.qml
 msgid "Refresh local history"
 msgstr ""
 
 #: contents/ui/components/SpendView.qml
-msgid "History"
+msgid "Provider filter"
+msgstr ""
+
+#: contents/ui/components/SpendView.qml
+msgid "Limits"
 msgstr ""
 
 #: contents/ui/components/SpendView.qml
@@ -2056,6 +2103,10 @@ msgstr ""
 
 #: contents/ui/components/SpendView.qml
 msgid "History appears for providers supported by the codexbar cost command."
+msgstr ""
+
+#: contents/ui/components/SpendView.qml
+msgid "Providers on %1"
 msgstr ""
 
 #: contents/ui/components/SpendView.qml
@@ -2272,8 +2323,8 @@ msgstr ""
 
 #: contents/ui/configAiInsights.qml
 msgid ""
-"Shows a short AI-generated summary of your usage in Overview. Nothing is "
-"sent and no AI service is contacted while this is off."
+"Enables guided questions in Usage & Spend. Nothing is sent and no AI service "
+"is contacted while this is off."
 msgstr ""
 
 #: contents/ui/configAiInsights.qml
@@ -2422,9 +2473,9 @@ msgstr ""
 
 #: contents/ui/configAiInsights.qml
 msgid ""
-"Use the button on the AI Insights card to generate on request. Automatic "
-"generation never runs more often than the chosen interval, and ordinary "
-"usage refreshes do not trigger it."
+"Choose Generate insight under Ask the data in Usage & Spend or the fixed-"
+"provider view. Automatic generation never runs more often than the chosen "
+"interval, and ordinary usage refreshes do not trigger it."
 msgstr ""
 
 #: contents/ui/configAiInsights.qml
@@ -2567,10 +2618,6 @@ msgstr ""
 
 #: contents/ui/configDiagnostics.qml
 msgid "Diagnostic provider:"
-msgstr ""
-
-#: contents/ui/configDiagnostics.qml contents/ui/configProviders.qml
-msgid "All providers"
 msgstr ""
 
 #: contents/ui/configDiagnostics.qml
@@ -4174,10 +4221,6 @@ msgstr ""
 
 #: contents/ui/main.qml
 msgid "No usage yet"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Limits not available"
 msgstr ""
 
 #: contents/ui/main.qml scripts/smoke/Capture.qml

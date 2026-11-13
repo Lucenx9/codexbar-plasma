@@ -1,28 +1,32 @@
 # AI Insights
 
-AI Insights is an optional, disabled-by-default Overview card and in-popup
-analysis view. A language model explains a small, validated snapshot of the
-usage the widget already shows. This document records its boundary decision, data contract,
+AI Insights is optional, disabled-by-default guided analysis inside Usage &
+Spend. A language model explains a small, validated snapshot of usage the widget
+already shows. This document records its boundary decision, data contract,
 request contract, and verification. The [usage guide](usage.md#ai-insights)
 describes setup and behavior for users.
 
 ## Presentation
 
-The Overview card keeps the summary visible and opens the full answer and
-highlights in an analysis page. Without Overview, the provider view has the
-same card.
-Returning preserves the originating view and scroll position. Navigation is
-local presentation state: it never generates an answer or scans cost history.
-The Back button displays provider titles literally, including markup and
-ampersands, even while the analysis page is hidden. Its content item uses
-`PlainPlasmaLabel` so Plasma's rich-text mnemonic processing cannot reinterpret
-the title. The accessible name retains the original title.
-The card and page show the same saved insight, generation time, service, model,
-and freshness. Both show an error if generation fails.
+**Ask the data** expands an assistant inside Usage & Spend. A fixed-provider
+widget without global navigation shows it in the provider view when enabled.
+The assistant replaces the former Overview card and separate analysis page.
+Disclosure and chart navigation never generate an answer. Manual generation
+uses one of four fixed intents: `summary`, `changes`, `headroom`, or `investigate`.
+Automatic generation continues to request a summary.
 
-The saved cache contains a snapshot identifier, not the source measurements.
-The page must not cite live usage as evidence for an older answer. Coverage guidance describes the existing snapshot rules without
-inventing new forecasts or claiming that absent historical data was analyzed.
+The assistant labels its all-provider, current-quota and two-complete-week scope
+independently of chart filters. It does not receive selected models, projects,
+or days. Requests can explain changes and CLI forecasts, or identify evidence
+worth investigating; they cannot establish causality, invent savings, or assume
+that provider quotas or models are interchangeable.
+
+The saved answer includes its question, generation time, service, model, and
+freshness. A failed request preserves that answer and shows an error. Version-1
+caches without a question remain valid and default to `summary`. The cache has
+a snapshot identifier for the evidence, independent of the selected question,
+not source measurements: live figures are never cited as
+evidence for an older answer. Missing history means no historical comparison.
 
 ## Boundary decision
 
@@ -51,8 +55,8 @@ network requests and returns semantic JSON records.
 | Helper commands, private-input descriptors, and reply validation | `contents/ui/AiInsightsProtocol.js` |
 | Process, nonce, deadline, stale replies, interval timer | `contents/ui/controllers/AiInsightsController.qml` |
 | Persistence and localized error text | `main.qml` and `components/AiInsightsMessages.qml` |
-| Compact and full saved-answer presentation | `components/AiInsightsCard.qml` |
-| Analysis page and return navigation | `components/AiInsightsView.qml` and `components/FullRepresentation.qml` |
+| Guided questions and saved-answer presentation | `components/AnalysisAssistant.qml` |
+| Analytics selection and presentation | `UsageAnalysis.js`, `ChartStack.mjs`, and `components/SpendView.qml` |
 | Secret Service, HTTP, provider differences, output validation | `scripts/lib/ai_insights.py` via `scripts/ai-insights.py` |
 | Settings, key prompt, model discovery | `configAiInsights.qml` |
 
@@ -69,8 +73,8 @@ transport. Direct QtTests cover both modules, and the process/settings tests
 exercise their production callers without changing cache keys or deadlines.
 
 While `aiInsightsEnabled` is false, the snapshot is not built, the controller
-has no scheduled or active process, and the card and analysis page are hidden.
-The page remains instantiated, so its plain-text rendering also applies while hidden.
+has no scheduled or active process, and saved answers stay hidden. The assistant
+can still disclose setup guidance in Usage & Spend without building a snapshot.
 Model discovery and wallet lookups run only from the settings page when
 the user enables the feature or presses a button.
 
@@ -97,6 +101,11 @@ never shown as current. A language change does not make a request due by
 itself; the next insight follows the configured generation policy.
 
 ## Snapshot contract
+
+Manual guided requests add only a validated `question` enum to the snapshot.
+`AiInsightsSnapshot.forQuestion` preserves the summary payload and derives a new
+snapshot identifier for other intents. The helper validates that enum and maps
+it to fixed instructions; it does not accept a free-text prompt.
 
 `AiInsightsSnapshot.build(providers, nowMs, warningPercent)` constructs a new
 object from an allowlist. It never copies an input record.
@@ -302,6 +311,9 @@ table, honoring the response's `Retry-After`, and a choice that finished with
   the persisted last attempt, so a failed or timed-out request, which the
   provider may already have billed, also waits a full interval, including
   across plasmashell restarts.
+- If the evidence and request context match the saved answer, automatic
+  generation stays idle even after the interval. This also preserves guided
+  answers; selecting a different question does not make evidence new.
 - One request at a time, with a per-request nonce. The helper's HTTP timeout is
   150 seconds, the shell bound 180 seconds, and the QML deadline 185 seconds,
   restarted when generation starts so preparation never shortens it. This
@@ -309,7 +321,7 @@ table, honoring the response's `Retry-After`, and a choice that finished with
   generation, including a wallet unlock prompt, the model lookup, and a retry,
   shares a 170-second budget: each request waits only for what remains, and no
   request starts with less than 30 seconds left. If the shell bound still stops
-  the helper, the card reports a timeout, including Qt's native SIGKILL crash
+  the helper, the assistant reports a timeout, including Qt's native SIGKILL crash
   result for an exec'd timeout owner. Answers may
   use up to 4000 output tokens, including hidden reasoning tokens.
   Each HTTP operation has a wall-clock deadline covering connection, headers,
@@ -344,10 +356,9 @@ table, honoring the response's `Retry-After`, and a choice that finished with
 
 ## Verification
 
-- `tests/tst_ai_insights_view.qml`: the actual Plasma Back label preserves tags,
-  images, entities, and ampersands as literal text in visible and hidden views,
-  with ordinary Overview/provider titles, accessibility, mouse and keyboard
-  navigation, and no generation on return.
+- `tests/tst_ai_insights_view.qml`: native disclosure and keyboard activation,
+  explicit question selection, busy/disabled states, cache-context mismatch,
+  narrow plain-text rendering, and no generation on disclosure.
 - `tests/tst_ai_insights.qml`: language tags, context keys, cache validation and
   invalidation, schedule and restart rules, retry delays, command quoting,
   prepared-input paths, and reply validation, including markup that must stay literal and success JSON
@@ -388,13 +399,14 @@ table, honoring the response's `Retry-After`, and a choice that finished with
   a long model list opens as a height-capped, scrolling menu. The wide scenario
   also edits a tested model and disables the feature during a connection test,
   proving that the old verdict and late replies are discarded. The
-  card scenarios start generation through the first-use **Generate insight**
-  button and check that **Open analysis** reveals the highlights in the
-  dedicated view. They capture the compact card and analysis page, check return
-  to a nonzero scroll position, tab changes, feature disabling, and no generation
-  on navigation. `tst_ai_insights_view.qml` exercises the production card and
-  page's keyboard activation, Back/Escape, full text, explicit generation, and
-  context without treating live data as saved evidence. The `normal` scenario
-  asserts that the card stays hidden and idle by default.
+  assistant scenarios start generation through the explicit **Generate insight**
+  control and verify integrated highlights, translated answers, plain text,
+  mismatched caches, failures, and no generation on navigation.
+  `tst_ai_insights_view.qml` exercises disclosure, guided intent selection,
+  keyboard activation, disabled/busy states, and narrow saved-answer rendering.
+  Controller tests verify the intent travels through the private snapshot file
+  and is persisted with its answer. Python tests reject unknown and non-string
+  intents before any request. The `normal` scenario verifies no generation while
+  AI Insights is disabled.
 
 No test contacts a real AI service, wallet, or credential.

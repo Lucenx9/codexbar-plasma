@@ -127,6 +127,29 @@ TestCase {
         return index >= 0 ? call[index + 1] : undefined;
     }
 
+    function test_guidedQuestionUsesPrivateInputAndPersistsIntent() {
+        var controller = create();
+        verify(controller.generate("changes"));
+        tryCompare(generated, "count", 1, 10000);
+        var value = JSON.parse(argument(calls()[0], "--received-snapshot"));
+        compare(value.question, "changes");
+        compare(JSON.parse(controller.cacheText).question, "changes");
+        verify(calls()[0].indexOf("--question") < 0);
+        var cached = JSON.parse(controller.cacheText);
+        compare(cached.snapshot, controller.snapshotId);
+        cached.generatedAt = new Date(Date.now() - 7 * 3600000).toISOString();
+        controller.cacheText = JSON.stringify(cached);
+        controller.lastAttempt = cached.generatedAt;
+        controller.intervalHours = 6;
+        wait(400);
+        verify(!controller.busy);
+        compare(attempts.count, 1);
+        compare(calls().length, 1, "unchanged evidence must preserve the guided answer after the interval");
+        controller.snapshotId = "0000ffff";
+        tryCompare(generated, "count", 2, 10000);
+        compare(calls().length, 2, "new evidence may generate the scheduled summary");
+        compare(JSON.parse(controller.cacheText).question, "summary");
+    }
     function test_1_disabledStartsNothing() {
         var controller = create({insightsEnabled: false, intervalHours: 6});
         verify(!controller.generate());

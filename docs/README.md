@@ -63,7 +63,7 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
 - [Provider authentication screenshot](codexbar-plasma-provider-authentication.png):
   synthetic Copilot settings showing device sign-in, credential clearing,
   CLI-described authentication hints and the per-provider source selector, used in the usage guide.
-- [AI Insights](ai-insights.md): the optional insight card and analysis view, their
+- [AI Insights](ai-insights.md): the optional guided assistant in Usage & Spend, its
   boundary decision, allowlisted snapshot, private helper handoff, language selection, request and credential contracts,
   scheduling, and tests.
 - [Translations](translations.md): adding and checking a language catalog.

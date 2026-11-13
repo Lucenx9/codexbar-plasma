@@ -284,7 +284,7 @@ KCM.SimpleKCM {
         }
 
         Components.PlainControlsLabel {
-            text: i18n("Shows a short AI-generated summary of your usage in Overview. Nothing is sent and no AI service is contacted while this is off.")
+            text: i18n("Enables guided questions in Usage & Spend. Nothing is sent and no AI service is contacted while this is off.")
             leftPadding: LayoutMirroring.enabled || !enabledCheck.indicator
                 ? 0 : enabledCheck.indicator.width + enabledCheck.spacing
             rightPadding: LayoutMirroring.enabled && enabledCheck.indicator
@@ -591,7 +591,7 @@ KCM.SimpleKCM {
         }
 
         Components.PlainControlsLabel {
-            text: i18n("Use the button on the AI Insights card to generate on request. Automatic generation never runs more often than the chosen interval, and ordinary usage refreshes do not trigger it.")
+            text: i18n("Choose Generate insight under Ask the data in Usage & Spend or the fixed-provider view. Automatic generation never runs more often than the chosen interval, and ordinary usage refreshes do not trigger it.")
             font: Kirigami.Theme.smallFont
             opacity: 0.7
             Layout.fillWidth: true

@@ -153,7 +153,7 @@ class CostTest(unittest.TestCase):
     def test_history_header_and_bars(self):
         spend_header = applet.id_block("spendHeaderRow")
         history_controls = applet.id_block("historyControlsRow")
-        if "ComboBox" in spend_header or "spendTotalLine()" not in spend_header:
+        if "ComboBox" in spend_header or "Components.AnalysisSummary" not in spend_view_qml.read_text():
             raise AssertionError("history filters must leave the full header width available for the spend total")
         for control_id in ("metricToggle", "rangeCombo"):
             if f"id: {control_id}" not in history_controls:
@@ -386,7 +386,7 @@ class CostTest(unittest.TestCase):
         if not code_contains(spend_view_text, "view.applet.refreshCost(true)"):
             raise AssertionError("the cost refresh button must explicitly bypass the automatic hourly throttle")
         for cost_loading_fragment in (
-            "busy: view.applet.costLoading",
+            "busy: view.limitsSelected ? view.applet.loading === true : view.applet.costLoading",
             "visible: view.applet.costLoading && view.providerCosts.length === 0",
             "visible: !view.applet.costLoading",
         ):

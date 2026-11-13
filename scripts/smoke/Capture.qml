@@ -43,11 +43,7 @@ Item {
     property var settingsCostSnapshot
     property var settingsProviderSnapshot
     property int missingCliStep: 0
-    property int aiInsightsStep: 0
-    property bool aiInsightsOverviewCaptured: false
-    property double aiInsightsReadyAtMs: 0
-    property real aiInsightsReturnY: 0
-    property string aiInsightsAttempt: ""
+    property int analysisStep: 0
     property int recoveryStep: 0
     property var recoveryUsageSnapshot
     property var recoveryCostSnapshot
@@ -919,8 +915,11 @@ Item {
 
     function verifyHiddenUsageRows() {
         var popup = applet.fullRepresentationItem;
-        var section = findItem(popup, "hiddenUsageRowsSection");
-        var toggle = findItem(popup, "hiddenUsageRowsToggle");
+        var providerContent = findItem(popup, "providerScroll");
+        if (!providerContent)
+            return false;
+        var section = findItem(providerContent, "hiddenUsageRowsSection");
+        var toggle = findItem(providerContent, "hiddenUsageRowsToggle");
         if (!section || !toggle)
             return false;
         if (settingsBehaviorStep === 0) {
@@ -937,7 +936,7 @@ Item {
         if (!detailBeforeCaptured)
             return false;
         if (settingsBehaviorStep <= 2) {
-            var hide = findItem(popup, "hideUsageRowButton");
+            var hide = findItem(providerContent, "hideUsageRowButton");
             verifyScenario(hide && hide.visible, "usage row has no hide action");
             hide.clicked();
             settingsBehaviorStep++;
@@ -982,7 +981,7 @@ Item {
         for (var i = 0; i < 64; i++)
             fullList.push({provider: "fixture" + i, row: "primary"});
         config.popupHiddenUsageRows = JSON.stringify(fullList);
-        var hideAction = findItem(popup, "hideUsageRowButton");
+        var hideAction = findItem(providerContent, "hideUsageRowButton");
         verifyScenario(hideAction !== null && !hideAction.visible,
             "a full hidden-row list still offered an ineffective hide action");
         applet.restorePopupUsageRow("fixture0", {lane: "primary"});
@@ -993,11 +992,14 @@ Item {
 
     function verifyPopupContent() {
         var popup = applet.fullRepresentationItem;
+        var providerContent = findItem(popup, "providerScroll");
+        if (!providerContent)
+            return false;
         var config = applet.Plasmoid.configuration;
-        var pace = findItem(popup, "usagePaceLabel");
-        var marker = findItem(popup, "usagePaceMarker");
-        var credits = findItem(popup, "creditsSection");
-        var details = findItem(popup, "providerDetailsSection");
+        var pace = findItem(providerContent, "usagePaceLabel");
+        var marker = findItem(providerContent, "usagePaceMarker");
+        var credits = findItem(providerContent, "creditsSection");
+        var details = findItem(providerContent, "providerDetailsSection");
         if (!pace || !marker || !credits || !details)
             return false;
         if (!navigationVerified) {
@@ -1007,8 +1009,8 @@ Item {
             var costs = applet.tokenCosts;
             var memo = applet.notificationMemo;
             var serial = usageLifecycle.commandRunSerial;
-            var actions = findItem(popup, "providerActionsToggle");
-            var actionButtons = namedItems(popup, "providerActionButton");
+            var actions = findItem(providerContent, "providerActionsToggle");
+            var actionButtons = namedItems(providerContent, "providerActionButton");
             verifyScenario(actions && !actions.expanded && actionButtons.length > 0
                 && actionButtons.every(function(button) { return !button.visible; }),
                 "provider actions must start collapsed");
@@ -1185,16 +1187,16 @@ Item {
         return true;
     }
 
-    function aiInsightsCardVisible() {
-        return visibleAiInsightsCards().length;
+    function analysisAssistantVisible() {
+        return visibleAnalysisAssistants().length;
     }
 
-    // Overview and the provider view each own a card; only one is shown.
-    function visibleAiInsightsCards() {
+    // Usage & Spend and the fixed-provider fallback are mutually exclusive.
+    function visibleAnalysisAssistants() {
         var popup = applet.fullRepresentationItem;
         var cards = [];
         (function collect(item) {
-            if (item.objectName === "aiInsightsCard")
+            if (item.objectName === "analysisAssistant")
                 cards.push(item);
             for (var i = 0; i < item.children.length; i++)
                 collect(item.children[i]);
@@ -1212,12 +1214,12 @@ Item {
         if (scenario === "ai-insights-error") {
             if (applet.aiInsightsErrorReason !== "network")
                 return false;
-            var error = findItem(visibleAiInsightsCards()[0], "aiInsightsError");
+            var error = findItem(visibleAnalysisAssistants()[0], "aiInsightsError");
             verifyScenario(error !== null && error.visible && error.plainText.indexOf("Ollama") >= 0,
                 "the AI Insights failure must be visible and actionable");
             verifyScenario(applet.providers.length === 2 && applet.providers[0].rows.length === 2,
                 "an AI Insights failure must not change usage data");
-            return aiInsightsCardVisible() === 1;
+            return analysisAssistantVisible() === 1;
         }
         if (applet.aiInsightsCacheState !== "current")
             return false;
@@ -1236,105 +1238,15 @@ Item {
                 "the fixture must make Qt.locale() disagree with the displayed language");
         }
         if (scenario === "ai-insights-single") {
-            verifyScenario(!applet.overviewAvailable && applet.selectedProviderID === "codex",
+            verifyScenario(!applet.overviewAvailable,
                 "single-provider navigation changed");
         }
-        var originScroll = findItem(popup, applet.overviewAvailable ? "overviewScroll" : "providerScroll");
-        var page = findItem(popup, "aiInsightsView");
-        var card = visibleAiInsightsCards()[0];
-        // Let the generation dimming settle before the summary capture.
-        if (aiInsightsReadyAtMs === 0)
-            aiInsightsReadyAtMs = Date.now();
-        if (aiInsightsStep === 0 && Date.now() - aiInsightsReadyAtMs < 600)
-            return false;
-        if (aiInsightsStep === 0) {
-            // The compact card leaves the highlights to the analysis page.
-            var open = card ? findItem(card, "aiInsightsOpenButton") : null;
-            verifyScenario(open !== null && open.visible && !page.visible, "the insight card must offer Open analysis");
-            verifyScenario(!hasVisibleText(card, applet.aiInsightsCache.highlights[0]),
-                "the compact card must not list highlights");
-            verifyScenario(card.metaText.split(" \u00b7 ").length === 3 && card.metaText.indexOf(" - ") < 0,
-                "the insight source line must join provider, model and age like the other headers");
-            aiInsightsAttempt = applet.Plasmoid.configuration.aiInsightsLastAttempt;
-            popup.grabToImage(function(result) {
-                capture.verifyScenario(result.saveToFile(capture.imagePath.replace(/\.png$/, "-overview.png")),
-                    "AI Insights summary capture failed");
-                capture.aiInsightsOverviewCaptured = true;
-            });
-            aiInsightsStep++;
-            return false;
-        }
-        if (!aiInsightsOverviewCaptured)
-            return false;
-        var flickable = originScroll.contentItem;
-        var config = applet.Plasmoid.configuration;
-        if (aiInsightsStep === 1) {
-            // A short popup makes the origin view scroll, so Back has a real
-            // position to restore.
-            popup.Window.window.height = 420;
-            aiInsightsStep++;
-            return false;
-        }
-        if (aiInsightsStep === 2) {
-            if (flickable.contentHeight <= flickable.height + 40)
-                return false;
-            flickable.contentY = flickable.contentHeight - flickable.height;
-            aiInsightsReturnY = flickable.contentY;
-            findItem(card, "aiInsightsOpenButton").clicked();
-            aiInsightsStep++;
-            return false;
-        }
-        verifyScenario(!applet.aiInsightsBusy && config.aiInsightsLastAttempt === aiInsightsAttempt,
-            "opening or leaving the analysis must not generate an insight");
-        function openAnalysis() {
-            findItem(visibleAiInsightsCards()[0], "aiInsightsOpenButton").clicked();
-            verifyScenario(page.visible && !originScroll.visible && aiInsightsCardVisible() === 1,
-                "Open analysis must replace the origin view with the analysis page");
-        }
-        if (aiInsightsStep === 3) {
-            verifyScenario(aiInsightsReturnY > 0, "the origin view did not scroll");
-            verifyScenario(page.visible && !originScroll.visible && aiInsightsCardVisible() === 1,
-                "Open analysis must replace the origin view with the analysis page");
-            verifyScenario(hasVisibleText(page, applet.aiInsightsCache.highlights[0]),
-                "the analysis page must list the highlights");
-            var back = findItem(page, "aiInsightsBackButton");
-            verifyScenario(back.activeFocus, "the analysis page must focus Back");
-            back.clicked();
-            verifyScenario(!page.visible && originScroll.visible && flickable.contentY === aiInsightsReturnY,
-                "Back must return to the origin view at its scroll position");
-            verifyScenario(findItem(visibleAiInsightsCards()[0], "aiInsightsOpenButton").activeFocus,
-                "Back must return focus to Open analysis");
-            if (applet.overviewAvailable) {
-                // The Overview tab returns as Back does; another view closes the page.
-                openAnalysis();
-                findItem(popup, "overviewTab").activated();
-                verifyScenario(!page.visible && applet.overviewSelected && flickable.contentY === aiInsightsReturnY,
-                    "the Overview tab must leave the analysis page");
-                openAnalysis();
-                applet.selectGlobalView("spend");
-                verifyScenario(!page.visible && applet.spendSelected, "another tab must leave the analysis page");
-                applet.selectGlobalView("overview");
-                verifyScenario(!page.visible, "returning to Overview reopened the analysis page");
-            }
-            // Disabling the feature closes the page; enabling it again does not reopen it.
-            openAnalysis();
-            config.aiInsightsEnabled = false;
-            verifyScenario(!page.visible && aiInsightsCardVisible() === 0 && originScroll.visible,
-                "disabling AI Insights must close the analysis page");
-            config.aiInsightsEnabled = true;
-            verifyScenario(!page.visible && aiInsightsCardVisible() === 1 && !applet.aiInsightsBusy,
-                "enabling AI Insights reopened the page or generated an insight");
-            popup.Window.window.height = 760;
-            aiInsightsStep++;
-            return false;
-        }
-        if (aiInsightsStep === 4) {
-            openAnalysis();
-            aiInsightsStep++;
-            return false;
-        }
-        // The final capture is the analysis page.
-        return page.visible && aiInsightsCardVisible() === 1;
+        var assistant = visibleAnalysisAssistants()[0];
+        verifyScenario(assistant && assistant.answerExpanded && assistant.showsAnswer,
+            "the integrated assistant must retain its answer");
+        verifyScenario(hasVisibleText(assistant, applet.aiInsightsCache.highlights[0]),
+            "the integrated answer must expose its highlights");
+        return true;
     }
 
     function verifySubscriptionDates() {
@@ -1394,7 +1306,48 @@ Item {
         return section && section.visible && applet.presentedProviderData.subscriptionDates.length === 2;
     }
 
+    function analysisReady() {
+        if (applet.loading || applet.costLoading) return false;
+        var view = findItem(applet.fullRepresentationItem, "popupSpendView");
+        var chart = findItem(view, "analysisHistoryChart");
+        if (!view || !chart || chart.points.length === 0) return false;
+        if (analysisStep === 0) {
+            verifyScenario(chart.points.some(function(point) { return point.segments.length > 0; }), "provider chart segments missing");
+            chart.selectedIndex = 0;
+            verifyScenario(view.selectedDay === chart.points[0].label, "selected day lost");
+            findItem(view, "analysisProviderFilter").activated(1);
+            verifyScenario(view.providerCosts.length === 1 && view.selectedDay === "", "provider filter scope is wrong");
+            settingsProviderSnapshot = view.selectedProvider;
+            applet.setCostHistoryDays(7);
+            analysisStep = 1;
+            return false;
+        }
+        if (analysisStep === 1) {
+            verifyScenario(view.selectedProvider === settingsProviderSnapshot
+                && findItem(view, "analysisProviderFilter").currentValue === settingsProviderSnapshot,
+                "changing the history range cleared the provider filter");
+            findItem(view, "analysisLimitsButton").clicked();
+            verifyScenario(view.limitsSelected, "limits did not open");
+            findItem(view, "analysisMetricToggle").activated(1);
+            verifyScenario(!view.limitsSelected && applet.costHistoryShowsTokens, "token selection did not leave limits");
+            findItem(view, "analysisProviderFilter").activated(0);
+            if (scenario !== "usage-analysis-narrow") findItem(view, "analysisExpandButton").clicked();
+            analysisStep = 2;
+            return false;
+        }
+        verifyScenario(view.expandedView === (scenario !== "usage-analysis-narrow") && view.selectedProvider === "" && view.providerCosts.length === view.allProviderCosts.length, "expanded comparison lost providers");
+        verifyScenario(!applet.aiInsightsBusy, "analysis navigation started AI generation");
+        if (scenario === "usage-analysis-limits") {
+            if (!view.limitsSelected) findItem(view, "analysisLimitsButton").clicked();
+            verifyScenario(findItem(view, "analysisLimits").visible, "current limits are hidden");
+            verifyScenario(!findItem(view, "analysisMetricToggle").selectionActive, "two metrics look selected");
+        }
+        if (scenario === "usage-analysis-models") findItem(view, "analysisModels").expanded = true;
+        return true;
+    }
+
     function scenarioReady() {
+        if (scenario.indexOf("usage-analysis") === 0) return analysisReady();
         if (scenario === "detail-severity") {
             if (applet.loading || applet.selectedProviderID !== "codex") return false;
             var severityIcons = [];
@@ -2870,18 +2823,21 @@ Item {
                         if (capture.applet.costLoading || capture.applet.tokenCosts !== previousCosts)
                             console.error("SMOKE_FAILED: metric switch reloaded project history");
                     }
+                } else if (capture.scenario.indexOf("usage-analysis") === 0) {
+                    popup.Window.window.width = capture.scenario === "usage-analysis-narrow" ? 640 : 960;
+                    popup.Window.window.height = 760;
+                    capture.applet.selectGlobalView("spend");
                 } else if (capture.scenario.indexOf("ai-insights") === 0) {
                     popup.Window.window.height = 760;
-                    if (capture.scenario !== "ai-insights-single")
-                        capture.applet.selectGlobalView("overview");
+                    if (capture.applet.globalNavigationAvailable)
+                        capture.applet.selectGlobalView("spend");
                     capture.verifyScenario(!capture.applet.aiInsightsBusy && capture.applet.aiInsightsCacheState === "none",
-                        "AI Insights must not generate before an explicit request in manual mode");
-                    // First use goes through the card's labeled button.
-                    var shownCard = capture.visibleAiInsightsCards()[0];
-                    var firstGenerate = shownCard ? capture.findItem(shownCard, "aiInsightsFirstGenerateButton") : null;
-                    capture.verifyScenario(firstGenerate !== null && firstGenerate.visible,
-                        "the empty card must offer a labeled generate button");
-                    firstGenerate.clicked();
+                        "analysis navigation must not generate in manual mode");
+                    var assistant = capture.visibleAnalysisAssistants()[0];
+                    capture.verifyScenario(assistant !== undefined, "integrated assistant is missing");
+                    assistant.answerExpanded = true;
+                    var generate = capture.findItem(assistant, "aiInsightsGenerateButton");
+                    generate.requested();
                     capture.verifyScenario(capture.applet.aiInsightsBusy, "manual generation did not start");
                     capture.applet.generateAiInsight();
                 } else if (capture.scenario === "normal" || capture.scenario.indexOf("localization-") === 0)
@@ -2918,7 +2874,7 @@ Item {
                 return;
             }
             if (capture.scenario === "normal") {
-                capture.verifyScenario(!capture.applet.aiInsightsEnabled && capture.aiInsightsCardVisible() === 0
+                capture.verifyScenario(!capture.applet.aiInsightsEnabled && capture.analysisAssistantVisible() === 0
                     && capture.applet.aiInsightsSnapshot.text === "" && !capture.applet.aiInsightsBusy,
                     "AI Insights must stay hidden and idle by default");
                 var next = capture.findItem(capture.applet.fullRepresentationItem, "nextTabsButton");

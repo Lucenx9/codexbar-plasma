@@ -191,7 +191,7 @@ PlasmoidItem {
     readonly property var overviewProviderItems: overviewProviders()
     readonly property bool globalNavigationAvailable: provider.length === 0
     readonly property bool overviewAvailable: globalNavigationAvailable && providers.length > 1 && overviewProviderItems.length > 0
-    readonly property bool spendAvailable: globalNavigationAvailable && (costUsageEnabled || identifiedTokensEnabled)
+    readonly property bool spendAvailable: globalNavigationAvailable && (costUsageEnabled || identifiedTokensEnabled || aiInsightsEnabled)
     readonly property bool sessionsAvailable: globalNavigationAvailable
     readonly property int selectedProviderIndex: providerIndexForID(selectedProviderID)
     readonly property bool globalViewSelected: selectionInitialized && selectedProviderID.length === 0
@@ -1482,8 +1482,8 @@ PlasmoidItem {
             "BCP 47 language tag of this translation, such as it or pt-BR. AI Insights are written in this language.", "en"))
     }
 
-    function generateAiInsight() {
-        aiInsightsController.generate()
+    function generateAiInsight(question) {
+        aiInsightsController.generate(question)
     }
 
     function monthDayTimeText(timestampMs) {
