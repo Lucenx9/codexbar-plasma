@@ -37,7 +37,30 @@ function selectedDayCost(snapshot, day) {
 }
 
 function dailyPoints(format, costs, showsTokens) {
-    return Lines.calendarPoints(Costs.spendDailyPoints(format, filterCosts(costs, ""), showsTokens))
+    var items = filterCosts(costs, "")
+    var ambiguous = ambiguousDates(items, showsTokens)
+    var points = Costs.spendDailyPoints(format, items, showsTokens).filter(function(point) {
+        return !Guards.hasOwnKey(ambiguous, point.label)
+    })
+    // Retain the date even when duplicate values overflowed or had no metric.
+    // A partial sum from healthy providers cannot establish this day's total.
+    Object.keys(ambiguous).forEach(function(label) { points.push({label: label, value: null}) })
+    points.sort(function(a, b) { return a.label.localeCompare(b.label) })
+    return Lines.calendarPoints(points.slice(-365))
+}
+
+function ambiguousDates(items, showsTokens) {
+    var currency = Currency.spendCurrency(items)
+    var result = ({})
+    items.slice(0, 128).filter(function(item) {
+        return showsTokens || Currency.costMatchesSpendCurrency(item, currency)
+    }).forEach(function(item) {
+        var dates = Snapshot.historyDates(Array.isArray(item.daily) ? item.daily : [])
+        Object.keys(dates).forEach(function(label) {
+            if (dates[label] === null) result[label] = true
+        })
+    })
+    return result
 }
 
 function providerLines(format, costs, points, showsTokens) {

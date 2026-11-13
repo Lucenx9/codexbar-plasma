@@ -439,6 +439,7 @@ TestCase {
             { tag: "older-day-arrives", points: [day("2026-10-15", 1), day("2026-10-16", 2), day("2026-10-17", 9)] },
             { tag: "older-day-expires", points: [day("2026-10-17", 9)] },
             { tag: "selected-day-disappears", points: [day("2026-10-16", 2), day("2026-10-18", 4)], missing: true },
+            { tag: "selected-day-duplicated", points: [day("2026-10-16", 2), day("2026-10-17", 3), day("2026-10-17", 4)], missing: true },
             { tag: "empty-history", points: [], missing: true }
         ];
     }

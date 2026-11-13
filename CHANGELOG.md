@@ -23,6 +23,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep aggregate daily chart readouts unavailable when an eligible provider has
+  duplicate records for that date, matching its line and day details. Clear a
+  pinned day that becomes ambiguous after a refresh.
+
 - Keep Usage & Spend summary values aligned with wrapped labels and show full
   comparison status text. Show history requirements for unavailable comparisons
   and give expanded charts more height. Draw smooth provider lines with subtle

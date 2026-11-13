@@ -9,7 +9,11 @@ The selected provider stays selected across range changes and empty results;
 it remains available in the filter until the user chooses another option.
 A pinned day changes provider/model details, while headline totals
 retain the selected period; project totals appear only with all days selected.
-Missing and duplicate days remain unavailable.
+Missing and duplicate days remain unavailable. A duplicate date within any
+provider eligible for the metric also makes the aggregate daily readout
+unavailable and clears that day if it was pinned before a refresh. Healthy
+provider lines remain visible; an excluded foreign-currency provider cannot
+invalidate the money readout.
 Daily lines compare providers on a shared zero-based scale with readable tick
 values and headroom. `ChartLines.mjs` preserves calendar spacing, breaks lines
 at missing or ambiguous dates, and uses monotone curves without new extrema.

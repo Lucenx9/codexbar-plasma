@@ -126,6 +126,7 @@ TestCase {
         var values = ({})
         lines[0].points.forEach(function(point) { values[point.label] = point.value })
         compare(values["2026-11-13"], null)
+        compare(points.filter(function(p) { return p.label === "2026-11-13" })[0].value, null)
         compare(values["2026-11-12"], 0)
         compare(values["2026-11-11"], null)
         compare(points.filter(function(p) { return p.label === "2026-11-11" })[0].value, null)
@@ -133,6 +134,45 @@ TestCase {
         cost.daily[1].cost = null
         lines = Analysis.providerLines(null, [cost], points, false)
         compare(lines[0].points.filter(function(p) { return p.label === "2026-11-12" })[0].value, null)
+    }
+
+    function test_dailyTotalsRejectProviderDuplicates_data() {
+        return [
+            {tag: "single-cost", tokens: false, second: false, foreign: false, duplicate: true, expected: null},
+            {tag: "duplicate-overflow", tokens: false, second: false, foreign: false, duplicate: true, overflow: true, expected: null},
+            {tag: "single-tokens", tokens: true, second: false, foreign: false, duplicate: true, expected: null},
+            {tag: "shared-day-cost", tokens: false, second: true, foreign: false, duplicate: false, expected: 5},
+            {tag: "shared-day-tokens", tokens: true, second: true, foreign: false, duplicate: false, expected: 50},
+            {tag: "ambiguous-subtotal", tokens: false, second: true, foreign: false, duplicate: true, expected: null},
+            {tag: "foreign-money", tokens: false, second: true, foreign: true, duplicate: true, expected: 2},
+            {tag: "foreign-tokens", tokens: true, second: true, foreign: true, duplicate: true, expected: null}
+        ]
+    }
+
+    function test_dailyTotalsRejectProviderDuplicates(data) {
+        var first = snapshot("codex", "USD", 2, 1)
+        first.daily = [{label: "2026-11-13", cost: 2, tokens: 20, currency: "USD"}]
+        if (data.overflow) first.daily[0].cost = Number.MAX_VALUE
+        var costs = [first]
+        if (data.second) {
+            var currency = data.foreign ? "EUR" : "USD"
+            var second = snapshot("claude", currency, 3, 1)
+            second.daily = [{label: "2026-11-13", cost: 3, tokens: 30, currency: currency}]
+            costs.push(second)
+        }
+        if (data.duplicate) costs[costs.length - 1].daily.push(costs[costs.length - 1].daily[0])
+        var original = JSON.stringify(costs)
+        var points = Analysis.dailyPoints(null, costs, data.tokens)
+        compare(points.length, 1)
+        compare(points[0].value, data.expected)
+        if (data.expected === null) verify(!points[0].displayValue)
+        var lines = Analysis.providerLines(null, costs, points, data.tokens)
+        if (data.duplicate && !data.second) {
+            compare(lines[0].points[0].value, null)
+            compare(Chart.domain(lines).maximum, 0)
+        }
+        if (data.second) compare(lines[0].points[0].value, data.tokens ? 20 : 2)
+        compare(JSON.stringify(costs), original)
     }
 
     function test_calendarAndPathsRejectBadDataAndRespectBounds() {
