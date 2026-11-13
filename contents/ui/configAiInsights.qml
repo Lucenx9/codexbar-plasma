@@ -284,7 +284,7 @@ KCM.SimpleKCM {
         }
 
         Components.PlainControlsLabel {
-            text: i18n("Shows a short AI-generated summary of your usage in Overview. Nothing is sent and no AI service is contacted while this is off.")
+            text: i18n("Enables guided questions in Usage & Spend. Nothing is sent and no AI service is contacted while this is off.")
             leftPadding: LayoutMirroring.enabled || !enabledCheck.indicator
                 ? 0 : enabledCheck.indicator.width + enabledCheck.spacing
             rightPadding: LayoutMirroring.enabled && enabledCheck.indicator

@@ -8,6 +8,20 @@ TestCase {
 
     readonly property double now: new Date(2026, 8, 23, 12, 0, 0).getTime()
 
+    function test_guidedQuestionIsBoundedAndPreservesEvidence() {
+        var text = JSON.stringify({providers: [{provider: "codex", quotas: []}], signals: []})
+        compare(AiInsightsSnapshot.forQuestion(text, "summary").text, text)
+        var result = AiInsightsSnapshot.forQuestion(text, "changes")
+        var selected = JSON.parse(result.text)
+        compare(selected.question, "changes")
+        delete selected.question
+        compare(JSON.stringify(selected), text)
+        verify(result.id !== AiInsightsSnapshot.forQuestion(text, "summary").id)
+        for (var invalid of [null, 12, {}, "{", "[]", "x".repeat(16385)])
+            compare(AiInsightsSnapshot.forQuestion(invalid, "changes").text, "")
+        compare(AiInsightsSnapshot.forQuestion(text, "arbitrary instructions").text, "")
+    }
+
     function dayLabel(offset) {
         var date = new Date(2026, 8, 23 - offset)
         var month = date.getMonth() + 1

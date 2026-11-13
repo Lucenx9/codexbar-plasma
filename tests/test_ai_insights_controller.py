@@ -127,6 +127,15 @@ TestCase {
         return index >= 0 ? call[index + 1] : undefined;
     }
 
+    function test_guidedQuestionUsesPrivateInputAndPersistsIntent() {
+        var controller = create();
+        verify(controller.generate("changes"));
+        tryCompare(generated, "count", 1, 10000);
+        var value = JSON.parse(argument(calls()[0], "--received-snapshot"));
+        compare(value.question, "changes");
+        compare(JSON.parse(controller.cacheText).question, "changes");
+        verify(calls()[0].indexOf("--question") < 0);
+    }
     function test_1_disabledStartsNothing() {
         var controller = create({insightsEnabled: false, intervalHours: 6});
         verify(!controller.generate());

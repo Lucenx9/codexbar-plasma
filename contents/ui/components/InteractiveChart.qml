@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import "../ChartScale.js" as ChartScale
 import "../CostChart.mjs" as CostChart
+import "../ChartStack.mjs" as ChartStack
 import "../ProviderNormalizer.mjs" as Normalizer
 
 ColumnLayout {
@@ -11,6 +12,8 @@ ColumnLayout {
 
     required property var applet
     required property var points
+    property var seriesColors: ({})
+    onSeriesColorsChanged: plot.requestPaint()
     required property color accent
     property string kind: "bar"
     property string accessibleTitle: ""
@@ -329,12 +332,30 @@ ColumnLayout {
                     context.translate(0, baseline * 2)
                     context.scale(1, -1)
                 }
-                context.fillStyle = barIndex === chart.activeIndex ? activeFill : normalFill
-                CostChart.paintRoundedTopBar(
+                var segments = bar.negative ? [] : ChartStack.stackedBarSegments(
+                    chart.points[barIndex], bar.height, baseline)
+                if (segments.length > 0) {
+                    context.globalAlpha = barIndex === chart.activeIndex ? 1 : 0.8
+                    for (var segmentIndex = 0; segmentIndex < segments.length; segmentIndex++) {
+                        var segment = segments[segmentIndex]
+                        context.fillStyle = chart.seriesColors[segment.provider] || chart.accent
+                        if (segment.rounded) {
+                            CostChart.paintRoundedTopBar(context,
+                                {x: geometry.offset + barIndex * geometry.step, baseline: segment.baseline,
+                                    width: geometry.barWidth, height: segment.height}, Kirigami.Units.smallSpacing / 2)
+                        } else {
+                            context.fillRect(geometry.offset + barIndex * geometry.step,
+                                segment.baseline - segment.height, geometry.barWidth, segment.height)
+                        }
+                    }
+                } else {
+                    context.fillStyle = barIndex === chart.activeIndex ? activeFill : normalFill
+                    CostChart.paintRoundedTopBar(
                     context,
                     { x: geometry.offset + barIndex * geometry.step, baseline: baseline,
                         width: geometry.barWidth, height: bar.height },
                     Kirigami.Units.smallSpacing / 2)
+                }
                 context.restore()
             }
         }

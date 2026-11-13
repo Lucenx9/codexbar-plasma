@@ -165,9 +165,14 @@ function timestampMs(value) {
     return isFinite(parsed) ? parsed : NaN
 }
 
+function question(value) {
+    return ["summary", "changes", "headroom", "investigate"].indexOf(value) >= 0 ? value : "summary"
+}
+
 function cacheText(entry) {
     return JSON.stringify({
         version: 1,
+        question: question(entry.question),
         summary: plainText(entry.summary, maximumSummaryLength),
         highlights: highlights(entry.highlights),
         generatedAt: new Date(entry.generatedAtMs).toISOString(),
@@ -201,6 +206,7 @@ function parseCache(text) {
     }
     return {
         summary: summary,
+        question: question(value.question),
         highlights: highlights(value.highlights),
         generatedAtMs: generatedAtMs,
         contextKey: value.context,

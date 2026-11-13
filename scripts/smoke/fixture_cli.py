@@ -22,6 +22,7 @@ SCENARIOS += ("settings-providers", "settings-providers-narrow", "settings-provi
 SCENARIOS += ("settings-providers-0840", "settings-providers-0840-keys", "settings-providers-0840-cookie")
 SCENARIOS += ("settings-providers-auth", "settings-providers-auth-legacy")
 SCENARIOS += ("settings-providers-keys-soniox", "settings-providers-keys-chatbox")
+SCENARIOS += ("usage-analysis", "usage-analysis-limits", "usage-analysis-narrow", "usage-analysis-models")
 SCENARIOS += ("readme-overview", "readme-spend", "readme-sessions", "readme-codex")
 SCENARIOS += ("readme-panel-standard", "readme-panel-minimal")
 SCENARIOS += ("tabs-icon-only",)
@@ -336,7 +337,7 @@ def response(args, scenario, now):
     if (args[:5] == ["cost", "--format", "json", "--json-only", "--days"]
             and len(args) == 6 and args[5] in ("7", "30", "90")):
         days = int(args[5])
-        if scenario.startswith("share-usage"):
+        if scenario.startswith(("share-usage", "usage-analysis-models")):
             snapshots = [readme_cost(provider, days, now) for provider in ("codex", "claude")]
             for snapshot in snapshots:
                 snapshot["provenance"] = "listPriceEstimate"
@@ -345,7 +346,7 @@ def response(args, scenario, now):
                         "modelName": "Example coding model" if snapshot["provider"] == "codex" else "Example reasoning model",
                         "cost": day["totalCost"], "totalTokens": day["totalTokens"]}]
             return snapshots
-        if scenario.startswith("readme-"):
+        if scenario.startswith(("readme-", "usage-analysis")):
             return [readme_cost(provider, days, now) for provider in ("codex", "claude")]
         if scenario.startswith("popup-cost-") or scenario == "privacy-cost-details":
             snapshot = readme_cost("codex", days, now)

@@ -35,14 +35,13 @@ full_representation_text = full_representation_qml.read_text(encoding="utf-8")
 
 class PopupLayoutTest(unittest.TestCase):
     def test_top_level_cards_match_overview_geometry(self):
-        # Sessions and Spend provider cards are top-level surfaces like
-        # Overview rows: same outer radius and horizontal content inset.
+        # Sessions retain the Overview card geometry; analysis uses compact action rows.
         fragments = (
             "radius: view.applet.roundedSurfaceRadius",
             "anchors.leftMargin: Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing",
             "anchors.rightMargin: Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing",
         )
-        for card_text in (sessions_view_text, spend_view_text):
+        for card_text in (sessions_view_text,):
             missing = [fragment for fragment in fragments if not code_contains(card_text, fragment)]
             self.assertEqual(missing, [], "cards must match overview card geometry")
 
@@ -541,24 +540,13 @@ class PopupLayoutTest(unittest.TestCase):
             self.assertIn("visible: applet." + ("spendSelected" if view == "SpendView" else "sessionsSelected")
                           + " && !fullRoot.commandPathMissing", full_representation_text)
 
-    def test_ai_insights_analysis_navigation(self):
-        # The analysis is a page inside the popup, never a tab or a generation.
-        for fragment in (
-            'visible: applet.overviewSelected && !fullRoot.aiInsightsOpen',
-            'visible: applet.presentedProviderData !== null && !fullRoot.aiInsightsOpen',
-            'visible: fullRoot.aiInsightsOpen',
-            'onAiInsightsViewKeyChanged',
-        ):
-            if fragment not in full_representation_text:
-                raise AssertionError("the analysis page must replace its origin view: " + fragment)
-        if full_representation_text.count("onOpenRequested: function(keyboard) { fullRoot.openAiInsights(keyboard) }") != 2:
-            raise AssertionError("both AI Insights cards must open the analysis page")
-        if full_representation_text.count("fullRoot.closeAiInsights(false, false)") != 2:
-            raise AssertionError("the Overview and provider tabs must leave the analysis page")
-        for name in ("openAiInsights", "closeAiInsights"):
-            body = function_body(full_representation_text, name)
-            if "generate" in body.lower() or "contentY" not in body:
-                raise AssertionError(name + " must only navigate and keep the origin scroll position")
+    def test_ai_insights_integrated_analysis(self):
+        self.assertNotIn("AiInsightsView", full_representation_text)
+        self.assertNotIn("AiInsightsCard", full_representation_text)
+        self.assertIn("Components.SpendView", full_representation_text)
+        spend = (root / "contents/ui/components/SpendView.qml").read_text()
+        self.assertIn("Components.AnalysisAssistant", spend)
+        self.assertNotIn("generateAiInsight", spend)
 
     def test_provider_actions(self):
         action_rows_body = function_body(main_text, "actionRows")
@@ -614,7 +602,7 @@ class PopupLayoutTest(unittest.TestCase):
 
     def test_reset_labels(self):
         # Popup header and detail lines share the Sessions and Usage & Spend separator.
-        for popup_file in ("FullRepresentation.qml", "OverviewProviderRow.qml", "AiInsightsCard.qml"):
+        for popup_file in ("FullRepresentation.qml", "OverviewProviderRow.qml", "AnalysisAssistant.qml"):
             if 'i18n("%1 - %2"' in (root / "contents/ui/components" / popup_file).read_text():
                 raise AssertionError(f"{popup_file} must join popup detail lines with the middle dot separator")
         reset_text_body = function_body(main_text, "resetText")

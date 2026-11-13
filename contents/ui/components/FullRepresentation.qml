@@ -62,7 +62,7 @@ Item {
     readonly property bool standardHeightActive: applet.providers.length > 0
         || applet.spendSelected || applet.sessionsSelected
 
-    implicitWidth: Kirigami.Units.gridUnit * 34
+    implicitWidth: Kirigami.Units.gridUnit * (applet.spendSelected && spendView.expandedView ? 50 : 34)
     implicitHeight: standardHeightActive
         ? maximumPopupHeight
         : Math.max(minimumPopupHeight,
@@ -85,57 +85,6 @@ Item {
     readonly property bool globalErrorActive: applet.providerUsageFeedbackVisible && applet.errorText.length > 0
         && !fullRoot.commandPathMissing
         && (!applet.selectedProviderData || applet.selectedProviderData.error !== applet.errorText)
-
-    // The AI Insights analysis is a page inside the popup, not a tab: the
-    // card of the Overview, or of the provider view without one, opens it,
-    // and Back returns to that view at its previous scroll position. A change
-    // of view, account, or a disabled feature closes it.
-    readonly property string aiInsightsViewKey: !applet.aiInsightsEnabled ? ""
-        : applet.overviewSelected ? "overview"
-        : (!applet.overviewAvailable && applet.presentedProviderData !== null
-            ? "provider:" + providerScroll.selectionKey : "")
-    property string aiInsightsOrigin: ""
-    property real aiInsightsReturnY: 0
-    readonly property bool aiInsightsOpen: aiInsightsOrigin.length > 0
-
-    onAiInsightsViewKeyChanged: {
-        if (aiInsightsOpen && aiInsightsViewKey !== aiInsightsOrigin) {
-            aiInsightsOrigin = ""
-        }
-    }
-
-    function aiInsightsOriginScroll() {
-        return aiInsightsViewKey === "overview" ? overviewScroll : providerScroll
-    }
-
-    function openAiInsights(keyboard) {
-        if (aiInsightsViewKey.length === 0) {
-            return
-        }
-        applet.collapseStatusComponents()
-        var flickable = aiInsightsOriginScroll().contentItem as Flickable
-        aiInsightsReturnY = flickable ? flickable.contentY : 0
-        aiInsightsOrigin = aiInsightsViewKey
-        aiInsightsView.scrollToTop()
-        aiInsightsView.focusBack(keyboard)
-    }
-
-    // A tab click keeps focus on the tab; Back returns it to Open analysis.
-    function closeAiInsights(restoreFocus, keyboard) {
-        if (!aiInsightsOpen) {
-            return
-        }
-        var flickable = aiInsightsOriginScroll().contentItem as Flickable
-        aiInsightsOrigin = ""
-        if (flickable) {
-            flickable.cancelFlick()
-            flickable.contentY = Math.max(0, Math.min(aiInsightsReturnY,
-                flickable.contentHeight - flickable.height))
-        }
-        if (restoreFocus) {
-            (aiInsightsViewKey === "overview" ? overviewAiInsightsCard : providerAiInsightsCard).focusOpenButton(keyboard)
-        }
-    }
 
     Controls.Action {
         id: retryUsageAction
@@ -217,7 +166,6 @@ Item {
                 tabHeight: providerTabsBar.tabHeight
                 selected: applet.overviewSelected
                 onActivated: {
-                    fullRoot.closeAiInsights(false, false)
                     applet.selectGlobalView("overview")
                 }
             }
@@ -301,7 +249,6 @@ Item {
                         : Kirigami.Units.smallSpacing
 
                     function activate() {
-                        fullRoot.closeAiInsights(false, false)
                         applet.selectedProviderID = modelData.provider
                         applet.selectionInitialized = true
                     }
@@ -707,6 +654,7 @@ Item {
         }
 
         Components.SpendView {
+            id: spendView
             objectName: "popupSpendView"
             visible: applet.spendSelected && !fullRoot.commandPathMissing
             applet: fullRoot.applet
@@ -717,18 +665,8 @@ Item {
             applet: fullRoot.applet
         }
 
-        Components.AiInsightsView {
-            id: aiInsightsView
-
-            visible: fullRoot.aiInsightsOpen
-            applet: fullRoot.applet
-            backText: fullRoot.aiInsightsOrigin === "overview" ? i18n("Overview")
-                : (applet.presentedProviderData ? applet.presentedProviderData.title : "")
-            onBackRequested: function(keyboard) { fullRoot.closeAiInsights(true, keyboard) }
-        }
-
         ColumnLayout {
-            visible: applet.overviewSelected && !fullRoot.aiInsightsOpen
+            visible: applet.overviewSelected
             Layout.fillWidth: true
             Layout.fillHeight: true
             spacing: Kirigami.Units.largeSpacing
@@ -835,20 +773,12 @@ Item {
                             }
                         }
                     }
-
-                    Components.AiInsightsCard {
-                        id: overviewAiInsightsCard
-
-                        visible: applet.aiInsightsEnabled
-                        applet: fullRoot.applet
-                        onOpenRequested: function(keyboard) { fullRoot.openAiInsights(keyboard) }
-                    }
                 }
             }
         }
 
         ColumnLayout {
-            visible: applet.presentedProviderData !== null && !fullRoot.aiInsightsOpen
+            visible: applet.presentedProviderData !== null
             Layout.fillWidth: true
             Layout.fillHeight: true
             spacing: Kirigami.Units.largeSpacing
@@ -1444,14 +1374,10 @@ Item {
                         presentationVisible: fullRoot.visible && !applet.globalViewSelected
                     }
 
-                    // Without an Overview tab (one provider, or a fixed provider),
-                    // the same card appears here instead, never in both places.
-                    Components.AiInsightsCard {
-                        id: providerAiInsightsCard
-
-                        visible: applet.aiInsightsEnabled && !applet.overviewAvailable
+                    // Fixed-provider widgets have no global Usage & Spend tab.
+                    Components.AnalysisAssistant {
                         applet: fullRoot.applet
-                        onOpenRequested: function(keyboard) { fullRoot.openAiInsights(keyboard) }
+                        visible: applet.aiInsightsEnabled && !applet.globalNavigationAvailable
                     }
 
                     ColumnLayout {

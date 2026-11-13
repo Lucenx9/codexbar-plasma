@@ -179,7 +179,7 @@ def stage_applet(work, scenario, image_path, theme=None):
     # used in the existing visual review, and narrow settings pages use 130%
     # text, without changing the desktop settings.
     size = 20 if scenario in ("long-text", "project-long-text", "provider-header-large", "popup-scroll-large") else 10
-    if scenario.startswith("settings-") and scenario.endswith("-narrow"):
+    if scenario.startswith(("settings-", "usage-analysis")) and scenario.endswith("-narrow"):
         size = 13
     (work / "config/kdeglobals").write_text(
         f"[General]\nfont=Noto Sans,{size},-1,5,50,0,0,0,0,0\n"

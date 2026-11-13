@@ -89,6 +89,16 @@ TestCase {
             "x".repeat(AiInsights.maximumSummaryLength - 2) + "\u2026")
     }
 
+    function test_questionCacheIsBackwardCompatible() {
+        var text = AiInsights.cacheText(entry({question: "headroom"}))
+        compare(AiInsights.parseCache(text).question, "headroom")
+        var legacy = JSON.parse(text)
+        delete legacy.question
+        compare(AiInsights.parseCache(JSON.stringify(legacy)).question, "summary")
+        legacy.question = {instructions: "invalid"}
+        compare(AiInsights.parseCache(JSON.stringify(legacy)).question, "summary")
+    }
+
     function test_cacheRejectsMalformedRecords() {
         compare(AiInsights.parseCache(""), null)
         compare(AiInsights.parseCache("{"), null)

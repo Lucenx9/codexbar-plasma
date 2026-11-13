@@ -321,14 +321,16 @@ owns checkout setup, delivery, and repository maintenance.
   blank strings, arrays, and missing fields never count as a successful exit.
   See the [AI Insights reference](ai-insights.md) for the
   boundary decision and contracts; keep it current with any change.
-  `components/FullRepresentation.qml` owns navigation from the compact
-  `AiInsightsCard.qml` to `AiInsightsView.qml` and restores the origin's scroll
-  position and keyboard focus on return. The detail view reuses the card's
-  saved-answer presentation; opening it never starts a process or a cost scan.
+  `components/AnalysisAssistant.qml` owns guided-question disclosure inside
+  Usage & Spend (or a fixed provider view). Opening it never starts a request.
+  The controller binds the validated question to the private snapshot and saved
+  answer; automatic generation remains a summary. `UsageAnalysis.js` projects
+  filtered history, complete-week comparisons, day details, and bounded model
+  rows. `ChartStack.mjs` validates and projects provider bar segments; QML owns
+  drawing, localization, and interaction.
 - `contents/ui/main.qml` owns the Status Page component list: its expanded
   provider, the single `CliProcess` request, and the 30-second deadline.
-  Collapsing, closing the popup, switching tab or view (including opening
-  AI Insights), or expanding another provider cancels the
+  Collapsing, closing the popup, switching tab or view, or expanding another provider cancels the
   request and refetches on the next expansion, and a late
   result for a provider that is no longer expanded is ignored. The official CLI
   emits only overall status, so `scripts/status-components.py` is a deliberate
@@ -371,7 +373,7 @@ owns checkout setup, delivery, and repository maintenance.
   synthetic fixtures based on that page schema, not a live outage observation.
   `tests/tst_status_components_list.qml` covers long-name elision and
   keyboard toggling. `tests/test_usage_recovery.py` executes the popup navigation
-  and status handlers together, covering cancellation on entering AI Insights,
+  and status handlers together, covering cancellation on switching global views,
   ignored late results, and a fresh fetch after returning. Replace the helper
   when the CLI exposes components; see
   [TODO](../TODO.md#status-components).

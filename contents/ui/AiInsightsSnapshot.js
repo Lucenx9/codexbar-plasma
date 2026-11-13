@@ -300,3 +300,24 @@ function build(items, nowMs, warningPercent) {
     var text = JSON.stringify(snapshot)
     return {text: sufficient ? text : "", id: sufficient ? identity(text) : "", sufficient: sufficient}
 }
+
+// Question IDs are application-owned intents, never free-form instructions.
+function forQuestion(text, question) {
+    if (["summary", "changes", "headroom", "investigate"].indexOf(question) < 0) return {text: "", id: ""}
+    var snapshot = questionSnapshot(text)
+    if (!snapshot) return {text: "", id: ""}
+    if (question === "summary") return {text: text, id: identity(text)}
+    snapshot.question = question
+    var result = JSON.stringify(snapshot)
+    return {text: result, id: identity(result)}
+}
+
+function questionSnapshot(text) {
+    if (typeof text !== "string" || !text || text.length > 16384) return null
+    try {
+        var snapshot = JSON.parse(text)
+        return Guards.isRecord(snapshot) && Array.isArray(snapshot.providers) ? snapshot : null
+    } catch (error) {
+        return null
+    }
+}

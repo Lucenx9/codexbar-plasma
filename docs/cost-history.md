@@ -1,5 +1,27 @@
 # Cost history and daily models
 
+## Global analysis
+
+Usage & Spend projects existing normalized cost snapshots through
+`UsageAnalysis.js`; it does not add a CLI command, price source, or account
+attribution. Provider filters scope costs, tokens, models and the heatmap.
+A pinned day changes provider/model details, while headline totals
+retain the selected period; project totals appear only with all days selected.
+Missing and duplicate days remain unavailable.
+Daily bars stack known provider contributions only when their sum agrees with
+the aggregate; `ChartStack.mjs` rejects invalid splits. Money stays in the
+selected currency and token totals can include all currencies.
+
+The weekly comparison uses the existing AI snapshot completeness rules without
+calling AI: fourteen complete days before today, a scan reaching today, no
+ambiguous dates, finite values and no partial costs. It never loads extra history
+for a short selection. Model lists retain a shared 128-row bound, mark truncation,
+and use the already privacy-projected snapshots. Limits use current usage data
+and remain independent of local history filters. No current CLI blocker in
+[TODO](../TODO.md) is resolved or bypassed by these presentation changes.
+
+## Provider details
+
 The provider popup shows Today and the selected period side by side with
 emphasized amounts. Its chart shows the peak daily amount above the plot until
 a day is inspected, without repeating the latest date beneath the axis. History,

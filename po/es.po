@@ -43,64 +43,37 @@ msgstr "Análisis con IA (beta)"
 msgid "Diagnostics"
 msgstr "Diagnóstico"
 
-#: contents/ui/components/AiInsightsCard.qml
+#: contents/ui/components/AnalysisAssistant.qml
 msgid "Choose an AI provider and model in the AI Insights settings."
 msgstr ""
 "Elija un proveedor de IA y un modelo en la configuración de Análisis con IA."
 
-#: contents/ui/components/AiInsightsCard.qml
-#: contents/ui/components/AiInsightsView.qml
+#: contents/ui/components/AnalysisAssistant.qml
 msgid "Not enough current usage data for an insight yet."
 msgstr "Todavía no hay suficientes datos de uso actuales para un análisis."
 
-#: contents/ui/components/AiInsightsCard.qml
-msgid ""
-"The saved insight belongs to other settings or another language. Generate a "
-"new one when needed."
-msgstr ""
-"El análisis guardado pertenece a otra configuración o a otro idioma. Genere "
-"uno nuevo cuando lo necesite."
-
-#: contents/ui/components/AiInsightsCard.qml
-msgid "No insight generated yet."
-msgstr "Aún no se ha generado ningún análisis."
-
-#: contents/ui/components/AiInsightsCard.qml
+#: contents/ui/components/AnalysisAssistant.qml
 msgid "Out of date"
 msgstr "Desactualizado"
 
-#: contents/ui/components/AiInsightsCard.qml
-msgid "Out of date, %1"
-msgstr "Desactualizado, %1"
-
-#: contents/ui/components/AiInsightsCard.qml
+#: contents/ui/components/AnalysisAssistant.qml
 msgid "Configure…"
 msgstr "Configurar…"
 
-#: contents/ui/components/AiInsightsCard.qml
+#: contents/ui/components/AnalysisAssistant.qml
 msgid "AI Insights"
 msgstr "Análisis con IA"
 
-#: contents/ui/components/AiInsightsCard.qml
-msgid "Beta"
-msgstr "Beta"
-
-#: contents/ui/components/AiInsightsCard.qml
+#: contents/ui/components/AnalysisAssistant.qml
 msgid "Generate insight"
 msgstr "Generar análisis"
 
-#: contents/ui/components/AiInsightsCard.qml
-msgid "Regenerate insight"
-msgstr "Regenerar análisis"
-
-#: contents/ui/components/AiInsightsCard.qml
-msgid "Generating insight…"
-msgstr "Generando análisis…"
-
+#: contents/ui/components/IdentifiedTokensSection.qml
 #: contents/ui/components/ProviderCostSection.qml
 msgid "Hide details"
 msgstr "Ocultar detalles"
 
+#: contents/ui/components/IdentifiedTokensSection.qml
 #: contents/ui/components/ProviderCostSection.qml
 msgid "Show details"
 msgstr "Mostrar detalles"
@@ -361,6 +334,7 @@ msgstr "Instalar y usar la CLI"
 msgid "Plasma could not run '%1'. Install or reuse a private official CLI for this widget and use it immediately. If your CLI is installed elsewhere, set its path in Settings > Diagnostics."
 msgstr "Plasma no pudo ejecutar «%1». Instale o reutilice una copia privada de la CLI oficial para este widget y úsela de inmediato. Si su CLI está instalada en otra ubicación, establezca su ruta en Ajustes > Diagnóstico."
 
+#: contents/ui/components/AnalysisLimits.qml
 #: contents/ui/components/FullRepresentation.qml
 msgid "No provider data"
 msgstr "No hay datos de proveedores"
@@ -537,9 +511,9 @@ msgstr[1] "%1 h"
 msgid "%1d %2h"
 msgstr "%1 d %2 h"
 
-#, kde-format
 #: contents/ui/components/PanelSettingsPreview.qml
 #: contents/ui/components/UsageWindowText.qml
+#, kde-format
 msgid "%1d"
 msgid_plural "%1d"
 msgstr[0] "%1 d"
@@ -569,9 +543,9 @@ msgstr "Terciaria"
 msgid "%1: %2% %3"
 msgstr "%1: %2 % %3"
 
-#, kde-format
 #: contents/ui/components/PanelSettingsPreview.qml
 #: contents/ui/components/PanelText.qml
+#, kde-format
 msgid "%1cr"
 msgstr "%1 cr"
 
@@ -600,6 +574,7 @@ msgid "Example data. Panel changes appear here before you apply them."
 msgstr ""
 "Datos de ejemplo. Los cambios del panel se muestran aquí antes de aplicarlos."
 
+#: contents/ui/components/AnalysisSummary.qml
 #: contents/ui/components/ProjectCostSection.qml
 #: contents/ui/components/ProviderCostSection.qml
 #: contents/ui/components/ShareUsageWindow.qml
@@ -607,6 +582,7 @@ msgstr ""
 msgid "Cost unavailable"
 msgstr "Coste no disponible"
 
+#: contents/ui/components/AnalysisSummary.qml
 #: contents/ui/components/CostText.qml
 #: contents/ui/components/ProjectCostSection.qml
 #: contents/ui/components/ProviderCostSection.qml
@@ -665,12 +641,14 @@ msgstr "%1 - activado por defecto en CodexBar"
 msgid "Enable %1"
 msgstr "Activar %1"
 
+#: contents/ui/components/AnalysisModels.qml
 #: contents/ui/components/ProviderCostSection.qml
 msgid "%1 incomplete request excluded"
 msgid_plural "%1 incomplete requests excluded"
 msgstr[0] "%1 solicitud incompleta excluida"
 msgstr[1] "%1 solicitudes incompletas excluidas"
 
+#: contents/ui/components/AnalysisSummary.qml
 #: contents/ui/components/CostMetricToggle.qml
 #: contents/ui/components/CostText.qml
 #: contents/ui/components/ProviderCostSection.qml
@@ -678,6 +656,7 @@ msgstr[1] "%1 solicitudes incompletas excluidas"
 msgid "Cost"
 msgstr "Coste"
 
+#: contents/ui/components/AnalysisSummary.qml
 #: contents/ui/components/CostMetricToggle.qml
 #: contents/ui/components/RateWindowLabels.qml
 msgid "Tokens"
@@ -721,17 +700,21 @@ msgid "Details for %1"
 msgstr "Detalles del %1"
 
 #: contents/ui/components/ProviderCostSection.qml
+#: contents/ui/components/SpendView.qml
 msgid "All days"
 msgstr "Todos los días"
 
+#: contents/ui/components/AnalysisModels.qml
 #: contents/ui/components/ProviderCostSection.qml scripts/smoke/Capture.qml
 msgid "No model breakdown for this day."
 msgstr "No hay desglose por modelo para este día."
 
+#: contents/ui/components/AnalysisModels.qml
 #: contents/ui/components/ProviderCostSection.qml scripts/smoke/Capture.qml
 msgid "No model breakdown for this period."
 msgstr "No hay desglose por modelo para este período."
 
+#: contents/ui/components/AnalysisModels.qml
 #: contents/ui/components/ProviderCostSection.qml
 msgid "Model breakdown is partial."
 msgstr "El desglose por modelo es parcial."
@@ -1395,6 +1378,8 @@ msgstr "Modelos principales por tokens"
 msgid "Share AI usage"
 msgstr "Compartir uso de IA"
 
+#: contents/ui/components/AnalysisModels.qml
+#: contents/ui/components/AnalysisSummary.qml
 #: contents/ui/components/ShareUsageWindow.qml
 msgid "Unavailable"
 msgstr "No disponible"
@@ -1475,10 +1460,6 @@ msgstr "90 días"
 #: contents/ui/components/SpendView.qml
 msgid "Refresh local history"
 msgstr "Actualizar historial local"
-
-#: contents/ui/components/SpendView.qml
-msgid "History"
-msgstr "Historial"
 
 #: contents/ui/components/SpendView.qml
 msgid "History range"
@@ -1614,14 +1595,6 @@ msgstr ""
 #: contents/ui/configAiInsights.qml
 msgid "Enable AI Insights"
 msgstr "Activar Análisis con IA"
-
-#: contents/ui/configAiInsights.qml
-msgid ""
-"Shows a short AI-generated summary of your usage in Overview. Nothing is "
-"sent and no AI service is contacted while this is off."
-msgstr ""
-"Muestra en Resumen un breve resumen de su uso generado por IA. Mientras esté "
-"desactivado, no se envía nada ni se contacta con ningún servicio de IA."
 
 #: contents/ui/configAiInsights.qml
 msgid "Model"
@@ -2126,8 +2099,8 @@ msgstr "Avisos de cuota"
 msgid "Quota warning (% used):"
 msgstr "Aviso de cuota (% usado):"
 
-#, kde-format
 #: contents/ui/components/ProviderCostDetails.qml
+#, kde-format
 msgid "%1% used"
 msgstr "%1 % usado"
 
@@ -2730,7 +2703,8 @@ msgstr "Recargar"
 msgid "Reload provider list"
 msgstr "Recargar lista de proveedores"
 
-#: contents/ui/configDiagnostics.qml contents/ui/configProviders.qml
+#: contents/ui/components/SpendView.qml contents/ui/configDiagnostics.qml
+#: contents/ui/configProviders.qml
 msgid "All providers"
 msgstr "Todos los proveedores"
 
@@ -3032,7 +3006,7 @@ msgstr ""
 msgid "Could not parse codexbar JSON: %1"
 msgstr "No se ha podido analizar el JSON de codexbar: %1"
 
-#: contents/ui/controllers/UsageController.qml
+#: contents/ui/configProviders.qml contents/ui/controllers/UsageController.qml
 msgid "Could not load CodexBar provider configuration."
 msgstr "No se ha podido cargar la configuración de proveedores de CodexBar."
 
@@ -3338,9 +3312,10 @@ msgstr "Distribución del uso"
 msgid "Latest dashboard day"
 msgstr "Último día del panel"
 
-#, kde-format
+#: contents/ui/components/AnalysisSummary.qml
 #: contents/ui/components/CostText.qml
-#: contents/ui/components/ShareUsageWindow.qml
+#: contents/ui/components/ShareUsageWindow.qml scripts/smoke/Capture.qml
+#, kde-format
 msgid "%1%"
 msgstr "%1 %"
 
@@ -3368,7 +3343,7 @@ msgstr "Cuenta oculta"
 msgid "No usage yet"
 msgstr "Aún no hay uso"
 
-#: contents/ui/main.qml
+#: contents/ui/components/AnalysisLimits.qml contents/ui/main.qml
 msgid "Limits not available"
 msgstr "Límites no disponibles"
 
@@ -3467,18 +3442,18 @@ msgstr "Mant."
 msgid "On pace"
 msgstr "Ritmo previsto"
 
-#, kde-format
 #: contents/ui/components/UsageWindowText.qml scripts/smoke/Capture.qml
+#, kde-format
 msgid "%1% in deficit"
 msgstr "%1 % por encima de lo previsto"
 
-#, kde-format
 #: contents/ui/components/UsageWindowText.qml
+#, kde-format
 msgid "%1% in reserve"
 msgstr "%1 % de reserva"
 
-#, kde-format
 #: contents/ui/components/UsageWindowText.qml scripts/smoke/Capture.qml
+#, kde-format
 msgid "Expected %1% used"
 msgstr "Uso previsto: %1 %"
 
@@ -3780,8 +3755,8 @@ msgstr "Web"
 msgid "Choose a source"
 msgstr "Elija una fuente"
 
-#, kde-format
 #: contents/ui/components/UsageWindowText.qml scripts/smoke/Capture.qml
+#, kde-format
 msgid "%1 (confidence unknown)"
 msgstr "%1 (fiabilidad desconocida)"
 
@@ -3899,7 +3874,7 @@ msgstr "Fuente solicitada: este equipo"
 msgid "Sources requested: this computer + SSH"
 msgstr "Fuentes solicitadas: este equipo + SSH"
 
-#: contents/ui/components/IdentifiedTokensSection.qml
+#: contents/ui/components/IdentifiedTokensSection.qml scripts/smoke/Capture.qml
 msgid "Some requests could not be included. This subtotal is partial."
 msgstr "Algunas solicitudes no se pudieron incluir. Este subtotal es parcial."
 
@@ -3953,37 +3928,9 @@ msgstr "La fuente proporciona los porcentajes de uso; algunos detalles pueden no
 msgid "Reset unavailable"
 msgstr "Hora de restablecimiento no disponible"
 
-#: contents/ui/components/AiInsightsCard.qml
-msgid "Open analysis"
-msgstr "Abrir análisis"
-
-#: contents/ui/components/AiInsightsView.qml
+#: contents/ui/components/AnalysisAssistant.qml
 msgid "Generated %1"
 msgstr "Generado el %1"
-
-#: contents/ui/components/AiInsightsView.qml
-msgid "A new insight is generated automatically at most every %1 hour."
-msgid_plural "A new insight is generated automatically at most every %1 hours."
-msgstr[0] "Se genera un nuevo análisis automáticamente como máximo cada %1 hora."
-msgstr[1] "Se genera un nuevo análisis automáticamente como máximo cada %1 horas."
-
-#: contents/ui/components/AiInsightsView.qml
-msgid "A new insight is generated only when you ask for one."
-msgstr "Se genera un nuevo análisis solo cuando usted lo solicita."
-
-#: contents/ui/components/AiInsightsView.qml
-msgid ""
-"Uses only quota, pace, incident, and 7-day spend and token data. Account "
-"names, projects, and paths are never sent."
-msgstr "Usa solo datos de cuota, ritmo de consumo, incidencias, gasto y tokens de 7 días. Nunca se envían nombres de cuentas, proyectos ni rutas."
-
-#: contents/ui/components/AiInsightsView.qml
-msgid "Back to %1"
-msgstr "Volver a %1"
-
-#: contents/ui/components/AiInsightsView.qml
-msgid "About this insight"
-msgstr "Acerca de este análisis"
 
 #: contents/ui/components/ProviderNames.qml
 msgid "Future AGI"
@@ -4001,13 +3948,13 @@ msgstr "No se pudo verificar la CLI gestionada existente. Seleccione otra CLI en
 msgid "Color preview:"
 msgstr "Vista previa de colores:"
 
-#, kde-format
 #: contents/ui/configNotifications.qml
+#, kde-format
 msgid "Warning from %1%"
 msgstr "Aviso desde el %1 %"
 
-#, kde-format
 #: contents/ui/configNotifications.qml
+#, kde-format
 msgid "Critical from %1%"
 msgstr "Crítico desde el %1 %"
 
@@ -4077,13 +4024,13 @@ msgstr "Clave de licencia para %1. Esta clave puede autorizar solicitudes de IA.
 msgid "Warning"
 msgstr "Advertencia"
 
-#, kde-format
 #: contents/ui/components/FullRepresentation.qml
+#, kde-format
 msgid "Warning at %1% used"
 msgstr "Aviso al %1 % de uso"
 
-#, kde-format
 #: contents/ui/components/FullRepresentation.qml
+#, kde-format
 msgid "Critical at %1% used"
 msgstr "Crítico al %1 % de uso"
 
@@ -4279,7 +4226,7 @@ msgstr "No se pudo iniciar la configuración de credenciales. Comprueba python3,
 msgid "%1 command failed. Try again."
 msgstr "El comando de %1 ha fallado. Inténtelo de nuevo."
 
-#: contents/ui/configProviders.qml
+#: contents/ui/configProviders.qml scripts/smoke/Capture.qml
 msgid "Set cookie…"
 msgstr "Establecer cookie…"
 
@@ -4407,12 +4354,12 @@ msgstr "Cabecera Cookie que contiene sessionKey"
 msgid "Claude Platform session validated and saved."
 msgstr "Sesión de Claude Platform validada y guardada."
 
-#: contents/ui/configProviders.qml
+#: contents/ui/configProviders.qml scripts/smoke/Capture.qml
 msgid "Validate and import session…"
 msgstr "Validar e importar sesión…"
 
 
-#: contents/ui/components/PanelText.qml
+#: contents/ui/components/PanelText.qml scripts/smoke/Capture.qml
 msgid "Spend %1 / %2"
 msgstr "Gasto %1 / %2"
 
@@ -4444,3 +4391,164 @@ msgstr "%1 % al día hasta el reinicio"
 msgctxt "Status of one service component"
 msgid "Information"
 msgstr "Información"
+
+#: contents/ui/components/AnalysisAssistant.qml
+msgid "Summarize usage"
+msgstr "Resumir el uso"
+
+#: contents/ui/components/AnalysisAssistant.qml
+msgid "What changed this week?"
+msgstr "¿Qué cambió esta semana?"
+
+#: contents/ui/components/AnalysisAssistant.qml
+msgid "How much headroom remains?"
+msgstr "¿Cuánto margen queda?"
+
+#: contents/ui/components/AnalysisAssistant.qml
+msgid "What should I investigate?"
+msgstr "¿Qué debería examinar?"
+
+#: contents/ui/components/AnalysisAssistant.qml
+msgid "Ask the data"
+msgstr "Consultar los datos"
+
+#: contents/ui/components/AnalysisAssistant.qml
+msgid ""
+"All providers: current quotas and the last 7 complete days versus the "
+"previous 7. Independent of the chart filters."
+msgstr ""
+"Todos los proveedores: cuotas actuales y últimos 7 días completos frente a "
+"los 7 anteriores. Independiente de los filtros del gráfico."
+
+#: contents/ui/components/AnalysisAssistant.qml
+msgid "Analysis question"
+msgstr "Pregunta de análisis"
+
+#: contents/ui/components/AnalysisAssistant.qml
+msgid ""
+"Saved answers describe the measurements at generation time. Account names, "
+"projects, paths and prompts are never sent."
+msgstr ""
+"Las respuestas guardadas describen las mediciones en el momento de su "
+"generación. Nunca se envían nombres de cuentas, proyectos, rutas ni "
+"instrucciones."
+
+#: contents/ui/components/AnalysisLimits.qml
+msgid ""
+"Current limits have different capacities and reset windows. Their "
+"percentages are not additive."
+msgstr ""
+"Los límites actuales tienen distintas capacidades y períodos de "
+"restablecimiento. Sus porcentajes no se suman."
+
+#: contents/ui/components/AnalysisModels.qml
+msgid "Models and token composition"
+msgstr "Modelos y composición de tokens"
+
+#: contents/ui/components/AnalysisSummary.qml
+msgid "%1×"
+msgstr "%1×"
+
+#: contents/ui/components/AnalysisSummary.qml
+msgid "No baseline"
+msgstr "Sin referencia"
+
+#: contents/ui/components/AnalysisSummary.qml
+msgid "Last 7 days vs previous 7"
+msgstr "Últimos 7 días frente a los 7 anteriores"
+
+#: contents/ui/components/SpendView.qml
+msgid "Local history, current limits and optional AI analysis"
+msgstr "Historial local, límites actuales y análisis de IA opcional"
+
+#: contents/ui/components/SpendView.qml
+msgid "Compact analysis"
+msgstr "Análisis compacto"
+
+#: contents/ui/components/SpendView.qml
+msgid "Expand analysis"
+msgstr "Ampliar análisis"
+
+#: contents/ui/components/SpendView.qml
+msgid "Provider filter"
+msgstr "Filtro de proveedores"
+
+#: contents/ui/components/SpendView.qml
+msgid "Limits"
+msgstr "Límites"
+
+#: contents/ui/components/SpendView.qml
+msgid "Providers on %1"
+msgstr "Proveedores el %1"
+
+#: contents/ui/configAiInsights.qml
+msgid ""
+"Enables guided questions in Usage & Spend. Nothing is sent and no AI service "
+"is contacted while this is off."
+msgstr ""
+"Activa preguntas guiadas en Uso y gastos. Mientras esté desactivado, no se "
+"envía nada ni se contacta con ningún servicio de IA."
+
+#~ msgid ""
+#~ "Shows a short AI-generated summary of your usage in Overview. Nothing is "
+#~ "sent and no AI service is contacted while this is off."
+#~ msgstr ""
+#~ "Muestra en Resumen un breve resumen de su uso generado por IA. Mientras "
+#~ "esté desactivado, no se envía nada ni se contacta con ningún servicio de "
+#~ "IA."
+
+#~ msgid ""
+#~ "The saved insight belongs to other settings or another language. Generate "
+#~ "a new one when needed."
+#~ msgstr ""
+#~ "El análisis guardado pertenece a otra configuración o a otro idioma. "
+#~ "Genere uno nuevo cuando lo necesite."
+
+#~ msgid "No insight generated yet."
+#~ msgstr "Aún no se ha generado ningún análisis."
+
+#~ msgid "Out of date, %1"
+#~ msgstr "Desactualizado, %1"
+
+#~ msgid "Beta"
+#~ msgstr "Beta"
+
+#~ msgid "Regenerate insight"
+#~ msgstr "Regenerar análisis"
+
+#~ msgid "Generating insight…"
+#~ msgstr "Generando análisis…"
+
+#~ msgid "History"
+#~ msgstr "Historial"
+
+#~ msgid "Open analysis"
+#~ msgstr "Abrir análisis"
+
+#~ msgid "A new insight is generated automatically at most every %1 hour."
+#~ msgid_plural ""
+#~ "A new insight is generated automatically at most every %1 hours."
+#~ msgstr[0] ""
+#~ "Se genera un nuevo análisis automáticamente como máximo cada %1 hora."
+#~ msgstr[1] ""
+#~ "Se genera un nuevo análisis automáticamente como máximo cada %1 horas."
+
+#~ msgid "A new insight is generated only when you ask for one."
+#~ msgstr "Se genera un nuevo análisis solo cuando usted lo solicita."
+
+#~ msgid ""
+#~ "Uses only quota, pace, incident, and 7-day spend and token data. Account "
+#~ "names, projects, and paths are never sent."
+#~ msgstr ""
+#~ "Usa solo datos de cuota, ritmo de consumo, incidencias, gasto y tokens de "
+#~ "7 días. Nunca se envían nombres de cuentas, proyectos ni rutas."
+
+#~ msgid "Back to %1"
+#~ msgstr "Volver a %1"
+
+#~ msgid "About this insight"
+#~ msgstr "Acerca de este análisis"
+
+#: contents/ui/components/AnalysisSummary.qml
+msgid "Comparison excludes today and needs 14 complete days plus a scan from today."
+msgstr "La comparación excluye hoy y requiere 14 días completos y un análisis realizado hoy."

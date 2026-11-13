@@ -260,8 +260,6 @@ work and upstream contract requirements.
   session metadata also reveal their full displayed text on hover when truncated.
   A truncated Sessions title also appears with the copy action label when its
   copy button has keyboard focus; the containing card shows a focus outline.
-  The AI Insights Back button stays within the popup and reveals a truncated
-  destination on hover or keyboard focus.
   Keyboard focus also reveals the name of a truncated or icon-only global tab.
   Other text that fits gets no tooltip, apart from provider-tab quota descriptions.
 - Refresh, copy, share, hide and tab-scroll icon buttons show their action
@@ -326,10 +324,22 @@ work and upstream contract requirements.
   stay in place.
   Overview, Usage & Spend, Sessions and provider headers use the theme's smaller
   text for summary and update metadata beneath their titles.
-- Global **Usage & Spend** tab with a Cost/Tokens toggle, a range selector
+- Global **Usage & Spend** tab with a provider filter, Cost/Tokens and Limits controls, and a range selector
   (7, 30, or 90 days, **Month to date**, or **All history**), interactive daily chart, activity heatmap, and provider totals that
   keep different currencies separate. The range selector matches the metric
   toggle's minimum height and includes its current value in its accessible name.
+  **Expand analysis** widens the popup for a side-by-side chart and provider list;
+  **Compact analysis** restores the stacked layout. Bars use provider colors
+  when the full split is known. Selecting a provider filters local analytics;
+  selecting a day scopes provider and model details, while headline
+  totals keep the selected period and projects appear only with **All days**. **All days** clears the day selection.
+  **Models and token composition** and **Activity heatmap** expand on demand.
+  **Last 7 days vs previous 7** excludes today and requires fourteen complete
+  days plus a current scan. Short, partial, stale, or ambiguous histories show
+  unavailable instead of extrapolating. Different currencies are not converted.
+  **Limits** shows current provider quotas and reset windows independently of
+  history filters; percentages are not additive across providers. Refresh updates
+  current usage in Limits and local history in Cost/Tokens.
   Chart and heatmap dates use the system
   locale's short date format. Chart guide lines follow theme text-color changes
   while the popup stays open. Hovering or using the arrow keys to inspect a
@@ -1198,7 +1208,7 @@ fields; track proposed extensions in the issue tracker.
   Open Status Page at the end of the list opens the site;
   other providers keep opening it directly. A page that cannot be read shows
   the status as unavailable and leaves the provider's CLI status unchanged.
-  Switching tabs, opening AI Insights, or closing the popup closes the list
+  Switching tabs or closing the popup closes the list
   and retires its pending request. Expanding it again fetches fresh status.
 - Optional quota warning markers on usage bars. Pace and warning markers keep
   a thin background edge, so they stay visible where they cross the colored
@@ -1554,7 +1564,7 @@ A restored CLI does not roll back upstream provider configuration changes.
 
 ## AI Insights
 
-AI Insights is an optional beta card that asks a language model for a short
+AI Insights is an optional beta assistant that asks a language model for a short
 explanation of your current usage: a quota likely to run out before its reset,
 a notable change in spending or tokens between the last two complete weeks, or
 a notable difference between providers. It explains facts the widget has
@@ -1562,7 +1572,8 @@ already measured; forecasts come from the CLI pace data, and comparisons appear
 only when the history supports them. Quota signals use the measured percentage
 without rounding across warning or exhaustion thresholds. It is off by default.
 While it is off, the widget builds no AI data, starts no AI process, contacts no AI service, and
-shows no card. The [AI Insights reference](ai-insights.md) documents the data
+hides saved answers. The **Ask the data** disclosure can still link to setup.
+The [AI Insights reference](ai-insights.md) documents the data
 and request contracts.
 
 Usage snapshots reach the AI helper through private one-use temporary files,
@@ -1580,22 +1591,21 @@ matches the installed `:latest` variant, including names such as
 `registry.example:5000/team/model`; the registry port is not a model tag.
 Changing the model clears the
 previous test result. Disabling AI Insights on this settings page retires any
-pending connection test or wallet operation and ignores its late reply. The card
+pending connection test or wallet operation and ignores its late reply. The assistant
 and settings reject success replies from a helper that exits with an error or
 crashes; a failed generation keeps the previous insight available.
-The card appears at the end of **Overview**. Without an Overview tab (one provider, or a
-fixed provider in Diagnostics), it appears in the provider view instead. The
-card's **Generate insight** button creates the first insight; afterwards the
-wand button in its header refreshes it. The Overview refresh button still
-refreshes usage only. The card shows up to three lines of the summary with the
-provider, model, and the insight's age. Hover over that line when it is truncated
-to read its full text; **Open analysis** opens a dedicated view inside the popup with the full
-summary and highlights. The back arrow names the previous view, displays provider
-titles as literal text, and returns to its saved scroll position. Opening or
-leaving the analysis does not generate an insight or scan cost history. The
-analysis uses the same saved answer as the card; a new usage refresh does not
-rewrite it. The enable switch's
-helper note in settings aligns with its label, matching the other settings pages.
+Open **Ask the data** in **Usage & Spend** and choose **Summarize usage**,
+**What changed this week?**, **How much headroom remains?**, or **What should I
+investigate?**. Then press **Generate insight**. The assistant shows the saved
+question, full summary and highlights, generation time, service, model, and age.
+It replaces the former Overview card and separate analysis page. A widget fixed
+to one provider in Diagnostics shows the enabled assistant on that provider page.
+Opening the disclosure does not make a request or scan history. Chart filters
+never change the AI scope: it uses current data across providers and available
+comparisons of the last two complete weeks. It can explain measured differences
+and CLI forecasts, or suggest which evidence to inspect. It does not diagnose
+causes, infer model quality, or promise savings. Automatic generation always
+requests a summary; a new usage refresh does not rewrite a saved answer.
 
 - **Ollama** runs models on your computer. The default address is
   `http://localhost:11434` and needs no API key. Install a model first, for
@@ -1658,7 +1668,7 @@ removes it.
 An insight older than the interval (a day in manual mode), or followed by a
 failed attempt, is labeled out of date beside its age.
 
-When a provider is unavailable, the card keeps usage data untouched and shows a
+When a provider is unavailable, the assistant keeps usage data untouched and shows a
 short reason, such as Ollama not running, a rejected key, missing credits, a
 rate limit, an unsupported model, or an unreadable answer. Automatic generation
 then waits for the next interval, because a failed or timed-out request may

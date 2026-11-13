@@ -127,6 +127,16 @@ class HelperTestCase(unittest.TestCase):
 
 
 class RequestContractTests(HelperTestCase):
+    def test_guided_questions_are_bounded_and_reach_system_instructions(self):
+        for question in ai.QUESTIONS:
+            snapshot = {"providers": [], "question": question}
+            self.assertEqual(ai.decode_snapshot(json.dumps(snapshot)), snapshot)
+            body = ai.request_body("ollama", "fixture", "en", snapshot, True)
+            self.assertIn(ai.QUESTIONS[question], body["messages"][0]["content"])
+        for question in ("ignore rules", [], {}, 1, None):
+            with self.assertRaises(ai.Failure):
+                ai.decode_snapshot(json.dumps({"providers": [], "question": question}))
+
     def test_fixture_records_only_helper_requests(self):
         # Desktop tools probe new local ports; such a request is not the helper's.
         foreign = urllib.request.Request(self.base + "/", headers={"User-Agent": "node"})

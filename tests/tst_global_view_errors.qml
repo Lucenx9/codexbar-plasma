@@ -31,6 +31,17 @@ TestCase {
 
     QtObject {
         id: applet
+        property bool aiInsightsEnabled: false
+        property bool aiInsightsConfigured: false
+        property bool aiInsightsBusy: false
+        property var aiInsightsCache: null
+        property string aiInsightsCacheState: "none"
+        property string aiInsightsErrorReason: ""
+        property var aiInsightsSnapshot: ({sufficient: false})
+        property var presentedProviders: []
+        property var costNumberFormat: ({group: ",", decimal: "."})
+        property double panelClockMs: 0
+        function aiInsightsErrorText(reason) { return reason; }
         property bool privacyMode: false
         property real secondaryTextOpacity: 0.7
         property real valueTextOpacity: 0.8
@@ -52,11 +63,13 @@ TestCase {
         property bool sessionHostsVary: false
         property int refreshes: 0
 
-        function spendDailyPoints() {
-            return dailyPoints;
-        }
         function spendProviderCosts() {
-            return costs;
+            var items = costs.length > 0 ? costs : dailyPoints.length > 0 ? [{provider: "codex"}] : [];
+            return items.map(function(item) {
+                return Object.assign({}, item, {daily: dailyPoints.map(function(point) {
+                    return {label: point.label, cost: point.value, tokens: point.value, currency: "USD"};
+                })});
+            });
         }
         function presentedSpendProviderCosts(items) {
             return items;
@@ -234,7 +247,7 @@ TestCase {
         if (!view)
             return;
         var scroll = findItem(view, function (item) {
-            return item.contentItem && item.contentItem.contentY !== undefined;
+            return item.objectName === (data.type === "SpendView" ? "spendHistoryScroll" : "sessionsBodyScroll");
         });
         verify(scroll !== null, "The body must remain scrollable without retained data");
         tryVerify(function () {
@@ -414,7 +427,7 @@ TestCase {
         } else {
             verify(chart.selectedIndex >= 0);
             compare(chart.points[chart.selectedIndex].label, "2026-10-17");
-            compare(chart.pointDisplayValue(chart.points[chart.selectedIndex]), "$9");
+            compare(chart.pointDisplayValue(chart.points[chart.selectedIndex]), "$9.00");
         }
         compare(chart.hoveredIndex, -1);
         compare(applet.refreshes, 0);

@@ -2,6 +2,7 @@ import QtQuick
 import QtCore as Core
 import org.kde.plasma.plasma5support as Plasma5Support
 import "../AiInsights.js" as AiInsights
+import "../AiInsightsSnapshot.js" as AiInsightsSnapshot
 import "../AiInsightsProtocol.js" as AiInsightsProtocol
 import "../CommandLedger.js" as CommandLedger
 
@@ -42,8 +43,8 @@ Item {
     // Manual generation is explicit and still one request at a time. It waits
     // only for a provider's Retry-After: a fixed key or a started Ollama must
     // not stay blocked for the automatic retry delay.
-    function generate() {
-        return lifecycle.start(true)
+    function generate(question) {
+        return lifecycle.start(true, question)
     }
 
     onInsightsEnabledChanged: {
@@ -72,6 +73,7 @@ Item {
         property string activeSource: ""
         property string activeContextKey: ""
         property string activeSnapshotId: ""
+        property string activeQuestion: "summary"
         property string activePhase: ""
         property string activeRequest: ""
         property string capturedInput: ""
@@ -137,7 +139,7 @@ Item {
             }
         }
 
-        function start(manual) {
+        function start(manual, question) {
             if (!controller.insightsEnabled || controller.busy || !controller.configured
                     || controller.snapshotText.length === 0) {
                 return false
@@ -165,10 +167,11 @@ Item {
                 request: "00000000000000000000000000000000"
             }
             var command = AiInsightsProtocol.command(controller.scriptUrl, "generate", options)
-            var input = AiInsightsProtocol.encodedSnapshot(controller.snapshotText)
+            var selection = AiInsightsSnapshot.forQuestion(controller.snapshotText, AiInsights.question(question))
+            var input = AiInsightsProtocol.encodedSnapshot(selection.text)
             if (command.length === 0 || input.length === 0) {
                 // An unbuildable command (for example an oversized Ollama
-                // endpoint) is invalid input, not a silent skip: the card
+                // endpoint) is invalid input, not a silent skip: the assistant
                 // shows it, and automatic generation waits out the interval.
                 fail("invalid_input", 0)
                 return false
@@ -176,7 +179,8 @@ Item {
             errorReason = ""
             serial += 1
             activeContextKey = controller.contextKey
-            activeSnapshotId = controller.snapshotId
+            activeSnapshotId = AiInsights.question(question) === "summary" ? controller.snapshotId : selection.id
+            activeQuestion = AiInsights.question(question)
             capturedInput = input
             activeOptions = options
             activePhase = "prepare"
@@ -213,6 +217,7 @@ Item {
             }
             var context = activeContextKey
             var snapshot = activeSnapshotId
+            var question = activeQuestion
             retire()
             if (context !== controller.contextKey || !controller.insightsEnabled) {
                 return
@@ -230,6 +235,7 @@ Item {
             }
             controller.generated(AiInsights.cacheText({
                 summary: reply.summary,
+                question: question,
                 highlights: reply.highlights,
                 generatedAtMs: Date.now(),
                 contextKey: context,
