@@ -7,6 +7,7 @@ import org.kde.plasma.plasma5support as Plasma5Support
 import org.kde.plasma.plasmoid
 import "components" as Components
 import "AiInsights.js" as AiInsights
+import "AiInsightsProtocol.js" as AiInsightsProtocol
 import "CommandLedger.js" as CommandLedger
 
 KCM.SimpleKCM {
@@ -144,7 +145,7 @@ KCM.SimpleKCM {
         if (!cfg_aiInsightsEnabled || busy) {
             return false
         }
-        var command = AiInsights.command(scriptUrl, action, {
+        var command = AiInsightsProtocol.command(scriptUrl, action, {
             provider: provider,
             endpoint: cfg_aiInsightsOllamaEndpoint,
             prompt: i18n("%1 API key for CodexBar AI Insights", providerName)
@@ -181,13 +182,13 @@ KCM.SimpleKCM {
         var action = activeAction
         retire()
         var stdout = data ? data["stdout"] : ""
-        var processResult = AiInsights.processResult(data)
+        var processResult = AiInsightsProtocol.processResult(data)
         var exitCode = processResult.exitCode
         var exitStatus = processResult.exitStatus
         if (action === "key-status") {
-            keyStatus = AiInsights.statusReply(stdout, ["present", "absent", "unavailable"], exitCode, exitStatus)
+            keyStatus = AiInsightsProtocol.statusReply(stdout, ["present", "absent", "unavailable"], exitCode, exitStatus)
         } else if (action === "set-key") {
-            const saved = AiInsights.statusReply(stdout,
+            const saved = AiInsightsProtocol.statusReply(stdout,
                 ["saved", "cancelled", "invalid", "dialog_missing", "unavailable"], exitCode, exitStatus)
             if (saved === "saved") {
                 report(i18n("API key saved in the system wallet."), false)
@@ -203,12 +204,12 @@ KCM.SimpleKCM {
             }
             Qt.callLater(refreshKeyStatus)
         } else if (action === "clear-key") {
-            const cleared = AiInsights.statusReply(stdout, ["cleared", "unavailable"], exitCode, exitStatus)
+            const cleared = AiInsightsProtocol.statusReply(stdout, ["cleared", "unavailable"], exitCode, exitStatus)
             report(cleared === "cleared" ? i18n("API key removed from the system wallet.")
                 : i18n("Could not remove the API key. The system wallet is unavailable."), cleared !== "cleared")
             Qt.callLater(refreshKeyStatus)
         } else if (action === "models") {
-            const result = AiInsights.modelsReply(stdout, exitCode, exitStatus)
+            const result = AiInsightsProtocol.modelsReply(stdout, exitCode, exitStatus)
             // The test read the wallet itself, so its answer replaces a status
             // lookup that failed or timed out, for example on a locked wallet.
             if (result.key === "valid") {

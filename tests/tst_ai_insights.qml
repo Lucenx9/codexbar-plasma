@@ -1,6 +1,7 @@
 import QtQuick
 import QtTest
 import "../contents/ui/AiInsights.js" as AiInsights
+import "../contents/ui/AiInsightsProtocol.js" as AiInsightsProtocol
 
 TestCase {
     name: "AiInsights"
@@ -202,7 +203,7 @@ TestCase {
 
     function test_modelListedWithRegistryPort(data) {
         verify(AiInsights.validModel("ollama", data.model))
-        var reply = AiInsights.modelsReply(JSON.stringify({status: "ok", key: "none",
+        var reply = AiInsightsProtocol.modelsReply(JSON.stringify({status: "ok", key: "none",
             models: [{id: data.listed}]}), 0, 0)
         compare(reply.outcome, "ok")
         compare(AiInsights.modelListed("ollama", data.model, reply.models), data.expected)
@@ -217,7 +218,7 @@ TestCase {
     }
 
     function test_generateCommandCarriesLanguageAndNoSecrets() {
-        var command = AiInsights.command("file:///opt/pkg/scripts/ai-insights.py", "generate", {
+        var command = AiInsightsProtocol.command("file:///opt/pkg/scripts/ai-insights.py", "generate", {
             provider: "openrouter", model: "vendor/model", language: "it", zdr: true,
             request: "0123456789abcdef0123456789abcdef", snapshot: '{"providers":[{"id":"codex\'s"}]}'})
         verify(command.indexOf("exec timeout --kill-after=2s 180s python3 '/opt/pkg/scripts/ai-insights.py'") === 0, command)
@@ -229,7 +230,7 @@ TestCase {
         verify(command.indexOf("--no-zdr") < 0)
         verify(command.indexOf("--endpoint") < 0)
         verify(!/key|token|bearer|authorization/i.test(command.replace("ai-insights", "")), command)
-        var english = AiInsights.command("file:///opt/pkg/scripts/ai-insights.py", "generate", {
+        var english = AiInsightsProtocol.command("file:///opt/pkg/scripts/ai-insights.py", "generate", {
             provider: "openrouter", model: "vendor/model", language: "english", zdr: false,
             request: "0123456789abcdef0123456789abcdef"})
         verify(english.indexOf("--language en ") >= 0 && english.indexOf("--no-zdr") > 0, english)
@@ -237,42 +238,44 @@ TestCase {
 
     function test_commandRejectsUnsafeInputs() {
         var script = "file:///opt/pkg/scripts/ai-insights.py"
-        compare(AiInsights.command(script, "generate", {provider: "openrouter", model: "openrouter/auto", snapshot: "{}"}), "")
-        compare(AiInsights.command(script, "generate", {provider: "openai", model: "$(id)", snapshot: "{}"}), "")
-        compare(AiInsights.command(script, "generate", {provider: "openai", model: "gpt-x", request: "../private"}), "")
-        compare(AiInsights.command(script, "generate", {provider: "openai", model: "gpt-x",
-            snapshot: new Array(AiInsights.maximumSnapshotLength + 2).join("x")}), "")
-        compare(AiInsights.command(script, "shell", {provider: "openai"}), "")
-        compare(AiInsights.command("https://example.com/x.py", "models", {provider: "openai"}), "")
-        var ollama = AiInsights.command(script, "models", {provider: "ollama", endpoint: "http://x'; id; '"})
+        compare(AiInsightsProtocol.command(script, "generate", {provider: "openrouter", model: "openrouter/auto", snapshot: "{}"}), "")
+        compare(AiInsightsProtocol.command(script, "generate", {provider: "openai", model: "$(id)", snapshot: "{}"}), "")
+        compare(AiInsightsProtocol.command(script, "generate", {provider: "openai", model: "gpt-x", request: "../private"}), "")
+        compare(AiInsightsProtocol.command(script, "generate", {provider: "openai", model: "gpt-x",
+            snapshot: new Array(AiInsightsProtocol.maximumSnapshotLength + 2).join("x")}), "")
+        for (var action of ["shell", "__proto__", "constructor", "toString", ["models"], {action: "models"}, null]) {
+            compare(AiInsightsProtocol.command(script, action, {provider: "openai"}), "")
+        }
+        compare(AiInsightsProtocol.command("https://example.com/x.py", "models", {provider: "openai"}), "")
+        var ollama = AiInsightsProtocol.command(script, "models", {provider: "ollama", endpoint: "http://x'; id; '"})
         verify(ollama.indexOf("--endpoint 'http://x'\\''; id; '\\'''") > 0, ollama)
-        compare(AiInsights.command(script, "generate", {provider: "ollama", model: "llama3",
-            endpoint: new Array(AiInsights.maximumEndpointLength + 2).join("x"), snapshot: "{}"}), "")
+        compare(AiInsightsProtocol.command(script, "generate", {provider: "ollama", model: "llama3",
+            endpoint: new Array(AiInsightsProtocol.maximumEndpointLength + 2).join("x"), snapshot: "{}"}), "")
     }
 
     function test_preparedInputRequiresSuccessfulBoundedLocalDescriptor() {
         var request = "0123456789abcdef0123456789abcdef"
         var descriptor = JSON.stringify({status: "ready", request: request,
             path: "/tmp/test 'dir/codexbar-plasma-ai-1000/" + request + "/payload.ini"})
-        compare(AiInsights.preparedInput(descriptor, 0, 0).location,
+        compare(AiInsightsProtocol.preparedInput(descriptor, 0, 0).location,
             "file:///tmp/test%20'dir/codexbar-plasma-ai-1000/" + request + "/payload.ini")
-        compare(AiInsights.preparedInput(descriptor, 1, 0), null)
-        compare(AiInsights.preparedInput(descriptor, 0, 1), null)
-        for (var path of ["https://host/" + request + "/payload.ini", "/tmp/other.ini", "/tmp/\n/" + request + "/payload.ini",
+        compare(AiInsightsProtocol.preparedInput(descriptor, 1, 0), null)
+        compare(AiInsightsProtocol.preparedInput(descriptor, 0, 1), null)
+        for (var path of [null, 7, [], "/".repeat(4097), "https://host/" + request + "/payload.ini", "/tmp/other.ini", "/tmp/\n/" + request + "/payload.ini",
                 "/tmp/" + request + "/payload.ini", "/tmp/other/" + request + "/payload.ini",
                 "/tmp/codexbar-plasma-ai-1000/../../home/user/codexbar-plasma-ai-1000/" + request + "/payload.ini",
                 "/tmp/./codexbar-plasma-ai-1000/" + request + "/payload.ini",
                 "/tmp//codexbar-plasma-ai-1000/" + request + "/payload.ini",
                 "/tmp/codexbar-plasma-ai-1000/" + request.replace("0", "1") + "/payload.ini"]) {
-            compare(AiInsights.preparedInput(JSON.stringify({status: "ready", request: request, path: path}), 0, 0), null)
+            compare(AiInsightsProtocol.preparedInput(JSON.stringify({status: "ready", request: request, path: path}), 0, 0), null)
         }
     }
 
     function test_snapshotEncodingIsBoundedAsciiWithoutQtVersionSpecificApis() {
-        compare(AiInsights.encodedSnapshot('{"providers":[]}'), "7b2270726f766964657273223a5b5d7d")
-        compare(AiInsights.encodedSnapshot("x".repeat(16384)).length, 32768)
+        compare(AiInsightsProtocol.encodedSnapshot('{"providers":[]}'), "7b2270726f766964657273223a5b5d7d")
+        compare(AiInsightsProtocol.encodedSnapshot("x".repeat(16384)).length, 32768)
         for (var input of ["", null, 7, "x".repeat(16385), "\u00e8", "\uD83D\uDE00"]) {
-            compare(AiInsights.encodedSnapshot(input), "")
+            compare(AiInsightsProtocol.encodedSnapshot(input), "")
         }
     }
 
@@ -301,12 +304,18 @@ TestCase {
             {tag: "unknown process result", text: JSON.stringify({status: "ok", summary: "Unconfirmed insight"}),
                 exitCode: NaN, outcome: "error", reason: "unavailable"},
             {tag: "normal exit 9", text: "", exitCode: 9, exitStatus: 0, outcome: "error", reason: "format"},
-            {tag: "helper exit", text: "", exitCode: 1, outcome: "error", reason: "format"}
+            {tag: "helper exit", text: "", exitCode: 1, outcome: "error", reason: "format"},
+            {tag: "retry on helper error", text: JSON.stringify({status: "error", reason: "rate_limited", retryAfter: 60}),
+                exitCode: 1, outcome: "error", reason: "rate_limited", retryAfterSeconds: 60},
+            {tag: "timeout discards retry", text: JSON.stringify({status: "error", reason: "rate_limited", retryAfter: 60}),
+                exitCode: 124, outcome: "error", reason: "timeout"},
+            {tag: "failed success discards retry", text: JSON.stringify({status: "ok", summary: "Unconfirmed", retryAfter: 60}),
+                exitCode: 1, outcome: "error", reason: "unavailable"}
         ]
     }
 
     function test_generationReplyValidation(data) {
-        var reply = AiInsights.generationReply(data.text, data.exitCode === undefined ? 0 : data.exitCode,
+        var reply = AiInsightsProtocol.generationReply(data.text, data.exitCode === undefined ? 0 : data.exitCode,
             data.exitStatus === undefined ? 0 : data.exitStatus)
         compare(reply.outcome, data.outcome)
         if (data.outcome === "ok") {
@@ -320,20 +329,20 @@ TestCase {
     }
 
     function test_modelsReplyValidation() {
-        var reply = AiInsights.modelsReply(JSON.stringify({status: "ok", key: "valid",
+        var reply = AiInsightsProtocol.modelsReply(JSON.stringify({status: "ok", key: "valid",
             models: [{id: "a/b"}, {id: "a/b"}, {id: "bad id"}, {id: 3}, null, {id: "llama3:8b"}]}), 0)
         compare(reply.models, ["a/b", "llama3:8b"])
         compare(reply.key, "valid")
-        compare(AiInsights.modelsReply(JSON.stringify({status: "error", reason: "auth"})).reason, "auth")
-        compare(AiInsights.modelsReply("oops").outcome, "error")
+        compare(AiInsightsProtocol.modelsReply(JSON.stringify({status: "error", reason: "auth"})).reason, "auth")
+        compare(AiInsightsProtocol.modelsReply("oops").outcome, "error")
         // The shell bound stopped the helper before it printed a listing.
-        compare(AiInsights.modelsReply("", 124).reason, "timeout")
-        compare(AiInsights.modelsReply("", 137).reason, "timeout")
-        compare(AiInsights.modelsReply("", 9, 1).reason, "timeout")
-        compare(AiInsights.modelsReply("", 9, 0).reason, "format")
-        compare(AiInsights.modelsReply("", 1).reason, "format")
-        compare(AiInsights.statusReply(JSON.stringify({status: "present"}), ["present", "absent"], 0), "present")
-        compare(AiInsights.statusReply(JSON.stringify({status: "sk-secret"}), ["present", "absent"], 0), "unavailable")
+        compare(AiInsightsProtocol.modelsReply("", 124).reason, "timeout")
+        compare(AiInsightsProtocol.modelsReply("", 137).reason, "timeout")
+        compare(AiInsightsProtocol.modelsReply("", 9, 1).reason, "timeout")
+        compare(AiInsightsProtocol.modelsReply("", 9, 0).reason, "format")
+        compare(AiInsightsProtocol.modelsReply("", 1).reason, "format")
+        compare(AiInsightsProtocol.statusReply(JSON.stringify({status: "present"}), ["present", "absent"], 0), "present")
+        compare(AiInsightsProtocol.statusReply(JSON.stringify({status: "sk-secret"}), ["present", "absent"], 0), "unavailable")
     }
 
     function test_processResultRejectsMalformedExitFields_data() {
@@ -354,17 +363,17 @@ TestCase {
     function test_processResultRejectsMalformedExitFields(data) {
         var ok = JSON.stringify({status: "ok", summary: "Unconfirmed insight", highlights: []})
         // A malformed exit code with a normal exit status must not confirm a reply.
-        var byCode = AiInsights.processResult({"stdout": ok, "exit code": data.code, "exit status": 0})
-        compare(AiInsights.generationReply(ok, byCode.exitCode, byCode.exitStatus).outcome, data.success ? "ok" : "error")
-        compare(AiInsights.statusReply(JSON.stringify({status: "saved"}), ["saved"], byCode.exitCode, byCode.exitStatus),
+        var byCode = AiInsightsProtocol.processResult({"stdout": ok, "exit code": data.code, "exit status": 0})
+        compare(AiInsightsProtocol.generationReply(ok, byCode.exitCode, byCode.exitStatus).outcome, data.success ? "ok" : "error")
+        compare(AiInsightsProtocol.statusReply(JSON.stringify({status: "saved"}), ["saved"], byCode.exitCode, byCode.exitStatus),
             data.success ? "saved" : "unavailable")
         // The same values in the exit status field must not read as a normal exit.
-        var byStatus = AiInsights.processResult({"stdout": ok, "exit code": 0, "exit status": data.code})
-        compare(AiInsights.generationReply(ok, byStatus.exitCode, byStatus.exitStatus).outcome, data.success ? "ok" : "error")
+        var byStatus = AiInsightsProtocol.processResult({"stdout": ok, "exit code": 0, "exit status": data.code})
+        compare(AiInsightsProtocol.generationReply(ok, byStatus.exitCode, byStatus.exitStatus).outcome, data.success ? "ok" : "error")
     }
 
     function test_processResultWithoutDataIsUnknown() {
-        var result = AiInsights.processResult(undefined)
+        var result = AiInsightsProtocol.processResult(undefined)
         verify(isNaN(result.exitCode))
         verify(isNaN(result.exitStatus))
     }
@@ -379,24 +388,24 @@ TestCase {
     }
 
     function test_failedProcessCannotConfirmModelsOrWalletState(data) {
-        var reply = AiInsights.modelsReply(JSON.stringify({status: "ok", key: "valid",
+        var reply = AiInsightsProtocol.modelsReply(JSON.stringify({status: "ok", key: "valid",
             models: [{id: "qwen3:4b"}]}), data.exitCode, data.exitStatus)
         compare(reply.outcome, "error")
         compare(reply.models, [])
         compare(reply.key, "")
         for (var status of ["present", "saved", "cleared"]) {
-            compare(AiInsights.statusReply(JSON.stringify({status: status}), [status],
+            compare(AiInsightsProtocol.statusReply(JSON.stringify({status: status}), [status],
                 data.exitCode, data.exitStatus), "unavailable")
         }
     }
 
     function test_safeReasonBoundsHelperReasons() {
-        compare(AiInsights.safeReason("auth"), "auth")
-        compare(AiInsights.safeReason("invalid_input"), "invalid_input")
-        compare(AiInsights.safeReason("<script>"), "unavailable")
-        compare(AiInsights.safeReason(""), "unavailable")
-        compare(AiInsights.safeReason(7), "unavailable")
-        compare(AiInsights.safeReason(null), "unavailable")
+        compare(AiInsightsProtocol.safeReason("auth"), "auth")
+        compare(AiInsightsProtocol.safeReason("invalid_input"), "invalid_input")
+        compare(AiInsightsProtocol.safeReason("<script>"), "unavailable")
+        compare(AiInsightsProtocol.safeReason(""), "unavailable")
+        compare(AiInsightsProtocol.safeReason(7), "unavailable")
+        compare(AiInsightsProtocol.safeReason(null), "unavailable")
     }
 
     function test_localEndpointPresentation() {

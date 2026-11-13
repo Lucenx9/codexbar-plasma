@@ -300,8 +300,11 @@ owns checkout setup, delivery, and repository maintenance.
   emits `attemptStarted`/`generated`/`rateLimitStored`; `main.qml` persists the
   attempt time, rate-limit deadline, and cached insight and builds the snapshot
   only while enabled. `AiInsights.js` owns the language tag, context key, cache
-  validation, schedule, retry delays, rate-limit record, model-list match,
-  helper command, and reply validation; `AiInsightsSnapshot.js` builds
+  validation, schedule, retry delays, rate-limit record and model-list match.
+  `AiInsightsProtocol.js` owns helper commands, private-input descriptors and
+  reply validation; both process owners call it directly. It uses the policy
+  module's shared language, model and text rules without owning cache state.
+  `AiInsightsSnapshot.js` builds
   the allowlisted snapshot and deterministic signals. `scripts/ai-insights.py`
   prepares a private one-use INI file for the controller's `QtCore.Settings`
   write; `scripts/lib/ai_insights_input.py` validates and removes it before
@@ -314,7 +317,7 @@ owns checkout setup, delivery, and repository maintenance.
   request. `configAiInsights.qml` owns the key-status, key, and model-discovery
   processes; `components/AiInsightsMessages.qml` localizes helper reasons for
   both surfaces. Both process owners read exit results through
-  `AiInsights.processResult`, which uses `Guards.exitCode`: null, booleans,
+  `AiInsightsProtocol.processResult`, which uses `Guards.exitCode`: null, booleans,
   blank strings, arrays, and missing fields never count as a successful exit.
   See the [AI Insights reference](ai-insights.md) for the
   boundary decision and contracts; keep it current with any change.
@@ -564,6 +567,11 @@ owns checkout setup, delivery, and repository maintenance.
   alone permits legacy empty successful output. The `enabledRoster` profile
   retains the read-only roster's tolerant record projection and failed-exit
   precedence; `ProviderRoster.js` selects enabled identities from those records.
+  Write-result handling first classifies the payload and its status aliases,
+  then applies the process-result precedence in `commandOutcome`: a structured
+  error wins; a valid success at exit zero ignores stderr noise; other replies
+  preserve stderr, timeout, exit-code and payload/status failure ordering.
+  `tst_provider_config_protocol.qml` exercises that public contract.
   JSON parsing errors are bounded and redacted before QML localizes them.
   `ProviderAuthentication.js` projects the optional 0.83.0 inventory into bounded
   source modes, writer flags, environment-variable names, redacted account hints

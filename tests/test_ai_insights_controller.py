@@ -72,6 +72,7 @@ if model == "failed-success-model":
 QML = '''import QtQuick
 import QtTest
 import "INSIGHTS_URL" as AiInsights
+import "PROTOCOL_URL" as AiInsightsProtocol
 TestCase {
     id: testCase
     name: "AiInsightsController"
@@ -390,14 +391,14 @@ TestCase {
         var source = Qt.createQmlObject('import QtQuick; import org.kde.plasma.plasma5support; DataSource { engine: "executable"; interval: 0 }', testCase);
         var reply = null;
         source.newData.connect(function(name, data) { reply = data; source.disconnectSource(name); });
-        var command = (AiInsights.command("HELPER_URL", "models", {provider: "openrouter"})
+        var command = (AiInsightsProtocol.command("HELPER_URL", "models", {provider: "openrouter"})
             + " --model slow-model").replace(" 45s ", " 1s ");
         source.connectSource(command);
         tryVerify(function() { return reply !== null; }, 10000);
         compare(Number(reply["exit code"]), 9);
         compare(Number(reply["exit status"]), 1);
-        compare(AiInsights.generationReply(reply.stdout, Number(reply["exit code"]), Number(reply["exit status"])).reason, "timeout");
-        compare(AiInsights.modelsReply(reply.stdout, Number(reply["exit code"]), Number(reply["exit status"])).reason, "timeout");
+        compare(AiInsightsProtocol.generationReply(reply.stdout, Number(reply["exit code"]), Number(reply["exit status"])).reason, "timeout");
+        compare(AiInsightsProtocol.modelsReply(reply.stdout, Number(reply["exit code"]), Number(reply["exit status"])).reason, "timeout");
         source.destroy();
     }
     function test_9_unbuildableCommandSurfacesInvalidInput() {
@@ -429,6 +430,7 @@ class AiInsightsControllerTests(unittest.TestCase):
                               + "assert supervise_parent()\nLOG_PATH = " + json.dumps(str(log)) + "\n" + HELPER)
             qml = (QML.replace("CONTROLLER_URL", (ROOT / "contents/ui/controllers/AiInsightsController.qml").as_uri())
                    .replace("INSIGHTS_URL", (ROOT / "contents/ui/AiInsights.js").as_uri())
+                   .replace("PROTOCOL_URL", (ROOT / "contents/ui/AiInsightsProtocol.js").as_uri())
                    .replace("HELPER_URL", helper.as_uri()).replace("LOG_URL", log.as_uri()))
             fixture = directory / "tst_ai_insights_controller.qml"
             fixture.write_text(qml)

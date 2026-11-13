@@ -2,6 +2,7 @@ import QtQuick
 import QtCore as Core
 import org.kde.plasma.plasma5support as Plasma5Support
 import "../AiInsights.js" as AiInsights
+import "../AiInsightsProtocol.js" as AiInsightsProtocol
 import "../CommandLedger.js" as CommandLedger
 
 // Owns the optional AI Insights generation process: one request at a time,
@@ -109,9 +110,9 @@ Item {
         }
 
         function discardInput(request) {
-            if (!AiInsights.validInputRequest(request)) return
+            if (!AiInsightsProtocol.validInputRequest(request)) return
             serial += 1
-            var command = AiInsights.command(controller.scriptUrl, "discard", {request: request})
+            var command = AiInsightsProtocol.command(controller.scriptUrl, "discard", {request: request})
             processSource.connectSource(CommandLedger.withRunNonce(command, serial, Date.now() + "-" + Math.random()))
         }
 
@@ -163,8 +164,8 @@ Item {
                 language: controller.requestContext.language,
                 request: "00000000000000000000000000000000"
             }
-            var command = AiInsights.command(controller.scriptUrl, "generate", options)
-            var input = AiInsights.encodedSnapshot(controller.snapshotText)
+            var command = AiInsightsProtocol.command(controller.scriptUrl, "generate", options)
+            var input = AiInsightsProtocol.encodedSnapshot(controller.snapshotText)
             if (command.length === 0 || input.length === 0) {
                 // An unbuildable command (for example an oversized Ollama
                 // endpoint) is invalid input, not a silent skip: the card
@@ -179,7 +180,7 @@ Item {
             capturedInput = input
             activeOptions = options
             activePhase = "prepare"
-            activeSource = CommandLedger.withRunNonce(AiInsights.command(controller.scriptUrl, "prepare", {}),
+            activeSource = CommandLedger.withRunNonce(AiInsightsProtocol.command(controller.scriptUrl, "prepare", {}),
                 serial, Date.now() + "-" + Math.random())
             // Persisted before the request, so a restart cannot repeat it at once.
             controller.attemptStarted(new Date().toISOString())
@@ -200,8 +201,8 @@ Item {
         function accept(sourceName, data) {
             processSource.disconnectSource(sourceName)
             if (sourceName !== activeSource) {
-                var abandonedResult = AiInsights.processResult(data)
-                var abandoned = AiInsights.preparedInput(data ? data["stdout"] : "",
+                var abandonedResult = AiInsightsProtocol.processResult(data)
+                var abandoned = AiInsightsProtocol.preparedInput(data ? data["stdout"] : "",
                     abandonedResult.exitCode, abandonedResult.exitStatus)
                 if (abandoned) discardInput(abandoned.request)
                 return
@@ -216,8 +217,8 @@ Item {
             if (context !== controller.contextKey || !controller.insightsEnabled) {
                 return
             }
-            var processResult = AiInsights.processResult(data)
-            var reply = AiInsights.generationReply(data ? data["stdout"] : "",
+            var processResult = AiInsightsProtocol.processResult(data)
+            var reply = AiInsightsProtocol.generationReply(data ? data["stdout"] : "",
                 processResult.exitCode, processResult.exitStatus)
             if (reply.outcome !== "ok") {
                 fail(reply.reason, reply.retryAfterSeconds)
@@ -240,8 +241,8 @@ Item {
         }
 
         function acceptPreparedInput(data) {
-            var prepared = AiInsights.processResult(data)
-            var input = AiInsights.preparedInput(data ? data["stdout"] : "",
+            var prepared = AiInsightsProtocol.processResult(data)
+            var input = AiInsightsProtocol.preparedInput(data ? data["stdout"] : "",
                 prepared.exitCode, prepared.exitStatus)
             if (!input) {
                 retire()
@@ -264,7 +265,7 @@ Item {
             var options = Object.assign({}, activeOptions, {request: input.request})
             activePhase = "generate"
             serial += 1
-            activeSource = CommandLedger.withRunNonce(AiInsights.command(controller.scriptUrl, "generate", options),
+            activeSource = CommandLedger.withRunNonce(AiInsightsProtocol.command(controller.scriptUrl, "generate", options),
                 serial, Date.now() + "-" + Math.random())
             // Preparation must not consume the generation's 180-second shell bound.
             deadline.restart()

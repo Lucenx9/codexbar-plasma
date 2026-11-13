@@ -29,6 +29,7 @@ QML = '''import QtQuick
 import QtQuick.Controls
 import QtTest
 import "SOURCE_URL/AiInsights.js" as AiInsights
+import "SOURCE_URL/AiInsightsProtocol.js" as AiInsightsProtocol
 import "SOURCE_URL/CommandLedger.js" as CommandLedger
 TestCase {
     id: page
@@ -322,6 +323,7 @@ CREATION_QML = '''import QtQuick
 import QtQuick.Controls
 import QtTest
 import "SOURCE_URL/AiInsights.js" as AiInsights
+import "SOURCE_URL/AiInsightsProtocol.js" as AiInsightsProtocol
 TestCase {
     id: test
     name: "AiInsightsCreationKeepsModel"

@@ -47,7 +47,8 @@ network requests and returns semantic JSON records.
 | --- | --- |
 | Normalized provider snapshots | Existing `ProviderSnapshot.js`, `CostResponse.js`, pace fields |
 | Allowlisted snapshot and deterministic signals | `contents/ui/AiInsightsSnapshot.js` |
-| Language, context, cache, schedule, command, and reply validation | `contents/ui/AiInsights.js` |
+| Language, context, cache, schedule, and presentation | `contents/ui/AiInsights.js` |
+| Helper commands, private-input descriptors, and reply validation | `contents/ui/AiInsightsProtocol.js` |
 | Process, nonce, deadline, stale replies, interval timer | `contents/ui/controllers/AiInsightsController.qml` |
 | Persistence and localized error text | `main.qml` and `components/AiInsightsMessages.qml` |
 | Compact and full saved-answer presentation | `components/AiInsightsCard.qml` |
@@ -60,6 +61,12 @@ comparison arithmetic and ordered signal selection. The helper separately
 projects model-list records and validates cloud completion envelopes. These
 steps retain the same public interfaces, limits and privacy allowlists; network
 and credential effects remain in Python.
+
+The controller and settings page call `AiInsightsProtocol` directly for helper
+commands and replies. The protocol uses `AiInsights` for shared language,
+model and text rules; cache and scheduling policy do not depend on the
+transport. Direct QtTests cover both modules, and the process/settings tests
+exercise their production callers without changing cache keys or deadlines.
 
 While `aiInsightsEnabled` is false, the snapshot is not built, the controller
 has no scheduled or active process, and the card and analysis page are hidden.

@@ -55,6 +55,7 @@ SURFACES: dict[str, tuple[str, ...]] = {
         "contents/ui/configAiInsights.qml",
         "contents/ui/components/AiInsightsMessages.qml",
         "contents/ui/AiInsights.js",
+        "contents/ui/AiInsightsProtocol.js",
     ),
     "diagnostics": (
         "contents/ui/configDiagnostics.qml",
