@@ -21,7 +21,9 @@ values and headroom. `ChartLines.mjs` preserves calendar spacing, breaks lines
 at missing or ambiguous dates, and uses monotone curves without new extrema.
 Subtle fills sit below all strokes and inspection markers. A narrow theme-surface
 outline keeps lines and markers readable over overlapping fills. Money stays in the
-selected currency and token totals can include all currencies. Hover or keyboard
+selected currency and token totals can include all currencies. Provider tab or
+saved ordering is applied after currency selection, so it cannot change the
+money represented by the lines, axis or totals. Hover or keyboard
 inspection reports each provider for the selected day. Provider pages retain bars.
 
 The weekly comparison uses the existing AI snapshot completeness rules without

@@ -449,9 +449,9 @@ ColumnLayout {
                     Kirigami.Theme.highlightColor,
                     Kirigami.Theme.backgroundColor)
                 kind: Analysis.hasCalendarHistory(view.dailyPoints) ? "line" : "bar"
-                lineSeries: kind !== "line" ? null : Analysis.providerLines(view.applet.costNumberFormat,
-                    view.applet.presentedSpendProviderCosts(view.providerCosts),
-                    view.dailyPoints, view.applet.costHistoryShowsTokens).map(function(series) {
+                lineSeries: kind !== "line" ? null : view.applet.presentedSpendProviderCosts(
+                    Analysis.providerLines(view.applet.costNumberFormat, view.providerCosts,
+                        view.dailyPoints, view.applet.costHistoryShowsTokens)).map(function(series) {
                         return Object.assign({}, series, {label: view.applet.providerDisplayTitle(series.provider)})
                     })
                 axisLabels: kind !== "line" ? [] : [historyChart.valueDomain.maximum, historyChart.valueDomain.maximum / 2, 0]

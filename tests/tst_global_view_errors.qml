@@ -1,5 +1,7 @@
 import QtQuick
 import QtTest
+import "../contents/ui/ProviderOrder.js" as ProviderOrder
+import "../contents/ui/CostCurrency.mjs" as CostCurrency
 
 TestCase {
     id: testCase
@@ -55,6 +57,7 @@ TestCase {
         readonly property bool costHistoryShowsTokens: costHistoryMetric === "tokens"
         property var dailyPoints: []
         property var costs: []
+        property string providerOrderRaw: ""
         property var sessions: []
         readonly property var presentedSessions: sessions
         property bool sessionsLoading: false
@@ -66,16 +69,16 @@ TestCase {
         function spendProviderCosts() {
             var items = costs.length > 0 ? costs : dailyPoints.length > 0 ? [{provider: "codex"}] : [];
             return items.map(function(item) {
-                return Object.assign({}, item, {daily: dailyPoints.map(function(point) {
+                return Object.assign({}, item, {daily: item.daily || dailyPoints.map(function(point) {
                     return {label: point.label, cost: point.value, tokens: point.value, currency: "USD"};
                 })});
             });
         }
         function presentedSpendProviderCosts(items) {
-            return items;
+            return ProviderOrder.orderedItems(items, providerOrderRaw);
         }
-        function spendCurrency() {
-            return "USD";
+        function spendCurrency(items) {
+            return CostCurrency.spendCurrency(items);
         }
         function spendTotalLine() {
             return "Synthetic local history";
@@ -168,6 +171,7 @@ TestCase {
         applet.costHistoryPeriod = "";
         applet.costHistoryMetric = "cost";
         applet.costs = [];
+        applet.providerOrderRaw = "";
         applet.sessions = [];
         applet.costErrorText = "";
         applet.sessionsErrorText = "";
@@ -503,6 +507,32 @@ TestCase {
         empty.helpfulAction.trigger();
         compare(view.selectedProvider, "");
         compare(filter.currentIndex, 0);
+    }
+
+    function test_providerOrderDoesNotChangeChartCurrency() {
+        function cost(provider, currency, amount, tokens) {
+            var day = {label: "2026-11-13", cost: amount, tokens: tokens, currency: currency};
+            return {provider: provider, currency: currency, totals: day, daily: [day]};
+        }
+        applet.costs = [cost("claude", "USD", 3, 100), cost("codex", "EUR", 90, 200),
+            cost("gemini", "USD", 7, 300)];
+        applet.providerOrderRaw = "codex,gemini,claude";
+        var view = createView("SpendView");
+        if (!view) return;
+        var chart = findItem(view, function(item) { return item.lineSeries !== undefined; });
+        compare(view.spendCurrency, "USD");
+        compare(view.dailyPoints[0].value, 10);
+        compare(chart.lineSeries.map(function(series) { return series.provider; }), ["gemini", "claude"]);
+        compare(chart.lineSeries.map(function(series) { return series.points[0].value; }), [7, 3]);
+        verify(chart.axisLabels[0].indexOf("$") === 0);
+        applet.providerOrderRaw = "claude,codex,gemini";
+        compare(chart.lineSeries.map(function(series) { return series.provider; }), ["claude", "gemini"]);
+        compare(view.dailyPoints[0].value, 10);
+        applet.providerOrderRaw = "codex,gemini,claude";
+        applet.costHistoryMetric = "tokens";
+        compare(view.dailyPoints[0].value, 600);
+        compare(chart.lineSeries.map(function(series) { return series.provider; }), ["codex", "gemini", "claude"]);
+        compare(chart.lineSeries.map(function(series) { return series.points[0].value; }), [200, 300, 100]);
     }
 
     function spendChart(points) {

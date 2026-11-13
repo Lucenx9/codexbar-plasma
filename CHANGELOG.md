@@ -35,6 +35,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   pinned day that becomes ambiguous after a refresh. Validate all 256 supported
   snapshots even beyond the chart's 128-series limit. Keep the provider dropdown
   synchronized after card selections, and preserve line contrast over fills.
+- Keep chart lines in the aggregate currency when provider tabs or saved order
+  place a different-currency provider first; presentation order no longer
+  changes the amounts plotted against the axis.
 
 - Keep Usage & Spend summary values aligned with wrapped labels and show full
   comparison status text. Show history requirements for unavailable comparisons
