@@ -46,6 +46,7 @@ GridLayout {
                 wrapMode: Text.Wrap
             }
             PlainPlasmaLabel {
+                id: summaryValue
                 text: modelData.value
                 font.weight: Font.DemiBold
                 font.pointSize: Kirigami.Theme.defaultFont.pointSize * 1.15
@@ -55,8 +56,8 @@ GridLayout {
                 Accessible.description: modelData.help || ""
                 HoverHandler { id: valueHover }
                 PlainToolTip {
-                    visible: valueHover.hovered && (parent.truncated || (modelData.help || "").length > 0)
-                    plainText: parent.text + (modelData.help ? "\n" + modelData.help : "")
+                    visible: valueHover.hovered && (summaryValue.truncated || (modelData.help || "").length > 0)
+                    plainText: summaryValue.text + (modelData.help ? "\n" + modelData.help : "")
                 }
             }
         }

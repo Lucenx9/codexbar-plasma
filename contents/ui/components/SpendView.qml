@@ -147,11 +147,12 @@ ColumnLayout {
         }
 
         PlasmaComponents.ToolButton {
+            id: expandButton
             objectName: "analysisExpandButton"
             icon.name: view.expandedView ? "view-restore" : "view-fullscreen"
             Accessible.name: view.expandedView ? i18n("Compact analysis") : i18n("Expand analysis")
             onClicked: view.expandedView = !view.expandedView
-            PlainToolTip { visible: parent.hovered || parent.visualFocus; plainText: parent.Accessible.name }
+            PlainToolTip { visible: expandButton.hovered || expandButton.visualFocus; plainText: expandButton.Accessible.name }
         }
 
         PlasmaComponents.ToolButton {

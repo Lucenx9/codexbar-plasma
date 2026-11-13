@@ -50,6 +50,7 @@ ColumnLayout {
                         wrapMode: Text.Wrap
                     }
                     PlainPlasmaLabel {
+                        id: modelAmount
                         text: Amounts.hasMetricValue(modelData, applet.costHistoryShowsTokens)
                             ? applet.costHistoryShowsTokens ? applet.usageCountText(modelData.tokens, "tokens")
                                 : applet.qualifiedCostValue(applet.amountString(modelData.cost, modelData.currency), modelData.valueMode)
@@ -58,7 +59,7 @@ ColumnLayout {
                         Layout.maximumWidth: section.width * 0.5
                         elide: Text.ElideRight
                         HoverHandler { id: amountHover }
-                        PlainToolTip { visible: parent.truncated && amountHover.hovered; plainText: parent.text }
+                        PlainToolTip { visible: modelAmount.truncated && amountHover.hovered; plainText: modelAmount.text }
                     }
                 }
                 PlainPlasmaLabel {
@@ -101,12 +102,13 @@ ColumnLayout {
                             wrapMode: Text.Wrap
                         }
                         PlainPlasmaLabel {
+                            id: partAmount
                             text: modelData.value
                             font.features: { "tnum": 1 }
                             Layout.maximumWidth: section.width * 0.5
                             elide: Text.ElideRight
                             HoverHandler { id: partHover }
-                            PlainToolTip { visible: parent.truncated && partHover.hovered; plainText: parent.text }
+                            PlainToolTip { visible: partAmount.truncated && partHover.hovered; plainText: partAmount.text }
                         }
                     }
                 }
