@@ -183,10 +183,11 @@ Item {
                 errorText = result.outcome === "success" ? "" : (result.message.length > 0 ? result.message : i18n("Some cost data could not be refreshed."));
                 break;
             case "commandFailed":
-                errorText = result.message || i18n("codexbar command failed.");
+                var commandError = result.message || i18n("codexbar command failed.");
                 if (result.argumentsRejected && run.historyPeriod.length > 0) {
-                    errorText = i18n("Month to date and All history need codexbar 0.67.0 or later.");
+                    commandError = i18n("Month to date and All history need codexbar 0.67.0 or later.");
                 }
+                errorText = commandError;
                 break;
             case "tooLarge":
                 errorText = i18n("codexbar response exceeded the supported size.");
