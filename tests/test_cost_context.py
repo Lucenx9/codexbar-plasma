@@ -6,6 +6,8 @@ import subprocess
 import tempfile
 import unittest
 
+from qml_runtime_support import runtime_warnings
+
 ROOT = Path(__file__).resolve().parents[1]
 
 QML = '''import QtQuick
@@ -294,6 +296,16 @@ if name == "partial" and run > 1: sys.exit(1)
 '''
 
 
+def expected_cancellation_warning(line):
+    if 'QProcess: Destroyed while process ("/bin/sh") is still running.' not in line:
+        return False
+    return any(case in line for case in (
+        "test_manualRefreshSupersedesAnActiveScan()",
+        "test_commandChangeRetiresTheOldSourceSynchronously()",
+        "test_disablingClearsAndRetiresData()",
+        "test_timeoutPreservesDataAndManualRetryRecovers()"))
+
+
 class CostContextTests(unittest.TestCase):
     def test_production_lifecycle_with_synthetic_cli(self):
         with tempfile.TemporaryDirectory(prefix="codexbar cost 'test-") as temporary:
@@ -316,13 +328,8 @@ class CostContextTests(unittest.TestCase):
                 self.fail("QML tests were skipped; the test environment must provide the KDE QML modules.")
             if "SKIP" in output:
                 self.skipTest("CostController needs the optional KDE QML modules")
-            warnings = [line for line in output.splitlines() if "QWARN" in line and not (
-                'QProcess: Destroyed while process ("/bin/sh") is still running.' in line
-                and any(case in line for case in (
-                    "test_manualRefreshSupersedesAnActiveScan()",
-                    "test_commandChangeRetiresTheOldSourceSynchronously()",
-                    "test_disablingClearsAndRetiresData()",
-                    "test_timeoutPreservesDataAndManualRetryRecovers()")))]
+            warnings = [line for line in runtime_warnings(output)
+                        if not expected_cancellation_warning(line)]
             self.assertEqual(warnings, [])
 
 

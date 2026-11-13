@@ -5,12 +5,12 @@ import * as CostAmounts from "./CostAmounts.mjs";
 // Cost chart geometry, point selection, and calendar heatmap layout.
 // Only paintRoundedTopBar draws, using the canvas supplied by its QML owner.
 
-var maximumCostHistoryPoints = 365
+export var maximumCostHistoryPoints = 365
 
 // Dense charts keep a one-pixel bar, so their drawing step must account for the
 // bar width instead of the nominal point slot. Otherwise the newest bar extends
 // beyond the right edge of the canvas.
-function chartBarGeometry(width, count) {
+export function chartBarGeometry(width, count) {
     var safeWidth = nonNegative(width)
     var points = pointCount(count, 1)
     var slotStep = safeWidth / points
@@ -35,7 +35,7 @@ function chartBarGeometry(width, count) {
 }
 
 // Keep the largest interactive marker fully inside the canvas at both ends.
-function chartLineX(width, count, index, inset) {
+export function chartLineX(width, count, index, inset) {
     var safeWidth = nonNegative(width)
     var points = pointCount(count, 1)
     var padding = Math.min(safeWidth / 2, nonNegative(inset))
@@ -51,7 +51,7 @@ function chartLineX(width, count, index, inset) {
     return padding + (safeWidth - padding * 2) * boundedIndex / (points - 1)
 }
 
-function chartLineIndexAt(width, count, positionX, inset) {
+export function chartLineIndexAt(width, count, positionX, inset) {
     var safeWidth = nonNegative(width)
     var points = pointCount(count, 0)
     if (points === 0 || safeWidth === 0) {
@@ -71,14 +71,14 @@ function chartLineIndexAt(width, count, positionX, inset) {
         Math.round(normalizedPosition * (points - 1))))
 }
 
-function chartLineY(height, fraction, inset) {
+export function chartLineY(height, fraction, inset) {
     var safeHeight = nonNegative(height)
     var padding = Math.min(safeHeight / 2, nonNegative(inset))
     var boundedFraction = Math.min(1, nonNegative(fraction))
     return safeHeight - padding - (safeHeight - padding * 2) * boundedFraction
 }
 
-function paintRoundedTopBar(context, bounds, radius) {
+export function paintRoundedTopBar(context, bounds, radius) {
     var x = bounds.x
     var baseline = bounds.baseline
     var safeWidth = nonNegative(bounds.width)
@@ -97,7 +97,7 @@ function paintRoundedTopBar(context, bounds, radius) {
     context.fill()
 }
 
-function chartPoints(fmt, points, showsTokens) {
+export function chartPoints(fmt, points, showsTokens) {
     var result = []
     if (!Array.isArray(points)) {
         return result
@@ -122,7 +122,7 @@ function chartPoints(fmt, points, showsTokens) {
 // same objects. Qt 6.8 re-notifies a var binding that re-evaluates to an equal
 // object, so a shallow provider copy would otherwise hand the chart a new array
 // for an unchanged snapshot. Writes only into the caller-owned memo.
-function memoizedChartPoints(memo, fmt, points, showsTokens) {
+export function memoizedChartPoints(memo, fmt, points, showsTokens) {
     if (!memo || typeof memo !== "object") return chartPoints(fmt, points, showsTokens)
     if (!memo.result || !chartMemoMatches(memo, fmt, points, showsTokens)) {
         memo.points = points
@@ -134,7 +134,7 @@ function memoizedChartPoints(memo, fmt, points, showsTokens) {
 }
 
 // Chart points omit unavailable amounts. Their index is not a daily-row index.
-function selectedCostDay(daily, points, activeIndex) {
+export function selectedCostDay(daily, points, activeIndex) {
     if (!Guards.isArrayIndex(points, activeIndex)) return null
     var point = points[activeIndex]
     var sourceIndex = point && point.sourceIndex
@@ -142,7 +142,7 @@ function selectedCostDay(daily, points, activeIndex) {
     return daily[sourceIndex] || null
 }
 
-function uniqueCostDayIndex(points, label) {
+export function uniqueCostDayIndex(points, label) {
     var found = -1
     for (var i = 0; i < points.length; i++) {
         if (points[i] && points[i].label === label) {
@@ -155,7 +155,7 @@ function uniqueCostDayIndex(points, label) {
     return found
 }
 
-function costDayIndexAfterRefresh(previousPoints, selectedIndex, points) {
+export function costDayIndexAfterRefresh(previousPoints, selectedIndex, points) {
     if (!Array.isArray(points)) return -1
     if (!Guards.isArrayIndex(previousPoints, selectedIndex)) return -1
     var previous = previousPoints[selectedIndex]
@@ -167,7 +167,7 @@ function costDayIndexAfterRefresh(previousPoints, selectedIndex, points) {
 // The selected metric can omit unavailable days. Use the unfiltered snapshots'
 // calendar bounds so missing values at either edge keep their slots too.
 // Legacy labels with no unambiguous calendar order keep their bounded sequence.
-function spendHeatmapDays(points, costs) {
+export function spendHeatmapDays(points, costs) {
     var items = Array.isArray(points) ? points.slice(-maximumCostHistoryPoints) : []
     if (items.length === 0) return []
     var window = indexedCalendarPoints(items)
@@ -192,7 +192,7 @@ function spendHeatmapDays(points, costs) {
 // weekday; the oldest end is padded with `null` placeholders, which keeps a
 // ragged first column from cutting a notch out of the block. Points beyond the
 // capacity are dropped, oldest first.
-function spendHeatmapCells(points, capacity, trailingSlots) {
+export function spendHeatmapCells(points, capacity, trailingSlots) {
     var items = Array.isArray(points) ? points : []
     var slots = Math.max(0, Math.floor(Number(capacity) || 0))
     var trailing = Math.max(0, Math.min(slots, Math.floor(Number(trailingSlots) || 0)))
@@ -211,7 +211,7 @@ function spendHeatmapCells(points, capacity, trailingSlots) {
 
 // QML's Locale.firstDayOfWeek counts 0 (Sunday) through 6; anything else falls
 // back to the ISO week's Monday start.
-function heatmapFirstWeekday(firstWeekday) {
+export function heatmapFirstWeekday(firstWeekday) {
     return typeof firstWeekday === "number" && Math.floor(firstWeekday) === firstWeekday
         && firstWeekday >= 0 && firstWeekday <= 6 ? firstWeekday : 1
 }
@@ -220,7 +220,7 @@ function heatmapFirstWeekday(firstWeekday) {
 // carry one weekday per row. spendHeatmapDays keeps unavailable days as `null`
 // slots; its fallback for undated or unordered points returns -1 here so the
 // caller leaves the rows unlabelled rather than naming the wrong days.
-function spendHeatmapNewestWeekday(days) {
+export function spendHeatmapNewestWeekday(days) {
     var items = Array.isArray(days) ? days : []
     if (items.length > maximumCostHistoryPoints) return -1
     var newest = newestCalendarSlot(items)
@@ -230,7 +230,7 @@ function spendHeatmapNewestWeekday(days) {
 // Weekday of each heatmap row, top to bottom, as 0 (Sunday) through 6. Rows
 // start on the locale's first day of the week, so each weekday keeps its row
 // as the range moves; [] leaves undated rows unlabelled.
-function spendHeatmapRowWeekdays(days, firstWeekday) {
+export function spendHeatmapRowWeekdays(days, firstWeekday) {
     if (spendHeatmapNewestWeekday(days) < 0) {
         return []
     }
@@ -244,7 +244,7 @@ function spendHeatmapRowWeekdays(days, firstWeekday) {
 
 // Empty slots after the newest day that close its week in the locale's row
 // order; 0 when the rows carry no weekday and the newest day simply ends the grid.
-function spendHeatmapTrailingSlots(days, firstWeekday) {
+export function spendHeatmapTrailingSlots(days, firstWeekday) {
     var newestWeekday = spendHeatmapNewestWeekday(days)
     if (newestWeekday < 0) {
         return 0
@@ -252,25 +252,25 @@ function spendHeatmapTrailingSlots(days, firstWeekday) {
     return 6 - (newestWeekday - heatmapFirstWeekday(firstWeekday) + 7) % 7
 }
 
-function nonNegative(value) {
+export function nonNegative(value) {
     var numeric = Number(value)
     return isFinite(numeric) ? Math.max(0, numeric) : 0
 }
 
-function pointCount(value, minimum) {
+export function pointCount(value, minimum) {
     var numeric = Math.floor(Number(value))
     return isFinite(numeric) ? Math.max(minimum, numeric) : minimum
 }
 
-function hasDayLabel(point) {
+export function hasDayLabel(point) {
     return point && typeof point.label === "string" && point.label.length > 0
 }
 
-function calendarDate(point) {
+export function calendarDate(point) {
     return hasDayLabel(point) ? Normalizer.parsedCalendarDateKey(point.label) : null
 }
 
-function indexedCalendarPoints(items) {
+export function indexedCalendarPoints(items) {
     var window = { byDate: ({}), firstDayMs: 0, lastDayMs: 0 }
     for (var i = 0; i < items.length; i++) {
         var date = calendarDate(items[i])
@@ -283,7 +283,7 @@ function indexedCalendarPoints(items) {
     return window
 }
 
-function extendSnapshotCalendar(window, snapshot) {
+export function extendSnapshotCalendar(window, snapshot) {
     var daily = snapshot && Array.isArray(snapshot.daily) ? snapshot.daily : []
     for (var i = Math.max(0, daily.length - maximumCostHistoryPoints); i < daily.length; i++) {
         var date = calendarDate(daily[i])
@@ -293,7 +293,7 @@ function extendSnapshotCalendar(window, snapshot) {
     }
 }
 
-function newestCalendarSlot(items) {
+export function newestCalendarSlot(items) {
     var newest = null
     var dayMs = 24 * 60 * 60 * 1000
     for (var i = 0; i < items.length; i++) {
@@ -308,14 +308,6 @@ function newestCalendarSlot(items) {
     return newest
 }
 
-function chartMemoMatches(memo, fmt, points, showsTokens) {
+export function chartMemoMatches(memo, fmt, points, showsTokens) {
     return memo.points === points && memo.fmt === fmt && memo.showsTokens === showsTokens
 }
-
-export {
-    maximumCostHistoryPoints, chartBarGeometry, chartLineX, chartLineIndexAt, chartLineY,
-    paintRoundedTopBar, chartPoints, memoizedChartPoints, selectedCostDay, uniqueCostDayIndex,
-    costDayIndexAfterRefresh, spendHeatmapDays, spendHeatmapCells, heatmapFirstWeekday, spendHeatmapNewestWeekday,
-    spendHeatmapRowWeekdays, spendHeatmapTrailingSlots, nonNegative, pointCount, hasDayLabel,
-    calendarDate, indexedCalendarPoints, extendSnapshotCalendar, newestCalendarSlot, chartMemoMatches,
-};

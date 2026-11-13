@@ -6,14 +6,14 @@ import * as Normalizer from "./ProviderNormalizer.mjs";
 // Missing amounts remain distinct from measured zero; no localization or effects.
 // Shared text and snapshot accessors keep the other cost modules on the same inputs.
 
-function numberFormat(groupSeparator, decimalPoint) {
+export function numberFormat(groupSeparator, decimalPoint) {
     return {
         group: typeof groupSeparator === "string" ? groupSeparator : ",",
         decimal: typeof decimalPoint === "string" ? decimalPoint : "."
     }
 }
 
-function boundedText(value, limit) {
+export function boundedText(value, limit) {
     if (value === null || value === undefined) {
         return ""
     }
@@ -22,7 +22,7 @@ function boundedText(value, limit) {
 
 // The metric the charts currently plot. Cost and tokens share one payload, so
 // every scale, peak, and summary has to read the same switch.
-function hasMetricValue(point, showsTokens) {
+export function hasMetricValue(point, showsTokens) {
     if (!point) {
         return false
     }
@@ -30,14 +30,14 @@ function hasMetricValue(point, showsTokens) {
     return typeof value === "number" && isFinite(value)
 }
 
-function metricValue(point, showsTokens) {
+export function metricValue(point, showsTokens) {
     if (!hasMetricValue(point, showsTokens)) {
         return 0
     }
     return showsTokens ? point.tokens : point.cost
 }
 
-function groupedDecimalString(fmt, value, digits) {
+export function groupedDecimalString(fmt, value, digits) {
     var numeric = Number(value)
     if (!isFinite(numeric)) return "-"
     // toFixed becomes exponential at this bound; those digits must not be grouped.
@@ -51,7 +51,7 @@ function groupedDecimalString(fmt, value, digits) {
 // "Quota" is a credit balance, not money, so it prints as a bare rounded count.
 // Like the money path it degrades to "-" for non-numeric input instead of
 // printing "NaN".
-function amountString(fmt, value, currency) {
+export function amountString(fmt, value, currency) {
     if (!Guards.isFiniteNumber(value)) return "-"
     var code = typeof currency === "string" ? currency.trim() : ""
     if (code === "Quota") return String(Math.round(value))
@@ -63,7 +63,7 @@ function amountString(fmt, value, currency) {
 
 // Compact counts use the caller's decimal mark, like costs on the same line:
 // "1,5K" beside "1.234,50" instead of the C-locale "1.5K".
-function scaledTokenCount(value, fmt) {
+export function scaledTokenCount(value, fmt) {
     if (value >= 10) return Number(value).toFixed(0)
     return Number(value).toFixed(1).replace(/\.0$/, "").replace(".", resolvedFormat(fmt).decimal)
 }
@@ -73,7 +73,7 @@ function scaledTokenCount(value, fmt) {
 // value across the whole boundary ("99.95" -> "100.0"), so the fractional digit
 // drops when the rounded figure is whole instead of choosing the precision
 // from the unrounded value.
-function formatCount(fmt, value) {
+export function formatCount(fmt, value) {
     var numeric = Number(value)
     if (!isFinite(numeric)) return "-"
     var magnitude = Math.abs(numeric)
@@ -83,7 +83,7 @@ function formatCount(fmt, value) {
     return (numeric < 0 && text !== "0" ? "-" : "") + text
 }
 
-function tokenCountString(tokens, fmt) {
+export function tokenCountString(tokens, fmt) {
     var value = Number(tokens)
     if (!isFinite(value)) {
         return "-"
@@ -107,7 +107,7 @@ function tokenCountString(tokens, fmt) {
 
 // Returns the peak of the currently plotted metric, so the bars keep their
 // scale when the Usage & Spend tab switches between cost and tokens.
-function sparklineMax(points, showsTokens) {
+export function sparklineMax(points, showsTokens) {
     var maximum = 0
     if (!Array.isArray(points)) {
         return maximum
@@ -118,14 +118,14 @@ function sparklineMax(points, showsTokens) {
     return maximum
 }
 
-function metricText(fmt, magnitude, currency, showsTokens) {
+export function metricText(fmt, magnitude, currency, showsTokens) {
     return showsTokens
         ? tokenCountString(magnitude, fmt)
         : amountString(fmt, magnitude, currency || "USD")
 }
 
 // Missing amounts stay absent; measured zeroes remain visible.
-function amountSummary(fmt, amounts, tokensTextFor) {
+export function amountSummary(fmt, amounts, tokensTextFor) {
     var values = []
     if (hasMetricValue(amounts, false)) {
         values.push(amountString(fmt, amounts.cost, amounts.currency))
@@ -138,7 +138,7 @@ function amountSummary(fmt, amounts, tokensTextFor) {
 
 // The bars highlight the peak of the selected metric, so this has to name the
 // same day, not the most expensive one. Returns null when nothing was spent.
-function peakPoint(points, showsTokens) {
+export function peakPoint(points, showsTokens) {
     var items = Array.isArray(points) ? points : []
     var peak = null
     var maximum = 0
@@ -153,7 +153,7 @@ function peakPoint(points, showsTokens) {
     return peak
 }
 
-function averageDailyValue(points, showsTokens, zeroDays) {
+export function averageDailyValue(points, showsTokens, zeroDays) {
     if (!Array.isArray(points)) {
         return null
     }
@@ -187,7 +187,7 @@ function averageDailyValue(points, showsTokens, zeroDays) {
     return { value: isFinite(total) ? total / denominator : average * (count / denominator), currency: currency }
 }
 
-function perMillionAmount(tokenCost) {
+export function perMillionAmount(tokenCost) {
     var totals = tokenCost ? tokenCost.totals : null
     if (!totals) return null
     var cost = positiveAmount(totals.cost)
@@ -201,7 +201,7 @@ function perMillionAmount(tokenCost) {
 // an earlier local date, such as one taken before midnight or retained after a
 // failed refresh, holds that day's spend, so today reads as unknown until a
 // scan from today arrives. A snapshot without a scan date keeps its amounts.
-function todayAmounts(tokenCost, nowMs) {
+export function todayAmounts(tokenCost, nowMs) {
     var today = tokenCost && tokenCost.today ? tokenCost.today : null
     var scanDay = today && typeof tokenCost.scanDay === "string" ? tokenCost.scanDay : ""
     var now = new Date(typeof nowMs === "number" ? nowMs : NaN)
@@ -220,18 +220,18 @@ function todayAmounts(tokenCost, nowMs) {
 }
 
 // Keep an overflowed sum non-finite until its caller publishes it as unknown.
-function addMetric(total, point, showsTokens) {
+export function addMetric(total, point, showsTokens) {
     if (!hasMetricValue(point, showsTokens)) return total
     var previous = total === null ? 0 : total
     return previous + Math.max(0, metricValue(point, showsTokens))
 }
 
-function resolvedFormat(fmt) {
+export function resolvedFormat(fmt) {
     var source = fmt && typeof fmt === "object" ? fmt : ({})
     return numberFormat(source.group, source.decimal)
 }
 
-function groupedDigits(whole, separator) {
+export function groupedDigits(whole, separator) {
     var grouped = ""
     for (var i = 0; i < whole.length; i++) {
         if (i > 0 && (whole.length - i) % 3 === 0) grouped += separator
@@ -240,53 +240,44 @@ function groupedDigits(whole, separator) {
     return grouped
 }
 
-function currencyPrefix(code) {
+export function currencyPrefix(code) {
     if (code === "USD") return "$"
     return code.length === 0 ? "" : code + " "
 }
 
-function trimWholeFraction(text, decimal) {
+export function trimWholeFraction(text, decimal) {
     var suffix = decimal + "0"
     return text.slice(-suffix.length) === suffix ? text.slice(0, -suffix.length) : text
 }
 
-function existingLabel(point, fallback) {
+export function existingLabel(point, fallback) {
     return point.label && point.label.length > 0 ? point.label : fallback
 }
 
-function zeroDayCount(value) {
+export function zeroDayCount(value) {
     return Guards.isFiniteNumber(value) ? Math.max(0, Math.floor(value)) : 0
 }
 
-function positiveAmount(value) {
+export function positiveAmount(value) {
     var numeric = Number(value)
     return isFinite(numeric) && numeric > 0 ? numeric : NaN
 }
 
-function perMillionRatio(cost, tokens) {
+export function perMillionRatio(cost, tokens) {
     var value = cost * 1000000 / tokens
     // Preserve ordinary rounding; rescale only if the intermediate product overflowed.
     return isFinite(value) ? value : cost / (tokens / 1000000)
 }
 
-function scanIsCurrent(scanDay, now) {
+export function scanIsCurrent(scanDay, now) {
     if (scanDay.length === 0 || !isFinite(now.getTime())) return true
     return scanDay === Normalizer.calendarDateKey(now.getFullYear(), now.getMonth() + 1, now.getDate())
 }
 
-function snapshotTotals(snapshot) {
+export function snapshotTotals(snapshot) {
     return snapshot && typeof snapshot === "object" && snapshot.totals ? snapshot.totals : ({})
 }
 
-function snapshotDaily(snapshot) {
+export function snapshotDaily(snapshot) {
     return snapshot && Array.isArray(snapshot.daily) ? snapshot.daily : []
 }
-
-export {
-    numberFormat, boundedText, hasMetricValue, metricValue, groupedDecimalString,
-    amountString, scaledTokenCount, formatCount, tokenCountString, sparklineMax,
-    metricText, amountSummary, peakPoint, averageDailyValue, perMillionAmount,
-    todayAmounts, addMetric, resolvedFormat, groupedDigits, currencyPrefix,
-    trimWholeFraction, existingLabel, zeroDayCount, positiveAmount, perMillionRatio,
-    scanIsCurrent, snapshotTotals, snapshotDaily,
-};

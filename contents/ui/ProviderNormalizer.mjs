@@ -8,57 +8,57 @@ import * as SubscriptionDates from "./SubscriptionDates.mjs";
 // Collection bounds limit allocations and delegates for malformed payloads.
 // Security checks and direct normalizer QtTests cover these limits.
 
-var maximumProviderSnapshots = 256
-var maximumAccountSnapshots = 128
-var maximumAccountIdentityLength = 256
-var maximumCostSnapshots = 256
-var maximumCostProjects = 128
-var maximumExtraRateWindows = 24
+export var maximumProviderSnapshots = 256
+export var maximumAccountSnapshots = 128
+export var maximumAccountIdentityLength = 256
+export var maximumCostSnapshots = 256
+export var maximumCostProjects = 128
+export var maximumExtraRateWindows = 24
 
 // The official `extraRateWindows[].id` identifies a named quota window. Only a
 // short identifier-shaped value is kept; it is matched, never displayed.
-function extraWindowID(value) {
+export function extraWindowID(value) {
     return typeof value === "string" && /^[A-Za-z0-9._:-]{1,64}$/.test(value) ? value : ""
 }
-var maximumSessions = 128
-var maximumCostHistoryPoints = 365
-var maximumCostHistoryScanItems = 2048
-var maximumModelBreakdownsPerDay = 128
-var maximumCostModelRows = 6
+export var maximumSessions = 128
+export var maximumCostHistoryPoints = 365
+export var maximumCostHistoryScanItems = 2048
+export var maximumModelBreakdownsPerDay = 128
+export var maximumCostModelRows = 6
 // Coverage counters are metadata, not allocation sizes, but bounding them keeps
 // later aggregation inside an exact and intentionally small numeric domain.
-var maximumCostCoverageCount = 1000000000
+export var maximumCostCoverageCount = 1000000000
 
 // Longest CLI-controlled pace ETA we will keep, in seconds.
-var maximumPaceEtaSeconds = 31536000
+export var maximumPaceEtaSeconds = 31536000
 
-function hasOwnKey(item, key) {
+export function hasOwnKey(item, key) {
     return Guards.hasOwnKey(item, key)
 }
 
-function isUnsafeObjectKey(key) {
+export function isUnsafeObjectKey(key) {
     return Guards.isUnsafeObjectKey(key)
 }
 
 // A CLI record is a plain object. Arrays and null are rejected because every
 // caller indexes named fields on the result.
-function isCliRecord(value) {
+export function isCliRecord(value) {
     return value !== null && typeof value === "object" && !Array.isArray(value)
 }
 
-function copyObject(item) {
+export function copyObject(item) {
     return Guards.copyObject(item)
 }
 
-function clamp(value, minimum, maximum) {
+export function clamp(value, minimum, maximum) {
     return Math.max(minimum, Math.min(maximum, value))
 }
 
-function nonEmptyString(value) {
+export function nonEmptyString(value) {
     return typeof value === "string" && value.length > 0
 }
 
-function strictFiniteNumber(value) {
+export function strictFiniteNumber(value) {
     var numericType = typeof value === "number"
         || (typeof value === "string" && value.trim().length > 0)
     if (!numericType) {
@@ -68,12 +68,12 @@ function strictFiniteNumber(value) {
     return isFinite(numeric) ? numeric : Number.NaN
 }
 
-function firstStrictFiniteNumber(preferred, fallback) {
+export function firstStrictFiniteNumber(preferred, fallback) {
     var numeric = strictFiniteNumber(preferred)
     return isFinite(numeric) ? numeric : strictFiniteNumber(fallback)
 }
 
-function boundedDisplayText(value, maximumLength) {
+export function boundedDisplayText(value, maximumLength) {
     var limit = Number(maximumLength)
     if (!isFinite(limit) || limit <= 0) {
         limit = 500
@@ -84,26 +84,26 @@ function boundedDisplayText(value, maximumLength) {
 
 // The canonical map key for a provider: CLI aliases resolved, then screened for
 // keys that would reach Object.prototype or smuggle control characters.
-function providerSnapshotKey(providerID) {
+export function providerSnapshotKey(providerID) {
     return ProviderIdentity.providerMapKey(ProviderIdentity.resolveProviderKey(providerID))
 }
 
 // "" for anything that cannot name a provider, so callers skip the entry rather
 // than inventing an id from a non-string or an oversized payload field.
-function normalizedProviderID(value) {
+export function normalizedProviderID(value) {
     return ProviderIdentity.normalizedProviderID(value)
 }
 
 // A scoped response may omit its identity in legacy account records, or carry
 // a command-wide CLI error. An explicit different provider is never its data.
-function providerMatchesScope(item, providerID) {
+export function providerMatchesScope(item, providerID) {
     if (!hasOwnKey(item, "provider")) return true
     var actual = normalizedProviderID(item.provider)
     return actual === providerID
         || (actual === "cli" && isCliRecord(item.error))
 }
 
-function providerConfigEntry(item, includeDisabled) {
+export function providerConfigEntry(item, includeDisabled) {
     if (!isCliRecord(item) || typeof ownField(item, "enabled") !== "boolean") return null
     var providerID = normalizedProviderID(item.provider)
     if (providerID.length === 0) return null
@@ -117,7 +117,7 @@ function providerConfigEntry(item, includeDisabled) {
 // The explicit CLI `all` selector includes disabled providers as well.
 // null means the envelope had no provider-config records. An empty array is a
 // valid success and remains distinguishable from an error-shaped JSON payload.
-function normalizeProviderConfigEntries(payload, includeDisabled) {
+export function normalizeProviderConfigEntries(payload, includeDisabled) {
     var providerIDs = []
     var displayNames = ({})
     var seenProviderIDs = ({})
@@ -137,14 +137,14 @@ function normalizeProviderConfigEntries(payload, includeDisabled) {
     return sawProviderConfigEntry ? { providerIDs: providerIDs, displayNames: displayNames } : null
 }
 
-function providerSnapshotHasError(item) {
+export function providerSnapshotHasError(item) {
     return isCliRecord(item)
         && (item.commandFailed === true || (item.error !== undefined
             && item.error !== null
             && String(item.error).trim().length > 0))
 }
 
-function canonicalProviderSnapshot(item) {
+export function canonicalProviderSnapshot(item) {
     if (!isCliRecord(item)) return null
     var providerID = normalizedProviderID(item.provider)
     if (providerID.length === 0) return null
@@ -155,7 +155,7 @@ function canonicalProviderSnapshot(item) {
 
 // Provider tabs are keyed by canonical provider id. Keep their model unique and
 // retain the first healthy snapshot when a malformed payload repeats an id.
-function dedupeProviderSnapshots(items) {
+export function dedupeProviderSnapshots(items) {
     var result = []
     var indexes = ({})
     if (!Array.isArray(items)) return result
@@ -177,15 +177,15 @@ function dedupeProviderSnapshots(items) {
     return result
 }
 
-function ownField(item, key) {
+export function ownField(item, key) {
     return hasOwnKey(item, key) ? item[key] : undefined
 }
 
-function isNonNegativeNumber(value) {
+export function isNonNegativeNumber(value) {
     return isFinite(value) && value >= 0
 }
 
-function normalizeCodexCreditLimit(providerID, creditLimit) {
+export function normalizeCodexCreditLimit(providerID, creditLimit) {
     if (normalizedProviderID(providerID) !== "codex" || !isCliRecord(creditLimit)) return null
     var used = strictFiniteNumber(ownField(creditLimit, "used"))
     var limit = strictFiniteNumber(ownField(creditLimit, "limit"))
@@ -207,7 +207,7 @@ function normalizeCodexCreditLimit(providerID, creditLimit) {
 
 // Missing confidence keeps legacy payloads compatible. Future or malformed
 // values are bounded to a semantic unknown, never promoted to measured quota.
-function usageConfidence(value) {
+export function usageConfidence(value) {
     if (value === undefined || value === "") {
         return ""
     }
@@ -216,28 +216,28 @@ function usageConfidence(value) {
 
 // CLI and persisted records use field absence for legacy confidence. The empty
 // marker belongs only to normalized in-memory snapshots, never to raw input.
-function usageConfidenceField(record) {
+export function usageConfidenceField(record) {
     return hasOwnKey(record, "dataConfidence")
         ? (usageConfidence(record.dataConfidence) || "unknown") : ""
 }
 
-function authoritativeQuota(row) {
+export function authoritativeQuota(row) {
     var confidence = usageConfidence(row && row.dataConfidence)
     return confidence === "" || confidence === "exact"
 }
 
 // Percentage-only readings can carry explicit CLI resets and forecasts.
 // Present those details without authorizing quota automation from the reading.
-function canPresentQuotaDetails(row) {
+export function canPresentQuotaDetails(row) {
     return !!row && (authoritativeQuota(row) || usageConfidence(row.dataConfidence) === "percentOnly")
 }
 
-function paceForecastKnown(pace, eta) {
+export function paceForecastKnown(pace, eta) {
     if (!isCliRecord(pace) || typeof ownField(pace, "willLastToReset") !== "boolean") return false
     return pace.willLastToReset === true || (isFinite(eta) && eta > 0)
 }
 
-function paceMetrics(pace) {
+export function paceMetrics(pace) {
     var expectedUsed = strictFiniteNumber(pace && pace.expectedUsedPercent)
     var eta = strictFiniteNumber(pace && pace.etaSeconds)
     return {
@@ -257,7 +257,7 @@ function paceMetrics(pace) {
 // `pacePercent` is -1 rather than 0 when the CLI omits it: an omitted pace is
 // not a pace of zero, and a marker drawn at 0 would claim the provider is
 // comfortably ahead of schedule.
-function rateWindowMetrics(window, pace, usageKnown) {
+export function rateWindowMetrics(window, pace, usageKnown) {
     if (!isCliRecord(window)) return null
     var used = strictFiniteNumber(window.usedPercent)
     var hasPercent = usageKnown !== false && isFinite(used)
@@ -272,7 +272,7 @@ function rateWindowMetrics(window, pace, usageKnown) {
 // The window length the CLI reports beside `resetsAt` (10080 for a weekly
 // limit). Anything but a whole number of minutes up to a year is dropped to 0,
 // which consumers read as "length unknown".
-function rateWindowMinutes(value) {
+export function rateWindowMinutes(value) {
     return typeof value === "number" && isFinite(value) && Math.floor(value) === value
         && value > 0 && value <= 366 * 24 * 60 ? value : 0
 }
@@ -280,7 +280,7 @@ function rateWindowMinutes(value) {
 // CLI-controlled text that must never throw while being read. Only genuine
 // scalars survive: coercing an object runs its toString, which a malformed
 // payload may have nulled, and would otherwise abort the whole refresh.
-function safeScalarText(value) {
+export function safeScalarText(value) {
     if (typeof value === "string") {
         return value
     }
@@ -290,7 +290,7 @@ function safeScalarText(value) {
     return ""
 }
 
-function statusSeverity(status) {
+export function statusSeverity(status) {
     if (!status) {
         return ""
     }
@@ -307,7 +307,7 @@ function statusSeverity(status) {
     }
 }
 
-function statusIncidentKey(status) {
+export function statusIncidentKey(status) {
     if (!status) {
         return ""
     }
@@ -331,7 +331,7 @@ function statusIncidentKey(status) {
     return ""
 }
 
-function httpsUrlHost(url) {
+export function httpsUrlHost(url) {
     var match = String(url || "").trim().match(/^https:\/\/([^\/?#]+)/i)
     return match ? match[1].toLowerCase() : ""
 }
@@ -340,7 +340,7 @@ function httpsUrlHost(url) {
 // the URL we already ship for that provider, so a compromised payload cannot
 // point the status action anywhere else. The fallback is passed in rather than
 // looked up here, which keeps the host comparison testable on its own.
-function safeStatusUrl(fallbackStatusUrl, url) {
+export function safeStatusUrl(fallbackStatusUrl, url) {
     var fallback = String(fallbackStatusUrl || "")
     var fallbackHost = httpsUrlHost(fallback)
     var candidate = typeof url === "string" ? url.trim() : ""
@@ -354,7 +354,7 @@ function safeStatusUrl(fallbackStatusUrl, url) {
     return candidateHost === fallbackHost ? candidate : fallback
 }
 
-function accountLabel(item) {
+export function accountLabel(item) {
     if (!item) {
         return ""
     }
@@ -379,12 +379,12 @@ function accountLabel(item) {
 // is reused once it passes the same blank and length checks as a fresh
 // candidate. Overlong or non-string identities carry no key and stay
 // display-only.
-function validAccountIdentity(value) {
+export function validAccountIdentity(value) {
     return typeof value === "string" && value.trim().length > 0
         && value.length <= maximumAccountIdentityLength
 }
 
-function accountKey(item) {
+export function accountKey(item) {
     if (!isCliRecord(item)) return ""
     if (validAccountIdentity(item.accountKey)) return item.accountKey
     var candidates = [item.account, item.organization, item.loginMethod]
@@ -400,7 +400,7 @@ function accountKey(item) {
 // structured value must not mask a valid fallback: `accountKey` skips
 // non-strings, so selecting `item.account || identity.accountEmail` directly
 // would keep an object and lose the fallback identity.
-function firstValidAccountIdentity(candidates) {
+export function firstValidAccountIdentity(candidates) {
     if (!Array.isArray(candidates)) {
         return ""
     }
@@ -413,7 +413,7 @@ function firstValidAccountIdentity(candidates) {
     return ""
 }
 
-function accountOptionKey(item) {
+export function accountOptionKey(item) {
     var key = accountKey(item)
     if (key.length > 0) {
         return "key:" + key
@@ -427,7 +427,7 @@ function accountOptionKey(item) {
 
 // Keep each account's position and first healthy record, as for provider
 // snapshots. A failed duplicate must not hide a successful account read.
-function dedupeAccountOptions(items) {
+export function dedupeAccountOptions(items) {
     if (!Array.isArray(items)) {
         return []
     }
@@ -450,20 +450,20 @@ function dedupeAccountOptions(items) {
     return result
 }
 
-function isMissingTokenAccountsError(errorMessage) {
+export function isMissingTokenAccountsError(errorMessage) {
     // codexbar --all-accounts reports "No token accounts configured for
     // <provider>." even when the provider works through OAuth/CLI auth
     // without named token accounts; that is an empty list, not a failure.
     return String(errorMessage || "").toLowerCase().indexOf("no token accounts configured") !== -1
 }
 
-function isUnsupportedTokenAccountsError(errorMessage) {
+export function isUnsupportedTokenAccountsError(errorMessage) {
     // codexbar --all-accounts rejects providers without token-account support
     // with "<provider> does not support token accounts." (Linux 0.76.0/0.77.0).
     return String(errorMessage || "").toLowerCase().indexOf("does not support token accounts") !== -1
 }
 
-function normalizeSession(item) {
+export function normalizeSession(item) {
     if (!isCliRecord(item)) {
         return null
     }
@@ -501,7 +501,7 @@ function normalizeSession(item) {
 // `null` for a payload shape we do not recognize, which the caller reports as an
 // error. An unrecognized shape must not read as an empty successful snapshot,
 // because that would silently drop the sessions the user was already looking at.
-function normalizeSessions(payload) {
+export function normalizeSessions(payload) {
     var items
     if (Array.isArray(payload)) {
         items = payload
@@ -529,7 +529,7 @@ function normalizeSessions(payload) {
 }
 
 // NaN when no nonnegative part is usable; an explicitly measured zero stays zero.
-function sumTokenParts(inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens) {
+export function sumTokenParts(inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens) {
     var total = 0
     var hasObservedPart = false
     var values = [inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens]
@@ -545,20 +545,20 @@ function sumTokenParts(inputTokens, outputTokens, cacheReadTokens, cacheCreation
 
 // `maximumDays` defaults to the charted bound; aggregates over a longer
 // calendar period may pass its span. Record inspection stays separately bounded.
-function boundedHistoryDays(days, maximumDays) {
+export function boundedHistoryDays(days, maximumDays) {
     var numericDays = strictFiniteNumber(days)
     return isFinite(numericDays)
         ? Math.max(1, Math.min(maximumDays || maximumCostHistoryPoints, numericDays))
         : 30
 }
 
-function calendarDateKey(year, month, day) {
+export function calendarDateKey(year, month, day) {
     var monthText = month < 10 ? "0" + month : String(month)
     var dayText = day < 10 ? "0" + day : String(day)
     return String(year) + "-" + monthText + "-" + dayText
 }
 
-function parsedCalendarDateKey(value) {
+export function parsedCalendarDateKey(value) {
     if (typeof value !== "string") return null
     var match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
     if (!match || Number(match[1]) < 1970) return null
@@ -572,7 +572,7 @@ function parsedCalendarDateKey(value) {
 // A CLI calendar key names a local day, not an instant: its local noon keeps
 // the same day in zones west of UTC and on days whose local midnight is skipped
 // by a spring-forward transition. Null for any other label.
-function calendarKeyLocalDate(value) {
+export function calendarKeyLocalDate(value) {
     var parsed = parsedCalendarDateKey(value)
     if (!parsed) {
         return null
@@ -581,7 +581,7 @@ function calendarKeyLocalDate(value) {
     return new Date(utc.getUTCFullYear(), utc.getUTCMonth(), utc.getUTCDate(), 12)
 }
 
-function localCalendarDateKey(value) {
+export function localCalendarDateKey(value) {
     if (!nonEmptyString(value) || value.length > 100) {
         return ""
     }
@@ -601,7 +601,7 @@ function localCalendarDateKey(value) {
     return calendarDateKey(date.getFullYear(), date.getMonth() + 1, date.getDate())
 }
 
-function costHistoryCalendarWindow(days, updatedAt, maximumDays) {
+export function costHistoryCalendarWindow(days, updatedAt, maximumDays) {
     var endDate = parsedCalendarDateKey(localCalendarDateKey(updatedAt))
     if (!endDate) {
         return null
@@ -615,7 +615,7 @@ function costHistoryCalendarWindow(days, updatedAt, maximumDays) {
 
 // Gap filling may be unsafe, but valid calendar labels must still stay inside
 // the selected window. Undated legacy rows retain their bounded tail behavior.
-function costHistoryRowsWithinWindow(rows, window) {
+export function costHistoryRowsWithinWindow(rows, window) {
     if (!window) {
         return rows
     }
@@ -626,7 +626,7 @@ function costHistoryRowsWithinWindow(rows, window) {
     })
 }
 
-function indexedCostDays(rows, window, historyDays) {
+export function indexedCostDays(rows, window, historyDays) {
     var indexed = { byDate: ({}), hasCost: false, hasTokens: false }
     for (var i = 0; i < rows.length; i++) {
         var parsed = parsedCalendarDateKey(rows[i].label)
@@ -644,16 +644,16 @@ function indexedCostDays(rows, window, historyDays) {
     return indexed
 }
 
-function isObservedCostAmount(value) {
+export function isObservedCostAmount(value) {
     return typeof value === "number" && isFinite(value)
 }
 
-function costDateWithinWindow(parsed, window) {
+export function costDateWithinWindow(parsed, window) {
     return parsed.timestampMs >= window.firstTimestampMs
         && parsed.timestampMs <= window.lastTimestampMs
 }
 
-function emptyCostDay(key, currency, indexed) {
+export function emptyCostDay(key, currency, indexed) {
     // Only metrics observed in this snapshot can imply zero activity on a gap.
     return {
         label: key,
@@ -669,7 +669,7 @@ function emptyCostDay(key, currency, indexed) {
     }
 }
 
-function filledCostDays(indexed, window, currency, blockedDateKeys) {
+export function filledCostDays(indexed, window, currency, blockedDateKeys) {
     var result = []
     var observedInRange = false
     var dayMilliseconds = 24 * 60 * 60 * 1000
@@ -687,7 +687,7 @@ function filledCostDays(indexed, window, currency, blockedDateKeys) {
     return observedInRange ? result : []
 }
 
-function fillMissingCostDays(rows, currency, selection, blockedDateKeys) {
+export function fillMissingCostDays(rows, currency, selection, blockedDateKeys) {
     if (rows.length === 0) return rows
     var window = selection.window
     if (!window) return rows
@@ -698,12 +698,12 @@ function fillMissingCostDays(rows, currency, selection, blockedDateKeys) {
     return result === null ? costHistoryRowsWithinWindow(rows, window) : result
 }
 
-function isIntegerInRange(value, minimum, maximum) {
+export function isIntegerInRange(value, minimum, maximum) {
     return typeof value === "number" && isFinite(value) && Math.floor(value) === value
         && value >= minimum && value <= maximum
 }
 
-function normalizedCostCoverage(coverage) {
+export function normalizedCostCoverage(coverage) {
     if (!isCliRecord(coverage)) return null
     var fields = ["priced", "unpriced", "unmetered", "estimated"]
     var result = ({})
@@ -720,7 +720,7 @@ function normalizedCostCoverage(coverage) {
 // an absent, malformed, or negative value means "none reported" rather than an
 // unknown amount. The upstream sum saturates, so accept the same bound as the
 // coverage counts and keep anything larger as the bound.
-function normalizedIncompleteRequestCount(value) {
+export function normalizedIncompleteRequestCount(value) {
     return isIntegerInRange(value, 1, Infinity) ? Math.min(value, maximumCostCoverageCount) : 0
 }
 
@@ -729,7 +729,7 @@ function normalizedIncompleteRequestCount(value) {
 // bounded contract and translate the provenance wire enum before the snapshot
 // becomes QML state; older payloads and records whose axes are all unusable
 // remain quiet.
-function costSourceKind(provenance) {
+export function costSourceKind(provenance) {
     switch (provenance) {
     case "listPriceEstimate": return "listPrice"
     case "vendorMetered": return "vendor"
@@ -739,7 +739,7 @@ function costSourceKind(provenance) {
     }
 }
 
-function normalizeCostTrustMetadata(rawCostRecord) {
+export function normalizeCostTrustMetadata(rawCostRecord) {
     if (!isCliRecord(rawCostRecord)) return null
     var coverage = normalizedCostCoverage(ownField(rawCostRecord, "coverage"))
     var incompleteRequests = normalizedIncompleteRequestCount(rawCostRecord.incompleteRequestCount)
@@ -749,7 +749,7 @@ function normalizeCostTrustMetadata(rawCostRecord) {
         : null
 }
 
-function costRecordHasError(item) {
+export function costRecordHasError(item) {
     if (!isCliRecord(item) || !hasOwnKey(item, "error")) {
         return false
     }
@@ -760,12 +760,12 @@ function costRecordHasError(item) {
     return Boolean(error)
 }
 
-function costEnvelopeItems(payload) {
+export function costEnvelopeItems(payload) {
     if (Array.isArray(payload)) return payload
     return isCliRecord(payload) ? [payload] : null
 }
 
-function normalizeCostEnvelope(payload) {
+export function normalizeCostEnvelope(payload) {
     var items = costEnvelopeItems(payload)
     if (!items) return null
     if (items.length === 0) return []
@@ -784,7 +784,7 @@ function normalizeCostEnvelope(payload) {
 // A partial cost response is a complete fresh snapshot except for the providers
 // named by error records. Carry only those providers forward; copying the whole
 // previous map would retain providers that the CLI no longer reports.
-function mergeCostSnapshotsAfterPartialFailure(previousSnapshots, freshSnapshots,
+export function mergeCostSnapshotsAfterPartialFailure(previousSnapshots, freshSnapshots,
         failedProviderIDs) {
     var merged = isCliRecord(freshSnapshots) ? copyObject(freshSnapshots) : ({})
     if (!isCliRecord(previousSnapshots) || !Array.isArray(failedProviderIDs)) {
@@ -801,11 +801,11 @@ function mergeCostSnapshotsAfterPartialFailure(previousSnapshots, freshSnapshots
     return merged
 }
 
-function nonNegativeAmount(value, missing) {
+export function nonNegativeAmount(value, missing) {
     return isFinite(value) ? Math.max(0, value) : missing
 }
 
-function normalizedCostProject(item, currency) {
+export function normalizedCostProject(item, currency) {
     if (!isCliRecord(item) || typeof ownField(item, "name") !== "string") return null
     var label = boundedDisplayText(item.name, 120)
     var cost = strictFiniteNumber(ownField(item, "totalCost"))
@@ -817,7 +817,7 @@ function normalizedCostProject(item, currency) {
 
 // CLI 0.56.2 projects carry local paths and nested source records. Retain only
 // the display name and range totals; project names are labels, never map keys.
-function normalizeCostProjects(items, currency) {
+export function normalizeCostProjects(items, currency) {
     var result = { rows: [], truncated: false }
     if (!Array.isArray(items)) return result
     var limit = Math.min(items.length, maximumCostProjects)
@@ -831,7 +831,7 @@ function normalizeCostProjects(items, currency) {
 
 // A record without any cost or token amount is not a day of usage. The daily
 // history skips it; the model history also needs it to lack model breakdowns.
-function costRecordHasAmounts(item) {
+export function costRecordHasAmounts(item) {
     return isFinite(firstStrictFiniteNumber(item.totalCost, item.costUSD))
         || isFinite(firstStrictFiniteNumber(item.totalTokens, item.tokens))
         || [item.inputTokens, item.outputTokens, item.cacheReadTokens,
@@ -842,11 +842,11 @@ function costRecordHasAmounts(item) {
             })
 }
 
-function costDayLabel(item) {
+export function costDayLabel(item) {
     return boundedDisplayText(item.date || item.day || item.dayKey || "", 120)
 }
 
-function normalizedCostDay(item, currency) {
+export function normalizedCostDay(item, currency) {
     var row = normalizeCostTotals(item, item.costUSD, item.tokens, currency)
     row.label = costDayLabel(item)
     row.incompleteRequests = normalizedIncompleteRequestCount(item.incompleteRequestCount)
@@ -856,7 +856,7 @@ function normalizedCostDay(item, currency) {
 }
 
 // Daily rows and model totals share calendar and input-inspection bounds.
-function costHistorySelection(items, options) {
+export function costHistorySelection(items, options) {
     var historyDays = Math.floor(boundedHistoryDays(options.days, options.maximumDays))
     return {
         historyDays: historyDays,
@@ -866,7 +866,7 @@ function costHistorySelection(items, options) {
     }
 }
 
-function selectedCostDays(items, currency, options, modelSources) {
+export function selectedCostDays(items, currency, options, modelSources) {
     var selection = costHistorySelection(items, options)
     var historyDays = selection.historyDays
     var blockedDateKeys = ({})
@@ -893,7 +893,7 @@ function selectedCostDays(items, currency, options, modelSources) {
     return result.slice(-historyDays)
 }
 
-function normalizeCostDaily(items, currency, options) {
+export function normalizeCostDaily(items, currency, options) {
     if (!Array.isArray(items)) return []
     options = options || ({})
     // Keep raw records local; only selected display rows need model summaries.
@@ -913,7 +913,7 @@ function normalizeCostDaily(items, currency, options) {
     return result
 }
 
-function normalizeCostTotals(totals, fallbackCost, fallbackTokens, currency) {
+export function normalizeCostTotals(totals, fallbackCost, fallbackTokens, currency) {
     var source = totals || ({})
     var cost = firstStrictFiniteNumber(source.totalCost, fallbackCost)
     var tokens = firstStrictFiniteNumber(source.totalTokens, fallbackTokens)
@@ -938,20 +938,20 @@ function normalizeCostTotals(totals, fallbackCost, fallbackTokens, currency) {
 
 // CodexBar 0.56.2 reports zero cost for Antigravity when today has no usage
 // or the whole history is empty, even though the provider has no pricing.
-function normalizeProviderCostAmount(providerID, amount) {
+export function normalizeProviderCostAmount(providerID, amount) {
     var cost = strictFiniteNumber(amount)
     return normalizedProviderID(providerID) !== "antigravity" && isFinite(cost)
         ? cost : null
 }
 
-function normalizeProviderCostTotals(providerID, totals, fallback) {
+export function normalizeProviderCostTotals(providerID, totals, fallback) {
     fallback = fallback || ({})
     var result = normalizeCostTotals(totals, fallback.cost, fallback.tokens, fallback.currency)
     result.cost = normalizeProviderCostAmount(providerID, result.cost)
     return result
 }
 
-function eligibleCostModelDay(item, itemIndex, selection) {
+export function eligibleCostModelDay(item, itemIndex, selection) {
     if (!isCliRecord(item)) return false
     if (!hasOwnKey(item, "modelBreakdowns") && !costRecordHasAmounts(item)) return false
     if (!selection.window) return true
@@ -960,12 +960,12 @@ function eligibleCostModelDay(item, itemIndex, selection) {
     return parsed ? costDateWithinWindow(parsed, selection.window) : itemIndex >= selection.firstItem
 }
 
-function costModelScanTruncated(selection, retainedDayCount) {
+export function costModelScanTruncated(selection, retainedDayCount) {
     return selection.firstInspectedItem > 0
         && (selection.window !== null || retainedDayCount < selection.historyDays)
 }
 
-function normalizeCostModels(items, currency, options) {
+export function normalizeCostModels(items, currency, options) {
     if (!Array.isArray(items)) return { rows: [], truncated: false }
     options = options || ({})
     var selection = costHistorySelection(items, options)
@@ -984,12 +984,12 @@ function normalizeCostModels(items, currency, options) {
     return summary
 }
 
-function costModelName(breakdown) {
+export function costModelName(breakdown) {
     var name = ownField(breakdown, "modelName")
     return nonEmptyString(name) ? name : ownField(breakdown, "model")
 }
 
-function normalizedCostModelBreakdown(breakdown, modelLabels) {
+export function normalizedCostModelBreakdown(breakdown, modelLabels) {
     if (!isCliRecord(breakdown)) return null
     var rawName = costModelName(breakdown)
     // Aggregate by raw identity: bounded, redacted labels can collide.
@@ -1008,7 +1008,7 @@ function normalizedCostModelBreakdown(breakdown, modelLabels) {
     }
 }
 
-function accumulateCostModelMetric(aggregate, breakdown, metric) {
+export function accumulateCostModelMetric(aggregate, breakdown, metric) {
     var overflowKey = metric + "Overflow"
     if (!isFinite(breakdown[metric]) || aggregate[overflowKey]) return
     var total = (aggregate[metric] === null ? 0 : aggregate[metric]) + Math.max(0, breakdown[metric])
@@ -1017,13 +1017,13 @@ function accumulateCostModelMetric(aggregate, breakdown, metric) {
     aggregate[metric] = aggregate[overflowKey] ? null : total
 }
 
-function accumulateCostModelAmounts(aggregate, breakdown) {
+export function accumulateCostModelAmounts(aggregate, breakdown) {
     if (isFinite(breakdown.tokens) && !isFinite(breakdown.cost)) aggregate.unknownCost = true
     accumulateCostModelMetric(aggregate, breakdown, "cost")
     accumulateCostModelMetric(aggregate, breakdown, "tokens")
 }
 
-function addCostModelBreakdown(byName, incompleteByName, breakdown) {
+export function addCostModelBreakdown(byName, incompleteByName, breakdown) {
     if (!breakdown) {
         return
     }
@@ -1048,24 +1048,24 @@ function addCostModelBreakdown(byName, incompleteByName, breakdown) {
     accumulateCostModelAmounts(byName[key], breakdown)
 }
 
-function compareCostModelLabels(a, b) {
+export function compareCostModelLabels(a, b) {
     return a.label === b.label ? 0 : (a.label < b.label ? -1 : 1)
 }
 
-function compareCostModelAmounts(a, b) {
+export function compareCostModelAmounts(a, b) {
     var aValue = a === null ? 0 : a
     var bValue = b === null ? 0 : b
     if (aValue === bValue) return 0
     return bValue > aValue ? 1 : -1
 }
 
-function compareCostModels(a, b) {
+export function compareCostModels(a, b) {
     return compareCostModelAmounts(a.cost, b.cost)
         || compareCostModelAmounts(a.tokens, b.tokens)
         || compareCostModelLabels(a, b)
 }
 
-function costModelTokenRanking(rows, truncated, hasUnknownCost) {
+export function costModelTokenRanking(rows, truncated, hasUnknownCost) {
     // Rank the full bounded aggregation before the cost-first display cap.
     // A cheap or unpriced model can still have the largest token count.
     var tokenRows = rows.filter(function(row) { return row.tokens !== null })
@@ -1083,7 +1083,7 @@ function costModelTokenRanking(rows, truncated, hasUnknownCost) {
     }
 }
 
-function accumulateCostModelDay(aggregation, item, modelLabels) {
+export function accumulateCostModelDay(aggregation, item, modelLabels) {
     var breakdowns = hasOwnKey(item, "modelBreakdowns") && Array.isArray(item.modelBreakdowns)
         ? item.modelBreakdowns : []
     var breakdownLimit = Math.min(breakdowns.length, maximumModelBreakdownsPerDay)
@@ -1094,7 +1094,7 @@ function accumulateCostModelDay(aggregation, item, modelLabels) {
     }
 }
 
-function costModelRows(aggregation, currency) {
+export function costModelRows(aggregation, currency) {
     var hasUnknownCost = false
     var modelKeys = Object.keys(aggregation.byName)
     // Currency belongs to the summary, not each model's accumulation. Validate
@@ -1110,7 +1110,7 @@ function costModelRows(aggregation, currency) {
     return { rows: rows, hasUnknownCost: hasUnknownCost }
 }
 
-function costModelSummary(modelDays, currency, includeTokenRanking, modelLabels) {
+export function costModelSummary(modelDays, currency, includeTokenRanking, modelLabels) {
     // Excluded-only records contribute counts without manufacturing measured amounts.
     var aggregation = { byName: ({}), incompleteByName: ({}), truncated: false }
     modelLabels = modelLabels || new Map()
@@ -1129,28 +1129,3 @@ function costModelSummary(modelDays, currency, includeTokenRanking, modelLabels)
     }
     return result
 }
-
-export {
-    maximumProviderSnapshots, maximumAccountSnapshots, maximumAccountIdentityLength, maximumCostSnapshots, maximumCostProjects,
-    maximumExtraRateWindows, extraWindowID, maximumSessions, maximumCostHistoryPoints, maximumCostHistoryScanItems,
-    maximumModelBreakdownsPerDay, maximumCostModelRows, maximumCostCoverageCount, maximumPaceEtaSeconds, hasOwnKey,
-    isUnsafeObjectKey, isCliRecord, copyObject, clamp, nonEmptyString,
-    strictFiniteNumber, firstStrictFiniteNumber, boundedDisplayText, providerSnapshotKey, normalizedProviderID,
-    providerMatchesScope, providerConfigEntry, normalizeProviderConfigEntries, providerSnapshotHasError, canonicalProviderSnapshot,
-    dedupeProviderSnapshots, ownField, isNonNegativeNumber, normalizeCodexCreditLimit, usageConfidence,
-    usageConfidenceField, authoritativeQuota, canPresentQuotaDetails, paceForecastKnown, paceMetrics,
-    rateWindowMetrics, rateWindowMinutes, safeScalarText, statusSeverity, statusIncidentKey,
-    httpsUrlHost, safeStatusUrl, accountLabel, validAccountIdentity, accountKey,
-    firstValidAccountIdentity, accountOptionKey, dedupeAccountOptions, isMissingTokenAccountsError, isUnsupportedTokenAccountsError,
-    normalizeSession, normalizeSessions, sumTokenParts, boundedHistoryDays, calendarDateKey,
-    parsedCalendarDateKey, calendarKeyLocalDate, localCalendarDateKey, costHistoryCalendarWindow, costHistoryRowsWithinWindow,
-    indexedCostDays, isObservedCostAmount, costDateWithinWindow, emptyCostDay, filledCostDays,
-    fillMissingCostDays, isIntegerInRange, normalizedCostCoverage, normalizedIncompleteRequestCount, costSourceKind,
-    normalizeCostTrustMetadata, costRecordHasError, costEnvelopeItems, normalizeCostEnvelope, mergeCostSnapshotsAfterPartialFailure,
-    nonNegativeAmount, normalizedCostProject, normalizeCostProjects, costRecordHasAmounts, costDayLabel,
-    normalizedCostDay, costHistorySelection, selectedCostDays, normalizeCostDaily, normalizeCostTotals,
-    normalizeProviderCostAmount, normalizeProviderCostTotals, eligibleCostModelDay, costModelScanTruncated, normalizeCostModels,
-    costModelName, normalizedCostModelBreakdown, accumulateCostModelMetric, accumulateCostModelAmounts, addCostModelBreakdown,
-    compareCostModelLabels, compareCostModelAmounts, compareCostModels, costModelTokenRanking, accumulateCostModelDay,
-    costModelRows, costModelSummary,
-};

@@ -2,7 +2,7 @@ import * as Guards from "./Guards.mjs";
 
 // Official usage dates are ISO-8601 strings. Check calendar components before
 // Date.parse, which otherwise rolls impossible dates into the following month.
-function date(value, dateOnly, kind) {
+export function date(value, dateOnly, kind) {
     if (typeof value !== "string" || value.length > 35) {
         return null;
     }
@@ -40,7 +40,7 @@ function date(value, dateOnly, kind) {
         calendarDay: dateOnly ? value.slice(0, 10) : ""};
 }
 
-function normalize(usage) {
+export function normalize(usage) {
     var result = [];
     for (var entry of [{field: "subscriptionRenewsAt", kind: "renews"},
             {field: "subscriptionExpiresAt", kind: "expires"}]) {
@@ -55,7 +55,3 @@ function normalize(usage) {
     }
     return result;
 }
-
-export {
-    date, normalize,
-};

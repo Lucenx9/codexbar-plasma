@@ -54,6 +54,18 @@ keyboard/pointer activation with the KDE desktop style at narrow and normal
 widths in LTR/RTL layouts. `tst_disclosure_button.qml` separately preserves the
 settings-only alignment with neighbouring check boxes.
 
+`test_cost_context.py` and `test_command_source_isolation.py` use
+`qml_runtime_support.py` to reject controller warnings except one Qt 6.11.1
+initialization diagnostic (cost-context cancellation exceptions remain local):
+`QObject::connect(QJSEngine, QtObject): invalid nullptr parameter`. A dynamically
+created empty WorkerScript reproduces it without applet code. In Qt 6.11.1,
+[`QtObject` connects `uiLanguageChanged`](https://github.com/qt/qtdeclarative/blob/v6.11.1/src/qml/qml/qqmlbuiltinfunctions.cpp#L267)
+to the null public engine used by
+[`WorkerScript`](https://github.com/qt/qtdeclarative/blob/v6.11.1/src/qmlworkerscript/qquickworkerscript.cpp#L232).
+The test accepts only that exact diagnostic on that exact Qt version; it does
+not suppress runtime logging or relax worker outcome assertions. Recheck the
+exception when updating the CI Qt version.
+
 `tst_popup_tab_strip.qml` checks manual keyboard activation and mirrored arrow
 navigation, including wrapping and Home/End. Resize and label-growth cases keep
 an unselected focused tab visible; focus outside navigation stays untouched.

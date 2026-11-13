@@ -14,35 +14,35 @@
 
 // Own properties only, read through `Object.prototype` so a payload carrying its
 // own `hasOwnProperty` key cannot answer for itself.
-function hasOwnKey(item, key) {
+export function hasOwnKey(item, key) {
     return item ? Object.prototype.hasOwnProperty.call(item, key) : false
 }
 
-function isRecord(value) {
+export function isRecord(value) {
     return value !== null && typeof value === "object" && !Array.isArray(value)
 }
 
-function isFiniteNumber(value) {
+export function isFiniteNumber(value) {
     return typeof value === "number" && isFinite(value)
 }
 
-function isNonNegativeInteger(value) {
+export function isNonNegativeInteger(value) {
     return isFiniteNumber(value) && Math.floor(value) === value && value >= 0
 }
 
-function isArrayIndex(items, index) {
+export function isArrayIndex(items, index) {
     return Array.isArray(items) && typeof index === "number"
         && Math.floor(index) === index && index >= 0 && index < items.length
 }
 
 // The key is coerced first: a non-string key that stringifies to `__proto__`
 // reaches the same slot as the string would.
-function isUnsafeObjectKey(key) {
+export function isUnsafeObjectKey(key) {
     var value = String(key || "")
     return value === "__proto__" || value === "constructor" || value === "prototype"
 }
 
-function copyObject(item) {
+export function copyObject(item) {
     var copy = ({})
     for (var key in item) {
         if (!hasOwnKey(item, key) || isUnsafeObjectKey(key)) {
@@ -57,7 +57,7 @@ function copyObject(item) {
 // quote. Inside single quotes a POSIX shell expands nothing, so this is the only
 // escaping the value needs, and it is the reason no CLI-controlled string can
 // grow into a second command.
-function shellQuote(value) {
+export function shellQuote(value) {
     return "'" + String(value).replace(/'/g, "'\\''") + "'"
 }
 
@@ -79,7 +79,7 @@ function shellQuote(value) {
 // Catch PIPE only in that shell: a diagnostic on a disconnected engine pipe
 // must not cancel the escalation. Caught handlers reset in executed children.
 // These callers place the bound after their UI deadline.
-function boundedShellCommand(command, timeoutSeconds, killAfterSeconds, processGroup) {
+export function boundedShellCommand(command, timeoutSeconds, killAfterSeconds, processGroup) {
     if (command.length === 0) {
         return ""
     }
@@ -101,19 +101,19 @@ function boundedShellCommand(command, timeoutSeconds, killAfterSeconds, processG
 // is wrong, which needs a different answer from a provider or network failure.
 // The codes are part of the shell contract, so they hold in every locale, while
 // the matching stderr text does not.
-var commandNotFoundExitCode = 127
-var commandNotExecutableExitCode = 126
+export var commandNotFoundExitCode = 127
+export var commandNotExecutableExitCode = 126
 
 // The numeric exit status, or NaN when the engine reported none. A missing or
 // malformed status is a failure, never an implicit 0.
-function exitCode(value) {
+export function exitCode(value) {
     if (typeof value === "number") {
         return value
     }
     return typeof value === "string" && /^\s*-?\d+\s*$/.test(value) ? Number(value) : Number.NaN
 }
 
-function isCommandPathFailure(exitCode) {
+export function isCommandPathFailure(exitCode) {
     // The engine reports the code as a number or a string. Anything else,
     // including a single-element array that would coerce to 127, is not an
     // exit code and must not be read as one.
@@ -128,13 +128,7 @@ function isCommandPathFailure(exitCode) {
 // A direct timeout parent lets the helper detect engine process destruction.
 // Disconnect alone may retain a cached engine source, so login also has an
 // explicit cancellation request owned by the page.
-function supervisedShellCommand(command, timeoutSeconds, killAfterSeconds) {
+export function supervisedShellCommand(command, timeoutSeconds, killAfterSeconds) {
     return "sh -c " + shellQuote("exec timeout --kill-after="
         + shellQuote(killAfterSeconds + "s") + " " + shellQuote(timeoutSeconds + "s") + " " + command)
 }
-
-export {
-    hasOwnKey, isRecord, isFiniteNumber, isNonNegativeInteger, isArrayIndex,
-    isUnsafeObjectKey, copyObject, shellQuote, boundedShellCommand, commandNotFoundExitCode,
-    commandNotExecutableExitCode, exitCode, isCommandPathFailure, supervisedShellCommand,
-};

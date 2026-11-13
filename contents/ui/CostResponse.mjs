@@ -8,7 +8,7 @@ import * as CliResponse from "./CliResponse.mjs";
 // oldest recorded day to the scan day instead; dates after a known scan day
 // cannot extend that span. NaN when no eligible day is recorded.
 // Like the daily normalization, read only the newest scan budget of records.
-function recordedHistoryDays(daily, scanDay) {
+export function recordedHistoryDays(daily, scanDay) {
     var first = Infinity;
     var last = -Infinity;
     var scan = Normalizer.parsedCalendarDateKey(scanDay);
@@ -29,7 +29,7 @@ function recordedHistoryDays(daily, scanDay) {
 
 // Long sparse histories need a calendar denominator, not an array with one
 // entry per day. Inspect only the same bounded input tail as the normalizer.
-function longHistoryAverage(items, currency, recordedDays, scanDay) {
+export function longHistoryAverage(items, currency, recordedDays, scanDay) {
     var source = Array.isArray(items) ? items : [];
     var first = Math.max(0, source.length - Normalizer.maximumCostHistoryScanItems);
     var scan = Normalizer.parsedCalendarDateKey(scanDay);
@@ -68,7 +68,7 @@ function longHistoryAverage(items, currency, recordedDays, scanDay) {
     };
 }
 
-function normalizeSnapshot(item, requestedHistoryDays) {
+export function normalizeSnapshot(item, requestedHistoryDays) {
     var provider = Normalizer.providerSnapshotKey(item.provider);
     var currency = Normalizer.boundedDisplayText(item.currencyCode || "USD", 12);
     var reportingPeriod = typeof item.reportingPeriod === "string" ? item.reportingPeriod : "";
@@ -140,7 +140,7 @@ function normalizeSnapshot(item, requestedHistoryDays) {
     };
 }
 
-function hasMeasuredAmounts(snapshot) {
+export function hasMeasuredAmounts(snapshot) {
     var amounts = [snapshot.today, snapshot.totals].concat(
         snapshot.daily, snapshot.models, snapshot.projects.rows);
     return amounts.some(function(row) {
@@ -148,7 +148,7 @@ function hasMeasuredAmounts(snapshot) {
     });
 }
 
-function preferredSnapshot(costs, candidate) {
+export function preferredSnapshot(costs, candidate) {
     if (!Normalizer.hasOwnKey(costs, candidate.provider)) return candidate;
     var previous = costs[candidate.provider];
     // Prefer a measurement to an empty duplicate in either order.
@@ -158,7 +158,7 @@ function preferredSnapshot(costs, candidate) {
 
 // Only success and partial results contain replacement data. Other outcomes
 // leave the controller's last completed snapshot untouched.
-function response(stdoutValue, stderrValue, requestedHistoryDays, exitCode) {
+export function response(stdoutValue, stderrValue, requestedHistoryDays, exitCode) {
     var parsed = CliResponse.decode(stdoutValue, stderrValue, exitCode, Normalizer.maximumCostSnapshots);
     if (parsed.outcome !== "success") return parsed;
     var payload = parsed.payload;
@@ -193,8 +193,3 @@ function response(stdoutValue, stderrValue, requestedHistoryDays, exitCode) {
         costs: costs, failedProviders: failedProviders, message: message,
         argumentsRejected: argumentsRejected};
 }
-
-export {
-    recordedHistoryDays, longHistoryAverage, normalizeSnapshot, hasMeasuredAmounts, preferredSnapshot,
-    response,
-};

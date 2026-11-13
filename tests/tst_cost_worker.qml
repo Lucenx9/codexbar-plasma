@@ -118,6 +118,10 @@ TestCase {
         return [
             {tag: "key-crosses-old-bound", offset: 65530, text: "sk-abcdefgh123456789", expected: "[redacted]"},
             {tag: "last-visible-position", offset: 65535, text: "sk-abcdefgh123456789", expected: "[redacted]"},
+            // Preserve the untruncated SafeText result when redaction needs
+            // characters beyond the inspection window, after a late start.
+            {tag: "inspection-lookahead", offset: 65535,
+                text: "x" + " ".repeat(3996) + "sk-abcdefgh ", expected: "x [re"},
             {tag: "authorization", offset: 65530, text: "Authorization: Bearer synthetic-secret", expected: "Authorization: [redacted]"},
             {tag: "diagnostic", offset: 65535, text: "synthetic command failure", expected: "synthetic command failure"},
             {tag: "outside-scan", offset: 65536, text: "must remain invisible", expected: ""}
