@@ -197,6 +197,33 @@ function commandError(payload) {
     return ""
 }
 
+function commandStatus(record) {
+    var status = Guards.hasOwnKey(record, "status")
+        ? (typeof record.status === "string" ? record.status.trim().toLowerCase() : "") : "ok"
+    if (["ok", "cancelled", "canceled", "error", "failed", "failure"].indexOf(status) < 0) {
+        return "invalidPayload"
+    }
+    if (record.cancelled === true || ["cancelled", "canceled"].indexOf(status) >= 0) {
+        return "cancelled"
+    }
+    return status === "ok" ? "success" : "statusError"
+}
+
+function commandPayloadOutcome(payload) {
+    var envelope = Array.isArray(payload) ? payload[0] : payload
+    var envelopeMessage = commandError(payload)
+    // An error record establishes failure even without a readable message.
+    if ((isCliRecord(envelope) && isCliRecord(envelope.error)) || envelopeMessage.length > 0) {
+        return { outcome: "envelopeError", message: envelopeMessage }
+    }
+    if (!commandPayloadIsSupported(payload)) {
+        return { outcome: payload === undefined ? "empty" : "invalidPayload", message: "" }
+    }
+    var outcome = Array.isArray(payload) ? "success" : commandStatus(payload)
+    return { outcome: outcome,
+        message: outcome === "statusError" ? boundedCliMessage(payload.message || "") : "" }
+}
+
 // Classified result of one finished provider command run (enable/disable,
 // set-api-key, descriptor field or action). `payload` is the already-parsed
 // stdout JSON, or undefined when stdout was empty; `stderrText` and
@@ -219,59 +246,21 @@ function commandError(payload) {
 //   "empty"        no stdout at all and no stderr to explain it
 //   "invalidPayload"  stdout JSON had an unsupported shape
 function commandOutcome(payload, stderrText, exitCode) {
-    var record = isCliRecord(payload) ? payload : null
-    var envelope = Array.isArray(payload) ? payload[0] : record
-    var envelopeMessage = commandError(payload)
-    // The error record establishes failure even when its message is absent
-    // or malformed. Display text must not decide whether a write succeeded.
-    if ((isCliRecord(envelope) && isCliRecord(envelope.error))
-            || envelopeMessage.length > 0) {
-        return ({ outcome: "envelopeError", message: envelopeMessage })
-    }
-
-    var hasStatus = record && Guards.hasOwnKey(record, "status")
-    var status = hasStatus && typeof record.status === "string"
-        ? record.status.trim().toLowerCase()
-        : ""
-    var statusCancelled = status === "cancelled" || status === "canceled"
-    var cancelled = record
-        && (record.cancelled === true || statusCancelled)
-    var statusFailed = status === "error" || status === "failed" || status === "failure"
-    var statusSupported = !hasStatus
-        || status === "ok"
-        || statusCancelled
-        || statusFailed
-    var supportedPayload = commandPayloadIsSupported(payload)
+    var result = commandPayloadOutcome(payload)
+    if (result.outcome === "envelopeError") return result
     var code = Guards.exitCode(exitCode)
-    var timedOut = code === 124 || code === 137
-
-    if (supportedPayload && statusSupported && !cancelled && !statusFailed && code === 0) {
-        return ({ outcome: "success", message: "" })
-    }
-
+    if (result.outcome === "success" && code === 0) return result
     var stderrMessage = boundedCliMessage(stderrText)
     if (stderrMessage.length > 0) {
-        return ({ outcome: "stderrError", message: stderrMessage })
+        return { outcome: "stderrError", message: stderrMessage }
     }
-    if (timedOut) {
-        return ({ outcome: "timeout", message: "" })
+    if (code === 124 || code === 137) {
+        return { outcome: "timeout", message: "" }
     }
     if (!isFinite(code) || code !== 0) {
-        return ({ outcome: "exitCodeError", message: "", exitCode: code })
+        return { outcome: "exitCodeError", message: "", exitCode: code }
     }
-    if (!supportedPayload || !statusSupported) {
-        return ({
-            outcome: payload === undefined ? "empty" : "invalidPayload",
-            message: ""
-        })
-    }
-    if (cancelled) {
-        return ({ outcome: "cancelled", message: "" })
-    }
-    return ({
-        outcome: "statusError",
-        message: record.message ? boundedCliMessage(record.message) : ""
-    })
+    return result
 }
 
 // Linux CLI 0.74.1 diagnostic schema 1.0 reports failed provider fetches in

@@ -171,7 +171,7 @@ class RequestContractTests(HelperTestCase):
         # Hidden reasoning tokens count against the output bound.
         self.assertGreaterEqual(ai.MAX_OUTPUT_TOKENS, 4000)
         root = Path(__file__).resolve().parents[1]
-        script = (root / "contents/ui/AiInsights.js").read_text()
+        script = (root / "contents/ui/AiInsightsProtocol.js").read_text()
         controller = (root / "contents/ui/controllers/AiInsightsController.qml").read_text()
         shell = int(re.search(r'action === "generate" \? "(\d+)s"', script).group(1))
         deadline = int(re.search(r'objectName: "aiInsightsDeadline"\s+interval: (\d+)', controller).group(1))
@@ -749,6 +749,7 @@ with open({str(self.log)!r}, "a") as log:
 LANGUAGE_QML = '''import QtQuick
 import QtTest
 import "SOURCE_URL/AiInsights.js" as AiInsights
+import "SOURCE_URL/AiInsightsProtocol.js" as AiInsightsProtocol
 TestCase {
     name: "AiInsightsCatalogLanguage"
     property var messages: ({})
@@ -760,7 +761,7 @@ TestCase {
     function test_languages_data() { return CASES; }
     function test_languages(data) {
         messages = data.messages;
-        var command = AiInsights.command("file:///pkg/scripts/ai-insights.py", "generate", {
+        var command = AiInsightsProtocol.command("file:///pkg/scripts/ai-insights.py", "generate", {
             provider: "openrouter", model: "vendor/model", language: aiInsightsLanguageTag(),
             request: "0123456789abcdef0123456789abcdef"});
         var match = /--language (\\S+)/.exec(command);
