@@ -1024,7 +1024,7 @@ function accumulateCostModelAmounts(aggregate, breakdown) {
     accumulateCostModelMetric(aggregate, breakdown, "tokens")
 }
 
-function addCostModelBreakdown(byName, incompleteByName, breakdown, currency) {
+function addCostModelBreakdown(byName, incompleteByName, breakdown) {
     if (!breakdown) {
         return
     }
@@ -1041,7 +1041,6 @@ function addCostModelBreakdown(byName, incompleteByName, breakdown, currency) {
             label: breakdown.label,
             cost: null,
             tokens: null,
-            currency: boundedDisplayText(currency || "USD", 12),
             costOverflow: false,
             tokensOverflow: false,
             unknownCost: false
@@ -1085,15 +1084,31 @@ function costModelTokenRanking(rows, truncated, hasUnknownCost) {
     }
 }
 
-function accumulateCostModelDay(aggregation, item, currency, modelLabels) {
+function accumulateCostModelDay(aggregation, item, modelLabels) {
     var breakdowns = hasOwnKey(item, "modelBreakdowns") && Array.isArray(item.modelBreakdowns)
         ? item.modelBreakdowns : []
     var breakdownLimit = Math.min(breakdowns.length, maximumModelBreakdownsPerDay)
     aggregation.truncated = aggregation.truncated || breakdowns.length > breakdownLimit
     for (var i = 0; i < breakdownLimit; i++) {
         addCostModelBreakdown(aggregation.byName, aggregation.incompleteByName,
-            normalizedCostModelBreakdown(breakdowns[i], modelLabels), currency)
+            normalizedCostModelBreakdown(breakdowns[i], modelLabels))
     }
+}
+
+function costModelRows(aggregation, currency) {
+    var hasUnknownCost = false
+    var modelKeys = Object.keys(aggregation.byName)
+    // Currency belongs to the summary, not each model's accumulation. Validate
+    // it once for populated summaries and never retain it across calls.
+    var modelCurrency = modelKeys.length > 0 ? boundedDisplayText(currency || "USD", 12) : ""
+    var rows = modelKeys.map(function(key) {
+        var model = aggregation.byName[key]
+        hasUnknownCost = hasUnknownCost || (model.tokens !== null && model.unknownCost)
+        return { label: model.label, cost: model.cost, tokens: model.tokens, currency: modelCurrency,
+            incompleteRequests: hasOwnKey(aggregation.incompleteByName, key)
+                ? aggregation.incompleteByName[key] : 0 }
+    })
+    return { rows: rows, hasUnknownCost: hasUnknownCost }
 }
 
 function costModelSummary(modelDays, currency, includeTokenRanking, modelLabels) {
@@ -1101,23 +1116,17 @@ function costModelSummary(modelDays, currency, includeTokenRanking, modelLabels)
     var aggregation = { byName: ({}), incompleteByName: ({}), truncated: false }
     modelLabels = modelLabels || new Map()
     for (var i = 0; i < modelDays.length; i++) {
-        accumulateCostModelDay(aggregation, modelDays[i], currency, modelLabels)
+        accumulateCostModelDay(aggregation, modelDays[i], modelLabels)
     }
-    var hasUnknownCost = false
-    var rows = Object.keys(aggregation.byName).map(function(key) {
-        var model = aggregation.byName[key]
-        hasUnknownCost = hasUnknownCost || (model.tokens !== null && model.unknownCost)
-        return { label: model.label, cost: model.cost, tokens: model.tokens, currency: model.currency,
-            incompleteRequests: hasOwnKey(aggregation.incompleteByName, key)
-                ? aggregation.incompleteByName[key] : 0 }
-    })
+    var projected = costModelRows(aggregation, currency)
+    var rows = projected.rows
     rows.sort(compareCostModels)
     var result = {
         rows: rows.slice(0, maximumCostModelRows),
         truncated: aggregation.truncated || rows.length > maximumCostModelRows
     }
     if (includeTokenRanking === true) {
-        result.tokenRanking = costModelTokenRanking(rows, aggregation.truncated, hasUnknownCost)
+        result.tokenRanking = costModelTokenRanking(rows, aggregation.truncated, projected.hasUnknownCost)
     }
     return result
 }
