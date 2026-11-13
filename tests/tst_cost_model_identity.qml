@@ -5,6 +5,43 @@ import "../contents/ui/ProviderNormalizer.js" as Normalizer
 TestCase {
     name: "CostModelIdentity"
 
+    function test_summaryCurrencyIsSanitizedAndScoped_data() {
+        return [
+            { tag: "ordinary", currency: "EUR", expected: "EUR" },
+            { tag: "whitespace", currency: "  EUR\n", expected: "EUR" },
+            { tag: "missing", currency: undefined, expected: "USD" },
+            { tag: "empty", currency: "", expected: "USD" },
+            { tag: "blank", currency: "   ", expected: "" },
+            { tag: "bounded", currency: "ABCDEFGHIJKLMNOP", expected: "ABCDEFGHIJKL" },
+            { tag: "object", currency: {toString: null}, expected: "" },
+            { tag: "array", currency: ["EUR"], expected: "" },
+            { tag: "redacted", currency: "sk-synthetic12345", expected: "[redacted]" }
+        ]
+    }
+
+    function test_summaryCurrencyIsSanitizedAndScoped(data) {
+        var breakdowns = []
+        for (var i = 0; i < 8; i++)
+            breakdowns.push({modelName: "model-" + i, cost: i, totalTokens: 8 - i})
+        var items = [{date: "2026-08-29", totalCost: 28, totalTokens: 36,
+            modelBreakdowns: breakdowns}]
+        var options = {days: 1, updatedAt: "2026-08-29", includeTokenRanking: true}
+        var original = JSON.stringify(items)
+        var daily = Normalizer.normalizeCostDaily(items, data.currency, options)
+        var period = Normalizer.normalizeCostModels(items, data.currency, options)
+        compare(period.rows.length, 6)
+        compare(period.tokenRanking.rows.length, 6)
+        compare(period.rows[0].label, "model-7")
+        compare(period.tokenRanking.rows[0].label, "model-0")
+        var rows = daily[0].models.concat(period.rows, period.tokenRanking.rows)
+        for (var row = 0; row < rows.length; row++)
+            compare(rows[row].currency, data.expected)
+        var refreshed = Normalizer.normalizeCostModels(items, "GBP", options)
+        compare(refreshed.rows[0].currency, "GBP")
+        compare(period.rows[0].currency, data.expected)
+        compare(JSON.stringify(items), original)
+    }
+
     function test_displayLabelsDoNotMergeDistinctModels_data() {
         var prefix = "synthetic-model-" + new Array(121).join("x")
         var cases = [

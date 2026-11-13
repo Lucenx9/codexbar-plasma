@@ -100,7 +100,9 @@ owns checkout setup, delivery, and repository maintenance.
   `includeModels: false` for averages, preserving the same calendar rules.
   Raw records stay in a bounded call-local map; model-label memoization is
   keyed by exact raw model identity and discarded after each normalization.
-  Only validated labels are reused, never amounts, currencies or counts.
+  Only validated labels are memoized, never amounts or counts. Each populated
+  model summary validates its shared currency once when projecting its rows;
+  no currency value is retained across summaries or normalization calls.
   Root adapters preserve the existing popup and chart interfaces. Executed
   tests in `tests/tst_cost_text.qml` cover snapshot immutability, period-label
   precedence, totals, qualifiers, count plurals, dashboard bounds and regional

@@ -555,6 +555,9 @@ Direct normalizer tests also reject model reads for discarded dates and
 amount-only rows, giving a deterministic guard independent of CPU speed.
 Cost-response tests count model reads across both All-history average paths
 to ensure only the period summary inspects models outside the chart window.
+`tst_cost_model_identity.qml` also covers shared currency validation in daily,
+period and token-ranked models, including malformed/redacted values and
+independent currencies across calls.
 
 ### Sticky CI report
 

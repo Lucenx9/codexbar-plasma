@@ -14,7 +14,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 - Reduce UI pauses when loading long cost histories by projecting daily models
   only for retained chart days, omitting model work from daily averages, and
-  reusing validated model labels within each normalization call.
+  reusing validated model labels within each normalization call. Model summaries
+  also validate their shared currency once instead of repeating it per model.
 
 - Keep predictive quota notifications consistent when a refresh omits a reset
   date: an ongoing forecast no longer repeats its warning, and a confirmed
