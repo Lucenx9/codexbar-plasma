@@ -1,7 +1,6 @@
-.pragma library
-.import "Guards.js" as Guards
-.import "CostAmounts.js" as CostAmounts
-.import "CostCurrency.js" as CostCurrency
+import * as Guards from "./Guards.mjs";
+import * as CostAmounts from "./CostAmounts.mjs";
+import * as CostCurrency from "./CostCurrency.mjs";
 
 // Semantic pricing confidence and bounded notice-dismissal transitions.
 // QML owns localization and commits the returned notice state.
@@ -236,3 +235,12 @@ function noticeStateForScope(source, scope) {
     if (scope.length === 0) return null
     return Guards.hasOwnKey(source, scope) ? source[scope] : null
 }
+
+export {
+    maximumCostTrustNoticeScopes, maximumIncompleteRequests, acceptedCostCoverage, acceptedIncompleteRequests, boundedIncompleteRequests,
+    acceptedCostSourceKind, costTrustSnapshotHasEvidence, costTrustSummary, costTrustNoticeKey, costTrustNoticeTransition,
+    costTrustNoticeStoreTransition, validCoverageCount, ownText, ownFlag, trustCoverage,
+    coverageHasActivity, hasPositiveTokens, hasObservedAmount, accumulateTrust, summarySource,
+    trustValueMode, summarizeTrust, accumulateCoverage, qualifiedIncompleteRequests, shouldQualifyAmount,
+    reusableNoticeState, copyOtherNoticeScopes, noticeStateForScope,
+};

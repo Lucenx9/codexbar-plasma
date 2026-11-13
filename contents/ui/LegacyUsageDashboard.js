@@ -1,5 +1,5 @@
 .pragma library
-.import "ProviderNormalizer.js" as Normalizer
+.import "ProviderNormalizer.mjs" as Normalizer
 
 var maximumRows = 10;
 var maximumKpis = 4;

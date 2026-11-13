@@ -1,8 +1,8 @@
 .pragma library
-.import "SafeText.js" as SafeText
+.import "SafeText.mjs" as SafeText
 .import "CliUpdate.js" as CliUpdate
 .import "Guards.js" as Guards
-.import "ProviderIdentity.js" as ProviderIdentity
+.import "ProviderIdentity.mjs" as ProviderIdentity
 
 var modules = ["QtQuick", "QtQuick.Controls", "QtQuick.Layouts", "QtQuick.Dialogs",
     "org.kde.kirigami", "org.kde.kcmutils", "org.kde.plasma.core",

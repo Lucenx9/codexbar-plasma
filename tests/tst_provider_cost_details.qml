@@ -1,8 +1,8 @@
 import QtQuick
 import QtTest
 import "../contents/ui/components" as Components
-import "../contents/ui/CostAmounts.js" as CostAmounts
-import "../contents/ui/ProviderNormalizer.js" as Normalizer
+import "../contents/ui/CostAmounts.mjs" as CostAmounts
+import "../contents/ui/ProviderNormalizer.mjs" as Normalizer
 
 TestCase {
     id: testCase

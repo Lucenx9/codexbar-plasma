@@ -21,13 +21,13 @@ FUNCTIONS = (
 QML = '''import QtQuick
 import QtTest
 import "SOURCE_URL/components" as Components
-import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
+import "SOURCE_URL/ProviderNormalizer.mjs" as Normalizer
 import "SOURCE_URL/ProviderSnapshot.js" as ProviderSnapshot
 import "SOURCE_URL/ProviderViewModel.js" as ProviderViewModel
 import "SOURCE_URL/UsageResponse.js" as UsageResponse
 import "SOURCE_URL/ProviderOrder.js" as ProviderOrder
 import "SOURCE_URL/Guards.js" as Guards
-import "SOURCE_URL/SafeText.js" as SafeText
+import "SOURCE_URL/SafeText.mjs" as SafeText
 import "SOURCE_URL/PacePresentation.js" as PacePresentation
 import "SOURCE_URL/ResetPresentation.js" as ResetPresentation
 TestCase {
@@ -161,7 +161,7 @@ import QtTest
 import "SOURCE_URL/components" as Components
 import org.kde.kirigami as Kirigami
 import "SOURCE_URL/QuotaThresholds.js" as QuotaThresholds
-import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
+import "SOURCE_URL/ProviderNormalizer.mjs" as Normalizer
 TestCase {
     name: "QuotaMarkers"
     property bool showQuotaWarningMarkers: true
@@ -236,7 +236,7 @@ class ProviderColorTests(unittest.TestCase):
 import QtTest
 import "SOURCE_URL/components" as Components
 import org.kde.kirigami as Kirigami
-import "SOURCE_URL/ProviderIdentity.js" as ProviderIdentity
+import "SOURCE_URL/ProviderIdentity.mjs" as ProviderIdentity
 import "SOURCE_URL/ThemeContrast.js" as ThemeContrast
 TestCase {
     name: "ProviderColors"

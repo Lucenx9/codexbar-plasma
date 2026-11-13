@@ -40,7 +40,7 @@ in ignored `dist/review/` or the OS temp directory.
 
 ## CLI response validation
 
-`CliResponse.js` owns bounded JSON decoding, redacted diagnostics and exit-code
+`CliResponse.mjs` owns bounded JSON decoding, redacted diagnostics and exit-code
 acceptance for `UsageResponse`, `AccountResponse`, `CostResponse`, and
 `SessionResponse`. The response modules retain their domain normalization; QML
 owners pass the actual executable-engine exit code and retain process lifecycles,

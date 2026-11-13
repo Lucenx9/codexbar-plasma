@@ -1,5 +1,4 @@
-.pragma library
-.import "Guards.js" as Guards
+import * as Guards from "./Guards.mjs";
 
 var maximumProviderIDLength = 128
 
@@ -722,3 +721,11 @@ function providerIconFileName(value) {
     }
     return hasOwnKey(providerIconFiles, key) ? providerIconFiles[key] : ""
 }
+
+export {
+    maximumProviderIDLength, hasOwnKey, providerKey, providerMapKey, normalizedProviderID,
+    documentationBaseUrl, providerAliases, providerCliArguments, providerBrandChannels, providerDashboardUrls,
+    providerLoginUrls, providerStatusUrls, providerDocsPaths, providerIconFiles, resolveProviderKey,
+    providerTableValue, providerCliArgument, providerBrandColorChannels, providerDashboardUrl, providerLoginUrl,
+    providerStatusUrl, providerDocsUrl, providerIconFileName,
+};

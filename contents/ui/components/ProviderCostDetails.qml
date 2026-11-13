@@ -1,6 +1,6 @@
 import QtQuick
 import "../ProviderCostPresentation.js" as ProviderCostPresentation
-import "../CostAmounts.js" as CostAmounts
+import "../CostAmounts.mjs" as CostAmounts
 
 // Localized cost and credit details. Cost/reset inputs are classified by the
 // pure module; monthly credit limits arrive normalized by ProviderNormalizer.

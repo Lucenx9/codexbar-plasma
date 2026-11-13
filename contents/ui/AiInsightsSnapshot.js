@@ -1,7 +1,7 @@
 .pragma library
-.import "ProviderNormalizer.js" as Normalizer
+.import "ProviderNormalizer.mjs" as Normalizer
 .import "Guards.js" as Guards
-.import "SubscriptionDates.js" as SubscriptionDates
+.import "SubscriptionDates.mjs" as SubscriptionDates
 
 // Builds the only data AI Insights may send: an explicit allowlist of
 // numeric facts and deterministic signals over already-normalized provider

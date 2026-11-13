@@ -1,6 +1,6 @@
 .pragma library
 .import "Guards.js" as Guards
-.import "ProviderNormalizer.js" as Normalizer
+.import "ProviderNormalizer.mjs" as Normalizer
 
 // Popup quota rows the user hid, per provider. This is a local display choice:
 // it filters only the provider tab's usage rows, never fetching, notifications,

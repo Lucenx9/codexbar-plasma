@@ -1,9 +1,8 @@
-.pragma library
-.import "Guards.js" as Guards
-.import "CostAmounts.js" as CostAmounts
-.import "CostChart.js" as CostChart
-.import "CostCurrency.js" as CostCurrency
-.import "CostTrust.js" as CostTrust
+import * as Guards from "./Guards.mjs";
+import * as CostAmounts from "./CostAmounts.mjs";
+import * as CostChart from "./CostChart.mjs";
+import * as CostCurrency from "./CostCurrency.mjs";
+import * as CostTrust from "./CostTrust.mjs";
 
 // Build provider cost rows and range-matched spend aggregates.
 // Callers own localization, selection, privacy, and process effects.
@@ -268,3 +267,10 @@ function projectData(snapshot) {
     if (!projects || !Array.isArray(projects.rows)) return null
     return projects
 }
+
+export {
+    maximumProjectRows, breakdownRows, modelRows, recentHistoryPoints, historyRows,
+    costPeriod, snapshotMatchesRange, spendSnapshots, projectRows, spendDailyPoints,
+    spendTotals, historyStillBuilding, historyRow, compareProjects, appendProjectSnapshot,
+    projectRow, normalizedSpendDay, addSpendDays, spendPointRows, projectData,
+};

@@ -28,7 +28,7 @@ class ProviderDataTest(unittest.TestCase):
     def test_provider_identity_is_shared(self):
         # Provider identity used to be two copies, and this file carried a drift check
         # that compared them entry by entry. The tables now live once in
-        # ProviderIdentity.js, so what is worth asserting is that neither surface has
+        # ProviderIdentity.mjs, so what is worth asserting is that neither surface has
         # grown a private copy again: both must read the shared module.
         for source_text, label in ((main_text, "main.qml"), (providers_text, "configProviders.qml")):
             for function_name, shared_call in (
@@ -43,7 +43,7 @@ class ProviderDataTest(unittest.TestCase):
                 if shared_call not in body:
                     raise AssertionError(
                         f"{label}: {function_name} must read provider identity from "
-                        f"ProviderIdentity.js instead of a local table"
+                        f"ProviderIdentity.mjs instead of a local table"
                     )
                 if 'case "' in body or "var aliases = {" in body:
                     raise AssertionError(

@@ -1,6 +1,6 @@
 .pragma library
-.import "ProviderNormalizer.js" as Normalizer
-.import "SubscriptionDates.js" as SubscriptionDates
+.import "ProviderNormalizer.mjs" as Normalizer
+.import "SubscriptionDates.mjs" as SubscriptionDates
 
 function timestamp(value) {
     if (typeof value === "number") return new Date(value).getTime();

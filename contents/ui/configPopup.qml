@@ -10,9 +10,9 @@ import "general/ConfigValueSync.js" as ConfigValueSync
 import "OverviewProviders.js" as OverviewProviders
 import "PopupHiddenRows.js" as PopupHiddenRows
 import "PopupHiddenSections.js" as PopupHiddenSections
-import "ProviderIdentity.js" as ProviderIdentity
+import "ProviderIdentity.mjs" as ProviderIdentity
 import "ProviderOrder.js" as ProviderOrder
-import "SafeText.js" as SafeText
+import "SafeText.mjs" as SafeText
 
 KCM.SimpleKCM {
     id: page

@@ -45,7 +45,7 @@ network requests and returns semantic JSON records.
 
 | Layer | Owner |
 | --- | --- |
-| Normalized provider snapshots | Existing `ProviderSnapshot.js`, `CostResponse.js`, pace fields |
+| Normalized provider snapshots | Existing `ProviderSnapshot.js`, `CostResponse.mjs`, pace fields |
 | Allowlisted snapshot and deterministic signals | `contents/ui/AiInsightsSnapshot.js` |
 | Language, context, cache, schedule, and presentation | `contents/ui/AiInsights.js` |
 | Helper commands, private-input descriptors, and reply validation | `contents/ui/AiInsightsProtocol.js` |

@@ -275,9 +275,9 @@ class SecretPromptLifecycleTests(unittest.TestCase):
 QML_WIRING = '''import QtQuick
 import QtTest
 import "SOURCE_URL/Guards.js" as Guards
-import "SOURCE_URL/ProviderIdentity.js" as ProviderIdentity
+import "SOURCE_URL/ProviderIdentity.mjs" as ProviderIdentity
 import "SOURCE_URL/config/ProviderOperations.js" as ProviderOperations
-import "SOURCE_URL/SafeText.js" as SafeText
+import "SOURCE_URL/SafeText.mjs" as SafeText
 import "SOURCE_URL/CommandLedger.js" as CommandLedger
 import "SOURCE_URL/config/ProviderDescriptor.js" as ProviderDescriptor
 import "SOURCE_URL/config/ProviderConfigProtocol.js" as ProviderConfigProtocol

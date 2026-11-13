@@ -1,7 +1,7 @@
 import QtQuick
 import QtTest
 import "../contents/ui/SessionResponse.js" as SessionResponse
-import "../contents/ui/SafeText.js" as SafeText
+import "../contents/ui/SafeText.mjs" as SafeText
 
 TestCase {
     name: "SessionResponse"

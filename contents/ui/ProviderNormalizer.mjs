@@ -1,8 +1,7 @@
-.pragma library
-.import "Guards.js" as Guards
-.import "ProviderIdentity.js" as ProviderIdentity
-.import "SafeText.js" as SafeText
-.import "SubscriptionDates.js" as SubscriptionDates
+import * as Guards from "./Guards.mjs";
+import * as ProviderIdentity from "./ProviderIdentity.mjs";
+import * as SafeText from "./SafeText.mjs";
+import * as SubscriptionDates from "./SubscriptionDates.mjs";
 
 // Pure normalization of untrusted `codexbar` CLI payloads.
 // QML owns effects and localization; these helpers return bounded semantic data.
@@ -1130,3 +1129,28 @@ function costModelSummary(modelDays, currency, includeTokenRanking, modelLabels)
     }
     return result
 }
+
+export {
+    maximumProviderSnapshots, maximumAccountSnapshots, maximumAccountIdentityLength, maximumCostSnapshots, maximumCostProjects,
+    maximumExtraRateWindows, extraWindowID, maximumSessions, maximumCostHistoryPoints, maximumCostHistoryScanItems,
+    maximumModelBreakdownsPerDay, maximumCostModelRows, maximumCostCoverageCount, maximumPaceEtaSeconds, hasOwnKey,
+    isUnsafeObjectKey, isCliRecord, copyObject, clamp, nonEmptyString,
+    strictFiniteNumber, firstStrictFiniteNumber, boundedDisplayText, providerSnapshotKey, normalizedProviderID,
+    providerMatchesScope, providerConfigEntry, normalizeProviderConfigEntries, providerSnapshotHasError, canonicalProviderSnapshot,
+    dedupeProviderSnapshots, ownField, isNonNegativeNumber, normalizeCodexCreditLimit, usageConfidence,
+    usageConfidenceField, authoritativeQuota, canPresentQuotaDetails, paceForecastKnown, paceMetrics,
+    rateWindowMetrics, rateWindowMinutes, safeScalarText, statusSeverity, statusIncidentKey,
+    httpsUrlHost, safeStatusUrl, accountLabel, validAccountIdentity, accountKey,
+    firstValidAccountIdentity, accountOptionKey, dedupeAccountOptions, isMissingTokenAccountsError, isUnsupportedTokenAccountsError,
+    normalizeSession, normalizeSessions, sumTokenParts, boundedHistoryDays, calendarDateKey,
+    parsedCalendarDateKey, calendarKeyLocalDate, localCalendarDateKey, costHistoryCalendarWindow, costHistoryRowsWithinWindow,
+    indexedCostDays, isObservedCostAmount, costDateWithinWindow, emptyCostDay, filledCostDays,
+    fillMissingCostDays, isIntegerInRange, normalizedCostCoverage, normalizedIncompleteRequestCount, costSourceKind,
+    normalizeCostTrustMetadata, costRecordHasError, costEnvelopeItems, normalizeCostEnvelope, mergeCostSnapshotsAfterPartialFailure,
+    nonNegativeAmount, normalizedCostProject, normalizeCostProjects, costRecordHasAmounts, costDayLabel,
+    normalizedCostDay, costHistorySelection, selectedCostDays, normalizeCostDaily, normalizeCostTotals,
+    normalizeProviderCostAmount, normalizeProviderCostTotals, eligibleCostModelDay, costModelScanTruncated, normalizeCostModels,
+    costModelName, normalizedCostModelBreakdown, accumulateCostModelMetric, accumulateCostModelAmounts, addCostModelBreakdown,
+    compareCostModelLabels, compareCostModelAmounts, compareCostModels, costModelTokenRanking, accumulateCostModelDay,
+    costModelRows, costModelSummary,
+};

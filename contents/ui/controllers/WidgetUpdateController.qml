@@ -3,8 +3,8 @@ import org.kde.plasma.plasma5support as Plasma5Support
 import "../UpdateLogic.js" as UpdateLogic
 import "../CommandLedger.js" as CommandLedger
 import "../Guards.js" as Guards
-import "../ProviderNormalizer.js" as Normalizer
-import "../SafeText.js" as SafeText
+import "../ProviderNormalizer.mjs" as Normalizer
+import "../SafeText.mjs" as SafeText
 
 Item {
     id: controller

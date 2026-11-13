@@ -1,6 +1,6 @@
 .pragma library
 .import "../Guards.js" as Guards
-.import "../SafeText.js" as SafeText
+.import "../SafeText.mjs" as SafeText
 
 // Pure trust boundary for the proposed provider-settings descriptor contract.
 // The Providers page keeps transport negotiation, process state, i18n, prompts,

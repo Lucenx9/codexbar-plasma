@@ -1,11 +1,11 @@
 import QtQuick
 import QtTest
-import "../contents/ui/CliResponse.js" as CliResponse
+import "../contents/ui/CliResponse.mjs" as CliResponse
 import "../contents/ui/AccountResponse.js" as AccountResponse
-import "../contents/ui/CostResponse.js" as CostResponse
+import "../contents/ui/CostResponse.mjs" as CostResponse
 import "../contents/ui/UsageResponse.js" as UsageResponse
 import "../contents/ui/SessionResponse.js" as SessionResponse
-import "../contents/ui/SafeText.js" as SafeText
+import "../contents/ui/SafeText.mjs" as SafeText
 
 TestCase {
     name: "CliResponse"

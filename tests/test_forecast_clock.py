@@ -21,7 +21,7 @@ FUNCTIONS = (
 QML = '''import QtQuick
 import QtTest
 import "SOURCE_URL/components" as Components
-import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
+import "SOURCE_URL/ProviderNormalizer.mjs" as Normalizer
 import "SOURCE_URL/ProviderSnapshot.js" as ProviderSnapshot
 import "SOURCE_URL/AccountResponse.js" as AccountResponse
 import "SOURCE_URL/Guards.js" as Guards
@@ -109,7 +109,7 @@ TestCase {
 POPUP_PACE_QML = '''import QtQuick
 import QtTest
 import "SOURCE_URL/components" as Components
-import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
+import "SOURCE_URL/ProviderNormalizer.mjs" as Normalizer
 import "SOURCE_URL/ProviderSnapshot.js" as ProviderSnapshot
 import "SOURCE_URL/PacePresentation.js" as PacePresentation
 import "SOURCE_URL/PrivacyPresentation.js" as PrivacyPresentation

@@ -22,7 +22,7 @@ import "SOURCE_URL/config/ProviderConfigProtocol.js" as ProviderConfigProtocol
 import "SOURCE_URL/CommandLedger.js" as CommandLedger
 import "SOURCE_URL/Guards.js" as Guards
 import "SOURCE_URL/config/ProviderDescriptor.js" as ProviderDescriptor
-import "SOURCE_URL/ProviderIdentity.js" as ProviderIdentity
+import "SOURCE_URL/ProviderIdentity.mjs" as ProviderIdentity
 TestCase {
     name: "ProviderSourceWrites"
     Component {

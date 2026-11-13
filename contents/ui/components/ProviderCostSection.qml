@@ -2,12 +2,12 @@ import QtQuick
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import "." as Components
-import "../CostPresentation.js" as CostPresentation
-import "../CostAmounts.js" as CostAmounts
-import "../CostChart.js" as CostChart
-import "../CostTrust.js" as CostTrust
+import "../CostPresentation.mjs" as CostPresentation
+import "../CostAmounts.mjs" as CostAmounts
+import "../CostChart.mjs" as CostChart
+import "../CostTrust.mjs" as CostTrust
 import "../QuotaWindowCost.js" as QuotaWindowCost
-import "../SubscriptionDates.js" as SubscriptionDates
+import "../SubscriptionDates.mjs" as SubscriptionDates
 
 ColumnLayout {
     id: tokenCostSection

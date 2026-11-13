@@ -18,12 +18,12 @@ import QtTest
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.components as PlasmaComponents
 import "SOURCE_URL/components" as Components
-import "SOURCE_URL/CostPresentation.js" as CostPresentation
-import "SOURCE_URL/CostAmounts.js" as CostAmounts
-import "SOURCE_URL/CostChart.js" as CostChart
-import "SOURCE_URL/CostCurrency.js" as CostCurrency
-import "SOURCE_URL/CostTrust.js" as CostTrust
-import "SOURCE_URL/CostResponse.js" as CostResponse
+import "SOURCE_URL/CostPresentation.mjs" as CostPresentation
+import "SOURCE_URL/CostAmounts.mjs" as CostAmounts
+import "SOURCE_URL/CostChart.mjs" as CostChart
+import "SOURCE_URL/CostCurrency.mjs" as CostCurrency
+import "SOURCE_URL/CostTrust.mjs" as CostTrust
+import "SOURCE_URL/CostResponse.mjs" as CostResponse
 import "SOURCE_URL/PrivacyPresentation.js" as Privacy
 TestCase {
     id: testCase

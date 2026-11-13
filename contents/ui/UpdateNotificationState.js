@@ -1,5 +1,5 @@
 .import "Guards.js" as Guards
-.import "ProviderNormalizer.js" as Normalizer
+.import "ProviderNormalizer.mjs" as Normalizer
 
 function safeReleaseUrl(url) {
     var candidate = typeof url === "string" ? url.trim() : ""

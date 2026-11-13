@@ -1,5 +1,4 @@
-.pragma library
-.import "CostAmounts.js" as CostAmounts
+import * as CostAmounts from "./CostAmounts.mjs";
 
 // Select monetary amounts in provider order, independently of token totals.
 // Totals inherit the selected currency; legacy daily rows default to USD.
@@ -76,3 +75,8 @@ function spendHasMixedCostCurrencies(costs) {
         return snapshotHasForeignCostCurrency(snapshot, currency)
     })
 }
+
+export {
+    pricedAmountCurrency, pricedSnapshotCurrency, fallbackSnapshotCurrency, firstCurrency, spendCurrency,
+    costMatchesSpendCurrency, dailyHasForeignCurrency, snapshotHasForeignCostCurrency, spendHasMixedCostCurrencies,
+};

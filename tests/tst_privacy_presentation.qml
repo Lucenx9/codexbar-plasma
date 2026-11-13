@@ -1,7 +1,7 @@
 import QtQuick
 import QtTest
 import "../contents/ui/PrivacyPresentation.js" as Privacy
-import "../contents/ui/CostResponse.js" as CostResponse
+import "../contents/ui/CostResponse.mjs" as CostResponse
 
 TestCase {
     name: "PrivacyPresentation"

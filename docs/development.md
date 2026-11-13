@@ -135,6 +135,10 @@ See [QML conventions](implementation.md#qml-conventions).
 
 See [Regression checks](testing.md#regression-checks).
 
+Shared cost-normalization helpers use `.mjs` so QML and WorkerScript load one
+implementation. Keep these files covered by the shared source manifest and
+exercise both the pure response tests and the worker lifecycle tests.
+
 For cost-normalization changes, also run `make benchmark-cost` separately from
 the parallel check suite. Its repeated synthetic measurements and CI budgets
 are described in [cost response performance](testing.md#cost-response-performance).

@@ -2,7 +2,7 @@ import QtQuick
 import QtTest
 import "../contents/ui/PanelText.js" as PanelTextPlan
 import "../contents/ui/PanelTextFit.js" as PanelTextFit
-import "../contents/ui/CostAmounts.js" as CostAmounts
+import "../contents/ui/CostAmounts.mjs" as CostAmounts
 import "../contents/ui/ProviderCostPresentation.js" as ProviderCostPresentation
 import "../contents/ui/PrivacyPresentation.js" as Privacy
 import "../contents/ui/components" as Components

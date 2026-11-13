@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls as Controls
 import QtTest
-import "../contents/ui/SafeText.js" as SafeText
+import "../contents/ui/SafeText.mjs" as SafeText
 
 // General owns the global defaults action; Notifications owns the quota
 // thresholds both of them share. Both pages read applied configuration, so

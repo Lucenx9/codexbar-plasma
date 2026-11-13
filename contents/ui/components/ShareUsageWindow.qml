@@ -7,7 +7,7 @@ import org.kde.kirigami as Kirigami
 import org.kde.plasma.components as PlasmaComponents
 import org.kde.kquickcontrolsaddons as KQuickControlsAddons
 import "../ShareUsage.js" as ShareUsage
-import "../CostAmounts.js" as CostAmounts
+import "../CostAmounts.mjs" as CostAmounts
 
 Controls.ApplicationWindow {
     id: window

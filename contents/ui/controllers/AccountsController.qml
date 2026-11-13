@@ -4,8 +4,8 @@ import "../AccountRequests.js" as AccountRequests
 import "../AccountResponse.js" as AccountResponse
 import "../CommandLedger.js" as CommandLedger
 import "../Guards.js" as Guards
-import "../ProviderIdentity.js" as ProviderIdentity
-import "../ProviderNormalizer.js" as Normalizer
+import "../ProviderIdentity.mjs" as ProviderIdentity
+import "../ProviderNormalizer.mjs" as Normalizer
 import "../ProviderSnapshot.js" as ProviderSnapshot
 
 Item {

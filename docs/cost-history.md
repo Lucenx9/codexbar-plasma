@@ -94,8 +94,8 @@ snapshot without a usable `updatedAt` keeps its Today amounts.
   tier is inferred from model names or amounts.
 
 These rules are implemented in
-[ProviderNormalizer.js](../contents/ui/ProviderNormalizer.js),
-[CostPresentation.js](../contents/ui/CostPresentation.js), and
+[ProviderNormalizer.mjs](../contents/ui/ProviderNormalizer.mjs),
+[CostPresentation.mjs](../contents/ui/CostPresentation.mjs), and
 [ProviderCostSection.qml](../contents/ui/components/ProviderCostSection.qml).
 
 ## Selection rules

@@ -12,6 +12,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Process local cost history in the background to reduce popup stalls on long
+  histories. Keep loading active until results are ready and discard superseded
+  work when settings change or a newer refresh starts.
+
 - Keep the focused popup tab visible when the popup resizes or tab labels
   change, even before that tab is activated. Left and Right now follow the
   visual tab order in right-to-left layouts.

@@ -1,7 +1,7 @@
 .pragma library
 .import "../Guards.js" as Guards
 .import "ProviderConfigProtocol.js" as Protocol
-.import "../ProviderIdentity.js" as Identity
+.import "../ProviderIdentity.mjs" as Identity
 .import "ProviderAuthentication.js" as Authentication
 
 // Older inventories have no per-provider modes. The CLI still validates writes.

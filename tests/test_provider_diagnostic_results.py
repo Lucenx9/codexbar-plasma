@@ -16,7 +16,7 @@ QML = '''import QtQuick
 import QtTest
 import "SOURCE_URL/CommandLedger.js" as CommandLedger
 import "SOURCE_URL/Guards.js" as Guards
-import "SOURCE_URL/SafeText.js" as SafeText
+import "SOURCE_URL/SafeText.mjs" as SafeText
 import "SOURCE_URL/config/ProviderConfigProtocol.js" as ProviderConfigProtocol
 import "SOURCE_URL/config/ProviderSource.js" as ProviderSource
 import "SOURCE_URL/config/ProviderSavedSources.js" as ProviderSavedSources

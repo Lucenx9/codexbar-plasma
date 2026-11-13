@@ -1,7 +1,7 @@
 .pragma library
-.import "ProviderNormalizer.js" as Normalizer
+.import "ProviderNormalizer.mjs" as Normalizer
 .import "Guards.js" as Guards
-.import "SubscriptionDates.js" as SubscriptionDates
+.import "SubscriptionDates.mjs" as SubscriptionDates
 
 function monthlyWindow(row) {
     if (!Normalizer.canPresentQuotaDetails(row) || row.hasPercent !== true) return false;

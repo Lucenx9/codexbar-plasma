@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Controls as Controls
-import "../SafeText.js" as SafeText
+import "../SafeText.mjs" as SafeText
 
 Controls.Button {
     property string plainText: ""

@@ -98,7 +98,7 @@ The comparison is the official
   prompts and fallback metadata. `ProviderConfigProtocol.response` accepts all
   113 official inventory records and preserves both new names and source modes,
   but `ProviderCapabilities.supportsApiKey` returns false for both providers
-  even with the CLI's true writer flag. `ProviderIdentity.js` lacks their
+  even with the CLI's true writer flag. `ProviderIdentity.mjs` lacks their
   static links/artwork. Preserve the curated policy for unknown providers.
 - **Plasma-native and implementable now:** WorkBuddy's manual-cookie action.
   Its stored-cookie Web fetch is now verified on Linux, but

@@ -1,7 +1,7 @@
 import QtQuick
 import QtTest
 import "../contents/ui/UsageCache.js" as Cache
-import "../contents/ui/ProviderNormalizer.js" as Normalizer
+import "../contents/ui/ProviderNormalizer.mjs" as Normalizer
 import "../contents/ui/PanelDisplay.js" as PanelDisplay
 import "../contents/ui/ProviderSnapshot.js" as Snapshot
 import "../contents/ui/UsageState.js" as State

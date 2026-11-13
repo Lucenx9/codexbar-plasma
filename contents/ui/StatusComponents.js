@@ -1,6 +1,6 @@
 .pragma library
 .import "Guards.js" as Guards
-.import "SafeText.js" as SafeText
+.import "SafeText.mjs" as SafeText
 
 // Validates the bounded status-component record printed by
 // scripts/status-components.py. Only Claude, OpenAI and xAI pages are supported.

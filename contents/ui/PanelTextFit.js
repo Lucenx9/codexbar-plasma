@@ -1,5 +1,5 @@
 .pragma library
-.import "SafeText.js" as SafeText
+.import "SafeText.mjs" as SafeText
 
 // Panel text is a composition of the optional segments enabled in settings:
 // the provider name, the usage figure, the credit balance, and a spend budget. A horizontal

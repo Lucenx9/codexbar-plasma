@@ -122,7 +122,7 @@ require_in_file "$MAKEFILE" "sha256sum codexbar-plasma.plasmoid > codexbar-plasm
 require_in_file "$UPDATER" "sha256sum --check --strict"
 
 for qml_file in "$PROVIDERS_QML" "$POPUP_QML" "$DIAGNOSTICS_QML"; do
-  require_in_file "$qml_file" 'import "SafeText.js" as SafeText'
+  require_in_file "$qml_file" 'import "SafeText.mjs" as SafeText'
 done
 require_in_surface applet "SafeText.cliMessage"
 require_in_surface providers "SafeText.cliMessage"
@@ -232,14 +232,14 @@ for guard_body in \
   "Object.prototype.hasOwnProperty.call(item, key)" \
   "String(value).replace(/'/g" \
 ; do
-  guard_files="$(cd "$ROOT_DIR" && grep -rlF "$guard_body" --include='*.qml' --include='*.js' contents/ | sort | tr '\n' ' ')"
-  if [[ "$guard_files" != "contents/ui/Guards.js " ]]; then
-    echo "guard implementation must live only in contents/ui/Guards.js: ${guard_body}" >&2
+  guard_files="$(cd "$ROOT_DIR" && grep -rlF "$guard_body" --include='*.qml' --include='*.js' --include='*.mjs' contents/ | sort | tr '\n' ' ')"
+  if [[ "$guard_files" != "contents/ui/Guards.mjs " ]]; then
+    echo "guard implementation must live only in contents/ui/Guards.mjs: ${guard_body}" >&2
     echo "found in: ${guard_files}" >&2
     exit 1
   fi
 done
-require_in_surface applet 'import "ProviderIdentity.js" as ProviderIdentity'
+require_in_surface applet 'import "ProviderIdentity.mjs" as ProviderIdentity'
 require_in_file "${ROOT_DIR}/contents/ui/ProviderSnapshot.js" 'var providerID = Normalizer.providerSnapshotKey(item.provider || "unknown") || "unknown"'
 # Guards.js is not part of the providers surface, so assert the delegation here;
 # the filtering rule itself is covered by tests/tst_guards.qml.
@@ -255,7 +255,7 @@ require_definition_where_used providers hasOwnKey "Guards.hasOwnKey(item, key)"
 # script instead of receiving it as an argument.
 reject_in_surface providers 'shellQuote(stdinValue)'
 reject_in_surface providers '({ "{value}": value }), field.kind === "secret" ? value : null)'
-# The key validation itself is asserted once above, against ProviderIdentity.js.
+# The key validation itself is asserted once above, against ProviderIdentity.mjs.
 # What each surface still owns is the refusal: an unusable key must fall back to
 # a generic icon rather than reaching Qt.resolvedUrl.
 for qml_file in "$MAIN_QML" "$PROVIDERS_QML"; do

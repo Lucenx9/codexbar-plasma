@@ -1,6 +1,6 @@
 .pragma library
 .import "../Guards.js" as Guards
-.import "../ProviderIdentity.js" as Identity
+.import "../ProviderIdentity.mjs" as Identity
 .import "ProviderConfigProtocol.js" as Protocol
 
 // Linux fetches verified at 0.82.0; OpenDesign joins at 0.83.0, WorkBuddy at 0.84.0. Writer

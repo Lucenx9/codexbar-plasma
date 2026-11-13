@@ -1,5 +1,4 @@
-.pragma library
-.import "Guards.js" as Guards
+import * as Guards from "./Guards.mjs";
 
 // Official usage dates are ISO-8601 strings. Check calendar components before
 // Date.parse, which otherwise rolls impossible dates into the following month.
@@ -56,3 +55,7 @@ function normalize(usage) {
     }
     return result;
 }
+
+export {
+    date, normalize,
+};

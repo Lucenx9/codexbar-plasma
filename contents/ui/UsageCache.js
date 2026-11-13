@@ -1,7 +1,7 @@
 .pragma library
 .import "Guards.js" as Guards
-.import "ProviderNormalizer.js" as Normalizer
-.import "SubscriptionDates.js" as SubscriptionDates
+.import "ProviderNormalizer.mjs" as Normalizer
+.import "SubscriptionDates.mjs" as SubscriptionDates
 
 var maximumAgeMs = 24 * 60 * 60 * 1000
 var maximumEntries = 64

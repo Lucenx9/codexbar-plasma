@@ -4,7 +4,7 @@ import org.kde.kirigami as Kirigami
 import "../PanelElements.js" as PanelElements
 import "../PanelTextFit.js" as PanelTextFit
 import "../ThemeContrast.js" as ThemeContrast
-import "../ProviderNormalizer.js" as Normalizer
+import "../ProviderNormalizer.mjs" as Normalizer
 
 Item {
     id: compactRoot

@@ -1,9 +1,24 @@
-.pragma library
-.import "ProviderNormalizer.js" as Normalizer
-.import "CostPresentation.js" as CostPresentation
-.import "CostAmounts.js" as CostAmounts
-.import "CostTrust.js" as CostTrust
-.import "CliResponse.js" as CliResponse
+import * as Normalizer from "./ProviderNormalizer.mjs";
+import * as CostPresentation from "./CostPresentation.mjs";
+import * as CostAmounts from "./CostAmounts.mjs";
+import * as CostTrust from "./CostTrust.mjs";
+import * as CliResponse from "./CliResponse.mjs";
+import * as SafeText from "./SafeText.mjs";
+
+// Bound copies across the thread boundary without parsing on the GUI thread.
+// Keep one extra stdout unit so decode still classifies an oversized response.
+function workerRequest(run, stdoutValue, stderrValue, exitCode) {
+    return {
+        serial: run.serial,
+        stdoutText: typeof stdoutValue === "string"
+            ? stdoutValue.slice(0, SafeText.maximumCliJsonLength + 1)
+            : stdoutValue === null || stdoutValue === undefined ? "" : {},
+        stderrText: typeof stderrValue === "string"
+            ? stderrValue.slice(0, SafeText.maximumDiagnosticLength) : "",
+        historyDays: run.historyDays,
+        exitCode: typeof exitCode === "number" || typeof exitCode === "string" ? exitCode : null
+    };
+}
 
 // `--period all` reports the days since year 1. Size its window from the
 // oldest recorded day to the scan day instead; dates after a known scan day
@@ -194,3 +209,9 @@ function response(stdoutValue, stderrValue, requestedHistoryDays, exitCode) {
         costs: costs, failedProviders: failedProviders, message: message,
         argumentsRejected: argumentsRejected};
 }
+
+export {
+    workerRequest,
+    recordedHistoryDays, longHistoryAverage, normalizeSnapshot, hasMeasuredAmounts, preferredSnapshot,
+    response,
+};

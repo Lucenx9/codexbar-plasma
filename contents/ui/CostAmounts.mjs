@@ -1,7 +1,6 @@
-.pragma library
-.import "Guards.js" as Guards
-.import "SafeText.js" as SafeText
-.import "ProviderNormalizer.js" as Normalizer
+import * as Guards from "./Guards.mjs";
+import * as SafeText from "./SafeText.mjs";
+import * as Normalizer from "./ProviderNormalizer.mjs";
 
 // Locale-explicit cost/count formatting and measured-amount arithmetic.
 // Missing amounts remain distinct from measured zero; no localization or effects.
@@ -282,3 +281,12 @@ function snapshotTotals(snapshot) {
 function snapshotDaily(snapshot) {
     return snapshot && Array.isArray(snapshot.daily) ? snapshot.daily : []
 }
+
+export {
+    numberFormat, boundedText, hasMetricValue, metricValue, groupedDecimalString,
+    amountString, scaledTokenCount, formatCount, tokenCountString, sparklineMax,
+    metricText, amountSummary, peakPoint, averageDailyValue, perMillionAmount,
+    todayAmounts, addMetric, resolvedFormat, groupedDigits, currencyPrefix,
+    trimWholeFraction, existingLabel, zeroDayCount, positiveAmount, perMillionRatio,
+    scanIsCurrent, snapshotTotals, snapshotDaily,
+};

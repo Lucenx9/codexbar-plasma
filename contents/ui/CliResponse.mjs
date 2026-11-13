@@ -1,6 +1,5 @@
-.pragma library
-.import "SafeText.js" as SafeText
-.import "ProviderNormalizer.js" as Normalizer
+import * as SafeText from "./SafeText.mjs";
+import * as Normalizer from "./ProviderNormalizer.mjs";
 
 function message(value) {
     return SafeText.cliMessage(SafeText.stripLoaderDiagnostics(value), SafeText.maximumCliMessageLength);
@@ -81,3 +80,7 @@ function decode(stdoutValue, stderrValue, exitCode, errorRecordLimit) {
         message: ""
     };
 }
+
+export {
+    message, structuredErrorExitCodes, explainsExit, hasStructuredError, decode,
+};

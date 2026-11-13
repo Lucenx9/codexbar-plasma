@@ -1,7 +1,7 @@
 import QtQuick
 import QtTest
 import "../contents/ui/AiInsightsSnapshot.js" as AiInsightsSnapshot
-import "../contents/ui/CostResponse.js" as CostResponse
+import "../contents/ui/CostResponse.mjs" as CostResponse
 
 TestCase {
     name: "AiInsightsSnapshot"

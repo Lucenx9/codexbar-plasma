@@ -7,7 +7,7 @@ import org.kde.plasma.plasma5support as Plasma5Support
 import org.kde.plasma.plasmoid
 import "components" as Components
 import "Guards.js" as Guards
-import "SafeText.js" as SafeText
+import "SafeText.mjs" as SafeText
 import "controllers" as Controllers
 import "SupportReport.js" as SupportReport
 import "CommandLedger.js" as CommandLedger

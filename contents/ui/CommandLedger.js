@@ -15,7 +15,7 @@
 // source name first, so a late reply from the retired one is no longer in the
 // ledger and cannot overwrite the fresher result.
 //
-// Like ProviderNormalizer.js this module must not reach for `Qt`, `Kirigami`, or
+// Like ProviderNormalizer.mjs this module must not reach for `Qt`, `Kirigami`, or
 // `i18n`, and it never mutates the map it is given: every change returns a new
 // map so QML property bindings on command ledgers re-evaluate.
 

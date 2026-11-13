@@ -1,7 +1,6 @@
-.pragma library
-.import "Guards.js" as Guards
-.import "ProviderNormalizer.js" as Normalizer
-.import "CostAmounts.js" as CostAmounts
+import * as Guards from "./Guards.mjs";
+import * as Normalizer from "./ProviderNormalizer.mjs";
+import * as CostAmounts from "./CostAmounts.mjs";
 
 // Cost chart geometry, point selection, and calendar heatmap layout.
 // Only paintRoundedTopBar draws, using the canvas supplied by its QML owner.
@@ -312,3 +311,11 @@ function newestCalendarSlot(items) {
 function chartMemoMatches(memo, fmt, points, showsTokens) {
     return memo.points === points && memo.fmt === fmt && memo.showsTokens === showsTokens
 }
+
+export {
+    maximumCostHistoryPoints, chartBarGeometry, chartLineX, chartLineIndexAt, chartLineY,
+    paintRoundedTopBar, chartPoints, memoizedChartPoints, selectedCostDay, uniqueCostDayIndex,
+    costDayIndexAfterRefresh, spendHeatmapDays, spendHeatmapCells, heatmapFirstWeekday, spendHeatmapNewestWeekday,
+    spendHeatmapRowWeekdays, spendHeatmapTrailingSlots, nonNegative, pointCount, hasDayLabel,
+    calendarDate, indexedCalendarPoints, extendSnapshotCalendar, newestCalendarSlot, chartMemoMatches,
+};

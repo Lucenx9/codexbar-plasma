@@ -1,6 +1,6 @@
 .pragma library
-.import "ProviderNormalizer.js" as Normalizer
-.import "CliResponse.js" as CliResponse
+.import "ProviderNormalizer.mjs" as Normalizer
+.import "CliResponse.mjs" as CliResponse
 
 // Failure outcomes carry no snapshot: only a successful response may replace
 // the last completed scan, including a confirmed empty session list.

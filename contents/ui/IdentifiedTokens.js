@@ -1,6 +1,6 @@
 .pragma library
 .import "Guards.js" as Guards
-.import "SafeText.js" as SafeText
+.import "SafeText.mjs" as SafeText
 
 var maximumRecords = 50000;
 var maximumCount = 9007199254740991;

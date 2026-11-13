@@ -1,4 +1,3 @@
-.pragma library
 
 var maximumCliMessageLength = 500
 var maximumDiagnosticLength = 65536
@@ -226,3 +225,11 @@ function cliDiagnostic(value, maximumLength) {
         .trim()
     return truncatedText(text, limit)
 }
+
+export {
+    maximumCliMessageLength, maximumDiagnosticLength, maximumCliJsonLength, credentialRedactionLookaheadLength, safeLimit,
+    boundedInspectionText, redactCredentials, redactCredentialsWithinSourceLimit, redactCredentialWindow, redactCredentialText,
+    isStructuredValue, plainTextAsRichText, plainTextAsMnemonicRichText, plainTextAsMnemonicLabel, plainButtonText,
+    truncatedText, boundedDisplayText, loaderDiagnosticMarker, loaderDiagnosticPattern, stripLoaderDiagnostics,
+    filteredLoaderDiagnostics, cliJsonText, cliMessage, cliDiagnostic,
+};

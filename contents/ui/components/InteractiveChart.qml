@@ -3,8 +3,8 @@ import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import "../ChartScale.js" as ChartScale
-import "../CostChart.js" as CostChart
-import "../ProviderNormalizer.js" as Normalizer
+import "../CostChart.mjs" as CostChart
+import "../ProviderNormalizer.mjs" as Normalizer
 
 ColumnLayout {
     id: chart

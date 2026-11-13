@@ -1,8 +1,8 @@
 .pragma library
 .import "Guards.js" as Guards
-.import "ProviderNormalizer.js" as Normalizer
+.import "ProviderNormalizer.mjs" as Normalizer
 .import "ProviderSnapshot.js" as ProviderSnapshot
-.import "CliResponse.js" as CliResponse
+.import "CliResponse.mjs" as CliResponse
 
 // An empty named-account list is a successful result. Failed refreshes carry
 // no options so the controller can retain the last successful list. Successes

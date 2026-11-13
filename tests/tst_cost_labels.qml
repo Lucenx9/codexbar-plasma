@@ -1,6 +1,6 @@
 import QtQuick
 import QtTest
-import "../contents/ui/CostAmounts.js" as CostAmounts
+import "../contents/ui/CostAmounts.mjs" as CostAmounts
 import "../contents/ui/components" as Components
 
 TestCase {

@@ -1,7 +1,7 @@
 .pragma library
 .import "../Guards.js" as Guards
-.import "../ProviderIdentity.js" as ProviderIdentity
-.import "../SafeText.js" as SafeText
+.import "../ProviderIdentity.mjs" as ProviderIdentity
+.import "../SafeText.mjs" as SafeText
 .import "ProviderDescriptor.js" as ProviderDescriptor
 .import "ProviderAuthentication.js" as ProviderAuthentication
 

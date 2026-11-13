@@ -24,8 +24,8 @@ whose behavior is already covered that way is removed, not duplicated: it fails
 on a rename that changes nothing and passes on an edit that changes behavior.
 
 `scripts/lib/qml_surfaces.py` defines QML/JS file groups for the Makefile,
-hardening checks, and translation extraction. Existing globs cover new files;
-add a glob only for a new directory. `scripts/test_qml_hardening.sh` rejects
+hardening checks, and translation extraction. Existing globs cover QML, JavaScript and ECMAScript modules (`.mjs`);
+add a glob for a new directory or source extension. `scripts/test_qml_hardening.sh` rejects
 uncovered QML/JS files.
 
 - Use `require_in_surface` / `reject_in_surface` in shell, or `Surface.require`,
@@ -44,7 +44,8 @@ uncovered QML/JS files.
   A plain search for `function foo(` anywhere in a group can miss broken callers.
 - Local bindings for `hasOwnKey`, `isUnsafeObjectKey`, `copyObject`, and
   `shellQuote` delegate to `contents/ui/Guards.js`. Share the implementation
-  through that `.pragma library` module, including in config pages.
+  through that QML entry point, including in config pages. The implementation
+is in `Guards.mjs` so WorkerScript uses the same guards.
   `tests/tst_guards.qml` covers behavior; `scripts/test_security_regressions.sh`
   rejects implementations duplicated elsewhere.
 
@@ -210,7 +211,7 @@ settings smoke compares the preview with the live monetary formatter.
 inputs, local calendar boundaries, DST and privacy. Its snapshot-to-allowance
 cases reject impossible dates, overflowing times and missing/invalid timezones
 before and after privacy projection, while retaining valid leap days and offsets.
-Both paths reuse the ISO-8601 validator in `SubscriptionDates.js` rather than
+Both paths reuse the ISO-8601 validator in `SubscriptionDates.mjs` rather than
 accepting `Date.parse` calendar rollover. The `monthly-allowance`
 smoke scenario checks the production popup reading.
 
@@ -453,7 +454,7 @@ backslashes, including a quoted directory's final separator and Unicode
 backslash escapes, remain subject to the conservative path filter.
 Common executable startup failures retain
 only a fixed reason, never the personal path or library filename.
-`SafeText.js` redacts secret-key and secret-access-key assignments alongside
+`SafeText.mjs` redacts secret-key and secret-access-key assignments alongside
 the existing credential names, including environment-variable and SDK spellings.
 It also matches keys whose quotes are backslash-escaped by one or more JSON
 encodings, and removes the rest of the line after an escaped quoted value

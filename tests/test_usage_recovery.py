@@ -453,8 +453,8 @@ class UsageRecoveryTests(unittest.TestCase):
 
 MENU_QML = '''import QtQuick
 import QtTest
-import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
-import "SOURCE_URL/ProviderIdentity.js" as ProviderIdentity
+import "SOURCE_URL/ProviderNormalizer.mjs" as Normalizer
+import "SOURCE_URL/ProviderIdentity.mjs" as ProviderIdentity
 import "SOURCE_URL/StatusComponents.js" as StatusComponents
 TestCase {
     name: "PopupMenuRows"

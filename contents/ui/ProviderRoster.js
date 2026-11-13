@@ -1,5 +1,5 @@
 .pragma library
-.import "SafeText.js" as SafeText
+.import "SafeText.mjs" as SafeText
 .import "config/ProviderConfigProtocol.js" as ProviderConfigProtocol
 
 function providerTitle(value) {

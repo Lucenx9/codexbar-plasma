@@ -1,10 +1,10 @@
 import QtQuick
-import "../CostPresentation.js" as CostPresentation
-import "../CostAmounts.js" as CostAmounts
-import "../ProviderNormalizer.js" as Normalizer
+import "../CostPresentation.mjs" as CostPresentation
+import "../CostAmounts.mjs" as CostAmounts
+import "../ProviderNormalizer.mjs" as Normalizer
 
 // Localized text for a provider's cost history: summary lines, breakdown,
-// model and day rows. CostPresentation.js computes the values; this object
+// model and day rows. CostPresentation.mjs computes the values; this object
 // words them in the catalog and dates CLI calendar keys in the locale.
 QtObject {
     id: root

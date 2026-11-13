@@ -15,7 +15,7 @@ class QuotaWindowCalendarTests(unittest.TestCase):
 import QtQuick
 import QtTest
 import "SOURCE_URL/QuotaWindowCost.js" as QuotaWindowCost
-import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
+import "SOURCE_URL/ProviderNormalizer.mjs" as Normalizer
 import "SOURCE_URL/AiInsightsSnapshot.js" as AiInsightsSnapshot
 
 TestCase {

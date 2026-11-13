@@ -1,5 +1,5 @@
 .pragma library
-.import "ProviderNormalizer.js" as Normalizer
+.import "ProviderNormalizer.mjs" as Normalizer
 
 // Semantic sections for the existing provider-cost contract. QML supplies all
 // translated labels and formats amounts; a balance never borrows a quota limit.

@@ -1,8 +1,8 @@
 import QtQuick
 import QtTest
 import "../contents/ui/UsageResponse.js" as UsageResponse
-import "../contents/ui/ProviderNormalizer.js" as Normalizer
-import "../contents/ui/SafeText.js" as SafeText
+import "../contents/ui/ProviderNormalizer.mjs" as Normalizer
+import "../contents/ui/SafeText.mjs" as SafeText
 
 TestCase {
     name: "UsageResponse"

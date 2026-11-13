@@ -1,6 +1,6 @@
 .pragma library
 .import "Guards.js" as Guards
-.import "SafeText.js" as SafeText
+.import "SafeText.mjs" as SafeText
 
 function response(text) {
     var empty = {status: "error", version: "", path: "", manager: "external", latest: "", releaseUrl: ""}

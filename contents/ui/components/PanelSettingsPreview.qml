@@ -4,10 +4,10 @@ import org.kde.kirigami as Kirigami
 import "../PanelDisplay.js" as PanelDisplay
 import "../PanelPreview.js" as PanelPreview
 import "../PanelTextFit.js" as PanelTextFit
-import "../ProviderIdentity.js" as ProviderIdentity
+import "../ProviderIdentity.mjs" as ProviderIdentity
 import "../QuotaThresholds.js" as QuotaThresholds
 import "../ThemeContrast.js" as ThemeContrast
-import "../CostAmounts.js" as CostAmounts
+import "../CostAmounts.mjs" as CostAmounts
 
 ColumnLayout {
     id: preview

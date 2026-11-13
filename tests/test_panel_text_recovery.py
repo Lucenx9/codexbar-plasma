@@ -25,13 +25,13 @@ import "SOURCE_URL/PanelProviders.js" as PanelProviders
 import "SOURCE_URL/PanelDisplay.js" as PanelDisplay
 import "SOURCE_URL/PanelRules.js" as PanelRules
 import "SOURCE_URL/PanelTextFit.js" as PanelTextFit
-import "SOURCE_URL/ProviderIdentity.js" as ProviderIdentity
+import "SOURCE_URL/ProviderIdentity.mjs" as ProviderIdentity
 import "SOURCE_URL/components" as Components
-import "SOURCE_URL/CostPresentation.js" as CostPresentation
-import "SOURCE_URL/CostAmounts.js" as CostAmounts
-import "SOURCE_URL/CostChart.js" as CostChart
-import "SOURCE_URL/CostCurrency.js" as CostCurrency
-import "SOURCE_URL/CostTrust.js" as CostTrust
+import "SOURCE_URL/CostPresentation.mjs" as CostPresentation
+import "SOURCE_URL/CostAmounts.mjs" as CostAmounts
+import "SOURCE_URL/CostChart.mjs" as CostChart
+import "SOURCE_URL/CostCurrency.mjs" as CostCurrency
+import "SOURCE_URL/CostTrust.mjs" as CostTrust
 TestCase {
     name: "PanelTextRecovery"
     Components.PanelText {
@@ -192,8 +192,8 @@ class PanelTextRecoveryTests(unittest.TestCase):
 MENUBAR_QML = '''import QtQuick
 import QtTest
 import "SOURCE_URL/PanelDisplay.js" as PanelDisplay
-import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
-import "SOURCE_URL/ProviderIdentity.js" as ProviderIdentity
+import "SOURCE_URL/ProviderNormalizer.mjs" as Normalizer
+import "SOURCE_URL/ProviderIdentity.mjs" as ProviderIdentity
 import "SOURCE_URL/PrivacyPresentation.js" as PrivacyPresentation
 import "SOURCE_URL/ResetPresentation.js" as ResetPresentation
 import "SOURCE_URL/components" as Components

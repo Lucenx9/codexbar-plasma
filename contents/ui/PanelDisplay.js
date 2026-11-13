@@ -1,5 +1,5 @@
 .pragma library
-.import "ProviderNormalizer.js" as Normalizer
+.import "ProviderNormalizer.mjs" as Normalizer
 
 var percentMode = "percent";
 var paceMode = "pace";

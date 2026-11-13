@@ -1,6 +1,6 @@
 .pragma library
 .import "Guards.js" as Guards
-.import "ProviderNormalizer.js" as Normalizer
+.import "ProviderNormalizer.mjs" as Normalizer
 
 // Only provider IDs and title digests are persisted. Equal current titles form
 // one group; a renamed title is visible again. Untitled sections stay visible.

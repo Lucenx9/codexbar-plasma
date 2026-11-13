@@ -1,6 +1,6 @@
 .pragma library
 .import "Guards.js" as Guards
-.import "ProviderNormalizer.js" as Normalizer
+.import "ProviderNormalizer.mjs" as Normalizer
 
 // CLI 0.56.2 supplies stage, percentages and a forecast beside its English
 // summary. Return semantic parts so QML can localize without parsing prose.

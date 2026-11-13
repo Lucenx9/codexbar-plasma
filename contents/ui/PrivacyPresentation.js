@@ -1,8 +1,8 @@
 .pragma library
 .import "Guards.js" as Guards
-.import "CostPresentation.js" as CostPresentation
-.import "ProviderNormalizer.js" as Normalizer
-.import "SubscriptionDates.js" as SubscriptionDates
+.import "CostPresentation.mjs" as CostPresentation
+.import "ProviderNormalizer.mjs" as Normalizer
+.import "SubscriptionDates.mjs" as SubscriptionDates
 
 // This is a presentation boundary over normalized snapshots. Private mode
 // retains numeric observations and drops provider prose instead of trying to

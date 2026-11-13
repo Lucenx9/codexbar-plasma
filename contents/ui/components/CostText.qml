@@ -1,9 +1,9 @@
 import QtQuick
-import "../CostPresentation.js" as CostPresentation
-import "../CostAmounts.js" as CostAmounts
-import "../CostTrust.js" as CostTrust
-import "../ProviderNormalizer.js" as Normalizer
-import "../ProviderIdentity.js" as ProviderIdentity
+import "../CostPresentation.mjs" as CostPresentation
+import "../CostAmounts.mjs" as CostAmounts
+import "../CostTrust.mjs" as CostTrust
+import "../ProviderNormalizer.mjs" as Normalizer
+import "../ProviderIdentity.mjs" as ProviderIdentity
 import "../Guards.js" as Guards
 
 // Localized text for normalized cost snapshots and legacy dashboard rows.

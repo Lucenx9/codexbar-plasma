@@ -1,7 +1,7 @@
 .pragma library
-.import "SafeText.js" as SafeText
-.import "CostPresentation.js" as Costs
-.import "CostTrust.js" as CostTrust
+.import "SafeText.mjs" as SafeText
+.import "CostPresentation.mjs" as Costs
+.import "CostTrust.mjs" as CostTrust
 
 function record(value) {
     return value !== null && typeof value === "object" && !Array.isArray(value)
