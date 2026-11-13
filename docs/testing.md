@@ -53,6 +53,11 @@ keyboard/pointer activation with the KDE desktop style at narrow and normal
 widths in LTR/RTL layouts. `tst_disclosure_button.qml` separately preserves the
 settings-only alignment with neighbouring check boxes.
 
+`tst_popup_tab_strip.qml` checks manual keyboard activation and mirrored arrow
+navigation, including wrapping and Home/End. Resize and label-growth cases keep
+an unselected focused tab visible; focus outside navigation stays untouched.
+Hidden and disabled tabs remain outside the native focus chain.
+
 `tst_visual_layout.qml` also destroys a container holding a dynamic provider
 detail section and fails on JavaScript warnings during teardown. The progress
 track must retain its theme color without reading a section that has already

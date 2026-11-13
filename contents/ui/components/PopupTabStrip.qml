@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Window
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.components as PlasmaComponents
@@ -17,6 +18,14 @@ Item {
     readonly property real tabPageStep: Math.max(Kirigami.Units.gridUnit * 4, providerTabsFlickable.width * 0.6)
     readonly property real tabWheelStep: Kirigami.Units.gridUnit * 5
     property Item selectedTab: null
+    readonly property Item navigationTab: {
+        var window = strip.Window.window;
+        var node = window ? window.activeFocusItem : null;
+        while (node && node.parent !== providerTabs) {
+            node = node.parent;
+        }
+        return node || selectedTab;
+    }
     // Reserve button space only after comparing the full strip width.
     readonly property bool tabsOverflow: width > 0 && providerTabs.implicitWidth > width - Kirigami.Units.smallSpacing
 
@@ -83,8 +92,18 @@ Item {
         ensureVisible(item);
     }
 
-    function revealSelectedTab() {
-        ensureVisible(selectedTab);
+    function revealFocusedOrSelectedTab() {
+        // Manual activation lets focus leave the selected tab. Layout changes
+        // must keep that navigation target visible until the user activates it.
+        ensureVisible(navigationTab);
+    }
+
+    // A layout can move a tab after updating its implicit width, or move it
+    // without changing the strip's total width. Observe the tab's final bounds.
+    Connections {
+        target: strip.navigationTab
+        function onXChanged() { Qt.callLater(strip.revealFocusedOrSelectedTab); }
+        function onWidthChanged() { Qt.callLater(strip.revealFocusedOrSelectedTab); }
     }
 
     // The focusable tabs in strip order, read off the focus chain
@@ -113,10 +132,10 @@ Item {
         var action = "";
         switch (key) {
         case Qt.Key_Left:
-            action = "previous";
+            action = providerTabs.LayoutMirroring.enabled ? "next" : "previous";
             break;
         case Qt.Key_Right:
-            action = "next";
+            action = providerTabs.LayoutMirroring.enabled ? "previous" : "next";
             break;
         case Qt.Key_Home:
             action = "first";
@@ -164,8 +183,8 @@ Item {
         interactive: contentWidth > width
 
         onMovementStarted: providerTabsScroll.stop()
-        onWidthChanged: Qt.callLater(strip.revealSelectedTab)
-        onContentWidthChanged: Qt.callLater(strip.revealSelectedTab)
+        onWidthChanged: Qt.callLater(strip.revealFocusedOrSelectedTab)
+        onContentWidthChanged: Qt.callLater(strip.revealFocusedOrSelectedTab)
 
         NumberAnimation {
             id: providerTabsScroll

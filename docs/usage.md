@@ -313,9 +313,13 @@ work and upstream contract requirements.
 - Overflowing popup tabs have separate scroll buttons and immediate keyboard
   focus reveal, so navigation never covers provider labels. A tab wider than the
   available area stays aligned at its start when focused or selected again.
+  Resizing the popup or updating tab labels keeps the focused tab visible even
+  before activation. With focus outside the strip, layout changes reveal the
+  selected tab without moving focus back into navigation.
 - Popup tabs follow the usual tab keyboard pattern: Left and Right move focus
   between tabs and wrap around at either end, Home and End jump to the first
   and last tab, and Enter or Space opens the focused tab.
+  Left and Right follow the visual tab order in right-to-left layouts too.
   Selected tabs use a tint of the theme focus color; the quota gauge under the
   icon remains a usage meter. Tab corners follow the inset inside the rounded
   strip. Selecting a tab keeps its width stable, so neighbouring tabs

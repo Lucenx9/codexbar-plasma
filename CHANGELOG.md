@@ -12,6 +12,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep the focused popup tab visible when the popup resizes or tab labels
+  change, even before that tab is activated. Left and Right now follow the
+  visual tab order in right-to-left layouts.
+
 - Reduce UI pauses when loading long cost histories by projecting daily models
   only for retained chart days, omitting model work from daily averages, and
   reusing validated model labels within each normalization call. Model summaries
