@@ -915,8 +915,11 @@ Item {
 
     function verifyHiddenUsageRows() {
         var popup = applet.fullRepresentationItem;
-        var section = findItem(popup, "hiddenUsageRowsSection");
-        var toggle = findItem(popup, "hiddenUsageRowsToggle");
+        var providerContent = findItem(popup, "providerScroll");
+        if (!providerContent)
+            return false;
+        var section = findItem(providerContent, "hiddenUsageRowsSection");
+        var toggle = findItem(providerContent, "hiddenUsageRowsToggle");
         if (!section || !toggle)
             return false;
         if (settingsBehaviorStep === 0) {
@@ -933,7 +936,7 @@ Item {
         if (!detailBeforeCaptured)
             return false;
         if (settingsBehaviorStep <= 2) {
-            var hide = findItem(popup, "hideUsageRowButton");
+            var hide = findItem(providerContent, "hideUsageRowButton");
             verifyScenario(hide && hide.visible, "usage row has no hide action");
             hide.clicked();
             settingsBehaviorStep++;
@@ -978,7 +981,7 @@ Item {
         for (var i = 0; i < 64; i++)
             fullList.push({provider: "fixture" + i, row: "primary"});
         config.popupHiddenUsageRows = JSON.stringify(fullList);
-        var hideAction = findItem(popup, "hideUsageRowButton");
+        var hideAction = findItem(providerContent, "hideUsageRowButton");
         verifyScenario(hideAction !== null && !hideAction.visible,
             "a full hidden-row list still offered an ineffective hide action");
         applet.restorePopupUsageRow("fixture0", {lane: "primary"});
@@ -989,11 +992,14 @@ Item {
 
     function verifyPopupContent() {
         var popup = applet.fullRepresentationItem;
+        var providerContent = findItem(popup, "providerScroll");
+        if (!providerContent)
+            return false;
         var config = applet.Plasmoid.configuration;
-        var pace = findItem(popup, "usagePaceLabel");
-        var marker = findItem(popup, "usagePaceMarker");
-        var credits = findItem(popup, "creditsSection");
-        var details = findItem(popup, "providerDetailsSection");
+        var pace = findItem(providerContent, "usagePaceLabel");
+        var marker = findItem(providerContent, "usagePaceMarker");
+        var credits = findItem(providerContent, "creditsSection");
+        var details = findItem(providerContent, "providerDetailsSection");
         if (!pace || !marker || !credits || !details)
             return false;
         if (!navigationVerified) {
@@ -1003,8 +1009,8 @@ Item {
             var costs = applet.tokenCosts;
             var memo = applet.notificationMemo;
             var serial = usageLifecycle.commandRunSerial;
-            var actions = findItem(popup, "providerActionsToggle");
-            var actionButtons = namedItems(popup, "providerActionButton");
+            var actions = findItem(providerContent, "providerActionsToggle");
+            var actionButtons = namedItems(providerContent, "providerActionButton");
             verifyScenario(actions && !actions.expanded && actionButtons.length > 0
                 && actionButtons.every(function(button) { return !button.visible; }),
                 "provider actions must start collapsed");

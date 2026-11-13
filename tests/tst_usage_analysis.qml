@@ -2,6 +2,7 @@ import QtQuick
 import QtTest
 import "../contents/ui/UsageAnalysis.js" as Analysis
 import "../contents/ui/ChartStack.mjs" as Chart
+import "../contents/ui/PrivacyPresentation.js" as Privacy
 
 TestCase {
     name: "UsageAnalysis"
@@ -52,6 +53,29 @@ TestCase {
         usd.daily.pop()
         compare(Analysis.comparison([usd], false, now), null)
         compare(Analysis.comparison([], false, now), null)
+    }
+
+    function test_privacyPreservesWeeklyComparison_data() {
+        return [{tag: "USD", currency: "USD"}, {tag: "EUR", currency: "EUR"}]
+    }
+
+    function test_privacyPreservesWeeklyComparison(data) {
+        var cost = snapshot("codex", data.currency, 2, 1)
+        cost.trust = {sourceKind: "listPrice"}
+        var projected = Privacy.cost(cost, true)
+        verify(projected.currency === undefined)
+        var original = JSON.stringify(projected)
+        compare(Analysis.comparison([projected], false, now), Analysis.comparison([cost], false, now))
+        compare(Analysis.comparison([projected], true, now), Analysis.comparison([cost], true, now))
+        var foreign = snapshot("claude", data.currency === "USD" ? "EUR" : "USD", 5, 1)
+        compare(Analysis.comparison([projected, Privacy.cost(foreign, true)], false, now),
+            Analysis.comparison([cost, foreign], false, now))
+        compare(JSON.stringify(projected), original)
+        projected.daily[1].incompleteRequests = 1
+        compare(Analysis.comparison([projected], false, now), null)
+        projected.daily[1].incompleteRequests = 0
+        projected.totals.cost = null
+        compare(Analysis.comparison([projected], false, now), null)
     }
 
     function test_unknownTotalsPartialAndOverflow() {

@@ -15,10 +15,12 @@ selected currency and token totals can include all currencies.
 The weekly comparison uses the existing AI snapshot completeness rules without
 calling AI: fourteen complete days before today, a scan reaching today, no
 ambiguous dates, finite values and no partial costs. It never loads extra history
-for a short selection. Model lists retain a shared 128-row bound, mark truncation,
-and use the already privacy-projected snapshots. Limits use current usage data
-and remain independent of local history filters. No current CLI blocker in
-[TODO](../TODO.md) is resolved or bypassed by these presentation changes.
+for a short selection. Privacy mode retains the numeric comparison, using the
+currency preserved in the projected totals. Model lists retain a shared 128-row
+bound, mark truncation, and use the already privacy-projected snapshots. Limits
+use current usage data and remain independent of local history filters. No
+current CLI blocker in [TODO](../TODO.md) is resolved or bypassed by these
+presentation changes.
 
 ## Provider details
 
