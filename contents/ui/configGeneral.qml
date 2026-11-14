@@ -118,6 +118,8 @@ KCM.SimpleKCM {
     property bool cfg_showProviderInPanelDefault: false
     property string cfg_panelStyle
     property string cfg_panelStyleDefault: "standard"
+    property string cfg_panelMeterShape
+    property string cfg_panelMeterShapeDefault: "capsules"
     property bool cfg_showPercentInPanel
     property bool cfg_showPercentInPanelDefault: false
     property bool cfg_showAutoQuotaLabel
@@ -385,6 +387,7 @@ KCM.SimpleKCM {
             [cfg_showProviderChangelogs, cfg_showProviderChangelogsDefault],
             [cfg_showProviderInPanel, cfg_showProviderInPanelDefault],
             [cfg_panelStyle, cfg_panelStyleDefault],
+            [cfg_panelMeterShape, cfg_panelMeterShapeDefault],
             [cfg_showPercentInPanel, cfg_showPercentInPanelDefault],
             [cfg_showAutoQuotaLabel, cfg_showAutoQuotaLabelDefault],
             [cfg_showMultiProviderInPanel, cfg_showMultiProviderInPanelDefault],
@@ -457,6 +460,7 @@ KCM.SimpleKCM {
         cfg_showProviderChangelogs = cfg_showProviderChangelogsDefault
         cfg_showProviderInPanel = cfg_showProviderInPanelDefault
         cfg_panelStyle = cfg_panelStyleDefault
+        cfg_panelMeterShape = cfg_panelMeterShapeDefault
         cfg_showPercentInPanel = cfg_showPercentInPanelDefault
         cfg_showAutoQuotaLabel = cfg_showAutoQuotaLabelDefault
         cfg_showMultiProviderInPanel = cfg_showMultiProviderInPanelDefault

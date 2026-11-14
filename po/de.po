@@ -2172,10 +2172,6 @@ msgid "Monochrome provider icons"
 msgstr "Einfarbige Anbietersymbole"
 
 #: contents/ui/configPanel.qml
-msgid "Quota capsules keep their warning colors in both styles."
-msgstr "Kontingentanzeigen behalten ihre Warnfarben in beiden Stilen."
-
-#: contents/ui/configPanel.qml
 msgid "Contents"
 msgstr "Inhalt"
 
@@ -4538,3 +4534,23 @@ msgstr "Unvollständige Daten"
 #: contents/ui/components/AnalysisSummary.qml
 msgid "Cost (%1 subtotal)"
 msgstr "Kosten (Zwischensumme in %1)"
+
+#: contents/ui/configPanel.qml
+msgid "Meter shape:"
+msgstr "Anzeigeform:"
+
+#: contents/ui/configPanel.qml
+msgid "Capsules"
+msgstr "Kapseln"
+
+#: contents/ui/configPanel.qml
+msgid "Rings"
+msgstr "Ringe"
+
+#: contents/ui/configPanel.qml
+msgid "Automatic quotas use an outer primary ring and an inner secondary ring. An explicit quota uses one ring."
+msgstr "Automatische Kontingente verwenden einen äußeren Ring für das primäre und einen inneren für das sekundäre Kontingent. Ein explizites Kontingent verwendet einen einzelnen Ring."
+
+#: contents/ui/configPanel.qml
+msgid "Quota indicators keep their warning colors in both styles."
+msgstr "Die Kontingentanzeigen behalten in beiden Stilen ihre Warnfarben."

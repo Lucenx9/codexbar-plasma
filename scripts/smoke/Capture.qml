@@ -800,6 +800,7 @@ Item {
         var snapshots = applet.providers;
         var serial = usageLifecycle.commandRunSerial;
         var liveStyle = applet.Plasmoid.configuration.panelStyle;
+        var liveShape = applet.Plasmoid.configuration.panelMeterShape;
         page.cfg_showSpendInPanel = true;
         verifyScenario(renderer.fullText === i18n("Spend %1 / %2", applet.amountString(12, "USD"),
             applet.amountString(20, "USD")), "spend preview differs from live number formatting");
@@ -812,6 +813,14 @@ Item {
         page.cfg_panelStyle = "minimal";
         verifyScenario(renderer.minimalStyle && !renderer.animationsEnabled && !renderer.interactive,
             "preview did not apply pending style immediately");
+        page.cfg_panelMeterShape = "rings";
+        verifyScenario(renderer.ringMeters && findItem(renderer, "panelMeterRing"),
+            "preview did not apply the pending ring shape");
+        page.applyMinimalPanelPreset();
+        verifyScenario(page.cfg_panelMeterShape === "rings" && page.cfg_panelStyle === "minimal",
+            "minimal-content preset changed the selected meter shape");
+        page.cfg_showPercentInPanel = true;
+        page.cfg_showProviderInPanel = true;
         preview.scenario = "nearLimit";
         verifyScenario(renderer.primaryText.indexOf(i18n("%1%", 98)) >= 0, "near-limit preview did not update");
         page.cfg_panelVisibilityRules = '{"meters":{"condition":"usageAtLeast","usedPercent":95}}';
@@ -844,6 +853,9 @@ Item {
             && page.cfg_panelQuotaLane === "secondary", "collapsing details reset a pending setting");
         page.cfg_panelQuotaLane = "auto";
         page.cfg_panelVisibilityRules = "{}";
+        page.cfg_panelMeterShape = "capsules";
+        verifyScenario(!renderer.ringMeters && applet.Plasmoid.configuration.panelMeterShape === liveShape,
+            "pending shape settings changed the live panel before Apply");
         verifyScenario(applet.Plasmoid.configuration.panelStyle === liveStyle
             && !applet.Plasmoid.configuration.showPercentInPanel
             && applet.providers === snapshots && usageLifecycle.commandRunSerial === serial,

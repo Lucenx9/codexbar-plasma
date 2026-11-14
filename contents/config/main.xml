@@ -221,6 +221,10 @@
       <label>Panel appearance: standard or minimal.</label>
       <default>standard</default>
     </entry>
+    <entry name="panelMeterShape" type="String">
+      <label>Panel quota shape: capsules or rings.</label>
+      <default>capsules</default>
+    </entry>
     <entry name="showPercentInPanel" type="Bool">
       <label>Show the selected usage text in the panel.</label>
       <default>false</default>

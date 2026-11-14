@@ -2174,10 +2174,6 @@ msgid "Monochrome provider icons"
 msgstr "Ícones dos provedores monocromáticos"
 
 #: contents/ui/configPanel.qml
-msgid "Quota capsules keep their warning colors in both styles."
-msgstr "Os indicadores de cota mantêm as cores de aviso em ambos os estilos."
-
-#: contents/ui/configPanel.qml
 msgid "Contents"
 msgstr "Conteúdo"
 
@@ -4518,3 +4514,23 @@ msgstr "Dados parciais"
 #: contents/ui/components/AnalysisSummary.qml
 msgid "Cost (%1 subtotal)"
 msgstr "Custo (subtotal em %1)"
+
+#: contents/ui/configPanel.qml
+msgid "Meter shape:"
+msgstr "Formato dos indicadores:"
+
+#: contents/ui/configPanel.qml
+msgid "Capsules"
+msgstr "Cápsulas"
+
+#: contents/ui/configPanel.qml
+msgid "Rings"
+msgstr "Anéis"
+
+#: contents/ui/configPanel.qml
+msgid "Automatic quotas use an outer primary ring and an inner secondary ring. An explicit quota uses one ring."
+msgstr "As cotas automáticas usam um anel externo para a cota principal e um interno para a secundária. Uma cota explícita usa um único anel."
+
+#: contents/ui/configPanel.qml
+msgid "Quota indicators keep their warning colors in both styles."
+msgstr "Os indicadores de cota mantêm as cores de aviso nos dois estilos."

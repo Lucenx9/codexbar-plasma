@@ -1101,6 +1101,15 @@ clipboard interoperability with every Wayland application or portal backend.
   percentages, and bounded reset metadata. Its denominator belongs only to that
   nested record, never to a plain `usage.credits` balance.
 
+Panel quota rings use the same selected rows, percentage direction, severity,
+and contrast policy as capsules. `PanelRingGeometry.js` bounds concentric
+geometry and short-arc caps; `components/PanelQuotaRings.qml` only draws those
+values using Qt Quick Shapes. `CompactRepresentation.qml` owns provider
+interaction and adapts quota data. `panelMeterShape` is independent of the
+persisted `panelStyle` color choice, defaults to `capsules`, and is reset by
+General with the other user settings. Direct geometry QtTests and the panel
+matrix cover rings, including small/vertical panels and absent/zero quotas.
+
 ## QML conventions
 
 For visual and interaction changes, follow the [design guide](../DESIGN.md)

@@ -96,6 +96,20 @@ class PanelMatrixTests(unittest.TestCase):
                                                ("panelProviderText", "43% used 125cr"))]}
         matrix.validate_record(record, 1)
 
+    def test_ring_capture_requires_both_quotas_and_rejects_capsules(self):
+        record = {"id": "rings-standard", "case": {"config": {
+            "panelMeterShape": "rings", "panelQuotaLane": "auto"}},
+            "parts": [{"name": "panelMeterRing"}, {"name": "panelMeterRing"}]}
+        matrix.validate_ring_record(record, 1)
+        record["parts"].pop()
+        with self.assertRaisesRegex(RuntimeError, "quota ring"):
+            matrix.validate_ring_record(record, 1)
+        record["case"]["edge"] = "missing-secondary"
+        matrix.validate_ring_record(record, 1)
+        record["parts"].append({"name": "panelMeterTrack"})
+        with self.assertRaisesRegex(RuntimeError, "Capsules"):
+            matrix.validate_ring_record(record, 1)
+
     def test_icon_only_case_cannot_pass_with_a_blank_capture(self):
         record = {"id": "minimal-0000", "width": 100, "height": 32,
                   "provider": "codex", "text": "", "case": {"vertical": False}, "parts": []}

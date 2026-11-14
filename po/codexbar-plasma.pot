@@ -3056,6 +3056,24 @@ msgid "Appearance"
 msgstr ""
 
 #: contents/ui/configPanel.qml
+msgid "Meter shape:"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Capsules"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Rings"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid ""
+"Automatic quotas use an outer primary ring and an inner secondary ring. An "
+"explicit quota uses one ring."
+msgstr ""
+
+#: contents/ui/configPanel.qml
 msgid "Panel style:"
 msgstr ""
 
@@ -3076,7 +3094,7 @@ msgid "Monochrome provider icons"
 msgstr ""
 
 #: contents/ui/configPanel.qml
-msgid "Quota capsules keep their warning colors in both styles."
+msgid "Quota indicators keep their warning colors in both styles."
 msgstr ""
 
 #: contents/ui/configPanel.qml

@@ -14,6 +14,8 @@ Item {
     property bool interactive: true
 
     readonly property bool verticalPanel: applet.verticalFormFactor
+    readonly property bool ringMeters: applet.panelMeterShape === "rings"
+    readonly property int ringDiameter: Math.max(16, Math.min(48, (verticalPanel ? width : height) - 2))
     readonly property bool minimalStyle: applet.minimalPanel === true
     readonly property var meterProviders: applet.compactProviders()
     readonly property bool hasProviderMeters: meterProviders.length > 0
@@ -126,10 +128,10 @@ Item {
     readonly property int meterBarWidth: verticalPanel
         ? Math.max(8, Math.min(meterContentHeight, meterIconSize + meterSpacing))
         : Math.max(Kirigami.Units.iconSizes.smallMedium, meterIconSize) + meterSpacing
-    readonly property int meterWidth: verticalPanel
+    readonly property int meterWidth: ringMeters ? ringDiameter : verticalPanel
         ? Math.max(meterIconSize, meterBarWidth)
         : meterIconSize + meterSpacing * 2 + meterBarWidth
-    readonly property int meterHeight: meterIconSize + meterSpacing * 3
+    readonly property int meterHeight: ringMeters ? ringDiameter : meterIconSize + meterSpacing * 3
         + meterBarHeight * 2 + quotaSpacing
     readonly property int metersExtent: meterProviders.length * meterHeight
         + Math.max(0, meterProviders.length - 1) * providerSpacing
@@ -260,10 +262,10 @@ Item {
         // without panel text) leaves spare room. Centre the row instead of
         // letting all of it pile up on the right of the content.
         anchors.centerIn: parent
-        width: Math.max(0, Math.min(compactRoot.width - Kirigami.Units.smallSpacing * 2,
+        width: Math.max(0, Math.min(compactRoot.width - (compactRoot.ringMeters ? 2 : Kirigami.Units.smallSpacing * 2),
             implicitWidth))
         height: compactRoot.verticalPanel ? implicitHeight
-            : Math.max(0, compactRoot.height - Kirigami.Units.smallSpacing * 2)
+            : Math.max(0, compactRoot.height - (compactRoot.ringMeters ? 2 : Kirigami.Units.smallSpacing * 2))
         rowSpacing: Kirigami.Units.smallSpacing
         columnSpacing: Kirigami.Units.smallSpacing
 
@@ -544,6 +546,7 @@ Item {
 
                     Rectangle {
                         anchors.fill: parent
+                        anchors.margins: compactRoot.ringMeters ? -1 : 0
                         radius: Kirigami.Units.smallSpacing
                         color: compactRoot.applet.withAlpha(Kirigami.Theme.textColor,
                             compactMeterMouse.pressed ? 0.14 : (compactMeterMouse.containsMouse ? 0.07 : 0))
@@ -558,6 +561,7 @@ Item {
 
                     Rectangle {
                         anchors.fill: parent
+                        anchors.margins: compactRoot.ringMeters ? -1 : 0
                         visible: compactMeter.activeFocus
                         radius: Kirigami.Units.smallSpacing
                         color: "transparent"
@@ -567,20 +571,46 @@ Item {
 
                     GridLayout {
                         anchors.centerIn: parent
-                        columns: compactRoot.verticalPanel ? 1 : 3
+                        columns: compactRoot.verticalPanel && !compactRoot.ringMeters ? 1 : 3
                         rowSpacing: compactRoot.meterSpacing
                         columnSpacing: compactRoot.meterSpacing
 
-                        Kirigami.Icon {
-                            objectName: "panelProviderIcon"
-                            source: compactRoot.applet.providerIconSource(compactMeter.modelData.provider)
-                            fallback: "view-statistics"
-                            isMask: compactRoot.minimalStyle || compactRoot.applet.providerIconIsMask(compactMeter.modelData.provider)
-                            color: ThemeContrast.readableAccentColor(compactMeter.accent,
-                                Kirigami.Theme.backgroundColor, Kirigami.Theme.textColor, 4.5)
+                        Item {
                             Layout.alignment: Qt.AlignCenter
-                            Layout.preferredWidth: compactRoot.meterIconSize
-                            Layout.preferredHeight: compactRoot.meterIconSize
+                            Layout.preferredWidth: compactRoot.ringMeters ? compactRoot.ringDiameter : compactRoot.meterIconSize
+                            Layout.preferredHeight: Layout.preferredWidth
+
+                            PanelQuotaRings {
+                                id: quotaRings
+                                anchors.fill: parent
+                                visible: compactRoot.ringMeters
+                                meters: compactRoot.ringMeters ? compactMeter.quotaRows.map(function(row) {
+                                    return {
+                                        percent: compactRoot.applet.displayPercent(row),
+                                        color: compactRoot.applet.quotaMeterColor(row, compactMeter.meterAccent),
+                                        warning: compactRoot.applet.quotaSeverity(row).length > 0
+                                    }
+                                }) : []
+                                trackColor: ThemeContrast.readableAccentColor(
+                                    ThemeContrast.interpolateColor(Kirigami.Theme.backgroundColor,
+                                        Kirigami.Theme.textColor, 0.35),
+                                    Kirigami.Theme.backgroundColor, Kirigami.Theme.textColor)
+                                animationsEnabled: compactRoot.animationsEnabled
+                                opacity: compactMeter.modelData.usageStale === true ? 0.55 : 1
+                            }
+
+                            Kirigami.Icon {
+                                objectName: "panelProviderIcon"
+                                source: compactRoot.applet.providerIconSource(compactMeter.modelData.provider)
+                                fallback: "view-statistics"
+                                isMask: compactRoot.minimalStyle || compactRoot.applet.providerIconIsMask(compactMeter.modelData.provider)
+                                color: ThemeContrast.readableAccentColor(compactMeter.accent,
+                                    Kirigami.Theme.backgroundColor, Kirigami.Theme.textColor, 4.5)
+                                anchors.centerIn: parent
+                                width: compactRoot.ringMeters && compactMeter.quotaRows.length > 0
+                                    ? quotaRings.logoSize : compactRoot.meterIconSize
+                                height: width
+                            }
 
                             PlainPlasmaLabel {
                                 objectName: "panelConfidenceMarker"
@@ -625,6 +655,7 @@ Item {
                         }
 
                         ColumnLayout {
+                            visible: !compactRoot.ringMeters
                             spacing: compactRoot.quotaSpacing
                             Layout.alignment: Qt.AlignCenter
                             opacity: compactMeter.modelData.usageStale === true ? 0.55 : 1

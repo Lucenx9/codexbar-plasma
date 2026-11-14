@@ -23,6 +23,21 @@ work and upstream contract requirements.
   readings stay distinguishable from zero without resembling a quarter-full
   meter. Every track has a visible outline; an exhausted remaining quota stays
   empty with its critical outline.
+- **Meter shape** in **Panel → Appearance** switches between the default
+  **Capsules** and **Rings**, independently of Provider colors or Monochrome.
+  Rings place the provider logo at the center, with the primary quota outside
+  the secondary quota. They start at the top and fill clockwise, using the
+  same used/remaining setting and independent warning colors as capsules.
+  An explicit quota choice shows one outer ring. Missing quotas are omitted;
+  measured zero leaves an empty track. Providers without an available quota
+  leave the meter roster; when no meters remain, the standalone identity icon
+  stays available. Tiny positive values keep a short visible stroke.
+  Rings work in horizontal and vertical panels, with the same provider actions,
+  accessible descriptions, incident badges, stale-data dimming, and optional
+  horizontal text. The settings preview follows pending shape changes;
+  Apply/Cancel retains its usual meaning. The minimal-content preset keeps the
+  selected shape. Restoring defaults selects Capsules. Unknown shape values
+  fall back to Capsules without rewriting the saved value.
 - Automatic panel meters show the primary quota above the secondary quota when
   both have percentages. A single available quota is centered vertically;
   absent quotas are omitted, while measured zero remains an empty track. If
@@ -73,8 +88,8 @@ work and upstream contract requirements.
 
 - **Show only icons and meters** in **Panel → Appearance** selects
   Monochrome and enables provider meters, including with a single
-  provider, and hides panel names, usage text, credits and spend budgets. The style selector
-  changes appearance alone. Existing installations keep their style, explicit
+  provider, and hides panel names, usage text, credits and spend budgets. The style and shape selectors
+  change appearance alone. Existing installations keep their style, explicit
   quota choice, and visibility settings. Automatic meters gain the second quota
   without a new setting or additional CLI calls.
 - Provider tabs with usage bars, reset windows, account identity, status, and

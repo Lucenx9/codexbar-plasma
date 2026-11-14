@@ -161,7 +161,7 @@ For private CLI selection, updates, and rollback, see
 
 - Quota meters, reset windows, account selection, and provider status, with
   configurable warnings and Plasma notifications.
-- Provider colors and Monochrome panel styles, up to two quota capsules per provider,
+- Provider colors and Monochrome panel styles, up to two quota capsules or concentric rings per provider,
   spaced provider groups, readable stacked meters on vertical panels, optional
   text with optional automatic quota names and monetary spend budgets, and a live settings preview.
 - Optional remaining monthly quota per day in the popup, using explicit CLI
@@ -200,7 +200,11 @@ unavailable. See the
 | --- | --- |
 | [![Colored provider icons and dual quota capsules in the Provider colors panel](docs/codexbar-plasma-panel-standard.png)](docs/codexbar-plasma-panel-standard.png) | [![Monochrome provider icons and dual quota capsules in the Monochrome panel](docs/codexbar-plasma-panel-minimal.png)](docs/codexbar-plasma-panel-minimal.png) |
 
-The same usage in both styles, with panel text hidden.
+The same usage in both styles, with panel text hidden. In **Panel → Appearance**,
+choose **Rings** to put the quota indicators around each provider icon. Color
+and shape are independent; existing installations keep capsules.
+
+[![Four providers with concentric quota rings](docs/codexbar-plasma-panel-rings.png)](docs/codexbar-plasma-panel-rings.png)
 
 | Provider overview | Local sessions |
 | --- | --- |
