@@ -547,6 +547,41 @@ class ResponseValidationTests(HelperTestCase):
 
 
 class ModelDiscoveryTests(HelperTestCase):
+    def test_full_model_catalogs_reach_the_qml_picker(self):
+        Handler.routes["/api/v1/key"] = (200, {"data": {}}, {}, 0)
+        for provider, route, field in (("ollama", "/api/tags", "models"),
+                                       ("openrouter", "/api/v1/models", "data"),
+                                       ("openai", "/v1/models", "data")):
+            with self.subTest(provider=provider):
+                ids = [f"gpt-{index:03d}-" + "x" * 192 for index in range(ai.MAX_MODELS)]
+                items = [{"id": model, "name": model if provider == "ollama" else '"' * 120,
+                          "supported_parameters": ["structured_outputs"]} for model in ids]
+                Handler.routes[route] = (200, {field: items}, {}, 0)
+                reply = ai.run("models", provider, endpoint=self.base)
+                self.assertEqual([model["id"] for model in reply["models"]], ids)
+                # Use the entry point's serialization, including escaped labels.
+                stdout = json.dumps(reply, ensure_ascii=False)
+                qml = '''import QtQuick
+import QtTest
+import "%s" as Protocol
+TestCase {
+    name: "HelperModelCatalog"
+    function test_catalogReachesPicker() {
+        var reply = Protocol.modelsReply(%s, 0, 0)
+        compare(reply.outcome, "ok")
+        compare(reply.models, %s)
+    }
+}
+''' % ((ROOT / "contents/ui/AiInsightsProtocol.js").as_uri(), json.dumps(stdout), json.dumps(ids))
+                with tempfile.TemporaryDirectory() as directory:
+                    fixture = Path(directory) / "tst_model_catalog.qml"
+                    fixture.write_text(qml)
+                    result = subprocess.run(
+                        [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],
+                        env={**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software"},
+                        capture_output=True, text=True, timeout=30)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
     def test_ollama_models(self):
         Handler.routes["/api/tags"] = (200, {"models": [{"name": "llama3.2:3b"}, {"name": "bad name"}, {"name": 3},
                                                         {"name": "qwen3:8b"}]}, {}, 0)

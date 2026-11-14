@@ -409,6 +409,22 @@ TestCase {
         }
     }
 
+    function test_modelCatalogHasItsOwnBound() {
+        var listed = JSON.stringify({status: "ok", key: "valid", models: [{id: "vendor/model"}]})
+        var padded = listed + " ".repeat(256 * 1024 - listed.length)
+        compare(AiInsightsProtocol.modelsReply(padded, 0, 0).models, ["vendor/model"])
+        compare(AiInsightsProtocol.modelsReply(padded + " ", 0, 0).reason, "format")
+        compare(AiInsightsProtocol.modelsReply(padded, 1, 0).reason, "unavailable")
+        compare(AiInsightsProtocol.modelsReply(padded, 124, 0).reason, "timeout")
+
+        // Catalog capacity must not relax the smaller generation/wallet bounds.
+        var answer = JSON.stringify({status: "ok", summary: "Measured usage.", highlights: []})
+        answer += " ".repeat(64 * 1024 - answer.length)
+        compare(AiInsightsProtocol.generationReply(answer, 0, 0).outcome, "ok")
+        compare(AiInsightsProtocol.generationReply(answer + " ", 0, 0).reason, "format")
+        compare(AiInsightsProtocol.statusReply(padded, ["ok"], 0, 0), "unavailable")
+    }
+
     function test_safeReasonBoundsHelperReasons() {
         compare(AiInsightsProtocol.safeReason("auth"), "auth")
         compare(AiInsightsProtocol.safeReason("invalid_input"), "invalid_input")

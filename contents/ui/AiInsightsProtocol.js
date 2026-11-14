@@ -6,6 +6,9 @@
 // input-file writes, deadlines, and stale-result rejection.
 
 var maximumSnapshotLength = 16384
+// 500 records with 200-character IDs and labels (including JSON escaping)
+// exceed the small completion envelope. Only model listings need this bound.
+var maximumModelsReplyLength = 256 * 1024
 // Mirrors the helper's own bound, so an oversized endpoint fails as invalid
 // input instead of an unexecutable command line.
 var maximumEndpointLength = 2048
@@ -123,8 +126,8 @@ function safeReason(value) {
     return reasons.indexOf(value) >= 0 ? value : "unavailable"
 }
 
-function parseReply(text) {
-    if (!boundedText(text, AiInsights.maximumReplyLength * 4)) {
+function parseReply(text, maximumLength) {
+    if (!boundedText(text, maximumLength || AiInsights.maximumReplyLength * 4)) {
         return null
     }
     try {
@@ -158,9 +161,9 @@ function successfulExit(exitCode, exitStatus) {
 
 // Timeout and malformed output outrank helper status; a claimed success also
 // requires a clean process exit. Keep the error payload for retry metadata.
-function helperReply(text, exitCode, exitStatus) {
+function helperReply(text, exitCode, exitStatus, maximumLength) {
     if (timeoutExit(exitCode, exitStatus)) return {reason: "timeout", value: null}
-    var value = parseReply(text)
+    var value = parseReply(text, maximumLength)
     if (!value) return {reason: "format", value: null}
     if (value.status !== "ok") return {reason: safeReason(value.reason), value: value}
     if (!successfulExit(exitCode, exitStatus)) return {reason: "unavailable", value: null}
@@ -199,7 +202,7 @@ function modelIds(value) {
 }
 
 function modelsReply(text, exitCode, exitStatus) {
-    var reply = helperReply(text, exitCode, exitStatus)
+    var reply = helperReply(text, exitCode, exitStatus, maximumModelsReplyLength)
     if (reply.reason) return {outcome: "error", reason: reply.reason, models: [], key: ""}
     return {outcome: "ok", reason: "", models: modelIds(reply.value.models),
         key: ["valid", "none"].indexOf(reply.value.key) >= 0 ? reply.value.key : ""}

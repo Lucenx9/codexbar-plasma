@@ -223,6 +223,9 @@ deep-research models, GPT-4, GPT-4 Turbo, and GPT-3.5, `chatgpt-4o-latest`,
 GPT-4o snapshots before `2024-08-06`, and `o1-preview`/`o1-mini` snapshots;
 and installed Ollama models.
 No default cloud model is chosen and no price is claimed; users pick a model.
+Model discovery returns at most 500 unique IDs. Its QML reply limit is 256 Ki
+characters, enough for the helper's bounded IDs and labels, including JSON
+escaping. Generation and wallet replies retain their 64 Ki-character limit.
 
 Connection tests match an untagged Ollama model against its installed `:latest`
 name. Only a colon after the final slash denotes a tag; a registry port does
@@ -370,7 +373,9 @@ table, honoring the response's `Retry-After`, and a choice that finished with
   `secret-tool`/`kdialog` executables, covering the request language for six
   catalogs, OpenRouter privacy routing, OpenAI storage, Ollama requests, every
   failure mapping, redirects, loopback proxy bypass, timeouts, malformed output,
-  and key handling. It also compiles the shipped catalogs and runs `main.qml`'s
+  and key handling. Full 500-model catalogs for all three services pass from the
+  HTTP fixture through the Python helper and QML reply parser, including long
+  IDs and escaped labels. It also compiles the shipped catalogs and runs `main.qml`'s
   language adapter to prove the catalog tag reaches `--language` under C and
   Italian regional locales.
 - `tests/test_ai_insights_settings.py`: the settings page's helper reply

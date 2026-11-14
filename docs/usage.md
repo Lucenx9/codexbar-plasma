@@ -1648,6 +1648,8 @@ rather than claiming it will answer; OpenRouter's Zero Data Retention routing is
 checked only when an insight is generated. For Ollama, an omitted model tag
 matches the installed `:latest` variant, including names such as
 `registry.example:5000/team/model`; the registry port is not a model tag.
+The model picker accepts up to 500 models, including catalogs with long model
+names, without treating the larger list as an unreadable response.
 Changing the model clears the
 previous test result. Disabling AI Insights on this settings page retires any
 pending connection test or wallet operation and ignores its late reply. The assistant
