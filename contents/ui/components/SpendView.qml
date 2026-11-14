@@ -274,6 +274,39 @@ ColumnLayout {
                 return item.value === view.selectedProvider
             }))
             Accessible.name: i18n("Provider filter")
+            Accessible.description: currentText
+            // The desktop style paints displayText in its background.
+            displayText: ""
+            RowLayout {
+                readonly property real arrowSpace: Math.max(providerFilter.indicator.width,
+                    Kirigami.Units.iconSizes.small) + Kirigami.Units.smallSpacing
+                x: providerFilter.leftPadding + (providerFilter.mirrored ? arrowSpace : 0)
+                y: providerFilter.topPadding
+                width: Math.max(0, providerFilter.availableWidth - arrowSpace)
+                height: providerFilter.availableHeight
+                spacing: Kirigami.Units.smallSpacing
+                LayoutMirroring.enabled: providerFilter.mirrored
+                Kirigami.Icon {
+                    objectName: "analysisSelectedProviderIcon"
+                    readonly property string provider: providerFilter.currentValue || ""
+                    source: provider ? view.applet.providerIconSource(provider) : "view-list-symbolic"
+                    fallback: "view-statistics"
+                    isMask: !provider || view.applet.providerIconIsMask(provider)
+                    color: provider ? view.applet.providerReadableColor(provider,
+                        Kirigami.Theme.backgroundColor) : Kirigami.Theme.textColor
+                    Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                    Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                    Accessible.ignored: true
+                }
+                PlainPlasmaLabel {
+                    text: providerFilter.currentText
+                    font: providerFilter.font
+                    Layout.fillWidth: true
+                    Layout.minimumWidth: 0
+                    elide: Text.ElideRight
+                    Accessible.ignored: true
+                }
+            }
             delegate: Controls.ItemDelegate {
                 id: providerOption
                 required property int index

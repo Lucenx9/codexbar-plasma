@@ -333,7 +333,7 @@ work and upstream contract requirements.
   line with a subtle fill, readable scale, and gaps for unavailable days. Hover
   or keyboard inspection shows daily values for each provider. Provider pages
   retain their bar charts. The provider dropdown shows each provider’s identity
-  icon beside its name and filters local analytics
+  icon beside its name in both the closed field and menu, filters local analytics,
   and stays selected across range changes, including empty results. Its width
   stays stable when expanding or compacting analysis, shrinking only when space
   is constrained; stacked controls continue to use the available width.
