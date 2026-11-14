@@ -4373,7 +4373,7 @@ msgstr "Histórico local e análise de IA opcional"
 
 #: contents/ui/components/SpendView.qml
 msgid "Compact analysis"
-msgstr "Análise compacta"
+msgstr "Reduzir análise"
 
 #: contents/ui/components/SpendView.qml
 msgid "Expand analysis"

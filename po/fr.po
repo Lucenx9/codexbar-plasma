@@ -4406,7 +4406,7 @@ msgstr "Historique local et analyse IA facultative"
 
 #: contents/ui/components/SpendView.qml
 msgid "Compact analysis"
-msgstr "Analyse compacte"
+msgstr "Réduire l’analyse"
 
 #: contents/ui/components/SpendView.qml
 msgid "Expand analysis"
@@ -4418,7 +4418,7 @@ msgstr "Filtre des fournisseurs"
 
 #: contents/ui/components/SpendView.qml
 msgid "Providers on %1"
-msgstr "Fournisseurs le %1"
+msgstr "Fournisseurs du %1"
 
 #: contents/ui/configAiInsights.qml
 msgid ""

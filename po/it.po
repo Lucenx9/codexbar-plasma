@@ -723,7 +723,7 @@ msgid ""
 "The history is kept per day, so a day containing a reset counts toward one "
 "week only."
 msgstr ""
-"La cronologia è giornaliera, quindi un giorno che contiene un azzeramento "
+"La cronologia è giornaliera, quindi un giorno che contiene un ripristino "
 "conta per una sola settimana."
 
 #: contents/ui/components/ProviderCostSection.qml
@@ -2841,7 +2841,7 @@ msgstr "Non è stato possibile aggiornare alcuni dati sui costi."
 #: contents/ui/controllers/CostController.qml
 msgid "Month to date and All history need codexbar 0.67.0 or later."
 msgstr ""
-"Mese corrente e Tutta la cronologia richiedono codexbar 0.67.0 o successivo."
+"Mese corrente e Tutta la cronologia richiedono codexbar 0.67.0 o versioni successive."
 
 #: contents/ui/controllers/CostController.qml
 msgid "codexbar cost did not return JSON."
@@ -4399,7 +4399,7 @@ msgstr "Filtro provider"
 
 #: contents/ui/components/SpendView.qml
 msgid "Providers on %1"
-msgstr "Provider il %1"
+msgstr "Provider del %1"
 
 #: contents/ui/configAiInsights.qml
 msgid ""
@@ -4498,7 +4498,7 @@ msgstr "Mostra meno modelli"
 
 #: contents/ui/configGeneral.qml
 msgid "Notify about updates"
-msgstr "Notifica aggiornamenti"
+msgstr "Notifica gli aggiornamenti"
 
 #: contents/ui/configGeneral.qml
 msgid "Install automatically"

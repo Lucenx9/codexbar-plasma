@@ -722,7 +722,7 @@ msgid ""
 "The history is kept per day, so a day containing a reset counts toward one "
 "week only."
 msgstr ""
-"El historial es diario, así que un día que contiene un reinicio cuenta para "
+"El historial es diario, así que un día que contiene un restablecimiento cuenta para "
 "una sola semana."
 
 #: contents/ui/components/ProviderCostSection.qml
@@ -4135,7 +4135,7 @@ msgid ""
 "%2\n"
 "\n"
 "The code expires in %3 seconds. Press OK after entering it to continue waiting in settings. Use Cancel sign-in in settings to cancel."
-msgstr "Abra esta dirección en el navegador:\n%1\n\nIntroduzca este código:\n%2\n\nEl código caduca en %3 segundos. Tras introducirlo, pulse OK para seguir esperando en los ajustes. Use Cancelar inicio de sesión en los ajustes para cancelar."
+msgstr "Abra esta dirección en el navegador:\n%1\n\nIntroduzca este código:\n%2\n\nEl código caduca en %3 segundos. Tras introducirlo, pulse Aceptar para seguir esperando en los ajustes. Use Cancelar inicio de sesión en los ajustes para cancelar."
 
 #: contents/ui/configProviders.qml
 msgid "Sign-in cancelled."
@@ -4330,11 +4330,11 @@ msgstr "Mostrar la cuota mensual restante por día"
 
 #: contents/ui/components/UsageWindowText.qml
 msgid "Less than %1% per day until reset"
-msgstr "Menos del %1 % al día hasta el reinicio"
+msgstr "Menos del %1 % al día hasta el restablecimiento"
 
 #: contents/ui/components/UsageWindowText.qml
 msgid "%1% per day until reset"
-msgstr "%1 % al día hasta el reinicio"
+msgstr "%1 % al día hasta el restablecimiento"
 
 #: contents/ui/components/StatusComponentsList.qml
 msgctxt "Status of one service component"
@@ -4395,7 +4395,7 @@ msgstr "Historial local y análisis de IA opcional"
 
 #: contents/ui/components/SpendView.qml
 msgid "Compact analysis"
-msgstr "Análisis compacto"
+msgstr "Reducir análisis"
 
 #: contents/ui/components/SpendView.qml
 msgid "Expand analysis"
