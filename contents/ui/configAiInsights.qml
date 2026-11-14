@@ -231,12 +231,12 @@ KCM.SimpleKCM {
             // The list proves access, not that a generation will succeed, so
             // never report an unlisted model as working.
             if (model.length === 0) {
-                report(i18np("Connection works. %1 model available.", "Connection works. %1 models available.",
+                report(i18np("Connected. %1 model available.", "Connected. %1 models available.",
                     result.models.length), false)
             } else if (!AiInsights.modelListed(provider, model, result.models)) {
-                report(i18n("Connection works, but %1 is not in the list of models usable for AI Insights. Choose a listed model.", model), true)
+                report(i18n("Connected. %1 is not listed for AI Insights. Choose a listed model.", model), true)
             } else {
-                const listed = i18n("Connection works, and %1 is in the list of models usable for AI Insights.", model)
+                const listed = i18n("Connected. %1 is listed for AI Insights.", model)
                 report(provider === "openrouter" && cfg_aiInsightsOpenRouterZdr
                     ? listed + " " + i18n("Zero Data Retention routing is checked only when an insight is generated.")
                     : listed, false)
@@ -284,7 +284,7 @@ KCM.SimpleKCM {
         }
 
         Components.PlainControlsLabel {
-            text: i18n("Enables guided questions in Usage & Spend. Nothing is sent and no AI service is contacted while this is off.")
+            text: i18n("Adds questions to Usage & Spend. No AI service is contacted while disabled.")
             leftPadding: LayoutMirroring.enabled || !enabledCheck.indicator
                 ? 0 : enabledCheck.indicator.width + enabledCheck.spacing
             rightPadding: LayoutMirroring.enabled && enabledCheck.indicator
@@ -517,7 +517,7 @@ KCM.SimpleKCM {
             text: {
                 return page.provider === "openai"
                     ? i18n("Requests are billed to your OpenAI API account. A ChatGPT subscription does not include API credits.")
-                    : i18n("Requests are billed to your OpenRouter credits, at the price of the model you choose. Providers that may collect data are never used.")
+                    : i18n("Uses OpenRouter credits at the selected model's price. Excludes providers that may collect data.")
             }
         }
 
@@ -548,7 +548,7 @@ KCM.SimpleKCM {
                         ? i18n("Generation uses the Ollama service on this computer. Usage statistics stay on this device.")
                         : i18n("Aggregated usage statistics are sent to the Ollama service at this address. Remote addresses must use https://.")
                 }
-                var sent = i18n("Only aggregated usage statistics are sent to %1: quotas, reset times, pace forecasts, and weekly spending and tokens per provider. Never account names, emails, projects, file paths, or prompts.", page.providerName)
+                var sent = i18n("Sends quotas, reset times, pace forecasts, and weekly spend and tokens per provider to %1.", page.providerName)
                 return sent
             }
             font: Kirigami.Theme.smallFont
@@ -578,7 +578,9 @@ KCM.SimpleKCM {
                 { text: i18n("Every 12 hours"), value: 12 },
                 { text: i18n("Daily"), value: 24 }
             ]
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 12
+            implicitContentWidthPolicy: Controls.ComboBox.WidestText
+            Layout.preferredWidth: Math.max(implicitWidth, Kirigami.Units.gridUnit * 12)
+            Layout.maximumWidth: page.availableWidth
             Component.onCompleted: currentIndex = Math.max(0, indexOfValue(AiInsights.intervalHours(page.cfg_aiInsightsIntervalHours)))
             onActivated: page.cfg_aiInsightsIntervalHours = currentValue
             Connections {
@@ -591,7 +593,8 @@ KCM.SimpleKCM {
         }
 
         Components.PlainControlsLabel {
-            text: i18n("Choose Generate analysis under AI Insights in Usage & Spend or the fixed-provider view. Automatic generation respects the chosen interval. Usage refreshes do not trigger it.")
+            text: i18n("Select %1 under %2 in %3 or the fixed-provider view. Automatic generation runs at most once per interval. Usage refreshes do not trigger it.",
+                i18n("Generate analysis"), i18n("AI Insights"), i18n("Usage & Spend"))
             font: Kirigami.Theme.smallFont
             opacity: 0.7
             Layout.fillWidth: true

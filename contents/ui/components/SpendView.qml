@@ -436,7 +436,7 @@ ColumnLayout {
 
             Components.PlainNote {
                 visible: view.hasMixedCostCurrencies
-                plainText: i18n("The cost subtotal and charts use %1. Providers reporting another currency remain separate below. Token figures include every provider.", view.spendCurrency)
+                plainText: i18n("Costs and charts use %1. Other currencies appear separately below. Tokens include all providers.", view.spendCurrency)
                 type: Kirigami.MessageType.Information
                 Layout.fillWidth: true
             }
@@ -452,7 +452,7 @@ ColumnLayout {
                 visible: view.providerCosts.length > 0 && view.dailyPoints.length === 0
                 plainText: view.applet.costHistoryShowsTokens
                     ? i18n("No daily token history is available for this range.")
-                    : i18n("No daily cost history is available for this range. Try Tokens to check for token-only history.")
+                    : i18n("No daily cost history for this range. Try Tokens for token history.")
                 type: Kirigami.MessageType.Information
                 Layout.fillWidth: true
             }

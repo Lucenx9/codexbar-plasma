@@ -1218,12 +1218,12 @@ fields; track proposed extensions in the issue tracker.
   refresh omits status, a previously retained outage is hidden; this is not
   evidence of recovery. Current status can still report an incident when quota
   fetching fails.
-- Status Page in the provider actions expands, for Claude, Claude Platform,
+- Status page in the provider actions expands, for Claude, Claude Platform,
   Codex, OpenAI, Grok, and xAI, into the service components of the public status page:
   status.claude.com for Claude, status.x.ai for Grok and xAI, and
   status.openai.com for Codex and OpenAI, whose
   groups such as APIs, ChatGPT, and Codex expand into their components. Each
-  Status Page header is one clickable row, with its disclosure arrow inside
+  Status page header is one clickable row, with its disclosure arrow inside
   the hover and keyboard-focus highlight. Click the title or arrow, or use
   Space while focused, to expand or collapse the list. Each component shows
   a colored dot and its state. OpenAI group states include all visible components
@@ -1244,7 +1244,7 @@ fields; track proposed extensions in the issue tracker.
   the overall status. When available, `curl` avoids long waits on unreachable
   IPv6 addresses by trying alternative connections promptly; without it, the
   helper uses Python's HTTP client.
-  Open Status Page at the end of the list opens the site;
+  Open status page at the end of the list opens the site;
   other providers keep opening it directly. A page that cannot be read shows
   the status as unavailable and leaves the provider's CLI status unchanged.
   Switching tabs or closing the popup closes the list
@@ -1420,7 +1420,7 @@ fields; track proposed extensions in the issue tracker.
 - Configurable order for the provider identity, service status, usage text, and
   provider meters shown in the panel.
 - Check for widget updates, notify, and install widget updates automatically
-  by default. In **General → Updates → Widget updates**, clear **Install widget updates
+  by default. In **General → Updates → Widget updates**, clear **Install
   automatically** and apply to opt out. Existing instances without a saved
   value adopt the new default; explicitly saved choices are kept. Plasma may
   have omitted the previous off setting because it matched the old default.
@@ -1429,7 +1429,7 @@ fields; track proposed extensions in the issue tracker.
   effect; the automatic updater never restarts Plasma itself.
   Startup respects the interval since the
   last successful check; first use and overdue checks run immediately.
-  **Check for widget updates now** checks on demand, even with automatic checks
+  **Check now** under **Widget updates** checks on demand, even with automatic checks
   off. When a check finds a newer release, **Install update** installs it like
   an automatic update. A failed attempt keeps the button available for retry;
   a successful installation hides it immediately. A later check also clears the
@@ -1452,11 +1452,11 @@ fields; track proposed extensions in the issue tracker.
 
 ### CLI release checks and installed versions
 
-In **General → Updates → CodexBar CLI**, **Check CLI releases now** compares the selected
+In **General → Updates → CodexBar CLI**, **Check now** compares the selected
 executable's `--version` with the latest stable official GitHub release. The
 manual check works even when daily checks are disabled. Daily checks are on by
 default, run independently of quota refreshes, and retry failures after one hour.
-Clear **Check upstream CLI releases daily** and apply to opt out; existing instances
+Clear **Check daily** and apply to opt out; existing instances
 without a saved value adopt the new default, and explicitly saved choices are kept.
 Failures after changing the selected command also retry after one hour, even
 if the previous command was checked recently. CLI
@@ -1541,8 +1541,8 @@ and provider configuration are unchanged.
 To return to an external copy, enter its path or `codexbar` in **Diagnostics**
 and apply. **Check versions** identifies the managed copy offline.
 
-**Update now** changes the managed copy immediately. **Automatically
-update the managed CLI daily** is enabled by default. Clear it and apply settings
+**Update now** changes the managed copy immediately. **Update daily**
+is enabled by default. Clear it and apply settings
 to opt out. It operates only while that exact managed path is selected,
 independently of release-check notifications. Selecting another command dims the
 setting once it is off, and leaves it switchable while it is still on. Widget

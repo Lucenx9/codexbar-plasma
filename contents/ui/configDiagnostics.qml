@@ -488,7 +488,8 @@ KCM.SimpleKCM {
         }
 
         Components.PlainControlsLabel {
-            text: i18n("This checks installed versions only. Check upstream CLI releases in General / Updates / CodexBar CLI.")
+            text: i18n("Checks installed versions. For CLI releases, open %1 > %2 > %3.",
+                i18n("General"), i18n("Updates"), i18n("CodexBar CLI"))
             font: Kirigami.Theme.smallFont
             opacity: 0.7
             Layout.fillWidth: true
@@ -508,7 +509,7 @@ KCM.SimpleKCM {
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            text: i18n("These options pin the widget to one provider or one source. Leave them blank to follow the providers enabled on the Providers page.")
+            text: i18n("Override the provider or source. Leave blank to use enabled providers and their saved sources.")
             font: Kirigami.Theme.smallFont
             opacity: 0.7
             wrapMode: Text.WordWrap
@@ -635,7 +636,7 @@ KCM.SimpleKCM {
         Components.PlainControlsLabel {
             font: Kirigami.Theme.smallFont
             opacity: 0.7
-            text: i18n("Collect an offline report to paste into an issue. Includes versions, CLI installation details, enabled provider IDs, the latest Diagnostics error and module checks. Filesystem paths and recognized credentials are omitted; review the preview before sharing.")
+            text: i18n("Collects versions, CLI installation details, enabled provider IDs, the latest error and module checks offline. Omits paths and recognized credentials. Review before sharing.")
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24

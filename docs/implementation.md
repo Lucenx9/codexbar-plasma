@@ -332,7 +332,7 @@ owns checkout setup, delivery, and repository maintenance.
   aggregate bars instead of assigning calendar positions. SpendView owns one
   scroll area, focus reveal and selection handoff; line hover previews remain
   clipped children of the plot, never window overlays.
-- `contents/ui/main.qml` owns the Status Page component list: its expanded
+- `contents/ui/main.qml` owns the Status page component list: its expanded
   provider, the single `CliProcess` request, and the 30-second deadline.
   Collapsing, closing the popup, switching tab or view, or expanding another provider cancels the
   request and refetches on the next expansion, and a late

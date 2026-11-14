@@ -117,7 +117,7 @@ TestCase {
 
     function actionsFor(refreshEnabled, refreshTitle) {
         return [
-            {title: "Usage Dashboard", icon: "view-statistics", action: "dashboard", enabled: true},
+            {title: "Usage dashboard", icon: "view-statistics", action: "dashboard", enabled: true},
             {title: refreshTitle || "Refresh", icon: "view-refresh", action: "refresh", enabled: refreshEnabled, separatorBefore: true}
         ];
     }

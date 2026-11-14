@@ -2026,7 +2026,7 @@ KCM.SimpleKCM {
                                 : page.selectedProviderSourceModes.indexOf(page.selectedProviderSavedSource) < 0
                                     && !page.providerSourcesLoading
                                     ? i18n("The saved source is not recognized. Choose a source and save to replace it.")
-                                    : i18n("Select Save to store this source. Apply is not needed. Automatic restores the provider default.")
+                                    : i18n("Save takes effect immediately. Automatic uses the provider default.")
                             opacity: page.secondaryTextOpacity
                             font: Kirigami.Theme.smallFont
                             wrapMode: Text.WordWrap
@@ -2078,10 +2078,11 @@ KCM.SimpleKCM {
 
                         Components.PlainControlsLabel {
                             Layout.fillWidth: true
+                            objectName: "providerOptionsNotice"
                             text: page.providerDescriptorsUnavailable && page.providerSourceSetupSupported
                                 ? i18n("This CodexBar version does not support editing other options for this provider.")
                                 : page.providerDescriptorsUnavailable
-                                ? i18n("This CodexBar version does not expose editable provider options. Enable/disable, supported API key setup, provider links, and redacted diagnostics remain available.")
+                                ? i18n("This CLI version cannot edit other provider options. Use the setup actions and diagnostics above.")
                                 : i18n("Editable provider options come from CodexBar. Redacted source and authentication details are available on request.")
                             opacity: page.secondaryTextOpacity
                             font: Kirigami.Theme.smallFont

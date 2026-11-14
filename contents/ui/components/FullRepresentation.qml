@@ -593,7 +593,7 @@ Item {
 
                             Layout.fillWidth: true
                             plainText: i18n("CodexBar CLI not found")
-                            plainExplanation: i18n("Plasma could not run '%1'. Install or reuse a private official CLI for this widget and use it immediately. If your CLI is installed elsewhere, set its path in Settings > Diagnostics.", applet.commandPath)
+                            plainExplanation: i18n("Could not run '%1'. Install the CLI for this widget, or set its path in Settings > Diagnostics.", applet.commandPath)
                             icon.name: "download"
                             type: Kirigami.PlaceholderMessage.Type.Actionable
                             helpfulAction: prepareCliAction

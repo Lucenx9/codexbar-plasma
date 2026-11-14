@@ -194,32 +194,21 @@ msgid "Copied"
 msgstr "Copiado"
 
 #: contents/ui/components/CostTrustNotice.qml
-msgid ""
-"Some usage in the selected range is unpriced or unmetered, so the displayed "
-"cost total is incomplete."
+msgid "The cost total is incomplete. Some usage has no price or metering."
 msgstr ""
-"Parte do uso no intervalo selecionado não tem preço definido ou medição, por "
-"isso o custo total exibido está incompleto."
+"O custo total está incompleto. Parte do uso não tem preço ou não é medida."
 
 #: contents/ui/components/CostTrustNotice.qml
-msgid ""
-"Some usage in the selected range is unpriced, so the displayed cost total is "
-"incomplete."
-msgstr ""
-"Parte do uso no intervalo selecionado não tem preço definido, por isso o "
-"custo total exibido está incompleto."
+msgid "The cost total is incomplete. Some usage has no price."
+msgstr "O custo total está incompleto. Parte do uso não tem preço."
 
 #: contents/ui/components/CostTrustNotice.qml
-msgid ""
-"Some usage in the selected range is unmetered, so the displayed cost total "
-"is incomplete."
-msgstr ""
-"Parte do uso no intervalo selecionado não tem medição, por isso o custo "
-"total exibido está incompleto."
+msgid "The cost total is incomplete. Some usage is unmetered."
+msgstr "O custo total está incompleto. Parte do uso não é medida."
 
 #: contents/ui/components/CostTrustNotice.qml
-msgid "Some usage costs in the selected range are estimated."
-msgstr "Alguns custos de uso no intervalo selecionado são estimados."
+msgid "Some costs are estimated."
+msgstr "Alguns custos são estimados."
 
 #: contents/ui/components/CostTrustNotice.qml
 msgid ""
@@ -236,26 +225,21 @@ msgstr[1] ""
 "excluídas dos totais exibidos."
 
 #: contents/ui/components/CostTrustNotice.qml
-msgid "The displayed range total is estimated from public list prices."
+msgid "The total is estimated from public list prices."
+msgstr "O total é estimado com base em preços de tabela públicos."
+
+#: contents/ui/components/CostTrustNotice.qml
+msgid "The total uses costs metered by providers."
+msgstr "O total usa os custos medidos pelos provedores."
+
+#: contents/ui/components/CostTrustNotice.qml
+msgid "The total combines metered costs and public list-price estimates."
 msgstr ""
-"O total exibido para o intervalo é estimado com base nos preços públicos de "
-"tabela."
+"O total combina custos medidos e estimativas de preços de tabela públicos."
 
 #: contents/ui/components/CostTrustNotice.qml
-msgid "The displayed range total uses provider-metered cost data."
-msgstr "O total exibido para o intervalo usa os custos medidos pelo provedor."
-
-#: contents/ui/components/CostTrustNotice.qml
-msgid ""
-"The displayed range total combines provider-metered cost data and public "
-"list-price estimates."
-msgstr ""
-"O total exibido para o intervalo combina custos medidos pelo provedor e "
-"estimativas baseadas nos preços públicos de tabela."
-
-#: contents/ui/components/CostTrustNotice.qml
-msgid "The source of the displayed range total could not be verified."
-msgstr "Não foi possível verificar a origem do total exibido para o intervalo."
+msgid "Could not verify the source of the cost total."
+msgstr "Não foi possível verificar a origem do custo total."
 
 #: contents/ui/components/CostTrustNotice.qml
 msgid "%1 %2"
@@ -329,8 +313,12 @@ msgid "Install and use CLI"
 msgstr "Instalar e usar a CLI"
 
 #: contents/ui/components/FullRepresentation.qml
-msgid "Plasma could not run '%1'. Install or reuse a private official CLI for this widget and use it immediately. If your CLI is installed elsewhere, set its path in Settings > Diagnostics."
-msgstr "O Plasma não conseguiu executar “%1”. Instale ou reutilize uma cópia privada da CLI oficial para este widget e use-a imediatamente. Se a sua CLI estiver instalada em outro local, defina o caminho em Configurações > Diagnóstico."
+msgid ""
+"Could not run '%1'. Install the CLI for this widget, or set its path in "
+"Settings > Diagnostics."
+msgstr ""
+"Não foi possível executar '%1'. Instale a CLI para este widget ou informe o "
+"caminho em Configurações > Diagnóstico."
 
 #: contents/ui/components/FullRepresentation.qml
 msgid "No provider data"
@@ -374,7 +362,7 @@ msgstr "Restante: %1"
 msgid "Hidden detail sections"
 msgstr "Seções de detalhes ocultas"
 
-#: contents/ui/components/FullRepresentation.qml
+#: contents/ui/components/FullRepresentation.qml contents/ui/main.qml
 msgid "Usage dashboard"
 msgstr "Painel de uso"
 
@@ -1469,24 +1457,21 @@ msgstr "O histórico local está indisponível: %1"
 
 #: contents/ui/components/SpendView.qml
 msgid ""
-"The cost subtotal and charts use %1. Providers reporting another currency "
-"remain separate below. Token figures include every provider."
+"Costs and charts use %1. Other currencies appear separately below. Tokens "
+"include all providers."
 msgstr ""
-"O subtotal dos custos e os gráficos usam %1. Os provedores que informam "
-"valores em outra moeda ficam separados abaixo. Os valores de tokens incluem "
-"todos os provedores."
+"Custos e gráficos usam %1. Outras moedas aparecem separadamente abaixo. Os "
+"tokens incluem todos os provedores."
 
 #: contents/ui/components/SpendView.qml
 msgid "No daily token history is available for this range."
 msgstr "Não há histórico diário de tokens disponível para este intervalo."
 
 #: contents/ui/components/SpendView.qml
-msgid ""
-"No daily cost history is available for this range. Try Tokens to check for "
-"token-only history."
+msgid "No daily cost history for this range. Try Tokens for token history."
 msgstr ""
-"Não há histórico diário de custos disponível para este intervalo. "
-"Experimente Tokens para procurar um histórico apenas de tokens."
+"Sem histórico de custos diários neste período. Selecione Tokens para ver o histórico de "
+"tokens."
 
 #: contents/ui/components/SpendView.qml
 msgid "No local token or cost history"
@@ -1557,25 +1542,20 @@ msgstr ""
 "disponível."
 
 #: contents/ui/configAiInsights.qml
-msgid "Connection works. %1 model available."
-msgid_plural "Connection works. %1 models available."
-msgstr[0] "A conexão funciona. %1 modelo disponível."
-msgstr[1] "A conexão funciona. %1 modelos disponíveis."
+msgid "Connected. %1 model available."
+msgid_plural "Connected. %1 models available."
+msgstr[0] "Conectado. %1 modelo disponível."
+msgstr[1] "Conectado. %1 modelos disponíveis."
 
 #: contents/ui/configAiInsights.qml
-msgid ""
-"Connection works, but %1 is not in the list of models usable for AI "
-"Insights. Choose a listed model."
+msgid "Connected. %1 is not listed for AI Insights. Choose a listed model."
 msgstr ""
-"A conexão funciona, mas %1 não está na lista de modelos utilizáveis para"
-" Insights de IA. Escolha um modelo da lista."
+"Conectado. %1 não está na lista de modelos para Insights de IA. Escolha um "
+"modelo da lista."
 
 #: contents/ui/configAiInsights.qml
-msgid ""
-"Connection works, and %1 is in the list of models usable for AI Insights."
-msgstr ""
-"A conexão funciona e %1 está na lista de modelos utilizáveis para "
-"Insights de IA."
+msgid "Connected. %1 is listed for AI Insights."
+msgstr "Conectado. %1 está na lista de modelos para Insights de IA."
 
 #: contents/ui/configAiInsights.qml
 msgid ""
@@ -1672,13 +1652,11 @@ msgstr ""
 
 #: contents/ui/configAiInsights.qml
 msgid ""
-"Only aggregated usage statistics are sent to %1: quotas, reset times, pace "
-"forecasts, and weekly spending and tokens per provider. Never account names, "
-"emails, projects, file paths, or prompts."
+"Sends quotas, reset times, pace forecasts, and weekly spend and tokens per "
+"provider to %1."
 msgstr ""
-"Somente estatísticas de uso agregadas são enviadas para %1: cotas, horários "
-"de redefinição, previsões de ritmo, e gastos e tokens semanais por provedor. "
-"Nunca nomes de conta, e-mails, projetos, caminhos de arquivos ou prompts."
+"Envia a %1 cotas, horários de redefinição, previsões de consumo, gastos e "
+"tokens semanais por provedor."
 
 #: contents/ui/configAiInsights.qml
 msgid ""
@@ -1690,11 +1668,11 @@ msgstr ""
 
 #: contents/ui/configAiInsights.qml
 msgid ""
-"Requests are billed to your OpenRouter credits, at the price of the model "
-"you choose. Providers that may collect data are never used."
+"Uses OpenRouter credits at the selected model's price. Excludes providers "
+"that may collect data."
 msgstr ""
-"As solicitações são descontadas dos seus créditos do OpenRouter, pelo preço "
-"do modelo escolhido. Provedores que possam coletar dados nunca são usados."
+"Usa créditos OpenRouter ao preço do modelo escolhido. Exclui provedores que "
+"possam coletar dados."
 
 #: contents/ui/configAiInsights.qml
 msgid "Generation"
@@ -1721,8 +1699,8 @@ msgid "Daily"
 msgstr "Diariamente"
 
 #: contents/ui/configAiInsights.qml
-msgid "Choose Generate analysis under AI Insights in Usage & Spend or the fixed-provider view. Automatic generation respects the chosen interval. Usage refreshes do not trigger it."
-msgstr "Selecione Gerar análise em Insights de IA, em Uso e gastos ou na visualização do provedor fixo. A geração automática respeita o intervalo escolhido. As atualizações de uso não a acionam."
+msgid "Select %1 under %2 in %3 or the fixed-provider view. Automatic generation runs at most once per interval. Usage refreshes do not trigger it."
+msgstr "Em %3 ou na visualização do provedor fixo, selecione %1 na seção %2. A geração automática ocorre no máximo uma vez por intervalo. Atualizar o uso não a inicia."
 
 #: contents/ui/configAiInsights.qml
 msgid "Saved insight:"
@@ -1820,11 +1798,9 @@ msgstr "Seleção avançada do provedor"
 
 #: contents/ui/configDiagnostics.qml
 msgid ""
-"These options pin the widget to one provider or one source. Leave them blank "
-"to follow the providers enabled on the Providers page."
-msgstr ""
-"Estas opções fixam o widget em um único provedor ou uma única origem. Deixe-"
-"as em branco para seguir os provedores ativados na página Provedores."
+"Override the provider or source. Leave blank to use enabled providers and "
+"their saved sources."
+msgstr "Substitui o provedor ou a origem. Deixe em branco para usar os provedores ativados e suas origens salvas."
 
 #: contents/ui/configDiagnostics.qml
 msgid "Provider:"
@@ -1898,12 +1874,8 @@ msgid "Refresh when opening the popup"
 msgstr "Atualizar ao abrir a janela pop-up"
 
 #: contents/ui/configGeneral.qml
-msgid ""
-"Refreshes quota data when needed, including when periodic refresh is "
-"disabled."
-msgstr ""
-"Atualiza os dados de cota quando necessário, mesmo com a atualização "
-"periódica desativada."
+msgid "Refreshes quotas when needed, even without periodic refresh."
+msgstr "Atualiza as cotas quando necessário, mesmo sem atualização periódica."
 
 #: contents/ui/configGeneral.qml scripts/smoke/Capture.qml
 msgid "Fetch provider service status"
@@ -2066,12 +2038,10 @@ msgid "Restore all defaults"
 msgstr "Restaurar todos os padrões"
 
 #: contents/ui/configGeneral.qml
-msgid ""
-"Default values are ready. Select Apply or OK to save them, or Cancel to keep "
-"the current settings."
+msgid "Select Apply or OK to save defaults, or Cancel to discard them."
 msgstr ""
-"Os valores padrão estão prontos. Selecione Aplicar ou OK para salvá-los, ou "
-"Cancelar para manter as configurações atuais."
+"Selecione Aplicar ou OK para salvar os padrões, ou Cancelar para descartá-"
+"los."
 
 #: contents/ui/configNotifications.qml
 msgid "Quota warnings"
@@ -2321,11 +2291,11 @@ msgstr "Automática"
 
 #: contents/ui/configPanel.qml
 msgid ""
-"Automatic meters show primary and secondary quotas. Choose a quota to show "
-"one capsule. Unavailable quotas are omitted."
+"Automatic shows primary and secondary quotas. Select a quota for one "
+"capsule. Missing quotas stay hidden."
 msgstr ""
-"Os medidores automáticos mostram as cotas primária e secundária. Escolha uma "
-"cota para mostrar uma única cápsula. Cotas indisponíveis são omitidas."
+"Automática mostra as cotas primária e secundária. Escolha uma cota para uma "
+"única cápsula. Cotas ausentes ficam ocultas."
 
 #: contents/ui/configPanel.qml
 msgid "Element order:"
@@ -2426,10 +2396,8 @@ msgid "Hidden detail sections:"
 msgstr "Seções de detalhes ocultas:"
 
 #: contents/ui/configPopup.qml
-msgid "None. Hide a titled section with its button in the popup."
-msgstr ""
-"Nenhuma. Oculte uma seção com título usando o botão correspondente na janela "
-"pop-up."
+msgid "None. Use a section's hide button in the popup."
+msgstr "Nenhuma. Use o botão de ocultar de uma seção na janela pop-up."
 
 #: contents/ui/configPopup.qml
 msgid ""
@@ -2452,8 +2420,8 @@ msgid "Hidden usage rows:"
 msgstr "Linhas de uso ocultas:"
 
 #: contents/ui/configPopup.qml
-msgid "None. Hide a usage row with its button in the popup."
-msgstr "Nenhuma. Oculte uma linha de uso com o botão dela na janela pop-up."
+msgid "None. Use a row's hide button in the popup."
+msgstr "Nenhuma. Use o botão de ocultar de uma linha na janela pop-up."
 
 #: contents/ui/configPopup.qml
 msgid "Hidden rows stay out of the popup's provider tabs only."
@@ -2710,14 +2678,11 @@ msgstr "Inspecionar configurações sem dados sensíveis"
 
 #: contents/ui/configProviders.qml
 msgid ""
-"This CodexBar version does not expose editable provider options. Enable/"
-"disable, supported API key setup, provider links, and redacted diagnostics "
-"remain available."
+"This CLI version cannot edit other provider options. Use the setup actions "
+"and diagnostics above."
 msgstr ""
-"Esta versão do CodexBar não disponibiliza opções editáveis dos provedores. "
-"Ainda é possível ativar e desativar provedores, configurar chaves de API "
-"compatíveis, abrir links dos provedores e executar diagnósticos sem dados "
-"sensíveis."
+"Esta versão da CLI não permite editar outras opções do provedor. Use as "
+"ações de configuração e diagnóstico acima."
 
 #: contents/ui/configProviders.qml
 msgid ""
@@ -3509,11 +3474,7 @@ msgid "Loading accounts…"
 msgstr "Carregando as contas…"
 
 #: contents/ui/main.qml
-msgid "Usage Dashboard"
-msgstr "Painel de uso"
-
-#: contents/ui/main.qml
-msgid "Status Page"
+msgid "Status page"
 msgstr "Página de status"
 
 #: contents/ui/components/StatusComponentsList.qml
@@ -3555,7 +3516,7 @@ msgid "Service status is unavailable."
 msgstr "O status dos serviços não está disponível."
 
 #: contents/ui/components/StatusComponentsList.qml
-msgid "Open Status Page"
+msgid "Open status page"
 msgstr "Abrir página de status"
 
 #: contents/ui/main.qml
@@ -3567,11 +3528,11 @@ msgid "About CodexBar"
 msgstr "Sobre o CodexBar"
 
 #: contents/ui/main.qml
-msgid "Add Account…"
+msgid "Add account…"
 msgstr "Adicionar conta…"
 
 #: contents/ui/main.qml
-msgid "Switch Account…"
+msgid "Switch account…"
 msgstr "Trocar de conta…"
 
 #: contents/ui/main.qml
@@ -3579,7 +3540,7 @@ msgid "Open Devin…"
 msgstr "Abrir Devin…"
 
 #: contents/ui/main.qml
-msgid "Open Droid in Browser…"
+msgid "Open Droid in browser…"
 msgstr "Abrir Droid no navegador…"
 
 #: contents/ui/main.qml
@@ -3695,8 +3656,8 @@ msgid "Support report"
 msgstr "Relatório de suporte"
 
 #: contents/ui/configDiagnostics.qml
-msgid "Collect an offline report to paste into an issue. Includes versions, CLI installation details, enabled provider IDs, the latest Diagnostics error and module checks. Filesystem paths and recognized credentials are omitted; review the preview before sharing."
-msgstr "Colete um relatório offline para colar em uma issue. Inclui versões, detalhes da instalação da CLI, IDs dos provedores ativados, o último erro de Diagnóstico e verificações dos módulos. Caminhos do sistema de arquivos e credenciais reconhecidas são omitidos; revise a prévia antes de compartilhar."
+msgid "Collects versions, CLI installation details, enabled provider IDs, the latest error and module checks offline. Omits paths and recognized credentials. Review before sharing."
+msgstr "Coleta offline versões, detalhes de instalação da CLI, IDs dos provedores ativados, último erro e verificações de módulos. Omite caminhos e credenciais reconhecidas. Revise antes de compartilhar."
 
 #: contents/ui/configDiagnostics.qml
 msgid "Collect support report"
@@ -3720,7 +3681,7 @@ msgstr "Web"
 
 #: contents/ui/configProviders.qml
 msgid "Choose a source"
-msgstr "Escolha uma fonte"
+msgstr "Escolha uma origem"
 
 #: contents/ui/components/UsageWindowText.qml scripts/smoke/Capture.qml
 #, kde-format
@@ -4042,10 +4003,8 @@ msgid "CodexBar CLI"
 msgstr "CLI do CodexBar"
 
 #: contents/ui/configDiagnostics.qml
-msgid ""
-"This checks installed versions only. Check upstream CLI releases in "
-"General / Updates / CodexBar CLI."
-msgstr "Verifica apenas as versões instaladas. Consulte novas versões da CLI em Geral / Atualizações / CLI do CodexBar."
+msgid "Checks installed versions. For CLI releases, open %1 > %2 > %3."
+msgstr "Verifica as versões instaladas. Para versões oficiais da CLI, abra %1 > %2 > %3."
 
 #: contents/ui/configDiagnostics.qml
 msgid "No output yet"
@@ -4053,9 +4012,11 @@ msgstr "Nenhum resultado ainda"
 
 #: contents/ui/configGeneral.qml
 msgid ""
-"Load a separate Codex subtotal on request in Usage & Spend. It does not "
-"represent account-wide usage."
-msgstr "Carregue um subtotal separado do Codex sob demanda em Uso e gastos. Ele não representa o uso de toda a conta."
+"Loads a subtotal on request in Usage & Spend, limited to identified Codex "
+"requests."
+msgstr ""
+"Carrega sob demanda em Uso e gastos um subtotal limitado às solicitações "
+"Codex identificadas."
 
 #: contents/ui/configGeneral.qml
 msgid "Widget updates"
@@ -4106,9 +4067,8 @@ msgid "Widget update in progress…"
 msgstr "Atualização do widget em andamento…"
 
 #: contents/ui/configGeneral.qml
-msgid ""
-"Requires daily CLI checks and Plasma notifications (Notifications page)."
-msgstr "Requer verificações diárias da CLI e notificações do Plasma (página Notificações)."
+msgid "Requires daily CLI checks and Plasma notifications."
+msgstr "Requer verificações diárias da CLI e notificações do Plasma."
 
 #: contents/ui/configProviders.qml
 msgctxt "Provider group, plural"
@@ -4124,7 +4084,7 @@ msgstr "Desativados"
 msgid ""
 "Some sources are unavailable on Linux. The source override in Diagnostics "
 "takes precedence."
-msgstr "Algumas fontes não estão disponíveis no Linux. A fonte definida em Diagnóstico tem prioridade."
+msgstr "Algumas origens não estão disponíveis no Linux. A origem definida em Diagnóstico tem prioridade."
 
 #: contents/ui/components/ProviderNames.qml
 msgid "Trae CN"
@@ -4214,7 +4174,7 @@ msgid ""
 "Remove the API key and manual cookie stored by CodexBar for %1? Token "
 "accounts, environment variables, source settings and enablement are "
 "unchanged."
-msgstr "Remover a chave de API e o cookie manual salvos pelo CodexBar para %1? As contas com tokens, variáveis de ambiente, configurações de fonte e o estado de ativação permanecem inalterados."
+msgstr "Remover a chave de API e o cookie manual salvos pelo CodexBar para %1? As contas com tokens, variáveis de ambiente, configurações de origem e o estado de ativação permanecem inalterados."
 
 #: contents/ui/configPopup.qml
 msgid "Follows the provider order above."
@@ -4291,19 +4251,19 @@ msgstr "Muda para monocromático, ativa os indicadores dos provedores e oculta n
 
 #: contents/ui/configProviders.qml
 msgid "Loading saved source…"
-msgstr "Carregando a fonte salva…"
+msgstr "Carregando a origem salva…"
 
 #: contents/ui/configProviders.qml
 msgid "Could not read the saved source. Reload to try again."
-msgstr "Não foi possível ler a fonte salva. Selecione Recarregar para tentar novamente."
+msgstr "Não foi possível ler a origem salva. Selecione Recarregar para tentar novamente."
 
 #: contents/ui/configProviders.qml
 msgid "The saved source is not recognized. Choose a source and save to replace it."
-msgstr "A fonte salva não é reconhecida. Escolha uma fonte e salve-a para substituí-la."
+msgstr "A origem salva não é reconhecida. Escolha uma origem e salve-a para substituí-la."
 
 #: contents/ui/configProviders.qml
-msgid "Select Save to store this source. Apply is not needed. Automatic restores the provider default."
-msgstr "Selecione Salvar para armazenar esta fonte. Não é necessário selecionar Aplicar. Automática restaura a fonte padrão do provedor."
+msgid "Save takes effect immediately. Automatic uses the provider default."
+msgstr "Salvar aplica a escolha imediatamente. Automática usa a origem padrão do provedor."
 
 #: contents/ui/components/ProviderNames.qml
 msgid "SiliconFlow"
@@ -4389,11 +4349,11 @@ msgstr "Pergunta de análise"
 
 #: contents/ui/components/AnalysisAssistant.qml
 msgid ""
-"Saved answers describe the measurements at generation time. Account names, "
-"projects, paths and prompts are never sent."
+"Answers use data from generation time. Account names, projects, paths and "
+"prompts are never sent."
 msgstr ""
-"As respostas salvas descrevem as medições no momento da geração. Nomes de "
-"contas, projetos, caminhos e prompts nunca são enviados."
+"As respostas usam os dados do momento da geração. Nomes de contas, projetos, "
+"caminhos e prompts nunca são enviados."
 
 #: contents/ui/components/AnalysisSummary.qml
 msgid "%1×"
@@ -4413,7 +4373,7 @@ msgstr "Histórico local e análise de IA opcional"
 
 #: contents/ui/components/SpendView.qml
 msgid "Compact analysis"
-msgstr "Análise compacta"
+msgstr "Reduzir análise"
 
 #: contents/ui/components/SpendView.qml
 msgid "Expand analysis"
@@ -4429,11 +4389,10 @@ msgstr "Provedores em %1"
 
 #: contents/ui/configAiInsights.qml
 msgid ""
-"Enables guided questions in Usage & Spend. Nothing is sent and no AI service "
-"is contacted while this is off."
+"Adds questions to Usage & Spend. No AI service is contacted while disabled."
 msgstr ""
-"Ativa perguntas guiadas em Uso e gastos. Enquanto estiver desativado, nada é "
-"enviado e nenhum serviço de IA é contatado."
+"Adiciona perguntas a Uso e gastos. Nenhum serviço de IA é contatado enquanto "
+"a opção estiver desativada."
 
 #~ msgid ""
 #~ "Shows a short AI-generated summary of your usage in Overview. Nothing is "
@@ -4521,3 +4480,23 @@ msgstr "Mostrar mais modelos"
 #: contents/ui/components/AnalysisModels.qml
 msgid "Show fewer models"
 msgstr "Mostrar menos modelos"
+
+#: contents/ui/configGeneral.qml
+msgid "Notify about updates"
+msgstr "Notificar atualizações"
+
+#: contents/ui/configGeneral.qml
+msgid "Install automatically"
+msgstr "Instalar automaticamente"
+
+#: contents/ui/configGeneral.qml
+msgid "Check now"
+msgstr "Verificar agora"
+
+#: contents/ui/configGeneral.qml
+msgid "Check daily"
+msgstr "Verificar diariamente"
+
+#: contents/ui/configGeneral.qml
+msgid "Update daily"
+msgstr "Atualizar diariamente"

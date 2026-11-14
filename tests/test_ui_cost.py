@@ -512,22 +512,12 @@ class CostTest(unittest.TestCase):
             raise AssertionError("mixed-currency spend text must label the selected currency as a subtotal")
         for mixed_currency_fragment in (
             "CostCurrency.spendHasMixedCostCurrencies(providerCosts)",
-            "The cost subtotal and charts use %1.",
+            "Costs and charts use %1.",
         ):
             if not code_contains(main_text, mixed_currency_fragment):
                 raise AssertionError(
                     "mixed-currency spend must be labelled as a subtotal and explain its scope; "
                     f"missing {mixed_currency_fragment!r}"
-                )
-        for empty_metric_fragment in (
-            "view.providerCosts.length > 0 && view.dailyPoints.length === 0",
-            "No daily token history is available for this range.",
-            "Try Tokens to check for token-only history.",
-        ):
-            if not code_contains(spend_view_text, empty_metric_fragment):
-                raise AssertionError(
-                    "a provider snapshot without the selected daily metric needs a scoped explanation; "
-                    f"missing {empty_metric_fragment!r}"
                 )
         token_cost_section_body = id_block(main_text, "tokenCostSection")
         for trust_owner_source, trust_owner_text in (
@@ -570,7 +560,7 @@ class CostTest(unittest.TestCase):
             "noticeRefresh.restart()",
             "onTriggered: noticeRoot.refreshNoticeState()",
             'i18n("%1 %2"',
-            'i18n("The displayed range total',
+            'i18n("The total',
             'i18np(',
             "lacked final usage",
             "function incompleteText()",

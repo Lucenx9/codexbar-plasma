@@ -701,7 +701,7 @@ KCM.SimpleKCM {
                 Layout.fillWidth: true
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 24
                 Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-                text: i18n("Automatic meters show primary and secondary quotas. Choose a quota to show one capsule. Unavailable quotas are omitted.")
+                text: i18n("Automatic shows primary and secondary quotas. Select a quota for one capsule. Missing quotas stay hidden.")
                 font: Kirigami.Theme.smallFont
                 opacity: 0.7
                 wrapMode: Text.WordWrap

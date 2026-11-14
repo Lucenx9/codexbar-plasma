@@ -3,7 +3,7 @@ import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 
-// Service components of a supported status page, below its "Status Page" row.
+// Service components of a supported status page, below its "Status page" row.
 // Component names come from the remote page, so they stay plain text.
 ColumnLayout {
     id: statusList
@@ -158,7 +158,7 @@ ColumnLayout {
         Layout.rightMargin: Kirigami.Units.smallSpacing
         leftPadding: Kirigami.Units.smallSpacing
         rightPadding: Kirigami.Units.smallSpacing
-        text: i18n("Open Status Page")
+        text: i18n("Open status page")
         icon.name: "internet-web-browser"
         onClicked: statusList.openRequested()
     }

@@ -130,7 +130,7 @@ ColumnLayout {
         }
         PlainPlasmaLabel {
             visible: applet.aiInsightsEnabled
-            text: i18n("Saved answers describe the measurements at generation time. Account names, projects, paths and prompts are never sent.")
+            text: i18n("Answers use data from generation time. Account names, projects, paths and prompts are never sent.")
             font: Kirigami.Theme.smallFont
             opacity: applet.secondaryTextOpacity
             Layout.fillWidth: true

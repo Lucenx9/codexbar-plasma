@@ -683,15 +683,8 @@ TestCase {
     }
 
     function optionsNoticeText(page) {
-        var all = [];
-        walkPageObjects(page, all);
-        var labels = all.filter(function(item) {
-            return item.toString().indexOf("PlainControlsLabel") >= 0
-                && item.visible
-                && (String(item.text).indexOf("Editable provider options") === 0
-                    || String(item.text).indexOf("This CodexBar version") === 0);
-        });
-        return labels.length === 1 ? String(labels[0].text) : "";
+        var notice = findChild(page, "providerOptionsNotice");
+        return notice && notice.visible ? String(notice.text) : "";
     }
 
     // The options notice must name the source of truth for the current CLI:
@@ -713,7 +706,7 @@ TestCase {
         verify(optionsNoticeText(page).indexOf("Editable provider options come from CodexBar") === 0);
         page.providerDescriptorsUnavailable = true;
         wait(0);
-        verify(optionsNoticeText(page).indexOf("This CodexBar version does not expose editable provider options") === 0);
+        verify(optionsNoticeText(page).indexOf("This CLI version cannot edit other provider options") === 0);
     }
 
     // Brand colours survive per provider instead of collapsing to one

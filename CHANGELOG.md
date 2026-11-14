@@ -20,6 +20,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   leave an unselected calendar, and keep sharing available when a provider
   filter has no history but other providers do.
 
+- Shorten popup and settings explanations, standardize action labels, and align
+  all five translations while retaining privacy, cost, and save guidance.
+
 - Keep the selected provider icon visible in the closed Usage & Spend filter.
 
 - Turn the Usage & Spend heatmap into a selectable Daily activity calendar.
@@ -54,6 +57,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   answers while the underlying evidence is unchanged.
 
 ### Fixed
+
+- Keep General settings help within narrow windows with longer translations,
+  and size the AI Insights frequency selector to its translated choices.
 
 - Position Usage & Spend hover previews beside the inspected day, switching
   sides near the plot edge so the guide and provider markers remain visible.

@@ -146,7 +146,7 @@ Provider setup and enable/disable actions save immediately to the CLI configurat
 **Apply** and **Cancel** cover widget settings only.
 
 Widget updates install automatically by default. To opt out, clear
-**General → Updates → Install widget updates automatically** and apply.
+**General → Updates → Widget updates → Install automatically** and apply.
 Installed updates take effect after a Plasma restart or logout and login;
 the automatic updater never restarts Plasma itself.
 
