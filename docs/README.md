@@ -236,6 +236,8 @@ when the product changes instead of adding dated before/after copies.
 - [Usage and spend](codexbar-plasma-usage-spend.png)
 - [Model breakdowns](codexbar-plasma-models.png): synthetic native expanded
   Usage & Spend with provider rows opened to their inline model lists.
+- [Daily activity](codexbar-plasma-daily-activity.png): synthetic native calendar
+  with month labels and a day selected in the chart and provider details.
 - [Chart hover inspection](codexbar-plasma-chart-hover.gif): synthetic native
   chart recording showing provider icons and previews switching sides.
 - [Shared usage card](codexbar-plasma-share.png): synthetic local PNG summary,

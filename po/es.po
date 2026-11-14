@@ -229,10 +229,10 @@ msgid_plural ""
 "%1 requests in the selected range lacked final usage, so they are excluded "
 "from the displayed totals."
 msgstr[0] ""
-"%1 solicitud del intervalo seleccionado no tiene uso final, por lo que queda "
+"%1 solicitud del período seleccionado no tiene uso final, por lo que queda "
 "excluida de los totales mostrados."
 msgstr[1] ""
-"%1 solicitudes del intervalo seleccionado no tienen uso final, por lo que "
+"%1 solicitudes del período seleccionado no tienen uso final, por lo que "
 "quedan excluidas de los totales mostrados."
 
 #: contents/ui/components/CostTrustNotice.qml
@@ -1500,8 +1500,8 @@ msgstr ""
 "codexbar cost."
 
 #: contents/ui/components/SpendView.qml
-msgid "Activity heatmap"
-msgstr "Mapa de calor de actividad"
+msgid "Daily activity"
+msgstr "Actividad diaria"
 
 #: contents/ui/components/SpendView.qml
 msgctxt "Activity heatmap legend, shade of the lowest daily value"
@@ -4025,8 +4025,8 @@ msgid "Provider actions"
 msgstr "Acciones del proveedor"
 
 #: contents/ui/components/InteractiveChart.qml
-msgid "Peak daily usage"
-msgstr "Pico de uso diario"
+msgid "Daily peak"
+msgstr "Pico diario"
 
 #: contents/ui/components/PanelText.qml
 msgid "Behind pace"
@@ -4532,8 +4532,8 @@ msgid "Show all providers"
 msgstr "Mostrar todos los proveedores"
 
 #: contents/ui/components/SpendView.qml
-msgid "Use the arrow keys to inspect days"
-msgstr "Use las teclas de flecha para examinar los días"
+msgid "Arrow keys inspect days. Enter selects a day; Escape clears the selection."
+msgstr "Use las flechas para consultar los días, Intro para seleccionar un día y Esc para borrar la selección."
 
 #: contents/ui/components/AnalysisModels.qml
 msgid "Show more models"

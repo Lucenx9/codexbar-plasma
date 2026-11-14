@@ -54,7 +54,7 @@ msgstr "Não há dados de uso atuais suficientes para gerar uma análise."
 
 #: contents/ui/components/AnalysisAssistant.qml
 msgid "Out of date"
-msgstr "Desatualizado"
+msgstr "Desatualizada"
 
 #: contents/ui/components/AnalysisAssistant.qml
 msgid "Configure…"
@@ -1499,8 +1499,8 @@ msgstr ""
 "cost."
 
 #: contents/ui/components/SpendView.qml
-msgid "Activity heatmap"
-msgstr "Mapa de calor da atividade"
+msgid "Daily activity"
+msgstr "Atividade diária"
 
 #: contents/ui/components/SpendView.qml
 msgctxt "Activity heatmap legend, shade of the lowest daily value"
@@ -4006,8 +4006,8 @@ msgid "Provider actions"
 msgstr "Ações do provedor"
 
 #: contents/ui/components/InteractiveChart.qml
-msgid "Peak daily usage"
-msgstr "Pico de uso diário"
+msgid "Daily peak"
+msgstr "Pico diário"
 
 #: contents/ui/components/PanelText.qml
 msgid "Behind pace"
@@ -4261,7 +4261,7 @@ msgstr "Separada dos totais de gastos."
 #: contents/ui/components/IdentifiedTokensSection.qml scripts/smoke/Capture.qml
 msgid ""
 "Check SSH and use the same supported codexbar version on both computers."
-msgstr "Verifique o SSH e use a mesma versão compatível da codexbar nos dois computadores."
+msgstr "Verifique o SSH e use a mesma versão compatível do codexbar nos dois computadores."
 
 #: contents/ui/components/IdentifiedTokensSection.qml scripts/smoke/Capture.qml
 msgid "Local data unavailable. Showing SSH data only."
@@ -4511,8 +4511,8 @@ msgid "Show all providers"
 msgstr "Mostrar todos os provedores"
 
 #: contents/ui/components/SpendView.qml
-msgid "Use the arrow keys to inspect days"
-msgstr "Use as teclas de seta para examinar os dias"
+msgid "Arrow keys inspect days. Enter selects a day; Escape clears the selection."
+msgstr "Use as setas para consultar os dias, Enter para selecionar um dia e Esc para limpar a seleção."
 
 #: contents/ui/components/AnalysisModels.qml
 msgid "Show more models"

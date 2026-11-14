@@ -12,7 +12,14 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Turn the Usage & Spend heatmap into a selectable Daily activity calendar.
+  Add month labels and a fixed date/value readout below the grid. Clicking a
+  measured day or pressing Enter/Space selects it in the chart and provider
+  details; Escape clears the selection. Keep the calendar collapsed initially.
+
 - Simplify Usage & Spend notes and use one AI Insights heading, matching settings.
+  Use a metric-neutral daily peak label and align translated selection hints,
+  token terminology and assistant status text.
   Preserve model-list expansion and keyboard focus when history refreshes.
 
 - Remove the recurring collecting-history banner from Usage & Spend; retain

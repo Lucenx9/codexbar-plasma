@@ -266,6 +266,32 @@ export function spendHeatmapTrailingSlots(days, firstWeekday) {
     return 6 - (newestWeekday - heatmapFirstWeekday(firstWeekday) + 7) % 7
 }
 
+function heatmapCalendarEnd(cells) {
+    if (!Array.isArray(cells)) return null
+    if (cells.length > 378 || cells.length % 7 !== 0) return null
+    return newestCalendarSlot(cells)
+}
+
+function extendMonthColumn(months, column, date) {
+    var key = date.getUTCFullYear() * 12 + date.getUTCMonth()
+    var span = months[key] || {column: column, columns: 0, month: date.getUTCMonth(), year: date.getUTCFullYear()}
+    span.columns++
+    months[key] = span
+}
+
+export function spendHeatmapMonths(cells) {
+    var newest = heatmapCalendarEnd(cells)
+    if (newest === null) return []
+    var first = cells.findIndex(function(cell) { return cell !== null })
+    var months = ({})
+    for (var column = 0; column < cells.length / 7; column++) {
+        var slot = Math.max(first, column * 7)
+        var date = new Date(newest - (cells.length - 1 - slot) * 86400000)
+        extendMonthColumn(months, column, date)
+    }
+    return Object.keys(months).map(function(key) { return months[key] })
+}
+
 export function nonNegative(value) {
     var numeric = Number(value)
     return isFinite(numeric) ? Math.max(0, numeric) : 0

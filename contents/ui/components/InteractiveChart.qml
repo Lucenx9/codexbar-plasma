@@ -225,7 +225,7 @@ ColumnLayout {
             text: chart.hasLineSeries && !chart.hasActivePoint ? chart.accessibleTitle
                 : chart.hasActivePoint && chart.readoutValid
                 ? chart.pointLabel(chart.points[chart.readoutIndex])
-                : chart.peakIndex >= 0 ? i18n("Peak daily usage")
+                : chart.peakIndex >= 0 ? i18n("Daily peak")
                 : chart.readoutValid ? chart.pointLabel(chart.points[chart.readoutIndex]) : ""
             // The retained text outlives the fade, and a zero opacity does not
             // take an item out of the accessibility tree the way visibility

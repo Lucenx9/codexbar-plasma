@@ -1503,8 +1503,8 @@ msgstr ""
 "codexbar cost."
 
 #: contents/ui/components/SpendView.qml
-msgid "Activity heatmap"
-msgstr "Carte de chaleur de l'activité"
+msgid "Daily activity"
+msgstr "Activité quotidienne"
 
 #: contents/ui/components/SpendView.qml
 msgctxt "Activity heatmap legend, shade of the lowest daily value"
@@ -4030,8 +4030,8 @@ msgid "Provider actions"
 msgstr "Actions du fournisseur"
 
 #: contents/ui/components/InteractiveChart.qml
-msgid "Peak daily usage"
-msgstr "Pic d’utilisation quotidien"
+msgid "Daily peak"
+msgstr "Pic quotidien"
 
 #: contents/ui/components/PanelText.qml
 msgid "Behind pace"
@@ -4541,8 +4541,8 @@ msgid "Show all providers"
 msgstr "Afficher tous les fournisseurs"
 
 #: contents/ui/components/SpendView.qml
-msgid "Use the arrow keys to inspect days"
-msgstr "Utilisez les touches fléchées pour examiner les jours"
+msgid "Arrow keys inspect days. Enter selects a day; Escape clears the selection."
+msgstr "Les flèches parcourent les jours. Entrée sélectionne un jour ; Échap efface la sélection."
 
 #: contents/ui/components/AnalysisModels.qml
 msgid "Show more models"

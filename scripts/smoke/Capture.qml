@@ -1336,6 +1336,23 @@ Item {
         }
         verifyScenario(view.expandedView === (scenario !== "usage-analysis-narrow") && view.selectedProvider === "" && view.providerCosts.length === view.allProviderCosts.length, "expanded comparison lost providers");
         verifyScenario(!applet.aiInsightsBusy, "analysis navigation started AI generation");
+        if (scenario === "usage-analysis" && analysisStep === 2) {
+            verifyScenario(!view.activityExpanded, "daily activity must start collapsed");
+            applet.setCostHistoryDays(90);
+            analysisStep = 3;
+            return false;
+        }
+        if (scenario === "usage-analysis") {
+            view.activityExpanded = true;
+            var calendar = findItem(view, "spendHeatmap");
+            if (!calendar || calendar.cells.length === 0) return false;
+            calendar.selectDay(chart.points[chart.points.length - 2].label, Qt.OtherFocusReason);
+            verifyScenario(view.selectedDay === calendar.selectedDay
+                && chart.points[chart.selectedIndex].label === calendar.selectedDay,
+                "calendar selection did not reach the chart and provider details");
+            verifyScenario(calendar.months.length > 1 && calendar.readout.length > 0,
+                "calendar months or fixed readout missing");
+        }
         if (scenario === "usage-analysis-models") {
             view.expandedModelProviders = ["codex", "claude"];
             verifyScenario(view.selectedProvider === "", "model disclosure changed the chart filter");

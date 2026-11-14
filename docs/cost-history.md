@@ -135,11 +135,19 @@ snapshot without a usable `updatedAt` keeps its Today amounts.
 - The global activity heatmap uses the unfiltered history's calendar dates,
   preserving unavailable days at either boundary and between measured days.
   Unavailable days occupy empty cells, so filtering missing amounts never shifts
-  weekday rows. Rows start on the locale's first day of the week, and empty
+  weekday rows. The **Daily activity** disclosure starts collapsed and stays
+  hidden for spans of seven days or fewer. Rows start on the locale's first day of the week, and empty
   cells after the newest day close its week. Its visible span and week count include those gaps, bounded to
   the newest 365 calendar days. Legacy non-date labels retain sequence order
   and leave the rows unlabelled, because only calendar-aligned days give each
   row one weekday.
+- Month labels follow the visible week columns and are omitted when a label
+  cannot fit its month span. Hover and keyboard inspection share a fixed
+  date/value row below the calendar, without floating tooltips. Clicking a
+  measured day, Enter/Space, or the accessibility press action pins the same day
+  in the chart and provider details. Arrow keys only inspect; Escape clears the
+  pin and leaves focus in the calendar. Zero days remain selectable, unavailable
+  slots do not. The selected day has a persistent outline.
 - Global cost and token aggregates that overflow the numeric range remain
   unavailable. An overflowing daily sum has no chart point and keeps an empty
   heatmap cell. Other dates, measured zeros, and the other metric remain usable.
@@ -159,6 +167,8 @@ These rules are implemented in
 
 ## Selection rules
 
+![Daily activity calendar sharing a selected day with the chart](codexbar-plasma-daily-activity.png)
+
 The account picker selects usage quotas. Local cost history comes from the
 CLI scan for the provider and history range, independently of the account
 selected in the widget. Changing accounts does not filter this scan or establish
@@ -175,7 +185,7 @@ Keyboard inspection uses the readout, accessible description and provider rows.
 
 ![Native chart hover inspection with synthetic provider data](codexbar-plasma-chart-hover.gif)
 
-All days and Escape clear the pin and leave keyboard focus on the chart. The
+All days and Escape in the chart clear the pin and leave keyboard focus on the chart. The
 reset action occupies the provider heading row without shifting the plot.
 Positive sub-cent amounts use an explicit less-than-one-cent notation; axis
 labels retain the precision needed to distinguish ticks. Pointer or keyboard selection pins a day

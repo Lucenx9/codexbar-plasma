@@ -7,7 +7,9 @@ Usage & Spend does not duplicate them.
 The `usage-analysis` scenario checks provider/day selection, retaining the
 provider filter through a history-range refresh, switching to Tokens, returning
 to all providers, expanding the layout, and avoiding AI generation during
-navigation. The `usage-analysis-models` and `usage-analysis-narrow` variants
+navigation. It then opens Daily activity over 90 days and verifies month labels,
+the fixed readout, and selection shared with the chart and provider details.
+The `usage-analysis-models` and `usage-analysis-narrow` variants
 inspect provider rows expanded to inline model details without changing the
 chart filter, and larger text in a compact window.
 `ai-insights-no-history` verifies that the assistant opens directly with both

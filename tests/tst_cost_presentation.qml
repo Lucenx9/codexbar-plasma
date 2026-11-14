@@ -1188,6 +1188,23 @@ TestCase {
 
     // Rows follow the locale's week, so a weekday keeps its row from day to
     // day instead of rotating with the newest date.
+    function test_spendHeatmapMonthsKeepCalendarGapsAndYearBoundaries() {
+        var cells = new Array(42).fill(null)
+        cells[2] = {label: "2026-12-23"}
+        cells[40] = {label: "2027-01-30"}
+        var before = JSON.stringify(cells)
+        compare(CostChart.spendHeatmapMonths(cells), [
+            {column: 0, columns: 2, month: 11, year: 2026},
+            {column: 2, columns: 4, month: 0, year: 2027}
+        ])
+        compare(JSON.stringify(cells), before)
+        cells[40].label = "2027-02-30"
+        compare(CostChart.spendHeatmapMonths(cells), [])
+        for (var value of [null, {}, [], new Array(379), [{label: "legacy"}], new Array(14).fill(null)])
+            compare(CostChart.spendHeatmapMonths(value), [])
+        compare(CostChart.spendHeatmapMonths([{label: "day-0"}, null, null, null, null, null, null]), [])
+    }
+
     function test_spendHeatmapRowWeekdaysStartOnTheLocaleWeek() {
         var days = []
         for (var day = 17; day <= 23; day++) {

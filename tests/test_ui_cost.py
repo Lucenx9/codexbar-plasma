@@ -412,8 +412,8 @@ class CostTest(unittest.TestCase):
     def test_spend_view_heatmap(self):
         if not code_contains(spend_view_text, "InteractiveChart"):
             raise AssertionError("SpendView must expose the interactive chart; missing 'InteractiveChart'")
-        if not code_contains(spend_view_text, "Activity heatmap"):
-            raise AssertionError("SpendView must expose the bounded activity heatmap; missing 'Activity heatmap'")
+        if not code_contains(spend_view_text, "Daily activity"):
+            raise AssertionError("SpendView must expose the bounded activity heatmap; missing 'Daily activity'")
         if not code_contains(spend_view_text, "visible: view.dailyPoints.length > 0"):
             raise AssertionError("SpendView must keep a one-day history keyboard-inspectable")
         if "visible: view.dailyPoints.length > 1" in spend_view_text:
@@ -456,7 +456,7 @@ class CostTest(unittest.TestCase):
         for heatmap_padding_fragment in (
             "readonly property bool measured: !!heatmapCell.modelData",
             "Accessible.ignored: !heatmapCell.measured",
-            "visible: heatmapMouse.containsMouse && heatmapCell.measured",
+            "onClicked: if (heatmapCell.measured)",
         ):
             if not code_contains(spend_view_text, heatmap_padding_fragment):
                 raise AssertionError(
@@ -492,19 +492,15 @@ class CostTest(unittest.TestCase):
                 "the heatmap hover outline must not fade a border's own alpha: Qt treats a zero-alpha "
                 "pen as invalid and paints a zero-width border, snapping the cell fill out to the edge"
             )
-        if not code_contains(spend_view_text, "opacity: heatmapCell.index === heatmapFocus.inspectedIndex ? 1 : 0"):
+        if not code_contains(spend_view_text, "opacity: heatmapCell.pinned || heatmapCell.index === heatmapFocus.inspectedIndex ? 1 : 0"):
             raise AssertionError(
                 "SpendView activity heatmap cells must use a dedicated inspection outline overlay, so the "
                 "painted fill geometry never depends on hover"
             )
 
-        # Two tooltips confirm or read out state instead of labelling a control, and opt
-        # out of that delay explicitly. Pin both, so the default cannot silently start
-        # holding back feedback that has to be immediate.
-        if not code_contains(spend_view_text, "delay: 0"):
+        if not code_contains(spend_view_text, 'objectName: "heatmapReadout"'):
             raise AssertionError(
-                "the heatmap cell readout must stay instant: it reports the cell under the pointer "
-                "while the pointer scans the grid"
+                "daily activity must keep its readout in the layout instead of covering cells with a tooltip"
             )
 
     def test_cost_trust_notices(self):

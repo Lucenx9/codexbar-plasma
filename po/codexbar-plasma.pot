@@ -802,7 +802,7 @@ msgid "Load local + SSH"
 msgstr ""
 
 #: contents/ui/components/InteractiveChart.qml
-msgid "Peak daily usage"
+msgid "Daily peak"
 msgstr ""
 
 #: contents/ui/components/InteractiveChart.qml
@@ -2104,11 +2104,12 @@ msgid "Providers on %1"
 msgstr ""
 
 #: contents/ui/components/SpendView.qml
-msgid "Activity heatmap"
+msgid "Daily activity"
 msgstr ""
 
 #: contents/ui/components/SpendView.qml
-msgid "Use the arrow keys to inspect days"
+msgid ""
+"Arrow keys inspect days. Enter selects a day; Escape clears the selection."
 msgstr ""
 
 #: contents/ui/components/SpendView.qml

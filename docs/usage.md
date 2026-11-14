@@ -354,7 +354,13 @@ work and upstream contract requirements.
   expanded across refreshes and day selections, including **Show more models**
   choices. Refreshing preserves focus on the model-list action, with a visible
   provider header or filter as the fallback when that action disappears.
-  Input, output and cache composition stays in provider details. **Activity heatmap** expands separately.
+  Input, output and cache composition stays in provider details. **Daily activity**
+  opens a compact calendar for ranges longer than seven days. It follows the same
+  provider, period and Cost/Token filters, with month and weekday labels. Hover
+  or arrow keys show the date and amount below the grid. Click or Enter/Space
+  selects that day in the chart and provider details; Escape clears the pin.
+  A zero remains selectable; an unavailable day stays empty. The calendar starts
+  collapsed and uses one intensity scale for the selected metric.
   **Last 7 days vs previous 7** excludes today and requires fourteen complete
   days plus a current scan. Short, partial, stale, or ambiguous histories show
   unavailable instead of extrapolating, with the history requirements shown below

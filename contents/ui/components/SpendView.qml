@@ -742,10 +742,15 @@ ColumnLayout {
             }
 
             Components.DisclosureButton {
-                plainText: i18n("Activity heatmap")
+                id: activityToggle
+                objectName: "analysisActivityToggle"
+                plainText: i18n("Daily activity")
                 visible: view.heatmapDays.length > 7
                 expanded: view.activityExpanded
-                onClicked: view.activityExpanded = !view.activityExpanded
+                onClicked: {
+                    if (view.activityExpanded) forceActiveFocus(Qt.OtherFocusReason)
+                    view.activityExpanded = !view.activityExpanded
+                }
             }
 
             GridLayout {
@@ -786,6 +791,7 @@ ColumnLayout {
                             visible: view.heatmapRowWeekdays.length === 7
                             spacing: heatmapGrid.rowSpacing
                             Layout.alignment: Qt.AlignTop
+                            Layout.topMargin: heatmapFocus.monthHeaderHeight
                             Accessible.ignored: true
 
                             Repeater {
@@ -810,18 +816,32 @@ ColumnLayout {
                             property string selectedDay: ""
                             property string hoveredDay: ""
                             readonly property var cells: heatmapGrid.cells
+                            readonly property var months: CostChart.spendHeatmapMonths(cells)
+                            readonly property real monthHeaderHeight: months.length > 0
+                                ? heatmapFontMetrics.height + Kirigami.Units.smallSpacing : 0
                             readonly property int inspectedIndex: HeatmapNavigation.indexForDay(cells,
-                                hoveredDay.length > 0 ? hoveredDay : (activeFocus ? selectedDay : ""))
+                                hoveredDay.length > 0 ? hoveredDay : (activeFocus ? selectedDay : view.selectedDay))
                             readonly property var inspectedCell: inspectedIndex >= 0 ? cells[inspectedIndex] : null
+                            readonly property string inspectedValue: !inspectedCell ? ""
+                                : view.applet.costHistoryShowsTokens ? view.applet.usageCountText(inspectedCell.value, "tokens")
+                                : inspectedCell.displayValue
                             readonly property string readout: inspectedCell
-                                ? i18n("%1: %2", historyChart.pointLabel(inspectedCell), inspectedCell.displayValue) : ""
+                                ? i18n("%1: %2", historyChart.pointLabel(inspectedCell), inspectedValue) : ""
 
                             activeFocusOnTab: HeatmapNavigation.nextDay(cells, "", "first", false).length > 0
                             background: null
                             Accessible.role: Accessible.Graphic
                             Accessible.name: readout.length > 0
-                                ? i18n("%1: %2", i18n("Activity heatmap"), readout) : i18n("Activity heatmap")
-                            Accessible.description: i18n("Use the arrow keys to inspect days")
+                                ? i18n("%1: %2", i18n("Daily activity"), readout) : i18n("Daily activity")
+                            Accessible.description: i18n("Arrow keys inspect days. Enter selects a day; Escape clears the selection.")
+
+                            function selectDay(day, reason) {
+                                var index = CostChart.uniqueCostDayIndex(historyChart.points, day)
+                                if (index < 0 || historyChart.points[index].value === null) return
+                                selectedDay = day
+                                historyChart.selectedIndex = index
+                                forceActiveFocus(reason)
+                            }
 
                             onActiveFocusChanged: {
                                 if (activeFocus) {
@@ -829,7 +849,8 @@ ColumnLayout {
                                     view.revealHistoryItem(heatmapFocus, heatmapReadout)
                                 }
                                 if (activeFocus && HeatmapNavigation.indexForDay(cells, selectedDay) < 0)
-                                    selectedDay = HeatmapNavigation.nextDay(cells, "", "last", false)
+                                    selectedDay = HeatmapNavigation.indexForDay(cells, view.selectedDay) >= 0
+                                        ? view.selectedDay : HeatmapNavigation.nextDay(cells, "", "last", false)
                             }
                             onCellsChanged: {
                                 hoveredDay = ""
@@ -839,6 +860,14 @@ ColumnLayout {
                             Keys.onPressed: function(event) {
                                 var direction = ""
                                 switch (event.key) {
+                                case Qt.Key_Return: case Qt.Key_Enter: case Qt.Key_Space:
+                                    selectDay(selectedDay, Qt.OtherFocusReason); event.accepted = true; return
+                                case Qt.Key_Escape:
+                                    historyChart.selectedIndex = -1
+                                    selectedDay = ""
+                                    hoveredDay = ""
+                                    event.accepted = true
+                                    return
                                 case Qt.Key_Left: direction = "left"; break
                                 case Qt.Key_Right: direction = "right"; break
                                 case Qt.Key_Up: direction = "up"; break
@@ -855,11 +884,31 @@ ColumnLayout {
 
                             Layout.fillWidth: true
                             Layout.preferredHeight: 7 * heatmapGrid.cellHeight
-                                + 6 * heatmapGrid.rowSpacing
+                                + 6 * heatmapGrid.rowSpacing + monthHeaderHeight
                             clip: true
+
+                            FontMetrics { id: heatmapFontMetrics; font: Kirigami.Theme.smallFont }
+
+                            Repeater {
+                                model: heatmapFocus.months
+                                delegate: PlainPlasmaLabel {
+                                    required property var modelData
+                                    readonly property real start: modelData.column * (heatmapGrid.cellWidth + heatmapGrid.cellSpacing)
+                                    width: modelData.columns * (heatmapGrid.cellWidth + heatmapGrid.cellSpacing) - heatmapGrid.cellSpacing
+                                    x: LayoutMirroring.enabled ? heatmapFocus.width - start - width : start
+                                    height: heatmapFontMetrics.height
+                                    visible: implicitWidth <= width
+                                    text: Qt.locale().standaloneMonthName(modelData.month, Locale.ShortFormat)
+                                    font: Kirigami.Theme.smallFont
+                                    opacity: view.applet.secondaryTextOpacity
+                                    horizontalAlignment: LayoutMirroring.enabled ? Text.AlignRight : Text.AlignLeft
+                                    Accessible.ignored: true
+                                }
+                            }
 
                             Grid {
                                 id: heatmapGrid
+                                y: heatmapFocus.monthHeaderHeight
 
                                 readonly property real cellSpacing: Math.max(1, Math.round(Kirigami.Units.smallSpacing / 2))
                                 readonly property real minimumCellSize: Kirigami.Units.gridUnit * 0.6
@@ -893,6 +942,7 @@ ColumnLayout {
 
                                         required property var modelData
                                         required property int index
+                                        objectName: measured ? "activityDay-" + modelData.label : ""
 
                                         // Padding slots carry no day: they fill the
                                         // oldest corner of the block and stay out of
@@ -903,14 +953,21 @@ ColumnLayout {
                                                 Number(heatmapCell.modelData.value) / view.heatmapMaximum))
                                             : 0
 
-                                        Accessible.role: Accessible.Graphic
+                                        Accessible.role: Accessible.Button
                                         Accessible.ignored: !heatmapCell.measured
+                                        Accessible.onPressAction: if (heatmapCell.measured)
+                                            heatmapFocus.selectDay(heatmapCell.modelData.label, Qt.OtherFocusReason)
+                                        readonly property bool pinned: measured && modelData.label === view.selectedDay
+                                        Accessible.selectable: heatmapCell.measured
+                                        Accessible.selected: pinned
                                         // Days read like the chart's, in the locale's date format.
                                         readonly property string dayLabel: heatmapCell.measured
                                             ? historyChart.pointLabel(heatmapCell.modelData) : ""
 
                                         Accessible.name: heatmapCell.dayLabel
-                                        Accessible.description: heatmapCell.measured ? heatmapCell.modelData.displayValue : ""
+                                        Accessible.description: !heatmapCell.measured ? ""
+                                            : view.applet.costHistoryShowsTokens ? view.applet.usageCountText(heatmapCell.modelData.value, "tokens")
+                                            : heatmapCell.modelData.displayValue
 
                                         width: heatmapGrid.cellWidth
                                         height: heatmapGrid.cellHeight
@@ -945,12 +1002,12 @@ ColumnLayout {
                                             anchors.fill: parent
                                             radius: parent.radius
                                             color: "transparent"
-                                            border.width: 1
-                                            border.color: heatmapFocus.activeFocus && heatmapFocus.hoveredDay.length === 0
+                                            border.width: heatmapCell.pinned ? 2 : 1
+                                            border.color: heatmapCell.pinned || heatmapFocus.activeFocus && heatmapFocus.hoveredDay.length === 0
                                                 ? Kirigami.Theme.textColor
                                                 : view.applet.withAlpha(Kirigami.Theme.textColor, 0.4)
                                             visible: heatmapCell.measured
-                                            opacity: heatmapCell.index === heatmapFocus.inspectedIndex ? 1 : 0
+                                            opacity: heatmapCell.pinned || heatmapCell.index === heatmapFocus.inspectedIndex ? 1 : 0
 
                                             Rectangle {
                                                 anchors.fill: parent
@@ -959,7 +1016,7 @@ ColumnLayout {
                                                 color: "transparent"
                                                 border.width: 1
                                                 border.color: Kirigami.Theme.backgroundColor
-                                                visible: heatmapFocus.activeFocus && heatmapFocus.hoveredDay.length === 0
+                                                visible: heatmapCell.pinned || heatmapFocus.activeFocus && heatmapFocus.hoveredDay.length === 0
                                             }
 
                                             Behavior on opacity {
@@ -970,26 +1027,15 @@ ColumnLayout {
                                             }
                                         }
 
-                                        Components.PlainToolTip {
-                                            // A readout for the cell under the pointer,
-                                            // not a label for a control: scanning the
-                                            // grid must not wait out a hover delay.
-                                            delay: 0
-                                            visible: heatmapMouse.containsMouse && heatmapCell.measured
-                                                && heatmapFocus.hoveredDay === heatmapCell.modelData.label
-                                            plainText: heatmapCell.measured
-                                                ? i18n("%1: %2", heatmapCell.dayLabel,
-                                                    heatmapCell.modelData.displayValue)
-                                                : ""
-                                        }
-
                                         MouseArea {
                                             id: heatmapMouse
 
                                             anchors.fill: parent
                                             hoverEnabled: true
-                                            // A binding avoids Qt rejecting a bare zero enum literal.
-                                            acceptedButtons: (0)
+                                            acceptedButtons: Qt.LeftButton
+                                            cursorShape: heatmapCell.measured ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                            onClicked: if (heatmapCell.measured)
+                                                heatmapFocus.selectDay(heatmapCell.modelData.label, Qt.MouseFocusReason)
                                             onEntered: if (heatmapCell.measured)
                                                 heatmapFocus.hoveredDay = heatmapCell.modelData.label
                                             onPositionChanged: if (heatmapCell.measured)
@@ -1002,6 +1048,17 @@ ColumnLayout {
                                 }
                             }
                         }
+                    }
+                    PlainPlasmaLabel {
+                        id: heatmapReadout
+                        objectName: "heatmapReadout"
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: heatmapFontMetrics.height
+                        text: heatmapFocus.readout.length > 0 ? heatmapFocus.readout : " "
+                        opacity: heatmapFocus.readout.length > 0 ? view.applet.secondaryTextOpacity : 0
+                        font: Qt.font(Object.assign({}, Kirigami.Theme.smallFont, { features: { "tnum": 1 } }))
+                        elide: Text.ElideRight
+                        Accessible.ignored: true
                     }
                     // The tint is the only magnitude cue: without a key the
                     // shades read as decoration. Each cell keeps its own
@@ -1049,24 +1106,7 @@ ColumnLayout {
                         }
                     }
 
-                    PlainPlasmaLabel {
-                        id: heatmapReadout
-                        objectName: "heatmapReadout"
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: implicitHeight
-                        text: heatmapFocus.readout.length > 0 ? heatmapFocus.readout : " "
-                        opacity: heatmapFocus.readout.length > 0 ? view.applet.secondaryTextOpacity : 0
-                        font: Qt.font(Object.assign({}, Kirigami.Theme.smallFont, { features: { "tnum": 1 } }))
-                        elide: Text.ElideRight
-                        Accessible.ignored: true
 
-                        HoverHandler { id: heatmapReadoutHover }
-                        PlainToolTip {
-                            visible: heatmapReadout.truncated && heatmapFocus.readout.length > 0
-                                && (heatmapReadoutHover.hovered || heatmapFocus.activeFocus)
-                            plainText: heatmapFocus.readout
-                        }
-                    }
                 }
 
 

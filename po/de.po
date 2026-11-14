@@ -1509,8 +1509,8 @@ msgstr ""
 "Der Verlauf erscheint für Anbieter, die der Befehl codexbar cost unterstützt."
 
 #: contents/ui/components/SpendView.qml
-msgid "Activity heatmap"
-msgstr "Aktivitäts-Heatmap"
+msgid "Daily activity"
+msgstr "Tägliche Aktivität"
 
 #: contents/ui/components/SpendView.qml
 msgctxt "Activity heatmap legend, shade of the lowest daily value"
@@ -3843,11 +3843,11 @@ msgstr "Parallel"
 
 #: contents/ui/components/IdentifiedTokensSection.qml
 msgid "Loading identified tokens timed out. Try again."
-msgstr "Das Laden identifizierter Token hat zu lange gedauert. Versuchen Sie es erneut."
+msgstr "Das Laden identifizierter Tokens hat zu lange gedauert. Versuchen Sie es erneut."
 
 #: contents/ui/components/IdentifiedTokensSection.qml
 msgid "Could not start identified-token collection. Check codexbar and GNU timeout."
-msgstr "Die Erfassung identifizierter Token konnte nicht gestartet werden. Prüfen Sie codexbar und GNU timeout."
+msgstr "Die Erfassung identifizierter Tokens konnte nicht gestartet werden. Prüfen Sie codexbar und GNU timeout."
 
 #: contents/ui/components/IdentifiedTokensSection.qml
 msgid ""
@@ -3863,7 +3863,7 @@ msgstr "Identifizierte Codex-Daten konnten nicht geladen werden. Prüfen Sie den
 
 #: contents/ui/components/IdentifiedTokensSection.qml
 msgid "Identified Codex tokens"
-msgstr "Identifizierte Codex-Token"
+msgstr "Identifizierte Codex-Tokens"
 
 #: contents/ui/components/IdentifiedTokensSection.qml
 msgid "%1 across %2"
@@ -4050,8 +4050,8 @@ msgid "Provider actions"
 msgstr "Anbieteraktionen"
 
 #: contents/ui/components/InteractiveChart.qml
-msgid "Peak daily usage"
-msgstr "Höchste tägliche Nutzung"
+msgid "Daily peak"
+msgstr "Tageshöchstwert"
 
 #: contents/ui/components/PanelText.qml
 msgid "Behind pace"
@@ -4557,8 +4557,8 @@ msgid "Show all providers"
 msgstr "Alle Anbieter anzeigen"
 
 #: contents/ui/components/SpendView.qml
-msgid "Use the arrow keys to inspect days"
-msgstr "Mit den Pfeiltasten die Tage untersuchen"
+msgid "Arrow keys inspect days. Enter selects a day; Escape clears the selection."
+msgstr "Pfeiltasten zeigen Tage an. Eingabe wählt einen Tag; Escape hebt die Auswahl auf."
 
 #: contents/ui/components/AnalysisModels.qml
 msgid "Show more models"
