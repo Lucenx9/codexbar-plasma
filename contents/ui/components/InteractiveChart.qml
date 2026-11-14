@@ -77,7 +77,8 @@ ColumnLayout {
         if (point.displayValue !== undefined && point.displayValue !== null) {
             return String(point.displayValue)
         }
-        var text = String(pointValue(point))
+        // Keep useful precision without exposing binary arithmetic tails.
+        var text = pointValue(point).toLocaleString(Qt.locale(), "g", 15)
         return valueSuffix.length > 0 ? text + " " + valueSuffix : text
     }
 

@@ -90,7 +90,9 @@ work and upstream contract requirements.
   tab while the provider order remains unchanged.
   Account and plan share a line when they fit; narrow widths or larger fonts
   place the plan below the account. Each keeps its full-text hover tooltip when
-  abbreviated, and the update time remains on a separate line.
+  abbreviated, and the update time remains on a separate line. Quota titles and
+  percentages share a line when they fit; longer labels or confidence qualifiers
+  place the percentage below the title and wrap it without hiding the number.
 - Provider tabs show **Plan renews on** and **Plan expires on** separately from
   quota resets when the CLI supplies valid subscription dates. Datetimes follow
   your regional date and clock format; dates marked as calendar-only keep their
@@ -399,8 +401,10 @@ work and upstream contract requirements.
   without the outline and still allows arrow-key inspection.
   Cost charts show the peak daily amount above the plot when no day is being
   inspected, giving the bars a numeric scale at rest. These interactions also
-  apply to provider cost and detail charts; provider detail charts keep their
-  existing readout behavior.
+  apply to provider cost and detail charts. Numeric detail-chart readouts use
+  regional separators and up to 15 significant digits, avoiding floating-point
+  arithmetic tails; explicit CLI display values remain unchanged. Provider detail
+  charts keep their existing readout behavior.
   Provider totals emphasize the selected Cost or Tokens metric, with the other
   figure on a smaller line beneath it. Missing amounts read as unavailable;
   measured zero stays zero. Positive spend below one cent reads **< $0.01**

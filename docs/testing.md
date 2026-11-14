@@ -71,6 +71,13 @@ navigation, including wrapping and Home/End. Resize and label-growth cases keep
 an unselected focused tab visible; focus outside navigation stays untouched.
 Hidden and disabled tabs remain outside the native focus chain.
 
+The visual layout checks exercise long quota titles and confidence qualifiers
+at 240/320/540/900 pixels, doubled text size, and mirrored layouts, including
+resize recovery and keyboard hiding. Numeric chart readout checks cover
+arithmetic tails, small and large values, missing data and explicit CLI display
+values. The QML runner repeats those numeric checks with German and Italian
+regional formats alongside the existing panel-preview locale checks.
+
 `tst_visual_layout.qml` also destroys a container holding a dynamic provider
 detail section and fails on JavaScript warnings during teardown. The progress
 track must retain its theme color without reading a section that has already

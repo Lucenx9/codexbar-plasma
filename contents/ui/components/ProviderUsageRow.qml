@@ -81,88 +81,106 @@ ColumnLayout {
         text: usageRow.percentText
     }
 
-    RowLayout {
-        id: usageTitleRow
+    GridLayout {
+        id: usageTitleLayout
+
+        readonly property bool stacked: usageRow.rowData.hasPercent
+            && Math.ceil(usageTitleMetrics.advanceWidth) + Math.ceil(usagePercentMetrics.advanceWidth)
+                + (usageRow.hideable ? usageRow.actionSize : 0)
+                + Kirigami.Units.smallSpacing * (usageRow.hideable ? 2 : 1) > width
 
         Layout.fillWidth: true
-        spacing: usageRow.resetInline ? usageRow.inlineTitleSpacing : Kirigami.Units.smallSpacing
+        Layout.minimumWidth: 0
+        columns: stacked ? 1 : 2
+        columnSpacing: usageRow.resetInline ? usageRow.inlineTitleSpacing : Kirigami.Units.smallSpacing
+        rowSpacing: Kirigami.Units.smallSpacing
 
-        PlainPlasmaLabel {
-            id: usageTitleLabel
+        RowLayout {
+            id: usageTitleRow
 
-            text: usageRow.rowData.label
-            font.weight: Font.DemiBold
-            Layout.alignment: Qt.AlignBaseline
             Layout.fillWidth: true
-            Layout.maximumWidth: usageRow.resetInline ? Math.ceil(implicitWidth) : Infinity
-            Layout.minimumWidth: usageRow.resetInline ? Math.ceil(implicitWidth) : 0
-            elide: Text.ElideRight
-
-            HoverHandler { id: usageTitleHover }
-
-            PlainToolTip {
-                visible: usageTitleLabel.truncated && usageTitleHover.hovered
-                plainText: usageTitleLabel.text
-            }
-        }
-
-        Rectangle {
-            objectName: "usageResetSeparator"
-            visible: usageRow.resetInline
-            Layout.preferredWidth: 1
-            Layout.preferredHeight: Math.round(usageInlineResetLabel.implicitHeight * 0.75)
-            color: usageRow.withAlpha(Kirigami.Theme.textColor, 0.2)
-            Accessible.ignored: true
-        }
-
-        PlainPlasmaLabel {
-            id: usageInlineResetLabel
-            objectName: "usageInlineResetLabel"
-
-            visible: usageRow.resetInline
-            text: usageRow.resetText
-            font: Kirigami.Theme.smallFont
-            opacity: usageRow.secondaryTextOpacity
+            Layout.minimumWidth: 0
             Layout.alignment: Qt.AlignBaseline
-            elide: Text.ElideRight
+            baselineOffset: usageTitleLabel.y + usageTitleLabel.baselineOffset
+            spacing: usageRow.resetInline ? usageRow.inlineTitleSpacing : Kirigami.Units.smallSpacing
 
-            HoverHandler { id: usageInlineResetHover }
+            PlainPlasmaLabel {
+                id: usageTitleLabel
 
-            PlainToolTip {
-                visible: usageInlineResetLabel.truncated && usageInlineResetHover.hovered
-                plainText: usageInlineResetLabel.text
-            }
-        }
+                text: usageRow.rowData.label
+                font.weight: Font.DemiBold
+                Layout.alignment: Qt.AlignBaseline
+                Layout.fillWidth: true
+                Layout.maximumWidth: usageRow.resetInline ? Math.ceil(implicitWidth) : Infinity
+                Layout.minimumWidth: usageRow.resetInline ? Math.ceil(implicitWidth) : 0
+                elide: Text.ElideRight
 
-        Item {
-            visible: usageRow.resetInline
-            Layout.fillWidth: true
-        }
+                HoverHandler { id: usageTitleHover }
 
-        // Revealed on row hover; keyboard focus keeps it visible and reachable.
-        // It sits before the percentage so its reserved space falls in the
-        // gap after the label, keeping the value flush with the meter's end.
-        PlasmaComponents.ToolButton {
-            id: hideUsageRowButton
-            objectName: "hideUsageRowButton"
-
-            visible: usageRow.hideable
-            icon.name: "view-hidden"
-            icon.width: Kirigami.Units.iconSizes.small
-            icon.height: Kirigami.Units.iconSizes.small
-            opacity: usageRowHover.hovered || hovered || activeFocus ? 1 : 0
-            Layout.preferredWidth: usageRow.actionSize
-            Layout.preferredHeight: usageRow.actionSize
-            Accessible.name: i18n("Hide the %1 row", usageRow.rowData.label)
-            Accessible.description: usageRow.warningDescription
-
-            PlainToolTip {
-                parent: hideUsageRowButton
-                visible: hideUsageRowButton.hovered || hideUsageRowButton.visualFocus
-                plainText: hideUsageRowButton.Accessible.name
+                PlainToolTip {
+                    visible: usageTitleLabel.truncated && usageTitleHover.hovered
+                    plainText: usageTitleLabel.text
+                }
             }
 
-            onClicked: usageRow.hideRequested()
+            Rectangle {
+                objectName: "usageResetSeparator"
+                visible: usageRow.resetInline
+                Layout.preferredWidth: 1
+                Layout.preferredHeight: Math.round(usageInlineResetLabel.implicitHeight * 0.75)
+                color: usageRow.withAlpha(Kirigami.Theme.textColor, 0.2)
+                Accessible.ignored: true
+            }
+
+            PlainPlasmaLabel {
+                id: usageInlineResetLabel
+                objectName: "usageInlineResetLabel"
+
+                visible: usageRow.resetInline
+                text: usageRow.resetText
+                font: Kirigami.Theme.smallFont
+                opacity: usageRow.secondaryTextOpacity
+                Layout.alignment: Qt.AlignBaseline
+                elide: Text.ElideRight
+
+                HoverHandler { id: usageInlineResetHover }
+
+                PlainToolTip {
+                    visible: usageInlineResetLabel.truncated && usageInlineResetHover.hovered
+                    plainText: usageInlineResetLabel.text
+                }
+            }
+
+            Item {
+                visible: usageRow.resetInline
+                Layout.fillWidth: true
+            }
+
+            // Revealed on row hover; keyboard focus keeps it visible and reachable.
+            // It sits before the percentage so its reserved space falls in the
+            // gap after the label, keeping the value flush with the meter's end.
+            PlasmaComponents.ToolButton {
+                id: hideUsageRowButton
+                objectName: "hideUsageRowButton"
+
+                visible: usageRow.hideable
+                icon.name: "view-hidden"
+                icon.width: Kirigami.Units.iconSizes.small
+                icon.height: Kirigami.Units.iconSizes.small
+                opacity: usageRowHover.hovered || hovered || activeFocus ? 1 : 0
+                Layout.preferredWidth: usageRow.actionSize
+                Layout.preferredHeight: usageRow.actionSize
+                Accessible.name: i18n("Hide the %1 row", usageRow.rowData.label)
+                Accessible.description: usageRow.warningDescription
+
+                PlainToolTip {
+                    parent: hideUsageRowButton
+                    visible: hideUsageRowButton.hovered || hideUsageRowButton.visualFocus
+                    plainText: hideUsageRowButton.Accessible.name
+                }
+
+                onClicked: usageRow.hideRequested()
+            }
         }
 
         PlainPlasmaLabel {
@@ -176,7 +194,9 @@ ColumnLayout {
             font.weight: Font.DemiBold
             Layout.alignment: Qt.AlignBaseline
             horizontalAlignment: Text.AlignRight
-            elide: Text.ElideRight
+            Layout.fillWidth: usageTitleLayout.stacked
+            Layout.minimumWidth: usageTitleLayout.stacked ? 0 : implicitWidth
+            wrapMode: Text.Wrap
         }
     }
 
