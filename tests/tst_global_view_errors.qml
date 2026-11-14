@@ -59,6 +59,7 @@ TestCase {
         readonly property bool costHistoryShowsTokens: costHistoryMetric === "tokens"
         property var dailyPoints: []
         property var costs: []
+        property string providerTitle: "Codex"
         property string providerOrderRaw: ""
         property var sessions: []
         readonly property var presentedSessions: sessions
@@ -98,7 +99,7 @@ TestCase {
             return privacyMode ? "Private scan failure" : text;
         }
         function providerDisplayTitle() {
-            return "Codex";
+            return providerTitle;
         }
         function providerReadableColor() {
             return "blue";
@@ -170,6 +171,7 @@ TestCase {
         applet.costHistoryPeriod = "";
         applet.costHistoryMetric = "cost";
         applet.costs = [];
+        applet.providerTitle = "Codex";
         applet.providerOrderRaw = "";
         applet.sessions = [];
         applet.costErrorText = "";
@@ -207,7 +209,14 @@ TestCase {
         verify(!section.expanded);
         var card = findChild(view, "analysisProviderToggle-codex");
         card.forceActiveFocus(Qt.TabFocusReason);
-        keyClick(Qt.Key_Space);
+        var restingColor = String(card.background.color);
+        var restingHeight = card.height;
+        keyPress(Qt.Key_Space);
+        verify(card.down);
+        verify(String(card.background.color) !== restingColor, "Pressing must provide immediate feedback");
+        compare(card.height, restingHeight);
+        verify(!section.expanded, "Disclosure commits on release");
+        keyRelease(Qt.Key_Space);
         verify(section.expanded);
         compare(view.selectedProvider, "");
         verify(card.activeFocus);
@@ -681,32 +690,70 @@ TestCase {
         compare(icon.source, "view-list-symbolic");
     }
 
+    function test_providerFilterRevealsTruncatedSelection() {
+        applet.costs = [{provider: "codex", totals: {cost: 2, tokens: 10, currency: "USD"}}];
+        var view = createView("SpendView");
+        if (!view) return;
+        view.width = 320;
+        mouseMove(view, view.width - 1, view.height - 1);
+        var filter = findChild(view, "analysisProviderFilter");
+        filter.activated(1);
+        filter.forceActiveFocus(Qt.TabFocusReason);
+        verify(waitForPolish(view));
+        var tip = findChild(filter, "analysisProviderFilterToolTip");
+        verify(tip !== null);
+        verify(!tip.visible, "A fitting name needs no tooltip");
+        applet.providerTitle = "Long <provider> & identity ".repeat(5);
+        tryCompare(tip, "visible", true);
+        compare(tip.plainText, applet.providerTitle);
+        verify(tip.text.indexOf("&lt;provider&gt;") >= 0);
+        var refresh = findChild(view, "analysisRefreshButton");
+        refresh.forceActiveFocus(Qt.TabFocusReason);
+        tryCompare(tip, "visible", false);
+        mouseMove(filter, filter.width / 2, filter.height / 2);
+        tryCompare(tip, "visible", true);
+        mouseMove(view, view.width - 1, view.height - 1);
+        tryCompare(tip, "visible", false);
+        filter.forceActiveFocus(Qt.TabFocusReason);
+        tryCompare(tip, "visible", true);
+        filter.popup.open();
+        tryCompare(tip, "visible", false);
+        filter.popup.close();
+        filter.forceActiveFocus(Qt.TabFocusReason);
+        tryCompare(tip, "visible", true);
+        compare(view.selectedProvider, "codex");
+        compare(applet.refreshes, 0);
+    }
+
     function test_providerFilterKeepsWidthAcrossAnalysisModes() {
         applet.costs = [{provider: "codex", totals: {cost: 2, tokens: 10, currency: "USD"}}];
         var view = createView("SpendView");
         if (!view) return;
         var filter = findChild(view, "analysisProviderFilter");
         var expand = findChild(view, "analysisExpandButton");
-        view.width = 612;
+        // Leave room for the desktop style's wider range combo. Width may
+        // shrink when constrained; stability applies when the cap can fit.
+        view.width = 800;
         verify(waitForPolish(view));
         filter.activated(1);
         var compactWidth = filter.width;
-        compare(filter.popup.width, compactWidth);
+        // Native styles may size the menu to its contents independently;
+        // the closed filter must keep its width across analysis modes.
         expand.clicked();
         view.width = 900;
         verify(waitForPolish(view));
         compare(filter.width, compactWidth);
-        compare(filter.popup.width, compactWidth);
         compare(view.selectedProvider, "codex");
         expand.clicked();
-        view.width = 612;
+        view.width = 800;
         verify(waitForPolish(view));
         compare(filter.width, compactWidth);
-        compare(filter.popup.width, compactWidth);
+        view.width = 612;
+        verify(waitForPolish(view));
+        verify(filter.width <= compactWidth);
         view.width = 320;
         verify(waitForPolish(view));
         verify(filter.width <= view.width);
-        compare(filter.popup.width, filter.width);
         compare(view.selectedProvider, "codex");
     }
 

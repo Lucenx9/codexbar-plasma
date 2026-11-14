@@ -307,6 +307,7 @@ ColumnLayout {
                     Accessible.ignored: true
                 }
                 PlainPlasmaLabel {
+                    id: selectedProviderLabel
                     text: providerFilter.currentText
                     font: providerFilter.font
                     Layout.fillWidth: true
@@ -314,6 +315,15 @@ ColumnLayout {
                     elide: Text.ElideRight
                     Accessible.ignored: true
                 }
+            }
+            HoverHandler { id: providerFilterHover }
+            PlainToolTip {
+                objectName: "analysisProviderFilterToolTip"
+                parent: providerFilter
+                visible: selectedProviderLabel.truncated && !providerFilter.popup.visible
+                    && (providerFilterHover.hovered || providerFilter.visualFocus)
+                delay: providerFilter.visualFocus ? 0 : Kirigami.Units.toolTipDelay
+                plainText: providerFilter.currentText
             }
             delegate: Controls.ItemDelegate {
                 id: providerOption
@@ -643,8 +653,10 @@ ColumnLayout {
                                 padding: Kirigami.Units.smallSpacing
                                 background: Rectangle {
                                     radius: view.applet.roundedSurfaceRadius
-                                    color: spendProviderCard.hovered || spendProviderCard.checked
-                                        ? view.applet.withAlpha(Kirigami.Theme.highlightColor, 0.12) : "transparent"
+                                    color: spendProviderCard.down
+                                        ? view.applet.withAlpha(Kirigami.Theme.highlightColor, 0.2)
+                                        : spendProviderCard.hovered || spendProviderCard.checked
+                                            ? view.applet.withAlpha(Kirigami.Theme.highlightColor, 0.12) : "transparent"
                                     border.width: spendProviderCard.visualFocus ? 2 : 0
                                     border.color: Kirigami.Theme.focusColor
                                 }
@@ -669,9 +681,10 @@ ColumnLayout {
                                 HoverHandler { id: spendProviderHover }
 
                                 PlainToolTip {
-                                    visible: spendProviderHover.hovered
+                                    visible: (spendProviderHover.hovered || spendProviderCard.visualFocus)
                                         && (spendProviderTitle.truncated || spendProviderPrimary.truncated
                                             || spendProviderSecondary.truncated)
+                                    delay: spendProviderCard.visualFocus ? 0 : Kirigami.Units.toolTipDelay
                                     plainText: spendProviderTitle.text + "\n" + spendProviderPrimary.text
                                         + "\n" + spendProviderSecondary.text
                                 }
