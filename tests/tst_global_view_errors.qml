@@ -197,6 +197,64 @@ TestCase {
         return null;
     }
 
+    function test_providerModelsExpandWithoutFilteringAndKeepFocus() {
+        var rows = Array.from({length: 5}, function(_, index) {
+            return {label: "Model " + index, cost: 5 - index, tokens: index + 1, currency: "USD"};
+        });
+        applet.costs = [{provider: "codex", models: rows, totals: {cost: 15, tokens: 15, currency: "USD"}}];
+        var view = createView("SpendView");
+        if (!view) return;
+        var section = findChild(view, "analysisModels");
+        verify(!section.expanded);
+        var card = findChild(view, "analysisProviderToggle-codex");
+        card.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Space);
+        verify(section.expanded);
+        compare(view.selectedProvider, "");
+        verify(card.activeFocus);
+        verify(waitForPolish(view));
+        compare(section.models.rows.length, 5);
+        var more = findChild(section, "analysisModelsShowMore");
+        verify(more.visible);
+        compare(findItem(section, function(item) { return item.text === "Model 4"; }), null);
+        more.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Space);
+        verify(section.showAll);
+        verify(more.activeFocus);
+        verify(findItem(section, function(item) { return item.text === "Model 4"; }) !== null);
+        keyClick(Qt.Key_Space);
+        verify(!section.showAll);
+        verify(more.activeFocus);
+        compare(findItem(section, function(item) { return item.text === "Model 4"; }), null);
+        section.selectedDay = "2026-11-13";
+        verify(!more.visible);
+        verify(card.activeFocus);
+        keyClick(Qt.Key_Space);
+        verify(!section.visible);
+        compare(view.selectedProvider, "");
+    }
+
+    function test_openProviderModelsFollowDayAndRefresh() {
+        var daily = {label: "2026-11-13", cost: 2, tokens: 20, currency: "USD",
+            models: [{label: "Day model", cost: 2, tokens: 20, currency: "USD"}]};
+        var cost = {provider: "codex", currency: "USD", totals: daily, daily: [daily],
+            models: [{label: "Period model", cost: 4, tokens: 40, currency: "USD"}]};
+        applet.costs = [cost, {provider: "claude", totals: daily}];
+        var view = createView("SpendView");
+        if (!view) return;
+        findChild(view, "analysisProviderToggle-codex").clicked();
+        verify(findChild(view, "analysisProviderToggle-codex").checked);
+        verify(!findChild(view, "analysisProviderToggle-claude").checked);
+        compare(findChild(view, "analysisModels").models.rows[0].label, "Period model");
+        findChild(view, "analysisHistoryChart").selectedIndex = 0;
+        verify(findChild(view, "analysisProviderToggle-codex").checked);
+        compare(findChild(view, "analysisModels").models.rows[0].label, "Day model");
+        applet.costs = [Object.assign({}, cost, {daily: [Object.assign({}, daily, {models: []})]})];
+        verify(findChild(view, "analysisProviderToggle-codex").checked);
+        compare(findChild(view, "analysisModels").models.rows.length, 0);
+        compare(view.selectedProvider, "");
+    }
+
     function test_longErrorKeepsBodyReachable_data() {
         return [
             {
@@ -445,10 +503,9 @@ TestCase {
             {provider: "claude", totals: {cost: 3, tokens: 20, currency: "USD"}}];
         var view = createView("SpendView");
         if (!view) return;
-        var card = findItem(view, function(item) { return item.modelData && item.modelData.provider === "claude" && item.checked !== undefined; });
-        verify(card !== null);
-        card.forceActiveFocus(Qt.TabFocusReason);
-        keyClick(Qt.Key_Space);
+        var filter = findChild(view, "analysisProviderFilter");
+        filter.forceActiveFocus(Qt.TabFocusReason);
+        filter.activated(2);
         compare(view.selectedProvider, "claude");
         verify(findChild(view, "analysisProviderFilter").activeFocus);
         applet.costs = [applet.costs[0]];
@@ -487,7 +544,7 @@ TestCase {
         compare(applet.refreshes, 0);
     }
 
-    function test_providerPickKeepsComboInSyncWithCardAndReset() {
+    function test_providerPickKeepsComboInSyncWithDisclosureAndReset() {
         applet.costs = [{provider: "codex", totals: {cost: 2, tokens: 10, currency: "USD"}},
             {provider: "claude", totals: {cost: 3, tokens: 20, currency: "USD"}}];
         var view = createView("SpendView");
@@ -497,11 +554,10 @@ TestCase {
         filter.activated(filter.currentIndex);
         compare(view.selectedProvider, "codex");
         var card = findItem(view, function(item) { return item.modelData && item.modelData.provider === "codex" && item.checked !== undefined; });
-        card.clicked();
-        compare(view.selectedProvider, "");
-        compare(filter.currentIndex, 0);
-        filter.incrementCurrentIndex();
-        filter.activated(filter.currentIndex);
+        card.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Space);
+        compare(view.selectedProvider, "codex");
+        compare(filter.currentIndex, 1);
         applet.costs = [applet.costs[1]];
         var empty = findItem(view, function(item) { return item.plainText === "No history for this provider"; });
         empty.helpfulAction.trigger();

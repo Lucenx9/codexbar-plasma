@@ -21,6 +21,7 @@ ColumnLayout {
     property bool expandedView: false
     readonly property bool historyAvailable: applet.costUsageEnabled !== false || applet.identifiedTokensEnabled === true
     property bool activityExpanded: false
+    property var expandedModelProviders: []
     readonly property var allProviderCosts: applet.spendProviderCosts()
     readonly property var filterProviderCosts: selectedProvider
         && !allProviderCosts.some(function(item) { return item.provider === selectedProvider })
@@ -418,6 +419,7 @@ ColumnLayout {
                 Layout.fillWidth: true
             InteractiveChart {
                 id: historyChart
+                Layout.alignment: Qt.AlignTop
                 objectName: "analysisHistoryChart"
                 Layout.preferredWidth: 3
                 seriesColors: {
@@ -508,141 +510,163 @@ ColumnLayout {
 
                         model: view.presentedProviderCosts
 
-                        delegate: PlasmaComponents.AbstractButton {
-                            id: spendProviderCard
-
+                        delegate: ColumnLayout {
+                            id: providerGroup
                             required property var modelData
-                            readonly property var totals: modelData.totals
-                            readonly property string costText: CostAmounts.hasMetricValue(totals, false)
-                                ? view.applet.qualifiedCostValue(AnalysisAmounts.metricText(view.applet.costNumberFormat,
-                                    totals.cost, totals.currency, false), modelData.valueMode)
-                                : i18n("Cost unavailable")
-                            readonly property string tokensText: CostAmounts.hasMetricValue(totals, true)
-                                ? view.applet.usageCountText(totals.tokens, "tokens")
-                                : i18n("Tokens unavailable")
-
                             Layout.fillWidth: true
-                            implicitHeight: spendProviderRow.implicitHeight + Kirigami.Units.smallSpacing * 2
-                            padding: Kirigami.Units.smallSpacing
-                            onClicked: {
-                                if (activeFocus) providerFilter.forceActiveFocus(focusReason)
-                                view.selectedProvider = view.selectedProvider === modelData.provider ? "" : modelData.provider
-                                checked = Qt.binding(function() { return view.selectedProvider === modelData.provider })
-                            }
-                            background: Rectangle {
-                                radius: view.applet.roundedSurfaceRadius
-                                color: spendProviderCard.hovered || spendProviderCard.checked
-                                    ? view.applet.withAlpha(Kirigami.Theme.highlightColor, 0.12) : "transparent"
-                                border.width: spendProviderCard.visualFocus ? 2 : 0
-                                border.color: Kirigami.Theme.focusColor
-                            }
-                            checkable: true
-                            checked: view.selectedProvider === modelData.provider
+                            Layout.minimumWidth: 0
+                            spacing: Kirigami.Units.smallSpacing
+                            PlasmaComponents.AbstractButton {
+                                id: spendProviderCard
 
-                            Accessible.role: Accessible.Button
-                            Accessible.name: view.applet.providerDisplayTitle(spendProviderCard.modelData.provider)
-                            Accessible.description: spendProviderPrimary.text + ". " + spendProviderSecondary.text
+                                readonly property var modelData: providerGroup.modelData
+                                readonly property var totals: modelData.totals
+                                readonly property string costText: CostAmounts.hasMetricValue(totals, false)
+                                    ? view.applet.qualifiedCostValue(AnalysisAmounts.metricText(view.applet.costNumberFormat,
+                                        totals.cost, totals.currency, false), modelData.valueMode)
+                                    : i18n("Cost unavailable")
+                                readonly property string tokensText: CostAmounts.hasMetricValue(totals, true)
+                                    ? view.applet.usageCountText(totals.tokens, "tokens")
+                                    : i18n("Tokens unavailable")
 
-                            HoverHandler { id: spendProviderHover }
+                                Layout.fillWidth: true
+                                implicitHeight: spendProviderRow.implicitHeight + Kirigami.Units.smallSpacing * 2
+                                padding: Kirigami.Units.smallSpacing
+                                background: Rectangle {
+                                    radius: view.applet.roundedSurfaceRadius
+                                    color: spendProviderCard.hovered || spendProviderCard.checked
+                                        ? view.applet.withAlpha(Kirigami.Theme.highlightColor, 0.12) : "transparent"
+                                    border.width: spendProviderCard.visualFocus ? 2 : 0
+                                    border.color: Kirigami.Theme.focusColor
+                                }
+                                checkable: true
+                                checked: view.expandedModelProviders.indexOf(modelData.provider) >= 0
+                                onClicked: {
+                                    var provider = modelData.provider
+                                    var opened = view.expandedModelProviders.indexOf(provider) >= 0
+                                    view.expandedModelProviders = opened
+                                        ? view.expandedModelProviders.filter(function(value) { return value !== provider })
+                                        : view.expandedModelProviders.concat([provider])
+                                    checked = Qt.binding(function() { return view.expandedModelProviders.indexOf(modelData.provider) >= 0 })
+                                }
+                                objectName: "analysisProviderToggle-" + modelData.provider
+                                Accessible.checkable: true
+                                Accessible.checked: checked
 
-                            PlainToolTip {
-                                visible: spendProviderHover.hovered
-                                    && (spendProviderTitle.truncated || spendProviderPrimary.truncated
-                                        || spendProviderSecondary.truncated)
-                                plainText: spendProviderTitle.text + "\n" + spendProviderPrimary.text
-                                    + "\n" + spendProviderSecondary.text
-                            }
+                                Accessible.role: Accessible.Button
+                                Accessible.name: view.applet.providerDisplayTitle(spendProviderCard.modelData.provider)
+                                Accessible.description: spendProviderPrimary.text + ". " + spendProviderSecondary.text
 
-                            contentItem: RowLayout {
-                                id: spendProviderRow
+                                HoverHandler { id: spendProviderHover }
 
-                                spacing: Kirigami.Units.largeSpacing
+                                PlainToolTip {
+                                    visible: spendProviderHover.hovered
+                                        && (spendProviderTitle.truncated || spendProviderPrimary.truncated
+                                            || spendProviderSecondary.truncated)
+                                    plainText: spendProviderTitle.text + "\n" + spendProviderPrimary.text
+                                        + "\n" + spendProviderSecondary.text
+                                }
 
-                                Rectangle {
-                                    Layout.preferredWidth: Kirigami.Units.iconSizes.smallMedium
-                                        + Kirigami.Units.smallSpacing * 2
-                                    Layout.preferredHeight: Layout.preferredWidth
-                                    // Same identity-tile treatment as the overview
-                                    // and header tiles, scaled down for this row.
-                                    radius: view.applet.nestedSurfaceRadius
-                                    color: view.applet.withAlpha(view.applet.providerReadableColor(
-                                        spendProviderCard.modelData.provider,
-                                        Kirigami.Theme.backgroundColor), 0.12)
-                                    border.width: 1
-                                    border.color: view.applet.withAlpha(Kirigami.Theme.textColor, 0.1)
+                                contentItem: RowLayout {
+                                    id: spendProviderRow
+
+                                    spacing: Kirigami.Units.largeSpacing
 
                                     Kirigami.Icon {
-                                        anchors.centerIn: parent
-                                        source: view.applet.providerIconSource(spendProviderCard.modelData.provider)
-                                        fallback: "view-statistics"
-                                        isMask: view.applet.providerIconIsMask(spendProviderCard.modelData.provider)
-                                        color: view.applet.providerReadableColor(
-                                            spendProviderCard.modelData.provider,
-                                            Kirigami.Theme.backgroundColor)
-                                        width: Kirigami.Units.iconSizes.smallMedium
-                                        height: Kirigami.Units.iconSizes.smallMedium
+                                        source: spendProviderCard.checked ? "arrow-down" : (spendProviderCard.mirrored ? "arrow-left" : "arrow-right")
+                                        Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                                        Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                                        Accessible.ignored: true
                                     }
-                                }
 
-                                PlainPlasmaLabel {
-                                    id: spendProviderTitle
-                                    objectName: "spendProviderTitle"
+                                    Rectangle {
+                                        Layout.preferredWidth: Kirigami.Units.iconSizes.smallMedium
+                                            + Kirigami.Units.smallSpacing * 2
+                                        Layout.preferredHeight: Layout.preferredWidth
+                                        // Same identity-tile treatment as the overview
+                                        // and header tiles, scaled down for this row.
+                                        radius: view.applet.nestedSurfaceRadius
+                                        color: view.applet.withAlpha(view.applet.providerReadableColor(
+                                            spendProviderCard.modelData.provider,
+                                            Kirigami.Theme.backgroundColor), 0.12)
+                                        border.width: 1
+                                        border.color: view.applet.withAlpha(Kirigami.Theme.textColor, 0.1)
 
-                                    text: view.applet.providerDisplayTitle(spendProviderCard.modelData.provider)
-                                    font.weight: Font.DemiBold
-                                    Layout.fillWidth: true
-                                    Layout.minimumWidth: 0
-                                    Layout.preferredWidth: 1
-                                    elide: Text.ElideRight
-                                }
-
-                                ColumnLayout {
-                                    // Equal flexible columns keep long amounts from
-                                    // pushing the provider identity out of the row.
-                                    Layout.fillWidth: true
-                                    Layout.minimumWidth: 0
-                                    Layout.preferredWidth: 1
-                                    spacing: Kirigami.Units.smallSpacing / 2
+                                        Kirigami.Icon {
+                                            anchors.centerIn: parent
+                                            source: view.applet.providerIconSource(spendProviderCard.modelData.provider)
+                                            fallback: "view-statistics"
+                                            isMask: view.applet.providerIconIsMask(spendProviderCard.modelData.provider)
+                                            color: view.applet.providerReadableColor(
+                                                spendProviderCard.modelData.provider,
+                                                Kirigami.Theme.backgroundColor)
+                                            width: Kirigami.Units.iconSizes.smallMedium
+                                            height: Kirigami.Units.iconSizes.smallMedium
+                                        }
+                                    }
 
                                     PlainPlasmaLabel {
-                                        id: spendProviderPrimary
-                                        objectName: "spendProviderPrimary"
-                                        font.features: { "tnum": 1 }
+                                        id: spendProviderTitle
+                                        objectName: "spendProviderTitle"
 
-                                        text: view.applet.costHistoryShowsTokens
-                                            ? spendProviderCard.tokensText : spendProviderCard.costText
+                                        text: view.applet.providerDisplayTitle(spendProviderCard.modelData.provider)
                                         font.weight: Font.DemiBold
                                         Layout.fillWidth: true
                                         Layout.minimumWidth: 0
-                                        horizontalAlignment: Text.AlignRight
+                                        Layout.preferredWidth: 1
                                         elide: Text.ElideRight
                                     }
 
-                                    PlainPlasmaLabel {
-                                        id: spendProviderSecondary
-                                        objectName: "spendProviderSecondary"
-
-                                        text: view.applet.costHistoryShowsTokens
-                                            ? spendProviderCard.costText : spendProviderCard.tokensText
-                                        font: Qt.font(Object.assign({}, Kirigami.Theme.smallFont, { features: { "tnum": 1 } }))
-                                        opacity: view.applet.secondaryTextOpacity
+                                    ColumnLayout {
+                                        // Equal flexible columns keep long amounts from
+                                        // pushing the provider identity out of the row.
                                         Layout.fillWidth: true
                                         Layout.minimumWidth: 0
-                                        horizontalAlignment: Text.AlignRight
-                                        elide: Text.ElideRight
+                                        Layout.preferredWidth: 1
+                                        spacing: Kirigami.Units.smallSpacing / 2
+
+                                        PlainPlasmaLabel {
+                                            id: spendProviderPrimary
+                                            objectName: "spendProviderPrimary"
+                                            font.features: { "tnum": 1 }
+
+                                            text: view.applet.costHistoryShowsTokens
+                                                ? spendProviderCard.tokensText : spendProviderCard.costText
+                                            font.weight: Font.DemiBold
+                                            Layout.fillWidth: true
+                                            Layout.minimumWidth: 0
+                                            horizontalAlignment: Text.AlignRight
+                                            elide: Text.ElideRight
+                                        }
+
+                                        PlainPlasmaLabel {
+                                            id: spendProviderSecondary
+                                            objectName: "spendProviderSecondary"
+
+                                            text: view.applet.costHistoryShowsTokens
+                                                ? spendProviderCard.costText : spendProviderCard.tokensText
+                                            font: Qt.font(Object.assign({}, Kirigami.Theme.smallFont, { features: { "tnum": 1 } }))
+                                            opacity: view.applet.secondaryTextOpacity
+                                            Layout.fillWidth: true
+                                            Layout.minimumWidth: 0
+                                            horizontalAlignment: Text.AlignRight
+                                            elide: Text.ElideRight
+                                        }
                                     }
                                 }
+                            }
+                            Components.AnalysisModels {
+                                applet: view.applet
+                                costs: Analysis.filterCosts(view.providerCosts, providerGroup.modelData.provider)
+                                selectedDay: view.selectedDay
+                                expanded: spendProviderCard.checked
+                                visible: expanded
+                                Layout.leftMargin: Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing
+                                onRestoreFocusRequested: spendProviderCard.forceActiveFocus(Qt.OtherFocusReason)
                             }
                         }
                     }
                 }
-            }
-
-            Components.AnalysisModels {
-                visible: view.providerCosts.length > 0
-                applet: view.applet
-                costs: view.applet.presentedSpendProviderCosts(view.providerCosts)
-                selectedDay: view.selectedDay
             }
 
             Components.DisclosureButton {

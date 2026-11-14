@@ -12,6 +12,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Expand each provider row in Usage & Spend to inspect its models inline,
+  with three ranked rows initially and an option to show more. Keep chart
+  filtering in the provider dropdown and token composition in provider details.
+
 - Keep project breakdowns in provider details instead of duplicating them in
   Usage & Spend. Codex projects remain available in its local history details.
 

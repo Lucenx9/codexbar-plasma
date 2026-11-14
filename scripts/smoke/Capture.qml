@@ -1336,7 +1336,10 @@ Item {
         }
         verifyScenario(view.expandedView === (scenario !== "usage-analysis-narrow") && view.selectedProvider === "" && view.providerCosts.length === view.allProviderCosts.length, "expanded comparison lost providers");
         verifyScenario(!applet.aiInsightsBusy, "analysis navigation started AI generation");
-        if (scenario === "usage-analysis-models") findItem(view, "analysisModels").expanded = true;
+        if (scenario === "usage-analysis-models") {
+            view.expandedModelProviders = ["codex", "claude"];
+            verifyScenario(view.selectedProvider === "", "model disclosure changed the chart filter");
+        }
         return true;
     }
 

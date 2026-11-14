@@ -332,9 +332,10 @@ work and upstream contract requirements.
   **Compact analysis** restores the stacked layout. Each provider has a colored
   line with a subtle fill, readable scale, and gaps for unavailable days. Hover
   or keyboard inspection shows daily values for each provider. Provider pages
-  retain their bar charts. Selecting a provider filters local analytics
-  and stays selected across range changes, including empty results;
-  the provider dropdown also follows selections and resets made through cards.
+  retain their bar charts. The provider dropdown filters local analytics
+  and stays selected across range changes, including empty results.
+  Clicking a provider row expands its models inline without changing the filter
+  or leaving Usage & Spend. Providers can be opened independently.
   Selecting a day scopes provider and model details, while headline
   totals keep the selected period. Project breakdowns stay in provider details.
   **All days** or Escape clears the day selection and returns keyboard inspection
@@ -344,7 +345,11 @@ work and upstream contract requirements.
   icons identify rows, with amounts aligned on the right and the daily total
   below. An ellipsis marks rows that do not fit the plot height; pinned-day
   cards and the accessible description retain all provider values.
-  **Models and token composition** and **Activity heatmap** expand on demand.
+  Each provider's model list shows aligned amounts ranked by the selected
+  metric. The first three models are shown initially; **Show more models**
+  reveals the remaining available rows for that provider. Open providers stay
+  expanded across refreshes and day selections. Input, output and cache
+  composition stays in provider details. **Activity heatmap** expands separately.
   **Last 7 days vs previous 7** excludes today and requires fourteen complete
   days plus a current scan. Short, partial, stale, or ambiguous histories show
   unavailable instead of extrapolating, with the history requirements shown below

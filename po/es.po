@@ -4426,10 +4426,6 @@ msgstr ""
 "generación. Nunca se envían nombres de cuentas, proyectos, rutas ni "
 "instrucciones."
 
-#: contents/ui/components/AnalysisModels.qml
-msgid "Models and token composition"
-msgstr "Modelos y composición de tokens"
-
 #: contents/ui/components/AnalysisSummary.qml
 msgid "%1×"
 msgstr "%1×"
@@ -4549,3 +4545,11 @@ msgstr "Mostrar todos los proveedores"
 #: contents/ui/components/SpendView.qml
 msgid "Use the arrow keys to inspect days"
 msgstr "Use las teclas de flecha para examinar los días"
+
+#: contents/ui/components/AnalysisModels.qml
+msgid "Show more models"
+msgstr "Mostrar más modelos"
+
+#: contents/ui/components/AnalysisModels.qml
+msgid "Show fewer models"
+msgstr "Mostrar menos modelos"

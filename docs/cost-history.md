@@ -26,6 +26,14 @@ selected currency and token totals can include all currencies. Provider tab or
 saved ordering is applied after currency selection, so it cannot change the
 money represented by the lines, axis or totals. Hover or keyboard
 inspection reports each provider for the selected day. Provider pages retain bars.
+Each provider row expands its own ranked model list inline, initially showing
+three rows. Show more models reveals that provider's remaining bounded rows
+without fetching data. Opening a provider does not change the chart filter or
+switch tabs. Open rows survive refreshes and day selection; the provider dropdown
+owns chart filtering. Token composition remains in provider details, while
+partial model coverage and excluded-request notices remain visible inline.
+
+![Inline provider model breakdowns with synthetic data](codexbar-plasma-models.png)
 
 The weekly comparison uses the existing AI snapshot completeness rules without
 calling AI: fourteen complete days before today, a scan reaching today, no

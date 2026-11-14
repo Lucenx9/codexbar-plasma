@@ -4450,10 +4450,6 @@ msgstr ""
 "Gespeicherte Antworten beschreiben die Messwerte zum Erstellungszeitpunkt. "
 "Kontonamen, Projekte, Pfade und Prompts werden nie gesendet."
 
-#: contents/ui/components/AnalysisModels.qml
-msgid "Models and token composition"
-msgstr "Modelle und Token-Zusammensetzung"
-
 #: contents/ui/components/AnalysisSummary.qml
 msgid "%1×"
 msgstr "%1×"
@@ -4574,3 +4570,11 @@ msgstr "Alle Anbieter anzeigen"
 #: contents/ui/components/SpendView.qml
 msgid "Use the arrow keys to inspect days"
 msgstr "Mit den Pfeiltasten die Tage untersuchen"
+
+#: contents/ui/components/AnalysisModels.qml
+msgid "Show more models"
+msgstr "Mehr Modelle anzeigen"
+
+#: contents/ui/components/AnalysisModels.qml
+msgid "Show fewer models"
+msgstr "Weniger Modelle anzeigen"

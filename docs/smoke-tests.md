@@ -8,7 +8,8 @@ The `usage-analysis` scenario checks provider/day selection, retaining the
 provider filter through a history-range refresh, switching to Tokens, returning
 to all providers, expanding the layout, and avoiding AI generation during
 navigation. The `usage-analysis-models` and `usage-analysis-narrow` variants
-inspect expanded model details and larger text in a compact window.
+inspect provider rows expanded to inline model details without changing the
+chart filter, and larger text in a compact window.
 `ai-insights-no-history` verifies that the assistant opens directly with both
 history sources disabled, without history controls or a cost scan.
 The `ai-insights` scenarios exercise the integrated assistant with a synthetic helper. `readme-spend` captures its compact

@@ -4422,10 +4422,6 @@ msgstr ""
 "Le risposte salvate descrivono le misurazioni al momento della generazione. "
 "Nomi degli account, progetti, percorsi e prompt non vengono mai inviati."
 
-#: contents/ui/components/AnalysisModels.qml
-msgid "Models and token composition"
-msgstr "Modelli e composizione dei token"
-
 #: contents/ui/components/AnalysisSummary.qml
 msgid "%1×"
 msgstr "%1×"
@@ -4545,3 +4541,11 @@ msgstr "Mostra tutti i provider"
 #: contents/ui/components/SpendView.qml
 msgid "Use the arrow keys to inspect days"
 msgstr "Usa i tasti freccia per esaminare i giorni"
+
+#: contents/ui/components/AnalysisModels.qml
+msgid "Show more models"
+msgstr "Mostra altri modelli"
+
+#: contents/ui/components/AnalysisModels.qml
+msgid "Show fewer models"
+msgstr "Mostra meno modelli"
