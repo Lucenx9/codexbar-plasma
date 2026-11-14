@@ -59,6 +59,13 @@ relevant sections; ordinary links here are on-demand reading, not bulk imports.
 4. Local forks and experimental branches are comparison material unless the
    user selects them as the target.
 
+Before changes that depend on external APIs, framework behavior, tooling,
+security guidance, or uncertain technical assumptions, verify current best
+practices on the web using official documentation and primary sources. Check
+applicability to the project's supported versions, cite sources that inform
+material decisions, and state any verification limits. Keep research scoped
+to the task and apply findings within the source-of-truth order above.
+
 Pin every comparison to an exact version, tag, or commit. Keep installed CLI,
 upstream main, and fork observations separate. Classify each parity gap as
 **Plasma-native and implementable now**, **blocked on an official CLI contract**,
