@@ -352,8 +352,9 @@ work and upstream contract requirements.
   metric. The first three models are shown initially; **Show more models**
   reveals the remaining available rows for that provider. Open providers stay
   expanded across refreshes and day selections, including **Show more models**
-  choices. Refreshing preserves focus on the model-list action, with a visible
-  provider header or filter as the fallback when that action disappears.
+  choices. Refreshing preserves focus on the provider header or model-list action,
+  with a visible header or filter as the fallback when the focused control disappears.
+  Model costs below one cent are labelled as less than one cent, distinct from zero.
   Input, output and cache composition stays in provider details. **Daily activity**
   opens a compact calendar for ranges longer than seven days. It follows the same
   provider, period and Cost/Token filters, with month and weekday labels. Hover
@@ -1047,8 +1048,9 @@ labels, with full text available on hover or keyboard focus when abbreviated.
 Short copy/save confirmations appear above the actions without resizing the
 preview; longer error messages can wrap there.
 
-Totals include the loaded providers; at most eight provider rows and six models
-are shown, ranked by tokens, with omitted row counts. A colored bar under the
+Sharing remains available when the current provider filter has no history but
+other providers do. Totals include the loaded providers; at most eight provider
+rows and six models are shown, ranked by tokens, with omitted row counts. A colored bar under the
 totals and a percentage in each provider row show its share of tracked tokens;
 omitted providers leave the end of the bar uncolored. Provider indicators adjust
 their contrast against the card background in both the preview and exported image.

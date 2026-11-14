@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import "../UsageAnalysis.js" as Analysis
 import "../CostAmounts.mjs" as Amounts
+import "../AnalysisAmounts.mjs" as AnalysisAmounts
 
 ColumnLayout {
     id: section
@@ -82,7 +83,8 @@ ColumnLayout {
                     id: modelAmount
                     text: Amounts.hasMetricValue(modelRow.modelData, section.applet.costHistoryShowsTokens)
                         ? section.applet.costHistoryShowsTokens ? section.applet.usageCountText(modelRow.modelData.tokens, "tokens")
-                            : section.applet.qualifiedCostValue(section.applet.amountString(modelRow.modelData.cost, modelRow.modelData.currency), modelRow.modelData.valueMode)
+                            : section.applet.qualifiedCostValue(AnalysisAmounts.metricText(section.applet.costNumberFormat,
+                                modelRow.modelData.cost, modelRow.modelData.currency, false), modelRow.modelData.valueMode)
                         : i18n("Unavailable")
                     font.features: { "tnum": 1 }
                     Layout.alignment: Qt.AlignTop
