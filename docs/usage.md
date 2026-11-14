@@ -1185,18 +1185,24 @@ and clipboard content remain under your control after closing the window.
   0.56.2 exposes project data for Codex. Missing amounts remain unavailable;
   project paths and nested source records are discarded. The bounded list
   signals omitted projects and does not change provider or global totals.
-- Cost-trust notices appear as quiet footnotes with a small icon, like the
-  other informational notes in Spend; errors with recovery actions keep the
-  standard message. In provider details, the optional notice precedes the
-  totals, after any cost error. The separate local-history explanation remains
-  after the chart and disclosure. Notices explain why a range is incomplete or
+- Cost provenance and exclusions start collapsed under **About these costs**
+  below the totals. **Partial data** labels incomplete ranges even when only
+  tokens are available; excluded requests also qualify token totals independently
+  of the explanation. Estimated, partial, and approximate cost qualifiers
+  stay beside the amounts. Expand the explanation with the pointer or keyboard.
+  Informational text has no message background; failures keep their warning
+  icon, and errors with recovery actions keep the standard message.
+  The separate local-history explanation remains beside the provider chart.
+  Mixed-currency totals name their currency and subtotal scope. Missing daily
+  history appears in the chart area with a **Tokens** action in Cost mode.
+  Explanations describe why a range is incomplete or
   estimated, including
   how many requests the CLI excluded from the displayed totals because they
   lacked final usage. Closing a
   notice suppresses the same meaning for that provider or the aggregate Spend
   view across refreshes and popup reopenings; a materially different warning is
-  shown again. Switching tabs or closing the popup leaves an open notice
-  available when returning. A changed count of excluded requests describes the same warning
+  shown again, initially collapsed. Switching tabs or closing the popup does
+  not dismiss an explanation; a recreated popup starts it collapsed. A changed count of excluded requests describes the same warning
   and stays closed.
 - Recent-day history rows, model rows, and a selected day in a provider's cost
   details state how many incomplete requests the CLI excluded from that row's

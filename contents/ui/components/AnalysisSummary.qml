@@ -5,6 +5,7 @@ import "../UsageAnalysis.js" as Analysis
 import "../AnalysisAmounts.mjs" as AnalysisAmounts
 import "../CostPresentation.mjs" as Costs
 import "../CostTrust.mjs" as Trust
+import "../CostCurrency.mjs" as CostCurrency
 
 GridLayout {
     id: summary
@@ -12,6 +13,7 @@ GridLayout {
     required property var costs
     readonly property var totals: Costs.spendTotals(costs)
     readonly property var trust: Trust.costTrustSummary(costs)
+    readonly property int excludedTokenRequests: Trust.incompleteTokenRequests(costs)
     readonly property var comparison: Analysis.comparison(costs, applet.costHistoryShowsTokens, applet.panelClockMs)
     readonly property string changeText: !comparison ? i18n("Unavailable")
         : comparison.changeMultiple !== undefined ? i18n("%1×", comparison.changeMultiple.toLocaleString(Qt.locale(), 'f', 1))
@@ -25,11 +27,17 @@ GridLayout {
 
     readonly property string comparisonHelp: i18n("Requires 14 complete days and a refresh today. Today is excluded.")
     readonly property var metrics: [
-        {label: i18n("Cost"), value: summary.totals && summary.totals.cost !== null
+        {label: CostCurrency.spendHasMixedCostCurrencies(costs)
+            ? i18n("Cost (%1 subtotal)", summary.totals ? summary.totals.currency : "") : i18n("Cost"),
+            value: summary.totals && summary.totals.cost !== null
             ? applet.qualifiedCostValue(AnalysisAmounts.metricText(applet.costNumberFormat, summary.totals.cost, summary.totals.currency, false),
                 summary.trust ? summary.trust.valueMode : "plain") : i18n("Cost unavailable")},
-        {label: i18n("Tokens"), value: summary.totals && summary.totals.tokens !== null
-            ? applet.usageCountText(summary.totals.tokens, "tokens") : i18n("Tokens unavailable")},
+        {label: summary.excludedTokenRequests > 0
+            ? i18n("%1 (partial)", i18n("Tokens")) : i18n("Tokens"),
+            value: summary.totals && summary.totals.tokens !== null
+            ? applet.usageCountText(summary.totals.tokens, "tokens") : i18n("Tokens unavailable"),
+            help: summary.excludedTokenRequests > 0 ? i18np("%1 incomplete request excluded",
+                "%1 incomplete requests excluded", summary.excludedTokenRequests) : ""},
         {label: i18n("Last 7 days vs previous 7"), value: summary.comparison && summary.comparison.estimated
             ? applet.qualifiedCostValue(summary.changeText, "estimated") : summary.changeText,
             help: summary.comparisonHelp}
@@ -75,9 +83,11 @@ GridLayout {
             wrapMode: modelData.help ? Text.WordWrap : Text.Wrap
             Accessible.name: i18n("%1: %2", modelData.label, text)
             Accessible.description: modelData.help || ""
+            activeFocusOnTab: (modelData.help || "").length > 0
             HoverHandler { id: valueHover }
             PlainToolTip {
-                visible: valueHover.hovered && (modelData.help || "").length > 0
+                objectName: "analysisSummaryValueToolTip"
+                visible: (valueHover.hovered || summaryValue.activeFocus) && (modelData.help || "").length > 0
                 plainText: summaryValue.text + "\n" + modelData.help
             }
         }

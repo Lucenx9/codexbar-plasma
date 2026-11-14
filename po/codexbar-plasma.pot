@@ -227,6 +227,7 @@ msgid "%1: %2"
 msgstr ""
 
 #: contents/ui/components/AnalysisModels.qml
+#: contents/ui/components/AnalysisSummary.qml
 #: contents/ui/components/ProviderCostSection.qml
 msgid "%1 incomplete request excluded"
 msgid_plural "%1 incomplete requests excluded"
@@ -261,6 +262,10 @@ msgid "Cost"
 msgstr ""
 
 #: contents/ui/components/AnalysisSummary.qml
+msgid "Cost (%1 subtotal)"
+msgstr ""
+
+#: contents/ui/components/AnalysisSummary.qml
 #: contents/ui/components/ProjectCostSection.qml
 #: contents/ui/components/ProviderCostSection.qml
 #: contents/ui/components/ShareUsageWindow.qml
@@ -269,8 +274,14 @@ msgid "Cost unavailable"
 msgstr ""
 
 #: contents/ui/components/AnalysisSummary.qml
+#: contents/ui/components/CostText.qml
+msgid "%1 (partial)"
+msgstr ""
+
+#: contents/ui/components/AnalysisSummary.qml
 #: contents/ui/components/CostMetricToggle.qml
 #: contents/ui/components/RateWindowLabels.qml
+#: contents/ui/components/SpendView.qml
 msgid "Tokens"
 msgstr ""
 
@@ -461,10 +472,6 @@ msgid "%1 (estimated)"
 msgstr ""
 
 #: contents/ui/components/CostText.qml
-msgid "%1 (partial)"
-msgstr ""
-
-#: contents/ui/components/CostText.qml
 msgid "%1 (approximate)"
 msgstr ""
 
@@ -512,6 +519,14 @@ msgstr ""
 
 #: contents/ui/components/CostText.qml
 msgid "Estimated from local Claude logs."
+msgstr ""
+
+#: contents/ui/components/CostTrustNotice.qml
+msgid "About these costs"
+msgstr ""
+
+#: contents/ui/components/CostTrustNotice.qml
+msgid "Partial data"
 msgstr ""
 
 #: contents/ui/components/CostTrustNotice.qml
@@ -2067,14 +2082,6 @@ msgid ""
 msgstr ""
 
 #: contents/ui/components/SpendView.qml
-msgid "No daily token history is available for this range."
-msgstr ""
-
-#: contents/ui/components/SpendView.qml
-msgid "No daily cost history for this range. Try Tokens for token history."
-msgstr ""
-
-#: contents/ui/components/SpendView.qml
 msgid "No history for this provider"
 msgstr ""
 
@@ -2088,6 +2095,14 @@ msgstr ""
 
 #: contents/ui/components/SpendView.qml
 msgid "History appears for providers supported by the codexbar cost command."
+msgstr ""
+
+#: contents/ui/components/SpendView.qml
+msgid "No daily token history is available for this range."
+msgstr ""
+
+#: contents/ui/components/SpendView.qml
+msgid "No daily cost history for this range. Try Tokens for token history."
 msgstr ""
 
 #: contents/ui/components/SpendView.qml

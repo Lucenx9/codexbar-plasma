@@ -12,6 +12,8 @@ PlainNote {
     property var noticeState: ({ key: "", dismissed: false, shouldShow: false })
 
     visible: false
+    heading: summary && summary.valueMode === "partial"
+        ? i18n("Partial data") : i18n("About these costs")
     plainText: summaryText()
     type: summary && summary.level === "warning"
         ? Kirigami.MessageType.Warning
@@ -20,7 +22,10 @@ PlainNote {
     Layout.fillWidth: true
 
     onSummaryChanged: scheduleRefreshNoticeState()
-    onNoticeScopeChanged: scheduleRefreshNoticeState()
+    onNoticeScopeChanged: {
+        expanded = false
+        scheduleRefreshNoticeState()
+    }
     onStateOwnerChanged: scheduleRefreshNoticeState()
     onPlainTextChanged: syncVisibility()
     onClosed: {
@@ -67,8 +72,10 @@ PlainNote {
             syncVisibility()
             return
         }
+        var previousKey = noticeState.key
         noticeState = stateOwner.updateCostTrustNoticeState(
             noticeScope, summary, shouldDismiss)
+        if (noticeState.key !== previousKey) expanded = false
         syncVisibility()
     }
 

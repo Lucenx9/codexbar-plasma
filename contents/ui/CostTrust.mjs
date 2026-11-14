@@ -70,6 +70,32 @@ export function costTrustSummary(costs) {
     return summarizeTrust(state)
 }
 
+// Tokens include every currency. Their exclusions must not inherit the
+// monetary summary's selected-currency filter or provenance qualifications.
+export function incompleteTokenRequests(costs) {
+    var items = Array.isArray(costs) ? costs : []
+    var count = 0
+    for (var i = 0; i < items.length; i++) {
+        var item = items[i]
+        if (!hasPositiveTokens(CostAmounts.snapshotTotals(item))) continue
+        var trust = Guards.hasOwnKey(item, "trust") ? item.trust : null
+        count = boundedIncompleteRequests(count + acceptedIncompleteRequests(trust))
+    }
+    return count
+}
+
+// Today amounts do not carry daily trust metadata. Match the scan's local day
+// while respecting the same stale-day policy as the displayed token amount.
+export function todayIncompleteTokenRequests(snapshot, nowMs) {
+    if (!hasPositiveTokens(CostAmounts.todayAmounts(snapshot, nowMs))) return 0
+    var scanDay = ownText(snapshot, "scanDay")
+    if (scanDay.length === 0) return 0
+    var matches = CostAmounts.snapshotDaily(snapshot).filter(function(day) {
+        return Guards.isRecord(day) && ownText(day, "label") === scanDay
+    })
+    return matches.length === 1 ? acceptedIncompleteRequests(matches[0]) : 0
+}
+
 export function costTrustNoticeKey(summary) {
     if (!Guards.isRecord(summary)) return ""
     var sourceKind = acceptedCostSourceKind(ownText(summary, "sourceKind"))
