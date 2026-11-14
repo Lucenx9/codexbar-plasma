@@ -571,9 +571,15 @@ TestCase {
         var view = createView("SpendView");
         if (!view) return;
         var filter = findChild(view, "analysisProviderFilter");
+        var icon = findChild(view, "analysisSelectedProviderIcon");
+        verify(icon.visible);
+        compare(icon.source, "view-list-symbolic");
         filter.incrementCurrentIndex();
         filter.activated(filter.currentIndex);
         compare(view.selectedProvider, "codex");
+        compare(icon.provider, "codex");
+        compare(icon.source, applet.providerIconSource("codex"));
+        compare(filter.Accessible.description, filter.currentText);
         var card = findItem(view, function(item) { return item.modelData && item.modelData.provider === "codex" && item.checked !== undefined; });
         card.forceActiveFocus(Qt.TabFocusReason);
         keyClick(Qt.Key_Space);
@@ -584,6 +590,8 @@ TestCase {
         empty.helpfulAction.trigger();
         compare(view.selectedProvider, "");
         compare(filter.currentIndex, 0);
+        compare(icon.provider, "");
+        compare(icon.source, "view-list-symbolic");
     }
 
     function test_providerFilterKeepsWidthAcrossAnalysisModes() {
