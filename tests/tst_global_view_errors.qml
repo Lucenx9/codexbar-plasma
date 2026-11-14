@@ -771,6 +771,56 @@ TestCase {
         compare(applet.refreshes, 0);
     }
 
+    function test_providerMenuHidesRetainedPointerHighlight() {
+        applet.costs = [{provider: "codex", totals: {cost: 2, tokens: 10, currency: "USD"}}];
+        applet.providerTitle = "Long <provider> & identity ".repeat(5);
+        var view = createView("SpendView");
+        if (!view) return;
+        view.width = 320;
+        var filter = findChild(view, "analysisProviderFilter");
+        filter.activated(1);
+        mouseMove(view, view.width - 1, view.height - 1);
+        mouseClick(filter, filter.width / 2, filter.height / 2);
+        tryCompare(filter.popup, "opened", true);
+        verify(waitForRendering(filter.popup.contentItem));
+        mouseMove(view, view.width - 1, view.height - 1);
+        var option = findItem(filter.popup.contentItem, function(item) {
+            return item.plainText === applet.providerTitle;
+        });
+        verify(option !== null);
+        var tip = findChild(option, "analysisProviderOptionToolTip");
+        verify(tip !== null);
+        var allOption = findItem(filter.popup.contentItem, function(item) {
+            return item.plainText === "All providers";
+        });
+        verify(allOption !== null);
+        mouseMove(allOption, allOption.width / 2, allOption.height / 2);
+        tryCompare(filter, "highlightedIndex", 0);
+        mouseMove(option, option.width / 2, option.height / 2);
+        tryCompare(option, "hovered", true);
+        verify(tip.delay > 0, "Pointer reveal keeps the native delay");
+        tryCompare(tip, "visible", true);
+        filter.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Up);
+        verify(option.hovered, "The pointer remains on the previous option");
+        tryCompare(tip, "visible", false, 1000);
+        keyClick(Qt.Key_Down);
+        tryCompare(tip, "visible", true);
+        compare(tip.delay, 0);
+        mouseMove(option, option.width / 2 + 2, option.height / 2);
+        tryVerify(function() { return tip.delay > 0; });
+        mouseMove(view, view.width - 1, view.height - 1);
+        tryCompare(option, "hovered", false);
+        verify(option.highlighted, "The native menu retains the pointer highlight");
+        tryCompare(tip, "visible", false, 1000);
+        filter.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Up);
+        keyClick(Qt.Key_Down);
+        tryCompare(tip, "visible", true);
+        compare(tip.delay, 0, "Keyboard inspection resumes without a pointer delay");
+        filter.popup.close();
+    }
+
     function test_providerFilterKeepsWidthAcrossAnalysisModes() {
         applet.costs = [{provider: "codex", totals: {cost: 2, tokens: 10, currency: "USD"}}];
         var view = createView("SpendView");

@@ -270,6 +270,16 @@ ColumnLayout {
         Components.PlainComboBox {
             id: providerFilter
             objectName: "analysisProviderFilter"
+            property bool keyboardMenuNavigation: false
+            Keys.onPressed: function(event) {
+                if ([Qt.Key_Space, Qt.Key_Return, Qt.Key_Enter, Qt.Key_Up,
+                    Qt.Key_Down, Qt.Key_Home, Qt.Key_End].indexOf(event.key) >= 0)
+                    keyboardMenuNavigation = true
+            }
+            Connections {
+                target: providerFilter.popup
+                function onClosed() { providerFilter.keyboardMenuNavigation = false }
+            }
             Layout.columnSpan: historyControlsRow.columns === 4 ? 1 : historyControlsRow.columns
             visible: view.applet.costUsageEnabled !== false
             Layout.fillWidth: true
@@ -329,16 +339,23 @@ ColumnLayout {
                 id: providerOption
                 required property int index
                 required property var modelData
+                hoverEnabled: true
                 readonly property string provider: modelData.value
                 width: providerFilter.width
                 readonly property string plainText: providerFilter.textAt(index)
                 Accessible.name: plainText
                 highlighted: providerFilter.highlightedIndex === index
+                HoverHandler {
+                    onPointChanged: providerFilter.keyboardMenuNavigation = false
+                }
+                onHighlightedChanged: if (highlighted && providerFilter.popup.opened)
+                    providerFilter.keyboardMenuNavigation = true
                 PlainToolTip {
                     objectName: "analysisProviderOptionToolTip"
                     visible: providerFilter.popup.visible && optionLabel.truncated
-                        && (providerOption.hovered || providerOption.highlighted)
-                    delay: providerOption.hovered ? Kirigami.Units.toolTipDelay : 0
+                        && (providerFilter.keyboardMenuNavigation
+                            ? providerOption.highlighted : providerOption.hovered)
+                    delay: providerFilter.keyboardMenuNavigation ? 0 : Kirigami.Units.toolTipDelay
                     plainText: providerOption.plainText
                 }
                 contentItem: RowLayout {

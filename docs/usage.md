@@ -341,7 +341,8 @@ work and upstream contract requirements.
   or keyboard focus; the tooltip closes while the menu is open. Truncated
   provider-row names and amounts also show their full text on keyboard focus.
   In the provider menu, a truncated name shows its full text immediately when
-  highlighted with the keyboard. Pointer hover keeps the normal tooltip delay.
+  highlighted with the keyboard. Pointer hover keeps the normal tooltip delay
+  and hides the tooltip when the pointer leaves the option.
   Clicking a provider row expands its models inline without changing the filter
   or leaving Usage & Spend. Providers can be opened independently.
   Provider rows give immediate visual feedback while pressed, without moving

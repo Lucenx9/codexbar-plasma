@@ -60,7 +60,7 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 - Explain when the Usage & Spend activity calendar shows only the most recent
   days that fit its width. Reveal truncated provider-menu names when highlighted
-  with the keyboard, keeping the normal pointer tooltip delay.
+  with the keyboard. Pointer tooltips keep their normal delay and close on exit.
 
 - Rank Usage & Spend models by tokens before limiting the list in Tokens mode,
   keeping high-token models with low or unavailable costs visible for both the
