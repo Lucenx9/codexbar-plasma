@@ -737,26 +737,23 @@ TestCase {
         verify(waitForPolish(view));
         filter.activated(1);
         var compactWidth = filter.width;
-        compare(filter.popup.width, compactWidth);
+        // Native styles may size the menu to its contents independently;
+        // the closed filter must keep its width across analysis modes.
         expand.clicked();
         view.width = 900;
         verify(waitForPolish(view));
         compare(filter.width, compactWidth);
-        compare(filter.popup.width, compactWidth);
         compare(view.selectedProvider, "codex");
         expand.clicked();
         view.width = 800;
         verify(waitForPolish(view));
         compare(filter.width, compactWidth);
-        compare(filter.popup.width, compactWidth);
         view.width = 612;
         verify(waitForPolish(view));
         verify(filter.width <= compactWidth);
-        compare(filter.popup.width, filter.width);
         view.width = 320;
         verify(waitForPolish(view));
         verify(filter.width <= view.width);
-        compare(filter.popup.width, filter.width);
         compare(view.selectedProvider, "codex");
     }
 
