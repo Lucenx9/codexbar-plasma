@@ -329,6 +329,8 @@ table, honoring the response's `Retry-After`, and a choice that finished with
   use up to 4000 output tokens, including hidden reasoning tokens.
   Each HTTP operation has a wall-clock deadline covering connection, headers,
   and success/error bodies, so trickled bytes cannot extend its timeout.
+  Once HTTP error headers arrive, a timeout reading the optional body preserves
+  that status and `Retry-After`; a slow error body cannot remove a rate limit.
 - Changing provider, model, endpoint, privacy routing, or language, disabling the
   feature, or destroying the widget retires the active request; its late reply
   is ignored. Commands replace their shell with GNU `timeout`; the supervised
@@ -372,7 +374,8 @@ table, honoring the response's `Retry-After`, and a choice that finished with
 - `tests/test_ai_insights.py`: the helper against a local HTTP server and fake
   `secret-tool`/`kdialog` executables, covering the request language for six
   catalogs, OpenRouter privacy routing, OpenAI storage, Ollama requests, every
-  failure mapping, redirects, loopback proxy bypass, timeouts, malformed output,
+  failure mapping, redirects, loopback proxy bypass, timeouts (including slow
+  error bodies retaining HTTP status and retry delays), malformed output,
   and key handling. Full 500-model catalogs for all three services pass from the
   HTTP fixture through the Python helper and QML reply parser, including long
   IDs and escaped labels. It also compiles the shipped catalogs and runs `main.qml`'s

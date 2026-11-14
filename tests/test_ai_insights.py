@@ -507,15 +507,23 @@ class ResponseValidationTests(HelperTestCase):
 
     def test_trickled_success_and_error_bodies_share_a_wall_clock_bound(self):
         previous_handler = signal.getsignal(signal.SIGALRM)
-        for status in (200, 429):
+        cases = [
+            (200, {}, {"reason": "timeout"}),
+            (401, {}, {"reason": "auth"}),
+            (429, {}, {"reason": "rate_limited"}),
+            (429, {"Retry-After": "3600"}, {"reason": "rate_limited", "retryAfter": 3600}),
+            (503, {"Retry-After": "120"}, {"reason": "routing", "retryAfter": 120}),
+        ]
+        for status, headers, expected in cases:
             with self.subTest(status=status):
-                Handler.routes["/api/chat"] = (status, b" " * 50,
-                                               {"X-Test-Trickle": "0.05"}, 0)
+                Handler.requests = []
+                Handler.routes["/api/v1/chat/completions"] = (status, b" " * 50,
+                    {**headers, "X-Test-Trickle": "0.05"}, 0)
                 with patch.object(ai, "REQUEST_TIMEOUT", 0.3):
                     started = time.monotonic()
-                    self.assertEqual(self.generate(provider="ollama", model="llama3"),
-                                     {"status": "error", "reason": "timeout"})
+                    self.assertEqual(self.generate(), {"status": "error", **expected})
                     self.assertLess(time.monotonic() - started, 0.9)
+                self.assertEqual(len(Handler.requests), 1)
                 self.assertEqual(signal.getsignal(signal.SIGALRM), previous_handler)
                 self.assertEqual(signal.getitimer(signal.ITIMER_REAL), (0, 0))
 
