@@ -4523,3 +4523,9 @@ msgstr "Comprobar a diario"
 #: contents/ui/configGeneral.qml
 msgid "Update daily"
 msgstr "Actualizar a diario"
+
+#: contents/ui/components/SpendView.qml
+msgid "Showing the most recent %1 day. The chart covers the full range."
+msgid_plural "Showing the most recent %1 days. The chart covers the full range."
+msgstr[0] "Se muestra %1 día, el más reciente. El gráfico abarca todo el período."
+msgstr[1] "Se muestran los %1 días más recientes. El gráfico abarca todo el período."

@@ -335,7 +335,10 @@ ColumnLayout {
                 Accessible.name: plainText
                 highlighted: providerFilter.highlightedIndex === index
                 PlainToolTip {
-                    visible: providerOption.hovered && optionLabel.truncated
+                    objectName: "analysisProviderOptionToolTip"
+                    visible: providerFilter.popup.visible && optionLabel.truncated
+                        && (providerOption.hovered || providerOption.highlighted)
+                    delay: providerOption.hovered ? Kirigami.Units.toolTipDelay : 0
                     plainText: providerOption.plainText
                 }
                 contentItem: RowLayout {
@@ -874,6 +877,8 @@ ColumnLayout {
                             property string selectedDay: ""
                             property string hoveredDay: ""
                             readonly property var cells: heatmapGrid.cells
+                            readonly property int visibleDayCount: Math.min(view.heatmapDays.length,
+                                Math.max(0, cells.length - view.heatmapTrailingSlots))
                             readonly property var months: CostChart.spendHeatmapMonths(cells)
                             readonly property real monthHeaderHeight: months.length > 0
                                 ? heatmapFontMetrics.height + Kirigami.Units.smallSpacing : 0
@@ -1168,6 +1173,18 @@ ColumnLayout {
                         }
                     }
 
+                    PlainPlasmaLabel {
+                        objectName: "heatmapWindowNotice"
+                        visible: heatmapFocus.visibleDayCount < view.heatmapDays.length
+                        text: i18np("Showing the most recent %1 day. The chart covers the full range.",
+                            "Showing the most recent %1 days. The chart covers the full range.",
+                            heatmapFocus.visibleDayCount)
+                        Layout.fillWidth: true
+                        Layout.topMargin: Kirigami.Units.smallSpacing
+                        font: Kirigami.Theme.smallFont
+                        opacity: view.applet.secondaryTextOpacity
+                        wrapMode: Text.Wrap
+                    }
 
                 }
 

@@ -4515,3 +4515,9 @@ msgstr "Controlla ogni giorno"
 #: contents/ui/configGeneral.qml
 msgid "Update daily"
 msgstr "Aggiorna ogni giorno"
+
+#: contents/ui/components/SpendView.qml
+msgid "Showing the most recent %1 day. The chart covers the full range."
+msgid_plural "Showing the most recent %1 days. The chart covers the full range."
+msgstr[0] "È mostrato %1 giorno, il più recente. Il grafico copre l’intero intervallo."
+msgstr[1] "Sono mostrati i %1 giorni più recenti. Il grafico copre l’intero intervallo."

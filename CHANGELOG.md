@@ -58,6 +58,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Explain when the Usage & Spend activity calendar shows only the most recent
+  days that fit its width. Reveal truncated provider-menu names when highlighted
+  with the keyboard, keeping the normal pointer tooltip delay.
+
 - Keep General settings help within narrow windows with longer translations,
   and size the AI Insights frequency selector to its translated choices.
 

@@ -2113,6 +2113,13 @@ msgctxt "Activity heatmap legend, shade of the highest daily value"
 msgid "More"
 msgstr ""
 
+#: contents/ui/components/SpendView.qml
+msgid "Showing the most recent %1 day. The chart covers the full range."
+msgid_plural ""
+"Showing the most recent %1 days. The chart covers the full range."
+msgstr[0] ""
+msgstr[1] ""
+
 #: contents/ui/components/StatusComponentsList.qml
 msgctxt "Status of one service component"
 msgid "Operational"

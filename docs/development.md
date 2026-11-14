@@ -174,6 +174,13 @@ See [CLI probes and packaging](runtime-verification.md#cli-probes-and-packaging)
 
 ## Delivery and CI
 
+For agent code changes, run CodeScene MCP before delivery. Run
+`code_health_review` on supported changed files, address introduced
+degradations, and use `code_health_score` to confirm the fixes. Require passing
+`pre_commit_code_health_safeguard` quality gates before committing, then run
+`analyze_change_set` against the PR base before opening it. Report unsupported
+files and unavailable analysis separately from passing checks.
+
 Use a `codex/` branch and a PR for repository changes. Direct pushes require an
 explicit exception for the current task. A request to push directly does not
 authorize weakening protection rules or bypassing failed checks.
