@@ -234,7 +234,7 @@ msgstr[1] ""
 
 #: contents/ui/components/CostTrustNotice.qml
 msgid "The total is estimated from public list prices."
-msgstr "Gesamtsumme anhand öffentlicher Listenpreise geschätzt."
+msgstr "Die Gesamtsumme wird anhand öffentlicher Listenpreise geschätzt."
 
 #: contents/ui/components/CostTrustNotice.qml
 msgid "The total uses costs metered by providers."
@@ -1488,9 +1488,7 @@ msgstr "Für diesen Zeitraum ist kein täglicher Tokenverlauf verfügbar."
 
 #: contents/ui/components/SpendView.qml
 msgid "No daily cost history for this range. Try Tokens for token history."
-msgstr ""
-"Kein täglicher Kostenverlauf für diesen Zeitraum. Wählen Sie Tokens für den Token-"
-"Verlauf."
+msgstr "Kein täglicher Kostenverlauf für diesen Zeitraum. Wählen Sie Tokens für den Tokenverlauf."
 
 #: contents/ui/components/SpendView.qml
 msgid "No local token or cost history"
@@ -1673,9 +1671,7 @@ msgstr ""
 msgid ""
 "Sends quotas, reset times, pace forecasts, and weekly spend and tokens per "
 "provider to %1."
-msgstr ""
-"Sendet %1 Kontingente, Rücksetzzeiten, Verbrauchsprognosen sowie "
-"wöchentliche Ausgaben und Tokens je Anbieter."
+msgstr "Sendet Kontingente, Rücksetzzeiten, Verbrauchsprognosen sowie wöchentliche Ausgaben und Tokens je Anbieter an %1."
 
 #: contents/ui/configAiInsights.qml
 msgid ""
@@ -2063,8 +2059,7 @@ msgstr "Alle Voreinstellungen wiederherstellen"
 
 #: contents/ui/configGeneral.qml
 msgid "Select Apply or OK to save defaults, or Cancel to discard them."
-msgstr ""
-"Mit Anwenden oder OK die Standardwerte speichern, mit Abbrechen verwerfen."
+msgstr "Wählen Sie Anwenden oder OK, um die Voreinstellungen zu speichern, oder Abbrechen, um sie zu verwerfen."
 
 #: contents/ui/configNotifications.qml
 msgid "Quota warnings"
@@ -2423,8 +2418,7 @@ msgstr "Ausgeblendete Detailabschnitte:"
 
 #: contents/ui/configPopup.qml
 msgid "None. Use a section's hide button in the popup."
-msgstr ""
-"Keine. Verwenden Sie die Ausblenden-Schaltfläche eines Abschnitts im Popup."
+msgstr "Keine. Verwenden Sie die Ausblenden-Schaltfläche eines Abschnitts im Aufklappfenster."
 
 #: contents/ui/configPopup.qml
 msgid ""
@@ -2448,7 +2442,7 @@ msgstr "Ausgeblendete Nutzungszeilen:"
 
 #: contents/ui/configPopup.qml
 msgid "None. Use a row's hide button in the popup."
-msgstr "Keine. Verwenden Sie die Ausblenden-Schaltfläche einer Zeile im Popup."
+msgstr "Keine. Verwenden Sie die Ausblenden-Schaltfläche einer Zeile im Aufklappfenster."
 
 #: contents/ui/configPopup.qml
 msgid "Hidden rows stay out of the popup's provider tabs only."
@@ -3706,14 +3700,8 @@ msgid "Support report"
 msgstr "Support-Bericht"
 
 #: contents/ui/configDiagnostics.qml
-msgid ""
-"Collects versions, CLI installation, enabled provider IDs, the latest error and "
-"module checks offline. Omits paths and recognized credentials. Review before "
-"sharing."
-msgstr ""
-"Erfasst Versionen, CLI-Installation, IDs aktivierter Anbieter, letzten Fehler und "
-"Modulprüfungen offline. Lässt Pfade und erkannte Zugangsdaten aus. Vor dem "
-"Teilen prüfen."
+msgid "Collects versions, CLI installation details, enabled provider IDs, the latest error and module checks offline. Omits paths and recognized credentials. Review before sharing."
+msgstr "Erfasst Versionen, Details zur CLI-Installation, IDs aktivierter Anbieter, letzten Fehler und Modulprüfungen offline. Lässt Pfade und erkannte Zugangsdaten aus. Vor dem Teilen prüfen."
 
 #: contents/ui/configDiagnostics.qml
 msgid "Collect support report"
@@ -4059,12 +4047,8 @@ msgid "CodexBar CLI"
 msgstr "CodexBar-CLI"
 
 #: contents/ui/configDiagnostics.qml
-msgid ""
-"Checks installed versions. For CLI releases, open General > Updates > "
-"CodexBar CLI."
-msgstr ""
-"Prüft installierte Versionen. CLI-Veröffentlichungen finden Sie unter "
-"Allgemein > Aktualisierungen > CodexBar CLI."
+msgid "Checks installed versions. For CLI releases, open %1 > %2 > %3."
+msgstr "Prüft installierte Versionen. CLI-Veröffentlichungen finden Sie unter %1 > %2 > %3."
 
 #: contents/ui/configDiagnostics.qml
 msgid "No output yet"
@@ -4074,9 +4058,7 @@ msgstr "Noch keine Ausgabe"
 msgid ""
 "Loads a subtotal on request in Usage & Spend, limited to identified Codex "
 "requests."
-msgstr ""
-"Lädt auf Anfrage in Nutzung und Ausgaben eine Teilsumme der identifizierten "
-"Codex-Anfragen."
+msgstr "Lädt auf Anfrage in Nutzung und Ausgaben eine auf identifizierte Codex-Anfragen begrenzte Teilsumme."
 
 #: contents/ui/configGeneral.qml
 msgid "Widget updates"
@@ -4547,7 +4529,7 @@ msgstr "Mit den Pfeiltasten die Tage untersuchen"
 
 #: contents/ui/configGeneral.qml
 msgid "Notify about updates"
-msgstr "Über Updates benachrichtigen"
+msgstr "Über Aktualisierungen benachrichtigen"
 
 #: contents/ui/configGeneral.qml
 msgid "Install automatically"

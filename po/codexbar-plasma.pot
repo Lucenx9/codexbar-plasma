@@ -8,7 +8,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: contents/config/config.qml
+#: contents/config/config.qml contents/ui/configDiagnostics.qml
 msgid "General"
 msgstr ""
 
@@ -2559,9 +2559,11 @@ msgid "Check versions"
 msgstr ""
 
 #: contents/ui/configDiagnostics.qml
-msgid ""
-"Checks installed versions. For CLI releases, open General > Updates > "
-"CodexBar CLI."
+msgid "Checks installed versions. For CLI releases, open %1 > %2 > %3."
+msgstr ""
+
+#: contents/ui/configDiagnostics.qml contents/ui/configGeneral.qml
+msgid "Updates"
 msgstr ""
 
 #: contents/ui/configDiagnostics.qml
@@ -2627,9 +2629,9 @@ msgstr ""
 
 #: contents/ui/configDiagnostics.qml
 msgid ""
-"Collects versions, CLI installation, enabled provider IDs, the latest error "
-"and module checks offline. Omits paths and recognized credentials. Review "
-"before sharing."
+"Collects versions, CLI installation details, enabled provider IDs, the "
+"latest error and module checks offline. Omits paths and recognized "
+"credentials. Review before sharing."
 msgstr ""
 
 #: contents/ui/configDiagnostics.qml
@@ -2744,10 +2746,6 @@ msgstr ""
 msgid ""
 "SSH runs only with the separate local + SSH button. Configure authentication "
 "and trusted host keys beforehand; no SSH prompts are shown."
-msgstr ""
-
-#: contents/ui/configGeneral.qml
-msgid "Updates"
 msgstr ""
 
 #: contents/ui/configGeneral.qml

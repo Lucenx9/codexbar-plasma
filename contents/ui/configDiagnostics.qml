@@ -488,7 +488,8 @@ KCM.SimpleKCM {
         }
 
         Components.PlainControlsLabel {
-            text: i18n("Checks installed versions. For CLI releases, open General > Updates > CodexBar CLI.")
+            text: i18n("Checks installed versions. For CLI releases, open %1 > %2 > %3.",
+                i18n("General"), i18n("Updates"), i18n("CodexBar CLI"))
             font: Kirigami.Theme.smallFont
             opacity: 0.7
             Layout.fillWidth: true
@@ -635,7 +636,7 @@ KCM.SimpleKCM {
         Components.PlainControlsLabel {
             font: Kirigami.Theme.smallFont
             opacity: 0.7
-            text: i18n("Collects versions, CLI installation, enabled provider IDs, the latest error and module checks offline. Omits paths and recognized credentials. Review before sharing.")
+            text: i18n("Collects versions, CLI installation details, enabled provider IDs, the latest error and module checks offline. Omits paths and recognized credentials. Review before sharing.")
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24

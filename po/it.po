@@ -227,7 +227,7 @@ msgstr[1] ""
 
 #: contents/ui/components/CostTrustNotice.qml
 msgid "The total is estimated from public list prices."
-msgstr "Totale stimato dai prezzi di listino pubblici."
+msgstr "Il totale è stimato dai prezzi di listino pubblici."
 
 #: contents/ui/components/CostTrustNotice.qml
 msgid "The total uses costs metered by providers."
@@ -1479,9 +1479,7 @@ msgstr ""
 
 #: contents/ui/components/SpendView.qml
 msgid "No daily cost history for this range. Try Tokens for token history."
-msgstr ""
-"Nessuno storico giornaliero dei costi per questo periodo. Prova Token per lo storico dei "
-"token."
+msgstr "Nessuna cronologia giornaliera dei costi per questo periodo. Prova Token per la cronologia dei token."
 
 #: contents/ui/components/SpendView.qml
 msgid "No local token or cost history"
@@ -3678,14 +3676,8 @@ msgid "Support report"
 msgstr "Report di supporto"
 
 #: contents/ui/configDiagnostics.qml
-msgid ""
-"Collects versions, CLI installation, enabled provider IDs, the latest error and "
-"module checks offline. Omits paths and recognized credentials. Review before "
-"sharing."
-msgstr ""
-"Raccoglie offline versioni, installazione CLI, ID dei provider abilitati, ultimo "
-"errore e controlli dei moduli. Omette percorsi e credenziali riconosciute. "
-"Rivedi prima di condividere."
+msgid "Collects versions, CLI installation details, enabled provider IDs, the latest error and module checks offline. Omits paths and recognized credentials. Review before sharing."
+msgstr "Raccoglie offline versioni, dettagli di installazione della CLI, ID dei provider abilitati, ultimo errore e controlli dei moduli. Omette percorsi e credenziali riconosciute. Rivedi prima di condividere."
 
 #: contents/ui/configDiagnostics.qml
 msgid "Collect support report"
@@ -4031,12 +4023,8 @@ msgid "CodexBar CLI"
 msgstr "CLI CodexBar"
 
 #: contents/ui/configDiagnostics.qml
-msgid ""
-"Checks installed versions. For CLI releases, open General > Updates > "
-"CodexBar CLI."
-msgstr ""
-"Controlla le versioni installate. Per le release della CLI, apri Generali > "
-"Aggiornamenti > CodexBar CLI."
+msgid "Checks installed versions. For CLI releases, open %1 > %2 > %3."
+msgstr "Controlla le versioni installate. Per le release della CLI, apri %1 > %2 > %3."
 
 #: contents/ui/configDiagnostics.qml
 msgid "No output yet"

@@ -226,7 +226,7 @@ msgstr[1] ""
 
 #: contents/ui/components/CostTrustNotice.qml
 msgid "The total is estimated from public list prices."
-msgstr "Total estimado com base em preços de tabela públicos."
+msgstr "O total é estimado com base em preços de tabela públicos."
 
 #: contents/ui/components/CostTrustNotice.qml
 msgid "The total uses costs metered by providers."
@@ -3665,14 +3665,8 @@ msgid "Support report"
 msgstr "Relatório de suporte"
 
 #: contents/ui/configDiagnostics.qml
-msgid ""
-"Collects versions, CLI installation, enabled provider IDs, the latest error and "
-"module checks offline. Omits paths and recognized credentials. Review before "
-"sharing."
-msgstr ""
-"Coleta offline versões, instalação da CLI, IDs dos provedores ativados, último erro e "
-"verificações de módulos. Omite caminhos e credenciais reconhecidas. Revise "
-"antes de compartilhar."
+msgid "Collects versions, CLI installation details, enabled provider IDs, the latest error and module checks offline. Omits paths and recognized credentials. Review before sharing."
+msgstr "Coleta offline versões, detalhes de instalação da CLI, IDs dos provedores ativados, último erro e verificações de módulos. Omite caminhos e credenciais reconhecidas. Revise antes de compartilhar."
 
 #: contents/ui/configDiagnostics.qml
 msgid "Collect support report"
@@ -4018,12 +4012,8 @@ msgid "CodexBar CLI"
 msgstr "CLI do CodexBar"
 
 #: contents/ui/configDiagnostics.qml
-msgid ""
-"Checks installed versions. For CLI releases, open General > Updates > "
-"CodexBar CLI."
-msgstr ""
-"Verifica as versões instaladas. Para versões da CLI, abra Geral > "
-"Atualizações > CodexBar CLI."
+msgid "Checks installed versions. For CLI releases, open %1 > %2 > %3."
+msgstr "Verifica as versões instaladas. Para versões da CLI, abra %1 > %2 > %3."
 
 #: contents/ui/configDiagnostics.qml
 msgid "No output yet"
