@@ -64,6 +64,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Accept large AI Insights model catalogs during Test connection instead of
+  reporting a valid response as unreadable. Keep the 500-model limit and the
+  smaller limits for generated answers and wallet replies.
+
 - Explain when the Usage & Spend activity calendar shows only the most recent
   days that fit its width. Reveal truncated provider-menu names when highlighted
   with the keyboard. Pointer tooltips keep their normal delay and close on exit.
