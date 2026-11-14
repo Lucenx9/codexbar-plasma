@@ -174,6 +174,36 @@ See [CLI probes and packaging](runtime-verification.md#cli-probes-and-packaging)
 
 ## Delivery and CI
 
+For agent code changes, run CodeScene MCP before delivery. Run
+`code_health_review` on supported changed files, address introduced
+degradations, and use `code_health_score` to confirm the fixes. Stage all intended
+changes, including new supported files, before running
+`pre_commit_code_health_safeguard`. Require passing quality gates before
+committing. Check `metadata.status` and `metadata.checked-file-count` against the
+staged supported files. When supported files are expected, reject
+`no-files-modified` or incomplete coverage even if the gates report `passed`.
+Then run `analyze_change_set` against the PR base before opening it. Report
+unsupported files and unavailable analysis separately from passing checks.
+
+To prepare CodeScene access:
+
+1. Install and register the server in your MCP client using CodeScene's
+   [installation guide](https://github.com/codescene-oss/codehealth-mcp#installation).
+2. For interactive access, invoke its `login` tool and complete the browser
+   sign-in. Headless setups can use a personal access token through the MCP
+   client's private configuration, following the
+   [authentication guide](https://github.com/codescene-oss/codehealth-mcp/blob/main/docs/authentication.md).
+   Keep credentials outside the repository and PR text.
+3. Run `verify_installation` with this checkout's absolute path as
+   `git_repository_path`. Resolve authentication and connectivity failures before
+   running the checks above.
+
+If CodeScene is unavailable, stop before committing. Report the unavailable
+check and its reason, and request that access or connectivity be restored.
+Reporting unavailability does not waive the quality gate. Unsupported file
+types are a coverage limit: report them and run their normal repository checks;
+supported changed files still require passing CodeScene gates.
+
 Use a `codex/` branch and a PR for repository changes. Direct pushes require an
 explicit exception for the current task. A request to push directly does not
 authorize weakening protection rules or bypassing failed checks.

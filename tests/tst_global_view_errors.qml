@@ -728,6 +728,136 @@ TestCase {
         compare(applet.refreshes, 0);
     }
 
+    function test_providerMenuRevealsKeyboardHighlightedName() {
+        applet.costs = [{provider: "codex", totals: {cost: 2, tokens: 10, currency: "USD"}}];
+        applet.providerTitle = "Long <provider> & identity ".repeat(5);
+        var view = createView("SpendView");
+        if (!view) return;
+        view.width = 320;
+        var filter = findChild(view, "analysisProviderFilter");
+        filter.activated(1);
+        mouseMove(view, view.width - 1, view.height - 1);
+        filter.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Space);
+        tryCompare(filter.popup, "visible", true);
+        tryCompare(filter.popup, "opened", true);
+        tryCompare(filter, "highlightedIndex", 1);
+        var option = findItem(filter.popup.contentItem, function(item) {
+            return item.plainText === applet.providerTitle && item.highlighted === true;
+        });
+        verify(option !== null);
+        var tip = findChild(option, "analysisProviderOptionToolTip");
+        verify(tip !== null);
+        tryCompare(tip, "visible", true);
+        compare(tip.plainText, applet.providerTitle);
+        compare(tip.delay, 0);
+        verify(tip.text.indexOf("&lt;provider&gt;") >= 0);
+        filter.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Up);
+        tryCompare(tip, "visible", false);
+        keyClick(Qt.Key_Down);
+        tryCompare(tip, "visible", true);
+        filter.popup.close();
+        tryCompare(tip, "visible", false);
+        applet.providerTitle = "Codex";
+        filter.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Space);
+        tryCompare(filter.popup, "opened", true);
+        option = findItem(filter.popup.contentItem, function(item) {
+            return item.plainText === "Codex" && item.highlighted === true;
+        });
+        verify(option !== null);
+        tip = findChild(option, "analysisProviderOptionToolTip");
+        verify(tip !== null);
+        tryCompare(tip, "visible", false);
+        filter.popup.close();
+        compare(applet.refreshes, 0);
+    }
+
+    function test_providerMenuHidesRetainedPointerHighlight() {
+        applet.costs = [{provider: "codex", totals: {cost: 2, tokens: 10, currency: "USD"}}];
+        applet.providerTitle = "Long <provider> & identity ".repeat(5);
+        var view = createView("SpendView");
+        if (!view) return;
+        view.width = 320;
+        var filter = findChild(view, "analysisProviderFilter");
+        filter.activated(1);
+        mouseMove(view, view.width - 1, view.height - 1);
+        mouseClick(filter, filter.width / 2, filter.height / 2);
+        tryCompare(filter.popup, "opened", true);
+        // Input needs settled geometry; an idle popup need not swap another frame.
+        verify(waitForPolish(filter.popup.contentItem.Window.window));
+        mouseMove(view, view.width - 1, view.height - 1);
+        var option = findItem(filter.popup.contentItem, function(item) {
+            return item.plainText === applet.providerTitle;
+        });
+        verify(option !== null);
+        var tip = findChild(option, "analysisProviderOptionToolTip");
+        verify(tip !== null);
+        var allOption = findItem(filter.popup.contentItem, function(item) {
+            return item.plainText === "All providers";
+        });
+        verify(allOption !== null);
+        mouseMove(allOption, allOption.width / 2, allOption.height / 2);
+        tryCompare(filter, "highlightedIndex", 0);
+        mouseMove(option, option.width / 2, option.height / 2);
+        tryCompare(option, "hovered", true);
+        verify(tip.delay > 0, "Pointer reveal keeps the native delay");
+        tryCompare(tip, "visible", true);
+        filter.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Up);
+        verify(option.hovered, "The pointer remains on the previous option");
+        tryCompare(tip, "visible", false, 1000);
+        keyClick(Qt.Key_Down);
+        tryCompare(tip, "visible", true);
+        compare(tip.delay, 0);
+        mouseMove(option, option.width / 2 + 2, option.height / 2);
+        tryVerify(function() { return tip.delay > 0; });
+        mouseMove(view, view.width - 1, view.height - 1);
+        tryCompare(option, "hovered", false);
+        verify(option.highlighted, "The native menu retains the pointer highlight");
+        tryCompare(tip, "visible", false, 1000);
+        filter.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Up);
+        keyClick(Qt.Key_Down);
+        tryCompare(tip, "visible", true);
+        compare(tip.delay, 0, "Keyboard inspection resumes without a pointer delay");
+        filter.popup.close();
+    }
+
+    function test_closedProviderKeysDoNotStartMenuInspection_data() {
+        return [
+            {tag: "up", key: Qt.Key_Up}, {tag: "down", key: Qt.Key_Down},
+            {tag: "home", key: Qt.Key_Home}, {tag: "end", key: Qt.Key_End},
+            {tag: "return", key: Qt.Key_Return}, {tag: "enter", key: Qt.Key_Enter}
+        ];
+    }
+    function test_closedProviderKeysDoNotStartMenuInspection(data) {
+        applet.costs = [{provider: "codex", totals: {cost: 2, tokens: 10, currency: "USD"}}];
+        applet.providerTitle = "Long <provider> & identity ".repeat(5);
+        var view = createView("SpendView");
+        if (!view) return;
+        view.width = 320;
+        var filter = findChild(view, "analysisProviderFilter");
+        filter.activated(1);
+        mouseMove(view, view.width - 1, view.height - 1);
+        filter.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(data.key);
+        verify(!filter.popup.visible, "Closed-combo selection keys must not open the menu");
+        mouseClick(filter, filter.width / 2, filter.height / 2);
+        tryCompare(filter.popup, "opened", true);
+        var option = findItem(filter.popup.contentItem, function(item) {
+            return item.plainText === applet.providerTitle;
+        });
+        verify(option !== null);
+        var tip = findChild(option, "analysisProviderOptionToolTip");
+        verify(tip !== null);
+        verify(tip.delay > 0, "A pointer-opened menu must retain the native tooltip delay");
+        if (!option.hovered) verify(!tip.visible);
+        filter.popup.close();
+        compare(applet.refreshes, 0);
+    }
+
     function test_providerFilterKeepsWidthAcrossAnalysisModes() {
         applet.costs = [{provider: "codex", totals: {cost: 2, tokens: 10, currency: "USD"}}];
         var view = createView("SpendView");

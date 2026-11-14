@@ -270,6 +270,18 @@ ColumnLayout {
         Components.PlainComboBox {
             id: providerFilter
             objectName: "analysisProviderFilter"
+            property bool keyboardMenuNavigation: false
+            Keys.onPressed: function(event) {
+                // Space opens on release; closed selection keys do not inspect the menu.
+                if ((providerFilter.popup.visible || event.key === Qt.Key_Space)
+                    && [Qt.Key_Space, Qt.Key_Return, Qt.Key_Enter, Qt.Key_Up,
+                    Qt.Key_Down, Qt.Key_Home, Qt.Key_End].indexOf(event.key) >= 0)
+                    keyboardMenuNavigation = true
+            }
+            Connections {
+                target: providerFilter.popup
+                function onClosed() { providerFilter.keyboardMenuNavigation = false }
+            }
             Layout.columnSpan: historyControlsRow.columns === 4 ? 1 : historyControlsRow.columns
             visible: view.applet.costUsageEnabled !== false
             Layout.fillWidth: true
@@ -329,13 +341,26 @@ ColumnLayout {
                 id: providerOption
                 required property int index
                 required property var modelData
+                hoverEnabled: true
                 readonly property string provider: modelData.value
                 width: providerFilter.width
                 readonly property string plainText: providerFilter.textAt(index)
                 Accessible.name: plainText
                 highlighted: providerFilter.highlightedIndex === index
+                HoverHandler {
+                    // pointChanged can repeat while the pointer stays still.
+                    readonly property point pointerPosition: point.scenePosition
+                    onPointerPositionChanged: providerFilter.keyboardMenuNavigation = false
+                    onHoveredChanged: providerFilter.keyboardMenuNavigation = false
+                }
+                onHighlightedChanged: if (highlighted && providerFilter.popup.opened)
+                    providerFilter.keyboardMenuNavigation = true
                 PlainToolTip {
-                    visible: providerOption.hovered && optionLabel.truncated
+                    objectName: "analysisProviderOptionToolTip"
+                    visible: providerFilter.popup.visible && optionLabel.truncated
+                        && (providerFilter.keyboardMenuNavigation
+                            ? providerOption.highlighted : providerOption.hovered)
+                    delay: providerFilter.keyboardMenuNavigation ? 0 : Kirigami.Units.toolTipDelay
                     plainText: providerOption.plainText
                 }
                 contentItem: RowLayout {
@@ -896,6 +921,8 @@ ColumnLayout {
                             property string selectedDay: ""
                             property string hoveredDay: ""
                             readonly property var cells: heatmapGrid.cells
+                            readonly property int visibleDayCount: Math.min(view.heatmapDays.length,
+                                Math.max(0, cells.length - view.heatmapTrailingSlots))
                             readonly property var months: CostChart.spendHeatmapMonths(cells)
                             readonly property real monthHeaderHeight: months.length > 0
                                 ? heatmapFontMetrics.height + Kirigami.Units.smallSpacing : 0
@@ -1190,6 +1217,20 @@ ColumnLayout {
                         }
                     }
 
+                    PlainPlasmaLabel {
+                        objectName: "heatmapWindowNotice"
+                        visible: heatmapFocus.visibleDayCount < view.heatmapDays.length
+                        text: i18np("Showing the most recent %1 day. The chart covers the full range.",
+                            "Showing the most recent %1 days. The chart covers the full range.",
+                            heatmapFocus.visibleDayCount)
+                        Layout.fillWidth: true
+                        Layout.minimumWidth: 0
+                        Layout.preferredWidth: 1
+                        Layout.topMargin: Kirigami.Units.smallSpacing
+                        font: Kirigami.Theme.smallFont
+                        opacity: view.applet.secondaryTextOpacity
+                        wrapMode: Text.Wrap
+                    }
 
                 }
 

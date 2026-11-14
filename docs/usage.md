@@ -340,6 +340,9 @@ work and upstream contract requirements.
   A truncated name in the closed provider filter shows its full text on hover
   or keyboard focus; the tooltip closes while the menu is open. Truncated
   provider-row names and amounts also show their full text on keyboard focus.
+  In the provider menu, a truncated name shows its full text immediately when
+  highlighted with the keyboard. Pointer hover keeps the normal tooltip delay
+  and hides the tooltip when the pointer leaves the option.
   Clicking a provider row expands its models inline without changing the filter
   or leaving Usage & Spend. Providers can be opened independently.
   Provider rows give immediate visual feedback while pressed, without moving
@@ -412,6 +415,9 @@ work and upstream contract requirements.
   a single column. A **Less–More** key directly below the grid shows the cell
   shades from the lowest to the highest daily value. Provider totals remain
   with the daily chart above the heatmap.
+  When the selected range has more weeks than fit in the calendar, a note
+  states how many of the most recent days are visible. The chart still covers
+  the full loaded range. The note disappears when all days fit.
   The heatmap is one keyboard Tab stop. Left/Right moves between weeks on the
   same weekday (mirrored for RTL); Up/Down moves within the week. Missing days
   are skipped, and Home/End select the first/last visible measured day. A readout

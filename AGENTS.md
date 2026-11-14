@@ -138,6 +138,9 @@ or **macOS-only/non-goal**. Screenshots and Swift models are not CLI contracts.
   `actionlint`, or `pyflakes` means its check is skipped, not passed. Use the
   actual check output to assess coverage; consult `.github/workflows/ci.yml`
   for the CI environment.
+- After code changes, run the CodeScene MCP checks in
+  [delivery and CI](docs/development.md#delivery-and-ci). Require passing quality
+  gates before committing; report unsupported files and unavailable analysis.
 - For packaging changes, also run `make package`. For component/delegate
   extraction, install or upgrade the local plasmoid and inspect recent Plasma
   logs as described in [runtime verification](docs/runtime-verification.md#runtime-verification).

@@ -1073,6 +1073,48 @@ class CostSectionTests(unittest.TestCase):
     }
     ''')
 
+    def test_heatmap_discloses_width_limited_history(self):
+        self.run_fixture('''
+    function test_heatmapWindowNotice_data() {
+        return [{tag: "ltr", mirrored: false}, {tag: "rtl", mirrored: true}];
+    }
+    function test_heatmapWindowNotice(data) {
+        failOnWarning(/Binding loop|recursive rearrange|TypeError|ReferenceError/);
+        spendPoints = Array.from({length: 365}, function(_, index) {
+            return {label: new Date(Date.UTC(2025, 10, 15 + index)).toISOString().slice(0, 10),
+                value: index + 1};
+        });
+        fakeApplet.costHistoryDays = 365;
+        var subject = createTemporaryObject(spendFactory, testCase, {
+            width: 616, height: 800, mirrored: data.mirrored
+        });
+        var grid = findChild(subject, "spendHeatmap");
+        var notice = findChild(subject, "heatmapWindowNotice");
+        verify(notice !== null, "A cropped calendar must explain its visible window");
+        tryVerify(function() { return notice.visible && grid.cells.length > 0; });
+        var first = grid.cells.find(function(cell) { return cell !== null; });
+        var count = 366 - first.value;
+        verify(count > 0 && count < 365);
+        compare(notice.text, "Showing the most recent " + count
+            + " days. The chart covers the full range.");
+        verify(notice.width <= subject.width);
+        var chart = findChild(subject, "analysisHistoryChart");
+        compare(chart.points.length, 365, "The chart must retain the full history");
+        subject.width = 1400;
+        tryCompare(notice, "visible", false);
+        subject.width = 320;
+        tryCompare(notice, "visible", true);
+        tryVerify(function() {
+            var oldest = grid.cells.find(function(cell) { return cell !== null; });
+            return notice.text === "Showing the most recent " + (366 - oldest.value)
+                + " days. The chart covers the full range.";
+        });
+        spendPoints = spendPoints.slice(-7);
+        tryCompare(notice, "visible", false);
+        compare(fakeApplet.refreshCount, 0, "Resizing must not fetch history");
+    }
+    ''')
+
     def test_heatmap_keyboard_inspection_and_refresh(self):
         self.run_fixture('''
     function test_heatmapKeyboard_data() {
