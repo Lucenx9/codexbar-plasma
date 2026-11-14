@@ -29,7 +29,10 @@ inspection reports each provider for the selected day. Provider pages retain bar
 Chart time runs from oldest on the left to newest on the right in both layout
 directions; endpoint dates follow those coordinates while the value axis mirrors.
 Each provider row expands its own ranked model list inline, initially showing
-three rows. Show more models reveals that provider's remaining bounded rows
+three rows. Cost and token rankings are computed before the six-model cap for
+both the selected period and each day, so low-cost and unpriced models can lead
+the token list. Privacy projection retains both rankings without model names.
+Show more models reveals that provider's remaining bounded rows
 without fetching data. Opening a provider does not change the chart filter or
 switch tabs. Open rows and Show more models choices survive refreshes and day
 selection. Refreshing preserves keyboard focus on the provider header or
@@ -82,7 +85,7 @@ snapshot without a usable `updatedAt` keeps its Today amounts.
   records still report the refresh error and never block a successful sibling.
 - Day models come from the selected `cost.daily[].modelBreakdowns[]` record.
   Missing day models never fall back to period totals.
-- Display at most six models per day and report truncation. Period models also
+- Display at most six models per metric per day and report truncation. Period models also
   expose truncation and an explicit empty state.
   Daily model projection runs only after the chart's calendar selection and
   row cap. Average-only rows omit that projection; they still use the same
