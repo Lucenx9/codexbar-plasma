@@ -1460,7 +1460,7 @@ msgid ""
 "Costs and charts use %1. Other currencies appear separately below. Tokens "
 "include all providers."
 msgstr ""
-"Los costes y gráficos usan %1. Las otras monedas aparecen separadas debajo. "
+"Los costes y gráficos usan %1. Las otras monedas aparecen por separado más abajo. "
 "Los tokens incluyen todos los proveedores."
 
 #: contents/ui/components/SpendView.qml
@@ -1470,7 +1470,7 @@ msgstr "No hay historial diario de tokens para este período."
 #: contents/ui/components/SpendView.qml
 msgid "No daily cost history for this range. Try Tokens for token history."
 msgstr ""
-"No hay historial de costes diarios para este período. Pruebe Tokens para ver su historial."
+"No hay historial de costes diarios para este período. Pruebe Tokens para ver el historial de tokens."
 
 #: contents/ui/components/SpendView.qml
 msgid "No local token or cost history"
@@ -1700,7 +1700,7 @@ msgstr "Cada día"
 
 #: contents/ui/configAiInsights.qml
 msgid "Select %1 under %2 in %3 or the fixed-provider view. Automatic generation runs at most once per interval. Usage refreshes do not trigger it."
-msgstr "Seleccione %1 en %2, dentro de %3 o en la vista del proveedor fijo. La generación automática se ejecuta como máximo una vez por intervalo. Actualizar el uso no la inicia."
+msgstr "En %3 o en la vista del proveedor fijo, seleccione %1 en la sección %2. La generación automática se ejecuta como máximo una vez por intervalo. Actualizar el uso no la inicia."
 
 #: contents/ui/configAiInsights.qml
 msgid "Saved insight:"
@@ -1985,7 +1985,7 @@ msgid ""
 "Install a private copy for this widget. System and package-manager "
 "installations remain available. Apply settings to use the selected copy."
 msgstr ""
-"Instale una copia privada para este elemento. Las instalaciones del sistema "
+"Instale una copia privada para este widget. Las instalaciones del sistema "
 "y de los gestores de paquetes siguen disponibles. Aplique los ajustes para "
 "usar la copia seleccionada."
 
@@ -2781,7 +2781,7 @@ msgid ""
 "Managed by this widget. Install updates or restore the previous version in "
 "Managed CLI below."
 msgstr ""
-"Gestionada por este elemento. Instale actualizaciones o restaure la versión "
+"Gestionada por este widget. Instale actualizaciones o restaure la versión "
 "anterior en CLI gestionada, más abajo."
 
 #: contents/ui/controllers/CliUpdateController.qml
@@ -2789,7 +2789,7 @@ msgid ""
 "Managed by this widget. Install updates or restore the previous version in "
 "General."
 msgstr ""
-"Gestionada por este elemento. Instale actualizaciones o restaure la versión "
+"Gestionada por este widget. Instale actualizaciones o restaure la versión "
 "anterior en General."
 
 #: contents/ui/controllers/CliUpdateController.qml
@@ -2885,7 +2885,7 @@ msgstr "Seleccione la CLI gestionada antes de actualizarla."
 #: contents/ui/controllers/ManagedCliController.qml
 msgid "Another widget is updating the managed CLI. Try again shortly."
 msgstr ""
-"Otro elemento está actualizando la CLI gestionada. Vuelva a intentarlo en "
+"Otro widget está actualizando la CLI gestionada. Vuelva a intentarlo en "
 "breve."
 
 #: contents/ui/controllers/ManagedCliController.qml
@@ -4024,7 +4024,7 @@ msgstr "CLI de CodexBar"
 
 #: contents/ui/configDiagnostics.qml
 msgid "Checks installed versions. For CLI releases, open %1 > %2 > %3."
-msgstr "Comprueba las versiones instaladas. Para las versiones de la CLI, abra %1 > %2 > %3."
+msgstr "Comprueba las versiones instaladas. Para las versiones oficiales de la CLI, abra %1 > %2 > %3."
 
 #: contents/ui/configDiagnostics.qml
 msgid "No output yet"

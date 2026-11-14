@@ -1461,7 +1461,7 @@ msgid ""
 "Costs and charts use %1. Other currencies appear separately below. Tokens "
 "include all providers."
 msgstr ""
-"Costi e grafici usano %1. Le altre valute sono separate qui sotto. I token "
+"Costi e grafici usano %1. Le altre valute sono indicate a parte qui sotto. I token "
 "includono tutti i provider."
 
 #: contents/ui/components/SpendView.qml
@@ -1701,7 +1701,7 @@ msgstr "Ogni giorno"
 
 #: contents/ui/configAiInsights.qml
 msgid "Select %1 under %2 in %3 or the fixed-provider view. Automatic generation runs at most once per interval. Usage refreshes do not trigger it."
-msgstr "Seleziona %1 in %2, in %3 o nella vista del provider fisso. La generazione automatica avviene al massimo una volta per intervallo. Gli aggiornamenti dei consumi non la avviano."
+msgstr "In %3 o nella vista del provider fisso, seleziona %1 nella sezione %2. La generazione automatica avviene al massimo una volta per intervallo. Gli aggiornamenti dei dati di utilizzo non la avviano."
 
 #: contents/ui/configAiInsights.qml
 msgid "Saved insight:"
@@ -2043,7 +2043,7 @@ msgstr "Ripristina tutti i valori predefiniti"
 #: contents/ui/configGeneral.qml
 msgid "Select Apply or OK to save defaults, or Cancel to discard them."
 msgstr ""
-"Seleziona Applica o OK per salvare i valori predefiniti, Annulla per "
+"Seleziona Applica o OK per salvare i valori predefiniti, oppure Annulla per "
 "scartarli."
 
 #: contents/ui/configNotifications.qml

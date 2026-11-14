@@ -212,7 +212,7 @@ msgstr ""
 #: contents/ui/components/CostTrustNotice.qml
 msgid "The cost total is incomplete. Some usage is unmetered."
 msgstr ""
-"Die Gesamtkosten sind unvollständig. Ein Teil der Nutzung ist nicht gemessen."
+"Die Gesamtkosten sind unvollständig. Für einen Teil der Nutzung fehlen Messwerte."
 
 #: contents/ui/components/CostTrustNotice.qml
 msgid "Some costs are estimated."
@@ -238,7 +238,7 @@ msgstr "Die Gesamtsumme wird anhand öffentlicher Listenpreise geschätzt."
 
 #: contents/ui/components/CostTrustNotice.qml
 msgid "The total uses costs metered by providers."
-msgstr "Die Gesamtsumme verwendet von Anbietern gemessene Kosten."
+msgstr "Die Gesamtsumme basiert auf den von Anbietern gemessenen Kosten."
 
 #: contents/ui/components/CostTrustNotice.qml
 msgid "The total combines metered costs and public list-price estimates."
@@ -1658,7 +1658,7 @@ msgstr ""
 msgid ""
 "Sends quotas, reset times, pace forecasts, and weekly spend and tokens per "
 "provider to %1."
-msgstr "Sendet Kontingente, Rücksetzzeiten, Verbrauchsprognosen sowie wöchentliche Ausgaben und Tokens je Anbieter an %1."
+msgstr "Sendet Kontingente, Zurücksetzungszeiten, Verbrauchsprognosen sowie wöchentliche Ausgaben und Tokens je Anbieter an %1."
 
 #: contents/ui/configAiInsights.qml
 msgid ""
@@ -1803,7 +1803,7 @@ msgid ""
 "Override the provider or source. Leave blank to use enabled providers and "
 "their saved sources."
 msgstr ""
-"Überschreibt Anbieter oder Quelle. Leer lassen, um aktivierte Anbieter und "
+"Überschreibt Anbieter oder Quelle. Lassen Sie die Felder leer, um aktivierte Anbieter und "
 "deren gespeicherte Quellen zu verwenden."
 
 #: contents/ui/configDiagnostics.qml
@@ -2405,7 +2405,7 @@ msgid ""
 "Restore individual sections in the popup, or all sections for a provider "
 "here."
 msgstr ""
-"Stellen Sie einzelne Abschnitte im Popup oder hier alle Abschnitte eines "
+"Stellen Sie einzelne Abschnitte im Aufklappfenster oder hier alle Abschnitte eines "
 "Anbieters wieder her."
 
 #: contents/ui/configPopup.qml
@@ -2681,8 +2681,8 @@ msgid ""
 "This CLI version cannot edit other provider options. Use the setup actions "
 "and diagnostics above."
 msgstr ""
-"Diese CLI-Version kann keine weiteren Anbieteroptionen bearbeiten. Nutzen "
-"Sie die Einrichtungsaktionen und Diagnose oben."
+"Diese CLI-Version kann keine weiteren Anbieteroptionen bearbeiten. Verwenden "
+"Sie die Einrichtungsaktionen und die Diagnose oben."
 
 #: contents/ui/configProviders.qml
 msgid ""
@@ -3024,7 +3024,7 @@ msgstr ""
 #: contents/ui/controllers/WidgetUpdateController.qml
 msgid "Could not parse widget update JSON: %1"
 msgstr ""
-"Die JSON-Daten zur Miniprogrammaktualisierung konnten nicht gelesen werden: "
+"Die JSON-Daten zur Miniprogramm-Aktualisierung konnten nicht gelesen werden: "
 "%1"
 
 #: contents/ui/controllers/WidgetUpdateController.qml
@@ -3034,7 +3034,7 @@ msgstr "Eine Aktualisierung des Miniprogramms ist verfügbar."
 #: contents/ui/configGeneral.qml
 #: contents/ui/controllers/WidgetUpdateController.qml
 msgid "Widget update %1 is available."
-msgstr "Miniprogrammaktualisierung %1 ist verfügbar."
+msgstr "Miniprogramm-Aktualisierung %1 ist verfügbar."
 
 #: contents/ui/controllers/UpdateNotificationsController.qml
 #: contents/ui/controllers/WidgetUpdateController.qml
@@ -3044,11 +3044,11 @@ msgstr ""
 
 #: contents/ui/controllers/WidgetUpdateController.qml
 msgid "Widget update %1 installed. %2"
-msgstr "Miniprogrammaktualisierung %1 installiert. %2"
+msgstr "Miniprogramm-Aktualisierung %1 installiert. %2"
 
 #: contents/ui/controllers/WidgetUpdateController.qml
 msgid "Widget update installed. %1"
-msgstr "Miniprogrammaktualisierung installiert. %1"
+msgstr "Miniprogramm-Aktualisierung installiert. %1"
 
 #: contents/ui/controllers/WidgetUpdateController.qml
 msgid "Widget is up to date."
@@ -3056,7 +3056,7 @@ msgstr "Das Miniprogramm ist aktuell."
 
 #: contents/ui/controllers/WidgetUpdateController.qml
 msgid "Widget update skipped."
-msgstr "Miniprogrammaktualisierung übersprungen."
+msgstr "Miniprogramm-Aktualisierung übersprungen."
 
 #: contents/ui/controllers/WidgetUpdateController.qml
 msgid "Unknown widget update status: %1"
@@ -3065,7 +3065,7 @@ msgstr "Unbekannter Aktualisierungsstatus des Miniprogramms: %1"
 #: contents/ui/controllers/WidgetUpdateController.qml
 msgid "Widget updater response exceeded the supported size."
 msgstr ""
-"Die Antwort der Miniprogrammaktualisierung überschreitet die unterstützte "
+"Die Antwort der Miniprogramm-Aktualisierung überschreitet die unterstützte "
 "Größe."
 
 #: contents/ui/main.qml
@@ -3675,7 +3675,7 @@ msgstr "Support-Bericht"
 
 #: contents/ui/configDiagnostics.qml
 msgid "Collects versions, CLI installation details, enabled provider IDs, the latest error and module checks offline. Omits paths and recognized credentials. Review before sharing."
-msgstr "Erfasst Versionen, Details zur CLI-Installation, IDs aktivierter Anbieter, letzten Fehler und Modulprüfungen offline. Lässt Pfade und erkannte Zugangsdaten aus. Vor dem Teilen prüfen."
+msgstr "Erfasst Versionen, Details zur CLI-Installation, IDs aktivierter Anbieter, letzten Fehler und Modulprüfungen offline. Lässt Pfade und erkannte Zugangsdaten aus. Prüfen Sie den Bericht vor dem Teilen."
 
 #: contents/ui/configDiagnostics.qml
 msgid "Collect support report"
@@ -4022,7 +4022,7 @@ msgstr "CodexBar-CLI"
 
 #: contents/ui/configDiagnostics.qml
 msgid "Checks installed versions. For CLI releases, open %1 > %2 > %3."
-msgstr "Prüft installierte Versionen. CLI-Veröffentlichungen finden Sie unter %1 > %2 > %3."
+msgstr "Prüft installierte Versionen. Offizielle CLI-Versionen finden Sie unter %1 > %2 > %3."
 
 #: contents/ui/configDiagnostics.qml
 msgid "No output yet"
@@ -4032,11 +4032,11 @@ msgstr "Noch keine Ausgabe"
 msgid ""
 "Loads a subtotal on request in Usage & Spend, limited to identified Codex "
 "requests."
-msgstr "Lädt auf Anfrage in Nutzung und Ausgaben eine auf identifizierte Codex-Anfragen begrenzte Teilsumme."
+msgstr "Lädt auf Wunsch in Nutzung und Ausgaben eine Teilsumme, die nur identifizierte Codex-Anfragen umfasst."
 
 #: contents/ui/configGeneral.qml
 msgid "Widget updates"
-msgstr "Miniprogrammaktualisierungen"
+msgstr "Miniprogramm-Aktualisierungen"
 
 #: contents/ui/configGeneral.qml
 msgid "Update checks are off"
@@ -4052,7 +4052,7 @@ msgstr "Aktualisierungen werden automatisch installiert"
 
 #: contents/ui/configPopup.qml
 msgid "Popup content"
-msgstr "Inhalt des Popups"
+msgstr "Inhalt des Aufklappfensters"
 
 #: contents/ui/configPopup.qml
 msgid "Automatic: first %1 providers"
@@ -4080,7 +4080,7 @@ msgstr "Sendet nur aggregierte Nutzungsdaten, ohne Kontonamen, E-Mails, Projekte
 
 #: contents/ui/configGeneral.qml
 msgid "Widget update in progress…"
-msgstr "Miniprogrammaktualisierung läuft…"
+msgstr "Miniprogramm-Aktualisierung läuft…"
 
 #: contents/ui/configGeneral.qml
 msgid "Requires daily CLI checks and Plasma notifications."
@@ -4409,7 +4409,7 @@ msgstr "Anbieter am %1"
 msgid ""
 "Adds questions to Usage & Spend. No AI service is contacted while disabled."
 msgstr ""
-"Fügt Fragen zu Nutzung und Ausgaben hinzu. Bei deaktivierter Option wird "
+"Ergänzt Nutzung und Ausgaben um Fragen. Bei deaktivierter Option wird "
 "kein KI-Dienst kontaktiert."
 
 #~ msgid ""
