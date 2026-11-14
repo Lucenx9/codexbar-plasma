@@ -1418,7 +1418,7 @@ fields; track proposed extensions in the issue tracker.
 - Configurable order for the provider identity, service status, usage text, and
   provider meters shown in the panel.
 - Check for widget updates, notify, and install widget updates automatically
-  by default. In **General → Updates → Widget updates**, clear **Install widget updates
+  by default. In **General → Updates → Widget updates**, clear **Install
   automatically** and apply to opt out. Existing instances without a saved
   value adopt the new default; explicitly saved choices are kept. Plasma may
   have omitted the previous off setting because it matched the old default.
@@ -1539,8 +1539,8 @@ and provider configuration are unchanged.
 To return to an external copy, enter its path or `codexbar` in **Diagnostics**
 and apply. **Check versions** identifies the managed copy offline.
 
-**Update now** changes the managed copy immediately. **Automatically
-update the managed CLI daily** is enabled by default. Clear it and apply settings
+**Update now** changes the managed copy immediately. **Update daily**
+is enabled by default. Clear it and apply settings
 to opt out. It operates only while that exact managed path is selected,
 independently of release-check notifications. Selecting another command dims the
 setting once it is off, and leaves it switchable while it is still on. Widget

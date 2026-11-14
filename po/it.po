@@ -2841,7 +2841,7 @@ msgstr "Non è stato possibile aggiornare alcuni dati sui costi."
 #: contents/ui/controllers/CostController.qml
 msgid "Month to date and All history need codexbar 0.67.0 or later."
 msgstr ""
-"Mese corrente e Tutto lo storico richiedono codexbar 0.67.0 o successivo."
+"Mese corrente e Tutta la cronologia richiedono codexbar 0.67.0 o successivo."
 
 #: contents/ui/controllers/CostController.qml
 msgid "codexbar cost did not return JSON."

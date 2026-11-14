@@ -578,7 +578,9 @@ KCM.SimpleKCM {
                 { text: i18n("Every 12 hours"), value: 12 },
                 { text: i18n("Daily"), value: 24 }
             ]
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 12
+            implicitContentWidthPolicy: Controls.ComboBox.WidestText
+            Layout.preferredWidth: Math.max(implicitWidth, Kirigami.Units.gridUnit * 12)
+            Layout.maximumWidth: page.availableWidth
             Component.onCompleted: currentIndex = Math.max(0, indexOfValue(AiInsights.intervalHours(page.cfg_aiInsightsIntervalHours)))
             onActivated: page.cfg_aiInsightsIntervalHours = currentValue
             Connections {

@@ -48,7 +48,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
-- Keep General settings help within narrow windows with longer translations.
+- Keep General settings help within narrow windows with longer translations,
+  and size the AI Insights frequency selector to its translated choices.
 
 - Position Usage & Spend hover previews beside the inspected day, switching
   sides near the plot edge so the guide and provider markers remain visible.

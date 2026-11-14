@@ -4117,7 +4117,7 @@ msgstr "Désactivés"
 msgid ""
 "Some sources are unavailable on Linux. The source override in Diagnostics "
 "takes precedence."
-msgstr "Certaines sources ne sont pas disponibles sous Linux. Le choix de source dans Diagnostics est prioritaire."
+msgstr "Certaines sources ne sont pas disponibles sous Linux. Le choix de source dans Diagnostic est prioritaire."
 
 #: contents/ui/components/ProviderNames.qml
 msgid "Trae CN"

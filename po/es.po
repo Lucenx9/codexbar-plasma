@@ -4135,7 +4135,7 @@ msgid ""
 "%2\n"
 "\n"
 "The code expires in %3 seconds. Press OK after entering it to continue waiting in settings. Use Cancel sign-in in settings to cancel."
-msgstr "Abre esta dirección en el navegador:\n%1\n\nIntroduce este código:\n%2\n\nEl código caduca en %3 segundos. Tras introducirlo, pulsa OK para seguir esperando en los ajustes. Usa Cancelar inicio de sesión en los ajustes para cancelar."
+msgstr "Abra esta dirección en el navegador:\n%1\n\nIntroduzca este código:\n%2\n\nEl código caduca en %3 segundos. Tras introducirlo, pulse OK para seguir esperando en los ajustes. Use Cancelar inicio de sesión en los ajustes para cancelar."
 
 #: contents/ui/configProviders.qml
 msgid "Sign-in cancelled."
@@ -4167,7 +4167,7 @@ msgstr "La configuración de CodexBar ha cambiado durante el inicio de sesión. 
 
 #: contents/ui/configProviders.qml
 msgid "Credential setup could not start. Check python3, kdialog and GNU timeout."
-msgstr "No se pudo iniciar la configuración de credenciales. Comprueba python3, kdialog y GNU timeout."
+msgstr "No se pudo iniciar la configuración de credenciales. Compruebe python3, kdialog y GNU timeout."
 
 #: contents/ui/configProviders.qml
 msgid "%1 command failed. Try again."
@@ -4194,7 +4194,7 @@ msgid ""
 "Remove the API key and manual cookie stored by CodexBar for %1? Token "
 "accounts, environment variables, source settings and enablement are "
 "unchanged."
-msgstr "¿Eliminar la clave API y la cookie manual que CodexBar ha guardado para %1? Las cuentas con tokens, las variables de entorno, los ajustes de origen y el estado de activación no cambian."
+msgstr "¿Eliminar la clave API y la cookie manual que CodexBar ha guardado para %1? Las cuentas con tokens, las variables de entorno, los ajustes de fuente y el estado de activación no cambian."
 
 #: contents/ui/configPopup.qml
 msgid "Follows the provider order above."
