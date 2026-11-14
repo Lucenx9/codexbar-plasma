@@ -176,10 +176,14 @@ See [CLI probes and packaging](runtime-verification.md#cli-probes-and-packaging)
 
 For agent code changes, run CodeScene MCP before delivery. Run
 `code_health_review` on supported changed files, address introduced
-degradations, and use `code_health_score` to confirm the fixes. Require passing
-`pre_commit_code_health_safeguard` quality gates before committing, then run
-`analyze_change_set` against the PR base before opening it. Report unsupported
-files and unavailable analysis separately from passing checks.
+degradations, and use `code_health_score` to confirm the fixes. Stage all intended
+changes, including new supported files, before running
+`pre_commit_code_health_safeguard`. Require passing quality gates before
+committing. Check `metadata.status` and `metadata.checked-file-count` against the
+staged supported files. When supported files are expected, reject
+`no-files-modified` or incomplete coverage even if the gates report `passed`.
+Then run `analyze_change_set` against the PR base before opening it. Report
+unsupported files and unavailable analysis separately from passing checks.
 
 To prepare CodeScene access:
 
