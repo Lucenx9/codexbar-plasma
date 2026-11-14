@@ -4,6 +4,7 @@ import "../contents/ui/UsageAnalysis.js" as Analysis
 import "../contents/ui/AnalysisAmounts.mjs" as Display
 import "../contents/ui/ChartLines.mjs" as Chart
 import "../contents/ui/CostResponse.mjs" as CostResponse
+import "../contents/ui/CostTrust.mjs" as CostTrust
 import "../contents/ui/PrivacyPresentation.js" as Privacy
 
 TestCase {
@@ -115,6 +116,37 @@ TestCase {
         usd.daily.pop()
         compare(Analysis.comparison([usd], false, now), null)
         compare(Analysis.comparison([], false, now), null)
+    }
+
+    function test_incompletePricingDoesNotHideCompleteTokenComparison_data() {
+        return [
+            {tag: "unpriced", field: "unpriced", privacy: false},
+            {tag: "unmetered", field: "unmetered", privacy: false},
+            {tag: "unpriced-private", field: "unpriced", privacy: true},
+            {tag: "unmetered-private", field: "unmetered", privacy: true}
+        ]
+    }
+
+    function test_incompletePricingDoesNotHideCompleteTokenComparison(data) {
+        var cost = snapshot("codex", "USD", 2, 1)
+        cost.trust = {sourceKind: "listPrice", incompleteRequests: 0,
+            coverage: {priced: 1, unpriced: 0, unmetered: 0, estimated: 0}}
+        cost.trust.coverage[data.field] = 1
+        cost = Privacy.cost(cost, data.privacy)
+        cost.valueMode = CostTrust.costTrustSummary([cost]).valueMode
+        compare(cost.valueMode, "partial")
+        compare(Analysis.comparison([cost], false, now), null)
+        var result = Analysis.comparison([cost], true, now)
+        verify(result !== null, "Incomplete prices must not hide fourteen complete days of tokens")
+        compare(result.current, 700)
+        compare(result.previous, 700)
+        compare(result.changePercent, 0)
+
+        cost.daily[1].incompleteRequests = 1
+        compare(Analysis.comparison([cost], true, now), null)
+        cost.daily[1].incompleteRequests = 0
+        cost.daily[1].tokens = null
+        compare(Analysis.comparison([cost], true, now), null)
     }
 
     function test_privacyPreservesWeeklyComparison_data() {

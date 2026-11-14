@@ -48,8 +48,11 @@ provider totals; measured zeros remain zero.
 
 The weekly comparison uses the existing AI snapshot completeness rules without
 calling AI: fourteen complete days before today, a scan reaching today, no
-ambiguous dates, finite values and no partial costs. It never loads extra history
-for a short selection. When the comparison is unavailable, its history
+ambiguous dates and finite values for the selected metric. Money comparisons
+also require complete pricing. Missing prices do not suppress a complete token
+comparison; excluded incomplete requests still make either comparison unavailable.
+It never loads extra history for a short selection. When the comparison is
+unavailable, its history
 requirements remain visible below the totals rather than only in a tooltip.
 Privacy mode retains the numeric comparison, using the currency preserved in
 the projected totals. Changes use unrounded weekly sums,
