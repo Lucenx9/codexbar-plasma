@@ -1965,6 +1965,30 @@ TestCase {
         compare(CostAmounts.todayAmounts(null, 0), null);
         compare(CostAmounts.todayAmounts({scanDay: "2026-09-23"}, 0), null);
     }
+
+    function test_todayTokenExclusionsUseOnlyOneMatchingDay_data() {
+        return [
+            {tag: "matching-day", daily: [{label: "2026-09-23", incompleteRequests: 3}], expected: 3},
+            {tag: "older-day", daily: [{label: "2026-09-22", incompleteRequests: 9}], expected: 0},
+            {tag: "ambiguous-day", daily: [
+                {label: "2026-09-23", incompleteRequests: 3},
+                {label: "2026-09-23", incompleteRequests: 4}
+            ], expected: 0},
+            {tag: "invalid-count", daily: [{label: "2026-09-23", incompleteRequests: "3"}], expected: 0},
+            {tag: "bounded-count", daily: [{label: "2026-09-23", incompleteRequests: 9007199254740991}], expected: 1000000000},
+            {tag: "malformed-siblings", daily: [null, 1, {}, {label: "2026-09-23", incompleteRequests: 3}], expected: 3}
+        ];
+    }
+
+    function test_todayTokenExclusionsUseOnlyOneMatchingDay(data) {
+        var snapshot = {scanDay: "2026-09-23", today: {tokens: 1200},
+            trust: {incompleteRequests: 99}, daily: data.daily};
+        compare(CostTrust.todayIncompleteTokenRequests(snapshot, new Date(2026, 8, 23, 23, 30).getTime()), data.expected);
+        compare(CostTrust.todayIncompleteTokenRequests(snapshot, new Date(2026, 8, 24, 0, 30).getTime()), 0);
+        snapshot.scanDay = "";
+        compare(CostTrust.todayIncompleteTokenRequests(snapshot, 0), 0);
+        compare(CostTrust.todayIncompleteTokenRequests(null, 0), 0);
+    }
     function test_truncationKeepsSurrogatePairsWhole() {
         var emoji = "\uD83D\uDE00"
         compare(CostAmounts.boundedText("a".repeat(119) + emoji, 120), "a".repeat(119))

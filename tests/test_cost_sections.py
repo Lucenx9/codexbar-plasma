@@ -757,6 +757,41 @@ class CostSectionTests(unittest.TestCase):
     }
     ''')
 
+    def test_provider_today_exclusions_follow_the_normalized_day(self):
+        self.run_fixture('''
+    function test_todayExclusionsFollowTheDay_data() {
+        return [
+            {tag: "today-incomplete", todayCount: 2, expected: "1200 tokens (partial)"},
+            {tag: "only-older-day-incomplete", todayCount: 0, expected: "1200 tokens"},
+            {tag: "invalid-daily-count", todayCount: "2", expected: "1200 tokens"}
+        ];
+    }
+    function test_todayExclusionsFollowTheDay(data) {
+        var scan = new Date(2026, 8, 23, 22).getTime();
+        var parsed = CostResponse.response(JSON.stringify([{
+            provider: "codex", historyDays: 30, currencyCode: "USD",
+            updatedAt: new Date(scan).toISOString(), sessionCostUSD: 1.25, sessionTokens: 1200,
+            incompleteRequestCount: 9, totals: {totalCost: 9, totalTokens: 9000},
+            daily: [
+                {date: "2026-09-22", totalCost: 7.75, totalTokens: 7800, incompleteRequestCount: 7},
+                {date: "2026-09-23", totalCost: 1.25, totalTokens: 1200, incompleteRequestCount: data.todayCount}
+            ]
+        }]), "", 30, 0).costs.codex;
+        fakeApplet.panelClockMs = scan;
+        var subject = createTemporaryObject(providerFactory, testCase, {width: 540});
+        verify(subject !== null);
+        for (var privacy of [false, true, false]) {
+            var cost = Object.assign({}, Privacy.cost(parsed, privacy), {windowLabel: "30d", hintLine: ""});
+            providerData = {provider: "codex", tokenCost: cost};
+            tryVerify(function() { return textsUnder(subject).indexOf(data.expected) >= 0; });
+            verify(textsUnder(subject).indexOf("9000 tokens (partial)") >= 0);
+        }
+        fakeApplet.panelClockMs = new Date(2026, 8, 24, 0, 30).getTime();
+        tryVerify(function() { return textsUnder(subject).indexOf("Tokens unavailable") >= 0; });
+        verify(textsUnder(subject).indexOf("1200 tokens (partial)") < 0);
+    }
+    ''')
+
     def test_calendar_history_growth_preserves_provider_selection(self):
         self.run_fixture('''
     function test_calendarGrowth_data() {

@@ -241,7 +241,9 @@ coverage and never expose raw provenance in QML.
 Excluded requests also mark the period's tokens as partial, including when cost
 is unavailable or the explanation was dismissed. Unpriced costs alone do not
 make measured tokens partial. Provider Today tokens use only that day's own
-exclusion count rather than inheriting the period's count.
+exclusion count from the matching normalized daily record rather than inheriting
+the period's count. A missing or ambiguous day supplies no count; the stale-day
+policy hides Today amounts after local midnight, including in privacy mode.
 
 Only pressing the notice's close button records a semantic dismissal. Hiding a
 tab or closing the popup preserves an open notice, including when the popup is

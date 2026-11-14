@@ -14,7 +14,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 - Replace informational message surfaces with contextual text. Show cost
   provenance and exclusion explanations on demand below the qualified totals,
-  keep partial-data labels visible, name mixed-currency subtotals, and place
+  keep excluded-token totals marked partial for the actual day or period across
+  currencies, name mixed-currency subtotals, and place
   missing daily history in the chart area with a Tokens action.
 
 - Keep chart dates aligned with their plotted values in right-to-left layouts.

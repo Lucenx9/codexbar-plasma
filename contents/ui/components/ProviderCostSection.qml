@@ -157,8 +157,8 @@ ColumnLayout {
                     label: i18n("Today"),
                     amounts: CostAmounts.todayAmounts(tokenCostSection.tokenCost, tokenCostSection.applet.panelClockMs),
                     valueMode: "plain",
-                    incompleteRequests: CostTrust.acceptedIncompleteRequests(CostAmounts.todayAmounts(
-                        tokenCostSection.tokenCost, tokenCostSection.applet.panelClockMs))
+                    incompleteRequests: CostTrust.todayIncompleteTokenRequests(
+                        tokenCostSection.tokenCost, tokenCostSection.applet.panelClockMs)
                 },
                 {
                     label: tokenCostSection.tokenCost.windowLabel,
