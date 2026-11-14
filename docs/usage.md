@@ -1131,7 +1131,9 @@ and clipboard content remain under your control after closing the window.
   Revisiting **Usage & Spend** refreshes history that became stale since the last
   scan, and a spend view left open across midnight refreshes once for the new day.
   Switching the Cost/Tokens metric or inspecting a day reuses the loaded data and
-  starts no scan. Cost settings applied together start a single scan using the
+  starts no scan. A complete weekly token comparison stays available when some
+  requests lack prices; excluded incomplete requests still prevent the comparison.
+  Cost settings applied together start a single scan using the
   final executable, provider, and history range; disabling costs starts none.
   History is processed in the background so large scans keep the popup responsive.
   Loading remains active until the updated data is ready; a superseded scan cannot

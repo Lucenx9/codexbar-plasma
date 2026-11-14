@@ -64,6 +64,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep weekly token comparisons available when pricing is partial but daily
+  token counts are complete. Missing counts and excluded incomplete requests
+  still make the comparison unavailable.
+
 - Preserve AI Insights rate limits and HTTP error reasons when reading a slow
   error response times out, so manual retries still respect `Retry-After`.
 
