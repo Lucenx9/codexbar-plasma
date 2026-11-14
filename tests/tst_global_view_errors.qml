@@ -821,6 +821,39 @@ TestCase {
         filter.popup.close();
     }
 
+    function test_closedProviderKeysDoNotStartMenuInspection_data() {
+        return [
+            {tag: "up", key: Qt.Key_Up}, {tag: "down", key: Qt.Key_Down},
+            {tag: "home", key: Qt.Key_Home}, {tag: "end", key: Qt.Key_End},
+            {tag: "return", key: Qt.Key_Return}, {tag: "enter", key: Qt.Key_Enter}
+        ];
+    }
+    function test_closedProviderKeysDoNotStartMenuInspection(data) {
+        applet.costs = [{provider: "codex", totals: {cost: 2, tokens: 10, currency: "USD"}}];
+        applet.providerTitle = "Long <provider> & identity ".repeat(5);
+        var view = createView("SpendView");
+        if (!view) return;
+        view.width = 320;
+        var filter = findChild(view, "analysisProviderFilter");
+        filter.activated(1);
+        mouseMove(view, view.width - 1, view.height - 1);
+        filter.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(data.key);
+        verify(!filter.popup.visible, "Closed-combo selection keys must not open the menu");
+        mouseClick(filter, filter.width / 2, filter.height / 2);
+        tryCompare(filter.popup, "opened", true);
+        var option = findItem(filter.popup.contentItem, function(item) {
+            return item.plainText === applet.providerTitle;
+        });
+        verify(option !== null);
+        var tip = findChild(option, "analysisProviderOptionToolTip");
+        verify(tip !== null);
+        verify(tip.delay > 0, "A pointer-opened menu must retain the native tooltip delay");
+        if (!option.hovered) verify(!tip.visible);
+        filter.popup.close();
+        compare(applet.refreshes, 0);
+    }
+
     function test_providerFilterKeepsWidthAcrossAnalysisModes() {
         applet.costs = [{provider: "codex", totals: {cost: 2, tokens: 10, currency: "USD"}}];
         var view = createView("SpendView");

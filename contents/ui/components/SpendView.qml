@@ -272,7 +272,9 @@ ColumnLayout {
             objectName: "analysisProviderFilter"
             property bool keyboardMenuNavigation: false
             Keys.onPressed: function(event) {
-                if ([Qt.Key_Space, Qt.Key_Return, Qt.Key_Enter, Qt.Key_Up,
+                // Space opens on release; closed selection keys do not inspect the menu.
+                if ((providerFilter.popup.visible || event.key === Qt.Key_Space)
+                    && [Qt.Key_Space, Qt.Key_Return, Qt.Key_Enter, Qt.Key_Up,
                     Qt.Key_Down, Qt.Key_Home, Qt.Key_End].indexOf(event.key) >= 0)
                     keyboardMenuNavigation = true
             }
