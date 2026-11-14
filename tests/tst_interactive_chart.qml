@@ -87,25 +87,65 @@ TestCase {
         verify(waitForRendering(chart))
     }
 
-    function test_linePreviewStaysInsidePlotAndClosesAfterPointerExit() {
+    function test_linePreviewStaysInsidePlotAndClosesAfterPointerExit_data() {
+        return [{tag: "compact", width: 260}, {tag: "wide", width: 320}];
+    }
+
+    function test_linePreviewStaysInsidePlotAndClosesAfterPointerExit(data) {
+        var points = [0, 1, 2].map(function(index) {
+            return {label: "2026-11-" + (11 + index), value: index + 1};
+        });
         var chart = createChart({applet: {secondaryTextOpacity: 0.7, canvasColor: function() { return "#000000" }},
-            width: 300, kind: "line", accent: "blue", points: [{label: "2026-11-13", value: 1}],
-            lineSeries: [{provider: "codex", points: [{label: "2026-11-13", value: 1}]}]});
+            width: data.width, plotHeight: 108, kind: "line", accent: "blue", points: points,
+            lineSeries: [{provider: "codex", iconSource: "view-statistics", iconIsMask: true, points: points}]});
         if (!chart) return;
         failOnWarning(/.*/);
         var focus = chart.nextItemInFocusChain(true);
         var plot = focus.parent;
         var preview = findChild(chart, "chartLinePreview");
-        mouseMove(plot, plot.width / 2, plot.height / 2);
-        tryCompare(preview, "visible", true);
-        verify(preview.x >= 0 && preview.x + preview.width <= plot.width);
-        verify(preview.y >= 0 && preview.y + preview.height <= plot.height);
+        var icon = findChild(chart, "chartPreviewProviderIcon");
+        verify(icon !== null);
+        compare(icon.source.toString(), "view-statistics");
+        compare(icon.isMask, true);
+        var originalHeight = chart.height;
+        var positions = [chart.lineMarkerInset, plot.width / 2, plot.width - chart.lineMarkerInset];
+        for (var i = 0; i < positions.length; i++) {
+            mouseMove(plot, positions[i], plot.height / 2);
+            tryCompare(chart, "hoveredIndex", i);
+            tryCompare(preview, "visible", true);
+            verify(preview.x >= 0 && preview.x + preview.width <= plot.width);
+            verify(preview.y >= 0 && preview.y + preview.height <= plot.height);
+            verify(preview.x > positions[i] + chart.lineMarkerInset
+                || preview.x + preview.width < positions[i] - chart.lineMarkerInset);
+            compare(chart.height, originalHeight);
+            compare(findChild(chart, "chartPreviewTotal").text, String(i + 1));
+        }
         mouseClick(plot, plot.width / 2, plot.height / 2);
         mouseMove(this, 330, 230);
         tryCompare(preview, "visible", false);
-        compare(chart.selectedIndex, 0);
+        compare(chart.selectedIndex, 1);
         keyClick(Qt.Key_Escape);
         compare(chart.selectedIndex, -1);
+    }
+
+    function test_linePreviewReservesTotalWhenProvidersOverflow() {
+        var points = [{label: "2026-11-13", value: 15}];
+        var providers = Array.from({length: 5}, function(_, index) {
+            return {provider: "provider-" + index, points: points};
+        });
+        var chart = createChart({applet: {secondaryTextOpacity: 0.7, canvasColor: function() { return "#000000" }},
+            width: 300, plotHeight: 108, kind: "line", accent: "blue", points: points, lineSeries: providers});
+        if (!chart) return;
+        failOnWarning(/.*/);
+        var plot = chart.nextItemInFocusChain(true).parent;
+        mouseMove(plot, plot.width / 2, plot.height / 2);
+        var preview = findChild(chart, "chartLinePreview");
+        tryCompare(preview, "visible", true);
+        verify(preview.hasOmittedRows);
+        var total = findChild(chart, "chartPreviewTotal");
+        compare(total.text, "15");
+        verify(total.mapToItem(preview, 0, total.height).y <= preview.height);
+        verify(chart.pointInspectionText(0).indexOf("provider-4: 15") >= 0);
     }
 
     function test_axisLabelsStayInsideMirroredChart() {

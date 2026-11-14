@@ -658,6 +658,27 @@ TestCase {
         compare(sparse.barWidth, 46)
     }
 
+    function test_chartPreviewKeepsTheInspectedDayClear_data() {
+        return [
+            {tag: "left edge", width: 300, anchor: 3.5, wanted: 120, x: 15.5, size: 120},
+            {tag: "middle", width: 300, anchor: 150, wanted: 120, x: 162, size: 120},
+            {tag: "flip left", width: 300, anchor: 210, wanted: 120, x: 78, size: 120},
+            {tag: "right edge", width: 300, anchor: 296.5, wanted: 120, x: 164.5, size: 120},
+            {tag: "long content", width: 200, anchor: 120, wanted: 400, x: 0, size: 108},
+            {tag: "long content right", width: 200, anchor: 80, wanted: 400, x: 92, size: 108},
+            {tag: "empty plot", width: 0, anchor: 0, wanted: 120, x: 0, size: 0}
+        ]
+    }
+
+    function test_chartPreviewKeepsTheInspectedDayClear(data) {
+        var result = CostChart.chartPreviewGeometry(data.width, data.anchor, data.wanted, 12)
+        compare(result.x, data.x)
+        compare(result.width, data.size)
+        verify(result.x >= 0 && result.x + result.width <= data.width)
+        if (data.width > 0)
+            verify(result.x >= data.anchor + 12 || result.x + result.width <= data.anchor - 12)
+    }
+
     function test_chartLineGeometryInsetsEndpointMarkers() {
         compare(CostChart.chartLineX(100, 3, 0, 3.5), 3.5)
         compare(CostChart.chartLineX(100, 3, 1, 3.5), 50)

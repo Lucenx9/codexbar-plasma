@@ -23,6 +23,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Position Usage & Spend hover previews beside the inspected day, switching
+  sides near the plot edge so the guide and provider markers remain visible.
+  Add small provider icons, aligned amounts and a separate daily total.
+
 - Keep Usage & Spend day selection stable, restore visible keyboard focus after
   filtering or clearing a day, and reveal focused controls in one shared scroll
   area with the optional assistant. Confine pointer previews to the chart, keep

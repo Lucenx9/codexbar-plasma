@@ -78,6 +78,20 @@ export function chartLineY(height, fraction, inset) {
     return safeHeight - padding - (safeHeight - padding * 2) * boundedFraction
 }
 
+// Prefer the right of the inspected day; flip or constrain the preview to the
+// roomier side rather than covering the guide and its provider markers.
+export function chartPreviewGeometry(width, anchor, preferredWidth, gap) {
+    var safeWidth = nonNegative(width)
+    var x = Math.min(safeWidth, nonNegative(anchor))
+    var spacing = Math.min(safeWidth / 2, nonNegative(gap))
+    var left = Math.max(0, x - spacing)
+    var right = Math.max(0, safeWidth - x - spacing)
+    var wanted = nonNegative(preferredWidth)
+    var useRight = wanted <= right || right >= left
+    var size = Math.min(wanted, useRight ? right : left)
+    return {x: useRight ? Math.min(safeWidth, x + spacing) : Math.max(0, x - spacing - size), width: size}
+}
+
 export function paintRoundedTopBar(context, bounds, radius) {
     var x = bounds.x
     var baseline = bounds.baseline

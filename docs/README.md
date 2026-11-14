@@ -234,6 +234,8 @@ when the product changes instead of adding dated before/after copies.
 - [Provider details](codexbar-plasma-codex.png)
 - [Hidden usage rows](codexbar-plasma-hidden-usage-rows.png): synthetic provider tab showing the inline restore list.
 - [Usage and spend](codexbar-plasma-usage-spend.png)
+- [Chart hover inspection](codexbar-plasma-chart-hover.gif): synthetic native
+  chart recording showing provider icons and previews switching sides.
 - [Shared usage card](codexbar-plasma-share.png): synthetic local PNG summary,
   with the provider token-share bar, separate provider/model rows, and the
   repository attribution.

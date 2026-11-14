@@ -492,26 +492,108 @@ ColumnLayout {
         Rectangle {
             id: linePreview
             objectName: "chartLinePreview"
+            readonly property real rowHeight: Math.max(Kirigami.Units.iconSizes.small, previewFont.height)
+            readonly property int rowCapacity: Math.max(0, Math.floor((plot.height
+                - Kirigami.Units.smallSpacing * 2) / (rowHeight + previewRows.spacing)) - 2)
+            readonly property var providers: chart.lineSeries || []
+            readonly property var inspectedPoint: chart.hoveredIndex >= 0 && chart.hoveredIndex < chart.pointCount
+                ? chart.points[chart.hoveredIndex] : null
+            readonly property bool hasOmittedRows: providers.length > rowCapacity
+            readonly property var visibleProviders: providers.slice(0,
+                Math.max(0, rowCapacity - (hasOmittedRows ? 1 : 0)))
+            readonly property var placement: CostChart.chartPreviewGeometry(plot.width,
+                CostChart.chartLineX(plot.width, chart.pointCount, chart.hoveredIndex, chart.lineMarkerInset),
+                previewRows.implicitWidth + Kirigami.Units.smallSpacing * 2,
+                Kirigami.Units.largeSpacing)
             visible: chart.hasLineSeries && chart.hoveredIndex >= 0 && plotMouse.containsMouse
-            width: Math.min(plot.width, previewText.implicitWidth + Kirigami.Units.smallSpacing * 2)
-            height: Math.min(plot.height, previewText.implicitHeight + Kirigami.Units.smallSpacing * 2)
-            x: Math.max(0, Math.min(plot.width - width,
-                CostChart.chartLineX(plot.width, chart.pointCount, chart.hoveredIndex, chart.lineMarkerInset) - width / 2))
+            width: placement.width
+            height: Math.min(plot.height, previewRows.implicitHeight + Kirigami.Units.smallSpacing * 2)
+            x: placement.x
             y: 0
             color: Kirigami.Theme.backgroundColor
             border.color: Kirigami.Theme.disabledTextColor
             radius: Kirigami.Units.cornerRadius
             clip: true
             Accessible.ignored: true
-            PlainPlasmaLabel {
-                id: previewText
-                anchors.fill: parent
-                anchors.margins: Kirigami.Units.smallSpacing
-                text: chart.pointInspectionText(chart.hoveredIndex)
-                font: Kirigami.Theme.smallFont
-                wrapMode: Text.Wrap
-                elide: Text.ElideRight
-                Accessible.ignored: true
+            FontMetrics { id: previewFont; font: Kirigami.Theme.smallFont }
+            ColumnLayout {
+                id: previewRows
+                x: Kirigami.Units.smallSpacing
+                y: Kirigami.Units.smallSpacing
+                width: Math.max(0, linePreview.width - Kirigami.Units.smallSpacing * 2)
+                spacing: Kirigami.Units.smallSpacing / 2
+
+                PlainPlasmaLabel {
+                    text: chart.pointLabel(linePreview.inspectedPoint)
+                    font: Kirigami.Theme.smallFont
+                    opacity: chart.applet.secondaryTextOpacity
+                    Layout.fillWidth: true
+                    elide: Text.ElideRight
+                    Accessible.ignored: true
+                }
+                Repeater {
+                    model: linePreview.visibleProviders
+                    delegate: RowLayout {
+                        id: previewProvider
+                        required property var modelData
+                        Layout.fillWidth: true
+                        spacing: Kirigami.Units.smallSpacing
+                        Kirigami.Icon {
+                            objectName: "chartPreviewProviderIcon"
+                            source: previewProvider.modelData.iconSource || "view-statistics"
+                            fallback: "view-statistics"
+                            isMask: previewProvider.modelData.iconIsMask === true
+                            color: chart.seriesColors[previewProvider.modelData.provider] || chart.accent
+                            Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                            Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                            Accessible.ignored: true
+                        }
+                        PlainPlasmaLabel {
+                            text: previewProvider.modelData.label || previewProvider.modelData.provider
+                            font: Kirigami.Theme.smallFont
+                            Layout.fillWidth: true
+                            Layout.minimumWidth: 0
+                            elide: Text.ElideRight
+                            Accessible.ignored: true
+                        }
+                        PlainPlasmaLabel {
+                            text: chart.pointDisplayValue(previewProvider.modelData.points
+                                ? previewProvider.modelData.points[chart.hoveredIndex] : null)
+                            font: Kirigami.Theme.smallFont
+                            Layout.maximumWidth: previewRows.width / 2
+                            horizontalAlignment: Text.AlignRight
+                            elide: Text.ElideRight
+                            Accessible.ignored: true
+                        }
+                    }
+                }
+                PlainPlasmaLabel {
+                    visible: linePreview.hasOmittedRows
+                    text: "…"
+                    font: Kirigami.Theme.smallFont
+                    Accessible.ignored: true
+                }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: Kirigami.Units.smallSpacing
+                    PlainPlasmaLabel {
+                        text: i18n("Total")
+                        font: Kirigami.Theme.smallFont
+                        Layout.fillWidth: true
+                        Layout.minimumWidth: 0
+                        elide: Text.ElideRight
+                        Accessible.ignored: true
+                    }
+                    PlainPlasmaLabel {
+                        objectName: "chartPreviewTotal"
+                        text: chart.pointDisplayValue(linePreview.inspectedPoint)
+                        font: Kirigami.Theme.smallFont
+                        Layout.maximumWidth: previewRows.width / 2
+                        horizontalAlignment: Text.AlignRight
+                        elide: Text.ElideRight
+                        Accessible.ignored: true
+                    }
+                }
             }
         }
     }

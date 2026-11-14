@@ -338,7 +338,10 @@ work and upstream contract requirements.
   Selecting a day scopes provider and model details, while headline
   totals keep the selected period and projects appear only with **All days**. **All days** or Escape clears the day selection and returns keyboard inspection
   to the chart. Selecting a day does not move the plot. Provider hover readouts
-  follow the configured provider order and stay inside the plot; pinned-day
+  follow the configured provider order and sit beside the inspected day's guide,
+  switching sides near the edge while staying inside the plot. Small provider
+  icons identify rows, with amounts aligned on the right and the daily total
+  below. An ellipsis marks rows that do not fit the plot height; pinned-day
   cards and the accessible description retain all provider values.
   **Models and token composition** and **Activity heatmap** expand on demand.
   **Last 7 days vs previous 7** excludes today and requires fourteen complete

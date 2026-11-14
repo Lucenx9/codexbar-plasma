@@ -804,6 +804,11 @@ msgstr ""
 msgid "Use the arrow keys to inspect chart points"
 msgstr ""
 
+#: contents/ui/components/InteractiveChart.qml
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Total"
+msgstr ""
+
 #: contents/ui/components/PanelRuleEditor.qml
 msgid "Show each provider meter"
 msgstr ""
@@ -1719,10 +1724,6 @@ msgstr ""
 
 #: contents/ui/components/RateWindowLabels.qml
 msgid "Premium"
-msgstr ""
-
-#: contents/ui/components/RateWindowLabels.qml
-msgid "Total"
 msgstr ""
 
 #: contents/ui/components/RateWindowLabels.qml

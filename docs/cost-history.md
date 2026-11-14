@@ -153,9 +153,16 @@ selected in the widget. Changing accounts does not filter this scan or establish
 that its totals belong to that account. The Codex cost hint states this scope.
 
 Hover previews stay inside the chart. Usage & Spend previews appear immediately
-while the pointer is over a day and are clipped to the plot and scroll viewport;
-long previews may elide, while pinning the day exposes the full provider details.
+while the pointer is over a day, beside its vertical guide rather than over its
+markers. They open on the right, flip left when needed, and shrink to the roomier
+side if neither side fits. They are clipped to the plot and scroll viewport;
+Provider rows use small identity icons and right-aligned amounts, followed by
+the daily total. Long names or amounts may elide; an ellipsis marks omitted
+provider rows when the plot is too short. Pinning the day exposes the full details.
 Keyboard inspection uses the readout, accessible description and provider rows.
+
+![Native chart hover inspection with synthetic provider data](codexbar-plasma-chart-hover.gif)
+
 All days and Escape clear the pin and leave keyboard focus on the chart. The
 reset action occupies the provider heading row without shifting the plot.
 Positive sub-cent amounts use an explicit less-than-one-cent notation; axis
