@@ -806,12 +806,30 @@ TestCase {
         compare(applet.refreshes, 0);
     }
 
-    function test_tokenOnlyExclusionsKeepTheSummaryQualified() {
-        applet.costs = [{provider: "codex", daily: [], totals: {cost: null, tokens: 20},
-            trust: {incompleteRequests: 2}}];
+    function test_tokenExclusionsKeepTheSummaryQualified_data() {
+        return [
+            {tag: "token-only", costs: [{provider: "codex", daily: [], totals: {cost: null, tokens: 20},
+                trust: {incompleteRequests: 2}}]},
+            {tag: "mixed-currencies", costs: [
+                {provider: "codex", daily: [], totals: {cost: 1, tokens: 10, currency: "USD"}},
+                {provider: "claude", daily: [], totals: {cost: 2, tokens: 20, currency: "EUR"},
+                    trust: {incompleteRequests: 2}}
+            ]}
+        ];
+    }
+
+    function test_tokenExclusionsKeepTheSummaryQualified(data) {
+        applet.costs = data.costs;
         var view = createView("SpendView");
         if (!view) return;
         verify(findItem(view, function(item) { return item.text === "Tokens (partial)"; }) !== null);
+        var value = findItem(view, function(item) { return item.Accessible.description === "2 incomplete requests excluded"; });
+        verify(value !== null);
+        value.forceActiveFocus(Qt.TabFocusReason);
+        verify(value.activeFocus);
+        var tip = findChild(value, "analysisSummaryValueToolTip");
+        verify(tip !== null);
+        tryVerify(function() { return tip.visible; });
     }
 
     function spendChart(points) {

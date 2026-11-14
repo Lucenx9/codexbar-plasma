@@ -256,7 +256,7 @@ class CostTest(unittest.TestCase):
             "amounts: CostAmounts.todayAmounts(tokenCostSection.tokenCost, tokenCostSection.applet.panelClockMs)",
             "amounts: tokenCostSection.tokenCost.totals",
             "tokenCostSection.amountText(modelData.amounts, modelData.valueMode)",
-            "tokenCostSection.tokensText(modelData.amounts)",
+            "tokenCostSection.tokensText(modelData.amounts, modelData.incompleteRequests)",
             "Layout.fillWidth: true",
             "wrapMode: Text.Wrap",
         ):

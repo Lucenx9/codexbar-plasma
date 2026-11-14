@@ -1604,6 +1604,29 @@ TestCase {
         compare(summary.valueMode, "partial")
     }
 
+    function test_tokenExclusionsHaveTheirOwnCurrencyIndependentScope_data() {
+        return [
+            {tag: "mixed-currencies", items: [
+                {totals: {cost: 1, tokens: 10, currency: "USD"}},
+                {totals: {cost: 2, tokens: 20, currency: "EUR"}, trust: {incompleteRequests: 3}}
+            ], expected: 3},
+            {tag: "token-only", items: [{totals: {cost: null, tokens: 10}, trust: {incompleteRequests: 2}}], expected: 2},
+            {tag: "missing-tokens", items: [{totals: {cost: 1}, trust: {incompleteRequests: 2}}], expected: 0},
+            {tag: "zero-tokens", items: [{totals: {tokens: 0}, trust: {incompleteRequests: 2}}], expected: 0},
+            {tag: "invalid-count", items: [{totals: {tokens: 10}, trust: {incompleteRequests: "2"}}], expected: 0},
+            {tag: "bounded-sum", items: [
+                {totals: {tokens: 10}, trust: {incompleteRequests: 1000000000}},
+                {totals: {tokens: 20}, trust: {incompleteRequests: 1000000000}}
+            ], expected: 1000000000},
+            {tag: "malformed-siblings", items: [null, 1, {}, {totals: {tokens: 10}, trust: {incompleteRequests: 2}}], expected: 2},
+            {tag: "invalid-list", items: {}, expected: 0}
+        ]
+    }
+
+    function test_tokenExclusionsHaveTheirOwnCurrencyIndependentScope(data) {
+        compare(CostTrust.incompleteTokenRequests(data.items), data.expected)
+    }
+
     function test_costTrustSummaryRejectsUnusableExcludedRequestCounts_data() {
         return [
             { tag: "absent", value: undefined },

@@ -86,6 +86,7 @@ TestCase {
     function test_closeButtonDismissesTheScope(data) {
         var notice = createTemporaryObject(noticeComponent, this)
         tryVerify(function() { return notice.visible })
+        verify(waitForPolish(notice))
 
         var details = findChild(notice, "plainNoteDetailsButton")
         mouseClick(details)
@@ -113,6 +114,7 @@ TestCase {
     function test_hiddenPresentationDoesNotDismiss() {
         var notice = createTemporaryObject(noticeComponent, this)
         tryVerify(function() { return notice.visible })
+        verify(waitForPolish(notice))
 
         notice.presentationVisible = false
         notice.visible = false
@@ -127,6 +129,7 @@ TestCase {
     function test_explanationStartsCollapsedAndCanBeOpened(data) {
         var notice = createTemporaryObject(noticeComponent, this)
         tryVerify(function() { return notice.visible })
+        verify(waitForPolish(notice))
         var label = findChild(notice, "plainNoteLabel")
         var details = findChild(notice, "plainNoteDetailsButton")
         verify(!label.visible)
@@ -150,6 +153,7 @@ TestCase {
     function test_scopeChangeCollapsesExplanationAndRestoresFocus() {
         var notice = createTemporaryObject(noticeComponent, this)
         tryVerify(function() { return notice.visible })
+        verify(waitForPolish(notice))
         var details = findChild(notice, "plainNoteDetailsButton")
         mouseClick(details)
         findChild(notice, "plainNoteCloseButton").forceActiveFocus(Qt.TabFocusReason)
@@ -165,8 +169,29 @@ TestCase {
                 trust: {incompleteRequests: 2}}])
         })
         tryVerify(function() { return notice.visible })
+        verify(waitForPolish(notice))
         compare(findChild(notice, "plainNoteDetailsButton").plainText, "Partial data")
         verify(!findChild(notice, "plainNoteLabel").visible)
+    }
+
+    function test_enlargedTranslatedDisclosureFitsNarrowWidth() {
+        var notice = createTemporaryObject(noticeComponent, this, {
+            width: 240, heading: "Informationen zu diesen Kosten"
+        })
+        tryVerify(function() { return notice.visible })
+        verify(waitForPolish(notice))
+        var details = findChild(notice, "plainNoteDetailsButton")
+        details.font.pointSize = 24
+        verify(waitForPolish(notice))
+        verify(details.width > 0)
+        verify(details.mapToItem(notice, 0, 0).x >= 0)
+        verify(details.mapToItem(notice, details.width, 0).x <= notice.width)
+        details.forceActiveFocus(Qt.TabFocusReason)
+        keyClick(Qt.Key_Space)
+        verify(waitForPolish(notice))
+        verify(findChild(notice, "plainNoteLabel").visible)
+        verify(details.mapToItem(notice, details.width, 0).x <= notice.width)
+        compare(details.Accessible.name, "Informationen zu diesen Kosten")
     }
 
     function test_hidingAncestorsPreservesTheNotice_data() {

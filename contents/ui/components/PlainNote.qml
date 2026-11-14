@@ -55,6 +55,9 @@ Item {
                 id: detailsButton
                 objectName: "plainNoteDetailsButton"
                 visible: noteRoot.heading.length > 0
+                Layout.minimumWidth: 0
+                Layout.maximumWidth: Math.max(0, noteRoot.width
+                    - (closeButton.visible ? closeButton.implicitWidth + noteRow.spacing : 0))
                 plainText: noteRoot.heading
                 expanded: noteRoot.expanded
                 onClicked: noteRoot.expanded = !noteRoot.expanded

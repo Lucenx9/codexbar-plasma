@@ -536,12 +536,14 @@ ColumnLayout {
                     }
 
                     PlainButton {
+                        id: showTokensButton
                         objectName: "analysisShowTokensButton"
                         visible: !view.applet.costHistoryShowsTokens
                         plainText: i18n("Tokens")
                         onClicked: {
+                            var reason = showTokensButton.focusReason
                             view.applet.setCostHistoryMetric("tokens")
-                            metricToggle.focusCurrentChoice(Qt.TabFocusReason)
+                            metricToggle.focusCurrentChoice(reason)
                         }
                     }
                 }

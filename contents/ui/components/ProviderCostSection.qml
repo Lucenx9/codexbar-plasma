@@ -164,7 +164,7 @@ ColumnLayout {
                     label: tokenCostSection.tokenCost.windowLabel,
                     amounts: tokenCostSection.tokenCost.totals,
                     valueMode: tokenCostSection.tokenCost.valueMode,
-                    incompleteRequests: tokenCostSection.costTrustSummary ? tokenCostSection.costTrustSummary.incompleteRequests : 0
+                    incompleteRequests: CostTrust.incompleteTokenRequests([tokenCostSection.tokenCost])
                 }
             ] : []
 

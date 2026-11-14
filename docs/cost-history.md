@@ -258,8 +258,11 @@ A foreign-currency snapshot with a finite cost is excluded from this notice,
 including its incomplete-request count, although its tokens enter the global
 total. Daily cost data alone does not create a range pricing notice. Token-only
 incomplete-request warnings still require a positive published token amount.
-Token-completeness notices across all currencies and daily-only cost notices need
-their own scope and text rather than a message about a displayed range total.
+`CostTrust.incompleteTokenRequests` independently sums bounded exclusions for
+positive token totals across all currencies. It qualifies the Tokens summary
+and supplies its excluded-request count on hover or keyboard focus, independently
+of monetary provenance. Daily-only cost notices still need their own scope and
+text rather than a message about a displayed range total.
 
 `CostCurrency.spendCurrency` chooses from measured cost amounts in displayed
 provider order, checking each provider's totals before its daily rows. Measured
