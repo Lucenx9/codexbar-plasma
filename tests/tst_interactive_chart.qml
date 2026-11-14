@@ -163,6 +163,37 @@ TestCase {
         verify(x >= 0 && x + labels[0].width <= chart.width + 1);
     }
 
+    function test_endpointDatesFollowPlotCoordinates_data() {
+        return [{tag: "line-ltr", kind: "line", mirrored: false},
+            {tag: "line-rtl", kind: "line", mirrored: true},
+            {tag: "bars-ltr", kind: "bars", mirrored: false},
+            {tag: "bars-rtl", kind: "bars", mirrored: true}];
+    }
+
+    function test_endpointDatesFollowPlotCoordinates(data) {
+        var chart = createChart({applet: {secondaryTextOpacity: 0.7, canvasColor: function() { return "#000000" }},
+            width: 300, kind: data.kind, accent: "blue", axisLabels: ["2", "1", "0"],
+            points: [{label: "2026-11-08", value: 1}, {label: "2026-11-14", value: 2}]});
+        if (!chart) return;
+        chart.LayoutMirroring.enabled = data.mirrored;
+        chart.LayoutMirroring.childrenInherit = true;
+        verify(waitForRendering(chart));
+        var dates = chart.children.find(function(item) {
+            return item.children && item.children.some(function(child) {
+                return child.text === chart.pointLabel(chart.points[0]);
+            });
+        });
+        verify(dates !== undefined);
+        var labels = dates.children.filter(function(item) { return item.text !== undefined; });
+        compare(labels.length, 2);
+        compare(labels[0].effectiveHorizontalAlignment, Text.AlignLeft);
+        compare(labels[1].effectiveHorizontalAlignment, Text.AlignRight);
+        var plot = chart.nextItemInFocusChain(true).parent;
+        verify(labels[0].mapToItem(chart, 0, 0).x < labels[1].mapToItem(chart, 0, 0).x);
+        compare(labels[0].text, chart.pointLabel(chart.points[chart.indexAt(0)]));
+        compare(labels[1].text, chart.pointLabel(chart.points[chart.indexAt(plot.width)]));
+    }
+
     function test_firstInspectionKeepsPlotGeometry_data() {
         return [{tag: "hover", keyboard: false}, {tag: "keyboard", keyboard: true}]
     }
