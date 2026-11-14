@@ -265,6 +265,25 @@ TestCase {
 
 
 class CostSectionTests(unittest.TestCase):
+    def test_provider_token_exclusions_remain_qualified_without_explanation(self):
+        self.run_fixture('''
+    function test_partialTokensStayVisible() {
+        providerTokenCost = Object.assign({}, providerTokenCost, {
+            trust: {incompleteRequests: 2}
+        });
+        var subject = createTemporaryObject(providerFactory, testCase, {width: 540});
+        verify(subject !== null);
+        tryVerify(function() { return textsUnder(subject).indexOf("100 tokens (partial)") >= 0; });
+        verify(textsUnder(subject).indexOf("10 tokens") >= 0);
+        verify(!findChild(subject, "plainNoteDetailsButton").visible);
+        providerTokenCost = Object.assign({}, providerTokenCost, {
+            trust: {coverage: {priced: 0, unpriced: 1, unmetered: 0, estimated: 0}}
+        });
+        tryVerify(function() { return textsUnder(subject).indexOf("100 tokens") >= 0; });
+        verify(textsUnder(subject).indexOf("100 tokens (partial)") < 0);
+    }
+    ''')
+
     def test_provider_disclosures_keep_focus_inside_viewport(self):
         self.run_fixture('''
     function test_disclosureFocusBounds_data() {
@@ -738,6 +757,41 @@ class CostSectionTests(unittest.TestCase):
     }
     ''')
 
+    def test_provider_today_exclusions_follow_the_normalized_day(self):
+        self.run_fixture('''
+    function test_todayExclusionsFollowTheDay_data() {
+        return [
+            {tag: "today-incomplete", todayCount: 2, expected: "1200 tokens (partial)"},
+            {tag: "only-older-day-incomplete", todayCount: 0, expected: "1200 tokens"},
+            {tag: "invalid-daily-count", todayCount: "2", expected: "1200 tokens"}
+        ];
+    }
+    function test_todayExclusionsFollowTheDay(data) {
+        var scan = new Date(2026, 8, 23, 22).getTime();
+        var parsed = CostResponse.response(JSON.stringify([{
+            provider: "codex", historyDays: 30, currencyCode: "USD",
+            updatedAt: new Date(scan).toISOString(), sessionCostUSD: 1.25, sessionTokens: 1200,
+            incompleteRequestCount: 9, totals: {totalCost: 9, totalTokens: 9000},
+            daily: [
+                {date: "2026-09-22", totalCost: 7.75, totalTokens: 7800, incompleteRequestCount: 7},
+                {date: "2026-09-23", totalCost: 1.25, totalTokens: 1200, incompleteRequestCount: data.todayCount}
+            ]
+        }]), "", 30, 0).costs.codex;
+        fakeApplet.panelClockMs = scan;
+        var subject = createTemporaryObject(providerFactory, testCase, {width: 540});
+        verify(subject !== null);
+        for (var privacy of [false, true, false]) {
+            var cost = Object.assign({}, Privacy.cost(parsed, privacy), {windowLabel: "30d", hintLine: ""});
+            providerData = {provider: "codex", tokenCost: cost};
+            tryVerify(function() { return textsUnder(subject).indexOf(data.expected) >= 0; });
+            verify(textsUnder(subject).indexOf("9000 tokens (partial)") >= 0);
+        }
+        fakeApplet.panelClockMs = new Date(2026, 8, 24, 0, 30).getTime();
+        tryVerify(function() { return textsUnder(subject).indexOf("Tokens unavailable") >= 0; });
+        verify(textsUnder(subject).indexOf("1200 tokens (partial)") < 0);
+    }
+    ''')
+
     def test_calendar_history_growth_preserves_provider_selection(self):
         self.run_fixture('''
     function test_calendarGrowth_data() {
@@ -842,7 +896,7 @@ class CostSectionTests(unittest.TestCase):
     def test_spend_view_presents_costs_and_controls(self):
         self.run_fixture('''
     // The spend view presents the ordered provider costs with its metric
-    // controls, still-building notice, chart and heatmap readout.
+    // controls, missing-chart explanation and heatmap readout.
     function test_spendViewPresentsCostsAndControls() {
         var subject = createTemporaryObject(spendFactory, testCase);
         verify(subject !== null);
@@ -881,15 +935,15 @@ class CostSectionTests(unittest.TestCase):
         compare(ranges[0].Accessible.name, "History range: All history");
         fakeApplet.setCostHistoryDays(30);
         var historyMsgs = all.filter(function(item) {
-            return item.plainText !== undefined
-                && item.plainText.indexOf("No daily") >= 0;
+            return item.text !== undefined
+                && item.text.indexOf("No daily") >= 0;
         });
         compare(historyMsgs.length, 1);
-        compare(historyMsgs[0].plainText,
+        compare(historyMsgs[0].text,
             "No daily cost history for this range. Try Tokens for token history.");
         fakeApplet.costHistoryShowsTokens = true;
         tryVerify(function() {
-            return historyMsgs[0].plainText
+            return historyMsgs[0].text
                 === "No daily token history is available for this range.";
         });
         fakeApplet.costHistoryShowsTokens = false;

@@ -4506,3 +4506,15 @@ msgid "Showing the most recent %1 day. The chart covers the full range."
 msgid_plural "Showing the most recent %1 days. The chart covers the full range."
 msgstr[0] "É mostrado %1 dia, o mais recente. O gráfico abrange todo o período."
 msgstr[1] "Os %1 dias mais recentes são mostrados. O gráfico abrange todo o período."
+
+#: contents/ui/components/CostTrustNotice.qml
+msgid "About these costs"
+msgstr "Sobre estes custos"
+
+#: contents/ui/components/CostTrustNotice.qml
+msgid "Partial data"
+msgstr "Dados parciais"
+
+#: contents/ui/components/AnalysisSummary.qml
+msgid "Cost (%1 subtotal)"
+msgstr "Custo (subtotal em %1)"

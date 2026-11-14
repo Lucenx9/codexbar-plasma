@@ -125,6 +125,9 @@ TestCase {
         function refreshCost() {
             refreshes++;
         }
+        function setCostHistoryMetric(metric) {
+            costHistoryMetric = metric;
+        }
         function refreshSessions() {
             refreshes++;
         }
@@ -899,6 +902,7 @@ TestCase {
         if (!view) return;
         var chart = findItem(view, function(item) { return item.lineSeries !== undefined; });
         compare(view.spendCurrency, "USD");
+        verify(findItem(view, function(item) { return item.text === "Cost (USD subtotal)"; }) !== null);
         compare(view.dailyPoints[0].value, 10);
         compare(chart.lineSeries.map(function(series) { return series.provider; }), ["gemini", "claude"]);
         compare(chart.lineSeries.map(function(series) { return series.points[0].value; }), [7, 3]);
@@ -911,6 +915,51 @@ TestCase {
         compare(view.dailyPoints[0].value, 600);
         compare(chart.lineSeries.map(function(series) { return series.provider; }), ["codex", "gemini", "claude"]);
         compare(chart.lineSeries.map(function(series) { return series.points[0].value; }), [200, 300, 100]);
+    }
+
+    function test_missingDailyHistoryOffersTokensAndKeepsFocus() {
+        applet.costs = [{provider: "codex", currency: "USD", daily: [],
+            totals: {cost: 2, tokens: 10, currency: "USD"}}];
+        var view = createView("SpendView");
+        if (!view) return;
+        var emptyChart = findChild(view, "analysisChartEmptyState");
+        var action = findChild(view, "analysisShowTokensButton");
+        verify(emptyChart.visible);
+        verify(action.visible);
+        action.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Space);
+        compare(applet.costHistoryMetric, "tokens");
+        verify(!action.visible);
+        var toggle = findChild(view, "analysisMetricToggle");
+        var tokensChoice = findItem(toggle, function(item) { return item.text === "Tokens" && item.activeFocus; });
+        verify(tokensChoice !== null);
+        compare(applet.refreshes, 0);
+    }
+
+    function test_tokenExclusionsKeepTheSummaryQualified_data() {
+        return [
+            {tag: "token-only", costs: [{provider: "codex", daily: [], totals: {cost: null, tokens: 20},
+                trust: {incompleteRequests: 2}}]},
+            {tag: "mixed-currencies", costs: [
+                {provider: "codex", daily: [], totals: {cost: 1, tokens: 10, currency: "USD"}},
+                {provider: "claude", daily: [], totals: {cost: 2, tokens: 20, currency: "EUR"},
+                    trust: {incompleteRequests: 2}}
+            ]}
+        ];
+    }
+
+    function test_tokenExclusionsKeepTheSummaryQualified(data) {
+        applet.costs = data.costs;
+        var view = createView("SpendView");
+        if (!view) return;
+        verify(findItem(view, function(item) { return item.text === "Tokens (partial)"; }) !== null);
+        var value = findItem(view, function(item) { return item.Accessible.description === "2 incomplete requests excluded"; });
+        verify(value !== null);
+        value.forceActiveFocus(Qt.TabFocusReason);
+        verify(value.activeFocus);
+        var tip = findChild(value, "analysisSummaryValueToolTip");
+        verify(tip !== null);
+        tryVerify(function() { return tip.visible; });
     }
 
     function spendChart(points) {

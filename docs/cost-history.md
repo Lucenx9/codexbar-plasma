@@ -68,9 +68,11 @@ presentation changes.
 The provider popup shows Today and the selected period side by side with
 emphasized amounts. Its chart shows the peak daily amount above the plot until
 a day is inspected, without repeating the latest date beneath the axis. History,
-period models, and projects expand on demand. Cost errors and pricing notices
+period models, and projects expand on demand. Cost errors and amount qualifiers
 remain visible when the details are collapsed, including refresh errors beside
-retained values. A successful refresh clears the error.
+retained values. Pricing explanations have their own collapsed disclosure below
+the totals, labeled Partial data for incomplete ranges. A successful refresh
+clears the error.
 
 Today is the CLI's total for the local date of the scan (`updatedAt`). A
 retained snapshot scanned on an earlier date, such as before midnight or before
@@ -231,21 +233,38 @@ remain supported.
 
 `ProviderNormalizer.normalizeCostTrustMetadata` bounds `coverage`, `provenance`,
 and the official `incompleteRequestCount`. `CostTrust.costTrustSummary`
-qualifies provider and global amounts with one shared notice. Missing legacy
+qualifies provider and global amounts with one shared explanation. Its disclosure
+starts collapsed below the totals; amount qualifiers and the Partial data label
+remain readable without opening it. Missing legacy
 metadata stays quiet. Keep pricing coverage separate from history collection
 coverage and never expose raw provenance in QML.
+Excluded requests also mark the period's tokens as partial, including when cost
+is unavailable or the explanation was dismissed. Unpriced costs alone do not
+make measured tokens partial. Provider Today tokens use only that day's own
+exclusion count from the matching normalized daily record rather than inheriting
+the period's count. A missing or ambiguous day supplies no count; the stale-day
+policy hides Today amounts after local midnight, including in privacy mode.
 
 Only pressing the notice's close button records a semantic dismissal. Hiding a
 tab or closing the popup preserves an open notice, including when the popup is
 recreated. Pointer and keyboard activation of the close button share that action.
+The close button appears inside the expanded explanation. Collapsing it does
+not record a dismissal. A different provider or semantic warning collapses the
+explanation, returning focus to its disclosure if the focused close button hides.
+Missing daily history occupies the chart area; its Tokens action returns focus
+to the selected metric control. Mixed-currency summary labels name the currency
+and identify the displayed amount as a subtotal.
 
 The shared pricing notice keeps cost provenance scoped to the selected currency.
 A foreign-currency snapshot with a finite cost is excluded from this notice,
 including its incomplete-request count, although its tokens enter the global
 total. Daily cost data alone does not create a range pricing notice. Token-only
 incomplete-request warnings still require a positive published token amount.
-Token-completeness notices across all currencies and daily-only cost notices need
-their own scope and text rather than a message about a displayed range total.
+`CostTrust.incompleteTokenRequests` independently sums bounded exclusions for
+positive token totals across all currencies. It qualifies the Tokens summary
+and supplies its excluded-request count on hover or keyboard focus, independently
+of monetary provenance. Daily-only cost notices still need their own scope and
+text rather than a message about a displayed range total.
 
 `CostCurrency.spendCurrency` chooses from measured cost amounts in displayed
 provider order, checking each provider's totals before its daily rows. Measured

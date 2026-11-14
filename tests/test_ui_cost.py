@@ -46,8 +46,8 @@ class CostTest(unittest.TestCase):
         token_cost_section_body = id_block(main_text, "tokenCostSection")
         self.assertLess(token_cost_section_body.index("visible: tokenCostSection.costErrorText.length > 0"),
                         token_cost_section_body.index("Components.CostTrustNotice {"))
-        self.assertLess(token_cost_section_body.index("Components.CostTrustNotice {"),
-                        token_cost_section_body.index("id: costSummaryGrid"))
+        self.assertLess(token_cost_section_body.index("id: costSummaryGrid"),
+                        token_cost_section_body.index("Components.CostTrustNotice {"))
         if not code_contains(token_cost_section_body, "applet.costErrorText"):
             raise AssertionError("tokenCostSection must surface costErrorText instead of dropping cost errors")
         if not code_contains(token_cost_section_body, "Cost unavailable: %1"):
@@ -256,7 +256,7 @@ class CostTest(unittest.TestCase):
             "amounts: CostAmounts.todayAmounts(tokenCostSection.tokenCost, tokenCostSection.applet.panelClockMs)",
             "amounts: tokenCostSection.tokenCost.totals",
             "tokenCostSection.amountText(modelData.amounts, modelData.valueMode)",
-            "tokenCostSection.tokensText(modelData.amounts)",
+            "tokenCostSection.tokensText(modelData.amounts, modelData.incompleteRequests)",
             "Layout.fillWidth: true",
             "wrapMode: Text.Wrap",
         ):
@@ -554,7 +554,6 @@ class CostTest(unittest.TestCase):
             "onStateOwnerChanged:",
             'typeof stateOwner.updateCostTrustNoticeState !== "function"',
             "onSummaryChanged: scheduleRefreshNoticeState()",
-            "onNoticeScopeChanged: scheduleRefreshNoticeState()",
             "onStateOwnerChanged: scheduleRefreshNoticeState()",
             "function scheduleRefreshNoticeState()",
             "noticeRefresh.restart()",

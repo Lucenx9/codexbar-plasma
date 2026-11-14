@@ -4526,3 +4526,15 @@ msgid "Showing the most recent %1 day. The chart covers the full range."
 msgid_plural "Showing the most recent %1 days. The chart covers the full range."
 msgstr[0] "%1 Tag wird angezeigt, der neueste. Das Diagramm zeigt den gesamten Zeitraum."
 msgstr[1] "Die letzten %1 Tage werden angezeigt. Das Diagramm zeigt den gesamten Zeitraum."
+
+#: contents/ui/components/CostTrustNotice.qml
+msgid "About these costs"
+msgstr "Informationen zu diesen Kosten"
+
+#: contents/ui/components/CostTrustNotice.qml
+msgid "Partial data"
+msgstr "Unvollständige Daten"
+
+#: contents/ui/components/AnalysisSummary.qml
+msgid "Cost (%1 subtotal)"
+msgstr "Kosten (Zwischensumme in %1)"

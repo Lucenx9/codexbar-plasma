@@ -173,6 +173,12 @@ Group related secondary data under existing disclosures. Keep provider actions
 separate from usage facts. Hiding a row changes presentation only; it must not
 change fetching, thresholds, notification semantics, or the panel's data.
 
+Keep informational explanations on the canvas rather than inside message
+surfaces. Place cost provenance and exclusions in a collapsed disclosure below
+the totals; retain amount qualifiers and an explicit partial-data label outside
+the explanation. Missing chart history belongs in the chart area. Reserve
+message surfaces for failures with recovery actions.
+
 ### Overview, history, and sessions
 
 Overview prioritizes provider identity and named quota comparisons. Keep

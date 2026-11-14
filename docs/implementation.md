@@ -89,7 +89,8 @@ owns checkout setup, delivery, and repository maintenance.
   missing-versus-zero arithmetic, averages and current-day amounts.
   `CostCurrency.mjs` selects the monetary currency and excludes foreign amounts
   without dropping currency-free tokens. `CostTrust.mjs` folds pricing confidence
-  and returns bounded semantic notice transitions. `CostChart.mjs` owns geometry,
+  and returns bounded semantic notice transitions. Its token-exclusion summary
+  spans currencies independently of monetary confidence. `CostChart.mjs` owns geometry,
   point memoization, date-preserving selection and calendar heatmap slots; its
   drawing method receives a canvas, explicit bounds and a corner radius.
   These modules take explicit inputs and contain no localization or process
