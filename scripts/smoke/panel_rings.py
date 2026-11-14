@@ -22,10 +22,18 @@ def add_ring_cases(add, content_keys):
 def validate_ring_record(record, count):
     if record["case"].get("config", {}).get("panelMeterShape") != "rings":
         return
-    rings = [part for part in record["parts"] if part["name"] == "panelMeterRing"]
+    names = [part["name"] for part in record["parts"]]
     expected_rings = count * (1 if record["case"]["config"]["panelQuotaLane"] != "auto" else 2)
     expected_rings -= {"missing-secondary": 1, "no-quotas": 2}.get(record["case"].get("edge"), 0)
-    if len(rings) != expected_rings:
+    if names.count("panelMeterRing") != expected_rings:
         raise RuntimeError("Missing or duplicated quota ring: " + record["id"])
-    if any(part["name"] == "panelMeterTrack" for part in record["parts"]):
+    if "panelMeterTrack" in names:
         raise RuntimeError("Capsules remain visible with rings: " + record["id"])
+    validate_ring_icons(record, count)
+
+
+def validate_ring_icons(record, count):
+    expected_icons = max(1, count - int(record["case"].get("edge") == "no-quotas"))
+    icons = sum(part["name"] in {"panelProviderIcon", "panelIdentityIcon"} for part in record["parts"])
+    if icons != expected_icons:
+        raise RuntimeError("Missing or duplicated provider icon: " + record["id"])

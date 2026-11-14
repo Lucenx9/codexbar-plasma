@@ -302,7 +302,8 @@ exhausted quotas are synthetic normalized snapshots within the isolated applet.
 Four providers is the meter row the compact renderer caps at, so that batch is
 where panel content competes for width and items are surrendered.
 
-The runner rejects missing PNGs, clipped measured elements, incorrect base
+The runner rejects missing PNGs, clipped measured elements, missing or duplicated
+provider logos in ring cases, incorrect ring counts, incorrect base
 text/capsule counts, and rendered text that is not one of the compositions the
 renderer offered. It rejects an elided label only when a narrower composition
 would have fitted: the narrowest composition has nothing left to surrender, so
