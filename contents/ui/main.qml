@@ -744,6 +744,10 @@ PlasmoidItem {
             for (var modelIndex = 0; modelIndex < dayModels.length; modelIndex++) {
                 dayModels[modelIndex].label = i18n("Model %1", modelIndex + 1)
             }
+            var dayTokenModels = result.daily[dayIndex].tokenRanking.rows
+            for (var dayRankIndex = 0; dayRankIndex < dayTokenModels.length; dayRankIndex++) {
+                dayTokenModels[dayRankIndex].label = i18n("Model %1", dayRankIndex + 1)
+            }
         }
         for (var j = 0; j < result.projects.rows.length; j++) {
             result.projects.rows[j].label = i18n("Project %1", j + 1)

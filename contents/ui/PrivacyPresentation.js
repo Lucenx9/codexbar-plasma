@@ -171,6 +171,16 @@ function modelAmounts(snapshot) {
     return result
 }
 
+function modelTokenRanking(snapshot) {
+    var ranking = field(snapshot, "tokenRanking", null)
+    var rankedAmounts = modelAmounts({ models: field(ranking, "rows", field(snapshot, "models", [])),
+        modelsTruncated: field(ranking, "truncated", field(snapshot, "modelsTruncated", false)) })
+    return { rows: rankedAmounts.rows, truncated: rankedAmounts.truncated,
+        sourceTruncated: field(ranking, "sourceTruncated", false) === true,
+        hasUnknownCost: field(ranking, "hasUnknownCost", false) === true,
+        omitted: Math.max(0, Math.min(1000000, Math.floor(numeric(ranking, "omitted", 0)))) }
+}
+
 function cost(snapshot, enabled) {
     if (!enabled) {
         return snapshot
@@ -179,9 +189,6 @@ function cost(snapshot, enabled) {
         return null
     }
     var models = modelAmounts(snapshot)
-    var ranking = field(snapshot, "tokenRanking", null)
-    var rankedAmounts = modelAmounts({ models: field(ranking, "rows", []),
-        modelsTruncated: field(ranking, "truncated", false) })
     var result = {
         provider: field(snapshot, "provider", ""),
         period: CostPresentation.costPeriod(field(snapshot, "period", "")),
@@ -193,10 +200,7 @@ function cost(snapshot, enabled) {
         today: amounts(field(snapshot, "today", null)),
         daily: [],
         models: models.rows,
-        tokenRanking: { rows: rankedAmounts.rows, truncated: rankedAmounts.truncated,
-            sourceTruncated: field(ranking, "sourceTruncated", false) === true,
-            hasUnknownCost: field(ranking, "hasUnknownCost", false) === true,
-            omitted: Math.max(0, Math.min(1000000, Math.floor(numeric(ranking, "omitted", 0)))) },
+        tokenRanking: modelTokenRanking(snapshot),
         modelsTruncated: models.truncated,
         averageDaily: averageDaily(field(snapshot, "averageDaily", null)),
         projects: { rows: [], truncated: false }
@@ -211,6 +215,7 @@ function cost(snapshot, enabled) {
         var dayModels = modelAmounts(daily[i])
         day.models = dayModels.rows
         day.modelsTruncated = dayModels.truncated
+        day.tokenRanking = modelTokenRanking(daily[i])
         result.daily.push(day)
     }
     var projects = field(snapshot, "projects", null)

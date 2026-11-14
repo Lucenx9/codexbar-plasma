@@ -58,6 +58,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Rank Usage & Spend models by tokens before limiting the list in Tokens mode,
+  keeping high-token models with low or unavailable costs visible for both the
+  selected period and individual days, including in privacy mode.
+
 - Keep General settings help within narrow windows with longer translations,
   and size the AI Insights frequency selector to its translated choices.
 
