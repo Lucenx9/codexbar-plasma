@@ -336,9 +336,13 @@ work and upstream contract requirements.
   and stays selected across range changes, including empty results;
   the provider dropdown also follows selections and resets made through cards.
   Selecting a day scopes provider and model details, while headline
-  totals keep the selected period and projects appear only with **All days**. **All days** or Escape clears the day selection and returns keyboard inspection
+  totals keep the selected period. Project breakdowns stay in provider details.
+  **All days** or Escape clears the day selection and returns keyboard inspection
   to the chart. Selecting a day does not move the plot. Provider hover readouts
-  follow the configured provider order and stay inside the plot; pinned-day
+  follow the configured provider order and sit beside the inspected day's guide,
+  switching sides near the edge while staying inside the plot. Small provider
+  icons identify rows, with amounts aligned on the right and the daily total
+  below. An ellipsis marks rows that do not fit the plot height; pinned-day
   cards and the accessible description retain all provider values.
   **Models and token composition** and **Activity heatmap** expand on demand.
   **Last 7 days vs previous 7** excludes today and requires fourteen complete
@@ -389,7 +393,7 @@ work and upstream contract requirements.
   Keyboard highlighting is immediate; mouse hover keeps its existing feedback.
   Selection follows the same date through refreshes and clears when the date
   leaves the grid or the range/metric changes. Inspection starts no history scan.
-  Provider totals and project groups follow the provider tab order.
+  Provider totals follow the provider tab order.
   Cost or token sums that exceed the numeric range stay unavailable, with an
   empty heatmap cell for that day. Other dates and valid metrics remain visible.
 - Usage, cost and account refreshes reject results from process failures even
@@ -1148,8 +1152,8 @@ and clipboard content remain under your control after closing the window.
   with the regional decimal mark that costs use, such as `4,3B` in Italian.
 - Cost totals qualified as estimated, partial, or approximate from the CLI's
   bounded pricing coverage and provenance metadata.
-- Project cost and token totals in **Usage & Spend**, ranked within each provider
-  by the selected metric and using the same history range. The official CLI
+- Project cost and token totals in the provider tab's expanded local history,
+  ranked by the selected metric and using the same history range. The official CLI
   0.56.2 exposes project data for Codex. Missing amounts remain unavailable;
   project paths and nested source records are discarded. The bounded list
   signals omitted projects and does not change provider or global totals.

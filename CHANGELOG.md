@@ -12,6 +12,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Keep project breakdowns in provider details instead of duplicating them in
+  Usage & Spend. Codex projects remain available in its local history details.
+
 - Replace the separate AI Insights card and page with guided analysis inside
   Usage & Spend. Add provider filters, daily provider lines, day-specific provider
   and model details, complete-week comparisons (also in privacy mode), and an
@@ -22,6 +25,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   answers while the underlying evidence is unchanged.
 
 ### Fixed
+
+- Position Usage & Spend hover previews beside the inspected day, switching
+  sides near the plot edge so the guide and provider markers remain visible.
+  Add small provider icons, aligned amounts and a separate daily total.
 
 - Keep Usage & Spend day selection stable, restore visible keyboard focus after
   filtering or clearing a day, and reveal focused controls in one shared scroll

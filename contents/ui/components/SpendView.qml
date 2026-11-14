@@ -452,7 +452,11 @@ ColumnLayout {
                 lineSeries: kind !== "line" ? null : view.applet.presentedSpendProviderCosts(
                     Analysis.providerLines(view.applet.costNumberFormat, view.providerCosts,
                         view.dailyPoints, view.applet.costHistoryShowsTokens)).map(function(series) {
-                        return Object.assign({}, series, {label: view.applet.providerDisplayTitle(series.provider)})
+                        return Object.assign({}, series, {
+                            label: view.applet.providerDisplayTitle(series.provider),
+                            iconSource: view.applet.providerIconSource(series.provider),
+                            iconIsMask: view.applet.providerIconIsMask(series.provider)
+                        })
                     })
                 axisLabels: kind !== "line" ? [] : [historyChart.valueDomain.maximum, historyChart.valueDomain.maximum / 2, 0]
                     .map(function(value, index) {
@@ -639,13 +643,6 @@ ColumnLayout {
                 applet: view.applet
                 costs: view.applet.presentedSpendProviderCosts(view.providerCosts)
                 selectedDay: view.selectedDay
-            }
-
-            Components.ProjectCostSection {
-                id: projects
-                visible: view.selectedDay.length === 0 && projects.hasContent
-                applet: view.applet
-                providerCosts: view.applet.presentedSpendProviderCosts(view.providerCosts)
             }
 
             Components.DisclosureButton {

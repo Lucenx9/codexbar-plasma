@@ -835,8 +835,9 @@ class CostSectionTests(unittest.TestCase):
         verify(subject !== null);
         tryVerify(function() {
             var texts = textsUnder(subject);
-            return texts.indexOf("Extra") >= 0 && texts.indexOf("Priced") >= 0;
+            return texts.indexOf("extra") >= 0 && texts.indexOf("codex") >= 0;
         });
+        compare(findChild(subject, "projectCostSection"), null);
         var all = [];
         walkTree(subject, all);
         var metricToggles = all.filter(function(item) {
@@ -885,7 +886,6 @@ class CostSectionTests(unittest.TestCase):
         });
         compare(notices.length, 1);
         verify(notices[0].visible);
-        var texts = textsUnder(subject);
         var charts = all.filter(function(item) {
             return item.toString().indexOf("InteractiveChart") >= 0;
         });

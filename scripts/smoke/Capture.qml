@@ -2601,9 +2601,17 @@ Item {
         if (scenario.indexOf("provider-header") === 0)
             return applet.selectedProviderID === "codex" && codex.hasIncident;
         if (scenario.indexOf("project-") === 0) {
-            if (!applet.spendSelected || !applet.tokenCosts.codex)
+            if (applet.spendSelected || applet.selectedProviderID !== "codex" || !applet.tokenCosts.codex)
                 return false;
-            var section = findItem(applet.fullRepresentationItem, "projectCostSection");
+            var providerScroll = findItem(applet.fullRepresentationItem, "providerScroll");
+            var costSection = findItem(providerScroll, "providerLocalCostSection");
+            if (!costSection || !costSection.tokenCost)
+                return false;
+            if (!costSection.detailsExpanded) {
+                costSection.detailsExpanded = true;
+                return false;
+            }
+            var section = findItem(costSection, "projectCostSection");
             if (!section || section.projectData.rows.length !== 4)
                 return false;
             var rows = section.projectData.rows;
@@ -2807,6 +2815,10 @@ Item {
                     if (capture.applet.costLoading || !capture.applet.tokenCosts.codex)
                         return;
                     capture.applet.selectGlobalView("spend");
+                    capture.verifyScenario(capture.findItem(
+                        capture.findItem(popup, "spendHistoryScroll"), "projectCostSection") === null,
+                        "Usage & Spend duplicates provider projects");
+                    capture.applet.openProviderFromPanel("codex");
                     if (capture.scenario === "project-range") {
                         capture.applet.setCostHistoryDays(7);
                         if (capture.applet.spendProviderCosts().length !== 0)
@@ -2855,9 +2867,9 @@ Item {
                     capture.findItem(popup, "providerScroll").contentItem.contentY = dashboard.y;
                 }
                 if (capture.scenario.indexOf("project-") === 0) {
-                    var section = capture.findItem(popup, "projectCostSection");
-                    var scroll = capture.findItem(popup, "spendHistoryScroll");
-                    scroll.contentItem.contentY = section.y;
+                    var scroll = capture.findItem(popup, "providerScroll");
+                    var section = capture.findItem(scroll, "projectCostSection");
+                    scroll.contentItem.contentY = section.mapToItem(scroll.contentItem.contentItem, 0, 0).y;
                 }
                 console.log("SMOKE_READY:" + capture.scenario);
                 stop();
