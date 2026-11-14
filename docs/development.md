@@ -136,7 +136,9 @@ See [QML conventions](implementation.md#qml-conventions).
 See [Regression checks](testing.md#regression-checks).
 
 The global popup view tests also run with the KDE desktop controls style to
-cover native selector sizing and keyboard tooltips in Usage & Spend.
+cover native selector sizing and keyboard tooltips in Usage & Spend. The QML
+runner repeats numeric chart readout checks with German and Italian regional
+formats, alongside the panel-preview locale checks.
 
 Shared cost-normalization helpers use `.mjs` so QML and WorkerScript load one
 implementation. Keep these files covered by the shared source manifest and

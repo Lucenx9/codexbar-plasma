@@ -2238,6 +2238,59 @@ TestCase {
         };
     }
 
+    function test_quotaTitlesAndPercentagesStayReadable_data() {
+        var cases = [];
+        for (var width of [240, 320, 540, 900]) {
+            for (var scale of [1, 2]) {
+                for (var mirrored of [false, true]) {
+                    for (var confidence of ["exact", "estimated", "unknown", "missing"])
+                        cases.push({tag: width + "-" + scale + "-" + mirrored + "-" + confidence,
+                            width: width, scale: scale, mirrored: mirrored, confidence: confidence});
+                }
+            }
+        }
+        return cases;
+    }
+
+    function test_quotaTitlesAndPercentagesStayReadable(data) {
+        failOnWarning(/Qt Quick Layouts: Detected recursive rearrange|Binding loop detected/);
+        var holder = createTemporaryQmlObject(
+            'import QtQuick; Item { LayoutMirroring.childrenInherit: true }', testCase);
+        holder.LayoutMirroring.enabled = data.mirrored;
+        var model = ProviderUiStress.quota(data.confidence === "missing" ? "empty" : "worst");
+        model.dataConfidence = data.confidence;
+        var row = createUsageRow(model, data.width, holder);
+        if (!row) return;
+        var title = findItem(row, item => item.text === model.label && item.truncated !== undefined);
+        var percent = findItem(row, item => item.objectName === "usagePercentLabel");
+        var hide = findItem(row, item => item.objectName === "hideUsageRowButton");
+        title.font.pointSize *= data.scale;
+        percent.font.pointSize *= data.scale;
+        for (var width of [data.width, 1800, data.width]) {
+            row.width = width;
+            verify(waitForPolish(row));
+            verify(title.width > 0, "A qualifier must not erase the quota title");
+            for (var item of [title, hide, percent]) {
+                if (!item.visible) continue;
+                verify(item.mapToItem(row, 0, 0).x >= -1);
+                verify(item.mapToItem(row, item.width, 0).x <= row.width + 1);
+            }
+            if (model.hasPercent) {
+                verify(!percent.truncated);
+                verify(percent.contentWidth <= percent.width + 1,
+                    "The full percentage and confidence qualifier must fit or wrap");
+            }
+        }
+        if (model.hasPercent && data.confidence === "unknown" && data.width === 320 && data.scale === 2)
+            verify(percent.mapToItem(row, 0, 0).y >= title.mapToItem(row, 0, title.height).y);
+        hide.forceActiveFocus(Qt.TabFocusReason);
+        compare(hide.opacity, 1);
+        var hidden = 0;
+        row.hideRequested.connect(function() { hidden++; });
+        keyClick(Qt.Key_Space);
+        compare(hidden, 1);
+    }
+
     function test_providerUsageRevealsTruncatedText_data() {
         return [
             {tag: "window-title", field: "label"},
@@ -2532,6 +2585,7 @@ TestCase {
         compare(row.warningDescription, "Warning at 80% used");
         verify(bar.Accessible.description.indexOf("Warning at 80% used") >= 0);
         verify(!bar.activeFocusOnTab);
+        verify(waitForPolish(row));
         mouseMove(bar, bar.width / 2, bar.height / 2);
         tryCompare(tip, "visible", true, tip.delay + 1000);
         compare(tip.plainText, "Warning at 80% used");

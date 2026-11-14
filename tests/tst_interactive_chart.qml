@@ -44,6 +44,45 @@ TestCase {
         return chart
     }
 
+    function test_numericReadoutUsesRegionalFormatting_data() {
+        var decimal = Qt.locale().decimalPoint;
+        return [
+            {tag: "arithmetic-tail", point: {value: 0.1 + 0.2}, expected: "0" + decimal + "3"},
+            {tag: "fraction", point: {value: 1284.5},
+                expected: (1284).toLocaleString(Qt.locale(), "f", 0) + decimal + "5"},
+            {tag: "zero", point: {value: 0}, expected: "0"},
+            {tag: "negative", point: {value: -42.5}, expected: Qt.locale().negativeSign + "42" + decimal + "5"},
+            {tag: "tiny", point: {value: 1e-9}, numeric: 1e-9},
+            {tag: "large", point: {value: 1e20}, numeric: 1e20},
+            {tag: "precision", point: {value: 1.23456789012345}, numeric: 1.23456789012345},
+            {tag: "explicit", point: {value: 1284.5, displayValue: "Provider <model> & amount"},
+                expected: "Provider <model> & amount"},
+            {tag: "explicit-empty", point: {value: 1, displayValue: ""}, expected: ""},
+            {tag: "unavailable", point: {value: null}, expected: "Unavailable"}
+        ];
+    }
+
+    function test_numericReadoutUsesRegionalFormatting(data) {
+        var point = Object.assign({label: "Mon"}, data.point);
+        var chart = createChart({applet: {secondaryTextOpacity: 0.7}, width: 300,
+            accent: "blue", points: [point], valueSuffix: "compute hours"});
+        if (!chart) return;
+        var focus = chart.nextItemInFocusChain(true);
+        focus.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Home);
+        compare(chart.selectedIndex, 0);
+        var readout = findChild(chart, "chartPointValue");
+        verify(readout !== null);
+        var suffix = point.displayValue === undefined && point.value !== null ? " compute hours" : "";
+        if (data.numeric !== undefined) {
+            compare(Number.fromLocaleString(Qt.locale(), readout.text.slice(0, -suffix.length)), data.numeric);
+        } else {
+            compare(readout.text, data.expected + suffix);
+        }
+        compare(focus.Accessible.description, "Mon: " + readout.text);
+        compare(readout.textFormat, Text.PlainText);
+    }
+
     function test_providerLinesInspectValuesAndGapsWithoutChangingGeometry() {
         function points(values) {
             return values.map(function(value, index) {

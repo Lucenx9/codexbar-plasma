@@ -23,11 +23,14 @@ run_qml_tests() {
 TZ=America/Los_Angeles QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
   run_qml_tests -input "$ROOT_DIR/tests"
 
-# Spend in the settings preview must use the live panel's decimal separator.
+# Panel previews and chart readouts must use regional number separators.
 for preview_locale in de_DE.UTF-8 it_IT.UTF-8; do
   LC_ALL="$preview_locale" QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
     run_qml_tests -input "$ROOT_DIR/tests/tst_panel_preview_surface.qml" \
     PanelPreviewSurface::test_spendOnlyPreviewUsesPendingSettingAndHidesUnavailableBudget
+  LC_ALL="$preview_locale" QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
+    run_qml_tests -input "$ROOT_DIR/tests/tst_interactive_chart.qml" \
+    InteractiveChart::test_numericReadoutUsesRegionalFormatting
 done
 
 # An RTL application must not reverse the inherited action-row mirroring twice.
