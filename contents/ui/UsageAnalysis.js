@@ -34,6 +34,7 @@ function selectedDayCost(snapshot, day) {
         totals: row || {cost: null, tokens: null, currency: snapshot.currency},
         models: row && Array.isArray(row.models) ? row.models : [],
         modelsTruncated: row ? row.modelsTruncated === true : false,
+        tokenRanking: row ? row.tokenRanking : null,
         projects: null
     })
 }
@@ -131,9 +132,17 @@ function comparisonPeriod(item, showsTokens, nowMs) {
     return period && !period.incomplete ? period : null
 }
 
+function modelSource(item, showsTokens) {
+    var ranking = showsTokens ? item.tokenRanking : null
+    if (ranking && Array.isArray(ranking.rows))
+        return ranking
+    return {rows: Array.isArray(item.models) ? item.models : [], truncated: item.modelsTruncated === true}
+}
+
 function appendModels(result, item, showsTokens) {
-    var models = Array.isArray(item.models) ? item.models : []
-    result.truncated = result.truncated || item.modelsTruncated === true || models.length > 128
+    var source = modelSource(item, showsTokens)
+    var models = source.rows
+    result.truncated = result.truncated || source.truncated === true || models.length > 128
     var rows = sortedModels(models, showsTokens)
     var remaining = 128 - result.rows.length
     result.truncated = result.truncated || rows.length > remaining

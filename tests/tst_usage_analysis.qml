@@ -3,6 +3,7 @@ import QtTest
 import "../contents/ui/UsageAnalysis.js" as Analysis
 import "../contents/ui/AnalysisAmounts.mjs" as Display
 import "../contents/ui/ChartLines.mjs" as Chart
+import "../contents/ui/CostResponse.mjs" as CostResponse
 import "../contents/ui/PrivacyPresentation.js" as Privacy
 
 TestCase {
@@ -305,5 +306,61 @@ TestCase {
         compare(bounded.rows.length, 128)
         verify(bounded.truncated)
         compare(bounded.rows[0].cost, 99)
+    }
+
+    function test_modelRankingPrecedesDisplayCap_data() {
+        var cases = []
+        for (var day of ["", "2026-11-13"]) {
+            for (var privacy of [false, true]) {
+                for (var tokens of [false, true]) {
+                    for (var leaderCost of [null, 0, 0.01]) {
+                        cases.push({tag: (day || "period") + "-privacy-" + privacy + "-tokens-" + tokens + "-cost-" + leaderCost,
+                            day: day, privacy: privacy, tokens: tokens, leaderCost: leaderCost})
+                    }
+                }
+            }
+        }
+        return cases
+    }
+
+    function test_modelRankingPrecedesDisplayCap(data) {
+        var breakdowns = Array.from({length: 6}, function(_, i) {
+            return {modelName: "priced-" + i, cost: 10 - i, totalTokens: 10 + i}
+        })
+        breakdowns.push({modelName: "token-leader", totalTokens: 1000, cost: data.leaderCost})
+        var cost = CostResponse.normalizeSnapshot({provider: "codex", currencyCode: "USD",
+            historyDays: 1, updatedAt: "2026-11-13T12:00:00Z",
+            daily: [{date: "2026-11-13", totalCost: 45, totalTokens: 1075,
+                modelBreakdowns: breakdowns}]}, 1)
+        cost = Privacy.cost(cost, data.privacy)
+        var original = JSON.stringify(cost)
+        var models = Analysis.modelRows([cost], data.day, data.tokens)
+        compare(models.rows.length, 6)
+        verify(models.truncated)
+        if (data.tokens) {
+            compare(models.rows[0].tokens, 1000)
+            compare(models.rows[0].cost, data.leaderCost)
+        } else {
+            compare(models.rows[0].cost, 10)
+            compare(models.rows[0].tokens, 10)
+        }
+        if (data.privacy) verify(JSON.stringify(models).indexOf("token-leader") < 0)
+        compare(JSON.stringify(cost), original)
+    }
+
+    function test_dayModelsNeverInheritPeriodTokenRanking() {
+        var cost = snapshot("codex", "USD", 2, 1)
+        cost.tokenRanking = {rows: [{label: "period-only", tokens: 1000}], truncated: true}
+        cost.daily[0].models = [{label: "legacy-day", tokens: 20}]
+        var selected = Analysis.modelRows([cost], "2026-11-13", true)
+        compare(selected.rows.length, 1)
+        compare(selected.rows[0].label, "legacy-day")
+        compare(selected.truncated, false)
+        cost.daily[0].tokenRanking = {rows: [], truncated: false}
+        compare(Analysis.modelRows([cost], "2026-11-13", true).rows, [])
+        compare(Analysis.modelRows([cost], "2026-11-12", true).rows, [])
+        compare(Analysis.modelRows([cost], "2025-01-01", true).rows, [])
+        cost.daily.push(cost.daily[0])
+        compare(Analysis.modelRows([cost], "2026-11-13", true).rows, [])
     }
 }

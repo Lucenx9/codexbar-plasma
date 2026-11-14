@@ -1180,6 +1180,8 @@ ColumnLayout {
                             "Showing the most recent %1 days. The chart covers the full range.",
                             heatmapFocus.visibleDayCount)
                         Layout.fillWidth: true
+                        Layout.minimumWidth: 0
+                        Layout.preferredWidth: 1
                         Layout.topMargin: Kirigami.Units.smallSpacing
                         font: Kirigami.Theme.smallFont
                         opacity: view.applet.secondaryTextOpacity

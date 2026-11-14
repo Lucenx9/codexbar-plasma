@@ -356,7 +356,10 @@ work and upstream contract requirements.
   below. An ellipsis marks rows that do not fit the plot height; pinned-day
   cards and the accessible description retain all provider values.
   Each provider's model list shows aligned amounts ranked by the selected
-  metric. The first three models are shown initially; **Show more models**
+  metric before applying the six-model limit, for both the period and a selected
+  day. Tokens mode keeps high-token models even when their cost is low or
+  unavailable, including in privacy mode.
+  The first three models are shown initially; **Show more models**
   reveals the remaining available rows for that provider. Open providers stay
   expanded across refreshes and day selections, including **Show more models**
   choices. Refreshing preserves focus on the provider header or model-list action,

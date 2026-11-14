@@ -853,7 +853,11 @@ overflow-safe sums, cost-first ordering, and optional token ranking. Display
 labels never become aggregation keys. Daily rows and period models share a
 calendar selection with separate display-day and input-scan bounds. Their
 normalization calls take named `days`, `updatedAt`, and optional `maximumDays`
-options; model calls can also request `includeTokenRanking`. Daily rows reuse
+options; model calls can also request `includeTokenRanking`. Displayed daily rows
+retain both cost and token rankings before their six-model caps. `UsageAnalysis.js`
+selects the ranking for the requested metric and day; absent daily rankings never
+inherit period data. Privacy projects both rankings and QML supplies anonymous
+model labels. Daily rows reuse
 the totals normalizer for strict numeric fallback and unknown-versus-zero rules.
 Calendar indexing and gap construction remain separate so malformed or duplicate
 days disable zero-day inference without losing valid in-range observations.

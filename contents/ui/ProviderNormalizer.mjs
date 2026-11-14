@@ -905,9 +905,10 @@ export function normalizeCostDaily(items, currency, options) {
         for (var j = 0; j < result.length; j++) {
             var source = modelSources.get(result[j])
             if (!source) continue
-            var summary = costModelSummary([source], currency, false, modelLabels)
+            var summary = costModelSummary([source], currency, true, modelLabels)
             result[j].models = summary.rows
             result[j].modelsTruncated = summary.truncated
+            result[j].tokenRanking = summary.tokenRanking
         }
     }
     return result
