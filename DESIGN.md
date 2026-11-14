@@ -183,8 +183,10 @@ number with another surface.
 Usage & Spend keeps provider, metric, and range controls above the
 scrollable content. Current quotas and reset windows belong in Overview and
 provider details. Compact mode stacks the chart and provider rows; expanded
-mode can place them side by side. Models, token composition, and the activity
-heatmap use disclosure. AI questions stay in a separate, optional disclosure
+mode can place them side by side. Each provider row discloses its own short,
+ranked model list; the provider dropdown owns chart filtering. Keep token
+composition in provider details and the activity heatmap in a disclosure.
+AI questions stay in a separate, optional disclosure
 whose scope is explicitly independent of the chart filters. Totals, dates, and units explain the chart; hover is a preview, and
 keyboard selection is a persistent way to inspect a day. Reserve readout space
 so inspection does not resize the chart. Keep estimated/partial/unavailable

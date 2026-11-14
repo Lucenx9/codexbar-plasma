@@ -49,8 +49,8 @@ msgstr ""
 "Elija un proveedor de IA y un modelo en la configuración de Análisis con IA."
 
 #: contents/ui/components/AnalysisAssistant.qml
-msgid "Not enough current usage data for an insight yet."
-msgstr "Todavía no hay suficientes datos de uso actuales para un análisis."
+msgid "Not enough current usage data to generate an analysis."
+msgstr "No hay suficientes datos de uso actuales para generar un análisis."
 
 #: contents/ui/components/AnalysisAssistant.qml
 msgid "Out of date"
@@ -65,7 +65,7 @@ msgid "AI Insights"
 msgstr "Análisis con IA"
 
 #: contents/ui/components/AnalysisAssistant.qml
-msgid "Generate insight"
+msgid "Generate analysis"
 msgstr "Generar análisis"
 
 #: contents/ui/components/IdentifiedTokensSection.qml
@@ -219,10 +219,10 @@ msgid_plural ""
 "%1 requests in the selected range lacked final usage, so they are excluded "
 "from the displayed totals."
 msgstr[0] ""
-"%1 solicitud del intervalo seleccionado no tiene uso final, por lo que queda "
+"%1 solicitud del período seleccionado no tiene uso final, por lo que queda "
 "excluida de los totales mostrados."
 msgstr[1] ""
-"%1 solicitudes del intervalo seleccionado no tienen uso final, por lo que "
+"%1 solicitudes del período seleccionado no tienen uso final, por lo que "
 "quedan excluidas de los totales mostrados."
 
 #: contents/ui/components/CostTrustNotice.qml
@@ -692,18 +692,18 @@ msgstr "Todos los días"
 
 #: contents/ui/components/AnalysisModels.qml
 #: contents/ui/components/ProviderCostSection.qml scripts/smoke/Capture.qml
-msgid "No model breakdown for this day."
-msgstr "No hay desglose por modelo para este día."
+msgid "No model data for this day."
+msgstr "No hay datos de modelos para este día."
 
 #: contents/ui/components/AnalysisModels.qml
 #: contents/ui/components/ProviderCostSection.qml scripts/smoke/Capture.qml
-msgid "No model breakdown for this period."
-msgstr "No hay desglose por modelo para este período."
+msgid "No model data for this period."
+msgstr "No hay datos de modelos para este período."
 
 #: contents/ui/components/AnalysisModels.qml
 #: contents/ui/components/ProviderCostSection.qml
-msgid "Model breakdown is partial."
-msgstr "El desglose por modelo es parcial."
+msgid "Some models are not shown."
+msgstr "Algunos modelos no se muestran."
 
 #: contents/ui/components/ProviderCostSection.qml
 msgid "Models"
@@ -1464,13 +1464,6 @@ msgstr ""
 "Los tokens incluyen todos los proveedores."
 
 #: contents/ui/components/SpendView.qml
-msgid ""
-"Local history is still being collected, so early days may be incomplete."
-msgstr ""
-"El historial local aún se está recopilando, por lo que los primeros días "
-"pueden estar incompletos."
-
-#: contents/ui/components/SpendView.qml
 msgid "No daily token history is available for this range."
 msgstr "No hay historial diario de tokens para este período."
 
@@ -1490,8 +1483,8 @@ msgstr ""
 "codexbar cost."
 
 #: contents/ui/components/SpendView.qml
-msgid "Activity heatmap"
-msgstr "Mapa de calor de actividad"
+msgid "Daily activity"
+msgstr "Actividad diaria"
 
 #: contents/ui/components/SpendView.qml
 msgctxt "Activity heatmap legend, shade of the lowest daily value"
@@ -1706,8 +1699,8 @@ msgid "Daily"
 msgstr "Cada día"
 
 #: contents/ui/configAiInsights.qml
-msgid "Select Generate insight under Ask the data. Automatic generation runs at most once per interval. Usage refreshes do not trigger it."
-msgstr "Seleccione Generar análisis en Consultar los datos. La generación automática se ejecuta como máximo una vez por intervalo. Actualizar el uso no la inicia."
+msgid "Select %1 under %2. Automatic generation runs at most once per interval. Usage refreshes do not trigger it."
+msgstr "Seleccione %1 en %2. La generación automática se ejecuta como máximo una vez por intervalo. Actualizar el uso no la inicia."
 
 #: contents/ui/configAiInsights.qml
 msgid "Saved insight:"
@@ -3994,8 +3987,8 @@ msgid "Provider actions"
 msgstr "Acciones del proveedor"
 
 #: contents/ui/components/InteractiveChart.qml
-msgid "Peak daily usage"
-msgstr "Pico de uso diario"
+msgid "Daily peak"
+msgstr "Pico diario"
 
 #: contents/ui/components/PanelText.qml
 msgid "Behind pace"
@@ -4365,10 +4358,6 @@ msgid "What should I investigate?"
 msgstr "¿Qué debería examinar?"
 
 #: contents/ui/components/AnalysisAssistant.qml
-msgid "Ask the data"
-msgstr "Consultar los datos"
-
-#: contents/ui/components/AnalysisAssistant.qml
 msgid ""
 "All providers: current quotas and the last 7 complete days versus the "
 "previous 7. Independent of the chart filters."
@@ -4387,10 +4376,6 @@ msgid ""
 msgstr ""
 "Las respuestas usan los datos del momento de generación. Nunca se envían "
 "nombres de cuentas, proyectos, rutas ni prompts."
-
-#: contents/ui/components/AnalysisModels.qml
-msgid "Models and token composition"
-msgstr "Modelos y composición de tokens"
 
 #: contents/ui/components/AnalysisSummary.qml
 msgid "%1×"
@@ -4492,8 +4477,8 @@ msgstr ""
 #~ msgstr "Acerca de este análisis"
 
 #: contents/ui/components/AnalysisSummary.qml
-msgid "Comparison excludes today and needs 14 complete days plus a scan from today."
-msgstr "La comparación excluye hoy y requiere 14 días completos y un análisis realizado hoy."
+msgid "Requires 14 complete days and a refresh today. Today is excluded."
+msgstr "Requiere 14 días completos y una actualización de hoy. Se excluye el día de hoy."
 
 #: contents/ui/components/SpendView.qml
 msgid "No history for this provider"
@@ -4508,8 +4493,16 @@ msgid "Show all providers"
 msgstr "Mostrar todos los proveedores"
 
 #: contents/ui/components/SpendView.qml
-msgid "Use the arrow keys to inspect days"
-msgstr "Use las teclas de flecha para examinar los días"
+msgid "Arrow keys inspect days. Enter selects a day; Escape clears the selection."
+msgstr "Use las flechas para consultar los días, Intro para seleccionar un día y Esc para borrar la selección."
+
+#: contents/ui/components/AnalysisModels.qml
+msgid "Show more models"
+msgstr "Mostrar más modelos"
+
+#: contents/ui/components/AnalysisModels.qml
+msgid "Show fewer models"
+msgstr "Mostrar menos modelos"
 
 #: contents/ui/configGeneral.qml
 msgid "Notify about updates"

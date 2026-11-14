@@ -33,16 +33,11 @@ ColumnLayout {
         DisclosureButton {
             id: disclosure
             objectName: "analysisAssistantToggle"
-            plainText: i18n("Ask the data")
+            plainText: i18n("AI Insights")
             expanded: assistant.answerExpanded
             onClicked: assistant.answerExpanded = !assistant.answerExpanded
         }
         Item { Layout.fillWidth: true }
-        PlainPlasmaLabel {
-            text: i18n("AI Insights")
-            font: Kirigami.Theme.smallFont
-            opacity: applet.secondaryTextOpacity
-        }
     }
 
     ColumnLayout {
@@ -75,7 +70,7 @@ ColumnLayout {
             RefreshButton {
                 objectName: "aiInsightsGenerateButton"
                 iconName: "tools-wizard"
-                label: i18n("Generate insight")
+                label: i18n("Generate analysis")
                 busy: applet.aiInsightsBusy
                 enabled: assistant.canGenerate || applet.aiInsightsBusy
                 onRequested: applet.generateAiInsight(question.currentValue)
@@ -86,7 +81,7 @@ ColumnLayout {
             visible: !assistant.canGenerate && !applet.aiInsightsBusy
             text: !applet.aiInsightsEnabled || !applet.aiInsightsConfigured
                 ? i18n("Choose an AI provider and model in the AI Insights settings.")
-                : i18n("Not enough current usage data for an insight yet.")
+                : i18n("Not enough current usage data to generate an analysis.")
             Layout.fillWidth: true
             wrapMode: Text.Wrap
         }

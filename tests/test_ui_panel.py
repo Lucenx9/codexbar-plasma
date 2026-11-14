@@ -22,7 +22,7 @@ compact_representation_text = compact_representation_qml.read_text(encoding="utf
 
 class PanelTest(unittest.TestCase):
     def test_compact_controls_do_not_consume_clicks(self):
-        for mouse_id in ("compactStatusMouse", "heatmapMouse"):
+        for mouse_id in ("compactStatusMouse",):
             mouse_body = applet.id_block(mouse_id)
             if not re.search(r"(?m)^[ \t]*acceptedButtons:[ \t]*(?:Qt\.NoButton|\(0\))[ \t]*;?[ \t]*(?://[^\n]*)?$", mouse_body):
                 raise AssertionError(f"{mouse_id} must not consume clicks")

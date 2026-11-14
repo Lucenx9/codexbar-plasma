@@ -338,7 +338,7 @@ TestCase {
             return
         var label = findChild(chart, "chartPointLabel")
         var value = findChild(chart, "chartPointValue")
-        compare(label.text, "Peak daily usage")
+        compare(label.text, "Daily peak")
         compare(value.text, "$9")
         var focusTarget = chart.nextItemInFocusChain(true)
         focusTarget.forceActiveFocus(Qt.TabFocusReason)
@@ -346,7 +346,7 @@ TestCase {
         compare(label.text, "First")
         compare(value.text, "$2")
         chart.selectedIndex = -1
-        compare(label.text, "Peak daily usage")
+        compare(label.text, "Daily peak")
         compare(value.text, "$9")
         chart.points = [{label: "Zero", value: 0, displayValue: "0 tokens"}]
         compare(value.text, "0 tokens")

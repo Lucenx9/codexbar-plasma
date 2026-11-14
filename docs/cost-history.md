@@ -26,6 +26,17 @@ selected currency and token totals can include all currencies. Provider tab or
 saved ordering is applied after currency selection, so it cannot change the
 money represented by the lines, axis or totals. Hover or keyboard
 inspection reports each provider for the selected day. Provider pages retain bars.
+Each provider row expands its own ranked model list inline, initially showing
+three rows. Show more models reveals that provider's remaining bounded rows
+without fetching data. Opening a provider does not change the chart filter or
+switch tabs. Open rows and Show more models choices survive refreshes and day
+selection. Refreshing preserves keyboard focus on the model-list action, or
+returns it to the provider header if that action disappears. If the provider
+disappears, focus returns to the provider filter. The provider dropdown
+owns chart filtering. Token composition remains in provider details, while
+partial model coverage and excluded-request notices remain visible inline.
+
+![Inline provider model breakdowns with synthetic data](codexbar-plasma-models.png)
 
 The weekly comparison uses the existing AI snapshot completeness rules without
 calling AI: fourteen complete days before today, a scan reaching today, no
@@ -124,11 +135,19 @@ snapshot without a usable `updatedAt` keeps its Today amounts.
 - The global activity heatmap uses the unfiltered history's calendar dates,
   preserving unavailable days at either boundary and between measured days.
   Unavailable days occupy empty cells, so filtering missing amounts never shifts
-  weekday rows. Rows start on the locale's first day of the week, and empty
+  weekday rows. The **Daily activity** disclosure starts collapsed and stays
+  hidden for spans of seven days or fewer. Rows start on the locale's first day of the week, and empty
   cells after the newest day close its week. Its visible span and week count include those gaps, bounded to
   the newest 365 calendar days. Legacy non-date labels retain sequence order
   and leave the rows unlabelled, because only calendar-aligned days give each
   row one weekday.
+- Month labels follow the visible week columns and are omitted when a label
+  cannot fit its month span. Hover and keyboard inspection share a fixed
+  date/value row below the calendar, without floating tooltips. Clicking a
+  measured day, Enter/Space, or the accessibility press action pins the same day
+  in the chart and provider details. Arrow keys only inspect; Escape clears the
+  pin and leaves focus in the calendar. Zero days remain selectable, unavailable
+  slots do not. The selected day has a persistent outline.
 - Global cost and token aggregates that overflow the numeric range remain
   unavailable. An overflowing daily sum has no chart point and keeps an empty
   heatmap cell. Other dates, measured zeros, and the other metric remain usable.
@@ -148,6 +167,8 @@ These rules are implemented in
 
 ## Selection rules
 
+![Daily activity calendar sharing a selected day with the chart](codexbar-plasma-daily-activity.png)
+
 The account picker selects usage quotas. Local cost history comes from the
 CLI scan for the provider and history range, independently of the account
 selected in the widget. Changing accounts does not filter this scan or establish
@@ -164,7 +185,7 @@ Keyboard inspection uses the readout, accessible description and provider rows.
 
 ![Native chart hover inspection with synthetic provider data](codexbar-plasma-chart-hover.gif)
 
-All days and Escape clear the pin and leave keyboard focus on the chart. The
+All days and Escape in the chart clear the pin and leave keyboard focus on the chart. The
 reset action occupies the provider heading row without shifting the plot.
 Positive sub-cent amounts use an explicit less-than-one-cent notation; axis
 labels retain the precision needed to distinguish ticks. Pointer or keyboard selection pins a day
@@ -193,8 +214,10 @@ figure. A single measurable day remains selectable to inspect its models.
 payload; the selected metric also controls bar scaling. Metric and day selection
 must not add CLI calls. Usage & Spend provider totals put the selected metric
 first and keep the other figure beneath it, preserving currency, cost qualifiers,
-and explicit unavailable values. `historyCoverageIsEstablished` controls the collecting
-history notice; a missing flag counts as established for legacy payloads.
+and explicit unavailable values. The generic collecting-history banner is not
+shown in Usage & Spend. `historyCoverageIsEstablished` still qualifies incomplete
+provider amounts and comparison eligibility; legacy payloads without the flag
+remain supported.
 
 `ProviderNormalizer.normalizeCostTrustMetadata` bounds `coverage`, `provenance`,
 and the official `incompleteRequestCount`. `CostTrust.costTrustSummary`

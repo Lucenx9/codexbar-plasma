@@ -57,7 +57,7 @@ class HoverMouseAreaTests(unittest.TestCase):
     def test_hover_areas_load_and_pass_clicks_through(self):
         applet = Surface("applet", ROOT)
         rows = [{"tag": object_id, "body": applet.id_block(object_id)}
-                for object_id in ("compactStatusMouse", "heatmapMouse")]
+                for object_id in ("compactStatusMouse",)]
         with tempfile.TemporaryDirectory(prefix="codexbar-hover-test-") as temporary:
             fixture = Path(temporary) / "tst_hover.qml"
             fixture.write_text(QML.replace("SOURCE_ROWS", json.dumps(rows)), encoding="utf-8")

@@ -92,9 +92,6 @@ TestCase {
         function qualifiedCostValue(value) {
             return value;
         }
-        function spendHistoryStillBuilding() {
-            return false;
-        }
         function privateErrorText(text) {
             return privacyMode ? "Private scan failure" : text;
         }
@@ -195,6 +192,88 @@ TestCase {
                 return found;
         }
         return null;
+    }
+
+    function test_providerModelsExpandWithoutFilteringAndKeepFocus() {
+        var rows = Array.from({length: 5}, function(_, index) {
+            return {label: "Model " + index, cost: 5 - index, tokens: index + 1, currency: "USD"};
+        });
+        applet.costs = [{provider: "codex", models: rows, totals: {cost: 15, tokens: 15, currency: "USD"}}];
+        var view = createView("SpendView");
+        if (!view) return;
+        var section = findChild(view, "analysisModels");
+        verify(!section.expanded);
+        var card = findChild(view, "analysisProviderToggle-codex");
+        card.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Space);
+        verify(section.expanded);
+        compare(view.selectedProvider, "");
+        verify(card.activeFocus);
+        verify(waitForPolish(view));
+        compare(section.models.rows.length, 5);
+        var more = findChild(section, "analysisModelsShowMore");
+        verify(more.visible);
+        compare(findItem(section, function(item) { return item.text === "Model 4"; }), null);
+        more.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Space);
+        verify(section.showAll);
+        verify(more.activeFocus);
+        verify(findItem(section, function(item) { return item.text === "Model 4"; }) !== null);
+        keyClick(Qt.Key_Space);
+        verify(!section.showAll);
+        verify(more.activeFocus);
+        compare(findItem(section, function(item) { return item.text === "Model 4"; }), null);
+        section.selectedDay = "2026-11-13";
+        verify(!more.visible);
+        verify(card.activeFocus);
+        keyClick(Qt.Key_Space);
+        verify(!section.visible);
+        compare(view.selectedProvider, "");
+    }
+
+    function test_modelListRefreshPreservesAllRowsAndKeyboardFocus() {
+        var rows = Array.from({length: 5}, function(_, index) {
+            return {label: "Model " + index, cost: 5 - index, tokens: index + 1, currency: "USD"};
+        });
+        var cost = {provider: "codex", models: rows, totals: {cost: 15, tokens: 15, currency: "USD"}};
+        applet.costs = [cost];
+        var view = createView("SpendView");
+        if (!view) return;
+        findChild(view, "analysisProviderToggle-codex").clicked();
+        findChild(view, "analysisModelsShowMore").forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Space);
+        applet.costs = [Object.assign({}, cost, {totals: {cost: 16, tokens: 16, currency: "USD"}})];
+        var section = findChild(view, "analysisModels");
+        verify(section.showAll);
+        tryCompare(findChild(section, "analysisModelsShowMore"), "activeFocus", true);
+        verify(findItem(section, function(item) { return item.text === "Model 4"; }) !== null);
+        applet.costs = [Object.assign({}, cost, {models: rows.slice(0, 2)})];
+        tryCompare(findChild(view, "analysisProviderToggle-codex"), "activeFocus", true);
+        applet.costs = [cost];
+        findChild(view, "analysisModelsShowMore").forceActiveFocus(Qt.TabFocusReason);
+        applet.costs = [{provider: "claude", models: rows, totals: cost.totals}];
+        tryCompare(findChild(view, "analysisProviderFilter"), "activeFocus", true);
+    }
+
+    function test_openProviderModelsFollowDayAndRefresh() {
+        var daily = {label: "2026-11-13", cost: 2, tokens: 20, currency: "USD",
+            models: [{label: "Day model", cost: 2, tokens: 20, currency: "USD"}]};
+        var cost = {provider: "codex", currency: "USD", totals: daily, daily: [daily],
+            models: [{label: "Period model", cost: 4, tokens: 40, currency: "USD"}]};
+        applet.costs = [cost, {provider: "claude", totals: daily}];
+        var view = createView("SpendView");
+        if (!view) return;
+        findChild(view, "analysisProviderToggle-codex").clicked();
+        verify(findChild(view, "analysisProviderToggle-codex").checked);
+        verify(!findChild(view, "analysisProviderToggle-claude").checked);
+        compare(findChild(view, "analysisModels").models.rows[0].label, "Period model");
+        findChild(view, "analysisHistoryChart").selectedIndex = 0;
+        verify(findChild(view, "analysisProviderToggle-codex").checked);
+        compare(findChild(view, "analysisModels").models.rows[0].label, "Day model");
+        applet.costs = [Object.assign({}, cost, {daily: [Object.assign({}, daily, {models: []})]})];
+        verify(findChild(view, "analysisProviderToggle-codex").checked);
+        compare(findChild(view, "analysisModels").models.rows.length, 0);
+        compare(view.selectedProvider, "");
     }
 
     function test_longErrorKeepsBodyReachable_data() {
@@ -445,10 +524,9 @@ TestCase {
             {provider: "claude", totals: {cost: 3, tokens: 20, currency: "USD"}}];
         var view = createView("SpendView");
         if (!view) return;
-        var card = findItem(view, function(item) { return item.modelData && item.modelData.provider === "claude" && item.checked !== undefined; });
-        verify(card !== null);
-        card.forceActiveFocus(Qt.TabFocusReason);
-        keyClick(Qt.Key_Space);
+        var filter = findChild(view, "analysisProviderFilter");
+        filter.forceActiveFocus(Qt.TabFocusReason);
+        filter.activated(2);
         compare(view.selectedProvider, "claude");
         verify(findChild(view, "analysisProviderFilter").activeFocus);
         applet.costs = [applet.costs[0]];
@@ -487,7 +565,7 @@ TestCase {
         compare(applet.refreshes, 0);
     }
 
-    function test_providerPickKeepsComboInSyncWithCardAndReset() {
+    function test_providerPickKeepsComboInSyncWithDisclosureAndReset() {
         applet.costs = [{provider: "codex", totals: {cost: 2, tokens: 10, currency: "USD"}},
             {provider: "claude", totals: {cost: 3, tokens: 20, currency: "USD"}}];
         var view = createView("SpendView");
@@ -497,16 +575,44 @@ TestCase {
         filter.activated(filter.currentIndex);
         compare(view.selectedProvider, "codex");
         var card = findItem(view, function(item) { return item.modelData && item.modelData.provider === "codex" && item.checked !== undefined; });
-        card.clicked();
-        compare(view.selectedProvider, "");
-        compare(filter.currentIndex, 0);
-        filter.incrementCurrentIndex();
-        filter.activated(filter.currentIndex);
+        card.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Space);
+        compare(view.selectedProvider, "codex");
+        compare(filter.currentIndex, 1);
         applet.costs = [applet.costs[1]];
         var empty = findItem(view, function(item) { return item.plainText === "No history for this provider"; });
         empty.helpfulAction.trigger();
         compare(view.selectedProvider, "");
         compare(filter.currentIndex, 0);
+    }
+
+    function test_providerFilterKeepsWidthAcrossAnalysisModes() {
+        applet.costs = [{provider: "codex", totals: {cost: 2, tokens: 10, currency: "USD"}}];
+        var view = createView("SpendView");
+        if (!view) return;
+        var filter = findChild(view, "analysisProviderFilter");
+        var expand = findChild(view, "analysisExpandButton");
+        view.width = 612;
+        verify(waitForPolish(view));
+        filter.activated(1);
+        var compactWidth = filter.width;
+        compare(filter.popup.width, compactWidth);
+        expand.clicked();
+        view.width = 900;
+        verify(waitForPolish(view));
+        compare(filter.width, compactWidth);
+        compare(filter.popup.width, compactWidth);
+        compare(view.selectedProvider, "codex");
+        expand.clicked();
+        view.width = 612;
+        verify(waitForPolish(view));
+        compare(filter.width, compactWidth);
+        compare(filter.popup.width, compactWidth);
+        view.width = 320;
+        verify(waitForPolish(view));
+        verify(filter.width <= view.width);
+        compare(filter.popup.width, filter.width);
+        compare(view.selectedProvider, "codex");
     }
 
     function test_providerOrderDoesNotChangeChartCurrency() {

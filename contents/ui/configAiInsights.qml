@@ -591,7 +591,8 @@ KCM.SimpleKCM {
         }
 
         Components.PlainControlsLabel {
-            text: i18n("Select Generate insight under Ask the data. Automatic generation runs at most once per interval. Usage refreshes do not trigger it.")
+            text: i18n("Select %1 under %2. Automatic generation runs at most once per interval. Usage refreshes do not trigger it.",
+                i18n("Generate analysis"), i18n("AI Insights"))
             font: Kirigami.Theme.smallFont
             opacity: 0.7
             Layout.fillWidth: true
