@@ -34,6 +34,7 @@ TestCase {
         id: settingsComponent
         QtObject {
             property string cfg_panelStyle: "standard"
+            property string cfg_panelMeterShape: "capsules"
             property string cfg_panelElementOrder: "identity,status,text,meters"
             property string cfg_panelQuotaLane: "auto"
             property string cfg_panelVisibilityRules: "{}"
@@ -100,6 +101,22 @@ TestCase {
         compare(settings.cfg_panelQuotaLane, "secondary");
         compare(settings.cfg_showMultiProviderInPanel, false);
         verify(renderer.width > 0 && renderer.height > 0);
+    }
+
+    function test_ringsPreviewFollowsPendingShapeAndQuotaChanges() {
+        var settings = createTemporaryObject(settingsComponent, testCase);
+        var preview = createPreview(settings);
+        if (!preview) return;
+        var renderer = findChild(preview, "panelPreviewRenderer");
+        settings.cfg_panelMeterShape = "rings";
+        verify(renderer.ringMeters);
+        verify(findChild(renderer, "panelMeterRing") !== null);
+        settings.cfg_panelStyle = "minimal";
+        verify(renderer.ringMeters && renderer.minimalStyle);
+        settings.cfg_panelQuotaLane = "secondary";
+        preview.scenario = "missing";
+        settings.cfg_panelMeterShape = "capsules";
+        verify(!renderer.ringMeters);
     }
 
     function test_spendOnlyPreviewUsesPendingSettingAndHidesUnavailableBudget() {

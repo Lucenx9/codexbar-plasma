@@ -250,6 +250,7 @@ when the product changes instead of adding dated before/after copies.
 - [Sessions](codexbar-plasma-sessions.png)
 - [Provider colors panel](codexbar-plasma-panel-standard.png): contrast-adjusted colored provider icons and outlined dual quota capsules.
 - [Monochrome panel](codexbar-plasma-panel-minimal.png): monochrome provider icons and dual quota capsules.
+- [Rings panel](codexbar-plasma-panel-rings.png): synthetic four-provider panel with primary and secondary quota rings around each logo.
 - [Panel with usage text](codexbar-plasma-panel-information.png): selected-provider text grouped with its quota capsules.
 
 ## Store artwork

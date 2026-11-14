@@ -129,6 +129,7 @@ PlasmoidItem {
     property string providerOrderRaw: Plasmoid.configuration.providerOrder || ""
     property string panelProviderIDsRaw: Plasmoid.configuration.panelProviderIDs || ""
     property string panelElementOrderRaw: Plasmoid.configuration.panelElementOrder || ""
+    readonly property string panelMeterShape: Plasmoid.configuration.panelMeterShape
     readonly property bool minimalPanel: Plasmoid.configuration.panelStyle === "minimal"
     readonly property string panelQuotaLane: PanelDisplay.safeLane(Plasmoid.configuration.panelQuotaLane)
     readonly property var panelVisibilityRules: PanelRules.normalizedRules(Plasmoid.configuration.panelVisibilityRules)

@@ -132,6 +132,7 @@ ColumnLayout {
         id: previewApplet
 
         readonly property bool verticalFormFactor: false
+        readonly property string panelMeterShape: preview.configPage.cfg_panelMeterShape
         readonly property bool minimalPanel: preview.previewModel.minimalStyle
         readonly property bool loading: false
 

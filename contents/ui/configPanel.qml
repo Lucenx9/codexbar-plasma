@@ -32,6 +32,8 @@ KCM.SimpleKCM {
     property bool cfg_showProviderInPanelDefault: false
     property string cfg_panelStyle: "standard"
     property string cfg_panelStyleDefault: "standard"
+    property string cfg_panelMeterShape: "capsules"
+    property string cfg_panelMeterShapeDefault: "capsules"
     property alias cfg_showPercentInPanel: showPercentCheck.checked
     property bool cfg_showPercentInPanelDefault: false
     property alias cfg_showAutoQuotaLabel: showAutoQuotaLabelCheck.checked
@@ -268,6 +270,56 @@ KCM.SimpleKCM {
             Kirigami.FormData.isSection: true
         }
 
+        RowLayout {
+            Kirigami.FormData.label: i18n("Meter shape:")
+            Layout.fillWidth: true
+            spacing: Kirigami.Units.largeSpacing
+
+            Controls.ButtonGroup {
+                buttons: [capsuleShapeButton, ringShapeButton]
+            }
+            Controls.RadioButton {
+                id: capsuleShapeButton
+                objectName: "panelCapsuleShape"
+                text: i18n("Capsules")
+                checked: page.cfg_panelMeterShape !== "rings"
+                onClicked: page.cfg_panelMeterShape = "capsules"
+                Keys.onRightPressed: {
+                    page.cfg_panelMeterShape = "rings"
+                    ringShapeButton.forceActiveFocus(Qt.TabFocusReason)
+                }
+                Keys.onDownPressed: {
+                    page.cfg_panelMeterShape = "rings"
+                    ringShapeButton.forceActiveFocus(Qt.TabFocusReason)
+                }
+            }
+            Controls.RadioButton {
+                id: ringShapeButton
+                objectName: "panelRingShape"
+                text: i18n("Rings")
+                checked: page.cfg_panelMeterShape === "rings"
+                onClicked: page.cfg_panelMeterShape = "rings"
+                Keys.onLeftPressed: {
+                    page.cfg_panelMeterShape = "capsules"
+                    capsuleShapeButton.forceActiveFocus(Qt.TabFocusReason)
+                }
+                Keys.onUpPressed: {
+                    page.cfg_panelMeterShape = "capsules"
+                    capsuleShapeButton.forceActiveFocus(Qt.TabFocusReason)
+                }
+            }
+        }
+
+        Components.PlainControlsLabel {
+            Layout.fillWidth: true
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            text: i18n("Automatic quotas use an outer primary ring and an inner secondary ring. An explicit quota uses one ring.")
+            visible: page.cfg_panelMeterShape === "rings"
+            font: Kirigami.Theme.smallFont
+            opacity: 0.7
+            wrapMode: Text.WordWrap
+        }
+
         Controls.ButtonGroup {
             buttons: [standardStyleButton, minimalStyleButton]
         }
@@ -347,7 +399,7 @@ KCM.SimpleKCM {
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            text: i18n("Quota capsules keep their warning colors in both styles.")
+            text: i18n("Quota indicators keep their warning colors in both styles.")
             font: Kirigami.Theme.smallFont
             opacity: 0.7
             wrapMode: Text.WordWrap

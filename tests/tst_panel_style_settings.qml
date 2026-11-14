@@ -94,6 +94,31 @@ TestCase {
         compare(page.cfg_panelStyle, "unrecognized");
     }
 
+    function test_meterShapeIsIndependentOfColorAndContent() {
+        var page = createPage({cfg_panelStyle: "minimal", cfg_showPercentInPanel: true});
+        if (!page) return;
+        var rings = findChild(page, "panelRingShape");
+        var capsules = findChild(page, "panelCapsuleShape");
+        verify(capsules.checked && !rings.checked);
+        rings.forceActiveFocus();
+        keyClick(Qt.Key_Space);
+        compare(page.cfg_panelMeterShape, "rings");
+        compare(page.cfg_panelStyle, "minimal");
+        verify(page.cfg_showPercentInPanel);
+        keyClick(Qt.Key_Left);
+        compare(page.cfg_panelMeterShape, "capsules");
+        keyClick(Qt.Key_Right);
+        compare(page.cfg_panelMeterShape, "rings");
+        page.cfg_panelStyle = "standard";
+        verify(rings.checked);
+        page.applyMinimalPanelPreset();
+        compare(page.cfg_panelMeterShape, "rings");
+        page.cfg_panelMeterShape = page.cfg_panelMeterShapeDefault;
+        verify(capsules.checked);
+        page.cfg_panelMeterShape = "unknown";
+        verify(capsules.checked && !rings.checked);
+    }
+
     function test_disclosureAndContextKeepPendingValues() {
         var page = createPage({cfg_panelQuotaLane: "secondary", cfg_menuBarDisplayMode: "resetTime"});
         if (!page) return;

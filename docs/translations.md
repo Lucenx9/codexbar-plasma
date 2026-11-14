@@ -46,7 +46,8 @@ in TODO.
 In Italian, settings use "Diagnostica" and "Finestra a comparsa". Technical
 terms such as "provider", "account", and "token" remain unchanged.
 Spanish instructions use the formal address consistently. Panel style labels
-describe the color choice: "Provider colors" and "Monochrome". The separate
+describe the color choice: "Provider colors" and "Monochrome". Meter shape is a separate choice:
+"Capsules" or "Rings". The separate
 "Show only icons and meters" preset also changes which panel contents are visible.
 
 Panel budget previews and the live panel use the same regional decimal and

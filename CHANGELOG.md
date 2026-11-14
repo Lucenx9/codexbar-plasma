@@ -10,6 +10,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Added
+
+- Add optional concentric quota rings around panel provider icons, independently
+  of Provider colors or Monochrome. Keep capsules as the default and preview
+  pending shape changes in Panel settings.
+
 ### Changed
 
 - Replace informational message surfaces with contextual text. Show cost

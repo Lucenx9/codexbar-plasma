@@ -14,9 +14,10 @@ import subprocess
 import tempfile
 
 import smoke_popup as smoke
+from smoke.panel_rings import add_ring_cases, validate_ring_record
 
 DEFAULTS = {
-    "panelStyle": "standard", "showProviderInPanel": False,
+    "panelStyle": "standard", "panelMeterShape": "capsules", "showProviderInPanel": False,
     "showPercentInPanel": False, "showCreditsInPanel": False,
     "showAutoQuotaLabel": False, "showSpendInPanel": False,
     "showMultiProviderInPanel": True, "panelQuotaLane": "auto",
@@ -43,6 +44,7 @@ def matrix_cases(vertical=False):
             add(style + "-" + edge, {"panelStyle": style}, edge=edge)
         for interaction in ("hover", "press", "focus"):
             add(style + "-" + interaction, {"panelStyle": style}, interaction=interaction)
+    add_ring_cases(add, CONTENTS)
     if vertical:
         return cases
     all_text = {key: True for key in CONTENTS}
@@ -106,6 +108,7 @@ def validate_record(record, count):
         expected = "" if record["id"] == "credits-unavailable" else "72% used"
         if record["text"] != expected:
             raise RuntimeError("Incorrect selected-provider content: " + record["id"])
+    validate_ring_record(record, count)
     validate_budget_record(record)
     flags = re.fullmatch(r"(?:standard|minimal)-([01]{4})", record["id"])
     if not flags:

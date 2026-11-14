@@ -114,7 +114,7 @@ Item {
     function visibleParts(item, result) {
         if (!item.visible)
             return;
-        if (["panelProviderText", "panelStandaloneText", "panelProviderIcon", "panelIdentityIcon", "panelMeterTrack"].indexOf(item.objectName) >= 0) {
+        if (["panelProviderText", "panelStandaloneText", "panelProviderIcon", "panelIdentityIcon", "panelMeterTrack", "panelMeterRing"].indexOf(item.objectName) >= 0) {
             var position = item.mapToItem(panel.item, 0, 0);
             result.push({
                 name: item.objectName,

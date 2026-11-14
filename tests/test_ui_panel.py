@@ -41,8 +41,8 @@ class PanelTest(unittest.TestCase):
         compact_meter_body = id_block(compact_representation_text, "compactMeter")
         for meter_fragment in (
             "Layout.preferredWidth: compactRoot.meterWidth",
-            "Layout.preferredWidth: compactRoot.meterIconSize",
-            "Layout.preferredHeight: compactRoot.meterIconSize",
+            "Layout.preferredWidth: compactRoot.ringMeters ? compactRoot.ringDiameter : compactRoot.meterIconSize",
+            "Layout.preferredHeight: Layout.preferredWidth",
             "Layout.preferredHeight: compactRoot.meterBarHeight",
         ):
             if not code_contains(compact_meter_body, meter_fragment):

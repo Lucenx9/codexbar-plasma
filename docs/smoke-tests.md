@@ -284,14 +284,16 @@ isolated using the smoke runner. The installed widget and real credentials are
 not used. The temporary applet runs the production normalization, settings
 adapters, and compact renderer.
 
-The default run saves 450 captures: 128 base combinations plus targeted cases
+The default run saves 594 captures: 128 base combinations plus targeted cases
 for all 24 element orders, five text formats with and without automatic quota
 labels, explicit quotas, visibility rules,
 missing data, long names, exhausted quotas, and 24/48/64-pixel panel heights.
 The targeted cases also cover optional monetary spend budgets, spend-only
 text and all six labelled-pace compositions in both styles, unavailable budgets, tiny readings, warning colors, stale quotas with
 confidence and incident markers, and real pointer hover/press and keyboard-focus
-states in both styles. `--vertical` adds 176 captures covering the base
+states in both styles. Ring cases cover both color styles, explicit quotas,
+missing and exhausted quotas, used/remaining direction, text, interactions,
+and 24/32/48/64-pixel extents. `--vertical` adds 320 captures covering the base
 combinations and those states on vertical panels. The capture harness uses
 QtTest input events; it does not simulate interaction by changing visual colors.
 Unavailable credits are tested with the four-provider fixture. Missing and
@@ -300,7 +302,8 @@ exhausted quotas are synthetic normalized snapshots within the isolated applet.
 Four providers is the meter row the compact renderer caps at, so that batch is
 where panel content competes for width and items are surrendered.
 
-The runner rejects missing PNGs, clipped measured elements, incorrect base
+The runner rejects missing PNGs, clipped measured elements, missing or duplicated
+provider logos in ring cases, incorrect ring counts, incorrect base
 text/capsule counts, and rendered text that is not one of the compositions the
 renderer offered. It rejects an elided label only when a narrower composition
 would have fitted: the narrowest composition has nothing left to surrender, so
