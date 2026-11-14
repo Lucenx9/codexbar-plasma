@@ -563,7 +563,7 @@ Item {
         if (costDetailsStep === 3) {
             verifyScenario(section.selectedDay !== null && details.modelRows.length === 0,
                 "missing daily models must not fall back to the period");
-            verifyScenario(hasText(details, i18n("No model breakdown for this day.")), "missing model notice absent");
+            verifyScenario(hasText(details, i18n("No model data for this day.")), "missing model notice absent");
             findItem(section, "providerCostMetricToggle").activated(0);
             costDetailsStep = 4;
             return false;
@@ -733,7 +733,7 @@ Item {
         if (costDetailsStep === 5) {
             verifyScenario(section.selectedDay === null && details.visible
                 && (scenario === "popup-cost-missing-tokens"
-                    ? empty.visible && empty.text === i18n("No model breakdown for this period.")
+                    ? empty.visible && empty.text === i18n("No model data for this period.")
                     : partial.visible), "period model notices did not recover after day inspection");
             return true;
         }
@@ -747,7 +747,7 @@ Item {
             for (var i = 0; i < section.tokenCost.daily.length; i++)
                 verifyScenario(section.tokenCost.daily[i].tokens === null, "gap filling invented token counts");
             if (costDetailsStep === 1) {
-                verifyScenario(empty.visible && empty.text === i18n("No model breakdown for this period.")
+                verifyScenario(empty.visible && empty.text === i18n("No model data for this period.")
                     && !partial.visible, "missing period models must have an explicit empty state");
                 findItem(section, "providerCostMetricToggle").activated(1);
             } else if (costDetailsStep === 2) {
@@ -757,7 +757,7 @@ Item {
                 chart.selectedIndex = chart.points.length - 1;
             } else {
                 verifyScenario(section.selectedDay.tokens === null && empty.visible
-                    && empty.text === i18n("No model breakdown for this day.") && !partial.visible,
+                    && empty.text === i18n("No model data for this day.") && !partial.visible,
                     "missing day models or tokens lost their unknown state");
                 section.clearDaySelection();
                 costDetailsStep = 5;

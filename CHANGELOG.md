@@ -12,6 +12,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Simplify Usage & Spend notes and use one AI Insights heading, matching settings.
+  Preserve model-list expansion and keyboard focus when history refreshes.
+
 - Remove the recurring collecting-history banner from Usage & Spend; retain
   specific missing-data, partial-cost and scan-error explanations.
 

@@ -22,6 +22,9 @@ ColumnLayout {
     readonly property bool historyAvailable: applet.costUsageEnabled !== false || applet.identifiedTokensEnabled === true
     property bool activityExpanded: false
     property var expandedModelProviders: []
+    property var providersShowingAllModels: []
+    property string modelFocusRestoreProvider: ""
+    signal restoreModelsFocus(string provider)
     readonly property var allProviderCosts: applet.spendProviderCosts()
     readonly property var filterProviderCosts: selectedProvider
         && !allProviderCosts.some(function(item) { return item.provider === selectedProvider })
@@ -54,6 +57,30 @@ ColumnLayout {
     Layout.fillWidth: true
     Layout.fillHeight: true
     spacing: Kirigami.Units.largeSpacing
+
+    Timer {
+        id: modelFocusRestore
+        interval: 0
+        onTriggered: {
+            var provider = view.modelFocusRestoreProvider
+            view.modelFocusRestoreProvider = ""
+            if (!view.visible || !provider) return
+            if (view.presentedProviderCosts.some(function(item) { return item.provider === provider }))
+                view.restoreModelsFocus(provider)
+            else
+                providerFilter.forceActiveFocus(Qt.OtherFocusReason)
+        }
+    }
+
+    Connections {
+        target: spendProviderRepeater
+        function onItemRemoved(index: int, item: var) {
+            if (item && item.modelsActionFocused) {
+                view.modelFocusRestoreProvider = item.modelData.provider
+                modelFocusRestore.restart()
+            }
+        }
+    }
 
     onSelectionScopeChanged: {
         if (!historyChart)
@@ -543,6 +570,14 @@ ColumnLayout {
                         delegate: ColumnLayout {
                             id: providerGroup
                             required property var modelData
+                            readonly property bool modelsActionFocused: modelList.actionFocused
+                            Connections {
+                                target: view
+                                function onRestoreModelsFocus(provider: string) {
+                                    if (provider === providerGroup.modelData.provider)
+                                        modelList.restoreActionFocus()
+                                }
+                            }
                             Layout.fillWidth: true
                             Layout.minimumWidth: 0
                             spacing: Kirigami.Units.smallSpacing
@@ -686,10 +721,17 @@ ColumnLayout {
                                 }
                             }
                             Components.AnalysisModels {
+                                id: modelList
                                 applet: view.applet
                                 costs: Analysis.filterCosts(view.providerCosts, providerGroup.modelData.provider)
                                 selectedDay: view.selectedDay
                                 expanded: spendProviderCard.checked
+                                showAll: view.providersShowingAllModels.indexOf(providerGroup.modelData.provider) >= 0
+                                onShowAllRequested: function(value) {
+                                    var provider = providerGroup.modelData.provider
+                                    var remaining = view.providersShowingAllModels.filter(function(item) { return item !== provider })
+                                    view.providersShowingAllModels = value ? remaining.concat([provider]) : remaining
+                                }
                                 visible: expanded
                                 Layout.leftMargin: Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing
                                 onRestoreFocusRequested: spendProviderCard.forceActiveFocus(Qt.OtherFocusReason)

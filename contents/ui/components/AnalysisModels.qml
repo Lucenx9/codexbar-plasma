@@ -15,11 +15,18 @@ ColumnLayout {
     readonly property var models: expanded ? Analysis.modelRows(costs, selectedDay, applet.costHistoryShowsTokens)
         : ({rows: [], truncated: false})
     readonly property bool hasMore: models.rows.length > 3
+    readonly property bool actionFocused: showMore.activeFocus
     signal restoreFocusRequested()
+    signal showAllRequested(bool value)
     onHasMoreChanged: if (!hasMore && showMore.activeFocus) restoreFocusRequested()
     Layout.fillWidth: true
     Layout.minimumWidth: 0
     spacing: Kirigami.Units.smallSpacing
+
+    function restoreActionFocus() {
+        if (expanded && hasMore) showMore.forceActiveFocus(Qt.OtherFocusReason)
+        else restoreFocusRequested()
+    }
 
     RowLayout {
         Layout.fillWidth: true
@@ -36,17 +43,17 @@ ColumnLayout {
             visible: section.hasMore
             flat: true
             plainText: section.showAll ? i18n("Show fewer models") : i18n("Show more models")
-            onClicked: section.showAll = !section.showAll
+            onClicked: section.showAllRequested(!section.showAll)
         }
     }
     PlainPlasmaLabel {
-        text: i18n("Model breakdown is partial.")
+        text: i18n("Some models are not shown.")
         visible: section.models.truncated
         wrapMode: Text.Wrap
         Layout.fillWidth: true
     }
     PlainPlasmaLabel {
-        text: section.selectedDay ? i18n("No model breakdown for this day.") : i18n("No model breakdown for this period.")
+        text: section.selectedDay ? i18n("No model data for this day.") : i18n("No model data for this period.")
         visible: section.models.rows.length === 0
         opacity: applet.secondaryTextOpacity
         wrapMode: Text.Wrap

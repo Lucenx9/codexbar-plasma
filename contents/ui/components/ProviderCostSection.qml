@@ -300,8 +300,8 @@ ColumnLayout {
         PlainPlasmaLabel {
             objectName: "costModelsEmptyNotice"
             visible: costDrillDownSection.modelRows.length === 0
-            text: tokenCostSection.selectedDay !== null ? i18n("No model breakdown for this day.")
-                : i18n("No model breakdown for this period.")
+            text: tokenCostSection.selectedDay !== null ? i18n("No model data for this day.")
+                : i18n("No model data for this period.")
             Layout.fillWidth: true
             wrapMode: Text.Wrap
         }
@@ -309,7 +309,7 @@ ColumnLayout {
         PlainPlasmaLabel {
             objectName: "costModelsPartialNotice"
             visible: costDrillDownSection.detailData !== null && costDrillDownSection.detailData.modelsTruncated === true
-            text: i18n("Model breakdown is partial.")
+            text: i18n("Some models are not shown.")
             Layout.fillWidth: true
             wrapMode: Text.Wrap
         }

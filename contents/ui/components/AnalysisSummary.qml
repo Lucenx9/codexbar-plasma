@@ -23,7 +23,7 @@ GridLayout {
     rowSpacing: Kirigami.Units.smallSpacing
     visible: totals !== null
 
-    readonly property string comparisonHelp: i18n("Comparison excludes today and needs 14 complete days plus a scan from today.")
+    readonly property string comparisonHelp: i18n("Requires 14 complete days and a refresh today. Today is excluded.")
     readonly property var metrics: [
         {label: i18n("Cost"), value: summary.totals && summary.totals.cost !== null
             ? applet.qualifiedCostValue(AnalysisAmounts.metricText(applet.costNumberFormat, summary.totals.cost, summary.totals.currency, false),

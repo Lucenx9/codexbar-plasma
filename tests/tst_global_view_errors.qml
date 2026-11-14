@@ -231,6 +231,30 @@ TestCase {
         compare(view.selectedProvider, "");
     }
 
+    function test_modelListRefreshPreservesAllRowsAndKeyboardFocus() {
+        var rows = Array.from({length: 5}, function(_, index) {
+            return {label: "Model " + index, cost: 5 - index, tokens: index + 1, currency: "USD"};
+        });
+        var cost = {provider: "codex", models: rows, totals: {cost: 15, tokens: 15, currency: "USD"}};
+        applet.costs = [cost];
+        var view = createView("SpendView");
+        if (!view) return;
+        findChild(view, "analysisProviderToggle-codex").clicked();
+        findChild(view, "analysisModelsShowMore").forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Space);
+        applet.costs = [Object.assign({}, cost, {totals: {cost: 16, tokens: 16, currency: "USD"}})];
+        var section = findChild(view, "analysisModels");
+        verify(section.showAll);
+        tryCompare(findChild(section, "analysisModelsShowMore"), "activeFocus", true);
+        verify(findItem(section, function(item) { return item.text === "Model 4"; }) !== null);
+        applet.costs = [Object.assign({}, cost, {models: rows.slice(0, 2)})];
+        tryCompare(findChild(view, "analysisProviderToggle-codex"), "activeFocus", true);
+        applet.costs = [cost];
+        findChild(view, "analysisModelsShowMore").forceActiveFocus(Qt.TabFocusReason);
+        applet.costs = [{provider: "claude", models: rows, totals: cost.totals}];
+        tryCompare(findChild(view, "analysisProviderFilter"), "activeFocus", true);
+    }
+
     function test_openProviderModelsFollowDayAndRefresh() {
         var daily = {label: "2026-11-13", cost: 2, tokens: 20, currency: "USD",
             models: [{label: "Day model", cost: 2, tokens: 20, currency: "USD"}]};

@@ -290,7 +290,7 @@ class CostTest(unittest.TestCase):
     def test_model_details(self):
         cost_drill_down_body = id_block(main_text, "costDrillDownSection")
         for fragment in (
-            'i18n("No model breakdown for this period.")',
+            'i18n("No model data for this period.")',
             "costDrillDownSection.detailData.modelsTruncated === true",
             "modelsTruncated: tokenCostSection.selectedDay.modelsTruncated",
         ):

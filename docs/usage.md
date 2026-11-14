@@ -351,8 +351,10 @@ work and upstream contract requirements.
   Each provider's model list shows aligned amounts ranked by the selected
   metric. The first three models are shown initially; **Show more models**
   reveals the remaining available rows for that provider. Open providers stay
-  expanded across refreshes and day selections. Input, output and cache
-  composition stays in provider details. **Activity heatmap** expands separately.
+  expanded across refreshes and day selections, including **Show more models**
+  choices. Refreshing preserves focus on the model-list action, with a visible
+  provider header or filter as the fallback when that action disappears.
+  Input, output and cache composition stays in provider details. **Activity heatmap** expands separately.
   **Last 7 days vs previous 7** excludes today and requires fourteen complete
   days plus a current scan. Short, partial, stale, or ambiguous histories show
   unavailable instead of extrapolating, with the history requirements shown below
@@ -1601,7 +1603,7 @@ already measured; forecasts come from the CLI pace data, and comparisons appear
 only when the history supports them. Quota signals use the measured percentage
 without rounding across warning or exhaustion thresholds. It is off by default.
 While it is off, the widget builds no AI data, starts no AI process, contacts no AI service, and
-hides saved answers. The **Ask the data** disclosure can still link to setup.
+hides saved answers. The **AI Insights** disclosure can still link to setup.
 The [AI Insights reference](ai-insights.md) documents the data
 and request contracts.
 
@@ -1623,9 +1625,9 @@ previous test result. Disabling AI Insights on this settings page retires any
 pending connection test or wallet operation and ignores its late reply. The assistant
 and settings reject success replies from a helper that exits with an error or
 crashes; a failed generation keeps the previous insight available.
-Open **Ask the data** in **Usage & Spend** and choose **Summarize usage**,
+Open **AI Insights** in **Usage & Spend** and choose **Summarize usage**,
 **What changed this week?**, **How much headroom remains?**, or **What should I
-investigate?**. Then press **Generate insight**. The assistant shows the saved
+investigate?**. Then press **Generate analysis**. The assistant shows the saved
 question, full summary and highlights, generation time, service, model, and age.
 It replaces the former Overview card and separate analysis page. A widget fixed
 to one provider in Diagnostics shows the enabled assistant on that provider page.

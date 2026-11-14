@@ -29,7 +29,10 @@ inspection reports each provider for the selected day. Provider pages retain bar
 Each provider row expands its own ranked model list inline, initially showing
 three rows. Show more models reveals that provider's remaining bounded rows
 without fetching data. Opening a provider does not change the chart filter or
-switch tabs. Open rows survive refreshes and day selection; the provider dropdown
+switch tabs. Open rows and Show more models choices survive refreshes and day
+selection. Refreshing preserves keyboard focus on the model-list action, or
+returns it to the provider header if that action disappears. If the provider
+disappears, focus returns to the provider filter. The provider dropdown
 owns chart filtering. Token composition remains in provider details, while
 partial model coverage and excluded-request notices remain visible inline.
 

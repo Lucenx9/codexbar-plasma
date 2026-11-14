@@ -591,7 +591,7 @@ KCM.SimpleKCM {
         }
 
         Components.PlainControlsLabel {
-            text: i18n("Choose Generate insight under Ask the data in Usage & Spend or the fixed-provider view. Automatic generation never runs more often than the chosen interval, and ordinary usage refreshes do not trigger it.")
+            text: i18n("Choose Generate analysis under AI Insights in Usage & Spend or the fixed-provider view. Automatic generation respects the chosen interval. Usage refreshes do not trigger it.")
             font: Kirigami.Theme.smallFont
             opacity: 0.7
             Layout.fillWidth: true
