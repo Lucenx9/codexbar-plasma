@@ -1699,8 +1699,8 @@ msgid "Daily"
 msgstr "Cada día"
 
 #: contents/ui/configAiInsights.qml
-msgid "Select %1 under %2. Automatic generation runs at most once per interval. Usage refreshes do not trigger it."
-msgstr "Seleccione %1 en %2. La generación automática se ejecuta como máximo una vez por intervalo. Actualizar el uso no la inicia."
+msgid "Select %1 under %2 in %3 or the fixed-provider view. Automatic generation runs at most once per interval. Usage refreshes do not trigger it."
+msgstr "Seleccione %1 en %2, dentro de %3 o en la vista del proveedor fijo. La generación automática se ejecuta como máximo una vez por intervalo. Actualizar el uso no la inicia."
 
 #: contents/ui/configAiInsights.qml
 msgid "Saved insight:"

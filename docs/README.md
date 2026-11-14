@@ -66,7 +66,8 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
 - [AI Insights](ai-insights.md): the optional guided assistant in Usage & Spend, its
   boundary decision, allowlisted snapshot, private helper handoff, language selection, request and credential contracts,
   scheduling, and tests.
-- [Translations](translations.md): adding and checking a language catalog.
+- [Translations](translations.md): terminology, linguistic references, and adding
+  or checking a language catalog.
 - [CLI 0.56.2 parity baseline](research/2026-09-01-macos-parity-0.56.2.md):
   verified official Linux contracts at that comparison date. The
   [usage guide](usage.md) describes current Plasma behavior; later scoped checks

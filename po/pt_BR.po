@@ -239,7 +239,7 @@ msgstr ""
 
 #: contents/ui/components/CostTrustNotice.qml
 msgid "Could not verify the source of the cost total."
-msgstr "Não foi possível verificar a fonte do custo total."
+msgstr "Não foi possível verificar a origem do custo total."
 
 #: contents/ui/components/CostTrustNotice.qml
 msgid "%1 %2"
@@ -1699,8 +1699,8 @@ msgid "Daily"
 msgstr "Diariamente"
 
 #: contents/ui/configAiInsights.qml
-msgid "Select %1 under %2. Automatic generation runs at most once per interval. Usage refreshes do not trigger it."
-msgstr "Selecione %1 em %2. A geração automática ocorre no máximo uma vez por intervalo. Atualizar o uso não a inicia."
+msgid "Select %1 under %2 in %3 or the fixed-provider view. Automatic generation runs at most once per interval. Usage refreshes do not trigger it."
+msgstr "Selecione %1 em %2, em %3 ou na visualização do provedor fixo. A geração automática ocorre no máximo uma vez por intervalo. Atualizar o uso não a inicia."
 
 #: contents/ui/configAiInsights.qml
 msgid "Saved insight:"
@@ -1800,9 +1800,7 @@ msgstr "Seleção avançada do provedor"
 msgid ""
 "Override the provider or source. Leave blank to use enabled providers and "
 "their saved sources."
-msgstr ""
-"Substitui o provedor ou a fonte. Deixe em branco para usar os provedores "
-"ativados e suas fontes salvas."
+msgstr "Substitui o provedor ou a origem. Deixe em branco para usar os provedores ativados e suas origens salvas."
 
 #: contents/ui/configDiagnostics.qml
 msgid "Provider:"
@@ -3683,7 +3681,7 @@ msgstr "Web"
 
 #: contents/ui/configProviders.qml
 msgid "Choose a source"
-msgstr "Escolha uma fonte"
+msgstr "Escolha uma origem"
 
 #: contents/ui/components/UsageWindowText.qml scripts/smoke/Capture.qml
 #, kde-format
@@ -4086,7 +4084,7 @@ msgstr "Desativados"
 msgid ""
 "Some sources are unavailable on Linux. The source override in Diagnostics "
 "takes precedence."
-msgstr "Algumas fontes não estão disponíveis no Linux. A fonte definida em Diagnóstico tem prioridade."
+msgstr "Algumas origens não estão disponíveis no Linux. A origem definida em Diagnóstico tem prioridade."
 
 #: contents/ui/components/ProviderNames.qml
 msgid "Trae CN"
@@ -4176,7 +4174,7 @@ msgid ""
 "Remove the API key and manual cookie stored by CodexBar for %1? Token "
 "accounts, environment variables, source settings and enablement are "
 "unchanged."
-msgstr "Remover a chave de API e o cookie manual salvos pelo CodexBar para %1? As contas com tokens, variáveis de ambiente, configurações de fonte e o estado de ativação permanecem inalterados."
+msgstr "Remover a chave de API e o cookie manual salvos pelo CodexBar para %1? As contas com tokens, variáveis de ambiente, configurações de origem e o estado de ativação permanecem inalterados."
 
 #: contents/ui/configPopup.qml
 msgid "Follows the provider order above."
@@ -4253,21 +4251,19 @@ msgstr "Muda para monocromático, ativa os indicadores dos provedores e oculta n
 
 #: contents/ui/configProviders.qml
 msgid "Loading saved source…"
-msgstr "Carregando a fonte salva…"
+msgstr "Carregando a origem salva…"
 
 #: contents/ui/configProviders.qml
 msgid "Could not read the saved source. Reload to try again."
-msgstr "Não foi possível ler a fonte salva. Selecione Recarregar para tentar novamente."
+msgstr "Não foi possível ler a origem salva. Selecione Recarregar para tentar novamente."
 
 #: contents/ui/configProviders.qml
 msgid "The saved source is not recognized. Choose a source and save to replace it."
-msgstr "A fonte salva não é reconhecida. Escolha uma fonte e salve-a para substituí-la."
+msgstr "A origem salva não é reconhecida. Escolha uma origem e salve-a para substituí-la."
 
 #: contents/ui/configProviders.qml
 msgid "Save takes effect immediately. Automatic uses the provider default."
-msgstr ""
-"Salvar aplica a escolha imediatamente. Automática usa a fonte padrão do "
-"provedor."
+msgstr "Salvar aplica a escolha imediatamente. Automática usa a origem padrão do provedor."
 
 #: contents/ui/components/ProviderNames.qml
 msgid "SiliconFlow"

@@ -268,9 +268,7 @@ msgstr "Die Nutzung wird aktualisiert, sobald die Verbindung zurückkehrt."
 
 #: contents/ui/main.qml
 msgid "For connection checks, open Diagnostics in widget settings."
-msgstr ""
-"Öffnen Sie zur Überprüfung der Verbindung die Diagnose in den Widget-"
-"Einstellungen."
+msgstr "Öffnen Sie zur Überprüfung der Verbindung die Diagnose in den Miniprogramm-Einstellungen."
 
 #: contents/ui/components/FullRepresentation.qml contents/ui/configGeneral.qml
 msgid "Retry"
@@ -326,9 +324,7 @@ msgstr "CLI installieren und verwenden"
 msgid ""
 "Could not run '%1'. Install the CLI for this widget, or set its path in "
 "Settings > Diagnostics."
-msgstr ""
-"'%1' konnte nicht ausgeführt werden. Installieren Sie die CLI für dieses "
-"Widget oder geben Sie ihren Pfad unter Einstellungen > Diagnose an."
+msgstr "'%1' konnte nicht ausgeführt werden. Installieren Sie die CLI für dieses Miniprogramm oder geben Sie ihren Pfad unter Einstellungen > Diagnose an."
 
 #: contents/ui/components/FullRepresentation.qml
 msgid "No provider data"
@@ -336,9 +332,7 @@ msgstr "Keine Anbieterdaten"
 
 #: contents/ui/components/FullRepresentation.qml
 msgid "Open Providers in widget settings to enable or set up a provider."
-msgstr ""
-"Öffnen Sie Anbieter in den Widget-Einstellungen, um einen Anbieter zu "
-"aktivieren oder einzurichten."
+msgstr "Öffnen Sie Anbieter in den Miniprogramm-Einstellungen, um einen Anbieter zu aktivieren oder einzurichten."
 
 #: contents/ui/components/FullRepresentation.qml
 #: contents/ui/components/ProviderHeader.qml contents/ui/configGeneral.qml
@@ -1707,8 +1701,8 @@ msgid "Daily"
 msgstr "Täglich"
 
 #: contents/ui/configAiInsights.qml
-msgid "Select %1 under %2. Automatic generation runs at most once per interval. Usage refreshes do not trigger it."
-msgstr "Wählen Sie %1 unter %2. Die automatische Erstellung erfolgt höchstens einmal pro Intervall. Eine Aktualisierung der Nutzung löst sie nicht aus."
+msgid "Select %1 under %2 in %3 or the fixed-provider view. Automatic generation runs at most once per interval. Usage refreshes do not trigger it."
+msgstr "Wählen Sie %1 unter %2 in %3 oder in der Ansicht des festen Anbieters. Die automatische Erstellung erfolgt höchstens einmal pro Intervall. Eine Aktualisierung der Nutzung löst sie nicht aus."
 
 #: contents/ui/configAiInsights.qml
 msgid "Saved insight:"
@@ -1990,10 +1984,7 @@ msgstr "Verwaltete CLI"
 msgid ""
 "Install a private copy for this widget. System and package-manager "
 "installations remain available. Apply settings to use the selected copy."
-msgstr ""
-"Installiert eine private Kopie für dieses Widget. Systeminstallationen und "
-"Installationen über Paketverwaltungen bleiben verfügbar. Übernehmen Sie die "
-"Einstellungen, um die ausgewählte Kopie zu verwenden."
+msgstr "Installiert eine private Kopie für dieses Miniprogramm. Systeminstallationen und Installationen über Paketverwaltungen bleiben verfügbar. Übernehmen Sie die Einstellungen, um die ausgewählte Kopie zu verwenden."
 
 #: contents/ui/configGeneral.qml
 msgid "Update now"
@@ -2012,11 +2003,7 @@ msgid ""
 "The selected %1 %2 keeps working outside the widget. Installing creates a "
 "second private copy and switches the widget to it; updates through the "
 "original method will no longer affect the widget."
-msgstr ""
-"Das ausgewählte %1 %2 funktioniert außerhalb des Widgets weiterhin. Die "
-"Installation erstellt eine zweite private Kopie und stellt das Widget darauf "
-"um; Updates über die ursprüngliche Methode wirken sich danach nicht mehr auf "
-"das Widget aus."
+msgstr "Das ausgewählte %1 %2 funktioniert außerhalb des Miniprogramms weiterhin. Die Installation erstellt eine zweite private Kopie und stellt das Miniprogramm darauf um; Aktualisierungen über die ursprüngliche Methode wirken sich danach nicht mehr auf das Miniprogramm aus."
 
 #: contents/ui/configGeneral.qml
 msgid "Install second copy"
@@ -2782,17 +2769,13 @@ msgstr "Zeitüberschreitung beim Laden der Konten. Erneut versuchen."
 msgid ""
 "Managed by this widget. Install updates or restore the previous version in "
 "Managed CLI below."
-msgstr ""
-"Von diesem Widget verwaltet. Unter Verwaltete CLI weiter unten können Sie "
-"Updates installieren oder die vorherige Version wiederherstellen."
+msgstr "Von diesem Miniprogramm verwaltet. Unter Verwaltete CLI weiter unten können Sie Aktualisierungen installieren oder die vorherige Version wiederherstellen."
 
 #: contents/ui/controllers/CliUpdateController.qml
 msgid ""
 "Managed by this widget. Install updates or restore the previous version in "
 "General."
-msgstr ""
-"Von diesem Widget verwaltet. Unter Allgemein können Sie Updates installieren "
-"oder die vorherige Version wiederherstellen."
+msgstr "Von diesem Miniprogramm verwaltet. Unter Allgemein können Sie Aktualisierungen installieren oder die vorherige Version wiederherstellen."
 
 #: contents/ui/controllers/CliUpdateController.qml
 msgid "Managed by Homebrew. Update through Homebrew."
@@ -2886,9 +2869,7 @@ msgstr "Wählen Sie vor dem Aktualisieren die verwaltete CLI aus."
 
 #: contents/ui/controllers/ManagedCliController.qml
 msgid "Another widget is updating the managed CLI. Try again shortly."
-msgstr ""
-"Ein anderes Widget aktualisiert die verwaltete CLI. Versuchen Sie es in "
-"Kürze erneut."
+msgstr "Ein anderes Miniprogramm aktualisiert die verwaltete CLI. Versuchen Sie es in Kürze erneut."
 
 #: contents/ui/controllers/ManagedCliController.qml
 msgid "No previous CLI version is available."
@@ -3640,7 +3621,7 @@ msgstr ""
 
 #: contents/ui/components/CostText.qml
 msgid "Estimated from local Codex logs, independently of the account selected in the widget."
-msgstr "Schätzung anhand lokaler Codex-Protokolle, unabhängig vom im Widget ausgewählten Konto."
+msgstr "Schätzung anhand lokaler Codex-Protokolle, unabhängig vom im Miniprogramm ausgewählten Konto."
 
 #: contents/ui/components/CostText.qml
 msgid "Estimated from local Claude logs."
@@ -3927,7 +3908,7 @@ msgstr "Kritisch ab %1 %"
 msgid ""
 "Unsupported identified-token schema. Use compatible codexbar versions on "
 "each selected source; this widget supports schemas 1 and 2."
-msgstr "Nicht unterstütztes Schema für identifizierte Tokens. Verwenden Sie kompatible codexbar-Versionen auf jeder ausgewählten Quelle; dieses Widget unterstützt die Schemata 1 und 2."
+msgstr "Nicht unterstütztes Schema für identifizierte Tokens. Verwenden Sie kompatible codexbar-Versionen auf jeder ausgewählten Quelle; dieses Miniprogramm unterstützt die Schemata 1 und 2."
 
 #: contents/ui/components/IdentifiedTokensSection.qml
 msgid "API-price estimate unavailable: %1 without a price."
@@ -4055,7 +4036,7 @@ msgstr "Lädt auf Anfrage in Nutzung und Ausgaben eine auf identifizierte Codex-
 
 #: contents/ui/configGeneral.qml
 msgid "Widget updates"
-msgstr "Widget-Aktualisierungen"
+msgstr "Miniprogrammaktualisierungen"
 
 #: contents/ui/configGeneral.qml
 msgid "Update checks are off"
@@ -4099,7 +4080,7 @@ msgstr "Sendet nur aggregierte Nutzungsdaten, ohne Kontonamen, E-Mails, Projekte
 
 #: contents/ui/configGeneral.qml
 msgid "Widget update in progress…"
-msgstr "Widget-Aktualisierung läuft…"
+msgstr "Miniprogrammaktualisierung läuft…"
 
 #: contents/ui/configGeneral.qml
 msgid "Requires daily CLI checks and Plasma notifications."

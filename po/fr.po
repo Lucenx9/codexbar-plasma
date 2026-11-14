@@ -1708,8 +1708,8 @@ msgid "Daily"
 msgstr "Chaque jour"
 
 #: contents/ui/configAiInsights.qml
-msgid "Select %1 under %2. Automatic generation runs at most once per interval. Usage refreshes do not trigger it."
-msgstr "Sélectionnez %1 dans %2. La génération automatique a lieu au plus une fois par intervalle. L'actualisation de l'utilisation ne la déclenche pas."
+msgid "Select %1 under %2 in %3 or the fixed-provider view. Automatic generation runs at most once per interval. Usage refreshes do not trigger it."
+msgstr "Sélectionnez %1 dans %2, sous %3 ou dans la vue du fournisseur fixe. La génération automatique a lieu au plus une fois par intervalle. L'actualisation de l'utilisation ne la déclenche pas."
 
 #: contents/ui/configAiInsights.qml
 msgid "Saved insight:"
@@ -4091,7 +4091,7 @@ msgstr "Les modifications de la clé API prennent effet immédiatement."
 msgid ""
 "Sends aggregated usage only, without account names, emails, projects, paths, "
 "or prompts."
-msgstr "Envoie uniquement des statistiques d’utilisation agrégées, sans noms de comptes, adresses e-mail, projets, chemins ni prompts."
+msgstr "Envoie uniquement des statistiques d'utilisation agrégées, sans noms de comptes, adresses e-mail, projets, chemins ni instructions."
 
 #: contents/ui/configGeneral.qml
 msgid "Widget update in progress…"
@@ -4386,9 +4386,7 @@ msgstr "Question d’analyse"
 msgid ""
 "Answers use data from generation time. Account names, projects, paths and "
 "prompts are never sent."
-msgstr ""
-"Les réponses utilisent les données au moment de la génération. Les noms de "
-"comptes, projets, chemins et prompts ne sont jamais envoyés."
+msgstr "Les réponses utilisent les données au moment de la génération. Les noms de comptes, projets, chemins et instructions ne sont jamais envoyés."
 
 #: contents/ui/components/AnalysisSummary.qml
 msgid "%1×"

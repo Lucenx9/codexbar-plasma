@@ -591,7 +591,7 @@ msgid "Overview"
 msgstr ""
 
 #: contents/ui/components/FullRepresentation.qml
-#: contents/ui/components/SpendView.qml
+#: contents/ui/components/SpendView.qml contents/ui/configAiInsights.qml
 msgid "Usage & Spend"
 msgstr ""
 
@@ -2458,8 +2458,8 @@ msgstr ""
 
 #: contents/ui/configAiInsights.qml
 msgid ""
-"Select %1 under %2. Automatic generation runs at most once per interval. "
-"Usage refreshes do not trigger it."
+"Select %1 under %2 in %3 or the fixed-provider view. Automatic generation "
+"runs at most once per interval. Usage refreshes do not trigger it."
 msgstr ""
 
 #: contents/ui/configAiInsights.qml

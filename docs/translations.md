@@ -68,6 +68,48 @@ The panel's "behind pace" message means the CLI predicts quota exhaustion before
 reset (`willLastToReset === false`). Translate it as excessive consumption, not
 as consumption below the expected pace.
 
+## Terminology and references
+
+Use this glossary for the named UI concepts. Dictionaries establish meaning
+and spelling; the displayed control and its context determine the translation.
+Keep the catalog's existing register and reuse translated labels in instructions.
+
+| Concept | Italian | French | German | Spanish | Brazilian Portuguese |
+| --- | --- | --- | --- | --- | --- |
+| Quota | quota | quota | Kontingent | cuota | cota |
+| Usage history | cronologia | historique | Verlauf | historial | histórico |
+| Provider source | sorgente | source | Quelle | fuente | origem |
+| Usage token | token | jeton | Token | token | token |
+
+Italian loanwords such as account, provider and token retain their existing
+invariant plurals. French AI privacy text uses "instruction" for a model prompt;
+terminal and SSH prompts remain "invite". German uses Plasma's "Miniprogramm"
+for the applet. Brazilian Portuguese provider-source controls use "origem"
+throughout their labels, saved-state messages and instructions.
+
+The following references were checked on 2026-11-14:
+
+- Italian: [Treccani, quota](https://www.treccani.it/vocabolario/quota/)
+  and [cronologia](https://www.treccani.it/vocabolario/cronologia/), plus
+  [Accademia della Crusca on foreign plurals](https://accademiadellacrusca.it/it/consulenza/plurale-dei-forestierismi-non-adattati/8).
+- French: OQLF/FranceTerme entries for
+  [jeton](https://vitrinelinguistique.oqlf.gouv.qc.ca/fiche-gdt/fiche/26584108/jeton)
+  and [instruction générative](https://vitrinelinguistique.oqlf.gouv.qc.ca/fiche-gdt/fiche/26577046/instruction-generative).
+- German: [Duden, Kontingent](https://www.duden.de/rechtschreibung/Kontingent)
+  and the [German Plasma handbook](https://docs.kde.org/stable_kf6/de/plasma-desktop/plasma-desktop/shortcuts.html)
+  for the platform's Miniprogramm terminology.
+- Spanish: [RAE, cuota](https://dle.rae.es/cuota).
+- Brazilian Portuguese: [Michaelis, cota](https://michaelis.uol.com.br/moderno-portugues/busca/portugues-brasileiro/cota/).
+
+Apply [KDE's text and label guidance](https://develop.kde.org/hig/text_and_labels/)
+to context, action wording, full accessible names for shortened controls, and
+space for longer translations. Use the
+[Microsoft language guides](https://learn.microsoft.com/en-us/globalization/reference/microsoft-style-guides)
+as supplementary grammar and usage references for these five locales. Keep
+this applet's glossary and established register when applying those guides. The
+[Lokalize handbook](https://docs.kde.org/stable_kf6/en/lokalize/lokalize/introduction.html)
+describes glossary, translation-memory and QA support for catalog maintenance.
+
 Install GNU gettext and Python 3 before running the commands below. Run them
 from the repository root.
 

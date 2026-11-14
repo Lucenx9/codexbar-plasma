@@ -2078,6 +2078,7 @@ KCM.SimpleKCM {
 
                         Components.PlainControlsLabel {
                             Layout.fillWidth: true
+                            objectName: "providerOptionsNotice"
                             text: page.providerDescriptorsUnavailable && page.providerSourceSetupSupported
                                 ? i18n("This CodexBar version does not support editing other options for this provider.")
                                 : page.providerDescriptorsUnavailable

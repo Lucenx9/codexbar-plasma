@@ -591,8 +591,8 @@ KCM.SimpleKCM {
         }
 
         Components.PlainControlsLabel {
-            text: i18n("Select %1 under %2. Automatic generation runs at most once per interval. Usage refreshes do not trigger it.",
-                i18n("Generate analysis"), i18n("AI Insights"))
+            text: i18n("Select %1 under %2 in %3 or the fixed-provider view. Automatic generation runs at most once per interval. Usage refreshes do not trigger it.",
+                i18n("Generate analysis"), i18n("AI Insights"), i18n("Usage & Spend"))
             font: Kirigami.Theme.smallFont
             opacity: 0.7
             Layout.fillWidth: true
