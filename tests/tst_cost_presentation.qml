@@ -936,7 +936,6 @@ TestCase {
         compare(CostCurrency.spendCurrency(arrayLike), "USD")
         compare(CostCurrency.spendHasMixedCostCurrencies(arrayLike), false)
         compare(CostPresentation.spendTotals("invalid"), null)
-        compare(CostPresentation.historyStillBuilding("invalid"), false)
     }
 
     function test_modelRowsLetTheCallerWordTheTokenHalf() {
@@ -1189,6 +1188,23 @@ TestCase {
 
     // Rows follow the locale's week, so a weekday keeps its row from day to
     // day instead of rotating with the newest date.
+    function test_spendHeatmapMonthsKeepCalendarGapsAndYearBoundaries() {
+        var cells = new Array(42).fill(null)
+        cells[2] = {label: "2026-12-23"}
+        cells[40] = {label: "2027-01-30"}
+        var before = JSON.stringify(cells)
+        compare(CostChart.spendHeatmapMonths(cells), [
+            {column: 0, columns: 2, month: 11, year: 2026},
+            {column: 2, columns: 4, month: 0, year: 2027}
+        ])
+        compare(JSON.stringify(cells), before)
+        cells[40].label = "2027-02-30"
+        compare(CostChart.spendHeatmapMonths(cells), [])
+        for (var value of [null, {}, [], new Array(379), [{label: "legacy"}], new Array(14).fill(null)])
+            compare(CostChart.spendHeatmapMonths(value), [])
+        compare(CostChart.spendHeatmapMonths([{label: "day-0"}, null, null, null, null, null, null]), [])
+    }
+
     function test_spendHeatmapRowWeekdaysStartOnTheLocaleWeek() {
         var days = []
         for (var day = 17; day <= 23; day++) {
@@ -1861,16 +1877,6 @@ TestCase {
         }
     }
 
-    // A missing flag counts as established, so older CLI payloads do not print
-    // a permanent "still collecting" note.
-    function test_historyStillBuildingOnlyOnAnExplicitFalse() {
-        verify(CostPresentation.historyStillBuilding([{ historyCoverageEstablished: false }]))
-        verify(!CostPresentation.historyStillBuilding([{ historyCoverageEstablished: true }]))
-        verify(!CostPresentation.historyStillBuilding([{}]))
-        verify(!CostPresentation.historyStillBuilding([]))
-        verify(!CostPresentation.historyStillBuilding([null, "stale", 42]))
-    }
-
     function test_malformedSnapshotsDegradeInsteadOfThrowing() {
         var points = CostPresentation.spendDailyPoints(fmt, [
             null,
@@ -1893,7 +1899,6 @@ TestCase {
         var totals = CostPresentation.spendTotals([{ totals: { tokens: "100", currency: "USD" } }])
         compare(totals.tokens, null)
         compare(CostPresentation.spendTotals([null, { totals: { cost: 2, tokens: 40, currency: "USD" } }]).tokens, 40)
-        verify(!CostPresentation.historyStillBuilding([null]))
         compare(CostCurrency.spendCurrency([null]), "USD")
     }
 

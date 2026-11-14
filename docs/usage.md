@@ -332,9 +332,13 @@ work and upstream contract requirements.
   **Compact analysis** restores the stacked layout. Each provider has a colored
   line with a subtle fill, readable scale, and gaps for unavailable days. Hover
   or keyboard inspection shows daily values for each provider. Provider pages
-  retain their bar charts. Selecting a provider filters local analytics
-  and stays selected across range changes, including empty results;
-  the provider dropdown also follows selections and resets made through cards.
+  retain their bar charts. The provider dropdown shows each provider’s identity
+  icon beside its name and filters local analytics
+  and stays selected across range changes, including empty results. Its width
+  stays stable when expanding or compacting analysis, shrinking only when space
+  is constrained; stacked controls continue to use the available width.
+  Clicking a provider row expands its models inline without changing the filter
+  or leaving Usage & Spend. Providers can be opened independently.
   Selecting a day scopes provider and model details, while headline
   totals keep the selected period. Project breakdowns stay in provider details.
   **All days** or Escape clears the day selection and returns keyboard inspection
@@ -344,12 +348,26 @@ work and upstream contract requirements.
   icons identify rows, with amounts aligned on the right and the daily total
   below. An ellipsis marks rows that do not fit the plot height; pinned-day
   cards and the accessible description retain all provider values.
-  **Models and token composition** and **Activity heatmap** expand on demand.
+  Each provider's model list shows aligned amounts ranked by the selected
+  metric. The first three models are shown initially; **Show more models**
+  reveals the remaining available rows for that provider. Open providers stay
+  expanded across refreshes and day selections, including **Show more models**
+  choices. Refreshing preserves focus on the model-list action, with a visible
+  provider header or filter as the fallback when that action disappears.
+  Input, output and cache composition stays in provider details. **Daily activity**
+  opens a compact calendar for ranges longer than seven days. It follows the same
+  provider, period and Cost/Token filters, with month and weekday labels. Hover
+  or arrow keys show the date and amount below the grid. Click or Enter/Space
+  selects that day in the chart and provider details; Escape clears the pin.
+  A zero remains selectable; an unavailable day stays empty. The calendar starts
+  collapsed and uses one intensity scale for the selected metric.
   **Last 7 days vs previous 7** excludes today and requires fourteen complete
   days plus a current scan. Short, partial, stale, or ambiguous histories show
   unavailable instead of extrapolating, with the history requirements shown below
   the totals. Summary values stay aligned when labels wrap, and comparison
   statuses wrap instead of being truncated. Different currencies are not converted.
+  The generic “local history is still being collected” banner is omitted;
+  missing-data states, pricing qualifications and scan errors remain visible.
   Current quotas and reset windows stay in **Overview** and provider details.
   Refresh updates local history. If both history sources are disabled but AI is
   enabled, this tab opens the assistant directly without history controls.
@@ -1591,7 +1609,7 @@ already measured; forecasts come from the CLI pace data, and comparisons appear
 only when the history supports them. Quota signals use the measured percentage
 without rounding across warning or exhaustion thresholds. It is off by default.
 While it is off, the widget builds no AI data, starts no AI process, contacts no AI service, and
-hides saved answers. The **Ask the data** disclosure can still link to setup.
+hides saved answers. The **AI Insights** disclosure can still link to setup.
 The [AI Insights reference](ai-insights.md) documents the data
 and request contracts.
 
@@ -1613,9 +1631,9 @@ previous test result. Disabling AI Insights on this settings page retires any
 pending connection test or wallet operation and ignores its late reply. The assistant
 and settings reject success replies from a helper that exits with an error or
 crashes; a failed generation keeps the previous insight available.
-Open **Ask the data** in **Usage & Spend** and choose **Summarize usage**,
+Open **AI Insights** in **Usage & Spend** and choose **Summarize usage**,
 **What changed this week?**, **How much headroom remains?**, or **What should I
-investigate?**. Then press **Generate insight**. The assistant shows the saved
+investigate?**. Then press **Generate analysis**. The assistant shows the saved
 question, full summary and highlights, generation time, service, model, and age.
 It replaces the former Overview card and separate analysis page. A widget fixed
 to one provider in Diagnostics shows the enabled assistant on that provider page.

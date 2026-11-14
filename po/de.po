@@ -50,8 +50,8 @@ msgstr ""
 "Modell."
 
 #: contents/ui/components/AnalysisAssistant.qml
-msgid "Not enough current usage data for an insight yet."
-msgstr "Noch nicht genug aktuelle Nutzungsdaten für einen Einblick."
+msgid "Not enough current usage data to generate an analysis."
+msgstr "Nicht genügend aktuelle Nutzungsdaten für eine Analyse."
 
 #: contents/ui/components/AnalysisAssistant.qml
 msgid "Out of date"
@@ -66,8 +66,8 @@ msgid "AI Insights"
 msgstr "KI-Einblicke"
 
 #: contents/ui/components/AnalysisAssistant.qml
-msgid "Generate insight"
-msgstr "Einblick erzeugen"
+msgid "Generate analysis"
+msgstr "Analyse erstellen"
 
 #: contents/ui/components/IdentifiedTokensSection.qml
 #: contents/ui/components/ProviderCostSection.qml
@@ -713,18 +713,18 @@ msgstr "Alle Tage"
 
 #: contents/ui/components/AnalysisModels.qml
 #: contents/ui/components/ProviderCostSection.qml scripts/smoke/Capture.qml
-msgid "No model breakdown for this day."
-msgstr "Keine Modelldetails für diesen Tag."
+msgid "No model data for this day."
+msgstr "Keine Modelldaten für diesen Tag."
 
 #: contents/ui/components/AnalysisModels.qml
 #: contents/ui/components/ProviderCostSection.qml scripts/smoke/Capture.qml
-msgid "No model breakdown for this period."
-msgstr "Keine Modellaufschlüsselung für diesen Zeitraum."
+msgid "No model data for this period."
+msgstr "Keine Modelldaten für diesen Zeitraum."
 
 #: contents/ui/components/AnalysisModels.qml
 #: contents/ui/components/ProviderCostSection.qml
-msgid "Model breakdown is partial."
-msgstr "Die Modelldetails sind unvollständig."
+msgid "Some models are not shown."
+msgstr "Einige Modelle werden nicht angezeigt."
 
 #: contents/ui/components/ProviderCostSection.qml
 msgid "Models"
@@ -1488,13 +1488,6 @@ msgstr ""
 "alle Anbieter."
 
 #: contents/ui/components/SpendView.qml
-msgid ""
-"Local history is still being collected, so early days may be incomplete."
-msgstr ""
-"Der lokale Verlauf wird noch erfasst. Die ersten Tage können daher "
-"unvollständig sein."
-
-#: contents/ui/components/SpendView.qml
 msgid "No daily token history is available for this range."
 msgstr "Für diesen Zeitraum ist kein täglicher Tokenverlauf verfügbar."
 
@@ -1516,8 +1509,8 @@ msgstr ""
 "Der Verlauf erscheint für Anbieter, die der Befehl codexbar cost unterstützt."
 
 #: contents/ui/components/SpendView.qml
-msgid "Activity heatmap"
-msgstr "Aktivitäts-Heatmap"
+msgid "Daily activity"
+msgstr "Tägliche Aktivität"
 
 #: contents/ui/components/SpendView.qml
 msgctxt "Activity heatmap legend, shade of the lowest daily value"
@@ -1741,8 +1734,8 @@ msgid "Daily"
 msgstr "Täglich"
 
 #: contents/ui/configAiInsights.qml
-msgid "Choose Generate insight under Ask the data in Usage & Spend or the fixed-provider view. Automatic generation never runs more often than the chosen interval, and ordinary usage refreshes do not trigger it."
-msgstr "Wählen Sie Einblick erzeugen unter Daten befragen in Nutzung und Ausgaben oder in der Ansicht des festen Anbieters. Die automatische Erzeugung läuft nie häufiger als im gewählten Intervall, und normale Nutzungsaktualisierungen lösen sie nicht aus."
+msgid "Choose Generate analysis under AI Insights in Usage & Spend or the fixed-provider view. Automatic generation respects the chosen interval. Usage refreshes do not trigger it."
+msgstr "Wählen Sie Analyse erstellen unter KI-Einblicke in Nutzung und Ausgaben oder in der Ansicht des festen Anbieters. Die automatische Erstellung hält das gewählte Intervall ein. Nutzungsaktualisierungen lösen sie nicht aus."
 
 #: contents/ui/configAiInsights.qml
 msgid "Saved insight:"
@@ -3850,11 +3843,11 @@ msgstr "Parallel"
 
 #: contents/ui/components/IdentifiedTokensSection.qml
 msgid "Loading identified tokens timed out. Try again."
-msgstr "Das Laden identifizierter Token hat zu lange gedauert. Versuchen Sie es erneut."
+msgstr "Das Laden identifizierter Tokens hat zu lange gedauert. Versuchen Sie es erneut."
 
 #: contents/ui/components/IdentifiedTokensSection.qml
 msgid "Could not start identified-token collection. Check codexbar and GNU timeout."
-msgstr "Die Erfassung identifizierter Token konnte nicht gestartet werden. Prüfen Sie codexbar und GNU timeout."
+msgstr "Die Erfassung identifizierter Tokens konnte nicht gestartet werden. Prüfen Sie codexbar und GNU timeout."
 
 #: contents/ui/components/IdentifiedTokensSection.qml
 msgid ""
@@ -3870,7 +3863,7 @@ msgstr "Identifizierte Codex-Daten konnten nicht geladen werden. Prüfen Sie den
 
 #: contents/ui/components/IdentifiedTokensSection.qml
 msgid "Identified Codex tokens"
-msgstr "Identifizierte Codex-Token"
+msgstr "Identifizierte Codex-Tokens"
 
 #: contents/ui/components/IdentifiedTokensSection.qml
 msgid "%1 across %2"
@@ -4057,8 +4050,8 @@ msgid "Provider actions"
 msgstr "Anbieteraktionen"
 
 #: contents/ui/components/InteractiveChart.qml
-msgid "Peak daily usage"
-msgstr "Höchste tägliche Nutzung"
+msgid "Daily peak"
+msgstr "Tageshöchstwert"
 
 #: contents/ui/components/PanelText.qml
 msgid "Behind pace"
@@ -4427,10 +4420,6 @@ msgid "What should I investigate?"
 msgstr "Was sollte ich genauer prüfen?"
 
 #: contents/ui/components/AnalysisAssistant.qml
-msgid "Ask the data"
-msgstr "Daten befragen"
-
-#: contents/ui/components/AnalysisAssistant.qml
 msgid ""
 "All providers: current quotas and the last 7 complete days versus the "
 "previous 7. Independent of the chart filters."
@@ -4449,10 +4438,6 @@ msgid ""
 msgstr ""
 "Gespeicherte Antworten beschreiben die Messwerte zum Erstellungszeitpunkt. "
 "Kontonamen, Projekte, Pfade und Prompts werden nie gesendet."
-
-#: contents/ui/components/AnalysisModels.qml
-msgid "Models and token composition"
-msgstr "Modelle und Token-Zusammensetzung"
 
 #: contents/ui/components/AnalysisSummary.qml
 msgid "%1×"
@@ -4556,8 +4541,8 @@ msgstr ""
 #~ msgstr "Über diese Analyse"
 
 #: contents/ui/components/AnalysisSummary.qml
-msgid "Comparison excludes today and needs 14 complete days plus a scan from today."
-msgstr "Der Vergleich schließt heute aus und benötigt 14 vollständige Tage sowie einen Scan von heute."
+msgid "Requires 14 complete days and a refresh today. Today is excluded."
+msgstr "Erfordert 14 vollständige Tage und eine heutige Aktualisierung. Heute ist ausgeschlossen."
 
 #: contents/ui/components/SpendView.qml
 msgid "No history for this provider"
@@ -4572,5 +4557,13 @@ msgid "Show all providers"
 msgstr "Alle Anbieter anzeigen"
 
 #: contents/ui/components/SpendView.qml
-msgid "Use the arrow keys to inspect days"
-msgstr "Mit den Pfeiltasten die Tage untersuchen"
+msgid "Arrow keys inspect days. Enter selects a day; Escape clears the selection."
+msgstr "Pfeiltasten zeigen Tage an. Eingabe wählt einen Tag; Escape hebt die Auswahl auf."
+
+#: contents/ui/components/AnalysisModels.qml
+msgid "Show more models"
+msgstr "Mehr Modelle anzeigen"
+
+#: contents/ui/components/AnalysisModels.qml
+msgid "Show fewer models"
+msgstr "Weniger Modelle anzeigen"

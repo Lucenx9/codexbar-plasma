@@ -46,7 +46,6 @@ TestCase {
         return i18n.apply(testCase, Array.prototype.slice.call(arguments, 1));
     }
 
-    property bool stillBuilding: true
     property bool mirrored: false
     property var projectCosts: [{
         provider: "codex",
@@ -150,10 +149,11 @@ TestCase {
                 })});
             });
         }
-        function presentedSpendProviderCosts(costs) { return testCase.presentedCosts; }
+        function presentedSpendProviderCosts(costs) {
+            return costs.length > 0 && costs[0].points ? costs : testCase.presentedCosts;
+        }
         function spendCurrency(costs) { return "USD"; }
         function spendTotalLine() { return "Total line"; }
-        function spendHistoryStillBuilding() { return testCase.stillBuilding; }
         function setCostHistoryMetric(metric) { metricSet = metric; }
         function setCostHistoryDays(days) { daysSet = String(days); costHistoryDays = days; costHistoryPeriod = ""; }
         function setCostHistoryPeriod(period) { periodSet = period; costHistoryPeriod = period; }
@@ -884,8 +884,7 @@ class CostSectionTests(unittest.TestCase):
             return item.plainText !== undefined
                 && item.plainText.indexOf("still being collected") >= 0;
         });
-        compare(notices.length, 1);
-        verify(notices[0].visible);
+        compare(notices.length, 0);
         var charts = all.filter(function(item) {
             return item.toString().indexOf("InteractiveChart") >= 0;
         });
@@ -896,7 +895,7 @@ class CostSectionTests(unittest.TestCase):
             return charts[0].accessibleTitle === "Daily token history";
         });
         fakeApplet.costHistoryShowsTokens = false;
-        verify(all.some(function(item) { return item.plainText === "Activity heatmap" && item.visible; }));
+        verify(all.some(function(item) { return item.plainText === "Daily activity" && item.visible; }));
         // Every rendered day must sit on the row whose weekday label names it.
         var dayNames = [];
         for (var weekday = 0; weekday < 7; weekday++)
@@ -1081,6 +1080,68 @@ class CostSectionTests(unittest.TestCase):
         compare(grid.readout, "");
         compare(fakeApplet.refreshCount, 0, "Inspection must not fetch history");
         spendPoints = originalPoints;
+    }
+    ''')
+
+    def test_heatmap_selects_chart_day_by_pointer_and_keyboard(self):
+        self.run_fixture('''
+    function test_selectCalendarDay_data() {
+        return [{tag: "ltr", mirrored: false}, {tag: "rtl", mirrored: true}];
+    }
+    function test_selectCalendarDay(data) {
+        failOnWarning(/Binding loop|recursive rearrange|TypeError|ReferenceError/);
+        var subject = createTemporaryObject(spendFactory, testCase,
+            {width: 580, height: 800, mirrored: data.mirrored});
+        var view = findChild(subject, "testAnalysis");
+        var chart = findChild(subject, "analysisHistoryChart");
+        var grid = findChild(subject, "spendHeatmap");
+        var readout = findChild(subject, "heatmapReadout");
+        grid.forceActiveFocus(Qt.TabFocusReason);
+        verify(waitForPolish(subject));
+        var cell = findChild(subject, "activityDay-2026-09-03");
+        var readoutY = readout.y;
+        mouseMove(cell, cell.width / 2, cell.height / 2);
+        tryVerify(function() { return readout.text.indexOf("$3") >= 0; });
+        compare(chart.selectedIndex, -1, "Hover must not select a day");
+        mouseClick(cell, cell.width / 2, cell.height / 2);
+        compare(view.selectedDay, "2026-09-03");
+        compare(chart.points[chart.selectedIndex].label, view.selectedDay);
+        verify(cell.Accessible.selected);
+        verify(grid.activeFocus);
+        mouseMove(testCase, 0, 0);
+        verify(readout.text.indexOf("$3") >= 0);
+        compare(readout.y, readoutY);
+        keyClick(Qt.Key_Home);
+        compare(view.selectedDay, "2026-09-03", "Keyboard inspection must preserve the pin");
+        keyClick(Qt.Key_Return);
+        compare(view.selectedDay, "2026-09-01");
+        keyClick(Qt.Key_End);
+        keyClick(Qt.Key_Space);
+        compare(view.selectedDay, "2026-09-08");
+        keyClick(Qt.Key_Escape);
+        compare(view.selectedDay, "");
+        verify(grid.activeFocus);
+        compare(readout.text.trim(), "");
+        cell.Accessible.pressAction();
+        compare(view.selectedDay, "2026-09-03");
+        // Pinning in the chart also marks the matching calendar cell.
+        chart.selectedIndex = 0;
+        verify(findChild(subject, "activityDay-2026-09-01").Accessible.selected);
+        var original = spendPoints;
+        spendPoints = original.filter(function(point) { return point.label !== "2026-09-05"; })
+            .map(function(point) { return Object.assign({}, point,
+                {value: point.label === "2026-09-04" ? 0 : point.value}); });
+        grid.selectDay("2026-09-04", Qt.OtherFocusReason);
+        compare(view.selectedDay, "2026-09-04");
+        verify(readout.text.indexOf("$0") >= 0, "A measured zero remains selectable");
+        grid.selectDay("2026-09-05", Qt.OtherFocusReason);
+        compare(view.selectedDay, "2026-09-04", "An unavailable day cannot change selection");
+        spendPoints = original;
+        var toggle = findChild(subject, "analysisActivityToggle");
+        toggle.clicked();
+        verify(!grid.visible);
+        verify(toggle.activeFocus);
+        compare(fakeApplet.refreshCount, 0);
     }
     ''')
 

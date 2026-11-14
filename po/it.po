@@ -48,9 +48,8 @@ msgid "Choose an AI provider and model in the AI Insights settings."
 msgstr "Scegli un provider IA e un modello nelle impostazioni di Analisi IA."
 
 #: contents/ui/components/AnalysisAssistant.qml
-msgid "Not enough current usage data for an insight yet."
-msgstr ""
-"Non ci sono ancora abbastanza dati di utilizzo aggiornati per un'analisi."
+msgid "Not enough current usage data to generate an analysis."
+msgstr "Dati di utilizzo aggiornati insufficienti per generare un'analisi."
 
 #: contents/ui/components/AnalysisAssistant.qml
 msgid "Out of date"
@@ -65,7 +64,7 @@ msgid "AI Insights"
 msgstr "Analisi IA"
 
 #: contents/ui/components/AnalysisAssistant.qml
-msgid "Generate insight"
+msgid "Generate analysis"
 msgstr "Genera analisi"
 
 #: contents/ui/components/IdentifiedTokensSection.qml
@@ -229,10 +228,10 @@ msgid_plural ""
 "%1 requests in the selected range lacked final usage, so they are excluded "
 "from the displayed totals."
 msgstr[0] ""
-"%1 richiesta nell'intervallo selezionato non ha un utilizzo finale, quindi è "
+"%1 richiesta nel periodo selezionato non ha un utilizzo finale, quindi è "
 "esclusa dai totali mostrati."
 msgstr[1] ""
-"%1 richieste nell'intervallo selezionato non hanno un utilizzo finale, "
+"%1 richieste nel periodo selezionato non hanno un utilizzo finale, "
 "quindi sono escluse dai totali mostrati."
 
 #: contents/ui/components/CostTrustNotice.qml
@@ -707,18 +706,18 @@ msgstr "Tutti i giorni"
 
 #: contents/ui/components/AnalysisModels.qml
 #: contents/ui/components/ProviderCostSection.qml scripts/smoke/Capture.qml
-msgid "No model breakdown for this day."
-msgstr "Nessun dettaglio dei modelli per questo giorno."
+msgid "No model data for this day."
+msgstr "Nessun dato sui modelli per questo giorno."
 
 #: contents/ui/components/AnalysisModels.qml
 #: contents/ui/components/ProviderCostSection.qml scripts/smoke/Capture.qml
-msgid "No model breakdown for this period."
-msgstr "Nessun dettaglio dei modelli per questo periodo."
+msgid "No model data for this period."
+msgstr "Nessun dato sui modelli per questo periodo."
 
 #: contents/ui/components/AnalysisModels.qml
 #: contents/ui/components/ProviderCostSection.qml
-msgid "Model breakdown is partial."
-msgstr "Il dettaglio dei modelli è parziale."
+msgid "Some models are not shown."
+msgstr "Alcuni modelli non sono mostrati."
 
 #: contents/ui/components/ProviderCostSection.qml
 msgid "Models"
@@ -1344,7 +1343,7 @@ msgstr "Mese corrente"
 #: contents/ui/components/ShareUsageWindow.qml
 #: contents/ui/components/SpendView.qml
 msgid "All history"
-msgstr "Tutto lo storico"
+msgstr "Tutta la cronologia"
 
 #: contents/ui/components/ShareUsageWindow.qml
 msgid ""
@@ -1480,13 +1479,6 @@ msgstr ""
 "includono tutti i provider."
 
 #: contents/ui/components/SpendView.qml
-msgid ""
-"Local history is still being collected, so early days may be incomplete."
-msgstr ""
-"La cronologia locale è ancora in fase di raccolta, quindi i primi giorni "
-"potrebbero essere incompleti."
-
-#: contents/ui/components/SpendView.qml
 msgid "No daily token history is available for this range."
 msgstr ""
 "Nessuna cronologia giornaliera dei token disponibile per questo periodo."
@@ -1510,8 +1502,8 @@ msgstr ""
 "cost."
 
 #: contents/ui/components/SpendView.qml
-msgid "Activity heatmap"
-msgstr "Mappa di calore dell'attività"
+msgid "Daily activity"
+msgstr "Attività giornaliera"
 
 #: contents/ui/components/SpendView.qml
 msgctxt "Activity heatmap legend, shade of the lowest daily value"
@@ -1734,8 +1726,8 @@ msgid "Daily"
 msgstr "Ogni giorno"
 
 #: contents/ui/configAiInsights.qml
-msgid "Choose Generate insight under Ask the data in Usage & Spend or the fixed-provider view. Automatic generation never runs more often than the chosen interval, and ordinary usage refreshes do not trigger it."
-msgstr "Scegli Genera analisi sotto Chiedi ai dati in Utilizzo e spesa o nella vista del provider fisso. La generazione automatica non avviene mai più spesso dell'intervallo scelto e i normali aggiornamenti dell'utilizzo non la avviano."
+msgid "Choose Generate analysis under AI Insights in Usage & Spend or the fixed-provider view. Automatic generation respects the chosen interval. Usage refreshes do not trigger it."
+msgstr "Scegli Genera analisi in Analisi IA, in Utilizzo e spesa o nella vista del provider fisso. La generazione automatica rispetta l'intervallo scelto. Gli aggiornamenti dell'utilizzo non la avviano."
 
 #: contents/ui/configAiInsights.qml
 msgid "Saved insight:"
@@ -4029,8 +4021,8 @@ msgid "Provider actions"
 msgstr "Azioni del provider"
 
 #: contents/ui/components/InteractiveChart.qml
-msgid "Peak daily usage"
-msgstr "Picco di utilizzo giornaliero"
+msgid "Daily peak"
+msgstr "Picco giornaliero"
 
 #: contents/ui/components/PanelText.qml
 msgid "Behind pace"
@@ -4399,10 +4391,6 @@ msgid "What should I investigate?"
 msgstr "Cosa dovrei approfondire?"
 
 #: contents/ui/components/AnalysisAssistant.qml
-msgid "Ask the data"
-msgstr "Chiedi ai dati"
-
-#: contents/ui/components/AnalysisAssistant.qml
 msgid ""
 "All providers: current quotas and the last 7 complete days versus the "
 "previous 7. Independent of the chart filters."
@@ -4422,10 +4410,6 @@ msgstr ""
 "Le risposte salvate descrivono le misurazioni al momento della generazione. "
 "Nomi degli account, progetti, percorsi e prompt non vengono mai inviati."
 
-#: contents/ui/components/AnalysisModels.qml
-msgid "Models and token composition"
-msgstr "Modelli e composizione dei token"
-
 #: contents/ui/components/AnalysisSummary.qml
 msgid "%1×"
 msgstr "%1×"
@@ -4440,11 +4424,11 @@ msgstr "Ultimi 7 giorni rispetto ai 7 precedenti"
 
 #: contents/ui/components/SpendView.qml
 msgid "Local history and optional AI analysis"
-msgstr "Storico locale e analisi IA facoltativa"
+msgstr "Cronologia locale e analisi IA facoltativa"
 
 #: contents/ui/components/SpendView.qml
 msgid "Compact analysis"
-msgstr "Analisi compatta"
+msgstr "Riduci analisi"
 
 #: contents/ui/components/SpendView.qml
 msgid "Expand analysis"
@@ -4527,12 +4511,12 @@ msgstr ""
 #~ msgstr "Informazioni sull'analisi"
 
 #: contents/ui/components/AnalysisSummary.qml
-msgid "Comparison excludes today and needs 14 complete days plus a scan from today."
-msgstr "Il confronto esclude oggi e richiede 14 giorni completi e una scansione effettuata oggi."
+msgid "Requires 14 complete days and a refresh today. Today is excluded."
+msgstr "Servono 14 giorni completi e un aggiornamento di oggi. Oggi è escluso."
 
 #: contents/ui/components/SpendView.qml
 msgid "No history for this provider"
-msgstr "Nessuno storico per questo provider"
+msgstr "Nessuna cronologia per questo provider"
 
 #: contents/ui/components/SpendView.qml
 msgid "Choose another provider or show all providers."
@@ -4543,5 +4527,13 @@ msgid "Show all providers"
 msgstr "Mostra tutti i provider"
 
 #: contents/ui/components/SpendView.qml
-msgid "Use the arrow keys to inspect days"
-msgstr "Usa i tasti freccia per esaminare i giorni"
+msgid "Arrow keys inspect days. Enter selects a day; Escape clears the selection."
+msgstr "Usa le frecce per esaminare i giorni, Invio per selezionare un giorno ed Esc per cancellare la selezione."
+
+#: contents/ui/components/AnalysisModels.qml
+msgid "Show more models"
+msgstr "Mostra altri modelli"
+
+#: contents/ui/components/AnalysisModels.qml
+msgid "Show fewer models"
+msgstr "Mostra meno modelli"

@@ -133,10 +133,6 @@ msgid "What should I investigate?"
 msgstr ""
 
 #: contents/ui/components/AnalysisAssistant.qml
-msgid "Ask the data"
-msgstr ""
-
-#: contents/ui/components/AnalysisAssistant.qml
 msgid "AI Insights"
 msgstr ""
 
@@ -151,7 +147,7 @@ msgid "Analysis question"
 msgstr ""
 
 #: contents/ui/components/AnalysisAssistant.qml
-msgid "Generate insight"
+msgid "Generate analysis"
 msgstr ""
 
 #: contents/ui/components/AnalysisAssistant.qml
@@ -159,7 +155,7 @@ msgid "Choose an AI provider and model in the AI Insights settings."
 msgstr ""
 
 #: contents/ui/components/AnalysisAssistant.qml
-msgid "Not enough current usage data for an insight yet."
+msgid "Not enough current usage data to generate an analysis."
 msgstr ""
 
 #: contents/ui/components/AnalysisAssistant.qml
@@ -181,22 +177,31 @@ msgid ""
 msgstr ""
 
 #: contents/ui/components/AnalysisModels.qml
-msgid "Models and token composition"
+#: contents/ui/components/ProviderCostSection.qml
+msgid "Models"
+msgstr ""
+
+#: contents/ui/components/AnalysisModels.qml
+msgid "Show fewer models"
+msgstr ""
+
+#: contents/ui/components/AnalysisModels.qml
+msgid "Show more models"
 msgstr ""
 
 #: contents/ui/components/AnalysisModels.qml
 #: contents/ui/components/ProviderCostSection.qml
-msgid "Model breakdown is partial."
+msgid "Some models are not shown."
 msgstr ""
 
 #: contents/ui/components/AnalysisModels.qml
 #: contents/ui/components/ProviderCostSection.qml scripts/smoke/Capture.qml
-msgid "No model breakdown for this day."
+msgid "No model data for this day."
 msgstr ""
 
 #: contents/ui/components/AnalysisModels.qml
 #: contents/ui/components/ProviderCostSection.qml scripts/smoke/Capture.qml
-msgid "No model breakdown for this period."
+msgid "No model data for this period."
 msgstr ""
 
 #: contents/ui/components/AnalysisModels.qml
@@ -204,6 +209,19 @@ msgstr ""
 #: contents/ui/components/InteractiveChart.qml
 #: contents/ui/components/ShareUsageWindow.qml
 msgid "Unavailable"
+msgstr ""
+
+#: contents/ui/components/AnalysisModels.qml
+#: contents/ui/components/AnalysisSummary.qml
+#: contents/ui/components/CompactRepresentation.qml
+#: contents/ui/components/CostText.qml
+#: contents/ui/components/InteractiveChart.qml
+#: contents/ui/components/PanelText.qml
+#: contents/ui/components/ProviderCostDetails.qml
+#: contents/ui/components/SpendView.qml contents/ui/configPopup.qml
+#: contents/ui/configProviders.qml contents/ui/main.qml
+#: scripts/smoke/Capture.qml
+msgid "%1: %2"
 msgstr ""
 
 #: contents/ui/components/AnalysisModels.qml
@@ -229,8 +247,7 @@ msgid "No baseline"
 msgstr ""
 
 #: contents/ui/components/AnalysisSummary.qml
-msgid ""
-"Comparison excludes today and needs 14 complete days plus a scan from today."
+msgid "Requires 14 complete days and a refresh today. Today is excluded."
 msgstr ""
 
 #: contents/ui/components/AnalysisSummary.qml
@@ -266,18 +283,6 @@ msgstr ""
 
 #: contents/ui/components/AnalysisSummary.qml
 msgid "Last 7 days vs previous 7"
-msgstr ""
-
-#: contents/ui/components/AnalysisSummary.qml
-#: contents/ui/components/CompactRepresentation.qml
-#: contents/ui/components/CostText.qml
-#: contents/ui/components/InteractiveChart.qml
-#: contents/ui/components/PanelText.qml
-#: contents/ui/components/ProviderCostDetails.qml
-#: contents/ui/components/SpendView.qml contents/ui/configPopup.qml
-#: contents/ui/configProviders.qml contents/ui/main.qml
-#: scripts/smoke/Capture.qml
-msgid "%1: %2"
 msgstr ""
 
 #: contents/ui/components/CompactRepresentation.qml
@@ -797,7 +802,7 @@ msgid "Load local + SSH"
 msgstr ""
 
 #: contents/ui/components/InteractiveChart.qml
-msgid "Peak daily usage"
+msgid "Daily peak"
 msgstr ""
 
 #: contents/ui/components/InteractiveChart.qml
@@ -1173,10 +1178,6 @@ msgstr ""
 #: contents/ui/components/ProviderCostSection.qml
 #: contents/ui/components/SpendView.qml
 msgid "All days"
-msgstr ""
-
-#: contents/ui/components/ProviderCostSection.qml
-msgid "Models"
 msgstr ""
 
 #: contents/ui/components/ProviderCostSection.qml
@@ -2073,11 +2074,6 @@ msgid ""
 msgstr ""
 
 #: contents/ui/components/SpendView.qml
-msgid ""
-"Local history is still being collected, so early days may be incomplete."
-msgstr ""
-
-#: contents/ui/components/SpendView.qml
 msgid "No daily token history is available for this range."
 msgstr ""
 
@@ -2108,11 +2104,12 @@ msgid "Providers on %1"
 msgstr ""
 
 #: contents/ui/components/SpendView.qml
-msgid "Activity heatmap"
+msgid "Daily activity"
 msgstr ""
 
 #: contents/ui/components/SpendView.qml
-msgid "Use the arrow keys to inspect days"
+msgid ""
+"Arrow keys inspect days. Enter selects a day; Escape clears the selection."
 msgstr ""
 
 #: contents/ui/components/SpendView.qml
@@ -2475,9 +2472,9 @@ msgstr ""
 
 #: contents/ui/configAiInsights.qml
 msgid ""
-"Choose Generate insight under Ask the data in Usage & Spend or the fixed-"
-"provider view. Automatic generation never runs more often than the chosen "
-"interval, and ordinary usage refreshes do not trigger it."
+"Choose Generate analysis under AI Insights in Usage & Spend or the fixed-"
+"provider view. Automatic generation respects the chosen interval. Usage "
+"refreshes do not trigger it."
 msgstr ""
 
 #: contents/ui/configAiInsights.qml

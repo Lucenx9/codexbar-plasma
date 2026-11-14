@@ -21,6 +21,10 @@ ColumnLayout {
     property bool expandedView: false
     readonly property bool historyAvailable: applet.costUsageEnabled !== false || applet.identifiedTokensEnabled === true
     property bool activityExpanded: false
+    property var expandedModelProviders: []
+    property var providersShowingAllModels: []
+    property string modelFocusRestoreProvider: ""
+    signal restoreModelsFocus(string provider)
     readonly property var allProviderCosts: applet.spendProviderCosts()
     readonly property var filterProviderCosts: selectedProvider
         && !allProviderCosts.some(function(item) { return item.provider === selectedProvider })
@@ -53,6 +57,30 @@ ColumnLayout {
     Layout.fillWidth: true
     Layout.fillHeight: true
     spacing: Kirigami.Units.largeSpacing
+
+    Timer {
+        id: modelFocusRestore
+        interval: 0
+        onTriggered: {
+            var provider = view.modelFocusRestoreProvider
+            view.modelFocusRestoreProvider = ""
+            if (!view.visible || !provider) return
+            if (view.presentedProviderCosts.some(function(item) { return item.provider === provider }))
+                view.restoreModelsFocus(provider)
+            else
+                providerFilter.forceActiveFocus(Qt.OtherFocusReason)
+        }
+    }
+
+    Connections {
+        target: spendProviderRepeater
+        function onItemRemoved(index: int, item: var) {
+            if (item && item.modelsActionFocused) {
+                view.modelFocusRestoreProvider = item.modelData.provider
+                modelFocusRestore.restart()
+            }
+        }
+    }
 
     onSelectionScopeChanged: {
         if (!historyChart)
@@ -238,7 +266,7 @@ ColumnLayout {
             visible: view.applet.costUsageEnabled !== false
             Layout.fillWidth: true
             Layout.minimumWidth: 0
-            Layout.maximumWidth: view.expandedView && historyControlsRow.columns === 4 ? Kirigami.Units.gridUnit * 18 : Infinity
+            Layout.maximumWidth: historyControlsRow.columns === 4 ? Kirigami.Units.gridUnit * 18 : Infinity
             textRole: "text"
             valueRole: "value"
             model: view.providerOptions
@@ -246,6 +274,45 @@ ColumnLayout {
                 return item.value === view.selectedProvider
             }))
             Accessible.name: i18n("Provider filter")
+            delegate: Controls.ItemDelegate {
+                id: providerOption
+                required property int index
+                required property var modelData
+                readonly property string provider: modelData.value
+                width: providerFilter.width
+                readonly property string plainText: providerFilter.textAt(index)
+                Accessible.name: plainText
+                highlighted: providerFilter.highlightedIndex === index
+                PlainToolTip {
+                    visible: providerOption.hovered && optionLabel.truncated
+                    plainText: providerOption.plainText
+                }
+                contentItem: RowLayout {
+                    LayoutMirroring.enabled: providerOption.mirrored
+                    spacing: Kirigami.Units.smallSpacing
+                    Kirigami.Icon {
+                        source: providerOption.provider ? view.applet.providerIconSource(providerOption.provider) : "view-list-symbolic"
+                        fallback: "view-statistics"
+                        isMask: !providerOption.provider || view.applet.providerIconIsMask(providerOption.provider)
+                        color: providerOption.provider ? view.applet.providerReadableColor(providerOption.provider,
+                            providerOption.highlighted || providerOption.down ? Kirigami.Theme.highlightColor : Kirigami.Theme.backgroundColor)
+                            : optionLabel.color
+                        Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                        Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                        Accessible.ignored: true
+                    }
+                    PlainPlasmaLabel {
+                        id: optionLabel
+                        text: providerOption.plainText
+                        font: providerOption.font
+                        color: providerOption.highlighted || providerOption.down
+                            ? Kirigami.Theme.highlightedTextColor : Kirigami.Theme.textColor
+                        Layout.fillWidth: true
+                        Layout.minimumWidth: 0
+                        elide: Text.ElideRight
+                    }
+                }
+            }
             onActivated: function(index) {
                 view.selectedProvider = view.providerOptions[index].value
                 currentIndex = Qt.binding(function() {
@@ -255,7 +322,7 @@ ColumnLayout {
                 })
             }
         }
-        Item { visible: historyControlsRow.columns === 4; Layout.fillWidth: true; Layout.maximumWidth: view.expandedView ? Infinity : 0 }
+        Item { visible: historyControlsRow.columns === 4; Layout.fillWidth: true }
 
         Components.CostMetricToggle {
             id: metricToggle
@@ -329,15 +396,6 @@ ColumnLayout {
             Components.PlainNote {
                 visible: view.hasMixedCostCurrencies
                 plainText: i18n("The cost subtotal and charts use %1. Providers reporting another currency remain separate below. Token figures include every provider.", view.spendCurrency)
-                type: Kirigami.MessageType.Information
-                Layout.fillWidth: true
-            }
-
-            Components.PlainNote {
-                // Distinguishes "you spent little" from "the local scan has not reached
-                // that far back yet", which otherwise look identical on the chart.
-                visible: view.providerCosts.length > 0 && view.applet.spendHistoryStillBuilding()
-                plainText: i18n("Local history is still being collected, so early days may be incomplete.")
                 type: Kirigami.MessageType.Information
                 Layout.fillWidth: true
             }
@@ -418,6 +476,7 @@ ColumnLayout {
                 Layout.fillWidth: true
             InteractiveChart {
                 id: historyChart
+                Layout.alignment: Qt.AlignTop
                 objectName: "analysisHistoryChart"
                 Layout.preferredWidth: 3
                 seriesColors: {
@@ -508,148 +567,190 @@ ColumnLayout {
 
                         model: view.presentedProviderCosts
 
-                        delegate: PlasmaComponents.AbstractButton {
-                            id: spendProviderCard
-
+                        delegate: ColumnLayout {
+                            id: providerGroup
                             required property var modelData
-                            readonly property var totals: modelData.totals
-                            readonly property string costText: CostAmounts.hasMetricValue(totals, false)
-                                ? view.applet.qualifiedCostValue(AnalysisAmounts.metricText(view.applet.costNumberFormat,
-                                    totals.cost, totals.currency, false), modelData.valueMode)
-                                : i18n("Cost unavailable")
-                            readonly property string tokensText: CostAmounts.hasMetricValue(totals, true)
-                                ? view.applet.usageCountText(totals.tokens, "tokens")
-                                : i18n("Tokens unavailable")
-
+                            readonly property bool modelsActionFocused: modelList.actionFocused
+                            Connections {
+                                target: view
+                                function onRestoreModelsFocus(provider: string) {
+                                    if (provider === providerGroup.modelData.provider)
+                                        modelList.restoreActionFocus()
+                                }
+                            }
                             Layout.fillWidth: true
-                            implicitHeight: spendProviderRow.implicitHeight + Kirigami.Units.smallSpacing * 2
-                            padding: Kirigami.Units.smallSpacing
-                            onClicked: {
-                                if (activeFocus) providerFilter.forceActiveFocus(focusReason)
-                                view.selectedProvider = view.selectedProvider === modelData.provider ? "" : modelData.provider
-                                checked = Qt.binding(function() { return view.selectedProvider === modelData.provider })
-                            }
-                            background: Rectangle {
-                                radius: view.applet.roundedSurfaceRadius
-                                color: spendProviderCard.hovered || spendProviderCard.checked
-                                    ? view.applet.withAlpha(Kirigami.Theme.highlightColor, 0.12) : "transparent"
-                                border.width: spendProviderCard.visualFocus ? 2 : 0
-                                border.color: Kirigami.Theme.focusColor
-                            }
-                            checkable: true
-                            checked: view.selectedProvider === modelData.provider
+                            Layout.minimumWidth: 0
+                            spacing: Kirigami.Units.smallSpacing
+                            PlasmaComponents.AbstractButton {
+                                id: spendProviderCard
 
-                            Accessible.role: Accessible.Button
-                            Accessible.name: view.applet.providerDisplayTitle(spendProviderCard.modelData.provider)
-                            Accessible.description: spendProviderPrimary.text + ". " + spendProviderSecondary.text
+                                readonly property var modelData: providerGroup.modelData
+                                readonly property var totals: modelData.totals
+                                readonly property string costText: CostAmounts.hasMetricValue(totals, false)
+                                    ? view.applet.qualifiedCostValue(AnalysisAmounts.metricText(view.applet.costNumberFormat,
+                                        totals.cost, totals.currency, false), modelData.valueMode)
+                                    : i18n("Cost unavailable")
+                                readonly property string tokensText: CostAmounts.hasMetricValue(totals, true)
+                                    ? view.applet.usageCountText(totals.tokens, "tokens")
+                                    : i18n("Tokens unavailable")
 
-                            HoverHandler { id: spendProviderHover }
+                                Layout.fillWidth: true
+                                implicitHeight: spendProviderRow.implicitHeight + Kirigami.Units.smallSpacing * 2
+                                padding: Kirigami.Units.smallSpacing
+                                background: Rectangle {
+                                    radius: view.applet.roundedSurfaceRadius
+                                    color: spendProviderCard.hovered || spendProviderCard.checked
+                                        ? view.applet.withAlpha(Kirigami.Theme.highlightColor, 0.12) : "transparent"
+                                    border.width: spendProviderCard.visualFocus ? 2 : 0
+                                    border.color: Kirigami.Theme.focusColor
+                                }
+                                checkable: true
+                                checked: view.expandedModelProviders.indexOf(modelData.provider) >= 0
+                                onClicked: {
+                                    var provider = modelData.provider
+                                    var opened = view.expandedModelProviders.indexOf(provider) >= 0
+                                    view.expandedModelProviders = opened
+                                        ? view.expandedModelProviders.filter(function(value) { return value !== provider })
+                                        : view.expandedModelProviders.concat([provider])
+                                    checked = Qt.binding(function() { return view.expandedModelProviders.indexOf(modelData.provider) >= 0 })
+                                }
+                                objectName: "analysisProviderToggle-" + modelData.provider
+                                Accessible.checkable: true
+                                Accessible.checked: checked
 
-                            PlainToolTip {
-                                visible: spendProviderHover.hovered
-                                    && (spendProviderTitle.truncated || spendProviderPrimary.truncated
-                                        || spendProviderSecondary.truncated)
-                                plainText: spendProviderTitle.text + "\n" + spendProviderPrimary.text
-                                    + "\n" + spendProviderSecondary.text
-                            }
+                                Accessible.role: Accessible.Button
+                                Accessible.name: view.applet.providerDisplayTitle(spendProviderCard.modelData.provider)
+                                Accessible.description: spendProviderPrimary.text + ". " + spendProviderSecondary.text
 
-                            contentItem: RowLayout {
-                                id: spendProviderRow
+                                HoverHandler { id: spendProviderHover }
 
-                                spacing: Kirigami.Units.largeSpacing
+                                PlainToolTip {
+                                    visible: spendProviderHover.hovered
+                                        && (spendProviderTitle.truncated || spendProviderPrimary.truncated
+                                            || spendProviderSecondary.truncated)
+                                    plainText: spendProviderTitle.text + "\n" + spendProviderPrimary.text
+                                        + "\n" + spendProviderSecondary.text
+                                }
 
-                                Rectangle {
-                                    Layout.preferredWidth: Kirigami.Units.iconSizes.smallMedium
-                                        + Kirigami.Units.smallSpacing * 2
-                                    Layout.preferredHeight: Layout.preferredWidth
-                                    // Same identity-tile treatment as the overview
-                                    // and header tiles, scaled down for this row.
-                                    radius: view.applet.nestedSurfaceRadius
-                                    color: view.applet.withAlpha(view.applet.providerReadableColor(
-                                        spendProviderCard.modelData.provider,
-                                        Kirigami.Theme.backgroundColor), 0.12)
-                                    border.width: 1
-                                    border.color: view.applet.withAlpha(Kirigami.Theme.textColor, 0.1)
+                                contentItem: RowLayout {
+                                    id: spendProviderRow
+
+                                    spacing: Kirigami.Units.largeSpacing
 
                                     Kirigami.Icon {
-                                        anchors.centerIn: parent
-                                        source: view.applet.providerIconSource(spendProviderCard.modelData.provider)
-                                        fallback: "view-statistics"
-                                        isMask: view.applet.providerIconIsMask(spendProviderCard.modelData.provider)
-                                        color: view.applet.providerReadableColor(
-                                            spendProviderCard.modelData.provider,
-                                            Kirigami.Theme.backgroundColor)
-                                        width: Kirigami.Units.iconSizes.smallMedium
-                                        height: Kirigami.Units.iconSizes.smallMedium
+                                        source: spendProviderCard.checked ? "arrow-down" : (spendProviderCard.mirrored ? "arrow-left" : "arrow-right")
+                                        Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                                        Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                                        Accessible.ignored: true
                                     }
-                                }
 
-                                PlainPlasmaLabel {
-                                    id: spendProviderTitle
-                                    objectName: "spendProviderTitle"
+                                    Rectangle {
+                                        Layout.preferredWidth: Kirigami.Units.iconSizes.smallMedium
+                                            + Kirigami.Units.smallSpacing * 2
+                                        Layout.preferredHeight: Layout.preferredWidth
+                                        // Same identity-tile treatment as the overview
+                                        // and header tiles, scaled down for this row.
+                                        radius: view.applet.nestedSurfaceRadius
+                                        color: view.applet.withAlpha(view.applet.providerReadableColor(
+                                            spendProviderCard.modelData.provider,
+                                            Kirigami.Theme.backgroundColor), 0.12)
+                                        border.width: 1
+                                        border.color: view.applet.withAlpha(Kirigami.Theme.textColor, 0.1)
 
-                                    text: view.applet.providerDisplayTitle(spendProviderCard.modelData.provider)
-                                    font.weight: Font.DemiBold
-                                    Layout.fillWidth: true
-                                    Layout.minimumWidth: 0
-                                    Layout.preferredWidth: 1
-                                    elide: Text.ElideRight
-                                }
-
-                                ColumnLayout {
-                                    // Equal flexible columns keep long amounts from
-                                    // pushing the provider identity out of the row.
-                                    Layout.fillWidth: true
-                                    Layout.minimumWidth: 0
-                                    Layout.preferredWidth: 1
-                                    spacing: Kirigami.Units.smallSpacing / 2
+                                        Kirigami.Icon {
+                                            anchors.centerIn: parent
+                                            source: view.applet.providerIconSource(spendProviderCard.modelData.provider)
+                                            fallback: "view-statistics"
+                                            isMask: view.applet.providerIconIsMask(spendProviderCard.modelData.provider)
+                                            color: view.applet.providerReadableColor(
+                                                spendProviderCard.modelData.provider,
+                                                Kirigami.Theme.backgroundColor)
+                                            width: Kirigami.Units.iconSizes.smallMedium
+                                            height: Kirigami.Units.iconSizes.smallMedium
+                                        }
+                                    }
 
                                     PlainPlasmaLabel {
-                                        id: spendProviderPrimary
-                                        objectName: "spendProviderPrimary"
-                                        font.features: { "tnum": 1 }
+                                        id: spendProviderTitle
+                                        objectName: "spendProviderTitle"
 
-                                        text: view.applet.costHistoryShowsTokens
-                                            ? spendProviderCard.tokensText : spendProviderCard.costText
+                                        text: view.applet.providerDisplayTitle(spendProviderCard.modelData.provider)
                                         font.weight: Font.DemiBold
                                         Layout.fillWidth: true
                                         Layout.minimumWidth: 0
-                                        horizontalAlignment: Text.AlignRight
+                                        Layout.preferredWidth: 1
                                         elide: Text.ElideRight
                                     }
 
-                                    PlainPlasmaLabel {
-                                        id: spendProviderSecondary
-                                        objectName: "spendProviderSecondary"
-
-                                        text: view.applet.costHistoryShowsTokens
-                                            ? spendProviderCard.costText : spendProviderCard.tokensText
-                                        font: Qt.font(Object.assign({}, Kirigami.Theme.smallFont, { features: { "tnum": 1 } }))
-                                        opacity: view.applet.secondaryTextOpacity
+                                    ColumnLayout {
+                                        // Equal flexible columns keep long amounts from
+                                        // pushing the provider identity out of the row.
                                         Layout.fillWidth: true
                                         Layout.minimumWidth: 0
-                                        horizontalAlignment: Text.AlignRight
-                                        elide: Text.ElideRight
+                                        Layout.preferredWidth: 1
+                                        spacing: Kirigami.Units.smallSpacing / 2
+
+                                        PlainPlasmaLabel {
+                                            id: spendProviderPrimary
+                                            objectName: "spendProviderPrimary"
+                                            font.features: { "tnum": 1 }
+
+                                            text: view.applet.costHistoryShowsTokens
+                                                ? spendProviderCard.tokensText : spendProviderCard.costText
+                                            font.weight: Font.DemiBold
+                                            Layout.fillWidth: true
+                                            Layout.minimumWidth: 0
+                                            horizontalAlignment: Text.AlignRight
+                                            elide: Text.ElideRight
+                                        }
+
+                                        PlainPlasmaLabel {
+                                            id: spendProviderSecondary
+                                            objectName: "spendProviderSecondary"
+
+                                            text: view.applet.costHistoryShowsTokens
+                                                ? spendProviderCard.costText : spendProviderCard.tokensText
+                                            font: Qt.font(Object.assign({}, Kirigami.Theme.smallFont, { features: { "tnum": 1 } }))
+                                            opacity: view.applet.secondaryTextOpacity
+                                            Layout.fillWidth: true
+                                            Layout.minimumWidth: 0
+                                            horizontalAlignment: Text.AlignRight
+                                            elide: Text.ElideRight
+                                        }
                                     }
                                 }
+                            }
+                            Components.AnalysisModels {
+                                id: modelList
+                                applet: view.applet
+                                costs: Analysis.filterCosts(view.providerCosts, providerGroup.modelData.provider)
+                                selectedDay: view.selectedDay
+                                expanded: spendProviderCard.checked
+                                showAll: view.providersShowingAllModels.indexOf(providerGroup.modelData.provider) >= 0
+                                onShowAllRequested: function(value) {
+                                    var provider = providerGroup.modelData.provider
+                                    var remaining = view.providersShowingAllModels.filter(function(item) { return item !== provider })
+                                    view.providersShowingAllModels = value ? remaining.concat([provider]) : remaining
+                                }
+                                visible: expanded
+                                Layout.leftMargin: Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing
+                                onRestoreFocusRequested: spendProviderCard.forceActiveFocus(Qt.OtherFocusReason)
                             }
                         }
                     }
                 }
             }
 
-            Components.AnalysisModels {
-                visible: view.providerCosts.length > 0
-                applet: view.applet
-                costs: view.applet.presentedSpendProviderCosts(view.providerCosts)
-                selectedDay: view.selectedDay
-            }
-
             Components.DisclosureButton {
-                plainText: i18n("Activity heatmap")
+                id: activityToggle
+                objectName: "analysisActivityToggle"
+                plainText: i18n("Daily activity")
                 visible: view.heatmapDays.length > 7
                 expanded: view.activityExpanded
-                onClicked: view.activityExpanded = !view.activityExpanded
+                onClicked: {
+                    if (view.activityExpanded) forceActiveFocus(Qt.OtherFocusReason)
+                    view.activityExpanded = !view.activityExpanded
+                }
             }
 
             GridLayout {
@@ -690,6 +791,7 @@ ColumnLayout {
                             visible: view.heatmapRowWeekdays.length === 7
                             spacing: heatmapGrid.rowSpacing
                             Layout.alignment: Qt.AlignTop
+                            Layout.topMargin: heatmapFocus.monthHeaderHeight
                             Accessible.ignored: true
 
                             Repeater {
@@ -714,18 +816,32 @@ ColumnLayout {
                             property string selectedDay: ""
                             property string hoveredDay: ""
                             readonly property var cells: heatmapGrid.cells
+                            readonly property var months: CostChart.spendHeatmapMonths(cells)
+                            readonly property real monthHeaderHeight: months.length > 0
+                                ? heatmapFontMetrics.height + Kirigami.Units.smallSpacing : 0
                             readonly property int inspectedIndex: HeatmapNavigation.indexForDay(cells,
-                                hoveredDay.length > 0 ? hoveredDay : (activeFocus ? selectedDay : ""))
+                                hoveredDay.length > 0 ? hoveredDay : (activeFocus ? selectedDay : view.selectedDay))
                             readonly property var inspectedCell: inspectedIndex >= 0 ? cells[inspectedIndex] : null
+                            readonly property string inspectedValue: !inspectedCell ? ""
+                                : view.applet.costHistoryShowsTokens ? view.applet.usageCountText(inspectedCell.value, "tokens")
+                                : inspectedCell.displayValue
                             readonly property string readout: inspectedCell
-                                ? i18n("%1: %2", historyChart.pointLabel(inspectedCell), inspectedCell.displayValue) : ""
+                                ? i18n("%1: %2", historyChart.pointLabel(inspectedCell), inspectedValue) : ""
 
                             activeFocusOnTab: HeatmapNavigation.nextDay(cells, "", "first", false).length > 0
                             background: null
                             Accessible.role: Accessible.Graphic
                             Accessible.name: readout.length > 0
-                                ? i18n("%1: %2", i18n("Activity heatmap"), readout) : i18n("Activity heatmap")
-                            Accessible.description: i18n("Use the arrow keys to inspect days")
+                                ? i18n("%1: %2", i18n("Daily activity"), readout) : i18n("Daily activity")
+                            Accessible.description: i18n("Arrow keys inspect days. Enter selects a day; Escape clears the selection.")
+
+                            function selectDay(day, reason) {
+                                var index = CostChart.uniqueCostDayIndex(historyChart.points, day)
+                                if (index < 0 || historyChart.points[index].value === null) return
+                                selectedDay = day
+                                historyChart.selectedIndex = index
+                                forceActiveFocus(reason)
+                            }
 
                             onActiveFocusChanged: {
                                 if (activeFocus) {
@@ -733,7 +849,8 @@ ColumnLayout {
                                     view.revealHistoryItem(heatmapFocus, heatmapReadout)
                                 }
                                 if (activeFocus && HeatmapNavigation.indexForDay(cells, selectedDay) < 0)
-                                    selectedDay = HeatmapNavigation.nextDay(cells, "", "last", false)
+                                    selectedDay = HeatmapNavigation.indexForDay(cells, view.selectedDay) >= 0
+                                        ? view.selectedDay : HeatmapNavigation.nextDay(cells, "", "last", false)
                             }
                             onCellsChanged: {
                                 hoveredDay = ""
@@ -743,6 +860,14 @@ ColumnLayout {
                             Keys.onPressed: function(event) {
                                 var direction = ""
                                 switch (event.key) {
+                                case Qt.Key_Return: case Qt.Key_Enter: case Qt.Key_Space:
+                                    selectDay(selectedDay, Qt.OtherFocusReason); event.accepted = true; return
+                                case Qt.Key_Escape:
+                                    historyChart.selectedIndex = -1
+                                    selectedDay = ""
+                                    hoveredDay = ""
+                                    event.accepted = true
+                                    return
                                 case Qt.Key_Left: direction = "left"; break
                                 case Qt.Key_Right: direction = "right"; break
                                 case Qt.Key_Up: direction = "up"; break
@@ -759,11 +884,31 @@ ColumnLayout {
 
                             Layout.fillWidth: true
                             Layout.preferredHeight: 7 * heatmapGrid.cellHeight
-                                + 6 * heatmapGrid.rowSpacing
+                                + 6 * heatmapGrid.rowSpacing + monthHeaderHeight
                             clip: true
+
+                            FontMetrics { id: heatmapFontMetrics; font: Kirigami.Theme.smallFont }
+
+                            Repeater {
+                                model: heatmapFocus.months
+                                delegate: PlainPlasmaLabel {
+                                    required property var modelData
+                                    readonly property real start: modelData.column * (heatmapGrid.cellWidth + heatmapGrid.cellSpacing)
+                                    width: modelData.columns * (heatmapGrid.cellWidth + heatmapGrid.cellSpacing) - heatmapGrid.cellSpacing
+                                    x: LayoutMirroring.enabled ? heatmapFocus.width - start - width : start
+                                    height: heatmapFontMetrics.height
+                                    visible: implicitWidth <= width
+                                    text: Qt.locale().standaloneMonthName(modelData.month, Locale.ShortFormat)
+                                    font: Kirigami.Theme.smallFont
+                                    opacity: view.applet.secondaryTextOpacity
+                                    horizontalAlignment: LayoutMirroring.enabled ? Text.AlignRight : Text.AlignLeft
+                                    Accessible.ignored: true
+                                }
+                            }
 
                             Grid {
                                 id: heatmapGrid
+                                y: heatmapFocus.monthHeaderHeight
 
                                 readonly property real cellSpacing: Math.max(1, Math.round(Kirigami.Units.smallSpacing / 2))
                                 readonly property real minimumCellSize: Kirigami.Units.gridUnit * 0.6
@@ -797,6 +942,7 @@ ColumnLayout {
 
                                         required property var modelData
                                         required property int index
+                                        objectName: measured ? "activityDay-" + modelData.label : ""
 
                                         // Padding slots carry no day: they fill the
                                         // oldest corner of the block and stay out of
@@ -807,14 +953,21 @@ ColumnLayout {
                                                 Number(heatmapCell.modelData.value) / view.heatmapMaximum))
                                             : 0
 
-                                        Accessible.role: Accessible.Graphic
+                                        Accessible.role: Accessible.Button
                                         Accessible.ignored: !heatmapCell.measured
+                                        Accessible.onPressAction: if (heatmapCell.measured)
+                                            heatmapFocus.selectDay(heatmapCell.modelData.label, Qt.OtherFocusReason)
+                                        readonly property bool pinned: measured && modelData.label === view.selectedDay
+                                        Accessible.selectable: heatmapCell.measured
+                                        Accessible.selected: pinned
                                         // Days read like the chart's, in the locale's date format.
                                         readonly property string dayLabel: heatmapCell.measured
                                             ? historyChart.pointLabel(heatmapCell.modelData) : ""
 
                                         Accessible.name: heatmapCell.dayLabel
-                                        Accessible.description: heatmapCell.measured ? heatmapCell.modelData.displayValue : ""
+                                        Accessible.description: !heatmapCell.measured ? ""
+                                            : view.applet.costHistoryShowsTokens ? view.applet.usageCountText(heatmapCell.modelData.value, "tokens")
+                                            : heatmapCell.modelData.displayValue
 
                                         width: heatmapGrid.cellWidth
                                         height: heatmapGrid.cellHeight
@@ -849,12 +1002,12 @@ ColumnLayout {
                                             anchors.fill: parent
                                             radius: parent.radius
                                             color: "transparent"
-                                            border.width: 1
-                                            border.color: heatmapFocus.activeFocus && heatmapFocus.hoveredDay.length === 0
+                                            border.width: heatmapCell.pinned ? 2 : 1
+                                            border.color: heatmapCell.pinned || heatmapFocus.activeFocus && heatmapFocus.hoveredDay.length === 0
                                                 ? Kirigami.Theme.textColor
                                                 : view.applet.withAlpha(Kirigami.Theme.textColor, 0.4)
                                             visible: heatmapCell.measured
-                                            opacity: heatmapCell.index === heatmapFocus.inspectedIndex ? 1 : 0
+                                            opacity: heatmapCell.pinned || heatmapCell.index === heatmapFocus.inspectedIndex ? 1 : 0
 
                                             Rectangle {
                                                 anchors.fill: parent
@@ -863,7 +1016,7 @@ ColumnLayout {
                                                 color: "transparent"
                                                 border.width: 1
                                                 border.color: Kirigami.Theme.backgroundColor
-                                                visible: heatmapFocus.activeFocus && heatmapFocus.hoveredDay.length === 0
+                                                visible: heatmapCell.pinned || heatmapFocus.activeFocus && heatmapFocus.hoveredDay.length === 0
                                             }
 
                                             Behavior on opacity {
@@ -874,26 +1027,15 @@ ColumnLayout {
                                             }
                                         }
 
-                                        Components.PlainToolTip {
-                                            // A readout for the cell under the pointer,
-                                            // not a label for a control: scanning the
-                                            // grid must not wait out a hover delay.
-                                            delay: 0
-                                            visible: heatmapMouse.containsMouse && heatmapCell.measured
-                                                && heatmapFocus.hoveredDay === heatmapCell.modelData.label
-                                            plainText: heatmapCell.measured
-                                                ? i18n("%1: %2", heatmapCell.dayLabel,
-                                                    heatmapCell.modelData.displayValue)
-                                                : ""
-                                        }
-
                                         MouseArea {
                                             id: heatmapMouse
 
                                             anchors.fill: parent
                                             hoverEnabled: true
-                                            // A binding avoids Qt rejecting a bare zero enum literal.
-                                            acceptedButtons: (0)
+                                            acceptedButtons: Qt.LeftButton
+                                            cursorShape: heatmapCell.measured ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                            onClicked: if (heatmapCell.measured)
+                                                heatmapFocus.selectDay(heatmapCell.modelData.label, Qt.MouseFocusReason)
                                             onEntered: if (heatmapCell.measured)
                                                 heatmapFocus.hoveredDay = heatmapCell.modelData.label
                                             onPositionChanged: if (heatmapCell.measured)
@@ -906,6 +1048,17 @@ ColumnLayout {
                                 }
                             }
                         }
+                    }
+                    PlainPlasmaLabel {
+                        id: heatmapReadout
+                        objectName: "heatmapReadout"
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: heatmapFontMetrics.height
+                        text: heatmapFocus.readout.length > 0 ? heatmapFocus.readout : " "
+                        opacity: heatmapFocus.readout.length > 0 ? view.applet.secondaryTextOpacity : 0
+                        font: Qt.font(Object.assign({}, Kirigami.Theme.smallFont, { features: { "tnum": 1 } }))
+                        elide: Text.ElideRight
+                        Accessible.ignored: true
                     }
                     // The tint is the only magnitude cue: without a key the
                     // shades read as decoration. Each cell keeps its own
@@ -953,24 +1106,7 @@ ColumnLayout {
                         }
                     }
 
-                    PlainPlasmaLabel {
-                        id: heatmapReadout
-                        objectName: "heatmapReadout"
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: implicitHeight
-                        text: heatmapFocus.readout.length > 0 ? heatmapFocus.readout : " "
-                        opacity: heatmapFocus.readout.length > 0 ? view.applet.secondaryTextOpacity : 0
-                        font: Qt.font(Object.assign({}, Kirigami.Theme.smallFont, { features: { "tnum": 1 } }))
-                        elide: Text.ElideRight
-                        Accessible.ignored: true
 
-                        HoverHandler { id: heatmapReadoutHover }
-                        PlainToolTip {
-                            visible: heatmapReadout.truncated && heatmapFocus.readout.length > 0
-                                && (heatmapReadoutHover.hovered || heatmapFocus.activeFocus)
-                            plainText: heatmapFocus.readout
-                        }
-                    }
                 }
 
 

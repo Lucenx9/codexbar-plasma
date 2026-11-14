@@ -8,7 +8,7 @@ describes setup and behavior for users.
 
 ## Presentation
 
-**Ask the data** expands an assistant inside Usage & Spend. A fixed-provider
+**AI Insights** expands an assistant inside Usage & Spend. A fixed-provider
 widget without global navigation shows it in the provider view when enabled.
 The assistant replaces the former Overview card and separate analysis page.
 Disclosure and chart navigation never generate an answer. Manual generation
@@ -399,7 +399,7 @@ table, honoring the response's `Retry-After`, and a choice that finished with
   a long model list opens as a height-capped, scrolling menu. The wide scenario
   also edits a tested model and disables the feature during a connection test,
   proving that the old verdict and late replies are discarded. The
-  assistant scenarios start generation through the explicit **Generate insight**
+  assistant scenarios start generation through the explicit **Generate analysis**
   control and verify integrated highlights, translated answers, plain text,
   mismatched caches, failures, and no generation on navigation.
   `tst_ai_insights_view.qml` exercises disclosure, guided intent selection,
