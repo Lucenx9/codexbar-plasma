@@ -369,9 +369,9 @@ class CostSectionTests(unittest.TestCase):
     }
     ''')
 
-    def test_spend_provider_totals_follow_metric_and_fit(self):
+    def test_spend_provider_totals_follow_metric(self):
         self.run_fixture('''
-    function test_spendProviderTotalsFollowMetricAndFit() {
+    function test_spendProviderTotalsFollowMetric() {
         failOnWarning(/Binding loop|Detected recursive rearrange/);
         var subject = createTemporaryObject(spendFactory, testCase, {width: 540, height: 800});
         verify(subject !== null);
@@ -398,15 +398,22 @@ class CostSectionTests(unittest.TestCase):
         fakeApplet.costHistoryShowsTokens = false;
         compare(primary.text, "Cost unavailable");
         compare(secondary.text, "0 tokens");
+    }
+    ''')
 
+    def test_spend_provider_totals_fit_and_reveal_full_text(self):
+        self.run_fixture('''
+    function test_spendProviderTotalsFitAndRevealFullText() {
+        failOnWarning(/Binding loop|Detected recursive rearrange/);
         testCase.presentedCosts = [{provider: "Long <provider> & identity ".repeat(5),
             totals: {cost: 123456789, tokens: null, currency: "EUR"}, valueMode: "estimated"}];
-        tryVerify(function() {
-            primary = findChild(subject, "spendProviderPrimary");
-            return primary && primary.text === "EUR 123,456,789.00 (estimated)";
-        });
-        secondary = findChild(subject, "spendProviderSecondary");
-        title = findChild(subject, "spendProviderTitle");
+        var subject = createTemporaryObject(spendFactory, testCase, {width: 540, height: 800});
+        verify(subject !== null);
+        var primary = findChild(subject, "spendProviderPrimary");
+        var secondary = findChild(subject, "spendProviderSecondary");
+        var title = findChild(subject, "spendProviderTitle");
+        verify(primary && secondary && title);
+        compare(primary.text, "EUR 123,456,789.00 (estimated)");
         compare(secondary.text, "Tokens unavailable");
         var card = title.parent.parent;
         compare(card.Accessible.name, title.text);
