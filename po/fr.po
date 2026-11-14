@@ -4537,3 +4537,15 @@ msgstr "Vérifier chaque jour"
 #: contents/ui/configGeneral.qml
 msgid "Update daily"
 msgstr "Mettre à jour chaque jour"
+
+#: contents/ui/components/CostTrustNotice.qml
+msgid "About these costs"
+msgstr "À propos de ces coûts"
+
+#: contents/ui/components/CostTrustNotice.qml
+msgid "Partial data"
+msgstr "Données partielles"
+
+#: contents/ui/components/AnalysisSummary.qml
+msgid "Cost (%1 subtotal)"
+msgstr "Coût (sous-total en %1)"

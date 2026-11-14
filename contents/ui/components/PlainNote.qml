@@ -3,42 +3,37 @@ import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.components as PlasmaComponents
 
-// A quiet footnote for information and warnings that need no action. Errors
-// with recovery actions keep PlainInlineMessage. The close button hides the
-// note like Kirigami.InlineMessage does and signals the explicit close action.
-Rectangle {
+// Contextual text without a message surface. Optional explanations can start
+// collapsed; failures needing recovery actions keep PlainInlineMessage.
+Item {
     id: noteRoot
 
     property string plainText: ""
     property int type: Kirigami.MessageType.Information
     property bool showCloseButton: false
+    property string heading: ""
+    property bool expanded: false
     readonly property alias text: noteLabel.text
 
     signal closed()
 
-    readonly property bool warning: type === Kirigami.MessageType.Warning
-    readonly property color tone: warning ? Kirigami.Theme.neutralTextColor : Kirigami.Theme.textColor
-    readonly property real padding: Kirigami.Units.smallSpacing * 1.5
+    onExpandedChanged: {
+        if (!expanded && closeButton.activeFocus)
+            detailsButton.forceActiveFocus(Qt.TabFocusReason)
+    }
 
-    implicitHeight: noteRow.implicitHeight + padding * 2
-    radius: Kirigami.Units.cornerRadius * 2
-    color: withAlpha(tone, warning ? 0.12 : 0.05)
+    readonly property bool warning: type === Kirigami.MessageType.Warning
+    implicitHeight: noteRow.implicitHeight
 
     RowLayout {
         id: noteRow
 
-        anchors.fill: parent
-        anchors.margins: noteRoot.padding
-        anchors.leftMargin: noteRoot.padding * 1.5
+        width: parent.width
         spacing: Kirigami.Units.smallSpacing * 1.5
 
         Kirigami.Icon {
-            // Breeze's warning keeps its own neutral color; the info glyph is
-            // monochrome and follows the secondary text.
-            source: noteRoot.warning ? "data-warning" : "help-about-symbolic"
-            isMask: !noteRoot.warning
-            color: Kirigami.Theme.textColor
-            opacity: noteRoot.warning ? 1 : 0.6
+            visible: noteRoot.warning && noteRoot.heading.length === 0
+            source: "data-warning"
             Layout.alignment: Qt.AlignTop
             Layout.topMargin: Math.max(0, (noteMetrics.height - height) / 2)
             Layout.preferredWidth: Kirigami.Units.iconSizes.small
@@ -51,21 +46,37 @@ Rectangle {
             font: noteLabel.font
         }
 
-        PlainPlasmaLabel {
-            id: noteLabel
-            objectName: "plainNoteLabel"
-
-            text: noteRoot.plainText
-            font: Kirigami.Theme.smallFont
-            wrapMode: Text.Wrap
+        ColumnLayout {
             Layout.fillWidth: true
-            Layout.alignment: Qt.AlignVCenter
+            Layout.minimumWidth: 0
+            spacing: Kirigami.Units.smallSpacing
+
+            DisclosureButton {
+                id: detailsButton
+                objectName: "plainNoteDetailsButton"
+                visible: noteRoot.heading.length > 0
+                plainText: noteRoot.heading
+                expanded: noteRoot.expanded
+                onClicked: noteRoot.expanded = !noteRoot.expanded
+            }
+
+            PlainPlasmaLabel {
+                id: noteLabel
+                objectName: "plainNoteLabel"
+
+                visible: noteRoot.heading.length === 0 || noteRoot.expanded
+                text: noteRoot.plainText
+                font: Kirigami.Theme.smallFont
+                wrapMode: Text.Wrap
+                Layout.fillWidth: true
+                Layout.minimumWidth: 0
+            }
         }
 
         PlasmaComponents.ToolButton {
             id: closeButton
             objectName: "plainNoteCloseButton"
-            visible: noteRoot.showCloseButton
+            visible: noteRoot.showCloseButton && (noteRoot.heading.length === 0 || noteRoot.expanded)
             icon.name: "window-close-symbolic"
             icon.width: Kirigami.Units.iconSizes.small
             icon.height: Kirigami.Units.iconSizes.small
@@ -73,8 +84,6 @@ Rectangle {
             text: i18n("Close")
             Accessible.name: text
             Layout.alignment: Qt.AlignTop
-            Layout.topMargin: -noteRoot.padding / 2
-            Layout.bottomMargin: -noteRoot.padding / 2
             onClicked: {
                 noteRoot.visible = false
                 noteRoot.closed()
@@ -88,9 +97,5 @@ Rectangle {
                 visible: closeButton.hovered || closeButton.visualFocus
             }
         }
-    }
-
-    function withAlpha(color, alpha) {
-        return Qt.rgba(color.r, color.g, color.b, alpha)
     }
 }

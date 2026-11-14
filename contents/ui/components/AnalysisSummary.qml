@@ -5,6 +5,7 @@ import "../UsageAnalysis.js" as Analysis
 import "../AnalysisAmounts.mjs" as AnalysisAmounts
 import "../CostPresentation.mjs" as Costs
 import "../CostTrust.mjs" as Trust
+import "../CostCurrency.mjs" as CostCurrency
 
 GridLayout {
     id: summary
@@ -25,10 +26,14 @@ GridLayout {
 
     readonly property string comparisonHelp: i18n("Requires 14 complete days and a refresh today. Today is excluded.")
     readonly property var metrics: [
-        {label: i18n("Cost"), value: summary.totals && summary.totals.cost !== null
+        {label: CostCurrency.spendHasMixedCostCurrencies(costs)
+            ? i18n("Cost (%1 subtotal)", summary.totals ? summary.totals.currency : "") : i18n("Cost"),
+            value: summary.totals && summary.totals.cost !== null
             ? applet.qualifiedCostValue(AnalysisAmounts.metricText(applet.costNumberFormat, summary.totals.cost, summary.totals.currency, false),
                 summary.trust ? summary.trust.valueMode : "plain") : i18n("Cost unavailable")},
-        {label: i18n("Tokens"), value: summary.totals && summary.totals.tokens !== null
+        {label: summary.trust && summary.trust.incompleteRequests > 0
+            ? i18n("%1 (partial)", i18n("Tokens")) : i18n("Tokens"),
+            value: summary.totals && summary.totals.tokens !== null
             ? applet.usageCountText(summary.totals.tokens, "tokens") : i18n("Tokens unavailable")},
         {label: i18n("Last 7 days vs previous 7"), value: summary.comparison && summary.comparison.estimated
             ? applet.qualifiedCostValue(summary.changeText, "estimated") : summary.changeText,

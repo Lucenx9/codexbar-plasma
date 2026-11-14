@@ -87,6 +87,10 @@ TestCase {
         var notice = createTemporaryObject(noticeComponent, this)
         tryVerify(function() { return notice.visible })
 
+        var details = findChild(notice, "plainNoteDetailsButton")
+        mouseClick(details)
+        verify(notice.expanded)
+
         var close = findChild(notice, "plainNoteCloseButton")
         if (data.keyboard) {
             close.forceActiveFocus(Qt.TabFocusReason)
@@ -114,6 +118,55 @@ TestCase {
         notice.visible = false
 
         compare(owner.dismissals, [])
+    }
+
+    function test_explanationStartsCollapsedAndCanBeOpened_data() {
+        return [{ tag: "pointer", keyboard: false }, { tag: "keyboard", keyboard: true }]
+    }
+
+    function test_explanationStartsCollapsedAndCanBeOpened(data) {
+        var notice = createTemporaryObject(noticeComponent, this)
+        tryVerify(function() { return notice.visible })
+        var label = findChild(notice, "plainNoteLabel")
+        var details = findChild(notice, "plainNoteDetailsButton")
+        verify(!label.visible)
+        if (data.keyboard) {
+            details.forceActiveFocus(Qt.TabFocusReason)
+            keyClick(Qt.Key_Space)
+        } else {
+            mouseClick(details)
+        }
+        verify(label.visible)
+        compare(label.text, "The total is estimated from public list prices.")
+
+        notice.summary = { sourceKind: "listPrice" }
+        wait(0)
+        verify(label.visible)
+        notice.summary = { sourceKind: "unknown" }
+        tryVerify(function() { return !label.visible })
+        compare(owner.dismissals, [])
+    }
+
+    function test_scopeChangeCollapsesExplanationAndRestoresFocus() {
+        var notice = createTemporaryObject(noticeComponent, this)
+        tryVerify(function() { return notice.visible })
+        var details = findChild(notice, "plainNoteDetailsButton")
+        mouseClick(details)
+        findChild(notice, "plainNoteCloseButton").forceActiveFocus(Qt.TabFocusReason)
+        notice.noticeScope = "provider:codex"
+        tryVerify(function() { return !notice.expanded })
+        verify(details.activeFocus)
+        compare(owner.dismissals, [])
+    }
+
+    function test_partialTokensKeepAVisibleQualifierWithoutCost() {
+        var notice = createTemporaryObject(noticeComponent, this, {
+            summary: CostTrust.costTrustSummary([{totals: {cost: null, tokens: 20},
+                trust: {incompleteRequests: 2}}])
+        })
+        tryVerify(function() { return notice.visible })
+        compare(findChild(notice, "plainNoteDetailsButton").plainText, "Partial data")
+        verify(!findChild(notice, "plainNoteLabel").visible)
     }
 
     function test_hidingAncestorsPreservesTheNotice_data() {

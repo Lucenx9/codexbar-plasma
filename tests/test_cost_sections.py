@@ -265,6 +265,25 @@ TestCase {
 
 
 class CostSectionTests(unittest.TestCase):
+    def test_provider_token_exclusions_remain_qualified_without_explanation(self):
+        self.run_fixture('''
+    function test_partialTokensStayVisible() {
+        providerTokenCost = Object.assign({}, providerTokenCost, {
+            trust: {incompleteRequests: 2}
+        });
+        var subject = createTemporaryObject(providerFactory, testCase, {width: 540});
+        verify(subject !== null);
+        tryVerify(function() { return textsUnder(subject).indexOf("100 tokens (partial)") >= 0; });
+        verify(textsUnder(subject).indexOf("10 tokens") >= 0);
+        verify(!findChild(subject, "plainNoteDetailsButton").visible);
+        providerTokenCost = Object.assign({}, providerTokenCost, {
+            trust: {coverage: {priced: 0, unpriced: 1, unmetered: 0, estimated: 0}}
+        });
+        tryVerify(function() { return textsUnder(subject).indexOf("100 tokens") >= 0; });
+        verify(textsUnder(subject).indexOf("100 tokens (partial)") < 0);
+    }
+    ''')
+
     def test_provider_disclosures_keep_focus_inside_viewport(self):
         self.run_fixture('''
     function test_disclosureFocusBounds_data() {
@@ -842,7 +861,7 @@ class CostSectionTests(unittest.TestCase):
     def test_spend_view_presents_costs_and_controls(self):
         self.run_fixture('''
     // The spend view presents the ordered provider costs with its metric
-    // controls, still-building notice, chart and heatmap readout.
+    // controls, missing-chart explanation and heatmap readout.
     function test_spendViewPresentsCostsAndControls() {
         var subject = createTemporaryObject(spendFactory, testCase);
         verify(subject !== null);
@@ -881,15 +900,15 @@ class CostSectionTests(unittest.TestCase):
         compare(ranges[0].Accessible.name, "History range: All history");
         fakeApplet.setCostHistoryDays(30);
         var historyMsgs = all.filter(function(item) {
-            return item.plainText !== undefined
-                && item.plainText.indexOf("No daily") >= 0;
+            return item.text !== undefined
+                && item.text.indexOf("No daily") >= 0;
         });
         compare(historyMsgs.length, 1);
-        compare(historyMsgs[0].plainText,
+        compare(historyMsgs[0].text,
             "No daily cost history for this range. Try Tokens for token history.");
         fakeApplet.costHistoryShowsTokens = true;
         tryVerify(function() {
-            return historyMsgs[0].plainText
+            return historyMsgs[0].text
                 === "No daily token history is available for this range.";
         });
         fakeApplet.costHistoryShowsTokens = false;

@@ -17,6 +17,11 @@ Controls.Control {
 
     signal activated(int index)
 
+    function focusCurrentChoice(reason) {
+        var choice = metricChoices.itemAt(currentIndex)
+        if (choice) choice.forceActiveFocus(reason)
+    }
+
     padding: Math.round(Kirigami.Units.smallSpacing / 2)
     Accessible.role: Accessible.Grouping
     Accessible.name: i18n("History metric")
@@ -35,6 +40,7 @@ Controls.Control {
         spacing: 0
 
         Repeater {
+            id: metricChoices
             model: [i18n("Cost"), i18n("Tokens")]
 
             delegate: PlasmaComponents.ToolButton {

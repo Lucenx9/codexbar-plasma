@@ -4520,3 +4520,15 @@ msgstr "Täglich prüfen"
 #: contents/ui/configGeneral.qml
 msgid "Update daily"
 msgstr "Täglich aktualisieren"
+
+#: contents/ui/components/CostTrustNotice.qml
+msgid "About these costs"
+msgstr "Informationen zu diesen Kosten"
+
+#: contents/ui/components/CostTrustNotice.qml
+msgid "Partial data"
+msgstr "Unvollständige Daten"
+
+#: contents/ui/components/AnalysisSummary.qml
+msgid "Cost (%1 subtotal)"
+msgstr "Kosten (Zwischensumme in %1)"

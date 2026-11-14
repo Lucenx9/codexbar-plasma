@@ -444,11 +444,9 @@ ColumnLayout {
                 Layout.fillWidth: true
             }
 
-            Components.PlainNote {
-                visible: view.hasMixedCostCurrencies
-                plainText: i18n("Costs and charts use %1. Other currencies appear separately below. Tokens include all providers.", view.spendCurrency)
-                type: Kirigami.MessageType.Information
-                Layout.fillWidth: true
+            Components.AnalysisSummary {
+                applet: view.applet
+                costs: view.providerCosts
             }
 
             Components.CostTrustNotice {
@@ -458,13 +456,12 @@ ColumnLayout {
                 summary: view.costTrustSummary
             }
 
-            Components.PlainNote {
-                visible: view.providerCosts.length > 0 && view.dailyPoints.length === 0
-                plainText: view.applet.costHistoryShowsTokens
-                    ? i18n("No daily token history is available for this range.")
-                    : i18n("No daily cost history for this range. Try Tokens for token history.")
-                type: Kirigami.MessageType.Information
+            PlainPlasmaLabel {
+                visible: view.hasMixedCostCurrencies
+                text: i18n("Costs and charts use %1. Other currencies appear separately below. Tokens include all providers.", view.spendCurrency)
+                font: Kirigami.Theme.smallFont
                 Layout.fillWidth: true
+                wrapMode: Text.Wrap
             }
 
             Item {
@@ -514,17 +511,40 @@ ColumnLayout {
                 Layout.fillHeight: true
             }
 
-            Components.AnalysisSummary {
-                applet: view.applet
-                costs: view.providerCosts
-            }
-
             GridLayout {
                 objectName: "analysisChartProviders"
                 columns: view.expandedView && view.width >= Kirigami.Units.gridUnit * 38 ? 2 : 1
                 columnSpacing: Kirigami.Units.largeSpacing * 2
                 rowSpacing: Kirigami.Units.largeSpacing
                 Layout.fillWidth: true
+
+                ColumnLayout {
+                    objectName: "analysisChartEmptyState"
+                    visible: view.providerCosts.length > 0 && view.dailyPoints.length === 0
+                    Layout.fillWidth: true
+                    Layout.preferredWidth: 3
+                    Layout.alignment: Qt.AlignTop
+                    spacing: Kirigami.Units.smallSpacing
+
+                    PlainPlasmaLabel {
+                        text: view.applet.costHistoryShowsTokens
+                            ? i18n("No daily token history is available for this range.")
+                            : i18n("No daily cost history for this range. Try Tokens for token history.")
+                        font: Kirigami.Theme.smallFont
+                        Layout.fillWidth: true
+                        wrapMode: Text.Wrap
+                    }
+
+                    PlainButton {
+                        objectName: "analysisShowTokensButton"
+                        visible: !view.applet.costHistoryShowsTokens
+                        plainText: i18n("Tokens")
+                        onClicked: {
+                            view.applet.setCostHistoryMetric("tokens")
+                            metricToggle.focusCurrentChoice(Qt.TabFocusReason)
+                        }
+                    }
+                }
             InteractiveChart {
                 id: historyChart
                 Layout.alignment: Qt.AlignTop

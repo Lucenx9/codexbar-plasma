@@ -49,8 +49,10 @@ ColumnLayout {
         return CostAmounts.hasMetricValue(amounts, false) ? applet.qualifiedCostValue(applet.amountString(amounts.cost, amounts.currency), mode) : i18n("Cost unavailable");
     }
 
-    function tokensText(amounts) {
-        return CostAmounts.hasMetricValue(amounts, true) ? applet.usageCountText(amounts.tokens, "tokens") : i18n("Tokens unavailable");
+    function tokensText(amounts, incompleteRequests) {
+        if (!CostAmounts.hasMetricValue(amounts, true)) return i18n("Tokens unavailable");
+        var text = applet.usageCountText(amounts.tokens, "tokens");
+        return incompleteRequests > 0 ? applet.qualifiedCostValue(text, "partial") : text;
     }
 
     function daySummaryText() {
@@ -141,13 +143,6 @@ ColumnLayout {
         wrapMode: Text.WordWrap
     }
 
-    Components.CostTrustNotice {
-        noticeScope: "provider:" + (tokenCostSection.providerData ? tokenCostSection.providerData.provider : "")
-        stateOwner: tokenCostSection.applet
-        presentationVisible: tokenCostSection.presentationVisible
-        summary: tokenCostSection.costTrustSummary
-    }
-
     GridLayout {
         id: costSummaryGrid
         objectName: "costSummaryGrid"
@@ -161,12 +156,15 @@ ColumnLayout {
                 {
                     label: i18n("Today"),
                     amounts: CostAmounts.todayAmounts(tokenCostSection.tokenCost, tokenCostSection.applet.panelClockMs),
-                    valueMode: "plain"
+                    valueMode: "plain",
+                    incompleteRequests: CostTrust.acceptedIncompleteRequests(CostAmounts.todayAmounts(
+                        tokenCostSection.tokenCost, tokenCostSection.applet.panelClockMs))
                 },
                 {
                     label: tokenCostSection.tokenCost.windowLabel,
                     amounts: tokenCostSection.tokenCost.totals,
-                    valueMode: tokenCostSection.tokenCost.valueMode
+                    valueMode: tokenCostSection.tokenCost.valueMode,
+                    incompleteRequests: tokenCostSection.costTrustSummary ? tokenCostSection.costTrustSummary.incompleteRequests : 0
                 }
             ] : []
 
@@ -192,7 +190,7 @@ ColumnLayout {
                     wrapMode: Text.Wrap
                 }
                 PlainPlasmaLabel {
-                    text: tokenCostSection.tokensText(modelData.amounts)
+                    text: tokenCostSection.tokensText(modelData.amounts, modelData.incompleteRequests)
                     font: Qt.font(Object.assign({}, Kirigami.Theme.smallFont, { features: { "tnum": 1 } }))
                     opacity: tokenCostSection.applet.secondaryTextOpacity
                     Layout.fillWidth: true
@@ -200,6 +198,13 @@ ColumnLayout {
                 }
             }
         }
+    }
+
+    Components.CostTrustNotice {
+        noticeScope: "provider:" + (tokenCostSection.providerData ? tokenCostSection.providerData.provider : "")
+        stateOwner: tokenCostSection.applet
+        presentationVisible: tokenCostSection.presentationVisible
+        summary: tokenCostSection.costTrustSummary
     }
 
     Components.InteractiveChart {

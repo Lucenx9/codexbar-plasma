@@ -236,7 +236,8 @@ when the product changes instead of adding dated before/after copies.
 - [Hidden usage rows](codexbar-plasma-hidden-usage-rows.png): synthetic provider tab showing the inline restore list.
 - [Usage and spend](codexbar-plasma-usage-spend.png)
 - [Model breakdowns](codexbar-plasma-models.png): synthetic native expanded
-  Usage & Spend with provider rows opened to their inline model lists.
+  Usage & Spend with provider rows opened to their inline model lists and
+  the cost explanation collapsed below the qualified totals.
 - [Daily activity](codexbar-plasma-daily-activity.png): synthetic native calendar
   with month labels and a day selected in the chart and provider details.
 - [Chart hover inspection](codexbar-plasma-chart-hover.gif): synthetic native
