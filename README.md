@@ -168,8 +168,8 @@ For private CLI selection, updates, and rollback, see
   window lengths and reset dates.
 - **Usage & Spend** with provider filters, provider cost/token lines, complete-week
   comparisons, and compact or expanded layouts. Inspect a day,
-  model/token composition, project breakdowns, or the optional activity heatmap
-  when the CLI supplies those details.
+  model/token composition, or the optional activity heatmap when the CLI supplies
+  those details. Project breakdowns stay in the corresponding provider tab.
 - Local agent **Sessions**. Transcript paths and working directories are never
   displayed or opened.
 - A local usage summary to save as a PNG or copy as text, and a redacted offline

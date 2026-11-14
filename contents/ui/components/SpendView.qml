@@ -645,13 +645,6 @@ ColumnLayout {
                 selectedDay: view.selectedDay
             }
 
-            Components.ProjectCostSection {
-                id: projects
-                visible: view.selectedDay.length === 0 && projects.hasContent
-                applet: view.applet
-                providerCosts: view.applet.presentedSpendProviderCosts(view.providerCosts)
-            }
-
             Components.DisclosureButton {
                 plainText: i18n("Activity heatmap")
                 visible: view.heatmapDays.length > 7

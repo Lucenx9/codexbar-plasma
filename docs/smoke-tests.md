@@ -1,5 +1,9 @@
 # Popup smoke tests and panel captures
 
+The `project-costs`, `project-tokens`, `project-range`, and `project-long-text`
+scenarios inspect projects in Codex's expanded local history and verify that
+Usage & Spend does not duplicate them.
+
 The `usage-analysis` scenario checks provider/day selection, retaining the
 provider filter through a history-range refresh, switching to Tokens, returning
 to all providers, expanding the layout, and avoiding AI generation during

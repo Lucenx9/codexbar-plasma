@@ -8,7 +8,8 @@ attribution. Provider filters scope costs, tokens, models and the heatmap.
 The selected provider stays selected across range changes and empty results;
 it remains available in the filter until the user chooses another option.
 A pinned day changes provider/model details, while headline totals
-retain the selected period; project totals appear only with all days selected.
+retain the selected period. Project totals belong in provider details and are
+not duplicated in global analysis.
 Missing and duplicate days remain unavailable. A duplicate date within any
 provider eligible for the metric also makes the aggregate daily readout
 unavailable and clears that day if it was pinned before a refresh. Healthy

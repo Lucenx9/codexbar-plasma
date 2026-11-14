@@ -12,6 +12,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Keep project breakdowns in provider details instead of duplicating them in
+  Usage & Spend. Codex projects remain available in its local history details.
+
 - Replace the separate AI Insights card and page with guided analysis inside
   Usage & Spend. Add provider filters, daily provider lines, day-specific provider
   and model details, complete-week comparisons (also in privacy mode), and an
