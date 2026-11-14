@@ -12,6 +12,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Keep the selected provider icon visible in the closed Usage & Spend filter.
+
 - Turn the Usage & Spend heatmap into a selectable Daily activity calendar.
   Add month labels and a fixed date/value readout below the grid. Clicking a
   measured day or pressing Enter/Space selects it in the chart and provider
