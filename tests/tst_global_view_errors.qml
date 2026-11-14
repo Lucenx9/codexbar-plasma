@@ -782,7 +782,8 @@ TestCase {
         mouseMove(view, view.width - 1, view.height - 1);
         mouseClick(filter, filter.width / 2, filter.height / 2);
         tryCompare(filter.popup, "opened", true);
-        verify(waitForRendering(filter.popup.contentItem));
+        // Input needs settled geometry; an idle popup need not swap another frame.
+        verify(waitForPolish(filter.popup.contentItem.Window.window));
         mouseMove(view, view.width - 1, view.height - 1);
         var option = findItem(filter.popup.contentItem, function(item) {
             return item.plainText === applet.providerTitle;

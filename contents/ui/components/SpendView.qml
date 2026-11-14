@@ -348,7 +348,10 @@ ColumnLayout {
                 Accessible.name: plainText
                 highlighted: providerFilter.highlightedIndex === index
                 HoverHandler {
-                    onPointChanged: providerFilter.keyboardMenuNavigation = false
+                    // pointChanged can repeat while the pointer stays still.
+                    readonly property point pointerPosition: point.scenePosition
+                    onPointerPositionChanged: providerFilter.keyboardMenuNavigation = false
+                    onHoveredChanged: providerFilter.keyboardMenuNavigation = false
                 }
                 onHighlightedChanged: if (highlighted && providerFilter.popup.opened)
                     providerFilter.keyboardMenuNavigation = true
