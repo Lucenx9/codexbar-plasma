@@ -337,8 +337,13 @@ work and upstream contract requirements.
   and stays selected across range changes, including empty results. Its width
   stays stable when expanding or compacting analysis, shrinking only when space
   is constrained; stacked controls continue to use the available width.
+  A truncated name in the closed provider filter shows its full text on hover
+  or keyboard focus; the tooltip closes while the menu is open. Truncated
+  provider-row names and amounts also show their full text on keyboard focus.
   Clicking a provider row expands its models inline without changing the filter
   or leaving Usage & Spend. Providers can be opened independently.
+  Provider rows give immediate visual feedback while pressed, without moving
+  the surrounding content.
   Selecting a day scopes provider and model details, while headline
   totals keep the selected period. Project breakdowns stay in provider details.
   **All days** or Escape clears the day selection and returns keyboard inspection

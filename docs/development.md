@@ -135,6 +135,9 @@ See [QML conventions](implementation.md#qml-conventions).
 
 See [Regression checks](testing.md#regression-checks).
 
+The global popup view tests also run with the KDE desktop controls style to
+cover native selector sizing and keyboard tooltips in Usage & Spend.
+
 Shared cost-normalization helpers use `.mjs` so QML and WorkerScript load one
 implementation. Keep these files covered by the shared source manifest and
 exercise both the pure response tests and the worker lifecycle tests.

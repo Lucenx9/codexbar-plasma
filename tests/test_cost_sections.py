@@ -443,6 +443,12 @@ class CostSectionTests(unittest.TestCase):
         tryCompare(tooltips[0], "visible", true);
         compare(tooltips[0].plainText, title.text + "\\n" + primary.text + "\\n" + secondary.text);
         verify(tooltips[0].text.indexOf("&lt;provider&gt;") >= 0);
+        mouseMove(testCase, testCase.width - 1, testCase.height - 1);
+        card.forceActiveFocus(Qt.TabFocusReason);
+        tryCompare(card, "visualFocus", true);
+        tryCompare(tooltips[0], "visible", true);
+        findChild(subject, "analysisProviderFilter").forceActiveFocus(Qt.TabFocusReason);
+        tryCompare(tooltips[0], "visible", false);
     }
     ''')
 

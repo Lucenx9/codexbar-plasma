@@ -61,6 +61,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Keep General settings help within narrow windows with longer translations,
   and size the AI Insights frequency selector to its translated choices.
 
+- Reveal truncated Usage & Spend provider names and amounts on keyboard focus,
+  including the selected provider filter, and give provider rows distinct press
+  feedback without changing their layout.
+
 - Position Usage & Spend hover previews beside the inspected day, switching
   sides near the plot edge so the guide and provider markers remain visible.
   Add small provider icons, aligned amounts and a separate daily total.
