@@ -34,7 +34,8 @@ without fetching data. Opening a provider does not change the chart filter or
 switch tabs. Open rows and Show more models choices survive refreshes and day
 selection. Refreshing preserves keyboard focus on the provider header or
 model-list action, returning it to the header if that action disappears. If the
-provider disappears, focus returns to the provider filter. The provider dropdown
+provider disappears, focus returns to the provider filter. Header restoration
+preserves the focus reason: mouse focus does not acquire a keyboard focus ring. The provider dropdown
 owns chart filtering. Token composition remains in provider details, while
 partial model coverage and excluded-request notices remain visible inline.
 Positive model costs below one cent use the same less-than-one-cent notation as

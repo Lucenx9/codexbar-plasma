@@ -13,7 +13,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 ### Changed
 
 - Keep chart dates aligned with their plotted values in right-to-left layouts.
-  Preserve provider-header focus across history refreshes and show positive
+  Preserve provider-header focus and its input method across history refreshes,
+  and show positive
   model costs below one cent as less than one cent instead of zero. Align inline
   model amounts with provider totals, fix RTL calendar month labels, let Escape
   leave an unselected calendar, and keep sharing available when a provider

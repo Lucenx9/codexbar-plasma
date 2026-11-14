@@ -25,7 +25,8 @@ ColumnLayout {
     property var providersShowingAllModels: []
     property string modelFocusRestoreProvider: ""
     property bool modelFocusRestoreAction: false
-    signal restoreModelsFocus(string provider, bool modelAction)
+    property int modelFocusRestoreReason: Qt.OtherFocusReason
+    signal restoreModelsFocus(string provider, bool modelAction, int focusReason)
     readonly property var allProviderCosts: applet.spendProviderCosts()
     readonly property var filterProviderCosts: selectedProvider
         && !allProviderCosts.some(function(item) { return item.provider === selectedProvider })
@@ -65,11 +66,13 @@ ColumnLayout {
         onTriggered: {
             var provider = view.modelFocusRestoreProvider
             var modelAction = view.modelFocusRestoreAction
+            var focusReason = view.modelFocusRestoreReason
             view.modelFocusRestoreProvider = ""
             view.modelFocusRestoreAction = false
+            view.modelFocusRestoreReason = Qt.OtherFocusReason
             if (!view.visible || !provider) return
             if (view.presentedProviderCosts.some(function(item) { return item.provider === provider }))
-                view.restoreModelsFocus(provider, modelAction)
+                view.restoreModelsFocus(provider, modelAction, focusReason)
             else
                 providerFilter.forceActiveFocus(Qt.OtherFocusReason)
         }
@@ -81,6 +84,7 @@ ColumnLayout {
             if (item && (item.modelsActionFocused || item.providerHeaderFocused)) {
                 view.modelFocusRestoreProvider = item.modelData.provider
                 view.modelFocusRestoreAction = item.modelsActionFocused
+                view.modelFocusRestoreReason = item.providerHeaderFocusReason
                 modelFocusRestore.restart()
             }
         }
@@ -609,12 +613,13 @@ ColumnLayout {
                             required property var modelData
                             readonly property bool modelsActionFocused: modelList.actionFocused
                             readonly property bool providerHeaderFocused: spendProviderCard.activeFocus
+                            readonly property int providerHeaderFocusReason: spendProviderCard.focusReason
                             Connections {
                                 target: view
-                                function onRestoreModelsFocus(provider: string, modelAction: bool) {
+                                function onRestoreModelsFocus(provider: string, modelAction: bool, focusReason: int) {
                                     if (provider !== providerGroup.modelData.provider) return
                                     if (modelAction) modelList.restoreActionFocus()
-                                    else spendProviderCard.forceActiveFocus(Qt.TabFocusReason)
+                                    else spendProviderCard.forceActiveFocus(focusReason)
                                 }
                             }
                             Layout.fillWidth: true

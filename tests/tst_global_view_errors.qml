@@ -295,7 +295,13 @@ TestCase {
     }
 
     function test_providerHeaderRefreshKeepsFocus_data() {
-        return [{tag: "closed", expanded: false}, {tag: "open", expanded: true}];
+        var rows = [];
+        [false, true].forEach(function(expanded) {
+            [Qt.TabFocusReason, Qt.BacktabFocusReason, Qt.MouseFocusReason, Qt.OtherFocusReason].forEach(function(reason) {
+                rows.push({tag: (expanded ? "open-" : "closed-") + reason, expanded: expanded, reason: reason});
+            });
+        });
+        return rows;
     }
 
     function test_providerHeaderRefreshKeepsFocus(data) {
@@ -308,12 +314,14 @@ TestCase {
         if (!view) return;
         var card = findChild(view, "analysisProviderToggle-codex");
         if (data.expanded) card.clicked();
-        card.forceActiveFocus(Qt.TabFocusReason);
+        card.forceActiveFocus(data.reason);
+        var visualFocus = card.visualFocus;
         applet.costs = [Object.assign({}, cost, {totals: {cost: 3, tokens: 30, currency: "USD"}})];
         card = findChild(view, "analysisProviderToggle-codex");
         tryCompare(card, "activeFocus", true);
         compare(card.checked, data.expanded);
-        verify(card.visualFocus);
+        compare(card.visualFocus, visualFocus);
+        compare(card.focusReason, data.reason);
         applet.costs = [{provider: "claude", totals: cost.totals}];
         tryCompare(findChild(view, "analysisProviderFilter"), "activeFocus", true);
     }
