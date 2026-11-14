@@ -564,7 +564,7 @@ KCM.SimpleKCM {
                     Components.PlainControlsLabel {
                         Layout.fillWidth: true
                         text: page.hiddenDetailProviders.length === 0
-                            ? i18n("None. Hide a titled section with its button in the popup.")
+                            ? i18n("None. Use a section's hide button in the popup.")
                             : i18n("Restore individual sections in the popup, or all sections for a provider here.")
                         font: Kirigami.Theme.smallFont
                         opacity: 0.7
@@ -628,7 +628,7 @@ KCM.SimpleKCM {
                     Components.PlainControlsLabel {
                         Layout.fillWidth: true
                         text: page.hiddenUsageRows.length === 0
-                            ? i18n("None. Hide a usage row with its button in the popup.")
+                            ? i18n("None. Use a row's hide button in the popup.")
                             : i18n("Hidden rows stay out of the popup's provider tabs only.")
                         font: Kirigami.Theme.smallFont
                         opacity: 0.7

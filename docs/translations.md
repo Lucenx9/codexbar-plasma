@@ -105,7 +105,8 @@ to the QML that gives the message its context.
   tag of this translation" to the catalog's own tag, such as `it` or `pt-BR`.
   AI Insights writes in the language named there, so it must match the
   catalog's language exactly and never be left empty.
-- Use short labels for the panel and tabs. Check longer text in the popup.
+- Use short labels for the panel and tabs, and sentence case for actions.
+  Check longer text in the popup.
 - Resolve fuzzy entries and translate empty entries before submitting.
 
 Run the catalog checks and build the distributable:

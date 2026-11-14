@@ -713,7 +713,7 @@ TestCase {
         verify(optionsNoticeText(page).indexOf("Editable provider options come from CodexBar") === 0);
         page.providerDescriptorsUnavailable = true;
         wait(0);
-        verify(optionsNoticeText(page).indexOf("This CodexBar version does not expose editable provider options") === 0);
+        verify(optionsNoticeText(page).indexOf("This CLI version cannot edit other provider options") === 0);
     }
 
     // Brand colours survive per provider instead of collapsing to one

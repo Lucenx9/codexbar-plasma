@@ -112,7 +112,7 @@ TestCase {
     function test_replyReportsTheTestedAddress() {
         verify(run("models"))
         accept(helperSource.connected[0], {stdout: listed, "exit code": 0, "exit status": 0})
-        verify(actionText.indexOf("Connection works") === 0, actionText)
+        verify(actionText.indexOf("Connected.") === 0, actionText)
         compare(availableModels, ["qwen3:4b"])
     }
 
@@ -149,7 +149,7 @@ TestCase {
         cfg_aiInsightsEnabled = true
         verify(run("models"), "re-enabling settings must permit an explicit connection test")
         accept(helperSource.connected[1], {stdout: listed, "exit code": 0, "exit status": 0})
-        verify(actionText.indexOf("Connection works") === 0)
+        verify(actionText.indexOf("Connected.") === 0)
     }
 
     function test_disabledSettingsStartNoHelper() {
@@ -247,7 +247,7 @@ TestCase {
             compare(keyStatus, "unavailable")
         } else {
             verify(actionFailed)
-            verify(actionText.indexOf("Connection works") < 0)
+            verify(actionText.indexOf("Connected.") < 0)
             verify(actionText.indexOf("API key saved") < 0)
             verify(actionText.indexOf("API key removed") < 0)
         }

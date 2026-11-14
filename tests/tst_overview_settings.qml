@@ -177,7 +177,7 @@ TestCase {
         tryVerify(function() {
             var now = [];
             walkObjects(page, now);
-            return now.some(function(item) { return item.text === "None. Hide a usage row with its button in the popup."; });
+            return now.some(function(item) { return item.text === "None. Use a row's hide button in the popup."; });
         });
     }
 

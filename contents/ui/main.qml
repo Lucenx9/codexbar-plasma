@@ -1397,11 +1397,11 @@ PlasmoidItem {
         }
 
         if (item.dashboardUrl && item.dashboardUrl.length > 0) {
-            rows.push({ title: i18n("Usage Dashboard"), icon: "view-statistics", action: "dashboard", enabled: true })
+            rows.push({ title: i18n("Usage dashboard"), icon: "view-statistics", action: "dashboard", enabled: true })
         }
         if (safeStatusUrl(item.provider, item.statusUrl).length > 0) {
             // Expansion stays out of the rows: rebuilding them would destroy the focused row.
-            rows.push({ title: i18n("Status Page"), icon: "network-connect", action: "status", enabled: true,
+            rows.push({ title: i18n("Status page"), icon: "network-connect", action: "status", enabled: true,
                 expandable: StatusComponents.feed(providerKey(item.provider)).length > 0 })
         }
         if (showProviderChangelogs && item.changelogUrl && item.changelogUrl.length > 0) {
@@ -1457,13 +1457,13 @@ PlasmoidItem {
     }
 
     function providerAccountAction(item) {
-        var title = item.account && item.account.length > 0 ? i18n("Switch Account…") : i18n("Add Account…")
+        var title = item.account && item.account.length > 0 ? i18n("Switch account…") : i18n("Add account…")
         var loginUrl = providerLoginUrl(item.provider)
         switch (providerKey(item.provider)) {
         case "devin":
             return { title: i18n("Open Devin…"), icon: "internet-services", action: "account-url", url: "https://app.devin.ai/settings/usage", enabled: true }
         case "factory":
-            return { title: i18n("Open Droid in Browser…"), icon: "internet-services", action: "account-url", url: "https://app.factory.ai", enabled: true }
+            return { title: i18n("Open Droid in browser…"), icon: "internet-services", action: "account-url", url: "https://app.factory.ai", enabled: true }
         case "manus":
             return { title: title, icon: "internet-services", action: "account-url", url: "https://manus.im", enabled: true }
         case "mimo":

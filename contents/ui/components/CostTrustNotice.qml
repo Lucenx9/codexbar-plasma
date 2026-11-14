@@ -81,18 +81,18 @@ PlainNote {
             return ""
         }
         if (summary.hasUnpriced && summary.hasUnmetered) {
-            return i18n("Some usage in the selected range is unpriced or unmetered, so the displayed cost total is incomplete.")
+            return i18n("The cost total is incomplete. Some usage has no price or metering.")
         }
         if (summary.hasUnpriced) {
-            return i18n("Some usage in the selected range is unpriced, so the displayed cost total is incomplete.")
+            return i18n("The cost total is incomplete. Some usage has no price.")
         }
         if (summary.hasUnmetered) {
-            return i18n("Some usage in the selected range is unmetered, so the displayed cost total is incomplete.")
+            return i18n("The cost total is incomplete. Some usage is unmetered.")
         }
         if (summary.hasEstimated
                 && summary.sourceKind !== "listPrice"
                 && summary.sourceKind !== "mixed") {
-            return i18n("Some usage costs in the selected range are estimated.")
+            return i18n("Some costs are estimated.")
         }
         return ""
     }
@@ -120,13 +120,13 @@ PlainNote {
         }
         switch (summary.sourceKind) {
         case "listPrice":
-            return i18n("The displayed range total is estimated from public list prices.")
+            return i18n("The total is estimated from public list prices.")
         case "vendor":
-            return i18n("The displayed range total uses provider-metered cost data.")
+            return i18n("The total uses costs metered by providers.")
         case "mixed":
-            return i18n("The displayed range total combines provider-metered cost data and public list-price estimates.")
+            return i18n("The total combines metered costs and public list-price estimates.")
         case "unknown":
-            return i18n("The source of the displayed range total could not be verified.")
+            return i18n("Could not verify the source of the cost total.")
         default:
             return ""
         }

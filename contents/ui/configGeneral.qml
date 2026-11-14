@@ -15,6 +15,7 @@ KCM.SimpleKCM {
     id: page
 
     readonly property Controls.ScrollView scrollView: contentItem as Controls.ScrollView
+    readonly property real hintMaximumWidth: Math.min(Kirigami.Units.gridUnit * 24, page.availableWidth)
 
     // Reserve the themed scrollbar width even when initial overflow disappears.
     Binding {
@@ -560,10 +561,10 @@ KCM.SimpleKCM {
         Components.PlainControlsLabel {
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: page.hintMaximumWidth
             leftPadding: LayoutMirroring.enabled ? 0 : page.hintIndent(refreshOnOpenCheck)
             rightPadding: LayoutMirroring.enabled ? page.hintIndent(refreshOnOpenCheck) : 0
-            text: i18n("Refreshes quota data when needed, including when periodic refresh is disabled.")
+            text: i18n("Refreshes quotas when needed, even without periodic refresh.")
             font: Kirigami.Theme.smallFont
             opacity: 0.7
             wrapMode: Text.WordWrap
@@ -584,7 +585,7 @@ KCM.SimpleKCM {
             opacity: 0.7
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: page.hintMaximumWidth
             wrapMode: Text.WordWrap
         }
 
@@ -604,7 +605,7 @@ KCM.SimpleKCM {
         Components.PlainControlsLabel {
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: page.hintMaximumWidth
             leftPadding: LayoutMirroring.enabled ? 0 : page.hintIndent(privacyModeCheck)
             rightPadding: LayoutMirroring.enabled ? page.hintIndent(privacyModeCheck) : 0
             text: i18n("Hides account identities and project or session names in the panel, popup and tooltips. Saved data is unchanged.")
@@ -669,8 +670,8 @@ KCM.SimpleKCM {
         Components.PlainControlsLabel {
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            text: i18n("Load a separate Codex subtotal on request in Usage & Spend. It does not represent account-wide usage.")
+            Layout.maximumWidth: page.hintMaximumWidth
+            text: i18n("Loads a subtotal on request in Usage & Spend, limited to identified Codex requests.")
             visible: identifiedTokensCheck.checked
             wrapMode: Text.WordWrap
             font: Kirigami.Theme.smallFont
@@ -716,7 +717,7 @@ KCM.SimpleKCM {
         Components.PlainControlsLabel {
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: page.hintMaximumWidth
             visible: identifiedTokensCheck.checked
             text: identifiedSshHostField.text.length > 0 && !IdentifiedTokens.validHost(identifiedSshHostField.text)
                 ? i18n("Enter one SSH alias or user@host without spaces or command options.")
@@ -742,7 +743,7 @@ KCM.SimpleKCM {
         Components.PlainControlsLabel {
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: page.hintMaximumWidth
             visible: !widgetUpdatesDisclosure.expanded
             leftPadding: page.mirrored ? 0 : Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing
             rightPadding: page.mirrored ? Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing : 0
@@ -821,7 +822,8 @@ KCM.SimpleKCM {
                         implicitWidth: 0
                         Layout.fillWidth: true
                         Layout.leftMargin: Kirigami.Units.gridUnit
-                        text: i18n("Notify when a widget update is available")
+                        text: i18n("Notify about updates")
+                        Accessible.name: i18n("Notify when a widget update is available")
                         enabled: updateChecksEnabledCheck.checked && page.cfg_enableNotifications
                     }
 
@@ -830,7 +832,8 @@ KCM.SimpleKCM {
                         implicitWidth: 0
                         Layout.fillWidth: true
                         Layout.leftMargin: Kirigami.Units.gridUnit
-                        text: i18n("Install widget updates automatically")
+                        text: i18n("Install automatically")
+                        Accessible.name: i18n("Install widget updates automatically")
                         enabled: updateChecksEnabledCheck.checked
                     }
                 }
@@ -838,7 +841,8 @@ KCM.SimpleKCM {
                 RowLayout {
                     Controls.Button {
                         objectName: "checkWidgetUpdateButton"
-                        text: i18n("Check for widget updates now")
+                        text: i18n("Check now")
+                        Accessible.name: i18n("Check for widget updates now")
                         icon.name: "view-refresh"
                         enabled: !page.widgetUpdateBusy
                         onClicked: Plasmoid.configuration.widgetUpdateRequest = "check"
@@ -868,7 +872,7 @@ KCM.SimpleKCM {
                     opacity: 0.7
                     Layout.fillWidth: true
                     Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-                    Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                    Layout.maximumWidth: page.hintMaximumWidth
                     wrapMode: Text.WordWrap
                 }
 
@@ -881,14 +885,14 @@ KCM.SimpleKCM {
                     opacity: 0.7
                     Layout.fillWidth: true
                     Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-                    Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                    Layout.maximumWidth: page.hintMaximumWidth
                     wrapMode: Text.WordWrap
                 }
 
                 Components.PlainInlineMessage {
                     Layout.fillWidth: true
                     Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-                    Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                    Layout.maximumWidth: page.hintMaximumWidth
                     type: Kirigami.MessageType.Error
                     plainText: widgetUpdateLastError.slice(0, 500)
                     visible: widgetUpdateLastError.length > 0
@@ -914,7 +918,7 @@ KCM.SimpleKCM {
         Components.PlainControlsLabel {
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: page.hintMaximumWidth
             objectName: "cliUpdatesSummary"
             visible: !cliUpdatesDisclosure.expanded
             leftPadding: page.mirrored ? 0 : Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing
@@ -943,7 +947,8 @@ KCM.SimpleKCM {
                     id: cliUpdateChecksEnabledCheck
                     implicitWidth: 0
                     Layout.fillWidth: true
-                    text: i18n("Check upstream CLI releases daily")
+                    text: i18n("Check daily")
+                    Accessible.name: i18n("Check upstream CLI releases daily")
                 }
 
                 ColumnLayout {
@@ -954,13 +959,14 @@ KCM.SimpleKCM {
                         implicitWidth: 0
                         Layout.fillWidth: true
                         Layout.leftMargin: Kirigami.Units.gridUnit
-                        text: i18n("Notify when a CLI release is available")
+                        text: i18n("Notify about updates")
+                        Accessible.name: i18n("Notify when a CLI release is available")
                         enabled: cliUpdateChecksEnabledCheck.checked && page.cfg_enableNotifications
                     }
 
                     Components.PlainControlsLabel {
                         visible: !cliUpdateNotificationsEnabledCheck.enabled
-                        text: i18n("Requires daily CLI checks and Plasma notifications (Notifications page).")
+                        text: i18n("Requires daily CLI checks and Plasma notifications.")
                         Layout.fillWidth: true
                         Layout.leftMargin: Kirigami.Units.gridUnit + page.hintIndent(cliUpdateNotificationsEnabledCheck)
                         wrapMode: Text.WordWrap
@@ -975,14 +981,15 @@ KCM.SimpleKCM {
                     opacity: 0.7
                     Layout.fillWidth: true
                     Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-                    Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                    Layout.maximumWidth: page.hintMaximumWidth
                     wrapMode: Text.WordWrap
                 }
 
                 RowLayout {
                     Controls.Button {
                         objectName: "checkCliReleaseButton"
-                        text: i18n("Check CLI releases now")
+                        text: i18n("Check now")
+                        Accessible.name: i18n("Check CLI releases now")
                         icon.name: "view-refresh"
                         enabled: !cliUpdater.busy
                         onClicked: cliUpdater.checkNow()
@@ -1000,7 +1007,7 @@ KCM.SimpleKCM {
                     text: cliUpdater.statusText
                     Layout.fillWidth: true
                     Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-                    Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                    Layout.maximumWidth: page.hintMaximumWidth
                     wrapMode: Text.WordWrap
                 }
 
@@ -1011,7 +1018,7 @@ KCM.SimpleKCM {
                     visible: cliUpdater.checked && cliUpdater.result.path.length > 0
                     Layout.fillWidth: true
                     Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-                    Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                    Layout.maximumWidth: page.hintMaximumWidth
                     wrapMode: Text.WordWrap
                 }
 
@@ -1035,7 +1042,7 @@ KCM.SimpleKCM {
                     opacity: 0.7
                     Layout.fillWidth: true
                     Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-                    Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                    Layout.maximumWidth: page.hintMaximumWidth
                     wrapMode: Text.WordWrap
                 }
 
@@ -1044,7 +1051,7 @@ KCM.SimpleKCM {
                     text: managedCli.statusText
                     Layout.fillWidth: true
                     Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-                    Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                    Layout.maximumWidth: page.hintMaximumWidth
                     wrapMode: Text.WordWrap
                 }
 
@@ -1080,7 +1087,7 @@ KCM.SimpleKCM {
                     text: i18n("Could not identify the installed CLI version.")
                     Layout.fillWidth: true
                     Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-                    Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                    Layout.maximumWidth: page.hintMaximumWidth
                     wrapMode: Text.WordWrap
                 }
 
@@ -1101,7 +1108,7 @@ KCM.SimpleKCM {
                         text: i18n("The selected %1 %2 keeps working outside the widget. Installing creates a second private copy and switches the widget to it; updates through the original method will no longer affect the widget.", installedCliProbe.result.path, installedCliProbe.result.version)
                         Layout.fillWidth: true
                         Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-                        Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                        Layout.maximumWidth: page.hintMaximumWidth
                         wrapMode: Text.WordWrap
                     }
                     RowLayout {
@@ -1126,7 +1133,8 @@ KCM.SimpleKCM {
                     objectName: "cliAutomaticUpdatesCheck"
                     implicitWidth: 0
                     Layout.fillWidth: true
-                    text: i18n("Automatically update the managed CLI daily")
+                    text: i18n("Update daily")
+                    Accessible.name: i18n("Automatically update the managed CLI daily")
                     checked: page.cfg_cliAutomaticUpdates
                     // Stays reachable while enabled so selecting another command cannot
                     // strand the setting on, leaving the helper to run with no effect.
@@ -1156,7 +1164,7 @@ KCM.SimpleKCM {
             opacity: 0.7
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: page.hintMaximumWidth
             wrapMode: Text.WordWrap
         }
 
@@ -1172,10 +1180,10 @@ KCM.SimpleKCM {
         Components.PlainInlineMessage {
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: page.hintMaximumWidth
             type: Kirigami.MessageType.Information
             visible: page.defaultValuesPrepared
-            plainText: i18n("Default values are ready. Select Apply or OK to save them, or Cancel to keep the current settings.")
+            plainText: i18n("Select Apply or OK to save defaults, or Cancel to discard them.")
         }
     }
 }

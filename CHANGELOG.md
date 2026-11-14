@@ -12,6 +12,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Shorten popup and settings explanations, standardize action labels, and align
+  all five translations while retaining privacy, cost, and save guidance.
+
 - Keep project breakdowns in provider details instead of duplicating them in
   Usage & Spend. Codex projects remain available in its local history details.
 
@@ -25,6 +28,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   answers while the underlying evidence is unchanged.
 
 ### Fixed
+
+- Keep General settings help within narrow windows with longer translations.
 
 - Position Usage & Spend hover previews beside the inspected day, switching
   sides near the plot edge so the guide and provider markers remain visible.

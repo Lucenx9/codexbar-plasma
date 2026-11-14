@@ -873,7 +873,7 @@ class CostSectionTests(unittest.TestCase):
         });
         compare(historyMsgs.length, 1);
         compare(historyMsgs[0].plainText,
-            "No daily cost history is available for this range. Try Tokens to check for token-only history.");
+            "No daily cost history for this range. Try Tokens for token history.");
         fakeApplet.costHistoryShowsTokens = true;
         tryVerify(function() {
             return historyMsgs[0].plainText

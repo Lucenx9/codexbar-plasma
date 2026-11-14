@@ -861,8 +861,8 @@ TestCase {
             {label: "Fetch provider service status", key: "cfg_includeStatus"},
             {label: "Load local usage and spend history", key: "cfg_costUsageEnabled"},
             {label: "Check for widget updates", key: "cfg_updateChecksEnabled"},
-            {label: "Notify when a widget update is available", key: "cfg_updateNotificationsEnabled"},
-            {label: "Install widget updates automatically", key: "cfg_autoUpdateEnabled"}
+            {label: "Notify about updates", key: "cfg_updateNotificationsEnabled"},
+            {label: "Install automatically", key: "cfg_autoUpdateEnabled"}
         ];
         for (var i = 0; i < cases.length; i++) {
             var box = generalCheckByText(page, cases[i].label);
