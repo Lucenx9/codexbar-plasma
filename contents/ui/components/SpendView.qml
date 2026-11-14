@@ -1,10 +1,12 @@
 import QtQuick
+import QtQuick.Window
 import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.components as PlasmaComponents
 import "." as Components
 import "../UsageAnalysis.js" as Analysis
+import "../AnalysisAmounts.mjs" as AnalysisAmounts
 import "../CostAmounts.mjs" as CostAmounts
 import "../CostChart.mjs" as CostChart
 import "../CostCurrency.mjs" as CostCurrency
@@ -18,8 +20,6 @@ ColumnLayout {
     property string selectedProvider: ""
     property bool expandedView: false
     readonly property bool historyAvailable: applet.costUsageEnabled !== false || applet.identifiedTokensEnabled === true
-    property bool limitsSelected: !historyAvailable
-    onHistoryAvailableChanged: { if (!historyAvailable) limitsSelected = true }
     property bool activityExpanded: false
     readonly property var allProviderCosts: applet.spendProviderCosts()
     readonly property var filterProviderCosts: selectedProvider
@@ -42,7 +42,8 @@ ColumnLayout {
     readonly property string spendCurrency: applet.spendCurrency(providerCosts)
     readonly property bool hasMixedCostCurrencies: CostCurrency.spendHasMixedCostCurrencies(providerCosts)
     readonly property real heatmapMaximum: chartMaximum(dailyPoints)
-    readonly property var heatmapDays: CostChart.spendHeatmapDays(dailyPoints, providerCosts)
+    readonly property var heatmapDays: CostChart.spendHeatmapDays(
+        dailyPoints.filter(function(point) { return point.value !== null }), providerCosts)
     readonly property int heatmapFirstWeekday: Qt.locale().firstDayOfWeek
     readonly property var heatmapRowWeekdays: CostChart.spendHeatmapRowWeekdays(
         heatmapDays, heatmapFirstWeekday)
@@ -69,6 +70,32 @@ ColumnLayout {
             maximum = Math.max(maximum, Number(points[i].value) || 0)
         }
         return maximum
+    }
+
+    function revealHistoryItem(item, lastItem) {
+        var flick = spendHistoryScroll.contentItem as Flickable
+        if (!visible || !flick || !item || !item.visible) return
+        item.ensurePolished()
+        historyContent.ensurePolished()
+        var ancestor = item
+        while (ancestor && ancestor !== flick.contentItem) ancestor = ancestor.parent
+        if (!ancestor) return
+        var top = item.mapToItem(flick.contentItem, 0, 0).y
+        var end = lastItem || item
+        var bottom = end.mapToItem(flick.contentItem, 0, end.height).y
+        var target = flick.contentY
+        if (top < target) target = top
+        else if (bottom > target + flick.height) target = Math.min(top, bottom - flick.height)
+        flick.contentY = Math.max(0, Math.min(target, Math.max(0, flick.contentHeight - flick.height)))
+    }
+
+    Connections {
+        target: view.Window.window
+        function onActiveFocusItemChanged() {
+            var item = view.Window.window.activeFocusItem
+            if (item && item.focusReason !== Qt.MouseFocusReason)
+                Qt.callLater(function() { if (item && item.activeFocus) view.revealHistoryItem(item) })
+        }
     }
 
     // Shared by the grid and its legend, so the key matches the cells exactly.
@@ -105,6 +132,16 @@ ColumnLayout {
         return 0
     }
 
+    Kirigami.Action {
+        id: showAllProvidersAction
+        text: i18n("Show all providers")
+        visible: view.selectedProvider.length > 0 && view.allProviderCosts.length > 0
+        onTriggered: {
+            providerFilter.forceActiveFocus(Qt.TabFocusReason)
+            view.selectedProvider = ""
+        }
+    }
+
     RowLayout {
         id: spendHeaderRow
 
@@ -128,7 +165,7 @@ ColumnLayout {
                 id: spendMetaLabel
 
                 visible: view.applet.costUsageEnabled !== false
-                text: i18n("Local history, current limits and optional AI analysis")
+                text: i18n("Local history and optional AI analysis")
                 font: Kirigami.Theme.smallFont
                 opacity: view.applet.secondaryTextOpacity
                 Layout.fillWidth: true
@@ -148,6 +185,8 @@ ColumnLayout {
 
         PlasmaComponents.ToolButton {
             id: expandButton
+            Layout.alignment: Qt.AlignTop
+            visible: view.applet.costUsageEnabled !== false
             objectName: "analysisExpandButton"
             icon.name: view.expandedView ? "view-restore" : "view-fullscreen"
             Accessible.name: view.expandedView ? i18n("Compact analysis") : i18n("Expand analysis")
@@ -157,7 +196,7 @@ ColumnLayout {
 
         PlasmaComponents.ToolButton {
             id: shareButton
-            visible: !view.limitsSelected && view.applet.costUsageEnabled !== false
+            visible: view.applet.costUsageEnabled !== false
             objectName: "shareUsageButton"
             Layout.alignment: Qt.AlignTop
             icon.name: "document-share"
@@ -173,30 +212,33 @@ ColumnLayout {
 
         Components.RefreshButton {
             objectName: "analysisRefreshButton"
-            visible: view.limitsSelected || view.applet.costUsageEnabled !== false
+            visible: view.applet.costUsageEnabled !== false
             Layout.alignment: Qt.AlignTop
-            busy: view.limitsSelected ? view.applet.loading === true : view.applet.costLoading
-            label: view.limitsSelected ? i18n("Refresh") : i18n("Refresh local history")
-            onRequested: {
-                if (view.limitsSelected) view.applet.refreshNow(true)
-                else view.applet.refreshCost(true)
-            }
+            busy: view.applet.costLoading
+            label: i18n("Refresh local history")
+            onRequested: view.applet.refreshCost(true)
         }
     }
 
-    RowLayout {
+    GridLayout {
         id: historyControlsRow
-        visible: true
+        columns: view.width >= metricToggle.implicitWidth + rangeCombo.implicitWidth + Kirigami.Units.gridUnit * 11
+            ? 4 : view.width >= metricToggle.implicitWidth + rangeCombo.implicitWidth + Kirigami.Units.smallSpacing ? 2 : 1
+        visible: view.applet.costUsageEnabled !== false
 
         Layout.fillWidth: true
         Layout.rightMargin: Kirigami.Units.smallSpacing
-        spacing: Kirigami.Units.smallSpacing
+        columnSpacing: Kirigami.Units.smallSpacing
+        rowSpacing: Kirigami.Units.smallSpacing
 
         Components.PlainComboBox {
+            id: providerFilter
             objectName: "analysisProviderFilter"
-            visible: !view.limitsSelected && view.applet.costUsageEnabled !== false
+            Layout.columnSpan: historyControlsRow.columns === 4 ? 1 : historyControlsRow.columns
+            visible: view.applet.costUsageEnabled !== false
             Layout.fillWidth: true
             Layout.minimumWidth: 0
+            Layout.maximumWidth: view.expandedView && historyControlsRow.columns === 4 ? Kirigami.Units.gridUnit * 18 : Infinity
             textRole: "text"
             valueRole: "value"
             model: view.providerOptions
@@ -204,33 +246,29 @@ ColumnLayout {
                 return item.value === view.selectedProvider
             }))
             Accessible.name: i18n("Provider filter")
-            onActivated: function(index) { view.selectedProvider = view.providerOptions[index].value }
+            onActivated: function(index) {
+                view.selectedProvider = view.providerOptions[index].value
+                currentIndex = Qt.binding(function() {
+                    return Math.max(0, view.providerOptions.findIndex(function(item) {
+                        return item.value === view.selectedProvider
+                    }))
+                })
+            }
         }
-        Item { visible: view.limitsSelected || view.applet.costUsageEnabled === false; Layout.fillWidth: true }
+        Item { visible: historyControlsRow.columns === 4; Layout.fillWidth: true; Layout.maximumWidth: view.expandedView ? Infinity : 0 }
 
         Components.CostMetricToggle {
             id: metricToggle
             objectName: "analysisMetricToggle"
             enabled: view.applet.costUsageEnabled !== false
-            selectionActive: !view.limitsSelected
 
             applet: view.applet
         }
 
-        PlainButton {
-            objectName: "analysisLimitsButton"
-            plainText: i18n("Limits")
-            checkable: true
-            checked: view.limitsSelected
-            onClicked: {
-                view.limitsSelected = !view.limitsSelected || !view.historyAvailable
-                checked = Qt.binding(function() { return view.limitsSelected })
-            }
-        }
-
         Components.PlainComboBox {
             id: rangeCombo
-            visible: !view.limitsSelected && view.applet.costUsageEnabled !== false
+            Layout.alignment: Qt.AlignRight
+            visible: view.applet.costUsageEnabled !== false
 
             Layout.minimumHeight: metricToggle.implicitHeight
             textRole: "text"
@@ -255,24 +293,8 @@ ColumnLayout {
         }
     }
 
-    Connections {
-        target: metricToggle
-        function onActivated(index) { view.limitsSelected = false }
-    }
-
-    Connections {
-        target: view.applet
-        function onCostHistoryMetricChanged() { view.limitsSelected = false }
-    }
-
-    Components.AnalysisLimits {
-        visible: view.limitsSelected
-        applet: view.applet
-    }
-
     PlasmaComponents.ScrollView {
         id: spendHistoryScroll
-        visible: !view.limitsSelected
         objectName: "spendHistoryScroll"
         Layout.fillWidth: true
         Layout.fillHeight: true
@@ -282,8 +304,9 @@ ColumnLayout {
         PlasmaComponents.ScrollBar.horizontal.policy: PlasmaComponents.ScrollBar.AlwaysOff
 
         ColumnLayout {
+            id: historyContent
             width: Math.max(0, parent.width - Kirigami.Units.smallSpacing)
-            height: view.providerCosts.length > 0 || view.applet.identifiedTokensEnabled === true
+            height: !view.historyAvailable || view.providerCosts.length > 0 || view.applet.identifiedTokensEnabled === true
                 ? implicitHeight : Math.max(implicitHeight, spendHistoryScroll.availableHeight)
             spacing: Kirigami.Units.largeSpacing
 
@@ -349,8 +372,12 @@ ColumnLayout {
 
                     anchors.centerIn: parent
                     width: parent.width
-                    plainText: i18n("No local token or cost history")
-                    plainExplanation: i18n("History appears for providers supported by the codexbar cost command.")
+                    plainText: view.selectedProvider.length > 0 && view.allProviderCosts.length > 0
+                        ? i18n("No history for this provider") : i18n("No local token or cost history")
+                    plainExplanation: view.selectedProvider.length > 0 && view.allProviderCosts.length > 0
+                        ? i18n("Choose another provider or show all providers.")
+                        : i18n("History appears for providers supported by the codexbar cost command.")
+                    helpfulAction: showAllProvidersAction
                     icon.name: "view-statistics-symbolic"
                     type: Kirigami.PlaceholderMessage.Type.Informational
                 }
@@ -365,6 +392,7 @@ ColumnLayout {
                 Controls.BusyIndicator {
                     id: spendBusyIndicator
                     anchors.centerIn: parent
+                    Accessible.name: i18n("Refresh local history")
                     running: parent.visible
                 }
             }
@@ -380,20 +408,6 @@ ColumnLayout {
             Components.AnalysisSummary {
                 applet: view.applet
                 costs: view.providerCosts
-            }
-
-            RowLayout {
-                visible: view.selectedDay.length > 0
-                Layout.fillWidth: true
-                PlainPlasmaLabel {
-                    text: historyChart.pointLabel({label: view.selectedDay})
-                    Layout.fillWidth: true
-                    elide: Text.ElideRight
-                }
-                PlainButton {
-                    plainText: i18n("All days")
-                    onClicked: historyChart.selectedIndex = -1
-                }
             }
 
             GridLayout {
@@ -418,6 +432,7 @@ ColumnLayout {
                 onPointsChanged: {
                     var index = CostChart.costDayIndexAfterRefresh(
                         view.daySelectionMemo.points, view.daySelectionMemo.index, points)
+                    if (index >= 0 && points[index].value === null) index = -1
                     view.daySelectionMemo = { points: points, index: index }
                     selectedIndex = index
                     hoveredIndex = -1
@@ -433,11 +448,23 @@ ColumnLayout {
                 accent: view.applet.readableAccentColor(
                     Kirigami.Theme.highlightColor,
                     Kirigami.Theme.backgroundColor)
-                kind: "bar"
+                kind: Analysis.hasCalendarHistory(view.dailyPoints) ? "line" : "bar"
+                lineSeries: kind !== "line" ? null : view.applet.presentedSpendProviderCosts(
+                    Analysis.providerLines(view.applet.costNumberFormat, view.providerCosts,
+                        view.dailyPoints, view.applet.costHistoryShowsTokens)).map(function(series) {
+                        return Object.assign({}, series, {label: view.applet.providerDisplayTitle(series.provider)})
+                    })
+                axisLabels: kind !== "line" ? [] : [historyChart.valueDomain.maximum, historyChart.valueDomain.maximum / 2, 0]
+                    .map(function(value, index) {
+                        return historyChart.valueDomain.maximum === 0 && index < 2 ? ""
+                            : AnalysisAmounts.axisText(view.applet.costNumberFormat, value,
+                                {step: historyChart.valueDomain.maximum / 2, currency: view.spendCurrency,
+                                    showsTokens: view.applet.costHistoryShowsTokens})
+                    })
                 showPeak: true
-                // This chart plots the whole selected range, up to 365 bars, and
+                // This chart plots the whole selected range, up to 365 days, and
                 // is the primary view here: it outranks the heatmap below it.
-                plotHeight: Kirigami.Units.gridUnit * 6
+                plotHeight: Kirigami.Units.gridUnit * (view.expandedView ? 10 : 6)
                 accessibleTitle: view.applet.costHistoryShowsTokens
                     ? i18n("Daily token history")
                     : i18n("Daily cost history")
@@ -451,11 +478,25 @@ ColumnLayout {
                     Layout.alignment: Qt.AlignTop
                     spacing: Kirigami.Units.smallSpacing
 
-                    PlainPlasmaLabel {
-                        text: view.selectedDay.length > 0 ? i18n("Providers on %1", historyChart.pointLabel({label: view.selectedDay})) : i18n("Providers")
-                        font.weight: Font.DemiBold
+                    RowLayout {
                         Layout.fillWidth: true
-                        elide: Text.ElideRight
+                        Layout.minimumHeight: allDaysButton.implicitHeight
+                        PlainPlasmaLabel {
+                            text: view.selectedDay.length > 0 ? i18n("Providers on %1", historyChart.pointLabel({label: view.selectedDay})) : i18n("Providers")
+                            font.weight: Font.DemiBold
+                            Layout.fillWidth: true
+                            elide: Text.ElideRight
+                        }
+                        PlainButton {
+                            id: allDaysButton
+                            objectName: "analysisAllDaysButton"
+                            visible: view.selectedDay.length > 0
+                            plainText: i18n("All days")
+                            onClicked: {
+                                historyChart.focusPlot(Qt.TabFocusReason)
+                                historyChart.selectedIndex = -1
+                            }
+                        }
                     }
 
                     Repeater {
@@ -469,8 +510,8 @@ ColumnLayout {
                             required property var modelData
                             readonly property var totals: modelData.totals
                             readonly property string costText: CostAmounts.hasMetricValue(totals, false)
-                                ? view.applet.qualifiedCostValue(view.applet.amountString(totals.cost,
-                                    totals.currency), modelData.valueMode)
+                                ? view.applet.qualifiedCostValue(AnalysisAmounts.metricText(view.applet.costNumberFormat,
+                                    totals.cost, totals.currency, false), modelData.valueMode)
                                 : i18n("Cost unavailable")
                             readonly property string tokensText: CostAmounts.hasMetricValue(totals, true)
                                 ? view.applet.usageCountText(totals.tokens, "tokens")
@@ -480,6 +521,7 @@ ColumnLayout {
                             implicitHeight: spendProviderRow.implicitHeight + Kirigami.Units.smallSpacing * 2
                             padding: Kirigami.Units.smallSpacing
                             onClicked: {
+                                if (activeFocus) providerFilter.forceActiveFocus(focusReason)
                                 view.selectedProvider = view.selectedProvider === modelData.provider ? "" : modelData.provider
                                 checked = Qt.binding(function() { return view.selectedProvider === modelData.provider })
                             }
@@ -595,7 +637,7 @@ ColumnLayout {
             Components.AnalysisModels {
                 visible: view.providerCosts.length > 0
                 applet: view.applet
-                costs: view.providerCosts
+                costs: view.applet.presentedSpendProviderCosts(view.providerCosts)
                 selectedDay: view.selectedDay
             }
 
@@ -635,16 +677,6 @@ ColumnLayout {
                     Layout.minimumWidth: 0
                     Layout.alignment: Qt.AlignTop
                     spacing: Kirigami.Units.smallSpacing / 2
-
-                    PlainPlasmaLabel {
-                        text: i18n("Activity heatmap")
-                        font.weight: Font.DemiBold
-                        Layout.fillWidth: true
-                        // Match the Providers column's heading gap, so the grid
-                        // and the first provider row start on the same line.
-                        Layout.bottomMargin: Kirigami.Units.smallSpacing / 2
-                        elide: Text.ElideRight
-                    }
 
                     // The grid follows the selected range instead of a fixed
                     // 42-day window, and derives the cell size from the available
@@ -696,27 +728,12 @@ ColumnLayout {
                             Accessible.role: Accessible.Graphic
                             Accessible.name: readout.length > 0
                                 ? i18n("%1: %2", i18n("Activity heatmap"), readout) : i18n("Activity heatmap")
-                            Accessible.description: i18n("Use the arrow keys to inspect chart points")
-
-                            function revealInHistoryScroll() {
-                                var flick = spendHistoryScroll.contentItem as Flickable
-                                if (!flick)
-                                    return
-                                var top = mapToItem(flick.contentItem, 0, 0).y
-                                var bottom = heatmapReadout.mapToItem(flick.contentItem, 0, heatmapReadout.height).y
-                                var target = flick.contentY
-                                if (top < target)
-                                    target = top
-                                else if (bottom > target + flick.height)
-                                    target = Math.min(top, bottom - flick.height)
-                                flick.contentY = Math.max(0, Math.min(target,
-                                    Math.max(0, flick.contentHeight - flick.height)))
-                            }
+                            Accessible.description: i18n("Use the arrow keys to inspect days")
 
                             onActiveFocusChanged: {
                                 if (activeFocus) {
                                     hoveredDay = ""
-                                    revealInHistoryScroll()
+                                    view.revealHistoryItem(heatmapFocus, heatmapReadout)
                                 }
                                 if (activeFocus && HeatmapNavigation.indexForDay(cells, selectedDay) < 0)
                                     selectedDay = HeatmapNavigation.nextDay(cells, "", "last", false)
@@ -837,10 +854,20 @@ ColumnLayout {
                                             color: "transparent"
                                             border.width: 1
                                             border.color: heatmapFocus.activeFocus && heatmapFocus.hoveredDay.length === 0
-                                                ? Kirigami.Theme.focusColor
+                                                ? Kirigami.Theme.textColor
                                                 : view.applet.withAlpha(Kirigami.Theme.textColor, 0.4)
                                             visible: heatmapCell.measured
                                             opacity: heatmapCell.index === heatmapFocus.inspectedIndex ? 1 : 0
+
+                                            Rectangle {
+                                                anchors.fill: parent
+                                                anchors.margins: 1
+                                                radius: Math.max(0, parent.radius - 1)
+                                                color: "transparent"
+                                                border.width: 1
+                                                border.color: Kirigami.Theme.backgroundColor
+                                                visible: heatmapFocus.activeFocus && heatmapFocus.hoveredDay.length === 0
+                                            }
 
                                             Behavior on opacity {
                                                 enabled: !heatmapFocus.activeFocus
@@ -951,19 +978,14 @@ ColumnLayout {
 
 
             }
+            Components.AnalysisAssistant {
+                id: analysisAssistant
+                answerExpanded: !view.historyAvailable
+                applet: view.applet
+                onAnswerExpandedChanged: if (answerExpanded)
+                    Qt.callLater(function() { view.revealHistoryItem(analysisAssistant) })
+            }
         }
     }
 
-    PlasmaComponents.ScrollView {
-        Layout.fillWidth: true
-        Layout.preferredHeight: Math.min(analysisAssistant.implicitHeight, view.height * 0.42)
-        contentWidth: availableWidth
-        clip: true
-        PlasmaComponents.ScrollBar.horizontal.policy: PlasmaComponents.ScrollBar.AlwaysOff
-        Components.AnalysisAssistant {
-            id: analysisAssistant
-            width: parent.width
-            applet: view.applet
-        }
-    }
 }

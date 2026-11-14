@@ -146,6 +146,8 @@ def stage_applet(work, scenario, image_path, theme=None):
             defaults["costUsageEnabled"] = "false"
     if scenario.startswith("ai-insights"):
         defaults.update(aiInsightsEnabled="true", aiInsightsModel="fixture-model")
+    defaults.update({"ai-insights-no-history": {
+        "costUsageEnabled": "false", "identifiedTokensEnabled": "false"}}.get(scenario, {}))
     for key, value in defaults.items():
         entry = config.find(f".//k:entry[@name='{key}']/k:default", ns)
         if entry is None:

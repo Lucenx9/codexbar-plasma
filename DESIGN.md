@@ -180,8 +180,9 @@ independent pools visible; a low session value must not obscure an exhausted
 weekly quota. Let spacing distinguish providers without surrounding each
 number with another surface.
 
-Usage & Spend keeps provider, metric, limits, and range controls above the
-scrollable content. Compact mode stacks the chart and provider rows; expanded
+Usage & Spend keeps provider, metric, and range controls above the
+scrollable content. Current quotas and reset windows belong in Overview and
+provider details. Compact mode stacks the chart and provider rows; expanded
 mode can place them side by side. Models, token composition, and the activity
 heatmap use disclosure. AI questions stay in a separate, optional disclosure
 whose scope is explicitly independent of the chart filters. Totals, dates, and units explain the chart; hover is a preview, and

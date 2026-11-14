@@ -386,7 +386,7 @@ class CostTest(unittest.TestCase):
         if not code_contains(spend_view_text, "view.applet.refreshCost(true)"):
             raise AssertionError("the cost refresh button must explicitly bypass the automatic hourly throttle")
         for cost_loading_fragment in (
-            "busy: view.limitsSelected ? view.applet.loading === true : view.applet.costLoading",
+            "busy: view.applet.costLoading",
             "visible: view.applet.costLoading && view.providerCosts.length === 0",
             "visible: !view.applet.costLoading",
         ):
@@ -419,7 +419,6 @@ class CostTest(unittest.TestCase):
         if "visible: view.dailyPoints.length > 1" in spend_view_text:
             raise AssertionError("SpendView must not hide the accessible chart when one history day is available")
         for heatmap_range_fragment in (
-            "readonly property var heatmapDays: CostChart.spendHeatmapDays(dailyPoints, providerCosts)",
             "Math.ceil( (view.heatmapDays.length + view.heatmapTrailingSlots) / 7)",
             "readonly property int fittingColumns",
             "readonly property real cellHeight",

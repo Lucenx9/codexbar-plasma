@@ -4,7 +4,7 @@ import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import "../ChartScale.js" as ChartScale
 import "../CostChart.mjs" as CostChart
-import "../ChartStack.mjs" as ChartStack
+import "../ChartLines.mjs" as ChartLines
 import "../ProviderNormalizer.mjs" as Normalizer
 
 ColumnLayout {
@@ -12,6 +12,15 @@ ColumnLayout {
 
     required property var applet
     required property var points
+    property var lineSeries: null
+    property var axisLabels: []
+    readonly property bool hasLineSeries: kind === "line" && lineSeries !== null
+    readonly property real axisWidth: axisLabels.length === 3
+        ? Math.min(Kirigami.Units.gridUnit * 6, Math.max(
+            Math.ceil(chartReadoutFontMetrics.advanceWidth(axisLabels[0])),
+            Math.ceil(chartReadoutFontMetrics.advanceWidth(axisLabels[1])),
+            Math.ceil(chartReadoutFontMetrics.advanceWidth(axisLabels[2])))) + Kirigami.Units.smallSpacing * 2 : 0
+    onLineSeriesChanged: plot.requestPaint()
     property var seriesColors: ({})
     onSeriesColorsChanged: plot.requestPaint()
     required property color accent
@@ -34,9 +43,10 @@ ColumnLayout {
     readonly property bool readoutValid: readoutIndex >= 0 && readoutIndex < pointCount
     readonly property int pointCount: points && typeof points.length === "number" ? points.length : 0
     readonly property bool hasActivePoint: activeIndex >= 0 && activeIndex < pointCount
-    readonly property var valueDomain: ChartScale.domain(points)
+    readonly property var valueDomain: hasLineSeries ? ChartLines.domain(lineSeries) : ChartScale.domain(points)
     readonly property real lineMarkerInset: 3.5
     readonly property color guideColor: Kirigami.Theme.textColor
+    readonly property color lineBackdrop: Kirigami.Theme.backgroundColor
 
     Layout.fillWidth: true
     spacing: Kirigami.Units.smallSpacing / 2
@@ -63,11 +73,82 @@ ColumnLayout {
         if (!point) {
             return ""
         }
+        if (point.value === null) return i18n("Unavailable")
         if (point.displayValue !== undefined && point.displayValue !== null) {
             return String(point.displayValue)
         }
         var text = String(pointValue(point))
         return valueSuffix.length > 0 ? text + " " + valueSuffix : text
+    }
+
+    function pointInspectionText(index) {
+        if (index < 0 || index >= pointCount) return ""
+        var lines = [i18n("%1: %2", pointLabel(points[index]), pointDisplayValue(points[index]))]
+        if (hasLineSeries) {
+            lineSeries.forEach(function(series) {
+                lines.push(i18n("%1: %2", series.label || series.provider,
+                    chart.pointDisplayValue(series.points[index])))
+            })
+        }
+        return lines.join("\n")
+    }
+
+    function traceRun(context, run) {
+        context.beginPath()
+        context.moveTo(run[0].x, run[0].y)
+        for (var i = 1; i < run.length; i++) {
+            context.bezierCurveTo(run[i].c1.x, run[i].c1.y,
+                run[i].c2.x, run[i].c2.y, run[i].x, run[i].y)
+        }
+    }
+
+    function paintProviderLines(context, width, height) {
+        var projected = lineSeries.map(function(series) {
+            return {color: chart.seriesColors[series.provider] || chart.accent,
+                runs: ChartLines.paths(series.points, {width: width, height: height,
+                    maximum: chart.valueDomain.maximum, inset: chart.lineMarkerInset})}
+        })
+        var baseline = CostChart.chartLineY(height, 0, lineMarkerInset)
+        for (var fill of projected) {
+            context.fillStyle = applet.canvasColor(fill.color, 0.07)
+            for (var area of fill.runs) {
+                if (area.length < 2) continue
+                traceRun(context, area)
+                context.lineTo(area[area.length - 1].x, baseline)
+                context.lineTo(area[0].x, baseline)
+                context.closePath()
+                context.fill()
+            }
+        }
+        context.lineCap = "round"
+        context.lineJoin = "round"
+        for (var stroke of projected) {
+            for (var run of stroke.runs) {
+                traceRun(context, run)
+                // Restore the surface used for accent contrast underneath each
+                // line, including where several translucent fills overlap.
+                context.lineWidth = 6
+                context.strokeStyle = applet.canvasColor(lineBackdrop, 1)
+                context.stroke()
+                context.lineWidth = 2
+                context.strokeStyle = applet.canvasColor(stroke.color, 1)
+                context.stroke()
+            }
+        }
+        context.lineWidth = 4
+        for (var marker of projected) {
+            context.fillStyle = applet.canvasColor(marker.color, 1)
+            for (var dots of marker.runs) {
+                for (var point of dots) {
+                    if (point.index !== activeIndex && dots.length > 1) continue
+                    context.beginPath()
+                    context.arc(point.x, point.y, point.index === activeIndex ? lineMarkerInset : 2, 0, Math.PI * 2)
+                    context.strokeStyle = applet.canvasColor(lineBackdrop, 1)
+                    context.stroke()
+                    context.fill()
+                }
+            }
+        }
     }
 
     function chartFraction(value) {
@@ -93,6 +174,10 @@ ColumnLayout {
             Math.floor(positionX * pointCount / plot.width)))
     }
 
+    function focusPlot(reason) {
+        plotFocus.forceActiveFocus(reason)
+    }
+
     function moveSelection(delta) {
         if (pointCount === 0) {
             return
@@ -105,7 +190,7 @@ ColumnLayout {
     FontMetrics {
         id: chartReadoutFontMetrics
 
-        font.pixelSize: Kirigami.Theme.smallFont.pixelSize
+        font: Kirigami.Theme.smallFont
     }
 
     RowLayout {
@@ -137,7 +222,8 @@ ColumnLayout {
             id: chartPointLabel
             objectName: "chartPointLabel"
 
-            text: chart.hasActivePoint && chart.readoutValid
+            text: chart.hasLineSeries && !chart.hasActivePoint ? chart.accessibleTitle
+                : chart.hasActivePoint && chart.readoutValid
                 ? chart.pointLabel(chart.points[chart.readoutIndex])
                 : chart.peakIndex >= 0 ? i18n("Peak daily usage")
                 : chart.readoutValid ? chart.pointLabel(chart.points[chart.readoutIndex]) : ""
@@ -157,7 +243,8 @@ ColumnLayout {
             objectName: "chartPointValue"
             font.features: { "tnum": 1 }
 
-            text: chart.hasActivePoint && chart.readoutValid
+            text: chart.hasLineSeries && !chart.hasActivePoint ? ""
+                : chart.hasActivePoint && chart.readoutValid
                 ? chart.pointDisplayValue(chart.points[chart.readoutIndex])
                 : chart.peakIndex >= 0 ? chart.pointDisplayValue(chart.points[chart.peakIndex])
                 : chart.readoutValid ? chart.pointDisplayValue(chart.points[chart.readoutIndex]) : ""
@@ -175,6 +262,24 @@ ColumnLayout {
 
         Layout.fillWidth: true
         Layout.preferredHeight: chart.plotHeight
+        Layout.leftMargin: chart.axisWidth
+
+        Repeater {
+            model: chart.axisLabels
+            delegate: PlainPlasmaLabel {
+                required property int index
+                required property var modelData
+                text: modelData
+                width: Math.max(0, chart.axisWidth - Kirigami.Units.smallSpacing * 2)
+                x: chart.LayoutMirroring.enabled ? plot.width + Kirigami.Units.smallSpacing * 2 : -chart.axisWidth
+                y: Math.max(0, Math.min(plot.height - implicitHeight,
+                    CostChart.chartLineY(plot.height, 1 - index / 2, chart.lineMarkerInset) - implicitHeight / 2))
+                horizontalAlignment: Text.AlignRight
+                font: Kirigami.Theme.smallFont
+                opacity: chart.applet.secondaryTextOpacity
+                elide: Text.ElideRight
+            }
+        }
 
         // Qt's visualFocus distinguishes keyboard entry from mouse selection.
         Controls.Control {
@@ -194,12 +299,16 @@ ColumnLayout {
             Accessible.role: Accessible.Graphic
             Accessible.name: chart.accessibleTitle
             Accessible.description: chart.hasActivePoint
-                ? i18n("%1: %2", chart.pointLabel(chart.points[chart.activeIndex]),
-                    chart.pointDisplayValue(chart.points[chart.activeIndex]))
+                ? chart.pointInspectionText(chart.activeIndex)
                 : i18n("Use the arrow keys to inspect chart points")
 
             Keys.onPressed: function(event) {
                 switch (event.key) {
+                case Qt.Key_Escape:
+                    if (chart.selectedIndex < 0) return
+                    chart.selectedIndex = -1
+                    event.accepted = true
+                    break
                 case Qt.Key_Left:
                     chart.moveSelection(-1)
                     event.accepted = true
@@ -244,6 +353,7 @@ ColumnLayout {
             function onSelectedIndexChanged() { plot.requestPaint() }
             function onHoveredIndexChanged() { plot.requestPaint() }
             function onGuideColorChanged() { plot.requestPaint() }
+            function onLineBackdropChanged() { plot.requestPaint() }
         }
 
         onPaint: {
@@ -254,12 +364,12 @@ ColumnLayout {
             }
 
             var baseline = ChartScale.barGeometry(height, 0, chart.valueDomain).baseline
-            if (chart.kind === "line" && chart.valueDomain.minimum < 0) {
+            if (chart.kind === "line" && (chart.valueDomain.minimum < 0 || chart.hasLineSeries)) {
                 baseline = CostChart.chartLineY(height,
                     chart.chartFraction(0), chart.lineMarkerInset)
             }
             context.fillStyle = chart.applet.canvasColor(chart.guideColor, 0.12)
-            context.fillRect(0, baseline, width, 1)
+            if (!chart.hasLineSeries) context.fillRect(0, baseline, width, 1)
             // Keep inspection visible for zero points and flat zero series,
             // where changing a bar's fill cannot identify the active position.
             if (chart.hasActivePoint) {
@@ -275,7 +385,7 @@ ColumnLayout {
                 context.fillStyle = chart.applet.canvasColor(chart.guideColor, 0.35)
                 context.fillRect(Math.max(0, Math.min(width - 1, Math.round(guideX))), 0, 1, height)
             }
-            if (chart.pointCount === 0 || chart.valueDomain.minimum === chart.valueDomain.maximum) {
+            if (chart.pointCount === 0 || (!chart.hasLineSeries && chart.valueDomain.minimum === chart.valueDomain.maximum)) {
                 return
             }
 
@@ -286,6 +396,16 @@ ColumnLayout {
                     context.fillStyle = chart.applet.canvasColor(chart.guideColor, 0.08)
                     context.fillRect(0, peakY, width, 1)
                 }
+            }
+
+            if (chart.hasLineSeries) {
+                context.fillStyle = chart.applet.canvasColor(chart.guideColor, 0.08)
+                for (var fraction of [0, 0.5, 1]) {
+                    var guideY = CostChart.chartLineY(height, fraction, chart.lineMarkerInset)
+                    context.fillRect(0, guideY, width, 1)
+                }
+                chart.paintProviderLines(context, width, height)
+                return
             }
 
             if (chart.kind === "line") {
@@ -332,30 +452,10 @@ ColumnLayout {
                     context.translate(0, baseline * 2)
                     context.scale(1, -1)
                 }
-                var segments = bar.negative ? [] : ChartStack.stackedBarSegments(
-                    chart.points[barIndex], bar.height, baseline)
-                if (segments.length > 0) {
-                    context.globalAlpha = barIndex === chart.activeIndex ? 1 : 0.8
-                    for (var segmentIndex = 0; segmentIndex < segments.length; segmentIndex++) {
-                        var segment = segments[segmentIndex]
-                        context.fillStyle = chart.seriesColors[segment.provider] || chart.accent
-                        if (segment.rounded) {
-                            CostChart.paintRoundedTopBar(context,
-                                {x: geometry.offset + barIndex * geometry.step, baseline: segment.baseline,
-                                    width: geometry.barWidth, height: segment.height}, Kirigami.Units.smallSpacing / 2)
-                        } else {
-                            context.fillRect(geometry.offset + barIndex * geometry.step,
-                                segment.baseline - segment.height, geometry.barWidth, segment.height)
-                        }
-                    }
-                } else {
-                    context.fillStyle = barIndex === chart.activeIndex ? activeFill : normalFill
-                    CostChart.paintRoundedTopBar(
-                    context,
-                    { x: geometry.offset + barIndex * geometry.step, baseline: baseline,
-                        width: geometry.barWidth, height: bar.height },
-                    Kirigami.Units.smallSpacing / 2)
-                }
+                context.fillStyle = barIndex === chart.activeIndex ? activeFill : normalFill
+                CostChart.paintRoundedTopBar(context,
+                    {x: geometry.offset + barIndex * geometry.step, baseline: baseline,
+                        width: geometry.barWidth, height: bar.height}, Kirigami.Units.smallSpacing / 2)
                 context.restore()
             }
         }
@@ -380,18 +480,46 @@ ColumnLayout {
 
         PlainToolTip {
             parent: plot
-            visible: chart.hasActivePoint
+            visible: !chart.hasLineSeries && chart.hasActivePoint
                 && (chartPointLabel.truncated || chartPointValue.truncated)
                 && (plotMouse.containsMouse || plotFocus.activeFocus)
             plainText: chart.hasActivePoint
-                ? i18n("%1: %2", chart.pointLabel(chart.points[chart.activeIndex]),
-                    chart.pointDisplayValue(chart.points[chart.activeIndex])) : ""
+                ? chart.pointInspectionText(chart.activeIndex) : ""
+        }
+
+        // A clipped child stays inside the plot and its scroll viewport. Unlike
+        // an overlay tooltip, it cannot float over navigation after scrolling.
+        Rectangle {
+            id: linePreview
+            objectName: "chartLinePreview"
+            visible: chart.hasLineSeries && chart.hoveredIndex >= 0 && plotMouse.containsMouse
+            width: Math.min(plot.width, previewText.implicitWidth + Kirigami.Units.smallSpacing * 2)
+            height: Math.min(plot.height, previewText.implicitHeight + Kirigami.Units.smallSpacing * 2)
+            x: Math.max(0, Math.min(plot.width - width,
+                CostChart.chartLineX(plot.width, chart.pointCount, chart.hoveredIndex, chart.lineMarkerInset) - width / 2))
+            y: 0
+            color: Kirigami.Theme.backgroundColor
+            border.color: Kirigami.Theme.disabledTextColor
+            radius: Kirigami.Units.cornerRadius
+            clip: true
+            Accessible.ignored: true
+            PlainPlasmaLabel {
+                id: previewText
+                anchors.fill: parent
+                anchors.margins: Kirigami.Units.smallSpacing
+                text: chart.pointInspectionText(chart.hoveredIndex)
+                font: Kirigami.Theme.smallFont
+                wrapMode: Text.Wrap
+                elide: Text.ElideRight
+                Accessible.ignored: true
+            }
         }
     }
 
     RowLayout {
         visible: chart.pointCount > 0
         Layout.fillWidth: true
+        Layout.leftMargin: chart.axisWidth
         spacing: Kirigami.Units.smallSpacing
 
         PlainPlasmaLabel {

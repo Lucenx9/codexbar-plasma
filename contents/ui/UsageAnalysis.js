@@ -1,9 +1,12 @@
 .pragma library
 .import "Guards.js" as Guards
 .import "CostAmounts.mjs" as Amounts
+.import "AnalysisAmounts.mjs" as Display
 .import "CostCurrency.mjs" as Currency
 .import "CostPresentation.mjs" as Costs
 .import "AiInsightsSnapshot.js" as Snapshot
+.import "ChartLines.mjs" as Lines
+.import "ProviderNormalizer.mjs" as Normalizer
 
 // Presentation projections over normalized CLI snapshots. No fetching, pricing,
 // localization, or account attribution belongs to an analysis selection.
@@ -36,34 +39,65 @@ function selectedDayCost(snapshot, day) {
 }
 
 function dailyPoints(format, costs, showsTokens) {
-    var items = filterCosts(costs, "")
-    var points = Costs.spendDailyPoints(format, items, showsTokens)
+    var items = filterCosts(costs, "").slice(0, Normalizer.maximumCostSnapshots)
+    var ambiguous = ambiguousDates(items, showsTokens)
+    var points = Costs.spendDailyPoints(format, items, showsTokens).filter(function(point) {
+        return !Guards.hasOwnKey(ambiguous, point.label)
+    })
+    // Retain the date even when duplicate values overflowed or had no metric.
+    // A partial sum from healthy providers cannot establish this day's total.
+    Object.keys(ambiguous).forEach(function(label) { points.push({label: label, value: null}) })
+    points.sort(function(a, b) { return a.label.localeCompare(b.label) })
     var currency = Currency.spendCurrency(items)
-    var series = items.map(function(item) {
-        return {provider: item.provider, days: Snapshot.historyDates(item.daily || [])}
+    var formatted = points.slice(-365).filter(function(point) {
+        return !/^\d{4}-\d{2}-\d{2}$/.test(point.label)
+            || Normalizer.parsedCalendarDateKey(point.label) !== null
+    }).map(function(point) {
+        return Object.assign({}, point, {displayValue: point.value === null ? null
+            : Display.metricText(format, point.value, currency, showsTokens)})
     })
-    return points.map(function(point) {
-        point.segments = daySegments(series, point, showsTokens, currency)
-        return point
+    return hasCalendarHistory(formatted) ? Lines.calendarPoints(formatted) : formatted
+}
+
+function hasCalendarHistory(points) {
+    return points.length > 0 && points.every(function(point) { return Normalizer.parsedCalendarDateKey(point.label) !== null })
+}
+
+function ambiguousDates(items, showsTokens) {
+    var currency = Currency.spendCurrency(items)
+    var result = ({})
+    items.filter(function(item) {
+        return showsTokens || Currency.costMatchesSpendCurrency(item, currency)
+    }).forEach(function(item) {
+        var dates = Snapshot.historyDates(Array.isArray(item.daily) ? item.daily : [])
+        Object.keys(dates).forEach(function(label) {
+            if (dates[label] === null) result[label] = true
+        })
+    })
+    return result
+}
+
+function providerLines(format, costs, points, showsTokens) {
+    var items = filterCosts(costs, "")
+    var currency = Currency.spendCurrency(items)
+    return items.filter(function(item) {
+        return typeof item.provider === "string" && !Guards.isUnsafeObjectKey(item.provider)
+            && (showsTokens || Currency.costMatchesSpendCurrency(item, currency))
+    }).slice(0, 128).map(function(item) {
+        var dates = Snapshot.historyDates(Array.isArray(item.daily) ? item.daily : [])
+        return {provider: item.provider, points: points.slice(0, 365).map(function(point) {
+            return Object.assign({label: point.label}, providerAmount(format, dates[point.label], currency, showsTokens))
+        })}
     })
 }
 
-function segmentValue(day, showsTokens, currency) {
-    if (!day || !Amounts.hasMetricValue(day, showsTokens)) return 0
-    if (!showsTokens && (day.currency || "USD") !== currency) return 0
-    return Amounts.metricValue(day, showsTokens)
-}
-
-function daySegments(series, point, showsTokens, currency) {
-    var segments = []
-    var total = 0
-    for (var i = 0; i < series.length; i++) {
-        var value = segmentValue(series[i].days[point.label], showsTokens, currency)
-        if (value > 0) segments.push({provider: series[i].provider, value: value})
-        total += value
-    }
-    // Duplicates or unknown contributions must not draw a plausible split.
-    return total === point.value ? segments : []
+function providerAmount(format, day, currency, showsTokens) {
+    var known = Amounts.hasMetricValue(day, showsTokens)
+        && (showsTokens || (day.currency || currency) === currency)
+    var value = known ? Amounts.metricValue(day, showsTokens) : null
+    if (value < 0) value = null
+    return {value: value,
+        displayValue: value === null ? null : Display.metricText(format, value, currency, showsTokens)}
 }
 
 // A fixed, explicitly labelled comparison of the last two complete weeks.

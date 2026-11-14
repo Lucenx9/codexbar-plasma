@@ -9,20 +9,37 @@ The selected provider stays selected across range changes and empty results;
 it remains available in the filter until the user chooses another option.
 A pinned day changes provider/model details, while headline totals
 retain the selected period; project totals appear only with all days selected.
-Missing and duplicate days remain unavailable.
-Daily bars stack known provider contributions only when their sum agrees with
-the aggregate; `ChartStack.mjs` rejects invalid splits. Money stays in the
-selected currency and token totals can include all currencies.
+Missing and duplicate days remain unavailable. A duplicate date within any
+provider eligible for the metric also makes the aggregate daily readout
+unavailable and clears that day if it was pinned before a refresh. Healthy
+provider lines remain visible; an excluded foreign-currency provider cannot
+invalidate the money readout.
+Aggregation and ambiguity checks share the normalizer's 256-snapshot bound;
+the separate 128-series drawing limit does not weaken the total's validation.
+Daily lines compare providers on a shared zero-based scale with readable tick
+values and headroom. `ChartLines.mjs` preserves calendar spacing, breaks lines
+at missing or ambiguous dates, and uses monotone curves without new extrema.
+Subtle fills sit below all strokes and inspection markers. A narrow theme-surface
+outline keeps lines and markers readable over overlapping fills. Money stays in the
+selected currency and token totals can include all currencies. Provider tab or
+saved ordering is applied after currency selection, so it cannot change the
+money represented by the lines, axis or totals. Hover or keyboard
+inspection reports each provider for the selected day. Provider pages retain bars.
 
 The weekly comparison uses the existing AI snapshot completeness rules without
 calling AI: fourteen complete days before today, a scan reaching today, no
 ambiguous dates, finite values and no partial costs. It never loads extra history
-for a short selection. Privacy mode retains the numeric comparison, using the
-currency preserved in the projected totals. Changes use unrounded weekly sums,
+for a short selection. When the comparison is unavailable, its history
+requirements remain visible below the totals rather than only in a tooltip.
+Privacy mode retains the numeric comparison, using the currency preserved in
+the projected totals. Changes use unrounded weekly sums,
 including sub-cent amounts; only displayed money and AI payloads round to cents.
 Model lists retain a shared 128-row
-bound, mark truncation, and use the already privacy-projected snapshots. Limits
-use current usage data and remain independent of local history filters. No
+bound, mark truncation, and use the already privacy-projected snapshots.
+Current quotas stay in Overview and provider details; the optional assistant
+can still use them independently of local history filters. With both local
+history sources disabled, the assistant opens directly and uses the available
+quota snapshot without starting a cost scan. No
 current CLI blocker in [TODO](../TODO.md) is resolved or bypassed by these
 presentation changes.
 
@@ -58,7 +75,9 @@ snapshot without a usable `updatedAt` keeps its Today amounts.
   Valid calendar dates remain inside the selected window even when duplicate
   dates, malformed records or the scan budget prevent gap filling. Those
   fallbacks retain observed rows without inventing zero days. Undated legacy
-  labels keep their bounded sequence behavior.
+  labels keep their bounded sequence behavior, using aggregate bars in Usage &
+  Spend when labels do not all name calendar dates. Invalid calendar dates are not
+  treated as legacy labels.
   Calendar keys accept only strings in `YYYY-MM-DD` form. Object and array
   date fields cannot extend All history or interrupt healthy provider snapshots.
   Quota-week sums mark trailing days after a stale snapshot, the last scanned
@@ -133,7 +152,14 @@ CLI scan for the provider and history range, independently of the account
 selected in the widget. Changing accounts does not filter this scan or establish
 that its totals belong to that account. The Codex cost hint states this scope.
 
-Hover previews stay inside the chart. Pointer or keyboard selection pins a day
+Hover previews stay inside the chart. Usage & Spend previews appear immediately
+while the pointer is over a day and are clipped to the plot and scroll viewport;
+long previews may elide, while pinning the day exposes the full provider details.
+Keyboard inspection uses the readout, accessible description and provider rows.
+All days and Escape clear the pin and leave keyboard focus on the chart. The
+reset action occupies the provider heading row without shifting the plot.
+Positive sub-cent amounts use an explicit less-than-one-cent notation; axis
+labels retain the precision needed to distinguish ticks. Pointer or keyboard selection pins a day
 without fetching data. While a day is pinned, the chart readout and the
 drill-down heading name it, so the latest-day summary under the chart is hidden. A background refresh retains the pinned date even when
 its chart position changes; a missing or ambiguous date clears the pin.

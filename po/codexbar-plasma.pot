@@ -180,21 +180,6 @@ msgid ""
 "projects, paths and prompts are never sent."
 msgstr ""
 
-#: contents/ui/components/AnalysisLimits.qml
-msgid ""
-"Current limits have different capacities and reset windows. Their "
-"percentages are not additive."
-msgstr ""
-
-#: contents/ui/components/AnalysisLimits.qml
-#: contents/ui/components/FullRepresentation.qml
-msgid "No provider data"
-msgstr ""
-
-#: contents/ui/components/AnalysisLimits.qml contents/ui/main.qml
-msgid "Limits not available"
-msgstr ""
-
 #: contents/ui/components/AnalysisModels.qml
 msgid "Models and token composition"
 msgstr ""
@@ -216,6 +201,7 @@ msgstr ""
 
 #: contents/ui/components/AnalysisModels.qml
 #: contents/ui/components/AnalysisSummary.qml
+#: contents/ui/components/InteractiveChart.qml
 #: contents/ui/components/ShareUsageWindow.qml
 msgid "Unavailable"
 msgstr ""
@@ -240,6 +226,11 @@ msgstr ""
 
 #: contents/ui/components/AnalysisSummary.qml
 msgid "No baseline"
+msgstr ""
+
+#: contents/ui/components/AnalysisSummary.qml
+msgid ""
+"Comparison excludes today and needs 14 complete days plus a scan from today."
 msgstr ""
 
 #: contents/ui/components/AnalysisSummary.qml
@@ -278,14 +269,6 @@ msgid "Last 7 days vs previous 7"
 msgstr ""
 
 #: contents/ui/components/AnalysisSummary.qml
-msgid ""
-"Comparison excludes today and needs 14 complete days plus a scan from today."
-msgstr ""
-
-#: contents/ui/components/CompactRepresentation.qml
-msgid "Open %1"
-msgstr ""
-
 #: contents/ui/components/CompactRepresentation.qml
 #: contents/ui/components/CostText.qml
 #: contents/ui/components/InteractiveChart.qml
@@ -295,6 +278,10 @@ msgstr ""
 #: contents/ui/configProviders.qml contents/ui/main.qml
 #: scripts/smoke/Capture.qml
 msgid "%1: %2"
+msgstr ""
+
+#: contents/ui/components/CompactRepresentation.qml
+msgid "Open %1"
 msgstr ""
 
 #: contents/ui/components/CopyableValue.qml
@@ -630,6 +617,10 @@ msgid ""
 msgstr ""
 
 #: contents/ui/components/FullRepresentation.qml
+msgid "No provider data"
+msgstr ""
+
+#: contents/ui/components/FullRepresentation.qml
 msgid "Open Providers in widget settings to enable or set up a provider."
 msgstr ""
 
@@ -640,8 +631,7 @@ msgstr[0] ""
 msgstr[1] ""
 
 #: contents/ui/components/FullRepresentation.qml
-#: contents/ui/components/ProviderHeader.qml
-#: contents/ui/components/SpendView.qml contents/ui/configGeneral.qml
+#: contents/ui/components/ProviderHeader.qml contents/ui/configGeneral.qml
 #: contents/ui/main.qml
 msgid "Refresh"
 msgstr ""
@@ -811,7 +801,6 @@ msgid "Peak daily usage"
 msgstr ""
 
 #: contents/ui/components/InteractiveChart.qml
-#: contents/ui/components/SpendView.qml
 msgid "Use the arrow keys to inspect chart points"
 msgstr ""
 
@@ -2045,7 +2034,11 @@ msgid "90 days"
 msgstr ""
 
 #: contents/ui/components/SpendView.qml
-msgid "Local history, current limits and optional AI analysis"
+msgid "Show all providers"
+msgstr ""
+
+#: contents/ui/components/SpendView.qml
+msgid "Local history and optional AI analysis"
 msgstr ""
 
 #: contents/ui/components/SpendView.qml
@@ -2062,10 +2055,6 @@ msgstr ""
 
 #: contents/ui/components/SpendView.qml
 msgid "Provider filter"
-msgstr ""
-
-#: contents/ui/components/SpendView.qml
-msgid "Limits"
 msgstr ""
 
 #: contents/ui/components/SpendView.qml
@@ -2098,7 +2087,15 @@ msgid ""
 msgstr ""
 
 #: contents/ui/components/SpendView.qml
+msgid "No history for this provider"
+msgstr ""
+
+#: contents/ui/components/SpendView.qml
 msgid "No local token or cost history"
+msgstr ""
+
+#: contents/ui/components/SpendView.qml
+msgid "Choose another provider or show all providers."
 msgstr ""
 
 #: contents/ui/components/SpendView.qml
@@ -2111,6 +2108,10 @@ msgstr ""
 
 #: contents/ui/components/SpendView.qml
 msgid "Activity heatmap"
+msgstr ""
+
+#: contents/ui/components/SpendView.qml
+msgid "Use the arrow keys to inspect days"
 msgstr ""
 
 #: contents/ui/components/SpendView.qml
@@ -4221,6 +4222,10 @@ msgstr ""
 
 #: contents/ui/main.qml
 msgid "No usage yet"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Limits not available"
 msgstr ""
 
 #: contents/ui/main.qml scripts/smoke/Capture.qml

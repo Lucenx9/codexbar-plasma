@@ -1,5 +1,7 @@
 import QtQuick
 import QtTest
+import "../contents/ui/ProviderOrder.js" as ProviderOrder
+import "../contents/ui/CostCurrency.mjs" as CostCurrency
 
 TestCase {
     id: testCase
@@ -55,6 +57,7 @@ TestCase {
         readonly property bool costHistoryShowsTokens: costHistoryMetric === "tokens"
         property var dailyPoints: []
         property var costs: []
+        property string providerOrderRaw: ""
         property var sessions: []
         readonly property var presentedSessions: sessions
         property bool sessionsLoading: false
@@ -66,16 +69,16 @@ TestCase {
         function spendProviderCosts() {
             var items = costs.length > 0 ? costs : dailyPoints.length > 0 ? [{provider: "codex"}] : [];
             return items.map(function(item) {
-                return Object.assign({}, item, {daily: dailyPoints.map(function(point) {
+                return Object.assign({}, item, {daily: item.daily || dailyPoints.map(function(point) {
                     return {label: point.label, cost: point.value, tokens: point.value, currency: "USD"};
                 })});
             });
         }
         function presentedSpendProviderCosts(items) {
-            return items;
+            return ProviderOrder.orderedItems(items, providerOrderRaw);
         }
-        function spendCurrency() {
-            return "USD";
+        function spendCurrency(items) {
+            return CostCurrency.spendCurrency(items);
         }
         function spendTotalLine() {
             return "Synthetic local history";
@@ -168,6 +171,7 @@ TestCase {
         applet.costHistoryPeriod = "";
         applet.costHistoryMetric = "cost";
         applet.costs = [];
+        applet.providerOrderRaw = "";
         applet.sessions = [];
         applet.costErrorText = "";
         applet.sessionsErrorText = "";
@@ -389,6 +393,72 @@ TestCase {
         verify(value.mapToItem(scroll, 0, 0).y < scroll.availableHeight / 2, "Short provider totals must stay near the top of the body");
     }
 
+    function test_selectionKeepsGeometryAndReturnsVisibleFocus() {
+        applet.dailyPoints = [day("2026-10-16", 2), day("2026-10-17", 3)];
+        var view = createView("SpendView");
+        if (!view) return;
+        var chart = findChild(view, "analysisHistoryChart");
+        var y = chart.mapToItem(view, 0, 0).y;
+        chart.focusPlot(Qt.TabFocusReason);
+        keyClick(Qt.Key_End);
+        verify(waitForPolish(view));
+        compare(chart.mapToItem(view, 0, 0).y, y);
+        var reset = findChild(view, "analysisAllDaysButton");
+        reset.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Space);
+        compare(chart.selectedIndex, -1);
+        verify(!reset.activeFocus);
+        keyClick(Qt.Key_Home);
+        compare(chart.selectedIndex, 0);
+        keyClick(Qt.Key_Escape);
+        compare(chart.selectedIndex, -1);
+    }
+
+    function test_assistantAndKeyboardUseOneScrollViewport() {
+        applet.dailyPoints = [day("2026-10-16", 2), day("2026-10-17", 3)];
+        var view = createView("SpendView");
+        if (!view) return;
+        var scroll = findChild(view, "spendHistoryScroll");
+        var toggle = findChild(view, "analysisAssistantToggle");
+        var height = scroll.height;
+        toggle.forceActiveFocus(Qt.TabFocusReason);
+        tryVerify(function() {
+            var pos = toggle.mapToItem(scroll, 0, 0);
+            return pos.y >= 0 && pos.y + toggle.height <= scroll.height + 1;
+        });
+        keyClick(Qt.Key_Space);
+        verify(waitForPolish(view));
+        compare(scroll.height, height);
+        var assistant = findChild(view, "analysisAssistant");
+        verify(assistant.answerExpanded);
+        tryVerify(function() {
+            var top = assistant.mapToItem(scroll, 0, 0).y;
+            return top >= -1 && top + Math.min(assistant.height, scroll.height) <= scroll.height + 1;
+        }, 1000, "Opening the assistant reveals its content after layout, not only its toggle: "
+            + JSON.stringify({top: assistant.mapToItem(scroll, 0, 0).y, height: assistant.height,
+                viewport: scroll.height, available: scroll.availableHeight, content: scroll.contentItem.contentHeight,
+                offset: scroll.contentItem.contentY}));
+    }
+
+    function test_providerFilterRetainsVisibleFocusAfterRowRebuild() {
+        applet.costs = [{provider: "codex", totals: {cost: 2, tokens: 10, currency: "USD"}},
+            {provider: "claude", totals: {cost: 3, tokens: 20, currency: "USD"}}];
+        var view = createView("SpendView");
+        if (!view) return;
+        var card = findItem(view, function(item) { return item.modelData && item.modelData.provider === "claude" && item.checked !== undefined; });
+        verify(card !== null);
+        card.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Space);
+        compare(view.selectedProvider, "claude");
+        verify(findChild(view, "analysisProviderFilter").activeFocus);
+        applet.costs = [applet.costs[0]];
+        var empty = findItem(view, function(item) { return item.plainText === "No history for this provider"; });
+        verify(empty !== null && empty.visible);
+        empty.helpfulAction.trigger();
+        compare(view.selectedProvider, "");
+        verify(findChild(view, "analysisProviderFilter").activeFocus);
+    }
+
     function test_providerFilterSurvivesRangeReplacement() {
         var codex = {provider: "codex", totals: {cost: 2, tokens: 100, currency: "USD"}, valueMode: "plain"};
         var claude = {provider: "claude", totals: {cost: 3, tokens: 200, currency: "USD"}, valueMode: "plain"};
@@ -417,6 +487,54 @@ TestCase {
         compare(applet.refreshes, 0);
     }
 
+    function test_providerPickKeepsComboInSyncWithCardAndReset() {
+        applet.costs = [{provider: "codex", totals: {cost: 2, tokens: 10, currency: "USD"}},
+            {provider: "claude", totals: {cost: 3, tokens: 20, currency: "USD"}}];
+        var view = createView("SpendView");
+        if (!view) return;
+        var filter = findChild(view, "analysisProviderFilter");
+        filter.incrementCurrentIndex();
+        filter.activated(filter.currentIndex);
+        compare(view.selectedProvider, "codex");
+        var card = findItem(view, function(item) { return item.modelData && item.modelData.provider === "codex" && item.checked !== undefined; });
+        card.clicked();
+        compare(view.selectedProvider, "");
+        compare(filter.currentIndex, 0);
+        filter.incrementCurrentIndex();
+        filter.activated(filter.currentIndex);
+        applet.costs = [applet.costs[1]];
+        var empty = findItem(view, function(item) { return item.plainText === "No history for this provider"; });
+        empty.helpfulAction.trigger();
+        compare(view.selectedProvider, "");
+        compare(filter.currentIndex, 0);
+    }
+
+    function test_providerOrderDoesNotChangeChartCurrency() {
+        function cost(provider, currency, amount, tokens) {
+            var day = {label: "2026-11-13", cost: amount, tokens: tokens, currency: currency};
+            return {provider: provider, currency: currency, totals: day, daily: [day]};
+        }
+        applet.costs = [cost("claude", "USD", 3, 100), cost("codex", "EUR", 90, 200),
+            cost("gemini", "USD", 7, 300)];
+        applet.providerOrderRaw = "codex,gemini,claude";
+        var view = createView("SpendView");
+        if (!view) return;
+        var chart = findItem(view, function(item) { return item.lineSeries !== undefined; });
+        compare(view.spendCurrency, "USD");
+        compare(view.dailyPoints[0].value, 10);
+        compare(chart.lineSeries.map(function(series) { return series.provider; }), ["gemini", "claude"]);
+        compare(chart.lineSeries.map(function(series) { return series.points[0].value; }), [7, 3]);
+        verify(chart.axisLabels[0].indexOf("$") === 0);
+        applet.providerOrderRaw = "claude,codex,gemini";
+        compare(chart.lineSeries.map(function(series) { return series.provider; }), ["claude", "gemini"]);
+        compare(view.dailyPoints[0].value, 10);
+        applet.providerOrderRaw = "codex,gemini,claude";
+        applet.costHistoryMetric = "tokens";
+        compare(view.dailyPoints[0].value, 600);
+        compare(chart.lineSeries.map(function(series) { return series.provider; }), ["codex", "gemini", "claude"]);
+        compare(chart.lineSeries.map(function(series) { return series.points[0].value; }), [200, 300, 100]);
+    }
+
     function spendChart(points) {
         applet.dailyPoints = points;
         var view = createView("SpendView");
@@ -439,6 +557,7 @@ TestCase {
             { tag: "older-day-arrives", points: [day("2026-10-15", 1), day("2026-10-16", 2), day("2026-10-17", 9)] },
             { tag: "older-day-expires", points: [day("2026-10-17", 9)] },
             { tag: "selected-day-disappears", points: [day("2026-10-16", 2), day("2026-10-18", 4)], missing: true },
+            { tag: "selected-day-duplicated", points: [day("2026-10-16", 2), day("2026-10-17", 3), day("2026-10-17", 4)], missing: true },
             { tag: "empty-history", points: [], missing: true }
         ];
     }

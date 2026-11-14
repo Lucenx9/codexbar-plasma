@@ -334,7 +334,6 @@ msgstr "Instalar y usar la CLI"
 msgid "Plasma could not run '%1'. Install or reuse a private official CLI for this widget and use it immediately. If your CLI is installed elsewhere, set its path in Settings > Diagnostics."
 msgstr "Plasma no pudo ejecutar «%1». Instale o reutilice una copia privada de la CLI oficial para este widget y úsela de inmediato. Si su CLI está instalada en otra ubicación, establezca su ruta en Ajustes > Diagnóstico."
 
-#: contents/ui/components/AnalysisLimits.qml
 #: contents/ui/components/FullRepresentation.qml
 msgid "No provider data"
 msgstr "No hay datos de proveedores"
@@ -3337,7 +3336,7 @@ msgstr "Cuenta oculta"
 msgid "No usage yet"
 msgstr "Aún no hay uso"
 
-#: contents/ui/components/AnalysisLimits.qml contents/ui/main.qml
+#: contents/ui/main.qml
 msgid "Limits not available"
 msgstr "Límites no disponibles"
 
@@ -4427,14 +4426,6 @@ msgstr ""
 "generación. Nunca se envían nombres de cuentas, proyectos, rutas ni "
 "instrucciones."
 
-#: contents/ui/components/AnalysisLimits.qml
-msgid ""
-"Current limits have different capacities and reset windows. Their "
-"percentages are not additive."
-msgstr ""
-"Los límites actuales tienen distintas capacidades y períodos de "
-"restablecimiento. Sus porcentajes no se suman."
-
 #: contents/ui/components/AnalysisModels.qml
 msgid "Models and token composition"
 msgstr "Modelos y composición de tokens"
@@ -4452,8 +4443,8 @@ msgid "Last 7 days vs previous 7"
 msgstr "Últimos 7 días frente a los 7 anteriores"
 
 #: contents/ui/components/SpendView.qml
-msgid "Local history, current limits and optional AI analysis"
-msgstr "Historial local, límites actuales y análisis de IA opcional"
+msgid "Local history and optional AI analysis"
+msgstr "Historial local y análisis de IA opcional"
 
 #: contents/ui/components/SpendView.qml
 msgid "Compact analysis"
@@ -4466,10 +4457,6 @@ msgstr "Ampliar análisis"
 #: contents/ui/components/SpendView.qml
 msgid "Provider filter"
 msgstr "Filtro de proveedores"
-
-#: contents/ui/components/SpendView.qml
-msgid "Limits"
-msgstr "Límites"
 
 #: contents/ui/components/SpendView.qml
 msgid "Providers on %1"
@@ -4546,3 +4533,19 @@ msgstr ""
 #: contents/ui/components/AnalysisSummary.qml
 msgid "Comparison excludes today and needs 14 complete days plus a scan from today."
 msgstr "La comparación excluye hoy y requiere 14 días completos y un análisis realizado hoy."
+
+#: contents/ui/components/SpendView.qml
+msgid "No history for this provider"
+msgstr "No hay historial para este proveedor"
+
+#: contents/ui/components/SpendView.qml
+msgid "Choose another provider or show all providers."
+msgstr "Elija otro proveedor o muestre todos los proveedores."
+
+#: contents/ui/components/SpendView.qml
+msgid "Show all providers"
+msgstr "Mostrar todos los proveedores"
+
+#: contents/ui/components/SpendView.qml
+msgid "Use the arrow keys to inspect days"
+msgstr "Use las teclas de flecha para examinar los días"

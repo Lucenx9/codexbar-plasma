@@ -13,15 +13,39 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 ### Changed
 
 - Replace the separate AI Insights card and page with guided analysis inside
-  Usage & Spend. Add provider filters, stacked daily bars, day-specific provider
-  and model details, complete-week comparisons (also in privacy mode), current
-  limits, and an optional wider layout. AI can summarize usage, explain weekly
+  Usage & Spend. Add provider filters, daily provider lines, day-specific provider
+  and model details, complete-week comparisons (also in privacy mode), and an
+  optional wider layout. AI can summarize usage, explain weekly
   changes or headroom, and suggest evidence to investigate, using the existing
   aggregated-data boundary. Provider filters survive range changes, weekly
   changes retain sub-cent precision, and scheduled generation preserves guided
   answers while the underlying evidence is unchanged.
 
 ### Fixed
+
+- Keep Usage & Spend day selection stable, restore visible keyboard focus after
+  filtering or clearing a day, and reveal focused controls in one shared scroll
+  area with the optional assistant. Confine pointer previews to the chart, keep
+  RTL axes visible, distinguish sub-cent spend from zero, strengthen heatmap
+  focus, and retain legacy labelled history. Adapt filters and summaries to
+  enlarged text and distinguish an empty provider filter from missing history.
+
+- Keep aggregate daily chart readouts unavailable when an eligible provider has
+  duplicate records for that date, matching its line and day details. Clear a
+  pinned day that becomes ambiguous after a refresh. Validate all 256 supported
+  snapshots even beyond the chart's 128-series limit. Keep the provider dropdown
+  synchronized after card selections, and preserve line contrast over fills.
+- Keep chart lines in the aggregate currency when provider tabs or saved order
+  place a different-currency provider first; presentation order no longer
+  changes the amounts plotted against the axis.
+
+- Keep Usage & Spend summary values aligned with wrapped labels and show full
+  comparison status text. Show history requirements for unavailable comparisons
+  and give expanded charts more height. Draw smooth provider lines with subtle
+  fills, readable scales, and gaps for missing days; keep provider-page bars.
+  Keep current quotas in Overview and
+  provider details instead of duplicating them in an analysis Limits view;
+  the assistant opens directly when history is disabled.
 
 - Process local cost history in the background to reduce popup stalls on long
   histories. Keep loading active until results are ready and discard superseded

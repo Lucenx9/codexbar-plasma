@@ -1,12 +1,48 @@
 import QtQuick
 import QtTest
 import "../contents/ui/UsageAnalysis.js" as Analysis
-import "../contents/ui/ChartStack.mjs" as Chart
+import "../contents/ui/AnalysisAmounts.mjs" as Display
+import "../contents/ui/ChartLines.mjs" as Chart
 import "../contents/ui/PrivacyPresentation.js" as Privacy
 
 TestCase {
     name: "UsageAnalysis"
     readonly property double now: new Date(2026, 10, 13, 12).getTime()
+
+    function test_smallAmountsAndScalePrecision() {
+        var format = {group: ".", decimal: ","}
+        compare(Display.metricText(format, 0.003, "USD", false), "< $0,01")
+        compare(Display.metricText(format, 0, "USD", false), "$0,00")
+        compare(Display.metricText(format, "0.003", "USD", false), "-")
+        compare(Display.metricText(format, 0.01, "EUR", false), "EUR 0,01")
+        compare(Display.axisText(format, 0.005, {step: 0.0025, currency: "USD", showsTokens: false}), "$0,0050")
+        compare(Display.axisText(format, 0.0025, {step: 0.0025, currency: "USD", showsTokens: false}), "$0,0025")
+        compare(Display.axisText(format, 20000, {step: 10000, currency: "USD", showsTokens: false}), "$20.000")
+        verify(Display.axisText(format, Number.MIN_VALUE, {step: Number.MIN_VALUE, currency: "USD", showsTokens: false}).indexOf("e-") > 0)
+        compare(Display.axisText(format, 120000, {step: 60000, currency: "USD", showsTokens: true}), "120K")
+        var cost = snapshot("codex", "USD", 0.003, 0.003)
+        var points = Analysis.dailyPoints(format, [cost], false)
+        compare(points[0].displayValue, "< $0,01")
+        compare(Analysis.providerLines(format, [cost], points, false)[0].points[0].displayValue, "< $0,01")
+    }
+
+    function test_legacySequenceRemainsInspectable() {
+        var cost = snapshot("codex", "USD", 1, 1)
+        cost.daily = [{label: "Mon", cost: 2, tokens: 20, currency: "USD"},
+            {label: "Tue", cost: 3, tokens: 30, currency: "USD"}]
+        var points = Analysis.dailyPoints(null, [cost], false)
+        compare(points.length, 2)
+        compare(Analysis.hasCalendarHistory(points), false)
+        compare(points[0].label, "Mon")
+        compare(points[0].displayValue, "$2.00")
+        compare(Analysis.dayCosts([cost], "Tue")[0].totals.cost, 3)
+        cost.daily.push({label: "2026-11-13", cost: 4, currency: "USD"})
+        points = Analysis.dailyPoints(null, [cost], false)
+        compare(points.length, 3)
+        compare(Analysis.hasCalendarHistory(points), false)
+        cost.daily = [{label: "2026-02-30", cost: 2, currency: "USD"}]
+        compare(Analysis.dailyPoints(null, [cost], false).length, 0)
+    }
 
     function snapshot(provider, currency, current, previous) {
         var daily = []
@@ -40,6 +76,31 @@ TestCase {
         cost.daily.push(cost.daily[1])
         compare(Analysis.dayCosts([cost], "2026-11-12")[0].totals.cost, null)
         compare(Analysis.modelRows([cost], "2026-11-12", false).rows.length, 0)
+    }
+
+    function test_ambiguityBeyondRenderedProviders_data() {
+        return [{tag: "129-cost", count: 129, tokens: false, foreign: false, expected: null},
+            {tag: "256-tokens", count: 256, tokens: true, foreign: false, expected: null},
+            {tag: "129-foreign-cost", count: 129, tokens: false, foreign: true, expected: 128},
+            {tag: "129-foreign-tokens", count: 129, tokens: true, foreign: true, expected: null},
+            {tag: "outside-snapshot-bound", count: 257, tokens: false, foreign: false, expected: 256}]
+    }
+
+    function test_ambiguityBeyondRenderedProviders(data) {
+        var costs = []
+        for (var i = 0; i < data.count; i++) {
+            var currency = data.foreign && i === data.count - 1 ? "EUR" : "USD"
+            var day = {label: "2026-11-13", cost: 1, tokens: 1, currency: currency}
+            costs.push({provider: "provider-" + i, currency: currency, totals: day, daily: [day]})
+        }
+        var last = costs[costs.length - 1]
+        last.daily.push(last.daily[0])
+        var original = JSON.stringify(costs)
+        var points = Analysis.dailyPoints(null, costs, data.tokens)
+        compare(points.length, 1)
+        compare(points[0].value, data.expected)
+        compare(Analysis.providerLines(null, costs, points, data.tokens).length, 128)
+        compare(JSON.stringify(costs), original)
     }
 
     function test_comparisonRequiresCompleteCompatibleEvidence() {
@@ -103,36 +164,133 @@ TestCase {
         compare(Analysis.comparison([cost], false, now), null)
     }
 
-    function test_stacksKeepCompatibleMoneyAndAllTokens() {
-        var usd = snapshot("codex", "USD", 2, 1)
-        var eur = snapshot("claude", "EUR", 5, 1)
-        var points = Analysis.dailyPoints(null, [usd, eur], false)
-        verify(points.length > 0)
-        compare(points[0].segments.length, 1)
-        compare(points[0].segments[0].provider, "codex")
-        compare(points[0].segments[0].value, points[0].value)
-        points = Analysis.dailyPoints(null, [usd, eur], true)
-        compare(points[0].segments.length, 2)
-        var segments = Chart.stackedBarSegments(points[0], 100, 100)
-        compare(segments.length, 2)
-        compare(segments[0].height, 50)
-        compare(segments[1].baseline, 50)
-        compare(segments[1].rounded, true)
+    function test_linesKeepCompatibleMoneyAndAllTokens() {
+        var costs = [snapshot("codex", "USD", 2, 1), snapshot("claude", "EUR", 5, 1)]
+        var points = Analysis.dailyPoints(null, costs, false)
+        var lines = Analysis.providerLines(null, costs, points, false)
+        compare(lines.length, 1)
+        compare(lines[0].provider, "codex")
+        compare(lines[0].points[0].value, points[0].value)
+        lines = Analysis.providerLines(null, costs, points, true)
+        compare(lines.length, 2)
+        compare(Chart.domain(lines).maximum, 120)
+        compare(Analysis.dailyPoints(null, costs, true)[0].value, 200)
     }
 
-    function test_stackRejectsAmbiguousAndInvalidSplits() {
-        var point = {value: 10, segments: [{provider: "codex", value: 9}]}
-        compare(Chart.stackedBarSegments(point, 100, 100).length, 0)
-        point.segments[0].value = "10"
-        compare(Chart.stackedBarSegments(point, 100, 100).length, 0)
-        point.segments[0].value = Infinity
-        compare(Chart.stackedBarSegments(point, 100, 100).length, 0)
-        compare(Chart.stackedBarSegments(null, 100, 100).length, 0)
-        var cost = snapshot("codex", "USD", 2, 1)
+    function test_linesKeepMissingDuplicateAndZeroDaysDistinct() {
+        var cost = snapshot("codex", "USD", 0, 1)
         cost.daily.push(cost.daily[0])
+        cost.daily = cost.daily.filter(function(day) { return day.label !== "2026-11-11" })
+        var original = JSON.stringify(cost)
         var points = Analysis.dailyPoints(null, [cost], false)
-        var duplicate = points.filter(function(point) { return point.label === cost.daily[0].label })[0]
-        compare(duplicate.segments.length, 0)
+        var lines = Analysis.providerLines(null, [cost], points, false)
+        var values = ({})
+        lines[0].points.forEach(function(point) { values[point.label] = point.value })
+        compare(values["2026-11-13"], null)
+        compare(points.filter(function(p) { return p.label === "2026-11-13" })[0].value, null)
+        compare(values["2026-11-12"], 0)
+        compare(values["2026-11-11"], null)
+        compare(points.filter(function(p) { return p.label === "2026-11-11" })[0].value, null)
+        compare(JSON.stringify(cost), original)
+        cost.daily[1].cost = null
+        lines = Analysis.providerLines(null, [cost], points, false)
+        compare(lines[0].points.filter(function(p) { return p.label === "2026-11-12" })[0].value, null)
+    }
+
+    function test_dailyTotalsRejectProviderDuplicates_data() {
+        return [
+            {tag: "single-cost", tokens: false, second: false, foreign: false, duplicate: true, expected: null},
+            {tag: "duplicate-overflow", tokens: false, second: false, foreign: false, duplicate: true, overflow: true, expected: null},
+            {tag: "single-tokens", tokens: true, second: false, foreign: false, duplicate: true, expected: null},
+            {tag: "shared-day-cost", tokens: false, second: true, foreign: false, duplicate: false, expected: 5},
+            {tag: "shared-day-tokens", tokens: true, second: true, foreign: false, duplicate: false, expected: 50},
+            {tag: "ambiguous-subtotal", tokens: false, second: true, foreign: false, duplicate: true, expected: null},
+            {tag: "foreign-money", tokens: false, second: true, foreign: true, duplicate: true, expected: 2},
+            {tag: "foreign-tokens", tokens: true, second: true, foreign: true, duplicate: true, expected: null}
+        ]
+    }
+
+    function test_dailyTotalsRejectProviderDuplicates(data) {
+        var first = snapshot("codex", "USD", 2, 1)
+        first.daily = [{label: "2026-11-13", cost: 2, tokens: 20, currency: "USD"}]
+        if (data.overflow) first.daily[0].cost = Number.MAX_VALUE
+        var costs = [first]
+        if (data.second) {
+            var currency = data.foreign ? "EUR" : "USD"
+            var second = snapshot("claude", currency, 3, 1)
+            second.daily = [{label: "2026-11-13", cost: 3, tokens: 30, currency: currency}]
+            costs.push(second)
+        }
+        if (data.duplicate) costs[costs.length - 1].daily.push(costs[costs.length - 1].daily[0])
+        var original = JSON.stringify(costs)
+        var points = Analysis.dailyPoints(null, costs, data.tokens)
+        compare(points.length, 1)
+        compare(points[0].value, data.expected)
+        if (data.expected === null) verify(!points[0].displayValue)
+        var lines = Analysis.providerLines(null, costs, points, data.tokens)
+        if (data.duplicate && !data.second) {
+            compare(lines[0].points[0].value, null)
+            compare(Chart.domain(lines).maximum, 0)
+        }
+        if (data.second) compare(lines[0].points[0].value, data.tokens ? 20 : 2)
+        compare(JSON.stringify(costs), original)
+    }
+
+    function test_calendarAndPathsRejectBadDataAndRespectBounds() {
+        var points = [{label: "2026-11-10", value: 0}, {label: "2026-11-12", value: 8},
+            {label: "2026-11-13", value: 2}]
+        var timeline = Chart.calendarPoints(points)
+        compare(timeline.length, 4)
+        compare(timeline[1].value, null)
+        var paths = Chart.paths(timeline, {width: 100, height: 80, maximum: 8, inset: 4})
+        compare(paths.length, 2)
+        compare(paths[0].length, 1)
+        compare(paths[0][0].y, 76)
+        compare(paths[1].length, 2)
+        compare(paths[1][0].y, 4)
+        verify(paths[1][1].c1.y > paths[1][0].y)
+        verify(paths[1][1].c2.y < paths[1][1].y)
+        compare(Chart.paths(points, {width: 100, height: 80, maximum: 8, inset: 4}).length, 2)
+        compare(Chart.calendarPoints([{label: "2026-02-30", value: 1}]).length, 0)
+        compare(Chart.domain([{points: [{value: null}, {value: -2}, {value: Infinity}, {value: "9"}]}]).maximum, 0)
+        compare(Chart.calendarPoints([{label: "2020-01-01", value: 1}, {label: "2026-11-13", value: 2}]).length, 365)
+        var zero = Chart.paths([{label: "2026-11-13", value: 0}], {width: 100, height: 80, maximum: 0, inset: 4})
+        compare(zero[0][0].x, 50)
+        compare(zero[0][0].y, 76)
+    }
+
+    function test_lineScaleAddsReadableHeadroomWithoutOverflow() {
+        for (var sample of [{value: 2.46, expected: 3}, {value: 103000, expected: 120000},
+                {value: 0, expected: 0}, {value: Number.MAX_VALUE, expected: Number.MAX_VALUE},
+                {value: Number.MIN_VALUE, expected: Number.MIN_VALUE}]) {
+            compare(Chart.domain([{points: [{value: sample.value}]}]).maximum, sample.expected)
+        }
+    }
+
+    function test_curvesPreserveTrendsWithoutInventingExtrema() {
+        for (var values of [[1, 2, 4], [0, 10, 10, 2, 0], [9, 0, 8, 0, 9], [0, 0, 0], [0, 0.001, 10]]) {
+            var points = values.map(function(value, index) {
+                return {label: "2026-11-" + (10 + index), value: value}
+            })
+            var run = Chart.paths(points, {width: 300, height: 100, maximum: 12, inset: 4})[0]
+            for (var i = 1; i < run.length; i++) {
+                var start = run[i - 1]
+                var end = run[i]
+                for (var step = 0; step <= 100; step++) {
+                    var t = step / 100
+                    var u = 1 - t
+                    var y = u*u*u*start.y + 3*u*u*t*end.c1.y + 3*u*t*t*end.c2.y + t*t*t*end.y
+                    verify(y >= Math.min(start.y, end.y) - 1e-8)
+                    verify(y <= Math.max(start.y, end.y) + 1e-8)
+                }
+            }
+            if (values.length === 3 && values[0] === 1) {
+                verify(run[1].c2.y > run[1].y)
+                verify(run[2].c1.y < run[1].y)
+                fuzzyCompare((run[1].y - run[1].c2.y) / (run[1].x - run[1].c2.x),
+                    (run[2].c1.y - run[1].y) / (run[2].c1.x - run[1].x), 1e-8)
+            }
+        }
     }
 
     function test_modelsStayScopedAndBounded() {

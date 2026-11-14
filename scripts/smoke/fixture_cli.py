@@ -22,7 +22,7 @@ SCENARIOS += ("settings-providers", "settings-providers-narrow", "settings-provi
 SCENARIOS += ("settings-providers-0840", "settings-providers-0840-keys", "settings-providers-0840-cookie")
 SCENARIOS += ("settings-providers-auth", "settings-providers-auth-legacy")
 SCENARIOS += ("settings-providers-keys-soniox", "settings-providers-keys-chatbox")
-SCENARIOS += ("usage-analysis", "usage-analysis-limits", "usage-analysis-narrow", "usage-analysis-models")
+SCENARIOS += ("usage-analysis", "usage-analysis-narrow", "usage-analysis-models")
 SCENARIOS += ("readme-overview", "readme-spend", "readme-sessions", "readme-codex")
 SCENARIOS += ("readme-panel-standard", "readme-panel-minimal")
 SCENARIOS += ("tabs-icon-only",)
@@ -48,7 +48,7 @@ SCENARIOS += ("identified-schema2-subcent", "identified-schema2-zero")
 
 SCENARIOS += ("providers-0740",)
 SCENARIOS += ("empty-providers", "usage-error", "usage-recovery", "cli-missing", "cli-setup", "cli-setup-unusable")
-SCENARIOS += ("ai-insights", "ai-insights-it", "ai-insights-mismatch", "ai-insights-error", "ai-insights-single",
+SCENARIOS += ("ai-insights", "ai-insights-no-history", "ai-insights-it", "ai-insights-mismatch", "ai-insights-error", "ai-insights-single",
               "settings-ai-insights", "settings-ai-insights-narrow", "settings-ai-insights-stored-narrow")
 MAX_SCENARIO_TIMEOUT_SECONDS = 120
 MATRIX_SCENARIOS = ("panel-matrix-one", "panel-matrix-four")

@@ -12,7 +12,6 @@ Controls.Control {
     id: metricToggle
 
     required property var applet
-    property bool selectionActive: true
     readonly property var values: ["cost", "tokens"]
     readonly property int currentIndex: applet.costHistoryShowsTokens ? 1 : 0
 
@@ -50,7 +49,7 @@ Controls.Control {
                 leftPadding: Kirigami.Units.largeSpacing
                 rightPadding: Kirigami.Units.largeSpacing
                 checkable: true
-                checked: metricToggle.selectionActive && metricToggle.currentIndex === index
+                checked: metricToggle.currentIndex === index
                 Accessible.name: modelData
                 // Flat ToolButtons inherit the parent theme. Created while
                 // Usage & Spend was hidden, they kept the unsynced default
@@ -63,7 +62,7 @@ Controls.Control {
                     // A click toggles checked and severs the binding; the applet
                     // setting stays the single source of the checked choice.
                     checked = Qt.binding(function () {
-                        return metricToggle.selectionActive && metricToggle.currentIndex === index;
+                        return metricToggle.currentIndex === index;
                     });
                 }
             }
