@@ -239,7 +239,7 @@ ColumnLayout {
             visible: view.applet.costUsageEnabled !== false
             Layout.fillWidth: true
             Layout.minimumWidth: 0
-            Layout.maximumWidth: view.expandedView && historyControlsRow.columns === 4 ? Kirigami.Units.gridUnit * 18 : Infinity
+            Layout.maximumWidth: historyControlsRow.columns === 4 ? Kirigami.Units.gridUnit * 18 : Infinity
             textRole: "text"
             valueRole: "value"
             model: view.providerOptions
@@ -247,6 +247,45 @@ ColumnLayout {
                 return item.value === view.selectedProvider
             }))
             Accessible.name: i18n("Provider filter")
+            delegate: Controls.ItemDelegate {
+                id: providerOption
+                required property int index
+                required property var modelData
+                readonly property string provider: modelData.value
+                width: providerFilter.width
+                readonly property string plainText: providerFilter.textAt(index)
+                Accessible.name: plainText
+                highlighted: providerFilter.highlightedIndex === index
+                PlainToolTip {
+                    visible: providerOption.hovered && optionLabel.truncated
+                    plainText: providerOption.plainText
+                }
+                contentItem: RowLayout {
+                    LayoutMirroring.enabled: providerOption.mirrored
+                    spacing: Kirigami.Units.smallSpacing
+                    Kirigami.Icon {
+                        source: providerOption.provider ? view.applet.providerIconSource(providerOption.provider) : "view-list-symbolic"
+                        fallback: "view-statistics"
+                        isMask: !providerOption.provider || view.applet.providerIconIsMask(providerOption.provider)
+                        color: providerOption.provider ? view.applet.providerReadableColor(providerOption.provider,
+                            providerOption.highlighted || providerOption.down ? Kirigami.Theme.highlightColor : Kirigami.Theme.backgroundColor)
+                            : optionLabel.color
+                        Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                        Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                        Accessible.ignored: true
+                    }
+                    PlainPlasmaLabel {
+                        id: optionLabel
+                        text: providerOption.plainText
+                        font: providerOption.font
+                        color: providerOption.highlighted || providerOption.down
+                            ? Kirigami.Theme.highlightedTextColor : Kirigami.Theme.textColor
+                        Layout.fillWidth: true
+                        Layout.minimumWidth: 0
+                        elide: Text.ElideRight
+                    }
+                }
+            }
             onActivated: function(index) {
                 view.selectedProvider = view.providerOptions[index].value
                 currentIndex = Qt.binding(function() {
@@ -256,7 +295,7 @@ ColumnLayout {
                 })
             }
         }
-        Item { visible: historyControlsRow.columns === 4; Layout.fillWidth: true; Layout.maximumWidth: view.expandedView ? Infinity : 0 }
+        Item { visible: historyControlsRow.columns === 4; Layout.fillWidth: true }
 
         Components.CostMetricToggle {
             id: metricToggle
@@ -330,15 +369,6 @@ ColumnLayout {
             Components.PlainNote {
                 visible: view.hasMixedCostCurrencies
                 plainText: i18n("The cost subtotal and charts use %1. Providers reporting another currency remain separate below. Token figures include every provider.", view.spendCurrency)
-                type: Kirigami.MessageType.Information
-                Layout.fillWidth: true
-            }
-
-            Components.PlainNote {
-                // Distinguishes "you spent little" from "the local scan has not reached
-                // that far back yet", which otherwise look identical on the chart.
-                visible: view.providerCosts.length > 0 && view.applet.spendHistoryStillBuilding()
-                plainText: i18n("Local history is still being collected, so early days may be incomplete.")
                 type: Kirigami.MessageType.Information
                 Layout.fillWidth: true
             }

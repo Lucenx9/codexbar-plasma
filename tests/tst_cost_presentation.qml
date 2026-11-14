@@ -936,7 +936,6 @@ TestCase {
         compare(CostCurrency.spendCurrency(arrayLike), "USD")
         compare(CostCurrency.spendHasMixedCostCurrencies(arrayLike), false)
         compare(CostPresentation.spendTotals("invalid"), null)
-        compare(CostPresentation.historyStillBuilding("invalid"), false)
     }
 
     function test_modelRowsLetTheCallerWordTheTokenHalf() {
@@ -1861,16 +1860,6 @@ TestCase {
         }
     }
 
-    // A missing flag counts as established, so older CLI payloads do not print
-    // a permanent "still collecting" note.
-    function test_historyStillBuildingOnlyOnAnExplicitFalse() {
-        verify(CostPresentation.historyStillBuilding([{ historyCoverageEstablished: false }]))
-        verify(!CostPresentation.historyStillBuilding([{ historyCoverageEstablished: true }]))
-        verify(!CostPresentation.historyStillBuilding([{}]))
-        verify(!CostPresentation.historyStillBuilding([]))
-        verify(!CostPresentation.historyStillBuilding([null, "stale", 42]))
-    }
-
     function test_malformedSnapshotsDegradeInsteadOfThrowing() {
         var points = CostPresentation.spendDailyPoints(fmt, [
             null,
@@ -1893,7 +1882,6 @@ TestCase {
         var totals = CostPresentation.spendTotals([{ totals: { tokens: "100", currency: "USD" } }])
         compare(totals.tokens, null)
         compare(CostPresentation.spendTotals([null, { totals: { cost: 2, tokens: 40, currency: "USD" } }]).tokens, 40)
-        verify(!CostPresentation.historyStillBuilding([null]))
         compare(CostCurrency.spendCurrency([null]), "USD")
     }
 

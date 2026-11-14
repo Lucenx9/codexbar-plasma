@@ -615,13 +615,6 @@ PlasmoidItem {
         Plasmoid.configuration.costHistoryMetric = safeCostHistoryMetric(metric)
     }
 
-    // The CLI reports whether its local log scan already covers the requested
-    // window; until it does, the earliest bars are short for a scan reason
-    // rather than a spend reason.
-    function spendHistoryStillBuilding() {
-        return CostPresentation.historyStillBuilding(spendProviderCosts())
-    }
-
     function dashboardPartText(part) {
         return costText.dashboardPartText(part)
     }

@@ -92,9 +92,6 @@ TestCase {
         function qualifiedCostValue(value) {
             return value;
         }
-        function spendHistoryStillBuilding() {
-            return false;
-        }
         function privateErrorText(text) {
             return privacyMode ? "Private scan failure" : text;
         }
@@ -563,6 +560,35 @@ TestCase {
         empty.helpfulAction.trigger();
         compare(view.selectedProvider, "");
         compare(filter.currentIndex, 0);
+    }
+
+    function test_providerFilterKeepsWidthAcrossAnalysisModes() {
+        applet.costs = [{provider: "codex", totals: {cost: 2, tokens: 10, currency: "USD"}}];
+        var view = createView("SpendView");
+        if (!view) return;
+        var filter = findChild(view, "analysisProviderFilter");
+        var expand = findChild(view, "analysisExpandButton");
+        view.width = 612;
+        verify(waitForPolish(view));
+        filter.activated(1);
+        var compactWidth = filter.width;
+        compare(filter.popup.width, compactWidth);
+        expand.clicked();
+        view.width = 900;
+        verify(waitForPolish(view));
+        compare(filter.width, compactWidth);
+        compare(filter.popup.width, compactWidth);
+        compare(view.selectedProvider, "codex");
+        expand.clicked();
+        view.width = 612;
+        verify(waitForPolish(view));
+        compare(filter.width, compactWidth);
+        compare(filter.popup.width, compactWidth);
+        view.width = 320;
+        verify(waitForPolish(view));
+        verify(filter.width <= view.width);
+        compare(filter.popup.width, filter.width);
+        compare(view.selectedProvider, "codex");
     }
 
     function test_providerOrderDoesNotChangeChartCurrency() {

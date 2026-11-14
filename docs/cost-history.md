@@ -201,8 +201,10 @@ figure. A single measurable day remains selectable to inspect its models.
 payload; the selected metric also controls bar scaling. Metric and day selection
 must not add CLI calls. Usage & Spend provider totals put the selected metric
 first and keep the other figure beneath it, preserving currency, cost qualifiers,
-and explicit unavailable values. `historyCoverageIsEstablished` controls the collecting
-history notice; a missing flag counts as established for legacy payloads.
+and explicit unavailable values. The generic collecting-history banner is not
+shown in Usage & Spend. `historyCoverageIsEstablished` still qualifies incomplete
+provider amounts and comparison eligibility; legacy payloads without the flag
+remain supported.
 
 `ProviderNormalizer.normalizeCostTrustMetadata` bounds `coverage`, `provenance`,
 and the official `incompleteRequestCount`. `CostTrust.costTrustSummary`

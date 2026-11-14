@@ -1488,13 +1488,6 @@ msgstr ""
 "alle Anbieter."
 
 #: contents/ui/components/SpendView.qml
-msgid ""
-"Local history is still being collected, so early days may be incomplete."
-msgstr ""
-"Der lokale Verlauf wird noch erfasst. Die ersten Tage können daher "
-"unvollständig sein."
-
-#: contents/ui/components/SpendView.qml
 msgid "No daily token history is available for this range."
 msgstr "Für diesen Zeitraum ist kein täglicher Tokenverlauf verfügbar."
 

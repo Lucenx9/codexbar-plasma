@@ -169,18 +169,6 @@ export function spendTotals(costs) {
     }
 }
 
-// The CLI reports whether its local log scan already covers the requested
-// window; until it does, the earliest bars are short for a scan reason rather
-// than a spend reason. A missing flag counts as established.
-export function historyStillBuilding(costs) {
-    var items = Array.isArray(costs) ? costs : []
-    return items.some(function(snapshot) {
-        if (!snapshot) return false
-        if (typeof snapshot !== "object") return false
-        return snapshot.historyCoverageEstablished === false
-    })
-}
-
 export function historyRow(item, maximum, showsTokens, labels) {
     var magnitude = Math.max(0, CostAmounts.metricValue(item, showsTokens))
     return {

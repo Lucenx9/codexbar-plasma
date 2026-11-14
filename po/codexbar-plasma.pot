@@ -2079,11 +2079,6 @@ msgid ""
 msgstr ""
 
 #: contents/ui/components/SpendView.qml
-msgid ""
-"Local history is still being collected, so early days may be incomplete."
-msgstr ""
-
-#: contents/ui/components/SpendView.qml
 msgid "No daily token history is available for this range."
 msgstr ""
 

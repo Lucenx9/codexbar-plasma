@@ -633,7 +633,6 @@ class CostTest(unittest.TestCase):
         for name, call in (
             ("costHistoryWindowLabel", "return costText.costHistoryWindowLabel(item, requestedHistoryDays)"),
             ("costChartPoints", "return CostChart.memoizedChartPoints(memo, costNumberFormat, points, costHistoryShowsTokens)"),
-            ("spendHistoryStillBuilding", "return CostPresentation.historyStillBuilding(spendProviderCosts())"),
         ):
             self.assertTrue(code_contains(function_body(source, name), call), name)
 

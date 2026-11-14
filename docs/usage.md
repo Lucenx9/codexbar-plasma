@@ -332,8 +332,11 @@ work and upstream contract requirements.
   **Compact analysis** restores the stacked layout. Each provider has a colored
   line with a subtle fill, readable scale, and gaps for unavailable days. Hover
   or keyboard inspection shows daily values for each provider. Provider pages
-  retain their bar charts. The provider dropdown filters local analytics
-  and stays selected across range changes, including empty results.
+  retain their bar charts. The provider dropdown shows each provider’s identity
+  icon beside its name and filters local analytics
+  and stays selected across range changes, including empty results. Its width
+  stays stable when expanding or compacting analysis, shrinking only when space
+  is constrained; stacked controls continue to use the available width.
   Clicking a provider row expands its models inline without changing the filter
   or leaving Usage & Spend. Providers can be opened independently.
   Selecting a day scopes provider and model details, while headline
@@ -355,6 +358,8 @@ work and upstream contract requirements.
   unavailable instead of extrapolating, with the history requirements shown below
   the totals. Summary values stay aligned when labels wrap, and comparison
   statuses wrap instead of being truncated. Different currencies are not converted.
+  The generic “local history is still being collected” banner is omitted;
+  missing-data states, pricing qualifications and scan errors remain visible.
   Current quotas and reset windows stay in **Overview** and provider details.
   Refresh updates local history. If both history sources are disabled but AI is
   enabled, this tab opens the assistant directly without history controls.

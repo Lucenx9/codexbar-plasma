@@ -46,7 +46,6 @@ TestCase {
         return i18n.apply(testCase, Array.prototype.slice.call(arguments, 1));
     }
 
-    property bool stillBuilding: true
     property bool mirrored: false
     property var projectCosts: [{
         provider: "codex",
@@ -153,7 +152,6 @@ TestCase {
         function presentedSpendProviderCosts(costs) { return testCase.presentedCosts; }
         function spendCurrency(costs) { return "USD"; }
         function spendTotalLine() { return "Total line"; }
-        function spendHistoryStillBuilding() { return testCase.stillBuilding; }
         function setCostHistoryMetric(metric) { metricSet = metric; }
         function setCostHistoryDays(days) { daysSet = String(days); costHistoryDays = days; costHistoryPeriod = ""; }
         function setCostHistoryPeriod(period) { periodSet = period; costHistoryPeriod = period; }
@@ -884,8 +882,7 @@ class CostSectionTests(unittest.TestCase):
             return item.plainText !== undefined
                 && item.plainText.indexOf("still being collected") >= 0;
         });
-        compare(notices.length, 1);
-        verify(notices[0].visible);
+        compare(notices.length, 0);
         var charts = all.filter(function(item) {
             return item.toString().indexOf("InteractiveChart") >= 0;
         });
