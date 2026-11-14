@@ -600,6 +600,8 @@ ColumnLayout {
 
     RowLayout {
         visible: chart.pointCount > 0
+        LayoutMirroring.enabled: false
+        LayoutMirroring.childrenInherit: true
         Layout.fillWidth: true
         Layout.leftMargin: chart.axisWidth
         spacing: Kirigami.Units.smallSpacing

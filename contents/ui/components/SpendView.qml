@@ -24,7 +24,8 @@ ColumnLayout {
     property var expandedModelProviders: []
     property var providersShowingAllModels: []
     property string modelFocusRestoreProvider: ""
-    signal restoreModelsFocus(string provider)
+    property bool modelFocusRestoreAction: false
+    signal restoreModelsFocus(string provider, bool modelAction)
     readonly property var allProviderCosts: applet.spendProviderCosts()
     readonly property var filterProviderCosts: selectedProvider
         && !allProviderCosts.some(function(item) { return item.provider === selectedProvider })
@@ -63,10 +64,12 @@ ColumnLayout {
         interval: 0
         onTriggered: {
             var provider = view.modelFocusRestoreProvider
+            var modelAction = view.modelFocusRestoreAction
             view.modelFocusRestoreProvider = ""
+            view.modelFocusRestoreAction = false
             if (!view.visible || !provider) return
             if (view.presentedProviderCosts.some(function(item) { return item.provider === provider }))
-                view.restoreModelsFocus(provider)
+                view.restoreModelsFocus(provider, modelAction)
             else
                 providerFilter.forceActiveFocus(Qt.OtherFocusReason)
         }
@@ -75,8 +78,9 @@ ColumnLayout {
     Connections {
         target: spendProviderRepeater
         function onItemRemoved(index: int, item: var) {
-            if (item && item.modelsActionFocused) {
+            if (item && (item.modelsActionFocused || item.providerHeaderFocused)) {
                 view.modelFocusRestoreProvider = item.modelData.provider
+                view.modelFocusRestoreAction = item.modelsActionFocused
                 modelFocusRestore.restart()
             }
         }
@@ -229,7 +233,7 @@ ColumnLayout {
             Layout.alignment: Qt.AlignTop
             icon.name: "document-share"
             Accessible.name: i18n("Share AI usage")
-            enabled: view.providerCosts.length > 0 && !view.applet.costLoading
+            enabled: view.allProviderCosts.length > 0 && !view.applet.costLoading
             onClicked: view.applet.openShareUsage()
             PlainToolTip {
                 parent: shareButton
@@ -604,11 +608,13 @@ ColumnLayout {
                             id: providerGroup
                             required property var modelData
                             readonly property bool modelsActionFocused: modelList.actionFocused
+                            readonly property bool providerHeaderFocused: spendProviderCard.activeFocus
                             Connections {
                                 target: view
-                                function onRestoreModelsFocus(provider: string) {
-                                    if (provider === providerGroup.modelData.provider)
-                                        modelList.restoreActionFocus()
+                                function onRestoreModelsFocus(provider: string, modelAction: bool) {
+                                    if (provider !== providerGroup.modelData.provider) return
+                                    if (modelAction) modelList.restoreActionFocus()
+                                    else spendProviderCard.forceActiveFocus(Qt.TabFocusReason)
                                 }
                             }
                             Layout.fillWidth: true
@@ -767,7 +773,8 @@ ColumnLayout {
                                 }
                                 visible: expanded
                                 Layout.leftMargin: Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing
-                                onRestoreFocusRequested: spendProviderCard.forceActiveFocus(Qt.OtherFocusReason)
+                                Layout.rightMargin: Kirigami.Units.smallSpacing
+                                onRestoreFocusRequested: spendProviderCard.forceActiveFocus(Qt.TabFocusReason)
                             }
                         }
                     }
@@ -896,6 +903,10 @@ ColumnLayout {
                                 case Qt.Key_Return: case Qt.Key_Enter: case Qt.Key_Space:
                                     selectDay(selectedDay, Qt.OtherFocusReason); event.accepted = true; return
                                 case Qt.Key_Escape:
+                                    if (view.selectedDay.length === 0) {
+                                        event.accepted = false
+                                        return
+                                    }
                                     historyChart.selectedIndex = -1
                                     selectedDay = ""
                                     hoveredDay = ""
@@ -934,7 +945,7 @@ ColumnLayout {
                                     text: Qt.locale().standaloneMonthName(modelData.month, Locale.ShortFormat)
                                     font: Kirigami.Theme.smallFont
                                     opacity: view.applet.secondaryTextOpacity
-                                    horizontalAlignment: LayoutMirroring.enabled ? Text.AlignRight : Text.AlignLeft
+                                    horizontalAlignment: Text.AlignLeft
                                     Accessible.ignored: true
                                 }
                             }

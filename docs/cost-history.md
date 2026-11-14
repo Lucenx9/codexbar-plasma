@@ -26,15 +26,19 @@ selected currency and token totals can include all currencies. Provider tab or
 saved ordering is applied after currency selection, so it cannot change the
 money represented by the lines, axis or totals. Hover or keyboard
 inspection reports each provider for the selected day. Provider pages retain bars.
+Chart time runs from oldest on the left to newest on the right in both layout
+directions; endpoint dates follow those coordinates while the value axis mirrors.
 Each provider row expands its own ranked model list inline, initially showing
 three rows. Show more models reveals that provider's remaining bounded rows
 without fetching data. Opening a provider does not change the chart filter or
 switch tabs. Open rows and Show more models choices survive refreshes and day
-selection. Refreshing preserves keyboard focus on the model-list action, or
-returns it to the provider header if that action disappears. If the provider
-disappears, focus returns to the provider filter. The provider dropdown
+selection. Refreshing preserves keyboard focus on the provider header or
+model-list action, returning it to the header if that action disappears. If the
+provider disappears, focus returns to the provider filter. The provider dropdown
 owns chart filtering. Token composition remains in provider details, while
 partial model coverage and excluded-request notices remain visible inline.
+Positive model costs below one cent use the same less-than-one-cent notation as
+provider totals; measured zeros remain zero.
 
 ![Inline provider model breakdowns with synthetic data](codexbar-plasma-models.png)
 
@@ -146,7 +150,9 @@ snapshot without a usable `updatedAt` keeps its Today amounts.
   date/value row below the calendar, without floating tooltips. Clicking a
   measured day, Enter/Space, or the accessibility press action pins the same day
   in the chart and provider details. Arrow keys only inspect; Escape clears the
-  pin and leaves focus in the calendar. Zero days remain selectable, unavailable
+  pin and leaves focus in the calendar. With no pin, Escape propagates to the
+  popup so it can close. Month names align with the start of their span in both
+  reading directions. Zero days remain selectable, unavailable
   slots do not. The selected day has a persistent outline.
 - Global cost and token aggregates that overflow the numeric range remain
   unavailable. An overflowing daily sum has no chart point and keeps an empty

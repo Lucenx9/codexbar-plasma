@@ -12,6 +12,8 @@ TestCase {
     height: 504
 
     property var holders: []
+    property int escaped: 0
+    Keys.onEscapePressed: function(event) { escaped++; event.accepted = true; }
     readonly property string longError: Array(17).join("Synthetic local scan failed. ")
 
     function i18n(text, value, second) {
@@ -249,10 +251,87 @@ TestCase {
         verify(findItem(section, function(item) { return item.text === "Model 4"; }) !== null);
         applet.costs = [Object.assign({}, cost, {models: rows.slice(0, 2)})];
         tryCompare(findChild(view, "analysisProviderToggle-codex"), "activeFocus", true);
+        verify(findChild(view, "analysisProviderToggle-codex").visualFocus);
         applet.costs = [cost];
         findChild(view, "analysisModelsShowMore").forceActiveFocus(Qt.TabFocusReason);
         applet.costs = [{provider: "claude", models: rows, totals: cost.totals}];
         tryCompare(findChild(view, "analysisProviderFilter"), "activeFocus", true);
+    }
+
+    function test_shareUsesAllLoadedProviders() {
+        applet.costs = [{provider: "codex", totals: {cost: 2, currency: "USD"}}];
+        var view = createView("SpendView");
+        if (!view) return;
+        view.selectedProvider = "claude";
+        compare(view.providerCosts.length, 0);
+        var share = findChild(view, "shareUsageButton");
+        verify(share.enabled);
+        applet.costLoading = true;
+        verify(!share.enabled);
+        applet.costLoading = false;
+        applet.costs = [];
+        verify(!share.enabled);
+    }
+
+    function test_calendarEscapeClearsPinThenPropagates() {
+        applet.dailyPoints = Array.from({length: 30}, function(_, index) {
+            return day("2026-10-" + String(index + 1).padStart(2, "0"), index + 1);
+        });
+        var view = createView("SpendView");
+        if (!view) return;
+        view.activityExpanded = true;
+        var calendar = findChild(view, "spendHeatmap");
+        verify(calendar !== null);
+        calendar.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Return);
+        verify(view.selectedDay.length > 0);
+        escaped = 0;
+        keyClick(Qt.Key_Escape);
+        compare(view.selectedDay, "");
+        compare(escaped, 0);
+        keyClick(Qt.Key_Escape);
+        compare(escaped, 1);
+        testCase.forceActiveFocus(Qt.OtherFocusReason);
+    }
+
+    function test_providerHeaderRefreshKeepsFocus_data() {
+        return [{tag: "closed", expanded: false}, {tag: "open", expanded: true}];
+    }
+
+    function test_providerHeaderRefreshKeepsFocus(data) {
+        var cost = {provider: "codex", totals: {cost: 2, tokens: 20, currency: "USD"},
+            models: Array.from({length: 5}, function(_, index) {
+                return {label: "Model " + index, cost: 0.4, currency: "USD"};
+            })};
+        applet.costs = [cost];
+        var view = createView("SpendView");
+        if (!view) return;
+        var card = findChild(view, "analysisProviderToggle-codex");
+        if (data.expanded) card.clicked();
+        card.forceActiveFocus(Qt.TabFocusReason);
+        applet.costs = [Object.assign({}, cost, {totals: {cost: 3, tokens: 30, currency: "USD"}})];
+        card = findChild(view, "analysisProviderToggle-codex");
+        tryCompare(card, "activeFocus", true);
+        compare(card.checked, data.expanded);
+        verify(card.visualFocus);
+        applet.costs = [{provider: "claude", totals: cost.totals}];
+        tryCompare(findChild(view, "analysisProviderFilter"), "activeFocus", true);
+    }
+
+    function test_modelCostPreservesSmallPositiveAmounts_data() {
+        return [{tag: "zero", value: 0, text: "$0.00"},
+            {tag: "sub-cent", value: 0.004, text: "< $0.01"},
+            {tag: "ordinary", value: 12.5, text: "$12.50"}];
+    }
+
+    function test_modelCostPreservesSmallPositiveAmounts(data) {
+        applet.costs = [{provider: "codex", totals: {cost: data.value, currency: "USD"},
+            models: [{label: "Measured model", cost: data.value, currency: "USD"}]}];
+        var view = createView("SpendView");
+        if (!view) return;
+        findChild(view, "analysisProviderToggle-codex").clicked();
+        var models = findChild(view, "analysisModels");
+        verify(findItem(models, function(item) { return item.text === data.text; }) !== null);
     }
 
     function test_openProviderModelsFollowDayAndRefresh() {
