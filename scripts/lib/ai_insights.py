@@ -335,6 +335,10 @@ def http_failure(provider, error):
     body = {}
     try:
         body = bounded_json(error.read(65536) or b"{}")
+    except Failure as failure:
+        if failure.reason != "timeout":
+            raise
+        # The optional body must not erase the received status or Retry-After.
     except (ValueError, RecursionError, OSError, http.client.HTTPException):
         pass
     detail = body.get("error") if isinstance(body, dict) else None

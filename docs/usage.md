@@ -1741,6 +1741,8 @@ still have been billed, and at least until the provider's retry time for a rate
 limit. The generate button can retry at once, except during a provider's rate
 limit, which it then reports. Provider retry times can be a delay in seconds or
 an HTTP date; the rate-limit wait is bounded between five minutes and 24 hours.
+Once received, a rate limit still applies if reading the rest of the response
+times out.
 Turn **Enable AI Insights**
 off to stop all AI activity; the saved insight stays hidden until you enable it
 again or clear it.

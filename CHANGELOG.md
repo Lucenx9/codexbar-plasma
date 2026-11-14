@@ -64,6 +64,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Preserve AI Insights rate limits and HTTP error reasons when reading a slow
+  error response times out, so manual retries still respect `Retry-After`.
+
 - Accept large AI Insights model catalogs during Test connection instead of
   reporting a valid response as unreadable. Keep the 500-model limit and the
   smaller limits for generated answers and wallet replies.
