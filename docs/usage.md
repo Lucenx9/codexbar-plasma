@@ -34,7 +34,11 @@ work and upstream contract requirements.
   stays available. Tiny positive values keep a short visible stroke.
   Rings work in horizontal and vertical panels, with the same provider actions,
   accessible descriptions, incident badges, stale-data dimming, and optional
-  horizontal text. The settings preview follows pending shape changes;
+  horizontal text. Confidence markers sit beside horizontal rings or below
+  vertical rings without covering the quota arcs. Their space stays reserved
+  when readings become exact, keeping neighbouring providers in place. A single
+  horizontal ring uses a compact slot instead of the capsule minimum width.
+  The settings preview follows pending shape changes;
   Apply/Cancel retains its usual meaning. The minimal-content preset keeps the
   selected shape. Restoring defaults selects Capsules. Unknown shape values
   fall back to Capsules without rewriting the saved value.

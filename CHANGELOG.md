@@ -70,6 +70,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep panel-ring confidence markers outside the quota arcs, strengthen empty
+  ring tracks in light and dark themes, and reduce the unused panel space
+  around a single ring without moving providers when confidence changes.
+
 - Keep weekly token comparisons available when pricing is partial but daily
   token counts are complete. Missing counts and excluded incomplete requests
   still make the comparison unavailable.

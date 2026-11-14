@@ -31,14 +31,11 @@ Item {
 
             ShapePath {
                 strokeWidth: 1
-                // Keep a severity tint without turning the empty scale into a
-                // measured arc. The 5.5:1 source target keeps rendered hairlines at
-                // least 3:1 in light/dark pixel checks at fractional radii.
-                strokeColor: ring.meter.warning
-                    ? ThemeContrast.readableAccentColor(
-                        ThemeContrast.interpolateColor(rings.trackColor, ring.meter.color, 0.4),
-                        rings.backgroundColor, rings.textColor, 5.5)
-                    : rings.trackColor
+                // Correct both neutral and warning hairlines for antialiasing.
+                // Keep the empty scale thinner than the measured arc.
+                strokeColor: ThemeContrast.readableAccentColor(ring.meter.warning
+                    ? ThemeContrast.interpolateColor(rings.trackColor, ring.meter.color, 0.4)
+                    : rings.trackColor, rings.backgroundColor, rings.textColor, 5.5)
                 fillColor: "transparent"
                 PathAngleArc {
                     centerX: rings.width / 2

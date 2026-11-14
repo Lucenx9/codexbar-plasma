@@ -16,6 +16,9 @@ Item {
     readonly property bool verticalPanel: applet.verticalFormFactor
     readonly property bool ringMeters: applet.panelMeterShape === "rings"
     readonly property int ringDiameter: Math.max(16, Math.min(48, (verticalPanel ? width : height) - 2))
+    readonly property int ringMarkerWidth: Math.ceil(Math.max(
+        ringMarkerMetrics.advanceWidth("?"), ringMarkerMetrics.advanceWidth("~")))
+    readonly property int ringMarkerHeight: Math.ceil(ringMarkerMetrics.height)
     readonly property bool minimalStyle: applet.minimalPanel === true
     readonly property var meterProviders: applet.compactProviders()
     readonly property bool hasProviderMeters: meterProviders.length > 0
@@ -128,10 +131,12 @@ Item {
     readonly property int meterBarWidth: verticalPanel
         ? Math.max(8, Math.min(meterContentHeight, meterIconSize + meterSpacing))
         : Math.max(Kirigami.Units.iconSizes.smallMedium, meterIconSize) + meterSpacing
-    readonly property int meterWidth: ringMeters ? ringDiameter : verticalPanel
+    readonly property int meterWidth: ringMeters
+        ? ringDiameter + (verticalPanel ? 0 : meterSpacing + ringMarkerWidth) : verticalPanel
         ? Math.max(meterIconSize, meterBarWidth)
         : meterIconSize + meterSpacing * 2 + meterBarWidth
-    readonly property int meterHeight: ringMeters ? ringDiameter : meterIconSize + meterSpacing * 3
+    readonly property int meterHeight: ringMeters
+        ? ringDiameter + (verticalPanel ? meterSpacing + ringMarkerHeight : 0) : meterIconSize + meterSpacing * 3
         + meterBarHeight * 2 + quotaSpacing
     readonly property int metersExtent: meterProviders.length * meterHeight
         + Math.max(0, meterProviders.length - 1) * providerSpacing
@@ -143,7 +148,7 @@ Item {
         inlineTextBudget)
     readonly property int desiredWidth: verticalPanel
         ? Kirigami.Units.iconSizes.small + Kirigami.Units.iconSizes.smallMedium + meterSpacing * 4
-        : Math.min(maximumCompactWidth, Math.max(Kirigami.Units.gridUnit * 4.8,
+        : Math.min(maximumCompactWidth, Math.max(ringMeters ? compactExtent : Kirigami.Units.gridUnit * 4.8,
             compactRow.implicitWidth + Kirigami.Units.smallSpacing * 2))
     readonly property int desiredHeight: verticalPanel
         ? Math.ceil(compactRow.implicitHeight + Kirigami.Units.smallSpacing * 2)
@@ -161,6 +166,13 @@ Item {
     implicitWidth: desiredWidth
     implicitHeight: desiredHeight
     clip: true
+
+    FontMetrics {
+        id: ringMarkerMetrics
+        font.family: Kirigami.Theme.smallFont.family
+        font.pointSize: Kirigami.Theme.smallFont.pointSize
+        font.bold: true
+    }
 
     // Visibility rules can filter a hovered meter out while its provider
     // stays in the roster. Its destroyed MouseArea delivers no reliable
@@ -571,7 +583,7 @@ Item {
 
                     GridLayout {
                         anchors.centerIn: parent
-                        columns: compactRoot.verticalPanel && !compactRoot.ringMeters ? 1 : 3
+                        columns: compactRoot.verticalPanel ? 1 : 4
                         rowSpacing: compactRoot.meterSpacing
                         columnSpacing: compactRoot.meterSpacing
 
@@ -615,8 +627,12 @@ Item {
                             PlainPlasmaLabel {
                                 objectName: "panelConfidenceMarker"
                                 visible: text.length > 0
-                                anchors.bottom: parent.bottom
-                                anchors.right: parent.right
+                                x: compactRoot.ringMeters
+                                    ? (compactRoot.verticalPanel ? (parent.width - width) / 2
+                                        : (LayoutMirroring.enabled ? -width - compactRoot.meterSpacing
+                                            : parent.width + compactRoot.meterSpacing)) : parent.width - width
+                                y: compactRoot.ringMeters && compactRoot.verticalPanel
+                                    ? parent.height + compactRoot.meterSpacing : parent.height - height
                                 text: {
                                     var confidence = compactMeter.quotaRows.map(function(row) {
                                         return Normalizer.usageConfidence(row.dataConfidence)
@@ -624,8 +640,7 @@ Item {
                                     return confidence.indexOf("unknown") >= 0 ? "?"
                                         : confidence.indexOf("estimated") >= 0 ? "~" : ""
                                 }
-                                font.pointSize: Kirigami.Theme.smallFont.pointSize
-                                font.bold: true
+                                font: ringMarkerMetrics.font
                                 color: Kirigami.Theme.textColor
                                 Rectangle {
                                     anchors.fill: parent
@@ -652,6 +667,16 @@ Item {
                                 border.width: 1
                                 border.color: Kirigami.Theme.backgroundColor
                             }
+                        }
+
+                        // Reserve the marker slot even for exact readings, so a
+                        // confidence update cannot shift neighbouring providers.
+                        Item {
+                            visible: compactRoot.ringMeters
+                            Layout.preferredWidth: compactRoot.verticalPanel
+                                ? compactRoot.ringDiameter : compactRoot.ringMarkerWidth
+                            Layout.preferredHeight: compactRoot.verticalPanel
+                                ? compactRoot.ringMarkerHeight : compactRoot.ringDiameter
                         }
 
                         ColumnLayout {
