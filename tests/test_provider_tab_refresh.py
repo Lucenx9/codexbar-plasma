@@ -161,8 +161,7 @@ TestCase {
 
     function test_navigationFeedbackIsImmediate(data) {
         var item = data.overview ? overviewProviderRepeater.itemAt(1) : providerTabRepeater.itemAt(1);
-        verify(waitForPolish(fullRoot));
-        wait(0);
+        verify(waitForPolish(fullRoot.Window.window));
         var focus = item.nextItemInFocusChain(true);
         focus.forceActiveFocus(Qt.TabFocusReason);
         compare(item.color, applet.withAlpha(Kirigami.Theme.focusColor, data.focusAlpha));
