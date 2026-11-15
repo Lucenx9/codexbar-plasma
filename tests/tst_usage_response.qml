@@ -117,7 +117,7 @@ TestCase {
         return [{tag: "empty", value: "", outcome: "empty"},
             {tag: "malformed", value: "{", outcome: "invalidJson"},
             {tag: "null", value: "null", outcome: "noProviders"},
-            {tag: "empty-list", value: "[]", outcome: "noProviders"},
+            {tag: "empty-list", value: "[]", outcome: "emptyRoster"},
             {tag: "scalar", value: "42", outcome: "noProviders"},
             {tag: "object", value: "{}", outcome: "noProviders"},
             {tag: "unsafe-id", value: '{"provider":"__proto__"}', outcome: "noProviders"},
@@ -126,6 +126,19 @@ TestCase {
 
     function test_boundedEnvelopes(data) {
         compare(UsageResponse.response(data.value, "", "", 1, 0).outcome, data.outcome);
+    }
+
+    function test_emptyRosterRequiresSuccessfulUnscopedArray() {
+        var empty = UsageResponse.response("[]", "", "", 1, 0);
+        compare(empty.outcome, "emptyRoster");
+        compare(empty.items, []);
+        compare(empty.message, "");
+        for (var exitCode of [1, 2, 3, 4, 124, null])
+            verify(UsageResponse.response("[]", "", "", 1, exitCode).outcome !== "emptyRoster");
+        compare(UsageResponse.response("[]", "", "codex", 1, 0).outcome, "noProviders");
+        verify(UsageResponse.response("[]", "", "codex", 1, 0, "Work").outcome !== "emptyRoster");
+        for (var invalid of ["null", "{}", "[null]", '[{"provider":"__proto__"}]'])
+            compare(UsageResponse.response(invalid, "", "", 1, 0).outcome, "noProviders");
     }
 
     function test_limitsApplyBeforeReadingRecords() {

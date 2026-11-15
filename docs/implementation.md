@@ -454,6 +454,13 @@ owns checkout setup, delivery, and repository maintenance.
   persists quotas, and coordinates accounts and notifications. `UsageResponse.js`
   contains bounded response classification and per-record normalization; the
   controller supplies the receipt time and localizes failure outcomes.
+  An aggregate usage response of `[]` with exit 0 emits the same empty-roster
+  signal as empty provider discovery, clearing quotas and successful-refresh
+  freshness. Scoped empty replies and nonempty replies without valid records
+  remain failures. Verified with checksum-matched official Linux CLI 0.84.0
+  in an isolated bubblewrap home: disabling Codex and Claude through
+  `config disable`, then running `usage --source api --format json --json-only`,
+  returned `[]` with exit 0. The installed CLI 0.83.0 behaved identically.
   Aggregate provider overrides expand before scheduling scoped commands:
   `both` requests Codex and Claude; `all` discovers every valid roster entry,
   including disabled providers. An empty override retains enabled-only discovery.

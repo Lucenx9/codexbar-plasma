@@ -35,10 +35,18 @@ function records(payload, providerID, receivedAtMs) {
     return {outcome: "success", items: snapshots, message: ""};
 }
 
+function isEmptyRoster(payload, providerID) {
+    return !providerID && Array.isArray(payload) && payload.length === 0;
+}
+
 function response(stdoutValue, stderrValue, providerID, receivedAtMs, exitCode, selectedAccount) {
     var parsed = CliResponse.decode(stdoutValue, stderrValue, exitCode,
         providerID ? Normalizer.maximumAccountSnapshots : Normalizer.maximumProviderSnapshots);
     if (parsed.outcome !== "success") return parsed;
+    // An aggregate [] confirms no providers; a scoped empty reply or rejected
+    // records cannot clear the roster. decode already requires exit 0 for [].
+    if (isEmptyRoster(parsed.payload, providerID))
+        return {outcome: "emptyRoster", items: [], message: ""};
     // Codex exposes visible accounts through --all-accounts, not --account.
     // Match before provider deduplication can discard the selected record.
     if (providerID === "codex" && typeof selectedAccount === "string" && selectedAccount.length > 0) {
