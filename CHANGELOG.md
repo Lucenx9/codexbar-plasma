@@ -70,6 +70,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Tighten panel-ring margins between providers and around confidence markers
+  while retaining stable marker slots and the existing capsule spacing.
+
 - Keep panel-ring confidence markers outside the quota arcs, strengthen empty
   ring tracks in light and dark themes, and reduce the unused panel space
   around a single ring without moving providers when confidence changes.

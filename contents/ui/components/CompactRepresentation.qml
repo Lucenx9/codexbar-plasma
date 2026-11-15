@@ -123,8 +123,9 @@ Item {
                 ? Kirigami.Units.iconSizes.small
                 : (meterContentHeight < Kirigami.Units.iconSizes.medium
                     ? Kirigami.Units.iconSizes.smallMedium : Kirigami.Units.iconSizes.medium)))
-    readonly property int meterSpacing: Kirigami.Units.smallSpacing
-    readonly property int providerSpacing: Kirigami.Units.smallSpacing * 2
+    readonly property int meterSpacing: ringMeters
+        ? Math.max(1, Math.round(Kirigami.Units.smallSpacing / 2)) : Kirigami.Units.smallSpacing
+    readonly property int providerSpacing: ringMeters ? meterSpacing : Kirigami.Units.smallSpacing * 2
     readonly property int quotaSpacing: Math.max(2, Math.round(meterIconSize / 10))
     readonly property real mutedMeterChromaReduction: 0.75
     readonly property int meterBarHeight: Math.max(3, Math.round(meterIconSize / 5))

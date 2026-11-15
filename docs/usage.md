@@ -38,6 +38,8 @@ work and upstream contract requirements.
   vertical rings without covering the quota arcs. Their space stays reserved
   when readings become exact, keeping neighbouring providers in place. A single
   horizontal ring uses a compact slot instead of the capsule minimum width.
+  Ring groups use tighter margins around the reserved markers and between
+  providers, keeping the panel compact even when every reading is exact.
   The settings preview follows pending shape changes;
   Apply/Cancel retains its usual meaning. The minimal-content preset keeps the
   selected shape. Restoring defaults selects Capsules. Unknown shape values
