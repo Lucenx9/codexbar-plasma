@@ -70,6 +70,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Center panel-ring hover, pressed, and keyboard-focus feedback on the ring
+  instead of including the empty confidence-marker slot. Keep marker clicks
+  and provider text within the existing provider interaction area.
+
 - Tighten panel-ring margins between providers and around confidence markers
   while retaining stable marker slots and the existing capsule spacing.
 
