@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls as Controls
 import QtTest
+import org.kde.kirigami as Kirigami
 import "../contents/ui/components" as Components
 
 TestCase {
@@ -111,6 +112,23 @@ TestCase {
         verify(first.activeFocus);
         keyClick(Qt.Key_Space);
         compare(host.selectedIndex, 0);
+    }
+
+    function test_pressAndKeyboardFeedbackIsImmediate() {
+        var host = createStrip();
+        var tab = findChild(host, "tab1");
+        var focus = focusFor(host, 1);
+        focus.forceActiveFocus(Qt.TabFocusReason);
+        compare(tab.color, appearance.withAlpha(Kirigami.Theme.focusColor, 0.06));
+        keyClick(Qt.Key_Space);
+        compare(host.selectedIndex, 1);
+        compare(tab.color, appearance.withAlpha(Kirigami.Theme.focusColor, 0.18));
+        mousePress(tab, tab.width / 2, tab.height / 2);
+        compare(tab.scale, 0.985);
+        compare(tab.color, appearance.withAlpha(Kirigami.Theme.focusColor, 0.24));
+        mouseRelease(tab, tab.width / 2, tab.height / 2);
+        tryCompare(tab, "scale", 1);
+        tryCompare(tab, "color", appearance.withAlpha(Kirigami.Theme.focusColor, 0.18));
     }
 
     function test_overflowControlsAndWheelKeepScrollBounded() {

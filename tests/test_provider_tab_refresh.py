@@ -152,6 +152,37 @@ TestCase {
         compare(applet.selectedProviderID, "codex");
     }
 
+    function test_navigationFeedbackIsImmediate_data() {
+        return [
+            {tag: "provider-tab", overview: false, scale: 0.985, focusAlpha: 0.06, pressAlpha: 0.24},
+            {tag: "overview-row", overview: true, scale: 0.99, focusAlpha: 0.1, pressAlpha: 0.16}
+        ];
+    }
+
+    function test_navigationFeedbackIsImmediate(data) {
+        var item = data.overview ? overviewProviderRepeater.itemAt(1) : providerTabRepeater.itemAt(1);
+        verify(waitForPolish(fullRoot.Window.window));
+        var focus = item.nextItemInFocusChain(true);
+        focus.forceActiveFocus(Qt.TabFocusReason);
+        compare(item.color, applet.withAlpha(Kirigami.Theme.focusColor, data.focusAlpha));
+        mousePress(item, item.width / 2, item.height / 2);
+        compare(item.scale, data.scale);
+        compare(item.color, applet.withAlpha(Kirigami.Theme.focusColor, data.pressAlpha));
+        // A press is feedback, not activation. Releasing outside cancels it.
+        compare(applet.selectedProviderID, "codex");
+        mouseMove(item, item.width + 20, item.height / 2);
+        mouseRelease(item, item.width + 20, item.height / 2);
+        compare(applet.selectedProviderID, "codex");
+        tryCompare(item, "scale", 1);
+        fullRoot.forceActiveFocus(Qt.TabFocusReason);
+        focus.forceActiveFocus(Qt.TabFocusReason);
+        compare(item.color, applet.withAlpha(Kirigami.Theme.focusColor, data.focusAlpha));
+        keyClick(Qt.Key_Space);
+        compare(applet.selectedProviderID, "claude");
+        if (!data.overview)
+            compare(item.color, applet.withAlpha(Kirigami.Theme.focusColor, 0.18));
+    }
+
     function test_changedOverviewSnapshotPreservesKeyboardFocusAndUpdatesRow() {
         var row = overviewProviderRepeater.itemAt(1);
         var focus = row.nextItemInFocusChain(true);
