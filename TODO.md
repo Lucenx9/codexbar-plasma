@@ -18,7 +18,7 @@ Issues linked below preserve discussion; this file owns parity status.
   unavailable-cost output, and scoped carried blockers. The new setup actions
   are implemented; authenticated balances and successful Console login remain unverified.
 - Earlier reviews: each dated note in the
-  [documentation index](docs/README.md#maintained-references) records its own
+  [research index](docs/research/README.md) records its own
   release coverage, probes, and unverified cases. Shared payload structs retain
   optional credit-availability and detail-row fields awaiting authenticated
   output evidence.

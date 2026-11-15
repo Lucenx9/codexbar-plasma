@@ -1,485 +1,286 @@
 # Cost history and daily models
 
+This reference owns cost normalization, selection, trust, and identified-request
+contracts. The [usage guide](usage.md#costs-and-history) describes the controls;
+[implementation](implementation.md) describes process ownership.
+
 ## Global analysis
 
-Usage & Spend projects existing normalized cost snapshots through
-`UsageAnalysis.js`; it does not add a CLI command, price source, or account
-attribution. Provider filters scope costs, tokens, models and the heatmap.
-The selected provider stays selected across range changes and empty results;
-it remains available in the filter until the user chooses another option.
-A pinned day changes provider/model details, while headline totals
-retain the selected period. Project totals belong in provider details and are
-not duplicated in global analysis.
-Missing and duplicate days remain unavailable. A duplicate date within any
-provider eligible for the metric also makes the aggregate daily readout
-unavailable and clears that day if it was pinned before a refresh. Healthy
-provider lines remain visible; an excluded foreign-currency provider cannot
-invalidate the money readout.
-Aggregation and ambiguity checks share the normalizer's 256-snapshot bound;
-the separate 128-series drawing limit does not weaken the total's validation.
-Daily lines compare providers on a shared zero-based scale with readable tick
-values and headroom. `ChartLines.mjs` preserves calendar spacing, breaks lines
-at missing or ambiguous dates, and uses monotone curves without new extrema.
-Subtle fills sit below all strokes and inspection markers. A narrow theme-surface
-outline keeps lines and markers readable over overlapping fills. Money stays in the
-selected currency and token totals can include all currencies. Provider tab or
-saved ordering is applied after currency selection, so it cannot change the
-money represented by the lines, axis or totals. Hover or keyboard
-inspection reports each provider for the selected day. Provider pages retain bars.
-Chart time runs from oldest on the left to newest on the right in both layout
-directions; endpoint dates follow those coordinates while the value axis mirrors.
-Each provider row expands its own ranked model list inline, initially showing
-three rows. Cost and token rankings are computed before the six-model cap for
-both the selected period and each day, so low-cost and unpriced models can lead
-the token list. Privacy projection retains both rankings without model names.
-Show more models reveals that provider's remaining bounded rows
-without fetching data. Opening a provider does not change the chart filter or
-switch tabs. Open rows and Show more models choices survive refreshes and day
-selection. Refreshing preserves keyboard focus on the provider header or
-model-list action, returning it to the header if that action disappears. If the
-provider disappears, focus returns to the provider filter. Header restoration
-preserves the focus reason: mouse focus does not acquire a keyboard focus ring. The provider dropdown
-owns chart filtering. Token composition remains in provider details, while
-partial model coverage and excluded-request notices remain visible inline.
-Positive model costs below one cent use the same less-than-one-cent notation as
-provider totals; measured zeros remain zero.
+`UsageAnalysis.js` projects normalized snapshots into Usage & Spend without new
+CLI calls, price sources, or account attribution. Provider filters scope costs,
+tokens, models, and the heatmap. A pinned day scopes the detail rows, while
+headline totals retain the selected period. Projects remain in provider details.
 
-![Inline provider model breakdowns with synthetic data](codexbar-plasma-models.png)
+Aggregation inspects up to 256 snapshots. The separate 128-series drawing bound
+does not limit total validation. Missing or duplicate dates are unavailable;
+a duplicate in any metric-eligible provider invalidates that day's aggregate
+readout and pin. Foreign-currency providers cannot invalidate a money readout
+they do not contribute to. Healthy provider lines remain visible.
 
-The weekly comparison uses the existing AI snapshot completeness rules without
-calling AI: fourteen complete days before today, a scan reaching today, no
-ambiguous dates and finite values for the selected metric. Money comparisons
-also require complete pricing. Missing prices do not suppress a complete token
-comparison; excluded incomplete requests still make either comparison unavailable.
-It never loads extra history for a short selection. When the comparison is
-unavailable, its history
-requirements remain visible below the totals rather than only in a tooltip.
-Privacy mode retains the numeric comparison, using the currency preserved in
-the projected totals. Changes use unrounded weekly sums,
-including sub-cent amounts; only displayed money and AI payloads round to cents.
-Model lists retain a shared 128-row
-bound, mark truncation, and use the already privacy-projected snapshots.
-Current quotas stay in Overview and provider details; the optional assistant
-can still use them independently of local history filters. With both local
-history sources disabled, the assistant opens directly and uses the available
-quota snapshot without starting a cost scan. No
-current CLI blocker in [TODO](../TODO.md) is resolved or bypassed by these
-presentation changes.
+`ChartLines.mjs` preserves calendar spacing, breaks lines at unavailable dates,
+and uses monotone curves without new extrema. Time runs oldest to newest from
+left to right in both layout directions. Currency selection precedes visual
+provider ordering. Model rankings are computed separately for cost and tokens
+before the six-model cap; privacy removes names while retaining both rankings.
+Expanded rows survive refreshes and day selection without fetching data.
+
+Weekly comparisons require fourteen complete days before today, a scan reaching
+today, unambiguous dates, and finite amounts. Money also requires complete
+pricing; unpriced history can still support a token comparison. Excluded
+incomplete requests invalidate either comparison. Comparisons never fetch extra
+history. Arithmetic uses unrounded weekly sums, including sub-cent values;
+displayed money and AI payloads round to cents. Numeric comparisons survive
+privacy projection. Model lists share a 128-row bound and mark truncation.
+
+Current quotas remain independent of history filters. With local history
+disabled, AI Insights can use current quotas without starting a cost scan.
 
 ## Provider details
 
-The provider popup shows Today and the selected period side by side with
-emphasized amounts. Its chart shows the peak daily amount above the plot until
-a day is inspected, without repeating the latest date beneath the axis. History,
-period models, and projects expand on demand. Cost errors and amount qualifiers
-remain visible when the details are collapsed, including refresh errors beside
-retained values. Pricing explanations have their own collapsed disclosure below
-the totals, labeled Partial data for incomplete ranges. A successful refresh
-clears the error.
-
-Today is the CLI's total for the local date of the scan (`updatedAt`). A
-retained snapshot scanned on an earlier date, such as before midnight or before
-a failed refresh, shows Today as unavailable instead of that day's spend. A
-snapshot without a usable `updatedAt` keeps its Today amounts.
+Today means the local date of the CLI scan's `updatedAt`. If a retained snapshot
+was scanned before today, its Today amounts become unavailable, including after
+a failed refresh. Legacy snapshots without usable `updatedAt` retain their
+Today amounts. Refresh errors and cost qualifiers remain visible beside
+retained totals even when history details are collapsed.
 
 ## Data and display rules
 
-- Repeated provider IDs in one cost reply prefer a snapshot with measured
-  amounts over an empty one, including measured zero, then keep the first
-  successful measurement. Later duplicates cannot erase its amounts. Failed
-  records still report the refresh error and never block a successful sibling.
-- Day models come from the selected `cost.daily[].modelBreakdowns[]` record.
-  Missing day models never fall back to period totals.
-- Display at most six models per metric per day and report truncation. Period models also
-  expose truncation and an explicit empty state.
-  Daily model projection runs only after the chart's calendar selection and
-  row cap. Average-only rows omit that projection; they still use the same
-  amount, missing-day and calendar validation as chart rows.
-- Missing costs and token counts remain unknown. Measured zero stays zero;
-  filling calendar gaps only fills metrics actually observed in the snapshot.
-  Valid calendar dates remain inside the selected window even when duplicate
-  dates, malformed records or the scan budget prevent gap filling. Those
-  fallbacks retain observed rows without inventing zero days. Undated legacy
-  labels keep their bounded sequence behavior, using aggregate bars in Usage &
-  Spend when labels do not all name calendar dates. Invalid calendar dates are not
-  treated as legacy labels.
-  Calendar keys accept only strings in `YYYY-MM-DD` form. Object and array
-  date fields cannot extend All history or interrupt healthy provider snapshots.
-  Quota-week sums mark trailing days after a stale snapshot, the last scanned
-  day of a snapshot taken before today, and measured days with excluded
-  incomplete requests as partial; a newer usage refresh does not make those
-  costs known. Quota-week costs use the normalized totals' currency, which
-  remains available after privacy projection.
-  Recent history rows show both available amounts, including zero, in either
-  metric mode. The selected metric still controls row filtering and bar scaling.
-  Bar scaling preserves finite proportions even for very large reported amounts.
-  The history rows show the newest seven days, and the peak line names the
-  highest of them, the row their bars highlight. The daily average covers the
-  whole range and divides the measured days only, so a range measured as zero
-  averages to zero; a range with no measured day has no average at all.
-  If very large finite daily costs or token counts overflow the sum, an
-  incremental mean supplies the average. Ordinary sums retain their existing
-  rounding behavior.
-  Privacy applies the same three-uppercase-letter currency validation to
-  whole-range daily cost averages as to totals and daily rows. An average
-  with an invalid currency stays unavailable, without a USD fallback; its
-  currency-free token average remains available.
-- Average cost per million tokens retains finite rates even when scaling the
-  cost total first would overflow. Rates outside the numeric range are omitted;
-  the underlying cost and token totals remain unchanged.
-- **Month to date** and **All history** come from the CLI's `cost --period`.
-  Period identifiers accept only strings; malformed values use the existing
-  day-range fallback and preserve a bounded legacy label when supplied.
-  A snapshot belongs to the selected range by its `reportingPeriod`, not its
-  day count, which grows through the month. `--period all` reports the days
-  since year 1, so the widget sizes that window from the oldest recorded day to
-  the scan day. Dates after a known scan day do not extend that window or lower
-  its daily averages; the daily and model filters already exclude those records.
-  Without a usable scan date, the window keeps spanning the recorded dates.
-  The chart and daily rows keep at most 365 days, while period
-  models and the daily average cover the whole span within the 2,048-record
-  scan budget; the CLI's totals still cover the whole history. That budget limits
-  input records, not elapsed calendar days. Longer sparse histories aggregate
-  models across their full span and count eligible zero-activity dates in the
-  average denominator without allocating a row per date. Duplicate dates,
-  unknown days and truncated scans still prevent zero-day inference. An
-  amount-bearing row covers its date even if a second row for that date has
-  no amounts, matching the shorter-history gap-fill rule.
-- The global activity heatmap uses the unfiltered history's calendar dates,
-  preserving unavailable days at either boundary and between measured days.
-  Unavailable days occupy empty cells, so filtering missing amounts never shifts
-  weekday rows. The **Daily activity** disclosure starts collapsed and stays
-  hidden for spans of seven days or fewer. Rows start on the locale's first day of the week, and empty
-  cells after the newest day close its week. Its visible span and week count include those gaps, bounded to
-  the newest 365 calendar days. Legacy non-date labels retain sequence order
-  and leave the rows unlabelled, because only calendar-aligned days give each
-  row one weekday.
-- Month labels follow the visible week columns and are omitted when a label
-  cannot fit its month span. Hover and keyboard inspection share a fixed
-  date/value row below the calendar, without floating tooltips. Clicking a
-  measured day, Enter/Space, or the accessibility press action pins the same day
-  in the chart and provider details. Arrow keys only inspect; Escape clears the
-  pin and leaves focus in the calendar. With no pin, Escape propagates to the
-  popup so it can close. Month names align with the start of their span in both
-  reading directions. Zero days remain selectable, unavailable
-  slots do not. The selected day has a persistent outline.
-- Global cost and token aggregates that overflow the numeric range remain
-  unavailable. An overflowing daily sum has no chart point and keeps an empty
-  heatmap cell. Other dates, measured zeros, and the other metric remain usable.
-- Model names are strings. Numeric names are not coerced into display labels.
-  Tied model amounts use the label as a stable ordering tiebreaker.
-- Sharing uses a separate token ranking from the full bounded period model
-  aggregation, before the existing six-row cost ranking is truncated. Cheap or
-  unpriced models remain eligible for the top-token list. Its known omitted-row
-  count and incomplete-scan flag survive privacy projection and export.
-- Standard/Fast totals remain blocked on an official CLI contract. No service
-  tier is inferred from model names or amounts.
-
-These rules are implemented in
-[ProviderNormalizer.mjs](../contents/ui/ProviderNormalizer.mjs),
+The owning code is [ProviderNormalizer.mjs](../contents/ui/ProviderNormalizer.mjs),
 [CostPresentation.mjs](../contents/ui/CostPresentation.mjs), and
 [ProviderCostSection.qml](../contents/ui/components/ProviderCostSection.qml).
 
+- Duplicate provider IDs prefer measured amounts, including zero, over an
+  empty snapshot, then retain the first successful measurement. Failed siblings
+  report errors without erasing successful amounts.
+- Missing amounts remain unknown; measured zero stays zero. Calendar gap filling
+  applies only to metrics observed in the snapshot. Duplicate dates, malformed
+  rows, or a truncated scan prevent zero-day inference while preserving observed
+  rows inside the selected period.
+- Calendar keys must be `YYYY-MM-DD` strings. Invalid dates are not legacy labels;
+  objects and arrays cannot extend a range. Bounded non-date legacy labels retain
+  sequence behavior and use aggregate bars in Usage & Spend.
+- Day models come only from the selected daily record's `modelBreakdowns`, never
+  period totals. Daily models are projected after calendar selection and row
+  limits. Average-only rows skip that projection. Display at most six models
+  per metric per day and mark truncated or empty model lists.
+- **Month to date** and **All history** use CLI `cost --period`. String
+  `reportingPeriod` identifies the range independently of its growing day count;
+  malformed values retain the bounded legacy-label/day-range fallback.
+  `--period all` reports days since year 1, so the frontend derives the window
+  from the oldest eligible date through the scan date. Future dates cannot
+  extend it. Without a usable scan date, recorded dates define the span.
+- Charts and daily rows retain at most 365 days. Period models and averages use
+  the full span within a 2,048-input-record scan budget; CLI totals retain their
+  full scope. Sparse histories count eligible zero-activity dates without
+  allocating a row per date. A date with any amount-bearing row is covered even
+  if a sibling row has no amounts. Duplicate, unknown, or truncated input still
+  prevents zero inference.
+- Averages divide only measured days. A measured zero range averages to zero;
+  an unmeasured range has no average. An incremental mean handles finite inputs
+  whose sum overflows. Cost-per-million-token rates preserve finite results
+  without overflowing intermediate scaling. Unrepresentable rates are omitted
+  without changing underlying totals.
+- Global and daily sums outside the numeric range are unavailable. Overflow in
+  one date or metric leaves other dates, measured zeros, and the other metric
+  usable. Bar scaling preserves finite proportions for large values.
+- The recent-history list shows the newest seven days and both available
+  amounts; the selected metric controls filtering and scaling. Its peak names
+  the highest visible day. Positive sub-cent costs use explicit less-than-one-cent
+  text rather than zero.
+- The heatmap uses unfiltered calendar dates, preserving gaps and incomplete
+  boundary weeks. It spans at most 365 days, follows the locale's first weekday,
+  and is hidden for spans of seven days or fewer. Zero days are selectable;
+  unavailable days are not. Non-date legacy labels retain unlabelled sequence
+  rows. Month labels appear only when they fit their calendar span.
+- Model names must be strings and break tied amounts by label. Sharing ranks
+  tokens from the full bounded period aggregation before the six-row cost cap,
+  retaining cheap and unpriced models, omitted-row counts, and incomplete-scan
+  markers through privacy projection.
+- Standard/Fast totals require an official CLI contract. Model names and amounts
+  cannot establish a service tier.
+
 ## Selection rules
 
-![Daily activity calendar sharing a selected day with the chart](codexbar-plasma-daily-activity.png)
+The account picker selects usage quotas. Local cost history is the CLI's scan
+for the provider and range, independent of that picker. Usage labels cannot
+establish account attribution.
 
-The account picker selects usage quotas. Local cost history comes from the
-CLI scan for the provider and history range, independently of the account
-selected in the widget. Changing accounts does not filter this scan or establish
-that its totals belong to that account. The Codex cost hint states this scope.
+A pin identifies a calendar date, never `sourceIndex`. Refreshes retain it as
+rows move; a missing or ambiguous date clears it. Month-to-date and All-history
+ranges retain their identity as the day count grows. Metric and day selection
+operate on loaded data without CLI calls.
 
-Hover previews stay inside the chart. Usage & Spend previews appear immediately
-while the pointer is over a day, beside its vertical guide rather than over its
-markers. They open on the right, flip left when needed, and shrink to the roomier
-side if neither side fits. They are clipped to the plot and scroll viewport;
-Provider rows use small identity icons and right-aligned amounts, followed by
-the daily total. Long names or amounts may elide; an ellipsis marks omitted
-provider rows when the plot is too short. Pinning the day exposes the full details.
-Keyboard inspection uses the readout, accessible description and provider rows.
+In provider details, provider, account, or range changes clear the pin and
+expanded period details, including when cached data is reused. Metric changes
+clear the pin but preserve explicitly expanded period details. In Usage & Spend,
+range or metric changes clear both selected and hovered dates. Period efficiency
+remains a period value, never a daily figure.
 
-![Native chart hover inspection with synthetic provider data](codexbar-plasma-chart-hover.gif)
-
-All days and Escape in the chart clear the pin and leave keyboard focus on the chart. The
-reset action occupies the provider heading row without shifting the plot.
-Positive sub-cent amounts use an explicit less-than-one-cent notation; axis
-labels retain the precision needed to distinguish ticks. Pointer or keyboard selection pins a day
-without fetching data. While a day is pinned, the chart readout and the
-drill-down heading name it, so the latest-day summary under the chart is hidden. A background refresh retains the pinned date even when
-its chart position changes; a missing or ambiguous date clears the pin.
-`sourceIndex` cannot identify a day across different snapshots.
-Month to date and All history keep the selected day and expanded details when
-their day count grows; their period name identifies the range.
-
-The global Usage & Spend chart also retains its selected date across refreshes,
-including when earlier days arrive or leave the window. A missing or ambiguous
-date clears its selection. Changing the global history range or metric clears
-both selected and hovered points, without inspecting a replacement day.
-
-Provider, account, and history range changes clear the pin and expanded details,
-including when cached data is reused. Account identity follows the account
-picker's canonical label, including organization-only identities. Metric changes
-clear the pin but preserve explicitly expanded period details. Period efficiency
-stays in the period view, available through All days; it is not shown as a daily
-figure. A single measurable day remains selectable to inspect its models.
+Pointer, keyboard, and calendar activation share the selected day. Chart Escape
+or All days clears it and retains chart focus. Calendar arrows inspect, while
+Enter, Space, or accessibility activation pins a measured day. Calendar Escape
+clears a pin first; with no pin it propagates to close the popup. Hover previews
+stay inside the plot and scroll viewport, with full detail available by pinning.
 
 ## History, trust, and project totals
 
-`costHistoryMetric` selects cost or tokens across charts from the same loaded
-payload; the selected metric also controls bar scaling. Metric and day selection
-must not add CLI calls. Usage & Spend provider totals put the selected metric
-first and keep the other figure beneath it, preserving currency, cost qualifiers,
-and explicit unavailable values. The generic collecting-history banner is not
-shown in Usage & Spend. `historyCoverageIsEstablished` still qualifies incomplete
-provider amounts and comparison eligibility; legacy payloads without the flag
-remain supported.
+`costHistoryMetric` changes chart scaling and amount order from the same payload.
+`historyCoverageIsEstablished` qualifies history completeness independently of
+pricing coverage; legacy payloads without it remain supported.
 
-`ProviderNormalizer.normalizeCostTrustMetadata` bounds `coverage`, `provenance`,
-and the official `incompleteRequestCount`. `CostTrust.costTrustSummary`
-qualifies provider and global amounts with one shared explanation. Its disclosure
-starts collapsed below the totals; amount qualifiers and the Partial data label
-remain readable without opening it. Missing legacy
-metadata stays quiet. Keep pricing coverage separate from history collection
-coverage and never expose raw provenance in QML.
-Excluded requests also mark the period's tokens as partial, including when cost
-is unavailable or the explanation was dismissed. Unpriced costs alone do not
-make measured tokens partial. Provider Today tokens use only that day's own
-exclusion count from the matching normalized daily record rather than inheriting
-the period's count. A missing or ambiguous day supplies no count; the stale-day
-policy hides Today amounts after local midnight, including in privacy mode.
+`normalizeCostTrustMetadata` bounds `coverage`, `provenance`, and
+`incompleteRequestCount`. `CostTrust.costTrustSummary` supplies semantic notices;
+raw provenance never reaches QML. Missing legacy metadata stays quiet.
+Closing a notice records its semantic dismissal. Collapsing it, hiding a tab,
+or recreating the popup does not. A changed count alone cannot revive a dismissed
+warning. A different provider or semantic warning collapses its explanation.
 
-Only pressing the notice's close button records a semantic dismissal. Hiding a
-tab or closing the popup preserves an open notice, including when the popup is
-recreated. Pointer and keyboard activation of the close button share that action.
-The close button appears inside the expanded explanation. Collapsing it does
-not record a dismissal. A different provider or semantic warning collapses the
-explanation, returning focus to its disclosure if the focused close button hides.
-Missing daily history occupies the chart area; its Tokens action returns focus
-to the selected metric control. Mixed-currency summary labels name the currency
-and identify the displayed amount as a subtotal.
+Excluded incomplete requests qualify tokens even if money is unavailable or
+the pricing notice was dismissed. Unpriced costs alone do not make measured
+tokens partial. Today uses only the matching day's exclusion count; stale-day
+suppression applies after midnight, including in privacy mode. Quota-week
+subtotals remain partial for stale trailing days, a last day scanned before
+today, or days with excluded requests. New usage quotas cannot establish missing
+cost history.
 
-The shared pricing notice keeps cost provenance scoped to the selected currency.
-A foreign-currency snapshot with a finite cost is excluded from this notice,
-including its incomplete-request count, although its tokens enter the global
-total. Daily cost data alone does not create a range pricing notice. Token-only
-incomplete-request warnings still require a positive published token amount.
-`CostTrust.incompleteTokenRequests` independently sums bounded exclusions for
-positive token totals across all currencies. It qualifies the Tokens summary
-and supplies its excluded-request count on hover or keyboard focus, independently
-of monetary provenance. Daily-only cost notices still need their own scope and
-text rather than a message about a displayed range total.
+Money notices and totals use one currency. Foreign-currency snapshots with
+finite costs are excluded from that pricing notice, though their tokens can
+contribute to the token total. `CostTrust.incompleteTokenRequests` separately
+sums bounded exclusions for positive token totals across all currencies.
+Daily-only cost data cannot create a notice about a range total.
 
-`CostCurrency.spendCurrency` chooses from measured cost amounts in displayed
-provider order, checking each provider's totals before its daily rows. Measured
-zero counts; token-only currency metadata cannot override a measured cost.
-When no measured amount names a currency, the existing totals or first daily
-row provide the fallback, then USD. Currency checks share the totals eligibility
-rule with spend aggregation. Daily rows without a currency retain their USD
-default, while totals without a currency inherit the selected currency. Direct
-presentation QtTests cover these priorities and input immutability.
+`CostCurrency.spendCurrency` selects the first measured currency in displayed
+provider order, testing totals before daily rows. Zero counts as measured;
+token-only metadata cannot override a measured currency. Fallbacks are existing
+totals, then the first daily row, then USD. Daily rows without a currency default
+to USD; totals without one inherit the selected currency. Privacy validates
+currencies as three uppercase letters, including whole-range averages. An
+invalid average currency suppresses money without suppressing token averages.
 
-Official CLI 0.60.5 reports `incompleteRequestCount` on the cost payload, its
-`totals`, each daily entry, and each model breakdown, omitting the key when no
-request was excluded. The counts describe requests that lacked final usage and
-are therefore missing from the reported tokens and cost. Treat them as a
-partial-total marker only: sum them under the coverage bound, never fold them
-into an amount, and keep the notice semantic so a changed count cannot revive a
-dismissed warning. Quota-week subtotals carry the bounded daily count so a
-mixed day makes the affected cost and token sums lower bounds, including in
-privacy mode. Each daily point and each aggregated model row also carries its
-own bounded count: a model sums its breakdown counts across the range,
-including breakdowns without measured amounts, and the provider cost section
-states the count under the history or model row and beside a selected day's
-amounts, without changing the amount text. A day whose requests are all
-incomplete arrives without `totalCost` and `totalTokens`, which daily
-normalization already keeps unknown
-instead of turning into a measured zero. Privacy mode keeps the count, which
-carries no identity.
+Official CLI 0.60.5 emits `incompleteRequestCount` on payloads, totals, days,
+and model breakdowns, omitting it when nothing was excluded. It counts requests
+without final usage, not an amount to add back. Aggregate counts within the
+coverage bound, including model breakdowns without amounts. A fully incomplete
+day omits `totalCost` and `totalTokens`, so it remains unknown. Counts survive
+privacy projection.
 
-`normalizeCostProjects` retains bounded names and optional amounts, discarding
-paths and nested source records. Preserve unknown amounts and duplicate names;
-keep provider currencies separate. Signal truncation at 128 inspected projects
-per provider or 128 displayed rows overall. Project rows never contribute to
-provider or global totals. The [usage guide](usage.md#costs-and-history) describes
-the range/metric controls and expandable presentation.
+`normalizeCostProjects` retains bounded names and optional amounts, preserving
+unknown values and duplicate names while discarding paths and nested source
+records. It inspects at most 128 projects per provider and displays at most
+128 rows overall, marking truncation. Projects never contribute to provider or
+global totals, and provider currencies remain separate.
 
-Official CLI 0.56.2 emits Antigravity token-only history through the generic cost
-envelope. Absent costs stay absent in daily/model normalization. Its established
-empty snapshot uses zero dollar totals despite costs being unavailable, so
-`normalizeProviderCostTotals` masks that provider sentinel until an official
-availability field exists. Token charts remain usable while cost totals and
-cost-mode charts stay unavailable. Official CLI 0.62.0 emits the same
-token-only shape for Muse Code: a synthetic `model_completed` turn counted
-exactly into `sessionTokens`, daily entries, and model breakdowns while every
-monetary field stayed absent. Cursor cost is rejected by that Linux release;
-neither case authorizes provider fetching or source parsing in QML. The scoped
-[0.57.0 probes](research/2026-09-09-macos-parity-0.57.0.md#scoped-official-linux-probes)
-confirm Cursor is still rejected, and the scoped
-[0.62.0 probes](research/2026-09-20-macos-parity-0.62.0.md#scoped-official-linux-probes)
-confirm it again alongside the Muse contract; neither retests established-empty
-Antigravity history.
-
-Track [explicit cost availability](../TODO.md#cost-availability),
-[Cursor Linux cost](../TODO.md#cursor-cost), and
-[service-tier totals](../TODO.md#service-tier-totals) in TODO.
+Antigravity's established empty token-only snapshot uses zero dollar totals even
+when costs are unavailable. `normalizeProviderCostTotals` masks that sentinel
+until an official availability field exists. Muse Code also supplies token-only
+history with monetary fields absent. Keep absent costs unavailable and tokens
+usable. No frontend provider fetching or source parsing is authorized by these
+shapes. Remaining blockers are [cost availability](../TODO.md#cost-availability),
+[Cursor cost](../TODO.md#cursor-cost), and
+[service-tier totals](../TODO.md#service-tier-totals).
 
 ## Identified-request subtotals
 
-The optional identified Codex section is a separate manual path, documented in
-the [usage guide](usage.md#identified-codex-token-subtotal). Its
-[pure decoder](../contents/ui/IdentifiedTokens.js) validates the exact requested
-UTC window, schema, safe integer counts, up to 50,000 records/conflict IDs per
-ledger, and the shared 4 MiB frontend JSON cap. This ceiling is deliberately
-stricter than the CLI's 32 MiB ledger transport limit; larger results are
-unavailable, never silently truncated. Duplicate ledger IDs and unsafe sums
-are rejected. Only aggregate counts and the optional CLI API-price estimate
-leave the decoder; request identities, model names and source metadata do not.
-Schemas 1 and 2 are accepted, with a separate compatibility outcome for unknown
-or mixed ledger schemas. Schema 2 validates optional model/pricing-mode fields
-and the required `includedInPlan` boolean without pricing requests locally.
+The manual [identified Codex section](usage.md#identified-codex-token-subtotal)
+has its own [decoder](../contents/ui/IdentifiedTokens.js) and
+[controller](../contents/ui/controllers/IdentifiedTokensController.qml).
+It starts only on an explicit local or local + SSH action. Context changes,
+timeouts, and destruction retire requests without replacements. Ordinary
+history, charts, sharing, and AI Insights neither start nor consume these scans.
 
-Successful local-only output is a ledger. Its subtotal sums input plus output
-for records outside `conflictingIDs`. With SSH, the CLI owns cross-source
-deduplication; the frontend validates the reports and bounds of its emitted
-subtotal. A single available source must match that source's aggregate.
-An exit-1 envelope can retain data when a source fails; an exit-0 partial
-subtotal can exclude requests. Availability and request completeness remain
-independent. With no available source, the CLI may omit `subtotal` rather than
-encode null. This was rechecked with the official 0.75.0 binary in an isolated
-missing-native-root fixture.
+The decoder validates the exact UTC window, schemas 1 and 2, safe integer
+counts, and at most 50,000 records or conflict IDs per ledger. The shared 4 MiB
+frontend JSON limit is stricter than the CLI's 32 MiB transport limit; oversized
+results are unavailable, never truncated. Duplicate IDs and unsafe sums are
+rejected. Only aggregate counts and the optional API-price estimate leave the
+decoder. Unknown or mixed schemas have a separate compatibility outcome.
+Schema 2 validates optional model/pricing-mode fields and requires
+`includedInPlan`, without calculating prices.
 
-For schema 2 envelopes, the CLI's `costUSD` becomes a separately labeled
-`apiEstimateUSD`, never a generic cost total. `unpricedRequestCount` must be
-a safe integer within the accepted request count. A non-null estimate must be
-finite and nonnegative, with no unpriced requests; a null estimate requires
-at least one. An empty known subtotal has a zero estimate. Bare local ledgers
-and schema 1 envelopes expose no estimate or unpriced count. The widget still
-requests at most one SSH host and rejects additional, unrequested reports.
+A local ledger sums input plus output outside `conflictingIDs`. With SSH, the
+CLI owns deduplication. The frontend validates reports and the emitted subtotal;
+a single available source must match its own aggregate. Exit 1 can retain an
+available source, while exit 0 can still exclude requests. Availability and
+request completeness are independent. With no source, `subtotal` may be omitted.
+Only one requested SSH host is accepted; extra or unrequested reports fail.
 
-No prices are inferred and no account-wide coverage is claimed. The
-[controller](../contents/ui/controllers/IdentifiedTokensController.qml) starts
-only on an explicit local or local + SSH action. Context changes, timeout and
-destruction retire requests without starting replacements. Ordinary history,
-provider totals, chart selection, sharing and AI Insights do not consume these
-results or start their scans.
+For schema 2 envelopes, `costUSD` becomes separate `apiEstimateUSD`, never a
+cost-history total or account-wide amount. `unpricedRequestCount` is a safe
+integer no greater than accepted requests. A non-null estimate is finite,
+nonnegative, and requires no unpriced requests; null requires at least one.
+An empty known subtotal has a zero estimate. Bare local ledgers and schema 1
+expose neither estimate nor unpriced count.
 
-The command runs under a separate GNU `timeout` process group: TERM at 110
-seconds, KILL after a 5-second grace, before the 120-second controller deadline.
-A waiting shell keeps that supervisor alive if Plasma disconnects the source
-early. Missing `timeout` fails closed. The real-engine lifecycle fixture
-shortens only the GNU deadlines for stubborn CLI/child processes and verifies
-that both stop, including after settings changes or controller destruction.
+GNU `timeout` sends TERM at 110 seconds and KILL after five more, before the
+120-second controller deadline. A waiting shell preserves supervision after
+Plasma disconnects its source. Missing `timeout` fails closed.
 
 ## Pinned CLI evidence
 
-A scoped [0.84.0 review](research/2026-11-10-macos-parity-0.84.0.md) on
-2026-11-10 verifies that the current decoder accepts one schema 2 request with
-111 tokens from both official Linux 0.83.0 and 0.84.0. With that same dated
-file behind a symlinked `sessions` root, both CLIs return an empty ledger with
-`partial: false`. Plasma cannot distinguish the omission from empty history;
-identified discovery remains [CLI-blocked](../TODO.md#identified-history-discovery).
-The 0.84.0 ordinary-cost scanner separately restores the symlinked-history
-tokens. Its absent OpenCode Go installation returns successful unavailable
-history with omitted amounts, which the current cost decoder keeps null.
+These scoped checks do not replace the
+[0.56.2 full audit](research/2026-09-01-macos-parity-0.56.2.md).
 
-A scoped 2026-11-01 check used the official Linux CodexBar 0.83.0 glibc
-x86_64 archive, SHA-256
-`e278eb0a1b6d620b5c84c157dfb16860a82477af6ec7330b6b6fb5c7f2729b5b`,
-matching the [0.83.0 review](research/2026-11-01-macos-parity-0.83.0.md).
-Bubblewrap hid host homes, runtime files and temporary files, cleared the
-environment and disabled networking. A synthetic native request emitted a
-schema 2 local ledger with 1,100 tokens, `model: "gpt-5"`, `pricingMode: null`
-and an `includedInPlan` boolean. A synthetic SSH executable returning the same
-official ledger verified CLI deduplication to one request, `source` and
-`collectedAt` metadata, and an envelope with `costUSD: null` and
-`unpricedRequestCount: 1`. No authenticated data or real SSH was used.
-Nonzero price presentation is covered by synthetic QtTest and popup fixtures;
-the probe did not establish a nonzero estimate. The released
-[`CodexRequestSubtotal` contract](https://github.com/steipete/CodexBar/blob/348e2fa8d36ae8e452739ca07a79e83ab9d25e98/Sources/CodexBarCore/Providers/Codex/CodexRequestLedger.swift)
-defines its amount as an API-equivalent estimate over accepted requests.
-
-A scoped check on 2026-10-18 used official Linux CodexBar 0.76.0 (source commit
-`2d8b1409a1649dce60f3610ebe4eab52b92545de`), with home directories hidden,
-an empty environment, and networking disabled. The installed binary matched
-the checksum-verified release used in the [0.76.0 review](research/2026-10-15-macos-parity-0.76.0.md).
-`cost --provider codex --account synthetic-account --format json --json-only`
-exited 1 with an `args` error, `Unknown option --account`. This is not a
-supported cost filter. The widget must not infer account attribution from a
-usage label or parse provider logs itself. Account-scoped local costs remain
-[blocked on a CLI contract](../TODO.md#account-scoped-local-costs).
-
-The focused [0.75.0 verification](research/2026-10-15-codex-contracts-0.75.0.md)
-confirms that native mixed priced/unpriced history retains its priced USD
-subtotal and every measured token count. Fully unpriced history omits costs
-instead of reporting zero. Existing normalization and sharing preserve both
-shapes, including their incomplete/estimated notice and privacy projection.
-At that version, the separate experimental identified-request local/SSH subtotal
-had no prices. Schema 2 estimates remain outside the widget's generic cost path.
-A synthetic historical
-scanner-cache fixture also verifies known-model partial subtotals and their
-sharing notice. Imported incomplete rows remain unverified.
-
-The scoped implementation used official CodexBar v0.56.8, commit
-`6ef82690b4a718a21fac42b72a102df07e475509`, and its
-[`CLICostCommand.swift`](https://github.com/steipete/CodexBar/blob/6ef82690b4a718a21fac42b72a102df07e475509/Sources/CodexBarCLI/CLICostCommand.swift).
-The existing daily model fields are `modelName`, `cost`, and `totalTokens`.
-That scoped implementation added no command or provider-specific source and did not replace the full
-[0.56.2 parity baseline](research/2026-09-01-macos-parity-0.56.2.md).
-
-The incomplete-request counts were verified in official Linux 0.60.5 output;
-the [0.60.5 review](research/2026-09-18-macos-parity-0.60.5.md#scoped-official-linux-probes)
-records the checksum-verified asset, the isolated probes, and the emitted keys.
-
-The Muse token-only shape was verified in official Linux 0.62.0 output; the
-[0.62.0 review](research/2026-09-20-macos-parity-0.62.0.md#scoped-official-linux-probes)
-records the checksum-verified asset
-(`11b88fef999f18cd7fd8b52e52a7fb3eb90e84eaf9fc98a1d4bc5d4170353513`), the
-isolated probes, and the emitted keys.
-
-Linux 0.67.0 adds `reportingPeriod` (`rolling:N`, `month-to-date`, or `all`)
-and an English `historyLabel` to every record. The widget titles `rolling:N`
-ranges itself in the user's language and uses a CLI label only for other
-periods. The
-[0.67.0 review](research/2026-09-26-macos-parity-0.67.0.md#linux-cli-contract-changes-since-0660)
-records the probes.
-
-Linux 0.69.0 still reports its year-1 day count as `historyDays` for
-`--period all` (739890 on 2026-09-29); the 0.69.0 All-history scan fix is
-internal, so the widget's 365-day chart bound stays. The
-[0.69.0 review](research/2026-09-29-macos-parity-0.69.0.md#linux-cli-contract-changes-since-0670)
-records the probes.
-
-Linux 0.72.0 still reports its year-1 day count as `historyDays` for
-`--period all` (739896 on 2026-10-05, six days later, so the 0.71.x scan
-efficiency fixes are internal too and the 365-day chart bound stays). The
-[0.72.0 review](research/2026-10-05-macos-parity-0.72.0.md#linux-cli-contract-changes-since-0690)
-records the probes.
-
-The official v0.56.8 Linux x86_64 release archive was checksum-verified with SHA-256
-`ab98788e12840e5689ae505bf62731e0ea0db1c77e63dceda1589b6e795ac5b8`.
-An isolated probe with two synthetic days and two models ran
-`cost --provider codex --days 7 --format json --json-only --refresh --provider-native-only`
-without network access. It exited 0 with empty stderr. The fixture and recorded
-output are linked in the
-[historical probe report](https://github.com/Lucenx9/codexbar-plasma/blob/92679f99ce5d5479f4f87edde051fff91e30b91f/docs/reviews/popup-cost-details/README.md).
+- [0.84.0 review](research/2026-11-10-macos-parity-0.84.0.md), 2026-11-10:
+  official Linux 0.83.0 and 0.84.0 both emitted one schema 2 request with 111
+  tokens. A symlinked `sessions` root instead emitted an empty ledger with
+  `partial: false`, an undetectable omission still
+  [CLI-blocked](../TODO.md#identified-history-discovery). Ordinary costs regain
+  symlinked history in 0.84.0. Absent OpenCode Go history omits amounts rather
+  than reporting zero.
+- [0.83.0 review](research/2026-11-01-macos-parity-0.83.0.md), 2026-11-01:
+  glibc x86_64 archive SHA-256
+  `e278eb0a1b6d620b5c84c157dfb16860a82477af6ec7330b6b6fb5c7f2729b5b`.
+  Bubblewrap hid host data, cleared the environment, and disabled networking.
+  A synthetic request emitted 1,100 tokens with `model: "gpt-5"`,
+  `pricingMode: null`, and `includedInPlan`. A synthetic SSH executable verified
+  deduplication, source metadata, `costUSD: null`, and `unpricedRequestCount: 1`.
+  No real SSH, authenticated data, or nonzero estimate was verified. The pinned
+  [`CodexRequestSubtotal` contract](https://github.com/steipete/CodexBar/blob/348e2fa8d36ae8e452739ca07a79e83ab9d25e98/Sources/CodexBarCore/Providers/Codex/CodexRequestLedger.swift)
+  defines an API-equivalent estimate over accepted requests.
+- Official Linux 0.76.0, source commit
+  `2d8b1409a1649dce60f3610ebe4eab52b92545de`, checked 2026-10-18 under hidden
+  homes, an empty environment, and disabled networking. The binary matched the
+  checksum-verified [0.76.0 review](research/2026-10-15-macos-parity-0.76.0.md).
+  `cost --provider codex --account synthetic-account --format json --json-only`
+  exited 1 with `Unknown option --account` (`kind: args`).
+  [Account-scoped costs](../TODO.md#account-scoped-local-costs) remain blocked.
+- [0.75.0 verification](research/2026-10-15-codex-contracts-0.75.0.md): native
+  mixed priced/unpriced history retains priced USD subtotals and measured
+  tokens; fully unpriced history omits money. Synthetic historical scanner-cache
+  rows verify known-model partial subtotals; imported incomplete rows remain
+  unverified. Identified local/SSH subtotals had no prices at this version.
+- [0.72.0](research/2026-10-05-macos-parity-0.72.0.md#linux-cli-contract-changes-since-0690)
+  and [0.69.0](research/2026-09-29-macos-parity-0.69.0.md#linux-cli-contract-changes-since-0670):
+  `--period all` still reports days since year 1 (739896 on 2026-10-05 and
+  739890 on 2026-09-29). Scanner fixes do not remove the 365-day frontend bound.
+- [0.67.0 review](research/2026-09-26-macos-parity-0.67.0.md#linux-cli-contract-changes-since-0660):
+  `reportingPeriod` is `rolling:N`, `month-to-date`, or `all`, with an English
+  `historyLabel`. Plasma localizes rolling ranges and uses CLI labels for others.
+- [0.62.0 probes](research/2026-09-20-macos-parity-0.62.0.md#scoped-official-linux-probes):
+  a Muse Code `model_completed` turn produced exact session/daily/model tokens
+  with all money absent. Checksum-verified asset SHA-256:
+  `11b88fef999f18cd7fd8b52e52a7fb3eb90e84eaf9fc98a1d4bc5d4170353513`.
+  Cursor costs remained rejected, as in the
+  [0.57.0 probes](research/2026-09-09-macos-parity-0.57.0.md#scoped-official-linux-probes).
+  Neither check retested Antigravity's established-empty sentinel from 0.56.2.
+- [0.60.5 probes](research/2026-09-18-macos-parity-0.60.5.md#scoped-official-linux-probes):
+  verified emitted incomplete-request counts and their omission semantics.
+- Official v0.56.8, commit `6ef82690b4a718a21fac42b72a102df07e475509`:
+  [`CLICostCommand.swift`](https://github.com/steipete/CodexBar/blob/6ef82690b4a718a21fac42b72a102df07e475509/Sources/CodexBarCLI/CLICostCommand.swift)
+  emits daily `modelName`, `cost`, and `totalTokens`. The Linux x86_64 archive
+  matched SHA-256 `ab98788e12840e5689ae505bf62731e0ea0db1c77e63dceda1589b6e795ac5b8`.
+  An isolated two-day/two-model probe ran
+  `cost --provider codex --days 7 --format json --json-only --refresh --provider-native-only`
+  without networking, exiting 0 with empty stderr. Its
+  [fixture and output](https://github.com/Lucenx9/codexbar-plasma/blob/92679f99ce5d5479f4f87edde051fff91e30b91f/docs/reviews/popup-cost-details/README.md)
+  remain in history.
 
 ## Regression coverage
 
-[Normalizer tests](../tests/tst_provider_normalizer.qml) and
-[presentation tests](../tests/tst_cost_presentation.qml) cover the data rules.
-The popup smoke scenarios cover pinned-day refreshes, reordering, missing days,
-cached account changes, ranges, missing token counts, and incomplete models.
-The `popup-cost-refresh-error` scenario covers retained costs through empty,
-malformed, unsupported, and partial error replies, collapsed/expanded details,
-privacy, an initial failure without cached costs, and recovery.
-[Cost response tests](../tests/tst_cost_response.qml) exercise malformed error
-messages and bounded normalization, including matching daily and model costs
-when duplicate dates disable gap filling. All-history cases exclude future dates
-when sizing short and multi-year windows and their averages, retaining the
-missing-scan-time fallback and input scan bound. Normalizer cases keep older and future
-dates outside the period across duplicate, malformed, blocked-day and incomplete
-scan fallbacks without manufacturing zero values. [Controller tests](../tests/test_cost_context.py)
-use real CLI processes to check healthy provider updates, same-context retention,
-command changes, forced refreshes, and timeouts.
-Run `make check` for logic and wiring, and `make smoke` for the real applet with
-synthetic data. Executed check results belong in the PR.
+Data entry points are [normalizer](../tests/tst_provider_normalizer.qml),
+[presentation](../tests/tst_cost_presentation.qml), and
+[response](../tests/tst_cost_response.qml) QtTests. The
+[controller tests](../tests/test_cost_context.py) exercise real CLI lifecycles.
+Run `make check` for logic and wiring, and `make smoke` for synthetic applet
+scenarios. Follow [testing](testing.md) for check selection; put executed results
+in the PR.
