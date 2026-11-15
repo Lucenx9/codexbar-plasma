@@ -43,7 +43,7 @@ Rectangle {
     implicitWidth: Layout.preferredWidth
     implicitHeight: tabHeight
     radius: tabStrip ? tabStrip.tabRadius : applet.roundedSurfaceRadius
-    color: tabMouse.pressed
+    color: tabMouse.containsPress
         ? applet.withAlpha(Kirigami.Theme.focusColor, 0.24)
         : (selected
         ? applet.withAlpha(Kirigami.Theme.focusColor, 0.18)
@@ -52,7 +52,7 @@ Rectangle {
         : (tabMouse.containsMouse ? applet.withAlpha(Kirigami.Theme.textColor, 0.05) : "transparent")))
     border.width: keyboardFocusVisible ? 1 : 0
     border.color: Kirigami.Theme.focusColor
-    scale: tabMouse.pressed ? 0.985 : 1
+    scale: tabMouse.containsPress ? 0.985 : 1
 
     function claimSelectedTab() {
         if (tab.tabStrip) {

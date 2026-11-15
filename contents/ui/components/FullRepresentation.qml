@@ -267,7 +267,7 @@ Item {
                         : providerTabsBar.tabHeight
                     Layout.preferredHeight: providerTabsBar.tabHeight
                     radius: providerTabsBar.tabRadius
-                    color: providerTabMouse.pressed
+                    color: providerTabMouse.containsPress
                         ? applet.withAlpha(Kirigami.Theme.focusColor, 0.24)
                         : (selected
                         ? applet.withAlpha(Kirigami.Theme.focusColor, 0.18)
@@ -277,8 +277,9 @@ Item {
                         ))
                     border.width: keyboardFocusVisible ? 1 : 0
                     border.color: Kirigami.Theme.focusColor
-                    opacity: modelData.error.length > 0 ? 0.62 : 1
-                    scale: providerTabMouse.pressed ? 0.985 : 1
+                    opacity: modelData.error.length > 0 && !selected && !keyboardFocusVisible
+                        && !providerTabMouse.containsMouse ? 0.62 : 1
+                    scale: providerTabMouse.containsPress ? 0.985 : 1
                     onSelectedChanged: providerTab.claimSelectedTab()
                     Component.onCompleted: providerTab.claimSelectedTab()
 

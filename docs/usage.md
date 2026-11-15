@@ -112,7 +112,11 @@ work and upstream contract requirements.
   keeps the scroll position. Usage refreshes keep keyboard focus on the provider
   tab while the provider order remains unchanged.
   Tabs and Overview rows show press and keyboard-focus feedback immediately;
-  only the pointer-release scale recovery uses the desktop animation duration.
+  moving the held pointer outside clears the pressed appearance, and moving
+  back inside restores it. Releasing outside cancels the click. Scale recovery
+  uses the desktop animation duration. A provider tab with an error remains
+  dimmed at rest, but selection, hover, and keyboard focus restore its normal
+  opacity so recovery navigation stays clear.
   Account and plan share a line when they fit; narrow widths or larger fonts
   place the plan below the account. Each keeps its full-text hover tooltip when
   abbreviated, and the update time remains on a separate line. Quota titles and

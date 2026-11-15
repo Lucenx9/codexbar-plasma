@@ -18,6 +18,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Keep failed provider tabs legible when selected, hovered, or keyboard-focused.
+  Clear the pressed appearance of popup tabs and Overview rows when dragging
+  outside, and restore it when moving back inside before release.
+
 - Replace informational message surfaces with contextual text. Show cost
   provenance and exclusion explanations on demand below the qualified totals,
   keep excluded-token totals marked partial for the actual day or period across

@@ -171,6 +171,12 @@ TestCase {
         // A press is feedback, not activation. Releasing outside cancels it.
         compare(applet.selectedProviderID, "codex");
         mouseMove(item, item.width + 20, item.height / 2);
+        tryCompare(item, "scale", 1);
+        verify(item.color !== applet.withAlpha(Kirigami.Theme.focusColor, data.pressAlpha));
+        mouseMove(item, item.width / 2, item.height / 2);
+        compare(item.scale, data.scale);
+        compare(item.color, applet.withAlpha(Kirigami.Theme.focusColor, data.pressAlpha));
+        mouseMove(item, item.width + 20, item.height / 2);
         mouseRelease(item, item.width + 20, item.height / 2);
         compare(applet.selectedProviderID, "codex");
         tryCompare(item, "scale", 1);
@@ -181,6 +187,29 @@ TestCase {
         compare(applet.selectedProviderID, "claude");
         if (!data.overview)
             compare(item.color, applet.withAlpha(Kirigami.Theme.focusColor, 0.18));
+    }
+
+    function test_failedTabKeepsInteractionFeedbackLegible() {
+        var failed = provider("claude", "Claude", -1);
+        failed.error = "Synthetic provider timeout";
+        applet.presentedProviders = [provider("codex", "Codex", 10), failed];
+        var tab = providerTabRepeater.itemAt(1);
+        verify(waitForPolish(fullRoot.Window.window));
+        fullRoot.forceActiveFocus(Qt.OtherFocusReason);
+        mouseMove(fullRoot, fullRoot.width - 1, fullRoot.height - 1);
+        compare(tab.opacity, 0.62);
+        mouseMove(tab, tab.width / 2, tab.height / 2);
+        compare(tab.opacity, 1);
+        mouseMove(fullRoot, fullRoot.width - 1, fullRoot.height - 1);
+        var focus = tab.nextItemInFocusChain(true);
+        focus.forceActiveFocus(Qt.TabFocusReason);
+        verify(tab.keyboardFocusVisible);
+        compare(tab.opacity, 1);
+        keyClick(Qt.Key_Space);
+        compare(applet.selectedProviderID, "claude");
+        fullRoot.forceActiveFocus(Qt.OtherFocusReason);
+        compare(tab.opacity, 1);
+        compare(tab.modelData.error, failed.error);
     }
 
     function test_changedOverviewSnapshotPreservesKeyboardFocusAndUpdatesRow() {
