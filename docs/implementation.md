@@ -1109,6 +1109,11 @@ interaction and adapts quota data. `panelMeterShape` is independent of the
 persisted `panelStyle` color choice, defaults to `capsules`, and is reset by
 General with the other user settings. Direct geometry QtTests and the panel
 matrix cover rings, including small/vertical panels and absent/zero quotas.
+Neutral and warning ring tracks use a 5.5:1 source contrast target to preserve
+at least 3:1 in the tested antialiased hairlines. Confidence markers have a
+font-measured, permanently reserved slot beside horizontal rings or below
+vertical rings; they never obscure the arc or resize the group on refresh.
+Ring layouts use their content width with a native compact hit-area minimum.
 
 ## QML conventions
 

@@ -439,22 +439,28 @@ TestCase {
     }
 
     function test_ringMarkersLeaveTheLogoCenterVisible_data() {
-        return [{tag: "horizontal24", vertical: false, extent: 24},
-            {tag: "horizontal32", vertical: false, extent: 32},
-            {tag: "vertical24", vertical: true, extent: 24},
-            {tag: "vertical32", vertical: true, extent: 32}];
+        var rows = [];
+        for (var vertical of [false, true])
+            for (var extent of [24, 32])
+                for (var confidence of ["estimated", "unknown"])
+                    for (var mirrored of [false, true])
+                        rows.push({tag: [vertical, extent, confidence, mirrored].join("-"),
+                            vertical: vertical, extent: extent, confidence: confidence, mirrored: mirrored});
+        return rows;
     }
 
     function test_ringMarkersLeaveTheLogoCenterVisible(data) {
         applet.panelMeterShape = "rings";
         applet.verticalFormFactor = data.vertical;
-        applet.quotaConfidence = "estimated";
+        applet.quotaConfidence = data.confidence;
         applet.quotaStale = true;
         applet.panelOrder = ["meters"];
         var panel = createControl("CompactRepresentation", {applet: applet,
             width: data.vertical ? data.extent : 300, height: data.vertical ? 240 : data.extent,
             animationsEnabled: false});
         if (!panel) return;
+        panel.LayoutMirroring.enabled = data.mirrored;
+        panel.LayoutMirroring.childrenInherit = true;
         verify(waitForRendering(panel));
         var meter = findItem(panel, item => item.objectName === "panelProviderMeter");
         var icon = findChild(meter, "panelProviderIcon");
@@ -465,6 +471,69 @@ TestCase {
             verify(center.x < 0 || center.x > marker.width || center.y < 0 || center.y > marker.height,
                 name + " covers the provider logo center");
         }
+        var confidence = findChild(meter, "panelConfidenceMarker");
+        var ring = findChild(meter, "panelMeterRing");
+        var position = confidence.mapToItem(ring, 0, 0);
+        verify(data.vertical ? position.y >= ring.height
+            : (data.mirrored ? position.x + confidence.width <= 0 : position.x >= ring.width),
+            "Confidence marker must not obscure the quota arc");
+        var bounds = confidence.mapToItem(panel, 0, 0);
+        verify(bounds.x >= 0 && bounds.y >= 0
+            && bounds.x + confidence.width <= panel.width
+            && bounds.y + confidence.height <= panel.height);
+        var extent = data.vertical ? panel.desiredHeight : panel.desiredWidth;
+        applet.quotaConfidence = "exact";
+        wait(0);
+        compare(data.vertical ? panel.desiredHeight : panel.desiredWidth, extent,
+            "Confidence updates must not move neighbouring providers");
+    }
+
+    function test_singleRingUsesItsContentWidth() {
+        applet.panelMeterShape = "rings";
+        applet.meterCount = 1;
+        applet.panelOrder = ["meters"];
+        applet.providerNameText = "";
+        applet.usageText = "";
+        var panel = createControl("CompactRepresentation", {applet: applet, height: 32,
+            animationsEnabled: false});
+        if (!panel) return;
+        verify(waitForRendering(panel));
+        verify(panel.desiredWidth < 64, "A single ring still occupies a capsule-sized slot");
+        var meter = findChild(panel, "panelProviderMeter");
+        verify(meter.width >= panel.ringDiameter);
+        mouseClick(meter, meter.width / 2, meter.height / 2);
+        compare(applet.openedProvider, "codex");
+    }
+
+    function test_neutralRingTrackHasRenderedContrast_data() {
+        var rows = [];
+        for (var light of [false, true])
+            for (var diameter of [22, 30, 46, 48])
+                rows.push({tag: light + "-" + diameter, light: light, diameter: diameter});
+        return rows;
+    }
+
+    function test_neutralRingTrackHasRenderedContrast(data) {
+        var background = data.light ? Qt.rgba(239 / 255, 240 / 255, 241 / 255, 1)
+            : Qt.rgba(32 / 255, 35 / 255, 38 / 255, 1);
+        var foreground = data.light ? Qt.rgba(35 / 255, 38 / 255, 41 / 255, 1)
+            : Qt.rgba(239 / 255, 240 / 255, 241 / 255, 1);
+        var holder = createTemporaryQmlObject('import QtQuick; Rectangle {}', testCase);
+        holder.width = holder.height = data.diameter;
+        holder.color = background;
+        var rings = createControl("PanelQuotaRings", {width: data.diameter, height: data.diameter,
+            animationsEnabled: false, backgroundColor: background, textColor: foreground,
+            trackColor: ThemeContrast.readableAccentColor(
+                ThemeContrast.interpolateColor(background, foreground, 0.35), background, foreground),
+            meters: [{percent: 0, color: foreground, warning: false}]}, holder);
+        if (!rings) return;
+        verify(waitForRendering(rings));
+        var image = grabImage(holder);
+        var contrast = 1;
+        for (var y = data.diameter / 2 - 2; y <= data.diameter / 2 + 2; y++)
+            for (var x = 0; x < 5; x++)
+                contrast = Math.max(contrast, ThemeContrast.contrastRatio(image.pixel(x, y), background));
+        verify(contrast >= 3, "Empty neutral ring has insufficient rendered contrast: " + contrast);
     }
 
     function test_panelMetersStayCenteredWithSpareWidth_data() {
