@@ -40,6 +40,8 @@ work and upstream contract requirements.
   horizontal ring uses a compact slot instead of the capsule minimum width.
   Ring groups use tighter margins around the reserved markers and between
   providers, keeping the panel compact even when every reading is exact.
+  Hover and keyboard-focus feedback stay centered on icon-only rings; when
+  provider text is shown, the feedback covers the whole provider group.
   The settings preview follows pending shape changes;
   Apply/Cancel retains its usual meaning. The minimal-content preset keeps the
   selected shape. Restoring defaults selects Capsules. Unknown shape values

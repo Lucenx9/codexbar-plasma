@@ -558,8 +558,15 @@ Item {
                     }
 
                     Rectangle {
-                        anchors.fill: parent
-                        anchors.margins: compactRoot.ringMeters ? -1 : 0
+                        id: providerFeedback
+                        objectName: "panelProviderFeedback"
+                        // The marker slot stays clickable, but its empty space
+                        // must not pull an icon-only ring's feedback off center.
+                        readonly property bool followsRing: compactRoot.ringMeters && !compactMeter.showsPrimaryText
+                        x: followsRing ? meterContents.x + meterIconCell.x : 0
+                        y: followsRing ? meterContents.y + meterIconCell.y : 0
+                        width: followsRing ? meterIconCell.width : parent.width
+                        height: followsRing ? meterIconCell.height : parent.height
                         radius: Kirigami.Units.smallSpacing
                         color: compactRoot.applet.withAlpha(Kirigami.Theme.textColor,
                             compactMeterMouse.pressed ? 0.14 : (compactMeterMouse.containsMouse ? 0.07 : 0))
@@ -573,8 +580,8 @@ Item {
                     }
 
                     Rectangle {
-                        anchors.fill: parent
-                        anchors.margins: compactRoot.ringMeters ? -1 : 0
+                        objectName: "panelProviderFocus"
+                        anchors.fill: providerFeedback
                         visible: compactMeter.activeFocus
                         radius: Kirigami.Units.smallSpacing
                         color: "transparent"
@@ -583,12 +590,14 @@ Item {
                     }
 
                     GridLayout {
+                        id: meterContents
                         anchors.centerIn: parent
                         columns: compactRoot.verticalPanel ? 1 : 4
                         rowSpacing: compactRoot.meterSpacing
                         columnSpacing: compactRoot.meterSpacing
 
                         Item {
+                            id: meterIconCell
                             Layout.alignment: Qt.AlignCenter
                             Layout.preferredWidth: compactRoot.ringMeters ? compactRoot.ringDiameter : compactRoot.meterIconSize
                             Layout.preferredHeight: Layout.preferredWidth

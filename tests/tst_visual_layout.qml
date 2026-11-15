@@ -488,6 +488,60 @@ TestCase {
             "Confidence updates must not move neighbouring providers");
     }
 
+    function test_ringFeedbackCentersOnTheRing_data() {
+        return test_ringMarkersLeaveTheLogoCenterVisible_data();
+    }
+
+    function test_ringFeedbackCentersOnTheRing(data) {
+        applet.panelMeterShape = "rings";
+        applet.verticalFormFactor = data.vertical;
+        applet.panelOrder = ["meters"];
+        var panel = createControl("CompactRepresentation", {applet: applet,
+            width: data.vertical ? data.extent : 300, height: data.vertical ? 240 : data.extent,
+            animationsEnabled: false});
+        verify(panel !== null);
+        panel.LayoutMirroring.enabled = data.mirrored;
+        panel.LayoutMirroring.childrenInherit = true;
+        verify(waitForRendering(panel));
+        var meter = findChild(panel, "panelProviderMeter");
+        var ring = findChild(meter, "panelMeterRing");
+        var feedback = findChild(meter, "panelProviderFeedback");
+        var focus = findChild(meter, "panelProviderFocus");
+        var center = ring.mapToItem(feedback, ring.width / 2, ring.height / 2);
+        fuzzyCompare(center.x, feedback.width / 2, 0.01);
+        fuzzyCompare(center.y, feedback.height / 2, 0.01);
+        compare(feedback.width, feedback.height);
+        var bounds = feedback.mapToItem(meter, 0, 0);
+        verify(bounds.x >= 0 && bounds.y >= 0);
+        verify(bounds.x + feedback.width <= meter.width + 0.01);
+        verify(bounds.y + feedback.height <= meter.height + 0.01);
+        mouseMove(ring, ring.width / 2, ring.height / 2);
+        tryCompare(applet, "hoveredPanelProviderID", meter.modelData.provider);
+        verify(feedback.color.a > 0);
+        meter.forceActiveFocus(Qt.TabFocusReason);
+        compare(focus.visible, true);
+        compare(focus.x, feedback.x);
+        compare(focus.y, feedback.y);
+        compare(focus.width, feedback.width);
+        compare(focus.height, feedback.height);
+        applet.quotaConfidence = data.confidence;
+        wait(0);
+        meter = findChild(panel, "panelProviderMeter");
+        feedback = findChild(meter, "panelProviderFeedback");
+        verify(waitForRendering(panel));
+        var after = feedback.mapToItem(meter, 0, 0);
+        compare(after.x, bounds.x);
+        compare(after.y, bounds.y);
+        var marker = findChild(meter, "panelConfidenceMarker");
+        mouseMove(marker, marker.width / 2, marker.height / 2);
+        tryCompare(applet, "hoveredPanelProviderID", meter.modelData.provider);
+        mouseClick(marker, marker.width / 2, marker.height / 2);
+        compare(applet.openedProvider, meter.modelData.provider);
+        mouseMove(testCase, 600, 220);
+        tryCompare(applet, "hoveredPanelProviderID", "");
+        compare(feedback.color.a, 0);
+    }
+
     function test_singleRingUsesItsContentWidth() {
         applet.panelMeterShape = "rings";
         applet.meterCount = 1;

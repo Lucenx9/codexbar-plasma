@@ -1117,6 +1117,11 @@ Ring layouts use their content width with a native compact hit-area minimum.
 Their internal and inter-provider gaps use half the theme's small spacing
 (rounded to at least one pixel), since the marker slot already separates arcs.
 Capsules retain the original spacing.
+Icon-only ring hover, pressed, and keyboard-focus feedback follows the ring
+cell, excluding the reserved marker slot. The full provider group remains
+clickable, including the confidence marker. Groups with inline provider text
+keep feedback across the whole group; the feedback never extends outside its
+interaction bounds.
 
 ## QML conventions
 
