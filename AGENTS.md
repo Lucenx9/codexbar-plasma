@@ -1,190 +1,129 @@
 # Agent instructions
 
-This repository contains only the standalone KDE Plasma widget for CodexBar.
-Here, plugin, widget, plasmoid, and applet all mean the Plasma frontend.
+This repository contains only the standalone KDE Plasma frontend for CodexBar.
+Widget, applet, plasmoid, and plugin refer to that frontend here.
 
 ## Project boundaries
 
-- Work on this applet. The official macOS app and local upstream/fork workspaces
-  are read-only references unless the user explicitly requests a separate
-  upstream change. A macOS parity request authorizes comparison and Plasma
-  implementation only. Keep Swift, Xcode, and the full upstream tree out of here.
-- Provider logic, authentication, config parsing, quota fetching, and JSON
-  contracts belong in the upstream `codexbar` CLI. Use supported CLI commands;
-  never hand-edit its config JSON or add provider scraping/auth logic to QML.
-- Confirm data and actions in the released official Linux CLI before designing
-  UI around them. If the contract is missing, record the requirement in
-  [TODO.md](TODO.md) with the verified CLI version and stop that part at the
-  frontend boundary.
-- Prefer generic CLI-described fields and actions. Unknown providers and optional
-  fields must degrade gracefully; static provider metadata is a tested fallback.
+- Work on the applet. Official macOS and local upstream/fork trees are read-only
+  references unless the user explicitly requests an upstream change. Parity work
+  authorizes comparison and Plasma implementation. Keep Swift and Xcode out.
+- Provider logic, authentication, config parsing, fetching, and JSON contracts
+  belong in the upstream `codexbar` CLI. Use supported commands; never hand-edit
+  CLI config JSON or add provider scraping/auth logic to QML.
+- Verify required fields/actions in a released official Linux CLI. Record missing
+  contracts in [TODO.md](TODO.md), with the verified version, and stop that part
+  at the frontend boundary. Complete independent in-scope work.
+- Prefer generic CLI-described fields/actions. Unknown providers and optional
+  fields degrade gracefully; static metadata is a tested fallback.
 
 ## Read for the task
 
-Read these references before changing the corresponding area. Follow their
-relevant sections; ordinary links here are on-demand reading, not bulk imports.
+Read only the relevant sections and their implementation links before editing.
 
-- For panel, popup, or settings UI changes and design reviews, read
-  [Design](DESIGN.md) before planning or editing. Apply its visual, interaction,
-  and accessibility criteria.
-- For QML, JavaScript, configuration, tests, packaging, or runtime diagnosis, read
-  [Development](docs/development.md) and follow its relevant implementation or
-  verification links. Then read the owning implementation, config schema, and
-  nearest regression check before editing.
-- For feature behavior, provider changes, CLI contracts, or macOS parity, read
-  the relevant [usage guide](docs/usage.md), contract/evidence links in the
-  [documentation index](docs/README.md), and [TODO.md](TODO.md). TODO owns the
-  remaining Linux/Plasma parity work; maintained guides own supported behavior.
-  Read linked issues for discussion, not a second parity inventory.
-- For a new official CodexBar release or a parity review, follow
-  [upstream release maintenance](docs/development.md#upstream-release-maintenance)
-  with the [`parity-review` skill](.claude/skills/parity-review/SKILL.md).
-  Update TODO without a user reminder, including releases since its last review.
-  Track only useful Linux/Plasma equivalents and their official CLI blockers.
-- For documentation changes, read the [documentation index](docs/README.md).
-  For agent instructions, also read
-  [instruction maintenance](docs/development.md#maintaining-agent-instructions).
-- For catalog or user-facing text changes, read
-  [Translations](docs/translations.md).
-- For PR creation or updates, complete every section of the
-  [PR template](.github/pull_request_template.md).
+| Task | Required reference |
+| --- | --- |
+| Panel, popup, settings UI, or design review | [Design](DESIGN.md) |
+| QML, JavaScript, config, tests, packaging, or runtime diagnosis | [Development](docs/development.md), then the owning implementation, config schema, and nearest regression check |
+| Feature behavior, providers, CLI contracts, or parity | Relevant [usage](docs/usage.md) section, [contract/evidence index](docs/README.md), and [TODO](TODO.md) |
+| New official release or parity review | [Release maintenance](docs/development.md#upstream-release-maintenance) and [parity-review skill](.claude/skills/parity-review/SKILL.md) |
+| Documentation | [Documentation index](docs/README.md) and [maintenance](docs/development.md#documentation-and-work-tracking) |
+| Agent instructions or skills | Also [instruction maintenance](docs/development.md#maintaining-agent-instructions) |
+| Catalogs or user-facing strings | [Translations](docs/translations.md) |
+| PR creation or update | Every section of the [PR template](.github/pull_request_template.md) |
+
+For a new release, update TODO without a reminder, covering every release since
+its last review. Track useful Linux/Plasma equivalents and official CLI blockers.
 
 ## Sources of truth
 
-1. The Plasma implementation, config schema, tests, and documented decisions
-   define current support.
-2. Released official Linux CLI contracts define what the frontend may consume.
-3. The official macOS app supplies product and UX references only. Recreate
-   useful Plasma-native behavior, without translating its implementation.
-4. Local forks and experimental branches are comparison material unless the
-   user selects them as the target.
+1. Plasma code, config schema, tests, and documented decisions define support.
+2. Released official Linux CLI contracts define consumable data and actions.
+3. Official macOS supplies product/UX references for Plasma-native equivalents.
+4. Local forks and experimental branches are comparisons unless selected as target.
 
-Before changes that depend on external APIs, framework behavior, tooling,
-security guidance, or uncertain technical assumptions, verify current best
-practices on the web using official documentation and primary sources. Check
-applicability to the project's supported versions, cite sources that inform
-material decisions, and state any verification limits. Keep research scoped
-to the task and apply findings within the source-of-truth order above.
+Pin comparisons to exact versions, tags, or commits. Separate installed CLI,
+upstream main, and fork observations. Classify parity gaps as implementable in
+Plasma now, blocked on an official CLI contract, or macOS-only/non-goal. Swift
+models and screenshots do not prove CLI output. TODO owns remaining parity work;
+linked issues supply discussion, not a second inventory.
 
-Pin every comparison to an exact version, tag, or commit. Keep installed CLI,
-upstream main, and fork observations separate. Classify each parity gap as
-**Plasma-native and implementable now**, **blocked on an official CLI contract**,
-or **macOS-only/non-goal**. Screenshots and Swift models are not CLI contracts.
+Before relying on external APIs, framework/tool behavior, security guidance, or
+uncertain technical assumptions, check current official/primary web sources.
+Apply them to supported versions within the source order above. Cite material
+decisions and state verification limits.
 
 ## Working style
 
-- Evaluation questions authorize inspection and an answer. Change requests
-  authorize the smallest complete in-scope implementation. Preserve existing
-  behavior and safeguards unless the request or evidence supports changing them.
-- Complete independent work when one part is blocked; state the exact blocker.
-  Proceed with reversible, low-cost steps already within the user's request.
-- Ask before destructive actions, meaningful cost, or external publication
-  unless already authorized. Ask when ambiguity would materially change the
-  result. Existing authorization applies throughout the task.
-- Preserve unrelated user changes. Inspect `git status` and `git diff` before
-  editing and before handoff; stage only the intended changes.
-- Avoid unrelated cleanup, dependencies, abstractions, and formatting churn.
-  Delegate only substantial independent work, with disjoint ownership, while
-  continuing useful work in the main task.
+- Evaluation requests authorize inspection and an answer. Change requests
+  authorize the smallest complete implementation, preserving existing safeguards.
+- Proceed with reversible in-scope work. Ask before destructive actions,
+  meaningful cost, or external publication unless already authorized, and when
+  ambiguity materially changes the result. Session authorization persists.
+- Inspect `git status` and `git diff` before editing and handoff. Preserve
+  unrelated changes; stage only intended files. Avoid unrelated cleanup,
+  dependencies, abstractions, and formatting churn.
+- Delegate substantial independent work with disjoint ownership while continuing
+  useful work yourself.
 - Keep repository prose in technical English. Answer in the user's language
-  with concise progress and a short result: changes, verification, blockers or
-  required action. Say when no action is needed.
+  with changes, verification, and exact blockers or required action. Say when
+  no action is needed.
 
 ## Architecture and data safety
 
-- Owning QML pages manage DataSource/CLI processes, nonce/timer lifecycles,
-  configuration writes, prompts, URL opening, notifications, and other effects.
-  Put non-trivial pure parsing, normalization, presentation, planning, and
-  transition logic in focused JS modules in the same change.
-- Pure modules accept explicit inputs and return bounded data, semantic results,
-  intents, or opaque next state. They must not read root properties, localize
-  text, or perform effects. QML adapts inputs, commits state, localizes, and acts.
-- Test pure public interfaces with direct adversarial QtTests. Use surface
-  assertions for QML wiring, effect ownership, and lifecycle ordering. Extract
-  only when the interface hides real complexity; avoid pass-through controllers
-  and callback modules that mirror root state.
-- Treat CLI stdout/stderr, descriptors, cached payloads, labels, URLs, and status
-  text as untrusted. Validate shapes, types, bounds, command allowlists, and URL
-  schemes. Preserve healthy provider data when an optional enrichment fails.
-- Never expose raw keys, cookies, bearer tokens, auth headers, or unredacted
-  diagnostics in logs, UI, fixtures, or persisted data. Use supported CLI stdin
-  secret flows and redacted results.
-- Secrets must never appear in command lines, even as shell positional arguments
-  piped to stdin: `/proc/<pid>/cmdline` exposes them. Only
-  `promptDescriptorSecret` may carry a secret; it reads the value inside the
-  script. Generic field writers must reject `kind === "secret"`. AI Insights
-  keys never enter QML: `scripts/lib/ai_insights.py` prompts, stores, and reads
-  them through Secret Service inside its own process.
-- Keep timeout, disconnect, retry, nonce, and stale-result handling beside the
-  process lifecycle. Late results must not replace a newer refresh or account
-  selection. Share guard implementations through `contents/ui/Guards.js`.
-- Preserve persisted config keys and the standard Plasma package shape. Keep
-  the Plasma 6 root as `PlasmoidItem` and all user-facing text in `i18n`/`i18np`.
+Before code changes, follow the [implementation reference](docs/implementation.md),
+including its ownership, behavioral contracts, and QML conventions.
+
+- QML owners manage processes, timers/nonces, config writes, prompts, URLs,
+  notifications, and effects. Focused pure JS modules accept explicit inputs
+  and return bounded data, intents, or next state. They read no root properties,
+  localize no text, and perform no effects. Extract only real complexity.
+- Validate untrusted CLI output, descriptors, caches, labels, URLs, and status
+  text: shapes, types, bounds, command allowlists, and URL schemes. Optional
+  enrichment failures must preserve healthy provider data.
+- Never expose secrets in logs, UI, fixtures, persisted data, or command lines,
+  including shell positional arguments piped to stdin. Use supported CLI stdin
+  secret flows and redacted results. Only `promptDescriptorSecret` may carry a
+  secret, read inside its script; generic writers reject `kind === "secret"`.
+  AI Insights keys stay in Python and Secret Service, never QML.
+- Keep timeout, disconnect, retry, nonce, and stale-result guards beside process
+  lifecycles. Late results cannot replace newer refresh/account state. Share
+  guards through `contents/ui/Guards.js`.
+- Preserve persisted config keys, the standard package shape, `PlasmoidItem`
+  root, and `i18n`/`i18np` for user-facing text. Test pure public behavior with
+  adversarial QtTests; use surface assertions for wiring and effect ownership.
 
 ## Verification and delivery
 
-- Deliver changes through a PR by default. A direct push is an exception only
-  when explicitly requested for the current task; it does not authorize bypassing
-  branch protections. Follow [delivery and CI](docs/development.md#delivery-and-ci)
-  after every push and authorized merge. Own the checks through their final
-  result, fix in-scope failures, and report the verified commit and any blocker.
-- Use Conventional Commits for every PR title: `type(scope): description`, with
-  scope optional. Choose the type for the final change, such as `fix`, `feat`,
-  `docs`, or `ci`; follow [the title rules](docs/development.md#delivery-and-ci).
-- Own consistency across the repository, without user reminders. For every
-  change, follow [repository maintenance](docs/development.md#repository-maintenance)
-  before editing and before delivery. A task is complete only when affected
-  code, configuration, tests, tooling, translations, metadata, documentation,
-  and work tracking agree with the delivered behavior.
-- Run the narrowest relevant check while iterating, then `make check` before
-  handing off any repository change. It includes QML lint/QtTests, ShellCheck,
-  workflow and Python lint, other static checks, and AppStream metadata
-  validation. Each check is its own `make` target, so iterate with that target
-  instead of the whole suite.
-- Report exact failures, skips, and unavailable tools. An absent `kpackagetool6`,
-  `actionlint`, or `pyflakes` means its check is skipped, not passed. Use the
-  actual check output to assess coverage; consult `.github/workflows/ci.yml`
-  for the CI environment.
-- After code changes, run the CodeScene MCP checks in
-  [delivery and CI](docs/development.md#delivery-and-ci). Require passing quality
-  gates before committing; report unsupported files and unavailable analysis.
-- For packaging changes, also run `make package`. For component/delegate
-  extraction, install or upgrade the local plasmoid and inspect recent Plasma
-  logs as described in [runtime verification](docs/runtime-verification.md#runtime-verification).
-  Packaging and runtime checks count only when actually performed.
-- Use `codexbar` as the default executable. Discover an absolute path with
-  `command -v codexbar`; do not assume an installation-specific location.
-- Publish only when authorized. A release requires green checks and
-  `make package`; its artifact is `dist/codexbar-plasma.plasmoid`. The
-  [`release` skill](.claude/skills/release/SKILL.md) carries the command sequence.
+Follow [repository maintenance](docs/development.md#repository-maintenance) before
+editing and delivery, and [delivery and CI](docs/development.md#delivery-and-ci)
+after every push or authorized merge. Required outcomes:
+
+- Affected code, config, tests, tooling, translations, metadata, guides, and TODO
+  agree. Run the narrow check while iterating, then `make check`. Report exact
+  failures, skips, and unavailable tools as coverage limits.
+- Code changes pass the documented CodeScene MCP gates before committing;
+  unsupported files and unavailable analysis are reported separately.
+- Packaging changes also pass `make package`. Component/delegate extraction
+  requires local installation and recent Plasma-log inspection per
+  [runtime verification](docs/runtime-verification.md#runtime-verification).
+- Deliver through a PR on a `codex/` branch with a Conventional Commit title.
+  Direct push requires explicit authorization for this task and cannot bypass
+  branch protection. Follow checks to their final result for the delivered SHA.
+  Merge and release publication require authorization.
+- Discover the CLI with `command -v codexbar`. A release requires green checks,
+  `make package`, and the [release skill](.claude/skills/release/SKILL.md);
+  its artifact is `dist/codexbar-plasma.plasmoid`.
 
 ## Documentation hygiene
 
-- For user-visible changes, update `CHANGELOG.md` under `Unreleased` in the same
-  change. For release preparation or release tooling changes, follow
-  [changelog and releases](docs/development.md#changelog-and-releases).
-- Own documentation and TODO maintenance as part of every change, without a
-  user reminder. Before editing, identify affected guides, TODO entries, and
-  related issues. Before handoff, reconcile them with the final diff. Remove
-  completed TODO work in the implementing PR; retain any unresolved scope.
-  Follow [the maintenance workflow](docs/development.md#documentation-and-work-tracking),
-  including for authorized direct commits to main. State documentation impact
-  in the PR or commit body; use closing keywords only for fully completed work.
-- When changing installation, updates, or requirements, update [README.md](README.md)
-  in the same change. For user-visible behavior or defaults, update the affected
-  [usage guide](docs/usage.md) sections and any affected README summaries or
-  screenshots. For build, test, or contributor workflow changes, update
-  [Development](docs/development.md). Check documented commands and examples
-  against the implementation before marking the change complete.
-- Keep maintained guides, CLI contracts, and lasting decisions in `docs/`.
-  List every document and image in [docs/README.md](docs/README.md) with its purpose.
-- Put temporary screenshots, logs, probe output, plans, and agent review reports
-  in ignored `dist/review/` or the OS temp directory. Summarize results in the PR;
-  promote only reusable findings into maintained documentation.
-- Remove obsolete documents and update links when replacing them. Preserve
-  pinned CLI evidence and unresolved decisions. Completed review histories and
-  captures remain recoverable through Git history. Keep README images synthetic.
-- Keep this file within the repository's 16 KiB budget. Add rules after a real bug
-  or repeated friction; move task-specific detail behind a conditional pointer.
-  The documentation tests in `make check` enforce that budget, the docs index,
-  retired artifact directories, and local Markdown link targets.
+[Documentation maintenance](docs/development.md#documentation-and-work-tracking)
+owns guide/TODO updates, changelog rules, index coverage, and evidence retention.
+Apply it in the same change without a reminder. Keep one owning document per
+fact; summarize and link elsewhere. Update existing sections before adding files.
+Temporary captures, logs, probes, plans, and review reports go in ignored
+`dist/review/` or the OS temp directory. Keep README images synthetic.
+
+Keep this file within the enforced 16 KiB budget. Add rules only after an observed
+failure or repeated friction; move task-specific procedure behind a conditional
+pointer. Keep `CLAUDE.md` as the single `@AGENTS.md` import.

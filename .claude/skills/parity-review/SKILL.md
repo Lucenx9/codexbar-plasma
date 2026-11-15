@@ -1,6 +1,6 @@
 ---
 name: parity-review
-description: Review new stable upstream CodexBar releases for Linux/Plasma parity, probe changed CLI contracts in isolation, and update TODO.md with a dated research note in one docs PR. Use when a new official CodexBar release appears, when the scheduled release monitor runs, or when the user asks for a parity review. Do not use to implement the gaps it finds or to release the widget.
+description: Review new stable upstream CodexBar releases for Linux/Plasma parity, probe changed CLI contracts in isolation, and update TODO.md and reusable contract evidence in one docs PR. Use when a new official CodexBar release appears, when the scheduled release monitor runs, or when the user asks for a parity review. Do not use to implement the gaps it finds or to release the widget.
 ---
 
 # Review upstream releases for parity
@@ -72,15 +72,19 @@ sandbox /tmp/probe/bin/codexbar --version
 
 ## 4. Write the results
 
-- Add `docs/research/YYYY-MM-DD-macos-parity-A.B.C.md` with the sections of the
-  newest note: header with Plasma commit and upstream tag, commit, and publish
-  time; release coverage table; Linux CLI contract changes; carried-forward
-  blockers rechecked; excluded from the Linux backlog; unverified; probe method.
-  The probe method names the `bwrap` isolation.
-- Index the note in `docs/README.md`.
-- In TODO.md, replace the review baseline's coverage with this review (earlier
-  coverage stays in its indexed note), add gaps with evidence and a done
-  condition, remove implemented ones, and revise resolved blockers.
+- Put the release delta, routine unchanged rechecks, and verification results in
+  the PR. Record exact Plasma/upstream commits, release dates, versions, probe
+  method, exclusions, and verification limits there.
+- Add `docs/research/YYYY-MM-DD-macos-parity-A.B.C.md` only when the review yields
+  reusable contract evidence or an unresolved decision needed by later work.
+  Include relevant sections from the newest note: release coverage, Linux CLI
+  changes, rechecked blockers, exclusions, unverified cases, and probe method.
+  Pin exact commits/versions and name the `bwrap` isolation. Index the note in
+  `docs/research/README.md`; do not copy its contents into the main docs index.
+- In TODO.md, replace the review baseline's coverage with this review's PR and
+  any evidence note. Add gaps with evidence and a done condition, remove
+  implemented ones, and revise resolved blockers. Earlier coverage remains in
+  its review PRs and indexed evidence.
 
 ## 5. Deliver
 

@@ -18,6 +18,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Shorten user and contributor guides, organize CLI evidence behind a research
+  index, and reduce agent instructions while preserving safety and delivery rules.
+
 - Keep failed provider tabs legible when selected, hovered, or keyboard-focused.
   Clear the pressed appearance of popup tabs and Overview rows when dragging
   outside, and restore it when moving back inside before release.
