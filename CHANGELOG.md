@@ -73,6 +73,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Make popup tabs and Overview rows respond immediately to presses and keyboard
   focus. Keep only the brief scale recovery after releasing the pointer.
 
+- Truncated labels in the popup's Provider actions now show their full text
+  on hover or keyboard focus.
+
 - Center panel-ring hover, pressed, and keyboard-focus feedback on the ring
   instead of including the empty confidence-marker slot. Keep marker clicks
   and provider text within the existing provider interaction area.

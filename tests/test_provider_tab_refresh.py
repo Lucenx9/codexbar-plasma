@@ -226,6 +226,43 @@ TestCase {
         verify(!providerActionRows.itemAt(0).visible);
     }
 
+    function test_truncatedActionTitleIsReadableWithMouseAndKeyboard() {
+        applet.presentedOverviewProviders = [];
+        var title = "Open the usage dashboard for a workspace with a long <literal> name";
+        applet.selectedProviderData = {provider: "codex", actions: actionsFor(true, title)};
+        var button = findChild(providerActionRows.itemAt(1), "providerActionButton");
+        var tip = findChild(button, "providerActionToolTip");
+        verify(tip !== null);
+        button.font.pixelSize = 24;
+        button.hoverEnabled = true;
+        tryCompare(button.contentItem, "truncated", true);
+        compare(tip.plainText, title);
+        verify(tip.text.indexOf("&lt;literal&gt;") >= 0);
+
+        fullRoot.forceActiveFocus(Qt.OtherFocusReason);
+        mouseMove(fullRoot, width - 1, height - 1);
+        wait(50);
+        mouseMove(button, button.width / 2, button.height / 2);
+        tryCompare(tip, "visible", true);
+        mouseMove(fullRoot, width - 1, height - 1);
+        tryCompare(tip, "visible", false);
+
+        button.forceActiveFocus(Qt.TabFocusReason);
+        tryCompare(tip, "visible", true);
+        compare(applet.lastPerformedAction, "");
+        applet.selectedProviderData = {provider: "codex", actions: actionsFor(true, "Refresh")};
+        tryCompare(button.contentItem, "truncated", false);
+        tryCompare(tip, "visible", false);
+        compare(tip.plainText, "Refresh");
+        keyClick(Qt.Key_Space);
+        compare(applet.lastPerformedAction, "refresh");
+
+        applet.selectedProviderData = {provider: "codex", actions: actionsFor(true, title)};
+        tryCompare(tip, "visible", true);
+        providerActionsToggle.expanded = false;
+        tryCompare(tip, "visible", false);
+    }
+
     function test_quotaGaugeKeepsSmallValuesProportional() {
         for (var used of [-1, 0, 1, 12, 25, 43, 100]) {
             applet.presentedProviders = [provider("codex", "Codex", used), provider("claude", "Claude", used)];

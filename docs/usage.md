@@ -294,7 +294,8 @@ work and upstream contract requirements.
   precedence over its action label.
   Usage-row hide actions appear immediately on hover or keyboard focus.
   **Provider actions** expands account management, provider links and widget
-  commands below the usage details. It starts collapsed and closes when the
+  commands below the usage details. Truncated action labels show their full
+  text on hover or keyboard focus. It starts collapsed and closes when the
   provider or account changes. Focus returns to its disclosure when a focused
   action becomes hidden; focus on another visible control stays there.
   Provider icons stay centered in icon-only tabs, including when their quota
