@@ -108,7 +108,6 @@ class PopupLayoutTest(unittest.TestCase):
             "Accessible.role: Accessible.Button",
             "Accessible.onPressAction:",
             "Keys.onPressed:",
-            "overviewRowMouse.pressed",
             "scale:",
         ):
             if not code_contains(overview_row_body, interaction_fragment):

@@ -1036,6 +1036,20 @@ TestCase {
         compare(tab.selected, false);
         compare(tab.showLabel, true);
 
+        // Dragging out disarms the press; re-entering restores its feedback.
+        mousePress(tab, tab.width / 2, tab.height / 2);
+        compare(tab.scale, 0.985);
+        var pressedColor = String(tab.color);
+        mouseMove(tab, tab.width + 20, tab.height / 2);
+        tryCompare(tab, "scale", 1);
+        verify(String(tab.color) !== pressedColor);
+        mouseMove(tab, tab.width / 2, tab.height / 2);
+        compare(tab.scale, 0.985);
+        compare(String(tab.color), pressedColor);
+        mouseMove(tab, tab.width + 20, tab.height / 2);
+        mouseRelease(tab, tab.width + 20, tab.height / 2);
+        compare(actionSpy.count, 0);
+
         // Click activates the tab
         mouseClick(tab, tab.width / 2, tab.height / 2);
         compare(actionSpy.count, 1);

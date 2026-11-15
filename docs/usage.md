@@ -95,6 +95,10 @@ quotas, resets, account and plan information, credits, service status, and
 optional provider details. Subscription renewal and expiration dates, when
 supplied by the CLI, are separate from quota resets.
 
+A failed provider tab stays dimmed until selected, hovered, or keyboard-focused.
+Releasing a tab or Overview row outside its bounds cancels activation; moving
+back inside before release restores its pressed feedback.
+
 - Left and Right move focus between tabs and wrap at either end. Home and End
   select the first and last focus position. Enter or Space opens the focused tab.
   Arrow direction follows visual order in right-to-left layouts.

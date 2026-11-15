@@ -70,14 +70,14 @@ Rectangle {
     implicitHeight: overviewRowContent.implicitHeight + Kirigami.Units.largeSpacing * 2
     Layout.preferredHeight: implicitHeight
     radius: applet.roundedSurfaceRadius
-    color: overviewRowMouse.pressed
+    color: overviewRowMouse.containsPress
         ? applet.withAlpha(Kirigami.Theme.focusColor, 0.16)
         : (keyboardFocusVisible
         ? applet.withAlpha(Kirigami.Theme.focusColor, 0.1)
         : (overviewRowMouse.containsMouse
         ? applet.withAlpha(Kirigami.Theme.textColor, 0.075)
         : applet.withAlpha(Kirigami.Theme.textColor, 0.035)))
-    scale: overviewRowMouse.pressed ? 0.99 : 1
+    scale: overviewRowMouse.containsPress ? 0.99 : 1
 
     Behavior on scale {
         enabled: targetValue === 1
