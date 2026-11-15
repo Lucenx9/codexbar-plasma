@@ -1466,6 +1466,14 @@ Item {
                                     Accessible.checkable: modelData.expandable === true
                                     Accessible.checked: providerActionRow.statusExpanded
 
+                                    Components.PlainToolTip {
+                                        objectName: "providerActionToolTip"
+                                        parent: providerActionButton
+                                        visible: providerActionButton.visible && actionTitle.truncated
+                                            && (providerActionButton.hovered || providerActionButton.visualFocus)
+                                        plainText: providerActionButton.text
+                                    }
+
                                     contentItem: RowLayout {
                                         LayoutMirroring.enabled: providerActionButton.mirrored
                                         spacing: providerActionButton.spacing
