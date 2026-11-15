@@ -286,6 +286,9 @@ Open **Providers** to search by name or ID and filter **All**, **Enabled**, or
 list reloads preserve the last loaded list; **Reload** retries. Changing the
 CLI path clears results from the previous executable.
 
+Bundled icons cover all 113 providers in official CLI 0.84.0. New providers use
+a generic icon; available data and setup still depend on Linux CLI support.
+
 **Provider enablement, credentials, and source saves take effect immediately.**
 Widget **Apply** and **Cancel** do not undo them. Secret prompts use the native
 password dialog and CLI stdin. Credentials never enter widget settings,
@@ -502,7 +505,7 @@ by the verified Linux CLI.
   history window returns to day mode.
 - **All history** totals cover recorded history. Charts, calendar, and daily rows
   show at most the newest 365 days; model totals and daily averages use up to
-  the newest 2,048 daily records. A long sparse history can span more calendar days.
+  2,048 daily input records. A long sparse history can span more calendar days.
 - Provider details compare today with the selected period. Today is unavailable
   until a scan from today arrives. Select a chart day for its models and tokens;
   change **Cost/Tokens** without fetching again. Missing breakdowns and list
@@ -529,10 +532,10 @@ a materially different warning appears again. Switching tabs alone does not
 dismiss it.
 
 Measured zeros stay zero. Positive spend below one cent is labeled as less than
-one cent. Different currencies are never converted, and amounts without a usable
-currency cannot become assumed USD totals. Dates and numeric separators follow
-your regional format. See [Cost history](cost-history.md) for bounds, aggregation
-rules, and pinned evidence.
+one cent. Different currencies are never converted; mixed-currency subtotals
+identify the included currency. Dates and numeric separators follow your regional
+format. See [Cost history](cost-history.md) for currency fallbacks, bounds,
+aggregation rules, and pinned evidence.
 
 ## Status and notifications
 
