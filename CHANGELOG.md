@@ -10,6 +10,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+## 0.2.57 - 2026-11-15
+
 ### Added
 
 - Add a linked `llms.txt` index for agents that need installation and usage
@@ -177,6 +179,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   date: an ongoing forecast no longer repeats its warning, and a confirmed
   recovery still allows a later warning. Equivalent reset timestamps no longer
   count as different quota windows.
+
+[Full diff](https://github.com/Lucenx9/codexbar-plasma/compare/v0.2.56...v0.2.57)
 
 ## 0.2.56 - 2026-11-12
 
