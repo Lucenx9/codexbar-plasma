@@ -9,6 +9,7 @@ are evidence for a specific version, not a description of today's widget.
 | Need | Read |
 | --- | --- |
 | Install, update, or report a problem | [Project README](../README.md) |
+| Find installation and usage docs as an AI agent | [Agent documentation index](../llms.txt) |
 | Use the panel, popup, providers, history, or settings | [Usage](usage.md) |
 | Contribute or report a vulnerability | [Contributing](../CONTRIBUTING.md), [security policy](../SECURITY.md) |
 | Change the UI | [Design](../DESIGN.md) |

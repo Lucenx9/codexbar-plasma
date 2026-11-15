@@ -7,7 +7,7 @@ local agent sessions, notifications, and multiple accounts.
 
 Available data and setup actions depend on the provider and the Linux CLI.
 
-[Install](#install) · [Requirements](#requirements) · [Features](#features) · [Update](#update) · [Troubleshooting](#troubleshooting) · [Development](#development)
+[Install](#install) · [Requirements](#requirements) · [Features](#features) · [Update](#update) · [Troubleshooting](#troubleshooting) · [Development](#development) · [AI agents](https://raw.githubusercontent.com/Lucenx9/codexbar-plasma/main/llms.txt)
 
 ![Overview, Usage and Spend, Sessions, and a provider detail tab in the CodexBar popup](docs/codexbar-plasma-tour.gif)
 

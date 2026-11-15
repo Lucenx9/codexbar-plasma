@@ -1,0 +1,23 @@
+# CodexBar Plasma
+
+> A standalone KDE Plasma 6 widget for the official CodexBar CLI.
+> The widget shows provider quotas, reset windows, costs, and local agent sessions.
+
+This repository contains the Plasma widget. The official CodexBar CLI provides
+provider data and authentication.
+
+The project README contains requirements and installation commands. Installation
+runs as the desktop user, without `sudo`. Unattended setup uses `--no-input`.
+The optional `--with-cli` flag also prepares a private official CLI copy.
+Selecting the CLI and adding the widget to a panel are separate setup steps.
+
+## Installation and use
+
+- [Project README](https://raw.githubusercontent.com/Lucenx9/codexbar-plasma/main/README.md): Requirements, installation commands, unattended setup, CLI selection, updates, and troubleshooting.
+- [Usage and settings](https://raw.githubusercontent.com/Lucenx9/codexbar-plasma/main/docs/usage.md): Provider setup, panel options, usage history, defaults, and data limits.
+
+## Optional
+
+- [Documentation index](https://raw.githubusercontent.com/Lucenx9/codexbar-plasma/main/docs/README.md): Maintained guides and verified CLI contract evidence.
+- [Contributor instructions](https://raw.githubusercontent.com/Lucenx9/codexbar-plasma/main/AGENTS.md): Boundaries, required references, checks, and PR delivery rules for agents that change this repository.
+- [Official CodexBar CLI](https://raw.githubusercontent.com/steipete/CodexBar/main/README.md): Upstream CLI documentation and provider references.
