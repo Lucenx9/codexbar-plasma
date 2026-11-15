@@ -282,13 +282,8 @@ Item {
                     onSelectedChanged: providerTab.claimSelectedTab()
                     Component.onCompleted: providerTab.claimSelectedTab()
 
-                    Behavior on color {
-                        ColorAnimation {
-                            duration: Kirigami.Units.shortDuration
-                        }
-                    }
-
                     Behavior on scale {
+                        enabled: targetValue === 1
                         NumberAnimation {
                             duration: Kirigami.Units.shortDuration
                             easing.type: Easing.OutCubic

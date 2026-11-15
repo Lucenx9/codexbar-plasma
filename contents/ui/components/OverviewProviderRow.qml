@@ -79,13 +79,8 @@ Rectangle {
         : applet.withAlpha(Kirigami.Theme.textColor, 0.035)))
     scale: overviewRowMouse.pressed ? 0.99 : 1
 
-    Behavior on color {
-        ColorAnimation {
-            duration: Kirigami.Units.shortDuration
-        }
-    }
-
     Behavior on scale {
+        enabled: targetValue === 1
         NumberAnimation {
             duration: Kirigami.Units.shortDuration
             easing.type: Easing.OutCubic

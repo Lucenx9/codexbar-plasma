@@ -111,6 +111,8 @@ work and upstream contract requirements.
   provider or account starts the details at the top; refreshing the same account
   keeps the scroll position. Usage refreshes keep keyboard focus on the provider
   tab while the provider order remains unchanged.
+  Tabs and Overview rows show press and keyboard-focus feedback immediately;
+  only the pointer-release scale recovery uses the desktop animation duration.
   Account and plan share a line when they fit; narrow widths or larger fonts
   place the plan below the account. Each keeps its full-text hover tooltip when
   abbreviated, and the update time remains on a separate line. Quota titles and
