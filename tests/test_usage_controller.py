@@ -240,6 +240,30 @@ TestCase {
         compare(empty.subject.lastCompletedAtMs, -1);
         compare(broken.emptyRosters, 0);
     }
+    function test_emptyAggregateClearsFreshnessAndRecovers() {
+        var o = create("empty-aggregate", {sourceMode: "api"});
+        completed(o, 1);
+        verify(o.subject.lastCompletedAtMs > 0);
+        o.subject.refresh(false);
+        tryCompare(o, "emptyRosters", 1);
+        compare(o.subject.loading, false);
+        compare(o.subject.errorText, "");
+        compare(o.subject.lastCompletedAtMs, -1);
+        compare(o.failures, []);
+        compare(o.snapshots.length, 1);
+        o.subject.refresh(false);
+        completed(o, 2);
+        verify(o.subject.lastCompletedAtMs > 0);
+    }
+    function test_initialEmptyAggregateUsesProviderSetup() {
+        var o = create("initial-empty-aggregate", {sourceMode: "api"});
+        tryCompare(o, "emptyRosters", 1);
+        compare(o.subject.loading, false);
+        compare(o.subject.errorText, "");
+        compare(o.subject.lastCompletedAtMs, -1);
+        compare(o.failures, []);
+        compare(o.snapshots, []);
+    }
     function test_expiredMeasurementsDoNotAdvanceFreshness() {
         var o = create("ancient", {sourceMode: "cli"});
         completed(o, 1);
@@ -439,6 +463,10 @@ if args[0] == "config":
          "enabled": key != "gemini"} for key in ids]))
     sys.exit(1 if name == "failed-roster" and run == 1 else 0)
 provider = args[args.index("--provider") + 1] if "--provider" in args else "codex"
+if name == "initial-empty-aggregate" or (name == "empty-aggregate" and run == 2):
+    assert "--provider" not in args and args[args.index("--source") + 1] == "api"
+    print("[]")
+    sys.exit(0)
 account = args[args.index("--account") + 1] if "--account" in args else "run " + str(run)
 if name == "aggregate-selectors" and provider in ("all", "both"):
     ids = ["codex", "claude", "gemini"] if provider == "all" else ["codex", "claude"]
@@ -494,7 +522,7 @@ class UsageControllerTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="codexbar usage 'test-") as temporary:
             directory = Path(temporary)
             for name in ("foreign-provider", "mixed-providers", "missing-provider", "failed-valid", "failed-timeout", "failed-roster", "ancient", "normal", "slow-roster", "flags", "mapped", "slow-first", "queue", "malformed", "empty",
-                         "aggregate-selectors",
+                         "aggregate-selectors", "empty-aggregate", "initial-empty-aggregate",
                          "no-records", "too-large", "empty-roster", "broken-roster", "timeout-aggregate",
                          "timeout-roster", "timeout-scoped"):
                 script = directory / name

@@ -70,6 +70,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Show provider setup and clear cached quotas when aggregate usage returns no
+  providers with an explicit source override, instead of reporting a refresh
+  error and retaining old usage.
+
 - Make popup tabs and Overview rows respond immediately to presses and keyboard
   focus. Keep only the brief scale recovery after releasing the pointer.
 

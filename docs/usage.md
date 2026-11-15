@@ -715,7 +715,10 @@ as last known and included when the merged snapshot is saved.
 
 An early successful empty provider list clears the disk cache immediately,
 so delayed verification cannot bring back providers the CLI has removed.
-A failed startup refresh still permits cached quota restoration.
+This also applies to an aggregate usage response of `[]` with an explicit
+source override: it shows provider setup rather than a refresh error.
+A failed startup refresh still permits cached quota restoration. Empty replies
+for a single requested provider and malformed records remain refresh failures.
 
 Explicit account selections last only for the current session, so the disk
 cache leaves out every provider with a selected account. Its quotas are never

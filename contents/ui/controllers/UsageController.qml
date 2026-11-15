@@ -325,16 +325,20 @@ Item {
                 maximumSnapshots: maximumProviderSnapshots
             });
             if (transition.finished) {
-                providerFallbackState = null;
-                usageLastCompletedAtMs = -1;
-                controller.emptyRoster();
-                // A confirmed empty roster uses the popup's provider setup state.
-                errorText = "";
-                commandPathFailed = false;
-                loading = false;
+                finishEmptyRoster();
                 return;
             }
             applyProviderFallbackTransition(transition);
+        }
+
+        function finishEmptyRoster() {
+            providerFallbackState = null;
+            usageLastCompletedAtMs = -1;
+            controller.emptyRoster();
+            // A confirmed empty roster uses the popup's provider setup state.
+            errorText = "";
+            commandPathFailed = false;
+            loading = false;
         }
 
         function applyProviderFallbackTransition(transition) {
@@ -463,6 +467,10 @@ Item {
             var providerID = Normalizer.normalizedProviderID(controller.provider);
             var scope = providerID === "all" || providerID === "both" ? "" : controller.provider;
             var result = UsageResponse.response(stdoutText, stderrText, scope, Date.now(), exitCode);
+            if (result.outcome === "emptyRoster") {
+                finishEmptyRoster();
+                return;
+            }
             if (result.outcome !== "success") {
                 if (result.outcome === "empty" && canUseProviderFallback()) {
                     startProviderFallback();
