@@ -1114,6 +1114,9 @@ at least 3:1 in the tested antialiased hairlines. Confidence markers have a
 font-measured, permanently reserved slot beside horizontal rings or below
 vertical rings; they never obscure the arc or resize the group on refresh.
 Ring layouts use their content width with a native compact hit-area minimum.
+Their internal and inter-provider gaps use half the theme's small spacing
+(rounded to at least one pixel), since the marker slot already separates arcs.
+Capsules retain the original spacing.
 
 ## QML conventions
 
