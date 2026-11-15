@@ -12,6 +12,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Added
 
+- Add a linked `llms.txt` index for agents that need installation and usage
+  documentation.
+
 - Add optional concentric quota rings around panel provider icons, independently
   of Provider colors or Monochrome. Keep capsules as the default and preview
   pending shape changes in Panel settings.
