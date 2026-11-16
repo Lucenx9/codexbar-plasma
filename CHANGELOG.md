@@ -10,6 +10,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Changed
+
+- Simplify the README installation path, feature overview, and update instructions.
+  Link provider requirements and detailed settings to the usage guide.
+
 ## 0.2.57 - 2026-11-15
 
 ### Added

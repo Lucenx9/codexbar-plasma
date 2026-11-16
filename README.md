@@ -1,9 +1,9 @@
 # CodexBar Plasma
 
 A standalone KDE Plasma 6 widget for the official
-[CodexBar CLI](https://github.com/steipete/CodexBar). Track Codex, Claude, Gemini,
-and other CLI providers from your panel, with quotas, reset windows, costs,
-local agent sessions, notifications, and multiple accounts.
+[CodexBar CLI](https://github.com/steipete/CodexBar). Monitor quotas, reset times,
+costs, and local agent sessions for Codex, Claude, Gemini, and other providers
+from your panel.
 
 Available data and setup actions depend on the provider and the Linux CLI.
 
@@ -11,9 +11,7 @@ Available data and setup actions depend on the provider and the Linux CLI.
 
 ![Overview, Usage and Spend, Sessions, and a provider detail tab in the CodexBar popup](docs/codexbar-plasma-tour.gif)
 
-Breeze Dark with synthetic data. The widget follows your Plasma theme.
-Cost charts show the peak daily amount at rest; Provider actions expands
-account management and links below the usage details.
+The tour uses Breeze Dark and synthetic data. The widget follows your Plasma theme.
 
 ## Requirements
 
@@ -58,35 +56,56 @@ AI Insights is off by default and needs no helper dependencies while disabled.
 
 ### Quick install from a terminal
 
-In your Plasma 6 desktop session, run this as your regular user, without `sudo`.
+In your Plasma 6 desktop session, run this command as your regular user, without `sudo`.
 Bash must be installed; your terminal can use another shell.
 
 ```sh
 bash -o pipefail -c 'curl -fsSL --connect-timeout 10 -m 30 --max-filesize 65536 --max-redirs 5 --proto "=https" --proto-redir "=https" https://raw.githubusercontent.com/Lucenx9/codexbar-plasma/main/setup.sh | bash'
 ```
 
-This downloads the installer from this repository's `main` branch and installs
-its latest stable release package, without a Git checkout or build. It reports
-missing commands before downloading the package. If `codexbar` is absent from
-your terminal's `PATH`, answer `y` to prepare a private official CLI.
+The command downloads the installer from this repository's `main` branch and
+installs the latest stable widget release. You do not need a Git checkout or build.
+The installer reports missing dependencies before downloading the package.
+
+If the installer offers a private official CLI, answer `y` to prepare it.
 Existing CLI installations and provider credentials are preserved.
+Then [set up the widget](#set-up-the-widget).
 
-Continue with [Set up the widget](#set-up-the-widget).
+Run the command again to upgrade. The installer offers to restart Plasma.
+Optional prompts default to No and are skipped without a terminal.
+Download failures return a nonzero exit status.
 
-Rerunning the command upgrades an older widget and offers to restart Plasma.
-Prompts default to No and are skipped without a terminal. Download failures
-return a nonzero exit status.
+### Set up the widget
+
+After installing through any method:
+
+1. Open your panel's **Add Widgets** chooser and add **CodexBar**.
+2. If the popup reports **CodexBar CLI not found**, click **Install and use CLI**.
+   This installs or reuses a private official CLI and selects it immediately.
+   To select an existing CLI, enter its absolute path in **Diagnostics → Command path** and apply.
+3. Open **Providers** in widget settings and enable the providers you want.
+   Use the available setup actions or follow each provider's **Docs** link for authentication.
+
+The popup shows quotas when the CLI returns usage.
+Provider enablement and credential actions save immediately to the CLI configuration.
+To change a provider's source mode, select the source and click **Save**.
+**Apply** and **Cancel** cover widget settings only.
+
+For provider requirements, see
+[provider setup](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/usage.md#providers-and-accounts).
+For other CLI installation methods, see the
+[upstream instructions](https://github.com/steipete/CodexBar).
 
 <details>
 <summary>Inspect the installer or run unattended setup</summary>
 
-To inspect the bootstrap first, download
+To inspect the installer before running it, download
 [`setup.sh`](https://github.com/Lucenx9/codexbar-plasma/blob/main/setup.sh)
-to a file you choose, inspect it, and run it with `bash FILE`.
-It downloads the complete
+to a file. Read it, then run `bash FILE`.
+The bootstrap downloads the complete
 [`scripts/update-widget.sh`](https://github.com/Lucenx9/codexbar-plasma/blob/main/scripts/update-widget.sh)
-into shell memory before running it. You can also download and inspect the full
-installer and run it with `bash FILE --setup`.
+before running it. You can also inspect the full installer and run
+`bash FILE --setup`.
 The installer verifies the package's GitHub SHA-256 digests, published checksum,
 applet ID, and version.
 
@@ -102,6 +121,9 @@ Use managed CLI** in widget settings, then **Apply**.
 A CLI preparation failure leaves the widget installed and returns a nonzero status.
 
 </details>
+
+<details>
+<summary>KDE Store or manual installation</summary>
 
 ### KDE Store or manual installation
 
@@ -125,117 +147,54 @@ kpackagetool6 -t Plasma/Applet -i codexbar-plasma.plasmoid
 
 A store listing can trail the GitHub release. The widget's updater follows GitHub.
 
-### Set up the widget
-
-After installing through any method:
-
-1. Open your panel's **Add Widgets** chooser and add **CodexBar**.
-2. If the popup reports **CodexBar CLI not found**, click **Install and use CLI**.
-   This installs or reuses a private official Linux binary and selects it immediately.
-   To use an existing CLI that Plasma cannot find, set its absolute path in
-   **Diagnostics → Command path** in widget settings and apply.
-3. In widget settings, open **Providers** to enable providers and use their
-   supported setup actions. For authentication that needs another tool, follow
-   the linked upstream provider instructions.
-   With CLI 0.83.0, **Settings and diagnostics** also lists each provider's
-   source modes and read-only setup hints.
-
-The popup shows quotas when the CLI returns usage. Use **Panel** settings to
-change the compact display and **General** for refresh and privacy settings.
-Provider setup and enable/disable actions save immediately to the CLI configuration.
-**Apply** and **Cancel** cover widget settings only.
-
-Widget updates install automatically by default. To opt out, clear
-**General → Updates → Widget updates → Install automatically** and apply.
-Installed updates take effect after a Plasma restart or logout and login;
-the automatic updater never restarts Plasma itself.
-
-For another CLI installation method, see the
-[official Linux releases](https://github.com/steipete/CodexBar/releases/latest)
-and [upstream instructions](https://github.com/steipete/CodexBar).
-Third-party packages such as AUR can lag behind upstream.
-For private CLI selection, updates, and rollback, see
-[managed CLI settings](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/usage.md#managed-cli).
+</details>
 
 ## Features
 
-- Quota meters, reset windows, account selection, and provider status, with
-  configurable warnings and Plasma notifications.
-- Provider colors and Monochrome panel styles, up to two quota capsules or concentric rings per provider,
-  spaced provider groups, readable stacked meters on vertical panels, optional
-  text with optional automatic quota names and monetary spend budgets, and a live settings preview.
-- Optional remaining monthly quota per day in the popup, using explicit CLI
-  window lengths and reset dates.
-- **Usage & Spend** with provider filters, provider cost/token lines, complete-week
-  comparisons, and compact or expanded layouts. Inspect a day,
-  model breakdowns, or the optional Daily activity calendar when the CLI supplies
-  those details. Project breakdowns stay in the corresponding provider tab.
-- Local agent **Sessions**. Transcript paths and working directories are never
-  displayed or opened.
-- A local usage summary to save as a PNG or copy as text, and a redacted offline
-  support report in **Diagnostics**.
-- Optional privacy mode, manual identified Codex token subtotals, and beta
+- Quota meters, reset times, multiple accounts, provider status, and configurable notifications.
+- **Provider colors** or **Monochrome** panel styles, quota capsules or rings, optional text, and spend budgets.
+  Preview changes in **Panel** settings.
+- **Usage & Spend** with cost and token history, provider filters, model breakdowns,
+  weekly comparisons, and an optional activity calendar.
+- Local agent **Sessions**, with no transcript paths or working directories displayed or opened.
+- Usage summaries to save as PNG images or copy as text, plus a privacy mode to hide personal information.
+- Optional beta
   [AI Insights](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/usage.md#ai-insights)
-  from Ollama, OpenRouter, or OpenAI, integrated into Usage & Spend as guided
-  questions. AI Insights is off by default and uses aggregated statistics only.
+  from Ollama, OpenRouter, or OpenAI. Ask questions about your usage
+  in **Usage & Spend**. AI Insights is off by default and uses only aggregated statistics.
 - English, Italian, French, German, Spanish, and Brazilian Portuguese, selected
   through your Plasma language preferences.
 
-Bundled names and icons cover all 113 providers in the official CLI 0.84.0
-registry, including SiliconFlow, Tripo, Soniox, Trae CN, Chatbox AI, abliteration.ai,
-and OpenDesign.
-Newer CLI providers use generic presentation where needed. Provider settings
-offer secure manual-cookie setup for 15 verified Linux providers, stored-key/cookie
-clearing, on-demand Copilot GitHub sign-in, and Claude Platform validated session
-import with CLI 0.84.0 or later; see [provider setup](docs/usage.md#providers-and-accounts).
-Secure key setup also supports Soniox with CLI 0.80.0 or later, and
-abliteration.ai and Chatbox AI with CLI 0.81.0 or later. Soniox requires an
-organization API key; Chatbox requires a license key. SiliconFlow and Tripo key
-setup requires CLI 0.84.0 or later and includes dedicated icons, brand colors,
-fallback names and links. SiliconFlow defaults to its China API; the regional editor remains
-unavailable. See the
-[provider setup notes](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/usage.md#providers-and-accounts).
+Bundled names and icons cover all 113 providers in official CLI 0.84.0.
+Newer providers use generic presentation where needed. See the
+[usage guide](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/usage.md)
+for options, defaults, and data limits.
 
 | Provider colors panel | Monochrome panel |
 | --- | --- |
 | [![Colored provider icons and dual quota capsules in the Provider colors panel](docs/codexbar-plasma-panel-standard.png)](docs/codexbar-plasma-panel-standard.png) | [![Monochrome provider icons and dual quota capsules in the Monochrome panel](docs/codexbar-plasma-panel-minimal.png)](docs/codexbar-plasma-panel-minimal.png) |
 
-The same usage in both styles, with panel text hidden. In **Panel → Appearance**,
-choose **Rings** to put the quota indicators around each provider icon. Color
-and shape are independent; existing installations keep capsules.
+Both styles show the same usage with panel text hidden.
+In **Panel → Appearance**, choose **Rings** to put quota indicators around each icon.
 
 [![Four providers with concentric quota rings](docs/codexbar-plasma-panel-rings.png)](docs/codexbar-plasma-panel-rings.png)
 
-| Provider overview | Local sessions |
-| --- | --- |
-| [![Overview with Codex, Claude, and Gemini usage](docs/codexbar-plasma-overview.png)](docs/codexbar-plasma-overview.png) | [![Active and idle local agent sessions](docs/codexbar-plasma-sessions.png)](docs/codexbar-plasma-sessions.png) |
-| **Usage & Spend** | **Provider details** |
-| [![Thirty days of spending and activity across providers](docs/codexbar-plasma-usage-spend.png)](docs/codexbar-plasma-usage-spend.png) | [![Codex quotas, reset windows, and daily cost history](docs/codexbar-plasma-codex.png)](docs/codexbar-plasma-codex.png) |
-
-Click an image to open it. All captures use synthetic data.
-
-New widgets refresh quotas every five minutes and when you open the popup on
-stale data. Percentages show quota **used**, with warning and critical thresholds
-at 80% and 95%. After a failed refresh, recent quotas remain visible as last known
-for up to 24 hours. See
+All images use synthetic data. Percentages show quota **used**.
+If a refresh fails, the widget can show last known quotas for up to 24 hours. See
 [data freshness](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/usage.md#data-freshness)
 for cache limits.
 
 <!-- Web links to guides also work in the installed package, which omits those files. -->
-The [usage and settings guide](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/usage.md)
-covers options, defaults, provider setup, and data limits. The
-[documentation index](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/README.md)
-links verified CLI evidence; [Linux parity TODO](https://github.com/Lucenx9/codexbar-plasma/blob/main/TODO.md)
+The [documentation index](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/README.md)
+links more screenshots and verified CLI evidence.
+[Linux parity TODO](https://github.com/Lucenx9/codexbar-plasma/blob/main/TODO.md)
 tracks remaining work and upstream blockers.
 
 ## Update
 
-Widget update checks, notifications, and automatic installation are enabled by
-default, with checks every 24 hours. Manage them in **General → Updates**.
-Existing saved choices are preserved. Instances without a saved value use the
-current defaults, including automatic installation. Plasma may have omitted a
-previous off value because it matched the old default.
-Read the [changelog](CHANGELOG.md) for changes and upgrade notes.
+Widget updates are checked and installed automatically every 24 hours by default.
+To opt out, clear **General → Updates → Widget updates → Install automatically** and apply.
+The automatic updater never restarts Plasma.
 
 To update manually, download the new `.plasmoid` from the
 [latest widget release](https://github.com/Lucenx9/codexbar-plasma/releases/latest)
@@ -245,27 +204,23 @@ and run in its directory:
 kpackagetool6 -t Plasma/Applet -u codexbar-plasma.plasmoid
 ```
 
-After either kind of update, log out and back in, or reload your Plasma panels
-and desktop:
+After an update, log out and back in, or restart your Plasma panels and desktop:
 
 ```sh
 systemctl --user restart plasma-plasmashell.service
 ```
 
-The updater verifies the release and backs up the installed widget before an
-upgrade. A failed installation restores the previous package. For scheduling
-and recovery details, see
-[update settings](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/usage.md#settings).
+The updater verifies the release and backs up the installed widget.
+A failed upgrade restores the previous package. See
+[update settings](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/usage.md#update-the-widget)
+for controls and how defaults apply to older installations.
+Read the [changelog](CHANGELOG.md) for release notes.
 
-CLI updates are separate. Update a system or package-manager CLI through its
-original installation method. **General → Updates → CodexBar CLI** checks for official
-releases daily by default. **General → Updates → CodexBar CLI → Managed CLI** can update
-or restore the private copy. Its automatic daily updates are enabled by default
-and run only while that managed copy is selected. You can disable either feature
-in its settings section. Explicitly saved preferences are preserved; instances
-without a saved value adopt the new defaults.
-See [CLI release checks](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/usage.md#cli-release-checks-and-installed-versions)
-and [managed CLI settings](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/usage.md#managed-cli).
+CLI updates are separate. Update an external CLI through its original installation method.
+The private managed CLI updates daily by default while selected. Manage its updates,
+selection, and rollback under **General → Updates → CodexBar CLI → Managed CLI**.
+See [managed CLI settings](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/usage.md#managed-cli)
+for details.
 
 ## Troubleshooting
 
@@ -273,8 +228,7 @@ and [managed CLI settings](https://github.com/Lucenx9/codexbar-plasma/blob/main/
 
 Use **Retry** in the popup or open **Diagnostics** in widget settings.
 **Check versions** reports the widget and CLI versions and the resolved CLI path.
-If the CLI is missing, **Install and use CLI** prepares a private copy.
-A damaged existing private copy reports an error instead of being selected.
+If the CLI is missing, click **Install and use CLI** to prepare a private copy.
 
 To check an existing CLI, run this in a terminal:
 
@@ -306,8 +260,7 @@ codexbar cost --format json --json-only
 The widget displays only data the CLI returns. Missing dollar amounts do not
 mean zero spend. See the
 [provider setup and compatibility notes](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/usage.md#providers-and-accounts)
-for version-specific issues, including Gemini's Automatic source on CLI 0.77.0
-through 0.80.0.
+for version requirements and known CLI issues.
 
 ### Notifications do not appear
 
@@ -347,15 +300,14 @@ cd codexbar-plasma
 make install
 ```
 
-Reload Plasma as described under [Update](#update). Before submitting changes,
-read [CONTRIBUTING.md](https://github.com/Lucenx9/codexbar-plasma/blob/main/CONTRIBUTING.md)
-and run `make check`. The
+Restart Plasma as described under [Update](#update).
+Before submitting changes, read
+[CONTRIBUTING.md](https://github.com/Lucenx9/codexbar-plasma/blob/main/CONTRIBUTING.md)
+and run `make check`. See the
 [development guide](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/development.md)
-lists test dependencies, checks, packaging, runtime verification, and QML conventions.
-Provider logic and CLI contracts belong upstream.
-To add or improve a language, follow the
-[translation guide](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/translations.md).
-CLI-supplied free-form text retains its original language.
+for test dependencies, packaging, and runtime verification, or the
+[translation guide](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/translations.md)
+to improve a language. Provider logic and CLI contracts belong upstream.
 
 ## Support
 
