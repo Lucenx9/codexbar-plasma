@@ -10,6 +10,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Fixed
+
+- Exclude impossible calendar dates from cost history, daily averages, and model
+  totals while preserving valid history and legacy labels.
+
 ### Changed
 
 - Simplify the README installation path, feature overview, and update instructions.

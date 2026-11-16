@@ -11,6 +11,46 @@ TestCase {
     function parse(payload, days) {
         return CostResponse.response(JSON.stringify(payload), "", days === undefined ? 30 : days, 0);
     }
+    function test_invalidCalendarDaysStayOutOfHistoryAndModels_data() {
+        var cases = [];
+        for (var date of ["2026-02-30", "2026-13-01", "2025-02-29"]) {
+            for (var updatedAt of ["2026-03-01", ""]) {
+                cases.push({tag: date + (updatedAt ? "-with-scan" : "-without-scan"),
+                    date: date, updatedAt: updatedAt});
+            }
+        }
+        return cases;
+    }
+    function test_invalidCalendarDaysStayOutOfHistoryAndModels(data) {
+        var invalid = {date: data.date, totalCost: 100, totalTokens: 1000,
+            modelBreakdowns: [{modelName: "Synthetic model", cost: 100, totalTokens: 1000}]};
+        var provider = {provider: "codex", updatedAt: data.updatedAt,
+            totals: {totalCost: 7, totalTokens: 70}, daily: [
+                {date: "2026-02-27", totalCost: 2, totalTokens: 20,
+                    modelBreakdowns: [{modelName: "Synthetic model", cost: 2, totalTokens: 20}]},
+                invalid,
+                {date: "2026-03-01", totalCost: 3, totalTokens: 30,
+                    modelBreakdowns: [{modelName: "Synthetic model", cost: 3, totalTokens: 30}]}
+            ]};
+        var sibling = {provider: "claude", sessionCostUSD: 9, sessionTokens: 90};
+        var result = parse([provider, sibling], 3);
+        compare(result.outcome, "success");
+        var cost = result.costs.codex;
+        // Malformed dates also prevent inferring a zero for the missing day.
+        compare(cost.daily.map(function(row) { return row.label; }), ["2026-02-27", "2026-03-01"]);
+        compare(CostAmounts.averageDailyValue(cost.daily, false).value, 2.5);
+        compare(cost.models.length, 1);
+        compare(cost.models[0].cost, 5);
+        compare(cost.models[0].tokens, 50);
+        compare(cost.tokenRanking.rows[0].tokens, 50);
+        compare(cost.totals.cost, 7);
+        compare(result.costs.claude, parse([sibling], 3).costs.claude);
+        provider.daily = [invalid];
+        var onlyInvalid = parse([provider], 3).costs.codex;
+        compare(onlyInvalid.daily, []);
+        compare(onlyInvalid.models, []);
+    }
+
     function test_structuredHistoryDatesPreserveHealthyProviders_data() {
         var cases = [];
         var fields = ["date", "day", "dayKey"];

@@ -569,6 +569,10 @@ export function parsedCalendarDateKey(value) {
     return key === value ? { key: key, timestampMs: timestampMs } : null
 }
 
+export function costHistoryLabelIsUsable(label) {
+    return !/^\d{4}-\d{2}-\d{2}$/.test(label) || parsedCalendarDateKey(label) !== null
+}
+
 // A CLI calendar key names a local day, not an instant: its local noon keeps
 // the same day in zones west of UTC and on days whose local midnight is skipped
 // by a spring-forward transition. Null for any other label.
@@ -890,7 +894,10 @@ export function selectedCostDays(items, currency, options, modelSources) {
     } else {
         result = fillMissingCostDays(result, currency, selection, blockedDateKeys)
     }
-    return result.slice(-historyDays)
+    // Let malformed dates block zero inference before excluding their amounts.
+    return result.filter(function(row) {
+        return costHistoryLabelIsUsable(row.label)
+    }).slice(-historyDays)
 }
 
 export function normalizeCostDaily(items, currency, options) {
@@ -955,6 +962,7 @@ export function normalizeProviderCostTotals(providerID, totals, fallback) {
 export function eligibleCostModelDay(item, itemIndex, selection) {
     if (!isCliRecord(item)) return false
     if (!hasOwnKey(item, "modelBreakdowns") && !costRecordHasAmounts(item)) return false
+    if (!costHistoryLabelIsUsable(costDayLabel(item))) return false
     if (!selection.window) return true
     var parsed = parsedCalendarDateKey(costDayLabel(item))
     // Undated legacy records retain the original bounded tail behavior.
