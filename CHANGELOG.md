@@ -12,6 +12,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Hide private provider aliases from the panel identity's accessible name when
+  personal information is hidden, while preserving provider navigation.
+
 - Exclude impossible calendar dates from cost history, daily averages, and model
   totals while preserving valid history and legacy labels.
 
