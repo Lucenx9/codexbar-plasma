@@ -15,15 +15,22 @@ TestCase {
         var cases = [];
         for (var date of ["2026-02-30", "2026-13-01", "2025-02-29"]) {
             for (var updatedAt of ["2026-03-01", ""]) {
-                cases.push({tag: date + (updatedAt ? "-with-scan" : "-without-scan"),
-                    date: date, updatedAt: updatedAt});
+                for (var amounts of [true, false]) {
+                    cases.push({tag: date + (updatedAt ? "-with-scan" : "-without-scan")
+                        + (amounts ? "-amounts" : "-models-only"),
+                        date: date, updatedAt: updatedAt, amounts: amounts});
+                }
             }
         }
         return cases;
     }
     function test_invalidCalendarDaysStayOutOfHistoryAndModels(data) {
-        var invalid = {date: data.date, totalCost: 100, totalTokens: 1000,
+        var invalid = {date: data.date,
             modelBreakdowns: [{modelName: "Synthetic model", cost: 100, totalTokens: 1000}]};
+        if (data.amounts) {
+            invalid.totalCost = 100;
+            invalid.totalTokens = 1000;
+        }
         var provider = {provider: "codex", updatedAt: data.updatedAt,
             totals: {totalCost: 7, totalTokens: 70}, daily: [
                 {date: "2026-02-27", totalCost: 2, totalTokens: 20,
@@ -49,6 +56,13 @@ TestCase {
         var onlyInvalid = parse([provider], 3).costs.codex;
         compare(onlyInvalid.daily, []);
         compare(onlyInvalid.models, []);
+        if (data.updatedAt) {
+            provider.reportingPeriod = "all";
+            provider.daily = [{date: "2010-01-01", totalCost: 4, totalTokens: 40}, invalid];
+            var longHistory = parse([provider]).costs.codex;
+            compare(longHistory.averageDaily.cost.value, 4);
+            compare(longHistory.averageDaily.tokens.value, 40);
+        }
     }
 
     function test_structuredHistoryDatesPreserveHealthyProviders_data() {

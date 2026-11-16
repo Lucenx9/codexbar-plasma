@@ -874,11 +874,16 @@ export function selectedCostDays(items, currency, options, modelSources) {
     var selection = costHistorySelection(items, options)
     var historyDays = selection.historyDays
     var blockedDateKeys = ({})
+    var hasInvalidDate = false
     var firstInspectedItem = selection.firstInspectedItem
     var result = []
     for (var i = items.length - 1; i >= firstInspectedItem; i--) {
         var item = items[i]
         if (!isCliRecord(item)) continue
+        if (!costHistoryLabelIsUsable(costDayLabel(item))) {
+            hasInvalidDate = true
+            continue
+        }
         if (costRecordHasAmounts(item)) {
             var row = normalizedCostDay(item, currency)
             result.unshift(row)
@@ -889,15 +894,12 @@ export function selectedCostDays(items, currency, options, modelSources) {
         if (blockedDate) blockedDateKeys[blockedDate.key] = true
     }
     // An incomplete scan cannot establish safe zero-activity gaps.
-    if (firstInspectedItem > 0) {
+    if (firstInspectedItem > 0 || hasInvalidDate) {
         result = costHistoryRowsWithinWindow(result, selection.window)
     } else {
         result = fillMissingCostDays(result, currency, selection, blockedDateKeys)
     }
-    // Let malformed dates block zero inference before excluding their amounts.
-    return result.filter(function(row) {
-        return costHistoryLabelIsUsable(row.label)
-    }).slice(-historyDays)
+    return result.slice(-historyDays)
 }
 
 export function normalizeCostDaily(items, currency, options) {
