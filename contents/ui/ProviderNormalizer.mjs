@@ -569,6 +569,10 @@ export function parsedCalendarDateKey(value) {
     return key === value ? { key: key, timestampMs: timestampMs } : null
 }
 
+export function costHistoryLabelIsUsable(label) {
+    return !/^\d{4}-\d{2}-\d{2}$/.test(label) || parsedCalendarDateKey(label) !== null
+}
+
 // A CLI calendar key names a local day, not an instant: its local noon keeps
 // the same day in zones west of UTC and on days whose local midnight is skipped
 // by a spring-forward transition. Null for any other label.
@@ -870,11 +874,16 @@ export function selectedCostDays(items, currency, options, modelSources) {
     var selection = costHistorySelection(items, options)
     var historyDays = selection.historyDays
     var blockedDateKeys = ({})
+    var hasInvalidDate = false
     var firstInspectedItem = selection.firstInspectedItem
     var result = []
     for (var i = items.length - 1; i >= firstInspectedItem; i--) {
         var item = items[i]
         if (!isCliRecord(item)) continue
+        if (!costHistoryLabelIsUsable(costDayLabel(item))) {
+            hasInvalidDate = true
+            continue
+        }
         if (costRecordHasAmounts(item)) {
             var row = normalizedCostDay(item, currency)
             result.unshift(row)
@@ -885,7 +894,7 @@ export function selectedCostDays(items, currency, options, modelSources) {
         if (blockedDate) blockedDateKeys[blockedDate.key] = true
     }
     // An incomplete scan cannot establish safe zero-activity gaps.
-    if (firstInspectedItem > 0) {
+    if (firstInspectedItem > 0 || hasInvalidDate) {
         result = costHistoryRowsWithinWindow(result, selection.window)
     } else {
         result = fillMissingCostDays(result, currency, selection, blockedDateKeys)
@@ -955,6 +964,7 @@ export function normalizeProviderCostTotals(providerID, totals, fallback) {
 export function eligibleCostModelDay(item, itemIndex, selection) {
     if (!isCliRecord(item)) return false
     if (!hasOwnKey(item, "modelBreakdowns") && !costRecordHasAmounts(item)) return false
+    if (!costHistoryLabelIsUsable(costDayLabel(item))) return false
     if (!selection.window) return true
     var parsed = parsedCalendarDateKey(costDayLabel(item))
     // Undated legacy records retain the original bounded tail behavior.

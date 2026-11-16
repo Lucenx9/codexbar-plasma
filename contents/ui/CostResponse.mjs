@@ -32,18 +32,21 @@ export function recordedHistoryDays(daily, scanDay) {
 export function longHistoryAverage(items, currency, recordedDays, scanDay) {
     var source = Array.isArray(items) ? items : [];
     var first = Math.max(0, source.length - Normalizer.maximumCostHistoryScanItems);
-    var scan = Normalizer.parsedCalendarDateKey(scanDay);
-    var firstDayMs = scan ? scan.timestampMs - (recordedDays - 1) * 86400000 : NaN;
-    var canFill = first === 0 && scan !== null;
+    var window = Normalizer.costHistoryCalendarWindow(recordedDays, scanDay, recordedDays);
+    var canFill = first === 0 && window !== null;
     var seen = ({});
     var blocked = ({});
     var retained = [];
     for (var i = first; i < source.length; i++) {
         var item = source[i];
         if (!Normalizer.isCliRecord(item)) continue;
+        if (!Normalizer.costHistoryLabelIsUsable(Normalizer.costDayLabel(item))) {
+            canFill = false;
+            continue;
+        }
         var day = Normalizer.parsedCalendarDateKey(Normalizer.boundedDisplayText(
             item.date || item.day || item.dayKey || "", 120));
-        if (scan && day && (day.timestampMs > scan.timestampMs || day.timestampMs < firstDayMs)) continue;
+        if (window && day && !Normalizer.costDateWithinWindow(day, window)) continue;
         if (!Normalizer.costRecordHasAmounts(item)) {
             if (day) blocked[day.key] = true;
             continue;

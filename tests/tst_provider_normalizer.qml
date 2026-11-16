@@ -1100,7 +1100,8 @@ TestCase {
     function test_normalizesDailyCostAndKeepsTheRequestedRange() {
         var daily = []
         for (var i = 0; i < 40; i++) {
-            daily.push({ date: "2026-07-" + i, totalCost: i, totalTokens: i * 10 })
+            daily.push({ date: new Date(Date.UTC(2026, 6, 1 + i)).toISOString().slice(0, 10),
+                totalCost: i, totalTokens: i * 10 })
         }
         var rows = Normalizer.normalizeCostDaily(daily, "USD", { days: 7 })
         compare(rows.length, 7)
@@ -1425,7 +1426,7 @@ TestCase {
     }
     function test_costHistoryFallbackPreservesStrictLegacyLabels_data() {
         return [
-            {tag: "invalid-calendar-date", date: "2026-02-31", label: "2026-02-31"},
+            {tag: "legacy-label", date: "legacy-day", label: "legacy-day"},
             {tag: "timestamp-label", date: "2026-08-30T00:00:00Z", label: "2026-08-30T00:00:00Z"},
             {tag: "non-string-date", date: {value: "2026-08-30"}, label: ""}
         ];

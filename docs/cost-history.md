@@ -56,9 +56,10 @@ The owning code is [ProviderNormalizer.mjs](../contents/ui/ProviderNormalizer.mj
   applies only to metrics observed in the snapshot. Duplicate dates, malformed
   rows, or a truncated scan prevent zero-day inference while preserving observed
   rows inside the selected period.
-- Calendar keys must be `YYYY-MM-DD` strings. Invalid dates are not legacy labels;
-  objects and arrays cannot extend a range. Bounded non-date legacy labels retain
-  sequence behavior and use aggregate bars in Usage & Spend.
+- Calendar keys must be `YYYY-MM-DD` strings. Impossible calendar dates are
+  excluded from daily amounts and model totals; they still prevent zero-day
+  inference. Objects and arrays cannot extend a range. Bounded non-date legacy
+  labels retain sequence behavior and use aggregate bars in Usage & Spend.
 - Day models come only from the selected daily record's `modelBreakdowns`, never
   period totals. Daily models are projected after calendar selection and row
   limits. Average-only rows skip that projection. Display at most six models
