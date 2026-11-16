@@ -87,7 +87,8 @@ After installing through any method:
    Use the available setup actions or follow each provider's **Docs** link for authentication.
 
 The popup shows quotas when the CLI returns usage.
-Provider setup and enablement changes save immediately to the CLI configuration.
+Provider enablement and credential actions save immediately to the CLI configuration.
+To change a provider's source mode, select the source and click **Save**.
 **Apply** and **Cancel** cover widget settings only.
 
 For provider requirements, see
