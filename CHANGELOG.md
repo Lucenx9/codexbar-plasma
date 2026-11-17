@@ -12,6 +12,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Update or roll back the shared managed CLI only when its launcher is selected.
+  Selecting a fixed release path or finding the CLI through PATH keeps new-release
+  notifications available.
+
 - Keep popup tab scroll buttons, directional icons, and action labels consistent
   with tab order in right-to-left layouts.
 

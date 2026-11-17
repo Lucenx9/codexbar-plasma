@@ -63,13 +63,13 @@ TestCase {
         compare(sent.length, 2)
     }
     function test_selfUpdatingManagedCliStaysQuiet() {
-        subject.notifyAvailableCliUpdate("v1", "https://github.com/cli/v1", "managed")
+        subject.notifyAvailableCliUpdate("v1", "https://github.com/cli/v1", true)
         compare(sent.length, 0)
         compare(config.cliUpdateLastNotifiedVersion, "")
-        subject.notifyAvailableCliUpdate("v1", "https://github.com/cli/v1", "pacman")
+        subject.notifyAvailableCliUpdate("v1", "https://github.com/cli/v1", false)
         compare(sent.length, 1)
         config.cliAutomaticUpdates = false
-        subject.notifyAvailableCliUpdate("v2", "https://github.com/cli/v2", "managed")
+        subject.notifyAvailableCliUpdate("v2", "https://github.com/cli/v2", true)
         compare(sent.length, 2)
         compare(config.cliUpdateLastNotifiedVersion, "v2")
     }

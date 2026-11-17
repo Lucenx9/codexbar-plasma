@@ -252,7 +252,9 @@ when the path already equals its default.
 
 `scripts/lib/managed_cli.py` owns per-user locking, throttling, bounded official
 downloads, strict extraction, isolated version probes, atomic activation and
-rollback. Only the exact managed command is eligible. Mutations, cleanup and
+rollback. Only the configured launcher path is eligible. The release probe reports this
+selection separately from ownership of the resolved executable so a PATH lookup
+or version-specific path still receives release announcements. Mutations, cleanup and
 rollback share the lock; healthy offline reuse bypasses it and release requests.
 Rollback compares the displayed stable `--expected-previous` target after locking
 and before probing/pruning/activation. Stale targets return `stale` unchanged.

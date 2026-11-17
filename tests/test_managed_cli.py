@@ -31,6 +31,27 @@ class ManagedCliTests(ManagedCliFixture, unittest.TestCase):
         self.assertFalse(cli.owns_command(""))
         self.assertFalse(cli.owns_command("/usr/bin/codexbar"))
 
+    def test_pinned_release_cannot_update_the_shared_installation(self):
+        self.operation("install")
+        pinned = cli.cli_release.local_record(self.command)["path"]
+        self.publish("0.63.0")
+        before = cli.state_record(self.root)
+        for action in ("automatic", "update", "rollback"):
+            with self.subTest(action=action):
+                self.assertEqual(self.operation(action, pinned), {"status": "external"})
+                self.assertEqual(cli.state_record(self.root), before)
+                self.assertEqual(cli.status(self.root)["version"], "0.62.0")
+
+    def test_probe_distinguishes_selected_launcher_from_managed_origin(self):
+        self.operation("install")
+        pinned = cli.cli_release.local_record(self.command)["path"]
+        with patch.dict(os.environ, {"PATH": str(self.root / "current") + os.pathsep + os.environ["PATH"]}):
+            for command in (self.command, pinned, "codexbar"):
+                with self.subTest(command=command):
+                    probe = cli.cli_release.local_record(command)
+                    self.assertEqual(probe["manager"], "managed")
+                    self.assertEqual(probe["managedSelected"], command == self.command)
+
     def test_install_normalizes_data_home_before_returning_the_selected_path(self):
         data = self.base / "data"
         data.mkdir()

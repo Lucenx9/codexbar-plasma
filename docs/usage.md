@@ -647,7 +647,9 @@ daily** and Apply to opt out. Manual checks remain available.
 CLI release notifications have their own switch and respect global notification
 and privacy settings. Each version is announced once per instance. A selected
 managed copy with automatic updates enabled needs no announcement because it
-updates itself; settings still show the available release.
+updates itself; settings still show the available release. If you select a
+specific release binary or use `codexbar` from PATH, release notifications stay
+available even when Diagnostics identifies the executable as widget-managed.
 
 Update an external CLI through its original installation method. The widget can
 identify package ownership or Homebrew receipts, but a pacman-owned package

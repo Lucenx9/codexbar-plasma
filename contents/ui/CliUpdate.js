@@ -2,8 +2,12 @@
 .import "Guards.js" as Guards
 .import "SafeText.mjs" as SafeText
 
+function managedSelection(value) {
+    return value.manager === "managed" && value.managedSelected === true
+}
+
 function response(text) {
-    var empty = {status: "error", version: "", path: "", manager: "external", latest: "", releaseUrl: ""}
+    var empty = {status: "error", version: "", path: "", manager: "external", managedSelected: false, latest: "", releaseUrl: ""}
     if (typeof text !== "string" || text.length > 16384) return empty
     var value
     try { value = JSON.parse(text) } catch (error) { return empty }
@@ -22,6 +26,7 @@ function response(text) {
     if (["available", "current", "local"].indexOf(value.status) >= 0 && version.length === 0) return empty
     return {status: value.status, version: SafeText.cliMessage(version, 128),
         path: SafeText.redactCredentialsWithinSourceLimit(path, 1024), manager: manager,
+        managedSelected: managedSelection(value),
         latest: tag.length > 0 ? tag.slice(1) : "",
         releaseUrl: tag.length > 0 ? "https://github.com/steipete/CodexBar/releases/tag/" + tag : ""}
 }
