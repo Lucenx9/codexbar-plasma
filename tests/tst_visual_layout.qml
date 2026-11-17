@@ -95,6 +95,9 @@ TestCase {
         function accountNoticeForProvider() {
             return "named";
         }
+        function accountAvailabilityForProvider() {
+            return "named";
+        }
         function selectedAccountForProvider() {
             return selectedAccount;
         }

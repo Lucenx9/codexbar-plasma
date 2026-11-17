@@ -104,11 +104,16 @@ TestCase {
         property string accountsError: ""
         property string selectedAccountKey: ""
         property string accountAvailability: ""
+        property string accountNotice: ""
+        property string requestedAccountProvider: ""
         function accountLoadingForProvider() {
             return accountsLoading;
         }
-        function accountNoticeForProvider() {
+        function accountAvailabilityForProvider() {
             return accountAvailability;
+        }
+        function accountNoticeForProvider() {
+            return accountNotice;
         }
         function accountOptionsForProvider() {
             return accountOptions;
@@ -134,7 +139,8 @@ TestCase {
         function selectAccount(providerID, key) {
             selectedAccountKey = key;
         }
-        function loadAccounts() {
+        function loadAccounts(providerID) {
+            requestedAccountProvider = providerID;
         }
     }
 
@@ -170,6 +176,8 @@ TestCase {
         applet.accountsError = "";
         applet.selectedAccountKey = "";
         applet.accountAvailability = "";
+        applet.accountNotice = "";
+        applet.requestedAccountProvider = "";
     }
 
     function cleanupTestCase() {
@@ -946,7 +954,7 @@ TestCase {
         var message = findByObjectName(panel, "accountsAvailabilityMessage");
         var reload = findByObjectName(panel, "reloadAccountsButton");
         compare(panel.visible, false);
-        applet.accountAvailability = "none";
+        applet.accountNotice = "none";
         tryCompare(panel, "visible", true);
         compare(message.visible, true);
         verify(message.text.indexOf("No named accounts") === 0);
@@ -959,14 +967,34 @@ TestCase {
         applet.accountsError = "Synthetic account discovery error";
         compare(message.visible, false);
         applet.accountsError = "";
-        applet.accountAvailability = "unsupported";
+        applet.accountNotice = "unsupported";
         compare(message.visible, true);
         verify(message.text.indexOf("cannot switch accounts") > 0);
         // Retrying stays possible, for example after an in-place CLI upgrade.
         compare(reload.enabled, true);
         applet.accountOptions = [{key: "work", label: "Work", provider: "claude"}];
-        applet.accountAvailability = "named";
+        applet.accountNotice = "named";
         compare(message.visible, false);
+    }
+
+    function test_unsupportedAccountDiscoveryCanBeRetriedAfterNoticeDismissal() {
+        applet.accountAvailability = "unsupported";
+        applet.accountNotice = "unsupported";
+        var panel = createControl("ProviderAccountsPanel", {
+            applet: applet, providerData: {provider: "gemini"}, width: 400
+        });
+        if (!panel)
+            return;
+        var message = findByObjectName(panel, "accountsAvailabilityMessage");
+        var reload = findByObjectName(panel, "reloadAccountsButton");
+        verify(message.visible);
+        applet.accountNotice = "";
+        verify(!message.visible);
+        verify(reload.visible && reload.enabled, "Reload should stay available after the notice is dismissed");
+        reload.clicked();
+        compare(applet.requestedAccountProvider, "gemini");
+        applet.accountAvailability = "";
+        compare(panel.visible, false);
     }
 
     function test_accountActionsExplainKeyboardFocus() {

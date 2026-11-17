@@ -310,7 +310,8 @@ one changes displayed usage, not your underlying Codex login. **Use default
 account** returns to the CLI default if a selected account disappears.
 
 A provider without token-account support disables **Accounts…** and explains the
-limit. Its reload action can retry. If no named accounts exist, the popup says
+limit. The explanation disappears when the popup closes, and **Reload accounts**
+remains available when it reopens. If no named accounts exist, the popup says
 that the provider default is in use. Changing CLI/provider/source configuration
 enables discovery again. Local cost history is independent of account selection.
 
