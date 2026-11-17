@@ -12,6 +12,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep popup tab scroll buttons, directional icons, and action labels consistent
+  with tab order in right-to-left layouts.
+
 - Hide private provider aliases from the panel identity's accessible name when
   personal information is hidden, while preserving provider navigation.
 
