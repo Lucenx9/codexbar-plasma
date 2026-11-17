@@ -728,10 +728,14 @@ class CostSectionTests(unittest.TestCase):
     // The CLI's "today" is the total of the day it scanned. A snapshot from
     // 22:00 must not present that day's spend as today's after midnight,
     // whether the new scan is still running or has failed.
-    function test_providerTodayNeedsAScanFromToday() {
+    function test_providerTodayNeedsAScanFromToday_data() {
+        return [{tag: "ordinary", cost: 1.25, expected: "$1.25"},
+            {tag: "subcent", cost: 0.002, expected: "< $0.01"}];
+    }
+    function test_providerTodayNeedsAScanFromToday(data) {
         var payload = [{ provider: "codex", historyDays: 30, currencyCode: "USD",
             updatedAt: new Date(2026, 8, 23, 22).toISOString(),
-            sessionCostUSD: 1.25, sessionTokens: 1200,
+            sessionCostUSD: data.cost, sessionTokens: 1200,
             totals: { totalCost: 9, totalTokens: 9000 }, daily: [] }];
         var tokenCost = Object.assign({}, CostResponse.response(JSON.stringify(payload), "", 30, 0).costs.codex,
             { windowLabel: "30d", hintLine: "" });
@@ -741,18 +745,18 @@ class CostSectionTests(unittest.TestCase):
         verify(subject !== null);
         tryVerify(function() {
             var texts = textsUnder(subject);
-            return texts.indexOf("Today") >= 0 && texts.indexOf("USD 1.25") >= 0
+            return texts.indexOf("Today") >= 0 && texts.indexOf(data.expected) >= 0
                 && texts.indexOf("1200 tokens") >= 0;
         });
 
         fakeApplet.panelClockMs = new Date(2026, 8, 24, 0, 30).getTime();
         tryVerify(function() {
             var texts = textsUnder(subject);
-            return texts.indexOf("Today") >= 0 && texts.indexOf("USD 1.25") < 0
+            return texts.indexOf("Today") >= 0 && texts.indexOf(data.expected) < 0
                 && texts.indexOf("Cost unavailable") >= 0 && texts.indexOf("Tokens unavailable") >= 0;
         });
         // The selected period still shows the retained snapshot.
-        verify(textsUnder(subject).indexOf("USD 9") >= 0);
+        verify(textsUnder(subject).indexOf("$9.00") >= 0);
         fakeApplet.panelClockMs = 0;
     }
     ''')

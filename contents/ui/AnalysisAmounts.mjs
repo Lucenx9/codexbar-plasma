@@ -3,10 +3,27 @@ import * as Guards from "./Guards.mjs";
 
 // Keep positive sub-cent measurements distinct from zero without changing
 // the precision of provider-detail balances or aggregate arithmetic.
+export function amountText(format, value, currency) {
+    if (currency !== "Quota" && Guards.isFiniteNumber(value) && value > 0 && value < 0.01)
+        return "< " + Amounts.amountString(format, 0.01, currency)
+    return Amounts.amountString(format, value, currency)
+}
+
 export function metricText(format, value, currency, showsTokens) {
-    if (!showsTokens && currency !== "Quota" && Guards.isFiniteNumber(value) && value > 0 && value < 0.01)
-        return "< " + Amounts.amountString(format, 0.01, currency || "USD")
-    return Amounts.metricText(format, value, currency, showsTokens)
+    return showsTokens ? Amounts.tokenCountString(value, format)
+        : amountText(format, value, currency || "USD")
+}
+
+// Missing amounts stay absent; measured zeroes remain visible.
+export function amountSummary(fmt, amounts, tokensTextFor) {
+    var values = []
+    if (Amounts.hasMetricValue(amounts, false)) {
+        values.push(amountText(fmt, amounts.cost, amounts.currency))
+    }
+    if (Amounts.hasMetricValue(amounts, true)) {
+        values.push(tokensTextFor ? tokensTextFor(amounts.tokens) : Amounts.tokenCountString(amounts.tokens, fmt))
+    }
+    return values.length > 0 ? values.join(" · ") : "-"
 }
 
 function axisDigits(step) {

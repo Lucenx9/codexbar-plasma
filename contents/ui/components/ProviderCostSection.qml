@@ -4,6 +4,7 @@ import org.kde.kirigami as Kirigami
 import "." as Components
 import "../CostPresentation.mjs" as CostPresentation
 import "../CostAmounts.mjs" as CostAmounts
+import "../AnalysisAmounts.mjs" as AnalysisAmounts
 import "../CostChart.mjs" as CostChart
 import "../CostTrust.mjs" as CostTrust
 import "../QuotaWindowCost.js" as QuotaWindowCost
@@ -46,7 +47,7 @@ ColumnLayout {
     }
 
     function amountText(amounts, mode) {
-        return CostAmounts.hasMetricValue(amounts, false) ? applet.qualifiedCostValue(applet.amountString(amounts.cost, amounts.currency), mode) : i18n("Cost unavailable");
+        return CostAmounts.hasMetricValue(amounts, false) ? applet.qualifiedCostValue(AnalysisAmounts.amountText(applet.costNumberFormat, amounts.cost, amounts.currency), mode) : i18n("Cost unavailable");
     }
 
     function tokensText(amounts, incompleteRequests) {
@@ -56,7 +57,7 @@ ColumnLayout {
     }
 
     function daySummaryText() {
-        var summary = CostAmounts.amountSummary(applet.costNumberFormat, selectedDay, function (tokens) {
+        var summary = AnalysisAmounts.amountSummary(applet.costNumberFormat, selectedDay, function (tokens) {
             return applet.usageCountText(tokens, "tokens");
         });
         var excluded = excludedRequestsText(CostTrust.acceptedIncompleteRequests(selectedDay));

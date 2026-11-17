@@ -1,6 +1,7 @@
 import QtQuick
 import "../CostPresentation.mjs" as CostPresentation
 import "../CostAmounts.mjs" as CostAmounts
+import "../AnalysisAmounts.mjs" as AnalysisAmounts
 import "../ProviderNormalizer.mjs" as Normalizer
 
 // Localized text for a provider's cost history: summary lines, breakdown,
@@ -56,7 +57,7 @@ QtObject {
             peak.label.length > 0 ? root.costDayLabel(peak.label) : i18n("Latest"),
             root.showsTokens
                 ? CostAmounts.tokenCountString(peak.magnitude, root.numberFormat)
-                : CostAmounts.amountString(root.numberFormat, peak.magnitude, peak.currency))
+                : AnalysisAmounts.amountText(root.numberFormat, peak.magnitude, peak.currency))
     }
 
     // A calendar period longer than the chart supplies its whole-range average.
@@ -68,7 +69,7 @@ QtObject {
         }
         return i18n("Average/day: %1", root.showsTokens
             ? CostAmounts.tokenCountString(average.value, root.numberFormat)
-            : CostAmounts.amountString(root.numberFormat, average.value, average.currency))
+            : AnalysisAmounts.amountText(root.numberFormat, average.value, average.currency))
     }
 
     function costPerMillionLine(tokenCost) {
@@ -77,6 +78,6 @@ QtObject {
             return ""
         }
         return i18n("Average: %1 / 1M tokens",
-            CostAmounts.amountString(root.numberFormat, perMillion.value, perMillion.currency))
+            AnalysisAmounts.amountText(root.numberFormat, perMillion.value, perMillion.currency))
     }
 }

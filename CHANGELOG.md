@@ -12,6 +12,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Show positive local-history costs below one cent as less than one cent across
+  provider summaries, daily/model rows, and chart readouts instead of rounding
+  them to zero.
+
 - Hide private provider aliases from the panel identity's accessible name when
   personal information is hidden, while preserving provider navigation.
 

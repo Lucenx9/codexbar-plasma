@@ -1,6 +1,8 @@
 import QtQuick
 import QtTest
 import "../contents/ui/CostAmounts.mjs" as CostAmounts
+import "../contents/ui/CostChart.mjs" as CostChart
+import "../contents/ui/CostResponse.mjs" as CostResponse
 import "../contents/ui/components" as Components
 
 TestCase {
@@ -55,6 +57,57 @@ TestCase {
                 cacheCreationTokens: 20
             }
         };
+    }
+
+    function test_smallMeasuredCosts_data() {
+        return [
+            {tag: "subcent-usd", cost: 0.002, currency: "USD", decimal: ".", expected: "< $0.01"},
+            {tag: "rounded-cent-usd", cost: 0.008, currency: "USD", decimal: ".", expected: "< $0.01"},
+            {tag: "subcent-eur-comma", cost: 0.002, currency: "EUR", decimal: ",", expected: "< EUR 0,01"},
+            {tag: "zero", cost: 0, currency: "USD", decimal: ".", expected: "$0.00"},
+            {tag: "one-cent", cost: 0.01, currency: "USD", decimal: ".", expected: "$0.01"},
+            {tag: "unknown", cost: null, currency: "USD", decimal: ".", expected: ""}
+        ];
+    }
+
+    function test_smallMeasuredCosts(data) {
+        numberFormat = CostAmounts.numberFormat(",", data.decimal);
+        var result = CostResponse.response(JSON.stringify([{
+            provider: "codex", updatedAt: "2026-11-17T12:00:00Z", historyDays: 1,
+            currencyCode: data.currency,
+            daily: [{date: "2026-11-17", totalCost: data.cost, totalTokens: 1000}]
+        }]), "", 1, 0);
+        compare(result.outcome, "success");
+        var snapshot = result.costs.codex;
+        var daily = snapshot.daily;
+        compare(daily[0].cost, data.cost);
+        var before = JSON.stringify(snapshot);
+        var summary = data.expected ? data.expected + " · 1K" : "1K";
+        // Token mode still includes the available money in the daily summary.
+        for (var tokens of [false, true]) {
+            showsTokens = tokens;
+            var rows = costLabels.costHistoryRows(snapshot);
+            compare(rows.length, tokens || data.cost !== null ? 1 : 0);
+            if (rows.length) compare(rows[0].value, summary);
+            var points = CostChart.chartPoints(numberFormat, daily, tokens);
+            compare(points.length, tokens || data.cost !== null ? 1 : 0);
+            if (points.length) compare(points[0].displayValue, tokens ? "1K" : data.expected);
+        }
+        showsTokens = false;
+        compare(costLabels.costPeakLine(daily), data.cost > 0
+            ? "Peak: " + costLabels.costDayLabel(daily[0].label) + " - " + data.expected : "");
+        compare(costLabels.costAverageDailyLine(daily), data.cost !== null
+            ? "Average/day: " + data.expected : "");
+        if (data.cost !== null) {
+            compare(costText.costLine("Today", data.cost, 1000, data.currency),
+                "Today: " + data.expected + " · 1K tokens");
+            compare(costText.costValueLine(data.cost, 1000, data.currency, "estimated"),
+                data.expected + " (estimated) · 1K tokens");
+        }
+        // Live provider balance formatting retains its two-decimal precision.
+        compare(costText.amountString(0.002, data.currency),
+            CostAmounts.amountString(numberFormat, 0, data.currency));
+        compare(JSON.stringify(snapshot), before);
     }
     function twoDays() {
         return [

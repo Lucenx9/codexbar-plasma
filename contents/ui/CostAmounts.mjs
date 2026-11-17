@@ -124,18 +124,6 @@ export function metricText(fmt, magnitude, currency, showsTokens) {
         : amountString(fmt, magnitude, currency || "USD")
 }
 
-// Missing amounts stay absent; measured zeroes remain visible.
-export function amountSummary(fmt, amounts, tokensTextFor) {
-    var values = []
-    if (hasMetricValue(amounts, false)) {
-        values.push(amountString(fmt, amounts.cost, amounts.currency))
-    }
-    if (hasMetricValue(amounts, true)) {
-        values.push(tokensTextFor ? tokensTextFor(amounts.tokens) : tokenCountString(amounts.tokens, fmt))
-    }
-    return values.length > 0 ? values.join(" · ") : "-"
-}
-
 // The bars highlight the peak of the selected metric, so this has to name the
 // same day, not the most expensive one. Returns null when nothing was spent.
 export function peakPoint(points, showsTokens) {

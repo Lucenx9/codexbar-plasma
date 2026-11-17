@@ -1,5 +1,6 @@
 import * as Guards from "./Guards.mjs";
 import * as CostAmounts from "./CostAmounts.mjs";
+import * as AnalysisAmounts from "./AnalysisAmounts.mjs";
 import * as CostChart from "./CostChart.mjs";
 import * as CostCurrency from "./CostCurrency.mjs";
 import * as CostTrust from "./CostTrust.mjs";
@@ -46,7 +47,7 @@ export function modelRows(fmt, tokenCost, tokensTextFor) {
         }
         rows.push({
             label: item.label,
-            value: CostAmounts.amountSummary(fmt, item, tokensTextFor),
+            value: AnalysisAmounts.amountSummary(fmt, item, tokensTextFor),
             incompleteRequests: CostTrust.acceptedIncompleteRequests(item)
         })
     }
@@ -173,7 +174,7 @@ export function historyRow(item, maximum, showsTokens, labels) {
     var magnitude = Math.max(0, CostAmounts.metricValue(item, showsTokens))
     return {
         label: item.label && item.label.length > 0 ? item.label : labels.fallbackLabel,
-        value: CostAmounts.amountSummary(labels.fmt, item),
+        value: AnalysisAmounts.amountSummary(labels.fmt, item),
         incompleteRequests: CostTrust.acceptedIncompleteRequests(item),
         percent: maximum > 0 && magnitude > 0 ? Math.max(3, (magnitude / maximum) * 100) : 0,
         isPeak: maximum > 0 && magnitude === maximum
@@ -243,7 +244,7 @@ export function spendPointRows(byDate, fmt, showsTokens) {
         var item = byDate[day]
         // A sum that overflowed is unavailable, never a fabricated zero.
         if (!isFinite(item.value)) continue
-        item.displayValue = CostAmounts.metricText(fmt, item.value, item.currency, showsTokens)
+        item.displayValue = AnalysisAmounts.metricText(fmt, item.value, item.currency, showsTokens)
         result.push(item)
     }
     return result

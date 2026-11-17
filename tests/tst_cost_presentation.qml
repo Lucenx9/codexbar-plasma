@@ -2,6 +2,7 @@ import QtQuick
 import QtTest
 import "../contents/ui/CostPresentation.mjs" as CostPresentation
 import "../contents/ui/CostAmounts.mjs" as CostAmounts
+import "../contents/ui/AnalysisAmounts.mjs" as AnalysisAmounts
 import "../contents/ui/CostChart.mjs" as CostChart
 import "../contents/ui/CostCurrency.mjs" as CostCurrency
 import "../contents/ui/CostTrust.mjs" as CostTrust
@@ -207,10 +208,10 @@ TestCase {
     function test_amountSummaryPreservesAvailableMetrics() {
         var fmt = CostAmounts.numberFormat(",", ".")
         var tokensText = function(tokens) { return tokens + " tokens" }
-        compare(CostAmounts.amountSummary(fmt, { cost: null, tokens: 5 }, tokensText), "5 tokens")
-        compare(CostAmounts.amountSummary(fmt, { cost: 0, tokens: null, currency: "USD" }, tokensText), "$0.00")
-        compare(CostAmounts.amountSummary(fmt, { cost: 0, tokens: 0, currency: "USD" }, tokensText), "$0.00 · 0 tokens")
-        compare(CostAmounts.amountSummary(fmt, null, tokensText), "-")
+        compare(AnalysisAmounts.amountSummary(fmt, { cost: null, tokens: 5 }, tokensText), "5 tokens")
+        compare(AnalysisAmounts.amountSummary(fmt, { cost: 0, tokens: null, currency: "USD" }, tokensText), "$0.00")
+        compare(AnalysisAmounts.amountSummary(fmt, { cost: 0, tokens: 0, currency: "USD" }, tokensText), "$0.00 · 0 tokens")
+        compare(AnalysisAmounts.amountSummary(fmt, null, tokensText), "-")
     }
 
     function test_modelRowsDistinguishZeroFromMissingAmounts() {
@@ -478,7 +479,7 @@ TestCase {
         compare(CostAmounts.tokenCountString(1500, ({})), "1.5K")
         compare(CostAmounts.metricText(comma, 1500, "USD", true), "1,5K")
         compare(CostPresentation.breakdownRows([{ label: "Input", tokens: 1500 }], comma)[0].value, "1,5K")
-        compare(CostAmounts.amountSummary(comma, { cost: 1.5, tokens: 1500, currency: "USD" }), "$1,50 · 1,5K")
+        compare(AnalysisAmounts.amountSummary(comma, { cost: 1.5, tokens: 1500, currency: "USD" }), "$1,50 · 1,5K")
     }
 
     // A value that rounds up across a unit boundary must promote to the larger

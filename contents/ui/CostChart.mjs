@@ -1,6 +1,7 @@
 import * as Guards from "./Guards.mjs";
 import * as Normalizer from "./ProviderNormalizer.mjs";
 import * as CostAmounts from "./CostAmounts.mjs";
+import * as AnalysisAmounts from "./AnalysisAmounts.mjs";
 
 // Cost chart geometry, point selection, and calendar heatmap layout.
 // Only paintRoundedTopBar draws, using the canvas supplied by its QML owner.
@@ -126,7 +127,7 @@ export function chartPoints(fmt, points, showsTokens) {
             label: CostAmounts.boundedText(point.label, 120),
             sourceIndex: i,
             value: value,
-            displayValue: CostAmounts.metricText(fmt, value, point.currency, showsTokens)
+            displayValue: AnalysisAmounts.metricText(fmt, value, point.currency, showsTokens)
         })
     }
     return result
