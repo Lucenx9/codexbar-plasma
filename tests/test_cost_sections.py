@@ -52,6 +52,7 @@ TestCase {
         projects: { rows: [
             { label: "Cost heavy", cost: 8, tokens: 100, currency: "USD" },
             { label: "Token heavy", cost: 1, tokens: 9000, currency: "USD" },
+            { label: "Tiny project", cost: 0.002, tokens: 2, currency: "USD" },
             { label: "Unpriced", cost: null, tokens: 50, currency: "USD" }
         ], truncated: false }
     }]
@@ -130,7 +131,7 @@ TestCase {
         function privateErrorText(text) { return text; }
         property double panelClockMs: 0
         function usageCountText(value) { return String(value) + " tokens"; }
-        function amountString(value, currency) { return (currency || "USD") + " " + String(value); }
+        function amountString(value, currency) { return CostAmounts.amountString(costNumberFormat, value, currency); }
         function qualifiedCostValue(value, mode) { return costText.qualifiedCostValue(value, mode); }
         function providerDisplayTitle(provider) { return provider; }
         function providerReadableColor(provider) { return "#3aa655"; }
@@ -487,7 +488,8 @@ class CostSectionTests(unittest.TestCase):
         verify(subject !== null);
         var texts = textsUnder(subject);
         verify(texts.indexOf("Cost heavy") < texts.indexOf("Token heavy"));
-        verify(texts.indexOf("USD 8") >= 0);
+        verify(texts.indexOf("$8.00") >= 0);
+        verify(texts.indexOf("< $0.01") >= 0);
         verify(texts.indexOf("Cost unavailable") >= 0);
         fakeApplet.costHistoryShowsTokens = true;
         tryVerify(function() {
@@ -630,8 +632,8 @@ class CostSectionTests(unittest.TestCase):
         verify(texts.indexOf(stamp(reset - 7 * 86400000) + " - " + stamp(reset)) >= 0, texts.join(" | "));
         verify(texts.indexOf(stamp(reset - 14 * 86400000) + " - " + stamp(reset - 7 * 86400000)) >= 0);
         // A 12:22 reset splits days, so both totals are marked as estimated.
-        verify(texts.indexOf("≈ USD 60 · 6000 tokens") >= 0, texts.join(" | "));
-        verify(texts.indexOf("≈ USD 42 · 4200 tokens") >= 0);
+        verify(texts.indexOf("≈ $60.00 · 6000 tokens") >= 0, texts.join(" | "));
+        verify(texts.indexOf("≈ $42.00 · 4200 tokens") >= 0);
         verify(texts.some(function(text) { return text.indexOf("≈ The history is kept per day") === 0; }));
 
         // Finite daily rows are still incomplete when the CLI says its local
@@ -641,8 +643,8 @@ class CostSectionTests(unittest.TestCase):
             rows: [{ lane: "secondary", windowMinutes: 10080, resetsAt: new Date(reset).toISOString() }] };
         tryVerify(function() {
             var updated = textsUnder(subject);
-            return updated.indexOf("≈ at least USD 60 · at least 6000 tokens") >= 0
-                && updated.indexOf("≈ at least USD 42 · at least 4200 tokens") >= 0;
+            return updated.indexOf("≈ at least $60.00 · at least 6000 tokens") >= 0
+                && updated.indexOf("≈ at least $42.00 · at least 4200 tokens") >= 0;
         });
 
         // Without a weekly row there is nothing honest to split.
@@ -686,8 +688,9 @@ class CostSectionTests(unittest.TestCase):
         self.run_fixture('''
     function test_privateQuotaCurrency_data() {
         return [
-            { tag: "euro", currency: "EUR", expected: "EUR 2" },
-            { tag: "dollar", currency: "USD", expected: "USD 2" }
+            { tag: "euro", currency: "EUR", cost: 2, expected: "EUR 2.00" },
+            { tag: "dollar", currency: "USD", cost: 2, expected: "$2.00" },
+            { tag: "subcent", currency: "USD", cost: 0.002, expected: "< $0.01" }
         ];
     }
     function test_privateQuotaCurrency(data) {
@@ -696,8 +699,8 @@ class CostSectionTests(unittest.TestCase):
         var parsed = CostResponse.response(JSON.stringify([{
             provider: "codex", currencyCode: data.currency, historyDays: 1,
             updatedAt: new Date(scan).toISOString(),
-            totals: { totalCost: 2, totalTokens: 100 },
-            daily: [{ date: "2026-09-17", totalCost: 2, totalTokens: 100 }]
+            totals: { totalCost: data.cost, totalTokens: 100 },
+            daily: [{ date: "2026-09-17", totalCost: data.cost, totalTokens: 100 }]
         }]), "", 1, 0);
         compare(parsed.outcome, "success");
         fakeApplet.panelClockMs = scan;
@@ -716,10 +719,47 @@ class CostSectionTests(unittest.TestCase):
             testCase.providerData = { provider: "codex", tokenCost: cost,
                 rows: [{ lane: "secondary", windowMinutes: 10080, resetsAt: reset }] };
             compare(section.windows.length, 1);
-            compare(section.windows[0].cost, 2);
-            // The fixture formatter exposes the currency passed by the view.
+            compare(section.windows[0].cost, data.cost);
             compare(section.amountText(section.windows[0]).split(" · ")[0], data.expected);
         }
+    }
+    ''')
+
+    def test_partial_quota_weeks_keep_a_numeric_subcent_bound(self):
+        self.run_fixture('''
+    function test_partialQuotaBound_data() {
+        return [
+            {tag: "history", reason: "history", cost: 0.002, currency: "USD", decimal: ".", expected: "$0.002"},
+            {tag: "missing", reason: "missing", cost: 0.00999, currency: "USD", decimal: ".", expected: "$0.00999"},
+            {tag: "excluded-euro", reason: "excluded", cost: 0.002, currency: "EUR", decimal: ",", expected: "EUR 0,002"},
+            {tag: "tiny", reason: "history", cost: 1e-7, currency: "USD", decimal: ".", expected: "$1e-7"},
+            {tag: "zero", reason: "history", cost: 0, currency: "USD", decimal: ".", expected: "$0.00"}
+        ];
+    }
+    function test_partialQuotaBound(data) {
+        fakeApplet.costNumberFormat = CostAmounts.numberFormat(",", data.decimal);
+        fakeApplet.panelClockMs = new Date(2026, 10, 17, 12).getTime();
+        var daily = [];
+        for (var day = 11; day <= 17; day++) daily.push({label: "2026-11-" + day,
+            cost: day === 17 ? data.cost : data.reason === "missing" && day === 12 ? null : 0,
+            tokens: day === 17 ? 100 : 0,
+            currency: data.currency,
+            incompleteRequests: data.reason === "excluded" && day === 17 ? 1 : 0});
+        var cost = Object.assign({}, providerTokenCost, {daily: daily,
+            totals: {cost: data.cost, tokens: 100, currency: data.currency},
+            historyCoverageEstablished: data.reason !== "history"});
+        testCase.providerData = {provider: "codex", tokenCost: cost,
+            rows: [{lane: "secondary", windowMinutes: 10080,
+                resetsAt: new Date(2026, 10, 18).toISOString()}]};
+        var subject = createTemporaryObject(providerFactory, testCase);
+        verify(subject !== null);
+        var all = [];
+        walkTree(subject, all);
+        var section = all.filter(function(item) { return item.objectName === "quotaWindowSection"; })[0];
+        compare(section.windows.length, 1);
+        compare(section.windows[0].cost, data.cost);
+        compare(section.windows[0].costPartial, data.reason !== "history");
+        compare(section.amountText(section.windows[0]).split(" · ")[0], "at least " + data.expected);
     }
     ''')
 
@@ -728,10 +768,14 @@ class CostSectionTests(unittest.TestCase):
     // The CLI's "today" is the total of the day it scanned. A snapshot from
     // 22:00 must not present that day's spend as today's after midnight,
     // whether the new scan is still running or has failed.
-    function test_providerTodayNeedsAScanFromToday() {
+    function test_providerTodayNeedsAScanFromToday_data() {
+        return [{tag: "ordinary", cost: 1.25, expected: "$1.25"},
+            {tag: "subcent", cost: 0.002, expected: "< $0.01"}];
+    }
+    function test_providerTodayNeedsAScanFromToday(data) {
         var payload = [{ provider: "codex", historyDays: 30, currencyCode: "USD",
             updatedAt: new Date(2026, 8, 23, 22).toISOString(),
-            sessionCostUSD: 1.25, sessionTokens: 1200,
+            sessionCostUSD: data.cost, sessionTokens: 1200,
             totals: { totalCost: 9, totalTokens: 9000 }, daily: [] }];
         var tokenCost = Object.assign({}, CostResponse.response(JSON.stringify(payload), "", 30, 0).costs.codex,
             { windowLabel: "30d", hintLine: "" });
@@ -741,18 +785,18 @@ class CostSectionTests(unittest.TestCase):
         verify(subject !== null);
         tryVerify(function() {
             var texts = textsUnder(subject);
-            return texts.indexOf("Today") >= 0 && texts.indexOf("USD 1.25") >= 0
+            return texts.indexOf("Today") >= 0 && texts.indexOf(data.expected) >= 0
                 && texts.indexOf("1200 tokens") >= 0;
         });
 
         fakeApplet.panelClockMs = new Date(2026, 8, 24, 0, 30).getTime();
         tryVerify(function() {
             var texts = textsUnder(subject);
-            return texts.indexOf("Today") >= 0 && texts.indexOf("USD 1.25") < 0
+            return texts.indexOf("Today") >= 0 && texts.indexOf(data.expected) < 0
                 && texts.indexOf("Cost unavailable") >= 0 && texts.indexOf("Tokens unavailable") >= 0;
         });
         // The selected period still shows the retained snapshot.
-        verify(textsUnder(subject).indexOf("USD 9") >= 0);
+        verify(textsUnder(subject).indexOf("$9.00") >= 0);
         fakeApplet.panelClockMs = 0;
     }
     ''')

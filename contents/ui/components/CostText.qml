@@ -1,6 +1,7 @@
 import QtQuick
 import "../CostPresentation.mjs" as CostPresentation
 import "../CostAmounts.mjs" as CostAmounts
+import "../AnalysisAmounts.mjs" as AnalysisAmounts
 import "../CostTrust.mjs" as CostTrust
 import "../ProviderNormalizer.mjs" as Normalizer
 import "../ProviderIdentity.mjs" as ProviderIdentity
@@ -69,7 +70,7 @@ QtObject {
         }
         var trustSummary = CostTrust.costTrustSummary(costs)
         var costValue = qualifiedCostValue(
-            CostAmounts.amountString(root.numberFormat, numericCost, totals.currency),
+            AnalysisAmounts.amountText(root.numberFormat, numericCost, totals.currency),
             trustSummary ? trustSummary.valueMode : "plain")
         if (!hasTokens) {
             return totals.hasMixedCostCurrencies ? i18n("%1 subtotal", costValue) : i18n("%1 total", costValue)
@@ -150,7 +151,7 @@ QtObject {
         var numericCost = Normalizer.strictFiniteNumber(cost)
         var numericTokens = Normalizer.strictFiniteNumber(tokens)
         var hasCost = isFinite(numericCost)
-        var costValue = hasCost ? amountString(numericCost, currency) : "-"
+        var costValue = hasCost ? AnalysisAmounts.amountText(root.numberFormat, numericCost, currency) : "-"
         if (hasCost) {
             costValue = qualifiedCostValue(costValue, valueMode)
         }
@@ -164,7 +165,7 @@ QtObject {
         var numericCost = Normalizer.strictFiniteNumber(cost)
         var numericTokens = Normalizer.strictFiniteNumber(tokens)
         var hasCost = isFinite(numericCost)
-        var costValue = hasCost ? amountString(numericCost, currency) : "-"
+        var costValue = hasCost ? AnalysisAmounts.amountText(root.numberFormat, numericCost, currency) : "-"
         if (hasCost) {
             costValue = qualifiedCostValue(costValue, valueMode)
         }

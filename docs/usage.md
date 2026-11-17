@@ -535,8 +535,9 @@ Dismissing a notice suppresses that meaning across refreshes and reopenings;
 a materially different warning appears again. Switching tabs alone does not
 dismiss it.
 
-Measured zeros stay zero. Positive spend below one cent is labeled as less than
-one cent. Different currencies are never converted; mixed-currency subtotals
+Measured zeros stay zero. Complete positive spend below one cent is labeled as
+less than one cent. Partial quota weeks show a precise minimum, such as
+**at least $0.002**. Different currencies are never converted; mixed-currency subtotals
 identify the included currency. Dates and numeric separators follow your regional
 format. See [Cost history](cost-history.md) for currency fallbacks, bounds,
 aggregation rules, and pinned evidence.
