@@ -54,9 +54,7 @@ MAX_SCENARIO_TIMEOUT_SECONDS = 120
 MATRIX_SCENARIOS = ("panel-matrix-one", "panel-matrix-four")
 
 
-def usage(provider, scenario, now):
-    if scenario == "partial-error" and provider == "claude":
-        return {"provider": provider, "error": {"message": "Synthetic provider timeout. Try again."}}
+def usage_snapshot(provider, scenario, now):
     long_text = scenario == "long-text"
     snapshot = {
         "provider": provider,
@@ -74,24 +72,15 @@ def usage(provider, scenario, now):
                           "resetsAt": (now + timedelta(days=4)).isoformat()},
         },
     }
-    if scenario == "detail-severity" and provider == "codex":
-        snapshot["usage"]["details"] = [{"title": "API usage details", "rows": [
-            {"label": "Completed batch", "value": "100 / 100", "severity": "normal", "progress": {"used": 100, "total": 100}},
-            {"label": "Requests", "value": "1 / 100", "severity": "warning", "progress": {"used": 1, "total": 100}},
-            {"label": "Account action", "value": "Check account settings", "severity": "critical"},
-            {"label": "Imported rows", "value": "100 / 100", "progress": {"used": 100, "total": 100}},
-            {"label": "Future metadata", "value": "100 / 100", "severity": "future", "progress": {"used": 100, "total": 100}}
-        ]}]
-    if scenario == "subscription-dates":
-        snapshot["usage"].update(subscriptionRenewsAt="2026-11-01T08:30:00Z",
-                                 subscriptionExpiresAt="2026-11-30T00:00:00Z",
-                                 subscriptionExpiresAtIsDateOnly=True)
-    if scenario.startswith("ai-insights") and provider == "codex":
-        snapshot["pace"] = {"primary": {"stage": "ahead", "deltaPercent": 13,
-            "expectedUsedPercent": 30, "willLastToReset": False, "etaSeconds": 3600}}
-    if scenario in ("estimated-usage", "estimated-panel", "unknown-panel") and provider == "codex":
+    return snapshot
+
+
+def apply_usage_confidence(snapshot, provider, scenario):
+    mode = {"estimated-usage": "estimated", "estimated-panel": "estimated",
+            "unknown-panel": "unknown"}.get(scenario)
+    if mode is not None and provider == "codex":
         snapshot["source"] = "local"
-        snapshot["usage"]["dataConfidence"] = "unknown" if scenario == "unknown-panel" else "estimated"
+        snapshot["usage"]["dataConfidence"] = mode
         snapshot["usage"]["primary"]["usedPercent"] = 95
         snapshot["pace"] = {"primary": {"expectedUsedPercent": 30,
             "willLastToReset": False, "etaSeconds": 3600}}
@@ -104,11 +93,13 @@ def usage(provider, scenario, now):
             snapshot["usage"]["secondary"]["usedPercent"] = 80
             snapshot["pace"] = {"secondary": {"stage": "farAhead", "deltaPercent": 37,
                 "expectedUsedPercent": 43, "willLastToReset": False, "etaSeconds": 64800}}
-    if scenario in MATRIX_SCENARIOS:
-        if provider == "codex":
-            snapshot["credits"] = {"remaining": 125}
-        snapshot["pace"] = {"primary": {"stage": "ahead", "deltaPercent": 13,
-            "expectedUsedPercent": 30, "willLastToReset": False, "etaSeconds": 3600}}
+
+
+def apply_usage_identity(snapshot, provider, scenario, now):
+    if scenario == "subscription-dates":
+        snapshot["usage"].update(subscriptionRenewsAt="2026-11-01T08:30:00Z",
+                                 subscriptionExpiresAt="2026-11-30T00:00:00Z",
+                                 subscriptionExpiresAtIsDateOnly=True)
     if scenario.startswith("readme-"):
         snapshot["account"] = "team@example.com"
         snapshot["usage"]["primary"]["usedPercent"] = {"codex": 43, "claude": 68, "gemini": 24}[provider]
@@ -121,6 +112,21 @@ def usage(provider, scenario, now):
             del snapshot["usage"]["secondary"]
     if scenario.startswith("provider-header"):
         snapshot["status"] = {"indicator": "minor", "description": "Synthetic service degradation"}
+
+
+def generic_usage_details():
+    return [{"title": "Generic details", "rows": [{"label": "Requests", "value": "7"}]}]
+
+
+def apply_usage_details(snapshot, provider, scenario):
+    if scenario == "detail-severity" and provider == "codex":
+        snapshot["usage"]["details"] = [{"title": "API usage details", "rows": [
+            {"label": "Completed batch", "value": "100 / 100", "severity": "normal", "progress": {"used": 100, "total": 100}},
+            {"label": "Requests", "value": "1 / 100", "severity": "warning", "progress": {"used": 1, "total": 100}},
+            {"label": "Account action", "value": "Check account settings", "severity": "critical"},
+            {"label": "Imported rows", "value": "100 / 100", "progress": {"used": 100, "total": 100}},
+            {"label": "Future metadata", "value": "100 / 100", "severity": "future", "progress": {"used": 100, "total": 100}}
+        ]}]
     if scenario == "legacy-dashboard":
         snapshot["openaiDashboard"] = {
             "creditsRemaining": 0,
@@ -132,17 +138,30 @@ def usage(provider, scenario, now):
                 "currentMonth": {"costUSD": 1234.56, "totalTokens": 987654321},
             }
         if provider == "claude":
-            snapshot["usage"]["details"] = [{"title": "Generic details",
-                                             "rows": [{"label": "Requests", "value": "7"}]}]
+            snapshot["usage"]["details"] = generic_usage_details()
     if scenario in ("popup-content", "popup-hidden-sections"):
         snapshot["credits"] = {"remaining": 125}
-        snapshot["usage"]["details"] = [{"title": "Generic details",
-                                          "rows": [{"label": "Requests", "value": "7"}]}]
+        snapshot["usage"]["details"] = generic_usage_details()
+
+
+def ahead_pace():
+    return {"primary": {"stage": "ahead", "deltaPercent": 13,
+                        "expectedUsedPercent": 30, "willLastToReset": False, "etaSeconds": 3600}}
+
+
+def apply_usage_pace(snapshot, provider, scenario):
+    if scenario.startswith("ai-insights") and provider == "codex":
+        snapshot["pace"] = ahead_pace()
+    if scenario in MATRIX_SCENARIOS:
+        if provider == "codex":
+            snapshot["credits"] = {"remaining": 125}
+        snapshot["pace"] = ahead_pace()
     if scenario.startswith("localization-") or scenario == "popup-content":
-        snapshot["pace"] = {"primary": {"stage": "ahead", "deltaPercent": 13,
-                                        "expectedUsedPercent": 30, "willLastToReset": False,
-                                        "etaSeconds": 3600,
-                                        "summary": "13% in deficit | Expected 30% used | Runs out in 1h"}}
+        snapshot["pace"] = ahead_pace()
+        snapshot["pace"]["primary"]["summary"] = "13% in deficit | Expected 30% used | Runs out in 1h"
+
+
+def apply_usage_allowance(snapshot, provider, scenario, now):
     budget = {"used": 12, "limit": 20, "currencyCode": "USD", "period": "Budget"}
     display_fields = {
         ("codex", "monthly-allowance"): {"extraRateWindows": [{"id": "monthly-allowance",
@@ -152,6 +171,17 @@ def usage(provider, scenario, now):
         ("codex", "panel-matrix-four"): {"providerCost": budget},
     }
     snapshot["usage"].update(display_fields.get((provider, scenario), {}))
+
+
+def usage(provider, scenario, now):
+    if scenario == "partial-error" and provider == "claude":
+        return {"provider": provider, "error": {"message": "Synthetic provider timeout. Try again."}}
+    snapshot = usage_snapshot(provider, scenario, now)
+    apply_usage_details(snapshot, provider, scenario)
+    apply_usage_identity(snapshot, provider, scenario, now)
+    apply_usage_confidence(snapshot, provider, scenario)
+    apply_usage_pace(snapshot, provider, scenario)
+    apply_usage_allowance(snapshot, provider, scenario, now)
     return snapshot
 
 
@@ -213,215 +243,336 @@ SETUP_SCENARIOS.update({name: ("0.83.0", KEY_SETUP_ROWS) for name in (
     "settings-providers-keys-soniox", "settings-providers-keys-chatbox")})
 
 
-def response(args, scenario, now):
-    """Synthetic reads and the source write used by authentication scenarios."""
+def authentication_provider_rows(scenario):
+    rows = [{"provider": key, "enabled": key in ("codex", "copilot", "openrouter")}
+            for key in ("codex", "copilot", "openrouter", "moonshot", "flora", "helmcode", "future-provider")]
+    if scenario.endswith("-legacy"):
+        return rows
+    for row in rows:
+        key = row["provider"]
+        row["authentication"] = dict(sourceModes=["api", "auto"], supportsConfigAPIKey=key != "moonshot",
+                                     supportsConfigCookieHeader=False, environmentVariables=[])
+    rows[1]["authentication"].update(environmentVariables=["COPILOT_API_TOKEN"],
+        supportsConfigCookieHeader=True,
+        tokenAccounts=dict(title="GitHub accounts", setupHint="Sign in with multiple GitHub accounts via OAuth."),
+        loginCommand="codexbar config login --provider copilot")
+    rows[2]["authentication"].update(environmentVariables=["OPENROUTER_API_KEY", "OPENROUTER_API_URL"],
+        tokenAccounts=dict(title="API keys", setupHint="Store multiple OpenRouter API keys."))
+    rows[4]["authentication"]["environmentVariables"] = ["FLORA_API_KEY", "FLORA_WORKSPACE_ID"]
+    rows[0]["authentication"].update(sourceModes=["api", "auto", "cli", "oauth", "web"],
+                                     supportsConfigAPIKey=False, supportsConfigCookieHeader=True)
+    rows[5]["authentication"].update(sourceModes=["auto", "web"], supportsConfigAPIKey=False,
+                                     supportsConfigCookieHeader=True)
+    return rows
+
+
+def usage_providers(scenario):
+    if scenario.startswith("readme-"):
+        return ("codex", "claude", "gemini")
+    if scenario == "panel-matrix-four":
+        return ("codex", "claude", "gemini", "cursor")
+    return ("codex", "claude")
+
+
+def provider_rows(scenario):
+    if scenario in SETUP_SCENARIOS:
+        return copy.deepcopy(SETUP_SCENARIOS[scenario][1])
+    if scenario.startswith("settings-providers-auth"):
+        return authentication_provider_rows(scenario)
+    if scenario == "empty-providers":
+        return []
+    if scenario in ("usage-error", "settings-providers-error"):
+        raise ValueError("Synthetic connection failure.")
+    return configured_provider_rows(scenario)
+
+
+def extra_provider_ids(scenario):
+    if scenario.startswith("settings-providers"):
+        return ("gemini", "cursor", "openrouter", "alibabatokenplan", "huggingface", "azureopenai",
+                "jetbrains", "perplexity", "example-provider-with-an-unusually-long-identifier")
+    return {
+        "providers-0740": ("tavily", "linkup", "tinyapi", "exa", "cosmic", "aerostack", "sailresearch", "sofya", "xapi"),
+        "provider-settings": ("gemini", "cursor", "openrouter"),
+    }.get(scenario, ())
+
+
+def configured_provider_rows(scenario):
+    providers = ("codex",) if scenario in ("panel-minimal-single", "panel-default-single", "panel-information-single", "panel-matrix-one", "ai-insights-single") else usage_providers(scenario)
+    rows = [{"provider": key, "enabled": True} for key in providers]
+    if scenario.startswith("settings-providers"):
+        # A long roster with the longest bundled title and an unknown ID.
+        rows.append({"provider": "moonshot", "enabled": True, "defaultEnabled": False})
+        rows[0]["defaultEnabled"] = True
+    rows.extend({"provider": key, "enabled": False} for key in extra_provider_ids(scenario))
+    return rows
+
+
+def version_response(scenario):
+    if scenario in SETUP_SCENARIOS:
+        return "CodexBar " + SETUP_SCENARIOS[scenario][0]
+    if scenario.startswith("settings-providers-auth"):
+        return "CodexBar " + ("0.82.0" if scenario.endswith("-legacy") else "0.83.0")
+    if scenario.startswith("settings-providers"):
+        return "CodexBar 0.73.0 (synthetic smoke fixture)"
+    return "CodexBar 0.56.2 (synthetic smoke fixture)"
+
+
+def config_response(args, scenario, now):
     if args == ["config", "providers", "--descriptors", "--format", "json", "--json-only"]:
         raise ValueError("Unknown option --descriptors")
     if args[:2] in (["config", "dump"], ["config", "set-source"]):
         return source_settings_response(args, scenario, now)
-    if args == ["--version"]:
-        if scenario in SETUP_SCENARIOS:
-            return "CodexBar " + SETUP_SCENARIOS[scenario][0]
-        if scenario.startswith("settings-providers-auth"):
-            return "CodexBar " + ("0.82.0" if scenario.endswith("-legacy") else "0.83.0")
-        if scenario.startswith("settings-providers"):
-            return "CodexBar 0.73.0 (synthetic smoke fixture)"
-        return "CodexBar 0.56.2 (synthetic smoke fixture)"
     if args == ["config", "providers", "--format", "json", "--json-only"]:
-        if scenario in SETUP_SCENARIOS:
-            return copy.deepcopy(SETUP_SCENARIOS[scenario][1])
-        if scenario.startswith("settings-providers-auth"):
-            rows = [{"provider": key, "enabled": key in ("codex", "copilot", "openrouter")}
-                    for key in ("codex", "copilot", "openrouter", "moonshot", "flora", "helmcode", "future-provider")]
-            if not scenario.endswith("-legacy"):
-                for row in rows:
-                    key = row["provider"]
-                    row["authentication"] = dict(sourceModes=["api", "auto"], supportsConfigAPIKey=key != "moonshot",
-                                                 supportsConfigCookieHeader=False, environmentVariables=[])
-                rows[1]["authentication"].update(environmentVariables=["COPILOT_API_TOKEN"],
-                    supportsConfigCookieHeader=True,
-                    tokenAccounts=dict(title="GitHub accounts", setupHint="Sign in with multiple GitHub accounts via OAuth."),
-                    loginCommand="codexbar config login --provider copilot")
-                rows[2]["authentication"].update(environmentVariables=["OPENROUTER_API_KEY", "OPENROUTER_API_URL"],
-                    tokenAccounts=dict(title="API keys", setupHint="Store multiple OpenRouter API keys."))
-                rows[4]["authentication"]["environmentVariables"] = ["FLORA_API_KEY", "FLORA_WORKSPACE_ID"]
-                rows[0]["authentication"].update(sourceModes=["api", "auto", "cli", "oauth", "web"],
-                                                 supportsConfigAPIKey=False, supportsConfigCookieHeader=True)
-                rows[5]["authentication"].update(sourceModes=["auto", "web"], supportsConfigAPIKey=False,
-                                                 supportsConfigCookieHeader=True)
-            return rows
-        if scenario == "empty-providers":
-            return []
-        if scenario in ("usage-error", "settings-providers-error"):
-            raise ValueError("Synthetic connection failure.")
-        providers = ("codex",) if scenario in ("panel-minimal-single", "panel-default-single", "panel-information-single", "panel-matrix-one", "ai-insights-single") else ("codex", "claude")
-        if scenario.startswith("readme-"):
-            providers += ("gemini",)
-        if scenario == "panel-matrix-four":
-            providers += ("gemini", "cursor")
-        rows = [{"provider": key, "enabled": True} for key in providers]
-        if scenario == "providers-0740":
-            rows.extend({"provider": key, "enabled": False} for key in (
-                "tavily", "linkup", "tinyapi", "exa", "cosmic", "aerostack", "sailresearch", "sofya", "xapi"))
-        if scenario == "provider-settings":
-            rows.extend({"provider": key, "enabled": False} for key in ("gemini", "cursor", "openrouter"))
-        if scenario.startswith("settings-providers"):
-            # A long roster with the longest bundled title and an unknown ID.
-            rows.append({"provider": "moonshot", "enabled": True, "defaultEnabled": False})
-            rows.extend({"provider": key, "enabled": False} for key in (
-                "gemini", "cursor", "openrouter", "alibabatokenplan", "huggingface", "azureopenai",
-                "jetbrains", "perplexity", "example-provider-with-an-unusually-long-identifier"))
-            rows[0]["defaultEnabled"] = True
-        return rows
+        return provider_rows(scenario)
+    raise ValueError("SMOKE_FAILED: unsupported fixture CLI command")
+
+
+def sessions_response(scenario, now):
+    if scenario.startswith("readme-"):
+        return {"sessions": [
+            {"provider": provider, "projectName": project, "state": state,
+             "source": source, "lastActivityAt": (now - timedelta(minutes=age)).isoformat()}
+            for provider, project, state, source, age in (
+                ("codex", "CodexBar Plasma", "active", "desktopApp", 0),
+                ("claude", "Design system", "active", "cli", 2),
+                ("codex", "Documentation", "idle", "ide", 18),
+                ("claude", "Release checks", "idle", "cli", 42))]}
+    return {"sessions": [{"provider": "codex", "projectName": "Example project",
+                          "state": "active", "source": "desktopApp", "lastActivityAt": now.isoformat()},
+                         {"provider": "claude", "projectName": "Another project",
+                          "state": "idle", "source": "cli", "lastActivityAt": now.isoformat()}]}
+
+
+def identified_ledger(args, scenario):
+    end = int(args[args.index("--identified-end") + 1])
+    days = int(args[args.index("--days") + 1])
+    partial = scenario == "identified-partial"
+    ledger = dict(schemaVersion=1, provider="codex", startUnixMs=end - end % 86400000 - (days - 1) * 86400000,
+                  endUnixMs=end, records=[dict(id=key * 64, timestampUnixMs=end, inputTokens=tokens,
+                                             outputTokens=10, cacheReadTokens=40, reasoningTokens=5)
+                                          for key, tokens in (("a", 100), ("b", 200))],
+                  conflictingIDs=["a" * 64] if partial else [], excludedCount=2 if partial else 0,
+                  partial=partial)
+    if scenario.startswith("identified-schema2"):
+        ledger["schemaVersion"] = 2
+        for record in ledger["records"]:
+            record.update(model="gpt-5", pricingMode="standard", includedInPlan=False)
+    if scenario == "identified-schema-mismatch":
+        ledger["schemaVersion"] = 3
+    return ledger
+
+
+def remote_identified_response(args, scenario, now, ledger):
+    assert args[args.index("--remote") + 1] == "build@host"
+    result = dict(reports=[dict(host="local", ledger=ledger), dict(host="build@host", error="synthetic SSH failure")],
+                  subtotal=dict(kind="identified-request-subtotal", totalTokens=320, requestCount=2,
+                                conflictCount=0, excludedCount=0, partial=False, costUSD=None),
+                  allSourcesAvailable=False, partial=True)
+    if ledger["schemaVersion"] == 2:
+        result["reports"][0].update(source="local", collectedAt=now.isoformat())
+        result["reports"][1]["source"] = "ssh"
+        price = {"identified-schema2": 0.0125, "identified-schema2-subcent": 0.004,
+                 "identified-schema2-zero": 0}.get(scenario)
+        result["subtotal"].update(costUSD=price, unpricedRequestCount=1 if price is None else 0)
+    return result
+
+
+def identified_response(args, scenario, now):
+    ledger = identified_ledger(args, scenario)
+    if has_remote_failure(scenario):
+        return remote_identified_response(args, scenario, now, ledger)
+    assert "--remote" not in args
+    return ledger
+
+
+def period_costs(args, now):
+    periods = {"month-to-date": (now.day, "Month to date"), "all": (60, "All")}
+    days, label = periods[args[5]]
+    snapshots = [readme_cost(provider, days, now) for provider in ("codex", "claude")]
+    for snapshot in snapshots:
+        snapshot["reportingPeriod"] = args[5]
+        snapshot["historyLabel"] = label
+        if args[5] == "all":
+            snapshot["historyDays"] = 739887
+    return snapshots
+
+
+def model_costs(days, now):
+    snapshots = [readme_cost(provider, days, now) for provider in ("codex", "claude")]
+    for snapshot in snapshots:
+        snapshot["provenance"] = "listPriceEstimate"
+        for day in snapshot["daily"]:
+            day["modelBreakdowns"] = [{
+                "modelName": "Example coding model" if snapshot["provider"] == "codex" else "Example reasoning model",
+                "cost": day["totalCost"], "totalTokens": day["totalTokens"]}]
+    return snapshots
+
+
+def remove_cost_amounts(snapshot, daily):
+    for day in daily:
+        day.pop("totalCost")
+        for model in day.get("modelBreakdowns", []):
+            model.pop("cost")
+    snapshot.pop("sessionCostUSD")
+    snapshot["totals"].pop("totalCost")
+
+
+def remove_token_amounts(snapshot, daily):
+    for day in daily:
+        day.pop("totalTokens")
+        day.pop("modelBreakdowns", None)
+    snapshot.pop("sessionTokens")
+    snapshot["totals"].pop("totalTokens")
+    snapshot["daily"] = [daily[-1]]
+    snapshot["totals"]["totalCost"] = daily[-1]["totalCost"]
+
+
+def popup_costs(scenario, days, now):
+    snapshot = readme_cost("codex", days, now)
+    if scenario == "privacy-cost-details":
+        snapshot["provenance"] = "listPriceEstimate"
+    daily = snapshot["daily"]
+    daily[0]["modelBreakdowns"] = [{"modelName": "Earlier model", "cost": daily[0]["totalCost"],
+                                     "totalTokens": daily[0]["totalTokens"]}]
+    daily[-1]["modelBreakdowns"] = [
+        {"modelName": "Example reasoning model", "cost": 1.4, "totalTokens": 50000},
+        {"modelName": "Example coding model", "cost": 0.78, "totalTokens": 41560},
+    ]
+    if scenario == "popup-cost-tokens":
+        remove_cost_amounts(snapshot, daily)
+    elif scenario == "popup-cost-missing-tokens":
+        remove_token_amounts(snapshot, daily)
+    elif scenario in ("popup-cost-partial-models", "privacy-cost-details"):
+        daily[-1]["modelBreakdowns"] = [
+            {"modelName": f"Example model {index}", "cost": 0.01, "totalTokens": 1000}
+            for index in range(7)
+        ]
+    return [snapshot]
+
+
+def add_project_costs(snapshot, factor, scenario):
+    snapshot["projects"] = [
+        {"name": "CodexBar Plasma", "totalCost": 5.5 * factor, "totalTokens": 24000 * factor},
+        {"name": "Documentation site", "totalCost": 3.25 * factor, "totalTokens": 55000 * factor},
+        {"name": "Unpriced experiment", "totalTokens": 5000 * factor},
+        {"name": "Empty project", "totalCost": 0, "totalTokens": 0},
+    ]
+    for project in snapshot["projects"]:
+        project["path"] = "/private/synthetic-project-path"
+        project["sources"] = [{"path": "/private/synthetic-source-path"}]
+    if scenario == "project-long-text":
+        snapshot["projects"][0]["name"] = "Example project with a long display name for the engineering and documentation team"
+
+
+def default_costs(scenario, days, now):
+    factor = 0.5 if days == 7 else 1
+    snapshot = {"provider": "codex", "updatedAt": now.isoformat(), "historyDays": days,
+             "currencyCode": "USD", "sessionCostUSD": 1.25, "sessionTokens": 12000,
+             "totals": {"totalCost": 8.75 * factor, "totalTokens": 84000 * factor},
+             "daily": [{"date": (now - timedelta(days=6 - i)).date().isoformat(),
+                        "totalCost": 1.25 * factor, "totalTokens": 12000 * factor}
+                       for i in range(7)]}
+    if scenario.startswith(("project-", "privacy-")):
+        add_project_costs(snapshot, factor, scenario)
+    if scenario == "usage-retention":
+        return [snapshot, {**snapshot, "provider": "claude"}]
+    return [snapshot]
+
+
+def daily_costs(args, scenario, now):
+    days = int(args[5])
+    if scenario.startswith(("share-usage", "usage-analysis-models")):
+        return model_costs(days, now)
+    if scenario.startswith(("readme-", "usage-analysis")):
+        return [readme_cost(provider, days, now) for provider in ("codex", "claude")]
+    if scenario.startswith("popup-cost-") or scenario == "privacy-cost-details":
+        return popup_costs(scenario, days, now)
+    return default_costs(scenario, days, now)
+
+
+def matches_cost_range(args, option, values):
+    return (args[:5] == ["cost", "--format", "json", "--json-only", option]
+            and len(args) == 6 and args[5] in values)
+
+
+def cost_response(args, scenario, now):
+    if args[:3] == ["cost", "--provider", "codex"] and "--identified-only" in args:
+        return identified_response(args, scenario, now)
+    # CLI 0.67.0 calendar periods retain the emitted English label and all-history day count.
+    if matches_cost_range(args, "--period", ("month-to-date", "all")):
+        return period_costs(args, now)
+    if matches_cost_range(args, "--days", ("7", "30", "90")):
+        return daily_costs(args, scenario, now)
+    raise ValueError("SMOKE_FAILED: unsupported fixture CLI command")
+
+
+def account_usage(first, scenario):
+    if scenario in ("popup-scroll", "popup-scroll-large"):
+        accounts = []
+        for index in range(20):
+            account = copy.deepcopy(first)
+            account["account"] = f"synthetic-engineering-account-with-a-long-label-{index}@example.com"
+            accounts.append(account)
+        return accounts
+    second = copy.deepcopy(first)
+    second["account"] = "second-demo@example.com"
+    return [first, second]
+
+
+def usage_response(args, scenario, now):
+    for provider in usage_providers(scenario):
+        prefix = ["usage", "--provider", provider]
+        if args == prefix + ["--format", "json", "--json-only"]:
+            return [usage(provider, scenario, now)]
+        if args == prefix + ["--all-accounts", "--format", "json", "--json-only"]:
+            return account_usage(usage(provider, scenario, now), scenario)
+    raise ValueError("SMOKE_FAILED: unsupported fixture CLI command")
+
+
+def response(args, scenario, now):
+    """Synthetic reads and the source write used by authentication scenarios."""
+    if args[:1] == ["config"]:
+        return config_response(args, scenario, now)
+    if args == ["--version"]:
+        return version_response(scenario)
     if args == ["diagnose", "--provider", "codex", "--format", "json", "--redact"]:
         return {"provider": "codex", "displayName": "Codex", "source": "cli", "sourceMode": "auto",
                 "auth": {"configured": True, "modes": ["oauth", "apiKey"]},
                 "settings": {"source": "auto", "usageHistory": "enabled"}, "fetchAttempts": [{}, {}]}
     if args == ["sessions", "--json-v2"]:
-        if scenario.startswith("readme-"):
-            return {"sessions": [
-                {"provider": provider, "projectName": project, "state": state,
-                 "source": source, "lastActivityAt": (now - timedelta(minutes=age)).isoformat()}
-                for provider, project, state, source, age in (
-                    ("codex", "CodexBar Plasma", "active", "desktopApp", 0),
-                    ("claude", "Design system", "active", "cli", 2),
-                    ("codex", "Documentation", "idle", "ide", 18),
-                    ("claude", "Release checks", "idle", "cli", 42))]}
-        return {"sessions": [{"provider": "codex", "projectName": "Example project",
-                              "state": "active", "source": "desktopApp", "lastActivityAt": now.isoformat()},
-                             {"provider": "claude", "projectName": "Another project",
-                              "state": "idle", "source": "cli", "lastActivityAt": now.isoformat()}]}
-    if args[:3] == ["cost", "--provider", "codex"] and "--identified-only" in args:
-        end = int(args[args.index("--identified-end") + 1])
-        days = int(args[args.index("--days") + 1])
-        partial = scenario == "identified-partial"
-        ledger = dict(schemaVersion=1, provider="codex", startUnixMs=end - end % 86400000 - (days - 1) * 86400000,
-                      endUnixMs=end, records=[dict(id=key * 64, timestampUnixMs=end, inputTokens=tokens,
-                                                 outputTokens=10, cacheReadTokens=40, reasoningTokens=5)
-                                              for key, tokens in (("a", 100), ("b", 200))],
-                      conflictingIDs=["a" * 64] if partial else [], excludedCount=2 if partial else 0,
-                      partial=partial)
-        if scenario.startswith("identified-schema2"):
-            ledger["schemaVersion"] = 2
-            for record in ledger["records"]:
-                record.update(model="gpt-5", pricingMode="standard", includedInPlan=False)
-        if scenario == "identified-schema-mismatch":
-            ledger["schemaVersion"] = 3
-        if scenario == "identified-ssh-failure" or scenario.startswith("identified-schema2"):
-            assert args[args.index("--remote") + 1] == "build@host"
-            result = dict(reports=[dict(host="local", ledger=ledger), dict(host="build@host", error="synthetic SSH failure")],
-                          subtotal=dict(kind="identified-request-subtotal", totalTokens=320, requestCount=2,
-                                        conflictCount=0, excludedCount=0, partial=False, costUSD=None),
-                          allSourcesAvailable=False, partial=True)
-            if ledger["schemaVersion"] == 2:
-                result["reports"][0].update(source="local", collectedAt=now.isoformat())
-                result["reports"][1]["source"] = "ssh"
-                price = {"identified-schema2": 0.0125, "identified-schema2-subcent": 0.004,
-                         "identified-schema2-zero": 0}.get(scenario)
-                result["subtotal"].update(costUSD=price, unpricedRequestCount=1 if price is None else 0)
-            return result
-        assert "--remote" not in args
-        return ledger
-    # CLI 0.67.0 calendar periods: an English label and, for all history, the
-    # days since year 1, as the official CLI reports them.
-    if (args[:5] == ["cost", "--format", "json", "--json-only", "--period"]
-            and len(args) == 6 and args[5] in ("month-to-date", "all")):
-        days = now.day if args[5] == "month-to-date" else 60
-        snapshots = [readme_cost(provider, days, now) for provider in ("codex", "claude")]
-        for snapshot in snapshots:
-            snapshot["reportingPeriod"] = args[5]
-            snapshot["historyLabel"] = "Month to date" if args[5] == "month-to-date" else "All"
-            if args[5] == "all":
-                snapshot["historyDays"] = 739887
-        return snapshots
-    if (args[:5] == ["cost", "--format", "json", "--json-only", "--days"]
-            and len(args) == 6 and args[5] in ("7", "30", "90")):
-        days = int(args[5])
-        if scenario.startswith(("share-usage", "usage-analysis-models")):
-            snapshots = [readme_cost(provider, days, now) for provider in ("codex", "claude")]
-            for snapshot in snapshots:
-                snapshot["provenance"] = "listPriceEstimate"
-                for day in snapshot["daily"]:
-                    day["modelBreakdowns"] = [{
-                        "modelName": "Example coding model" if snapshot["provider"] == "codex" else "Example reasoning model",
-                        "cost": day["totalCost"], "totalTokens": day["totalTokens"]}]
-            return snapshots
-        if scenario.startswith(("readme-", "usage-analysis")):
-            return [readme_cost(provider, days, now) for provider in ("codex", "claude")]
-        if scenario.startswith("popup-cost-") or scenario == "privacy-cost-details":
-            snapshot = readme_cost("codex", days, now)
-            if scenario == "privacy-cost-details":
-                snapshot["provenance"] = "listPriceEstimate"
-            daily = snapshot["daily"]
-            daily[0]["modelBreakdowns"] = [{"modelName": "Earlier model", "cost": daily[0]["totalCost"],
-                                             "totalTokens": daily[0]["totalTokens"]}]
-            daily[-1]["modelBreakdowns"] = [
-                {"modelName": "Example reasoning model", "cost": 1.4, "totalTokens": 50000},
-                {"modelName": "Example coding model", "cost": 0.78, "totalTokens": 41560},
-            ]
-            if scenario == "popup-cost-tokens":
-                for day in daily:
-                    day.pop("totalCost")
-                    for model in day.get("modelBreakdowns", []):
-                        model.pop("cost")
-                snapshot.pop("sessionCostUSD")
-                snapshot["totals"].pop("totalCost")
-            elif scenario == "popup-cost-missing-tokens":
-                for day in daily:
-                    day.pop("totalTokens")
-                    day.pop("modelBreakdowns", None)
-                snapshot.pop("sessionTokens")
-                snapshot["totals"].pop("totalTokens")
-                snapshot["daily"] = [daily[-1]]
-                snapshot["totals"]["totalCost"] = daily[-1]["totalCost"]
-            elif scenario in ("popup-cost-partial-models", "privacy-cost-details"):
-                daily[-1]["modelBreakdowns"] = [
-                    {"modelName": f"Example model {index}", "cost": 0.01, "totalTokens": 1000}
-                    for index in range(7)
-                ]
-            return [snapshot]
-        factor = 0.5 if days == 7 else 1
-        snapshot = {"provider": "codex", "updatedAt": now.isoformat(), "historyDays": days,
-                 "currencyCode": "USD", "sessionCostUSD": 1.25, "sessionTokens": 12000,
-                 "totals": {"totalCost": 8.75 * factor, "totalTokens": 84000 * factor},
-                 "daily": [{"date": (now - timedelta(days=6 - i)).date().isoformat(),
-                            "totalCost": 1.25 * factor, "totalTokens": 12000 * factor}
-                           for i in range(7)]}
-        if scenario.startswith("project-") or scenario.startswith("privacy-"):
-            snapshot["projects"] = [
-                {"name": "CodexBar Plasma", "totalCost": 5.5 * factor, "totalTokens": 24000 * factor},
-                {"name": "Documentation site", "totalCost": 3.25 * factor, "totalTokens": 55000 * factor},
-                {"name": "Unpriced experiment", "totalTokens": 5000 * factor},
-                {"name": "Empty project", "totalCost": 0, "totalTokens": 0},
-            ]
-            for project in snapshot["projects"]:
-                project["path"] = "/private/synthetic-project-path"
-                project["sources"] = [{"path": "/private/synthetic-source-path"}]
-            if scenario == "project-long-text":
-                snapshot["projects"][0]["name"] = "Example project with a long display name for the engineering and documentation team"
-        if scenario == "usage-retention":
-            return [snapshot, {**snapshot, "provider": "claude"}]
-        return [snapshot]
-    matrix_providers = ("codex", "claude", "gemini", "cursor")
-    for provider in (("codex", "claude", "gemini") if scenario.startswith("readme-")
-                     else matrix_providers if scenario == "panel-matrix-four"
-                     else ("codex", "claude")):
-        prefix = ["usage", "--provider", provider]
-        if args == prefix + ["--format", "json", "--json-only"]:
-            return [usage(provider, scenario, now)]
-        if args == prefix + ["--all-accounts", "--format", "json", "--json-only"]:
-            first = usage(provider, scenario, now)
-            if scenario in ("popup-scroll", "popup-scroll-large"):
-                accounts = []
-                for index in range(20):
-                    account = copy.deepcopy(first)
-                    account["account"] = f"synthetic-engineering-account-with-a-long-label-{index}@example.com"
-                    accounts.append(account)
-                return accounts
-            second = copy.deepcopy(first)
-            second["account"] = "second-demo@example.com"
-            return [first, second]
-    raise ValueError("SMOKE_FAILED: unsupported fixture CLI command")
+        return sessions_response(scenario, now)
+    if args[:1] == ["cost"]:
+        return cost_response(args, scenario, now)
+    return usage_response(args, scenario, now)
+
+
+def popup_cost_result(result, run):
+    if run in (2, 6, 11, 14):
+        return None, "Synthetic cost refresh failed."
+    overrides = {3: "{", 7: "{", 4: "null", 8: "null",
+                 5: [{"provider": "codex", "error": {"message": "Synthetic cost scan failed."}}],
+                 9: [{"provider": "codex", "error": {"message": "Synthetic cost scan failed."}}],
+                 10: [], 12: [{"provider": "codex", "totals": {"totalCost": 4, "totalTokens": 100}}]}
+    return overrides.get(run, result), None
+
+
+def cost_run_result(result, scenario, run):
+    if scenario == "popup-cost-refresh-error":
+        return popup_cost_result(result, run)
+    if run == 2:
+        return {"privacy-cost-details": (None, "demo@example.com private cost error"),
+                "usage-retention": ("{", None)}.get(scenario, (result, None))
+    return result, None
+
+
+def has_remote_failure(scenario):
+    return scenario == "identified-ssh-failure" or scenario.startswith("identified-schema2")
+
+
+def blocks_response(scenario):
+    if scenario == "loading":
+        return True
+    return scenario == "usage-cache-restart" and os.environ.get("CODEXBAR_SMOKE_RESTART") == "1"
 
 
 def main():
@@ -431,33 +582,16 @@ def main():
     result = response(sys.argv[1:], scenario, datetime.now(timezone.utc))
     if sys.argv[1:2] == ["cost"]:
         run = int(os.environ.get("CODEXBAR_PLASMA_RUN", "0"))
-        if scenario == "popup-cost-refresh-error":
-            if run in (2, 6, 11, 14):
-                print("Synthetic cost refresh failed.", file=sys.stderr)
-                return
-            if run in (3, 7):
-                result = "{"
-            elif run in (4, 8):
-                result = "null"
-            elif run in (5, 9):
-                result = [{"provider": "codex", "error": {"message": "Synthetic cost scan failed."}}]
-            elif run == 10:
-                result = []
-            elif run == 12:
-                result = [{"provider": "codex", "totals": {"totalCost": 4, "totalTokens": 100}}]
-        elif scenario == "privacy-cost-details" and run == 2:
-            print("demo@example.com private cost error", file=sys.stderr)
+        result, error = cost_run_result(result, scenario, run)
+        if error:
+            print(error, file=sys.stderr)
             return
-        elif scenario == "usage-retention" and run == 2:
-            result = "{"
-    if scenario == "loading" or (
-        scenario == "usage-cache-restart" and os.environ.get("CODEXBAR_SMOKE_RESTART") == "1"
-    ):
+    if blocks_response(scenario):
         # Keep responses blocked for every allowed preview duration; the runner
         # kills the process group after capturing the loading/restored state.
         time.sleep(MAX_SCENARIO_TIMEOUT_SECONDS + 1)
     print(result if isinstance(result, str) else json.dumps(result))
-    if (scenario == "identified-ssh-failure" or scenario.startswith("identified-schema2")) and "--identified-only" in sys.argv:
+    if has_remote_failure(scenario) and "--identified-only" in sys.argv:
         sys.exit(1)
 
 
