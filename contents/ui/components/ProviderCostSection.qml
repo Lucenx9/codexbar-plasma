@@ -474,7 +474,7 @@ ColumnLayout {
             var historyIncomplete = tokenCostSection.tokenCost
                 && tokenCostSection.tokenCost.historyCoverageEstablished === false;
             var cost = window.cost === null ? i18n("Cost unavailable")
-                : (window.costPartial || historyIncomplete ? i18n("at least %1", AnalysisAmounts.amountText(applet.costNumberFormat, window.cost, currency))
+                : (window.costPartial || historyIncomplete ? i18n("at least %1", AnalysisAmounts.amountText(applet.costNumberFormat, window.cost, currency, true))
                     : AnalysisAmounts.amountText(applet.costNumberFormat, window.cost, currency));
             var tokens = window.tokens === null ? i18n("Tokens unavailable")
                 : (window.tokensPartial || historyIncomplete ? i18n("at least %1", applet.usageCountText(window.tokens, "tokens"))

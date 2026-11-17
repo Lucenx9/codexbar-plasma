@@ -1,11 +1,20 @@
 import * as Amounts from "./CostAmounts.mjs";
 import * as Guards from "./Guards.mjs";
 
+function subcentText(format, value, currency, lowerBound) {
+    if (lowerBound !== true)
+        return "< " + Amounts.amountString(format, 0.01, currency)
+    // Partial sums are lower bounds; an upper-bound label cannot describe them.
+    var code = typeof currency === "string" ? currency.trim() : ""
+    var text = String(value).replace(".", Amounts.resolvedFormat(format).decimal)
+    return Amounts.currencyPrefix(code) + text
+}
+
 // Keep positive sub-cent measurements distinct from zero without changing
 // the precision of provider-detail balances or aggregate arithmetic.
-export function amountText(format, value, currency) {
+export function amountText(format, value, currency, lowerBound) {
     if (currency !== "Quota" && Guards.isFiniteNumber(value) && value > 0 && value < 0.01)
-        return "< " + Amounts.amountString(format, 0.01, currency)
+        return subcentText(format, value, currency, lowerBound)
     return Amounts.amountString(format, value, currency)
 }
 

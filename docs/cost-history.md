@@ -88,7 +88,9 @@ The owning code is [ProviderNormalizer.mjs](../contents/ui/ProviderNormalizer.mj
   amounts; the selected metric controls filtering and scaling. Its peak names
   the highest visible day. Local-history summaries, rows, chart readouts, and
   derived averages/rates show positive sub-cent costs as explicit
-  less-than-one-cent text rather than zero. Live provider balances retain
+  less-than-one-cent text rather than zero. Partial quota-week sums retain their
+  numeric sub-cent precision because they are lower bounds, not complete amounts.
+  Live provider balances retain
   two-decimal money formatting; raw amounts and aggregate arithmetic are unchanged.
 - The heatmap uses unfiltered calendar dates, preserving gaps and incomplete
   boundary weeks. It spans at most 365 days, follows the locale's first weekday,

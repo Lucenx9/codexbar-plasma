@@ -725,6 +725,44 @@ class CostSectionTests(unittest.TestCase):
     }
     ''')
 
+    def test_partial_quota_weeks_keep_a_numeric_subcent_bound(self):
+        self.run_fixture('''
+    function test_partialQuotaBound_data() {
+        return [
+            {tag: "history", reason: "history", cost: 0.002, currency: "USD", decimal: ".", expected: "$0.002"},
+            {tag: "missing", reason: "missing", cost: 0.00999, currency: "USD", decimal: ".", expected: "$0.00999"},
+            {tag: "excluded-euro", reason: "excluded", cost: 0.002, currency: "EUR", decimal: ",", expected: "EUR 0,002"},
+            {tag: "tiny", reason: "history", cost: 1e-7, currency: "USD", decimal: ".", expected: "$1e-7"},
+            {tag: "zero", reason: "history", cost: 0, currency: "USD", decimal: ".", expected: "$0.00"}
+        ];
+    }
+    function test_partialQuotaBound(data) {
+        fakeApplet.costNumberFormat = CostAmounts.numberFormat(",", data.decimal);
+        fakeApplet.panelClockMs = new Date(2026, 10, 17, 12).getTime();
+        var daily = [];
+        for (var day = 11; day <= 17; day++) daily.push({label: "2026-11-" + day,
+            cost: day === 17 ? data.cost : data.reason === "missing" && day === 12 ? null : 0,
+            tokens: day === 17 ? 100 : 0,
+            currency: data.currency,
+            incompleteRequests: data.reason === "excluded" && day === 17 ? 1 : 0});
+        var cost = Object.assign({}, providerTokenCost, {daily: daily,
+            totals: {cost: data.cost, tokens: 100, currency: data.currency},
+            historyCoverageEstablished: data.reason !== "history"});
+        testCase.providerData = {provider: "codex", tokenCost: cost,
+            rows: [{lane: "secondary", windowMinutes: 10080,
+                resetsAt: new Date(2026, 10, 18).toISOString()}]};
+        var subject = createTemporaryObject(providerFactory, testCase);
+        verify(subject !== null);
+        var all = [];
+        walkTree(subject, all);
+        var section = all.filter(function(item) { return item.objectName === "quotaWindowSection"; })[0];
+        compare(section.windows.length, 1);
+        compare(section.windows[0].cost, data.cost);
+        compare(section.windows[0].costPartial, data.reason !== "history");
+        compare(section.amountText(section.windows[0]).split(" · ")[0], "at least " + data.expected);
+    }
+    ''')
+
     def test_provider_today_needs_a_scan_from_today(self):
         self.run_fixture('''
     // The CLI's "today" is the total of the day it scanned. A snapshot from
