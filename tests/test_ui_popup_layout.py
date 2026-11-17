@@ -1,5 +1,4 @@
-"""Static UI checks for popup layout, headers, Overview rows, usage rows, and
-states."""
+"""Static UI checks for popup geometry, shared surfaces and headers."""
 
 import re
 import unittest
@@ -7,33 +6,21 @@ import unittest
 from ui_regression_support import (
     Surface,
     code_contains,
-    full_representation_qml,
-    function_body,
     id_block,
-    overview_provider_row_qml,
     provider_header_qml,
-    provider_usage_row_qml,
     providers_qml,
     root,
     sessions_view_qml,
     spend_view_qml,
 )
 
-# The popup UI rules below belong to the plasmoid surface, not to main.qml
-# specifically, so read the surface as one text. Extracting the popup into a
-# component keeps these assertions meaningful instead of silently unhooking them.
-applet = Surface("applet", root)
-main_text = applet.text
-providers_text = providers_qml.read_text(encoding="utf-8")
-provider_header_text = provider_header_qml.read_text(encoding="utf-8")
-provider_usage_row_text = provider_usage_row_qml.read_text(encoding="utf-8")
-overview_provider_row_text = overview_provider_row_qml.read_text(encoding="utf-8")
-sessions_view_text = sessions_view_qml.read_text(encoding="utf-8")
-spend_view_text = spend_view_qml.read_text(encoding="utf-8")
-full_representation_text = full_representation_qml.read_text(encoding="utf-8")
 
+class PopupGeometryTest(unittest.TestCase):
+    def setUp(self):
+        self.applet = Surface("applet", root)
+        self.providers_text = providers_qml.read_text(encoding="utf-8")
+        self.sessions_view_text = sessions_view_qml.read_text(encoding="utf-8")
 
-class PopupLayoutTest(unittest.TestCase):
     def test_top_level_cards_match_overview_geometry(self):
         # Sessions retain the Overview card geometry; analysis uses compact action rows.
         fragments = (
@@ -41,142 +28,172 @@ class PopupLayoutTest(unittest.TestCase):
             "anchors.leftMargin: Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing",
             "anchors.rightMargin: Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing",
         )
-        for card_text in (sessions_view_text,):
+        for card_text in (self.sessions_view_text,):
             missing = [fragment for fragment in fragments if not code_contains(card_text, fragment)]
             self.assertEqual(missing, [], "cards must match overview card geometry")
 
-    def test_overview_rows(self):
-        # Overview selection stores canonical provider IDs (legacy raw CLI spellings,
-        # e.g. groqcloud, alibaba-coding-plan, still resolve) matched at runtime
-        # against providerKey-normalized IDs (groq, alibaba). The applet must resolve
-        # the stored value through OverviewProviders, the module the settings page
-        # uses, so the custom selection is not silently ignored for aliased providers.
-        overview_body = function_body(main_text, "overviewProviders")
-        if not code_contains(overview_body, "OverviewProviders.visibleItems(providers, overviewProviderIDsRaw)"):
-            raise AssertionError(
-                "the Overview rows must share filtering and parsing with the settings page so "
-                "aliased providers match runtime keys"
+    def test_scroll_content_uses_native_width_and_single_gutter(self):
+        for scroll_id in ("overviewScroll", "providerScroll"):
+            scroll_body = id_block(self.applet.text, scroll_id)
+            self.assertTrue(
+                code_contains(scroll_body, "contentWidth: availableWidth"),
+                f"{scroll_id} content width must follow Plasma ScrollView availableWidth",
             )
-        for retired_overview_fragment in ("maxOverviewProviders", "configuredOverviewProviderIDs"):
-            if retired_overview_fragment in main_text:
-                raise AssertionError(
-                    "the Overview limit and selection parsing belong to OverviewProviders: "
-                    + retired_overview_fragment
-                )
-
-        overview_detail_body = function_body((root / "contents/ui/OverviewProviders.js").read_text(encoding="utf-8"), "detailText")
-        for overview_detail_fragment in (
-            "item.hasIncident === true && item.statusKnown !== false",
-            "item.account && item.account.length > 0",
-        ):
-            if not code_contains(overview_detail_body, overview_detail_fragment):
-                raise AssertionError(
-                    "the overview detail line stands for account identity; only an active "
-                    "incident may replace it, never an operational status; "
-                    f"missing {overview_detail_fragment!r}"
-                )
-
-        overview_row_body = id_block(overview_provider_row_text, "overviewRow")
-        for fragment in (
-            "implicitHeight: overviewRowContent.implicitHeight + Kirigami.Units.largeSpacing * 2",
-            "Layout.preferredHeight: implicitHeight",
-            "readonly property bool keyboardFocusVisible: overviewRowFocus.visualFocus",
-            "border.width: overviewRow.keyboardFocusVisible ? 1 : 0",
-            "overviewRowFocus.forceActiveFocus(Qt.MouseFocusReason)",
-        ):
-            if not code_contains(overview_row_body, fragment):
-                raise AssertionError(f"overview rows must fit their content and distinguish keyboard focus: {fragment}")
-        if not code_contains(overview_row_body, "applet.withAlpha(Kirigami.Theme.textColor, 0.035)"):
-            raise AssertionError("overview rows must keep a quiet neutral resting surface")
-        overview_row_surface_bindings = overview_row_body.split("RowLayout {", 1)[0]
-        if "border.width" in overview_row_surface_bindings:
-            raise AssertionError("overview rows must not regress to a stack of outlined cards")
-        for polished_overview_fragment in (
-            "radius: applet.roundedSurfaceRadius",
-            "id: overviewProviderIdentitySurface",
-            "radius: overviewRow.applet.nestedSurfaceRadius",
-            "applet.withAlpha(overviewRow.accent, 0.12)",
-            "border.color: overviewRow.applet.withAlpha(Kirigami.Theme.textColor, 0.1)",
-        ):
-            if not code_contains(overview_row_body, polished_overview_fragment):
-                raise AssertionError(
-                    "overview rows must retain the rounded provider identity treatment; "
-                    f"missing {polished_overview_fragment!r}"
-                )
-        for interaction_fragment in (
-            "activeFocusOnTab: true",
-            "Accessible.role: Accessible.Button",
-            "Accessible.onPressAction:",
-            "Keys.onPressed:",
-            "scale:",
-        ):
-            if not code_contains(overview_row_body, interaction_fragment):
-                raise AssertionError(
-                    "overview rows must preserve keyboard, assistive, and pressed feedback; "
-                    f"missing {interaction_fragment!r}"
-                )
-
-        # tst_panel_display covers the meter selection; the applet must feed it the
-        # popup candidates, not the panel's lane choice.
-        if not code_contains(function_body(main_text, "overviewMeterRows"),
-                             "PanelDisplay.overviewMeterRows(switcherCandidateRows(item))"):
-            raise AssertionError("Overview meters must ignore the panel's quota lane choice")
-
-        if not code_contains(main_text, "readonly property var overviewProviderItems: overviewProviders()"):
-            raise AssertionError("overview provider rows must be cached in a QML property binding")
-        if ".overviewProviders()" in main_text:
-            raise AssertionError("overview UI bindings must reuse overviewProviderItems")
-        overview_providers_js = (root / "contents/ui/OverviewProviders.js").read_text()
-        overview_error_only_body = function_body(overview_providers_js, "isErrorOnly")
-        if not code_contains(overview_error_only_body, "item.codexCreditLimit === null"):
-            raise AssertionError(
-                "a valid Codex monthly limit must keep a partially healthy provider overview-eligible"
+            self.assertTrue(
+                code_contains(scroll_body, f"{scroll_id}.availableWidth - Kirigami.Units.smallSpacing"),
+                f"{scroll_id} must retain one quiet content inset before its scrollbar",
             )
+            for stale_scroll_gutter in (
+                "readonly property real contentRightInset:",
+                "rightPadding: contentRightInset",
+            ):
+                self.assertNotIn(
+                    stale_scroll_gutter,
+                    scroll_body,
+                    f"{scroll_id} must not restore the doubled desktop scrollbar gutter",
+                )
+        self.assertGreaterEqual(
+            self.applet.text.count("PlasmaComponents.ScrollView {"),
+            2,
+            "popup content must use Plasma-native scroll views",
+        )
+        self.assertNotIn(
+            "Controls.ScrollView {",
+            self.applet.text,
+            "popup content must not restore desktop-framed scroll views",
+        )
 
-        # Direct QtTests cover eligibility, the stored selection, and the automatic
-        # ranking. Both modules stay pure so those cases describe the runtime.
-        auto_select_js = (root / "contents/ui/ProviderAutoSelect.js").read_text()
-        for pure_module_text in (overview_providers_js, auto_select_js):
-            for forbidden in ("root.", "Plasmoid.", "Qt.", "i18n(", "i18np(", "Date.now("):
-                if forbidden in pure_module_text:
-                    raise AssertionError(
-                        "Overview filtering and automatic selection must stay pure: " + forbidden
-                    )
+    def test_surfaces_and_compact_meters_follow_theme_units(self):
+        self.assertTrue(
+            code_contains(self.applet.text, "readonly property real roundedSurfaceRadius: Kirigami.Units.cornerRadius"),
+            "main.qml must derive its polished radius from Kirigami theme units",
+        )
+        self.assertTrue(
+            code_contains(self.applet.text, "readonly property real nestedSurfaceRadius: Kirigami.Units.cornerRadius"),
+            "main.qml must expose a concentric radius for surfaces nested inside a "
+            "roundedSurfaceRadius container",
+        )
+        self.assertTrue(
+            code_contains(self.applet.text, "readonly property real compactMeterTrackHeight: Math.round(Kirigami.Units.gridUnit"),
+            "list-row meters must derive their thinner track from gridUnit instead of "
+            "pinning a device pixel count",
+        )
 
-    def test_header_actions_and_refresh_controls(self):
+    def test_section_headings_outrank_metric_labels(self):
+        # Section headings sit above metric rows that are already DemiBold. A Normal
+        # weight heading therefore reads as less important than its own content, so the
+        # structural labels stay Primary and the size scale carries the ranking.
+        heading_chunks = self.applet.text.split("PlainHeading {")[1:]
+        self.assertGreaterEqual(len(heading_chunks), 5, "main.qml must keep its popup section headings")
+        for heading_chunk in heading_chunks:
+            if "type: Kirigami.Heading.Type.Primary" not in heading_chunk[:300]:
+                heading_head = heading_chunk.strip().splitlines()[0].strip()
+                raise AssertionError(
+                    "popup section headings must outrank the DemiBold metric labels they "
+                    f"introduce; heading starting {heading_head!r} is not Primary"
+                )
+
+    def test_popup_uses_native_dialog_frame_and_framed_tabs(self):
+        # The Plasma dialog already frames the popup. An inner outline nests a card
+        # inside it, and a separator under the framed tab strip adds a third line.
+        self.assertNotIn(
+            "popupInnerSurface",
+            self.applet.text,
+            "the popup must sit on the native dialog background, not an inner frame",
+        )
+        self.assertEqual(
+            id_block(self.applet.text, "providerTabsBar").count(
+            "Kirigami.Separator {"),
+            0,
+            "the framed tab strip must not add a separator beneath it",
+        )
+
+    def test_populated_views_share_height_and_empty_states_size_to_content(self):
+        self.assertTrue(
+            code_contains(self.applet.text, "fullRepresentation:"),
+            "the applet must keep a fullRepresentation root",
+        )
+        full_representation_head = id_block(self.applet.text, "fullRoot")
+        self.assertIn(
+            "standardHeightActive",
+            full_representation_head,
+            "every popup content section must share one standard height; "
+            "per-section content heights resize the dialog on each tab switch",
+        )
+        self.assertIn(
+            "popupContent.implicitHeight",
+            full_representation_head,
+            "the content-less popup states must stay compact and content-driven "
+            "instead of inheriting the standard section height",
+        )
+        self.assertFalse(
+            re.search(r"implicitHeight:\s*Kirigami\.Units\.gridUnit\s*\*\s*\d", full_representation_head),
+            "the popup must not pin implicitHeight to a grid-unit constant; the "
+            "constants belong in the named minimum/maximum height properties",
+        )
+
+    def test_presentation_scale_stays_shared_with_settings(self):
+        # Text de-emphasis had drifted into eleven ad-hoc opacity literals, several
+        # below the WCAG AA 4.5:1 floor for Kirigami.Theme.textColor on Breeze Light.
+        # Keep the scale in one place so a new section cannot reintroduce a dimmer step.
+        for token_definition in (
+            "readonly property real secondaryTextOpacity: 0.7",
+            "readonly property real valueTextOpacity: 0.85",
+            "readonly property real meterTrackHeight: Math.round(Kirigami.Units.gridUnit * 0.4)",
+        ):
+            self.assertTrue(
+                code_contains(self.applet.text, token_definition),
+                f"main.qml must define the shared presentation scale: {token_definition!r}",
+            )
+        self.assertTrue(
+            code_contains(self.providers_text, "readonly property real secondaryTextOpacity: 0.7"),
+            "configProviders.qml must mirror main.qml's secondaryTextOpacity step",
+        )
+
+
+class PopupHeadersTest(unittest.TestCase):
+    def setUp(self):
+        self.applet = Surface("applet", root)
+        self.provider_header_text = provider_header_qml.read_text(encoding="utf-8")
+        self.sessions_view_text = sessions_view_qml.read_text(encoding="utf-8")
+        self.spend_view_text = spend_view_qml.read_text(encoding="utf-8")
+
+    def test_header_actions_align_with_inset_and_top(self):
         header_sources = {
-            "overviewHeaderRow": main_text,
-            "providerHeaderRow": provider_header_text,
-            "spendHeaderRow": spend_view_text,
-            "sessionsHeaderRow": sessions_view_text,
+            "overviewHeaderRow": self.applet.text,
+            "providerHeaderRow": self.provider_header_text,
+            "spendHeaderRow": self.spend_view_text,
+            "sessionsHeaderRow": self.sessions_view_text,
         }
         for header_id, source_text in header_sources.items():
             header_body = id_block(source_text, header_id)
-            if not code_contains(header_body, "Layout.rightMargin: Kirigami.Units.smallSpacing"):
-                raise AssertionError(
-                    f"{header_id} must align header actions with the inset scroll content"
-                )
-            if not code_contains(header_body, "Layout.alignment: Qt.AlignTop"):
-                raise AssertionError(
-                    f"{header_id} must align header action buttons to top"
-                )
+            self.assertTrue(
+                code_contains(header_body, "Layout.rightMargin: Kirigami.Units.smallSpacing"),
+                f"{header_id} must align header actions with the inset scroll content",
+            )
+            self.assertTrue(
+                code_contains(header_body, "Layout.alignment: Qt.AlignTop"),
+                f"{header_id} must align header action buttons to top",
+            )
 
-        overview_header_body = id_block(main_text, "overviewHeaderRow")
-        provider_header_body = id_block(provider_header_text, "providerHeaderRow")
+    def test_overview_and_provider_headers_share_busy_refresh_control(self):
+        overview_header_body = id_block(self.applet.text, "overviewHeaderRow")
+        provider_header_body = id_block(self.provider_header_text, "providerHeaderRow")
         for header_id, header_body in (
             ("overviewHeaderRow", overview_header_body),
             ("providerHeaderRow", provider_header_body),
         ):
-            if not code_contains(header_body, "RefreshButton {"):
-                raise AssertionError(
-                    f"{header_id} must use the shared refresh control; missing 'RefreshButton {{'"
-                )
-            if not code_contains(header_body, "busy:"):
-                raise AssertionError(
-                    f"{header_id} must give the shared refresh control busy feedback; missing 'busy:'"
-                )
+            self.assertTrue(
+                code_contains(header_body, "RefreshButton {"),
+                f"{header_id} must use the shared refresh control; missing 'RefreshButton {{'",
+            )
+            self.assertTrue(
+                code_contains(header_body, "busy:"),
+                f"{header_id} must give the shared refresh control busy feedback; missing 'busy:'",
+            )
 
-        refresh_control_body = applet.id_block("refreshControl")
+    def test_refresh_control_preserves_footprint_without_owning_effects(self):
+        refresh_control_body = self.applet.id_block("refreshControl")
         for fragment in (
             "implicitWidth: refreshButton.implicitWidth",
             "implicitHeight: refreshButton.implicitHeight",
@@ -186,132 +203,28 @@ class PopupLayoutTest(unittest.TestCase):
             "Accessible.name: refreshControl.label",
             "delay: Kirigami.Units.toolTipDelay",
         ):
-            if not code_contains(refresh_control_body, fragment):
-                raise AssertionError(f"refresh controls must retain their footprint and feedback: {fragment}")
+            self.assertTrue(
+                code_contains(refresh_control_body, fragment),
+                f"refresh controls must retain their footprint and feedback: {fragment}",
+            )
         for effect in ("refreshNow(", "refreshCost(", "refreshSessions("):
-            if effect in refresh_control_body:
-                raise AssertionError("the shared refresh control must leave effects in its owning view")
-        if ".focusReason =" in applet.id_block("overviewRowMouse"):
-            raise AssertionError("overview rows must use a supported focus transition")
+            self.assertNotIn(
+                effect,
+                refresh_control_body,
+                "the shared refresh control must leave effects in its owning view",
+            )
+
+    def test_history_refresh_actions_keep_scoped_busy_feedback(self):
         for fragment in (
             "busy: view.applet.costLoading",
             "busy: view.applet.sessionsLoading",
             "onRequested: view.applet.refreshCost(true)",
             "onRequested: view.applet.refreshSessions()",
         ):
-            applet.require(fragment, "history and sessions must retain scoped refresh feedback and actions")
+            self.applet.require(fragment, "history and sessions must retain scoped refresh feedback and actions")
 
-    def test_scroll_views_and_surfaces(self):
-        for scroll_id in ("overviewScroll", "providerScroll"):
-            scroll_body = id_block(main_text, scroll_id)
-            if not code_contains(scroll_body, "contentWidth: availableWidth"):
-                raise AssertionError(f"{scroll_id} content width must follow Plasma ScrollView availableWidth")
-            if not code_contains(scroll_body, f"{scroll_id}.availableWidth - Kirigami.Units.smallSpacing"):
-                raise AssertionError(f"{scroll_id} must retain one quiet content inset before its scrollbar")
-            for stale_scroll_gutter in (
-                "readonly property real contentRightInset:",
-                "rightPadding: contentRightInset",
-            ):
-                if stale_scroll_gutter in scroll_body:
-                    raise AssertionError(
-                        f"{scroll_id} must not restore the doubled desktop scrollbar gutter"
-                    )
-
-        if main_text.count("PlasmaComponents.ScrollView {") < 2:
-            raise AssertionError("popup content must use Plasma-native scroll views")
-        if "Controls.ScrollView {" in main_text:
-            raise AssertionError("popup content must not restore desktop-framed scroll views")
-
-        if not code_contains(main_text, "readonly property real roundedSurfaceRadius: Kirigami.Units.cornerRadius"):
-            raise AssertionError("main.qml must derive its polished radius from Kirigami theme units")
-        if not code_contains(main_text, "readonly property real nestedSurfaceRadius: Kirigami.Units.cornerRadius"):
-            raise AssertionError(
-                "main.qml must expose a concentric radius for surfaces nested inside a "
-                "roundedSurfaceRadius container"
-            )
-        if not code_contains(main_text, "readonly property real compactMeterTrackHeight: Math.round(Kirigami.Units.gridUnit"):
-            raise AssertionError(
-                "list-row meters must derive their thinner track from gridUnit instead of "
-                "pinning a device pixel count"
-            )
-
-        # Section headings sit above metric rows that are already DemiBold. A Normal
-        # weight heading therefore reads as less important than its own content, so the
-        # structural labels stay Primary and the size scale carries the ranking.
-        heading_chunks = main_text.split("PlainHeading {")[1:]
-        if len(heading_chunks) < 5:
-            raise AssertionError("main.qml must keep its popup section headings")
-        for heading_chunk in heading_chunks:
-            if "type: Kirigami.Heading.Type.Primary" not in heading_chunk[:300]:
-                heading_head = heading_chunk.strip().splitlines()[0].strip()
-                raise AssertionError(
-                    "popup section headings must outrank the DemiBold metric labels they "
-                    f"introduce; heading starting {heading_head!r} is not Primary"
-                )
-        # The Plasma dialog already frames the popup. An inner outline nests a card
-        # inside it, and a separator under the framed tab strip adds a third line.
-        if "popupInnerSurface" in main_text:
-            raise AssertionError("the popup must sit on the native dialog background, not an inner frame")
-        if id_block(main_text, "providerTabsBar").count(
-                "Kirigami.Separator {") != 0:
-            raise AssertionError("the framed tab strip must not add a separator beneath it")
-
-        if not code_contains(main_text, "fullRepresentation:"):
-            raise AssertionError("the applet must keep a fullRepresentation root")
-        full_representation_head = id_block(main_text, "fullRoot")
-        if "standardHeightActive" not in full_representation_head:
-            raise AssertionError(
-                "every popup content section must share one standard height; "
-                "per-section content heights resize the dialog on each tab switch"
-            )
-        if "popupContent.implicitHeight" not in full_representation_head:
-            raise AssertionError(
-                "the content-less popup states must stay compact and content-driven "
-                "instead of inheriting the standard section height"
-            )
-        if re.search(r"implicitHeight:\s*Kirigami\.Units\.gridUnit\s*\*\s*\d", full_representation_head):
-            raise AssertionError(
-                "the popup must not pin implicitHeight to a grid-unit constant; the "
-                "constants belong in the named minimum/maximum height properties"
-            )
-
-        # Text de-emphasis had drifted into eleven ad-hoc opacity literals, several
-        # below the WCAG AA 4.5:1 floor for Kirigami.Theme.textColor on Breeze Light.
-        # Keep the scale in one place so a new section cannot reintroduce a dimmer step.
-        for token_definition in (
-            "readonly property real secondaryTextOpacity: 0.7",
-            "readonly property real valueTextOpacity: 0.85",
-            "readonly property real meterTrackHeight: Math.round(Kirigami.Units.gridUnit * 0.4)",
-        ):
-            if not code_contains(main_text, token_definition):
-                raise AssertionError(
-                    f"main.qml must define the shared presentation scale: {token_definition!r}"
-                )
-        if not code_contains(providers_text, "readonly property real secondaryTextOpacity: 0.7"):
-            raise AssertionError(
-                "configProviders.qml must mirror main.qml's secondaryTextOpacity step"
-            )
-        provider_cost_section_body = id_block(full_representation_text, "providerCostSection")
-        if provider_cost_section_body.count("Layout.preferredHeight: applet.meterTrackHeight") != 1:
-            raise AssertionError(
-                "the provider-cost meter must consume the shared meterTrackHeight"
-            )
-        if not code_contains(provider_cost_section_body, "Behavior on color"):
-            raise AssertionError(
-                "the provider-cost meter must animate color like the quota meters"
-            )
-        delegate = applet.id_block("providerUsageDelegate")
-        self.assertIn("meterTrackHeight: fullRoot.applet.meterTrackHeight", delegate)
-        self.assertNotIn("applet", provider_usage_row_text)
-        self.assertNotIn("Plasmoid", provider_usage_row_text)
-        self.assertEqual(main_text.count("delegate: providerUsageDelegate"), 2)
-        if provider_usage_row_text.count(
-            "Layout.preferredHeight: usageRow.meterTrackHeight"
-        ) != 1:
-            raise AssertionError("the provider-usage meter must consume meterTrackHeight")
-
-    def test_provider_header(self):
-        provider_header_body = id_block(provider_header_text, "providerHeaderRow")
+    def test_provider_header_exposes_stable_identity_structure(self):
+        provider_header_body = id_block(self.provider_header_text, "providerHeaderRow")
         for header_fragment in (
             "id: providerIdentitySurface",
             "id: providerHeaderIcon",
@@ -320,308 +233,67 @@ class PopupLayoutTest(unittest.TestCase):
             "id: providerAccountLabel",
             "id: providerPlanLabel",
         ):
-            if not code_contains(provider_header_body, header_fragment):
-                raise AssertionError(f"providerHeaderRow must expose {header_fragment} for stable header layout")
-
-        if not code_contains(provider_header_body, "providerIconSource(providerHeaderRow.providerData.provider)"):
-            raise AssertionError("providerHeaderRow must reinforce provider identity with the canonical icon")
-        if not code_contains(provider_header_body, "providerReadableColor("):
-            raise AssertionError("providerHeaderRow must keep provider identity visible on the active theme")
-        if not code_contains(provider_header_body, "radius: providerHeaderRow.applet.nestedSurfaceRadius"):
-            raise AssertionError("providerHeaderRow must share the nested rounded surface scale")
-        if not code_contains(provider_header_body, "type: Kirigami.Heading.Type.Primary"):
-            raise AssertionError(
-                "the provider title must stay the heaviest label in the detail view so "
-                "the section headings below it never outrank it"
+            self.assertTrue(
+                code_contains(provider_header_body, header_fragment),
+                f"providerHeaderRow must expose {header_fragment} for stable header layout",
             )
 
-        provider_account_label_body = id_block(provider_header_text, "providerAccountLabel")
+    def test_provider_identity_uses_canonical_icon_theme_color_and_heading(self):
+        provider_header_body = id_block(self.provider_header_text, "providerHeaderRow")
+        self.assertTrue(
+            code_contains(provider_header_body, "providerIconSource(providerHeaderRow.providerData.provider)"),
+            "providerHeaderRow must reinforce provider identity with the canonical icon",
+        )
+        self.assertTrue(
+            code_contains(provider_header_body, "providerReadableColor("),
+            "providerHeaderRow must keep provider identity visible on the active theme",
+        )
+        self.assertTrue(
+            code_contains(provider_header_body, "radius: providerHeaderRow.applet.nestedSurfaceRadius"),
+            "providerHeaderRow must share the nested rounded surface scale",
+        )
+        self.assertTrue(
+            code_contains(provider_header_body, "type: Kirigami.Heading.Type.Primary"),
+            "the provider title must stay the heaviest label in the detail view so "
+            "the section headings below it never outrank it",
+        )
+
+    def test_provider_account_label_fills_without_outgrowing_text(self):
+        provider_account_label_body = id_block(self.provider_header_text, "providerAccountLabel")
         for account_label_fragment in (
             # Filling with a cap at the label's own text lets the account elide on
             # narrow popups while never stretching past the email it shows.
             "Layout.fillWidth: true",
             "Layout.maximumWidth: Math.ceil(implicitWidth)",
         ):
-            if not code_contains(provider_account_label_body, account_label_fragment):
-                raise AssertionError(
-                    "providerAccountLabel must fill without outgrowing its text and "
-                    f"cap long account text before the refresh edge; "
-                    f"missing {account_label_fragment!r}"
-                )
-        if "providerHeaderRow.width" in provider_account_label_body or "providerMetaRow.width" in provider_account_label_body:
-            raise AssertionError("providerAccountLabel must not bind its width to the header layout width")
-
-        provider_plan_label_body = id_block(provider_header_text, "providerPlanLabel")
-        if not code_contains(provider_plan_label_body, "Layout.fillWidth: true"):
-            raise AssertionError("providerPlanLabel must fill available space beside account")
-        if not code_contains(provider_plan_label_body, "Layout.maximumWidth: Math.ceil(implicitWidth)"):
-            raise AssertionError("providerPlanLabel must cap at implicitWidth to avoid rounding false truncation")
-
-        if "providerUpdatedLabel" in applet.id_block("providerMetaRow"):
-            raise AssertionError("account identity and the update timestamp must have separate lines")
-
-    def test_usage_rows(self):
-        applet.require("row.pace = paceSummaryPartsText(snapshot.paceParts)", "usage rows must localize structured pace fields")
-
-        usage_percent_body = id_block(provider_usage_row_text, "usagePercentLabel")
-        if not code_contains(usage_percent_body, "font.weight: Font.DemiBold"):
-            raise AssertionError("usagePercentLabel must remain a prominent scan target")
-        if provider_usage_row_text.index("id: usagePercentLabel") > provider_usage_row_text.index("id: usageBar"):
-            raise AssertionError("usage percentage must appear in the metric header before its bar")
-        usage_bar_body = id_block(provider_usage_row_text, "usageBar")
-        if not code_contains(usage_bar_body, "usageRow.withAlpha(Kirigami.Theme.textColor, 0.1)"):
-            raise AssertionError("usageBar must keep its pill track visually restrained")
-        # A marker that spans the track edge to edge reads as a gap in the accent fill
-        # rather than a threshold, so pace and quota markers share one inset geometry.
-        # A background sliver on each side keeps the tick legible over the fill.
-        marker_body = (root / "contents/ui/components/MeterMarker.qml").read_text(encoding="utf-8")
-        for marker_geometry_fragment in (
-            "y: inset",
-            "height: Math.max(0, trackHeight - inset * 2)",
-            "readonly property real knockout: 1",
-            "color: Kirigami.Theme.backgroundColor",
-            "anchors.leftMargin: meterMarker.knockout",
-            "anchors.rightMargin: meterMarker.knockout",
-        ):
-            if not code_contains(marker_body, marker_geometry_fragment):
-                raise AssertionError(
-                    "MeterMarker.qml must define one shared inset meter marker; "
-                    f"missing {marker_geometry_fragment!r}"
-                )
-        if usage_bar_body.count("MeterMarker {") != 2:
-            raise AssertionError("both the pace marker and the quota markers must share one marker geometry")
-        for full_height_marker in ("height: usageBar.height\n", "height: trackHeight\n", "y: 0\n"):
-            if full_height_marker in usage_bar_body or full_height_marker in marker_body:
-                raise AssertionError(
-                    "quota markers must not span the meter track edge to edge again"
-                )
-
-        credits_section_body = id_block(full_representation_text, "creditsSection")
-        reset_credits_section_body = id_block(full_representation_text, "resetCreditsSection")
-        if "Kirigami.Separator {" in reset_credits_section_body:
-            raise AssertionError(
-                "reset credits must share the Credits separator instead of drawing their own"
+            self.assertTrue(
+                code_contains(provider_account_label_body, account_label_fragment),
+                "providerAccountLabel must fill without outgrowing its text and "
+                f"cap long account text before the refresh edge; "
+                f"missing {account_label_fragment!r}",
             )
-        if "resetCreditsSection" not in credits_section_body:
-            raise AssertionError("reset credits must stay grouped inside the Credits section")
-        for credit_limit_fragment in (
-            "readonly property var creditLimit:",
-            "applet.presentedProviderData.codexCreditLimit",
-            "applet.codexCreditLimitUsageRow(",
-            "model: creditsSection.creditLimitRow ? [creditsSection.creditLimitRow] : []",
-            "delegate: providerUsageDelegate",
-        ):
-            if not code_contains(credits_section_body, credit_limit_fragment):
-                raise AssertionError(
-                    "the Credits section must render the validated Codex monthly limit "
-                    f"without adding a meter to plain balances; missing {credit_limit_fragment!r}"
-                )
-        if not re.search(
-            r"visible:\s*applet\.presentedProviderData\s*"
-            r"&&\s*applet\.presentedProviderData\.credits\s*!==\s*null",
-            credits_section_body,
-        ):
-            raise AssertionError(
-                "the plain credits balance must stay null-safe and independent of QML formatting"
-            )
-        if not code_contains(credits_section_body, 'i18n("Remaining: %1",'):
-            raise AssertionError("the Credits section must keep the plain remaining-balance fallback")
-        credit_limit_row_body = applet.function_body("creditLimitRow")
-        for credit_limit_row_fragment in (
-            'i18n("Monthly credit limit")',
-            'i18n("Used: %1, remaining: %2 of %3"',
-            "usedPercent: creditLimit.usedPercent",
-            "leftPercent: creditLimit.leftPercent",
-            "resetsAt: creditLimit.resetsAt",
-        ):
-            if not code_contains(credit_limit_row_body, credit_limit_row_fragment):
-                raise AssertionError(
-                    "the Codex monthly-limit row must present every validated field through "
-                    f"the shared usage-meter component; missing {credit_limit_row_fragment!r}"
-                )
+        self.assertFalse(
+            "providerHeaderRow.width" in provider_account_label_body or "providerMetaRow.width" in provider_account_label_body,
+            "providerAccountLabel must not bind its width to the header layout width",
+        )
 
-        format_number_body = function_body(main_text, "formatNumber")
-        if not (
-            code_contains(format_number_body, "groupedDecimalString(")
-            or code_contains(format_number_body, "CostAmounts.formatCount(")
-        ):
-            raise AssertionError(
-                "formatNumber must format through groupedDecimalString or CostAmounts.formatCount "
-                "so credit balances carry group separators and the locale decimal mark like every "
-                "other figure in the popup"
-            )
-        if "toFixed(" in format_number_body:
-            raise AssertionError(
-                "formatNumber must not format digits itself again; toFixed hardcodes the "
-                "decimal mark and prints a whole balance as '0.0'"
-            )
-        for usage_metadata_id in ("usagePaceLabel", "usageResetLabel"):
-            usage_metadata_body = id_block(provider_usage_row_text, usage_metadata_id)
-            if not code_contains(usage_metadata_body, "font: Kirigami.Theme.smallFont"):
-                raise AssertionError(f"{usage_metadata_id} must retain the compact metadata type scale")
+    def test_provider_plan_label_caps_to_implicit_width(self):
+        provider_plan_label_body = id_block(self.provider_header_text, "providerPlanLabel")
+        self.assertTrue(
+            code_contains(provider_plan_label_body, "Layout.fillWidth: true"),
+            "providerPlanLabel must fill available space beside account",
+        )
+        self.assertTrue(
+            code_contains(provider_plan_label_body, "Layout.maximumWidth: Math.ceil(implicitWidth)"),
+            "providerPlanLabel must cap at implicitWidth to avoid rounding false truncation",
+        )
 
-        reset_credits_body = applet.function_body("resetSection")
-        if not code_contains(reset_credits_body, 'i18np("%1 available", "%1 available"'):
-            raise AssertionError("reset credit counts must use plural-aware translations")
-        if not code_contains(reset_credits_body, "ProviderCostPresentation.resetCount(providerID, resetCredits)"):
-            raise AssertionError("reset credits must use the tested semantic count")
-        direct_number_call = re.compile(r"(?<![A-Za-z0-9_])Number\(")
-        if direct_number_call.search(reset_credits_body):
-            raise AssertionError("reset credits must not use loose numeric coercion")
-
-    def test_feedback_and_empty_states(self):
-        # Error/warning message types are exercised on the production blocks
-        # by test_usage_recovery.py.
-        provider_usage_loading_body = id_block(main_text, "providerUsageLoadingRow")
-        if not code_contains(provider_usage_loading_body, "visible: applet.loading && applet.errorText.length === 0"):
-            raise AssertionError("an error-only popup must not display a loading indicator")
-        for scoped_feedback_body, feedback_name in (
-            (id_block(main_text, "emptyErrorScroll"), "emptyErrorScroll"),
-            (provider_usage_loading_body, "providerUsageLoadingRow"),
-        ):
-            if not code_contains(scoped_feedback_body, "applet.providerUsageFeedbackVisible"):
-                raise AssertionError(
-                    f"{feedback_name} must stay hidden on the independent Spend and Sessions tabs"
-                )
-
-        # A RowLayout inherits its children's maximum height, so it cannot absorb the
-        # leftover popup height: the layout engine then spreads the slack across every
-        # row and drops the tab bar into the middle of an otherwise empty popup.
-        if not re.search(r"Item \{\s*\n\s*id: providerUsageLoadingRow", main_text):
-            raise AssertionError(
-                "providerUsageLoadingRow must be a plain Item so it absorbs the leftover "
-                "popup height and keeps the tab bar pinned to the top while usage loads"
-            )
-        for filler_owner_source, filler_owner_text in (
-            ("SessionsView.qml", sessions_view_text),
-            ("SpendView.qml", spend_view_text),
-        ):
-            if not re.search(r"Controls\.BusyIndicator\s*\{\s*(?:id:\s*\w+\s*)?anchors\.centerIn:\s*parent", filler_owner_text):
-                raise AssertionError(
-                    f"{filler_owner_source} must center its busy indicator inside a filler item "
-                    "so the heading stays pinned to the top while loading"
-                )
-
-        provider_status_body = id_block(main_text, "providerStatusMessage")
-        if not code_contains(provider_status_body, "applet.presentedProviderData.hasIncident"):
-            raise AssertionError("healthy provider status must not occupy a permanent inline banner")
-        for block_id, source, data in (
-            ("providerStatusMessage", main_text, "applet.presentedProviderData"),
-            ("providerStatusBadge", provider_header_text, "providerHeaderRow.providerData"),
-        ):
-            visible = re.search(r"visible:\s*([^\n]*(?:\n\s*&&[^\n]*)*)", id_block(source, block_id))
-            if not visible or not re.search(
-                rf"{re.escape(data)}\.hasIncident\s*&&\s*{re.escape(data)}\.statusKnown\s*!==\s*false",
-                visible.group(1),
-            ):
-                raise AssertionError(f"{block_id} must hide inactive and unknown provider status")
-        if not code_contains(provider_status_body, "applet.statusBadgeColor(applet.presentedProviderData.statusSeverity)"):
-            raise AssertionError("incident pills must reflect the provider status severity")
-
-        placeholder_body = id_block(main_text, "providerPlaceholderMessage")
-        if not code_contains(placeholder_body, "Kirigami.PlaceholderMessage.Type.Informational"):
-            raise AssertionError("providerPlaceholderMessage must use the native informational empty state")
-
-        empty_providers_body = id_block(main_text, "emptyProvidersMessage")
-        for fragment in ("Kirigami.PlaceholderMessage.Type.Actionable", "helpfulAction: configureProvidersAction",
-                         "plainExplanation:"):
-            if not code_contains(empty_providers_body, fragment):
-                raise AssertionError("the empty provider state must explain and open native widget settings")
-
-    def test_missing_cli_guidance_takes_priority_on_global_tabs(self):
-        missing = id_block(main_text, "missingCommandMessage")
-        self.assertIn("visible: fullRoot.commandPathMissing", missing)
-        self.assertNotIn("!applet.globalViewSelected", missing)
-        self.assertIn("helpfulAction: prepareCliAction", missing)
-        self.assertIn("action: usageSettingsAction", missing)
-        self.assertNotIn('objectName: "popupSessionsView"', full_representation_text)
-        for view in ("SpendView", "SessionsView"):
-            self.assertIn("visible: applet." + ("spendSelected" if view == "SpendView" else "sessionsSelected")
-                          + " && !fullRoot.commandPathMissing", full_representation_text)
-
-    def test_ai_insights_integrated_analysis(self):
-        self.assertNotIn("AiInsightsView", full_representation_text)
-        self.assertNotIn("AiInsightsCard", full_representation_text)
-        self.assertIn("Components.SpendView", full_representation_text)
-        spend = (root / "contents/ui/components/SpendView.qml").read_text()
-        self.assertIn("Components.AnalysisAssistant", spend)
-        self.assertNotIn("generateAiInsight", spend)
-
-    def test_provider_actions(self):
-        action_rows_body = function_body(main_text, "actionRows")
-        if not code_contains(action_rows_body, 'action: "refresh", enabled: true, separatorBefore: true'):
-            raise AssertionError("actionRows must separate provider actions from widget-level actions")
-
-        provider_action_rows_body = id_block(main_text, "providerActionRows")
-        for action_fragment in (
-            "id: providerActionGroupSeparator",
-            "visible: modelData.separatorBefore === true",
-        ):
-            if not code_contains(provider_action_rows_body, action_fragment):
-                raise AssertionError(f"providerActionRows must expose {action_fragment} for grouped menu actions")
-
-    def test_generic_details(self):
-        snapshot_text = (root / "contents/ui/ProviderSnapshot.js").read_text()
-        normalize_provider_body = function_body(snapshot_text, "normalize")
-
-        # Parsing and fallback behavior are covered directly by
-        # tst_legacy_usage_dashboard.qml; keep localization and generic-detail priority
-        # wired through the applet without pinning the module's private helpers.
-        if not code_contains(normalize_provider_body, "providerDetails.length > 0 ? null : LegacyUsageDashboard.normalize(usage, item)"):
-            raise AssertionError("generic details must take precedence over bounded legacy dashboards")
-        present_provider_body = function_body(main_text, "presentProviderSnapshot")
-        for field in ("kpis", "rows"):
-            if not code_contains(present_provider_body, f"{field}: dashboard.{field}.map(dashboardDisplayRow)"):
-                raise AssertionError("legacy dashboard rows must use the localized adapter")
-        # The applet surface contains the same method on the root wrapper and
-        # CostText. Read the component for the formatting rules.
-        cost_text = (root / "contents/ui/components/CostText.qml").read_text(encoding="utf-8")
-        main_qml_text = (root / "contents/ui/main.qml").read_text(encoding="utf-8")
-        dashboard_display_body = function_body(cost_text, "dashboardDisplayRow")
-        if not code_contains(dashboard_display_body, "row.parts.map(root.dashboardPartText)"):
-            raise AssertionError("dashboard number formatting must remain in the QML adapter")
-        if not code_contains(dashboard_display_body, "dashboardLabelText(row.labelKey)"):
-            raise AssertionError("semantic dashboard labels must be localized in QML")
-        if not code_contains(dashboard_display_body, 'i18n("%1 (%2)", row.name, parts[0])'):
-            raise AssertionError("a named dashboard row must show its name with the first part")
-        if not code_contains(dashboard_display_body, 'Normalizer.boundedDisplayText(parts.join(" · "), 500)'):
-            raise AssertionError("dashboard row text must stay bounded in the QML adapter")
-        root_surface = Surface("applet", root)
-        main = root / "contents/ui/main.qml"
-        root_surface.texts = {main: main_qml_text}
-        root_surface.files = [main]
-        if not code_contains(root_surface.function_body("dashboardDisplayRow"),
-                             "return costText.dashboardDisplayRow(row)"):
-            raise AssertionError("the root dashboard row wrapper must delegate to CostText")
-        if not code_contains(main_text, "function providerCountText(count)"):
-            raise AssertionError("overview provider counts must use a plural-aware helper")
-        provider_count_body = function_body(main_text, "providerCountText")
-        if not code_contains(provider_count_body, 'i18np("%1 provider", "%1 providers", total)'):
-            raise AssertionError("providerCountText must select the correct singular form")
-
-    def test_reset_labels(self):
-        # Popup header and detail lines share the Sessions and Usage & Spend separator.
-        for popup_file in ("FullRepresentation.qml", "OverviewProviderRow.qml", "AnalysisAssistant.qml"):
-            if 'i18n("%1 - %2"' in (root / "contents/ui/components" / popup_file).read_text():
-                raise AssertionError(f"{popup_file} must join popup detail lines with the middle dot separator")
-        reset_text_body = function_body(main_text, "resetText")
-        # The root supplies the live clock and the shared regional date formatter.
-        if not code_contains(reset_text_body, "usageWindowText.resetText(window, panelClockMs, absolute)"):
-            raise AssertionError("reset presentation must receive the live panel clock")
-        applet.require("dateLabels: timeLabels", "reset presentation must use the shared regional formatter")
-        usage_text = (root / "contents/ui/components/UsageWindowText.qml").read_text()
-        for forbidden in ("Plasmoid.", "applet.", "Date.now(", "Timer {", "DataSource"):
-            if forbidden in usage_text:
-                raise AssertionError("usage text must not own applet state or effects: " + forbidden)
-        # A literal Qt.formatDateTime pattern writes English day and month names and a
-        # fixed hour cycle whatever the user's regional format; TimeLabels owns them.
-        for path in sorted((root / "contents/ui").rglob("*.qml")):
-            if "Qt.formatDateTime(" in path.read_text():
-                raise AssertionError(f"{path.relative_to(root)} must format times through TimeLabels")
-        reset_presentation = (root / "contents/ui/ResetPresentation.js").read_text()
-        for forbidden in ("root.", "Plasmoid.", "Qt.", "i18n(", "i18np(", "Date.now("):
-            if forbidden in reset_presentation:
-                raise AssertionError("reset decisions must be pure and use the caller's clock: " + forbidden)
+    def test_provider_identity_and_updated_time_use_separate_lines(self):
+        self.assertNotIn(
+            "providerUpdatedLabel",
+            self.applet.id_block("providerMetaRow"),
+            "account identity and the update timestamp must have separate lines",
+        )
 
 
 if __name__ == "__main__":
