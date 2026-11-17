@@ -2784,6 +2784,15 @@ msgstr "Le délai de chargement des comptes a expiré. Réessayez."
 
 #: contents/ui/controllers/CliUpdateController.qml
 msgid ""
+"Managed by this widget. Choose “Use managed CLI” in General to enable "
+"updates and rollback."
+msgstr ""
+"Cette CLI est gérée par ce composant graphique. Choisissez « Utiliser la CLI "
+"gérée » dans Général pour activer les mises à jour et la restauration de la "
+"version précédente."
+
+#: contents/ui/controllers/CliUpdateController.qml
+msgid ""
 "Managed by this widget. Install updates or restore the previous version in "
 "Managed CLI below."
 msgstr ""

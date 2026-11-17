@@ -2772,6 +2772,15 @@ msgstr ""
 
 #: contents/ui/controllers/CliUpdateController.qml
 msgid ""
+"Managed by this widget. Choose “Use managed CLI” in General to enable "
+"updates and rollback."
+msgstr ""
+"Este elemento gráfico gestiona esta CLI. Seleccione «Usar la CLI gestionada» "
+"en General para habilitar las actualizaciones y la restauración de la "
+"versión anterior."
+
+#: contents/ui/controllers/CliUpdateController.qml
+msgid ""
 "Managed by this widget. Install updates or restore the previous version in "
 "Managed CLI below."
 msgstr ""

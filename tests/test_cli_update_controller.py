@@ -118,9 +118,17 @@ TestCase {
         compare(updater.result.manager, "managed");
         compare(updater.guidanceText,
             "Managed by this widget. Install updates or restore the previous version in General.");
+        compare(available.signalArguments[0][2], true);
         updater.managedControlsOnPage = true;
         compare(updater.guidanceText,
             "Managed by this widget. Install updates or restore the previous version in Managed CLI below.");
+    }
+    function test_managedAliasRequiresLauncherSelection() {
+        var updater = create({commandPath: "alias"}); if (!updater) return;
+        updater.checkNow(); tryCompare(available, "count", 1);
+        compare(available.signalArguments[0][2], false);
+        compare(updater.result.manager, "managed");
+        compare(updater.guidanceText, "Managed by this widget. Choose “Use managed CLI” in General to enable updates and rollback.");
     }
     function test_invalidOutputDoesNotNotify() {
         var updater = create({commandPath: "bad"}); if (!updater) return;
@@ -172,7 +180,8 @@ elif "network" in sys.argv:
     print(json.dumps(dict(status="network_error", version="0.60.4", path="/usr/bin/codexbar", manager="external")))
 else:
     print(json.dumps(dict(status="local" if "--local-only" in sys.argv else "available",
-        version="0.60.4", path="/usr/bin/codexbar", manager="managed" if "managed" in sys.argv else "pacman",
+        version="0.60.4", path="/usr/bin/codexbar", manager="managed" if sys.argv[2] in ("managed", "alias") else "pacman",
+        managedSelected=sys.argv[2] == "managed",
         latest="0.62.0", tag="v0.62.0")))
 ''')
             qml = QML.replace("CONTROLLER", (ROOT / "contents/ui/controllers/CliUpdateController.qml").as_uri()).replace("FIXTURE", script.as_uri())

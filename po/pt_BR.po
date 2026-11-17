@@ -2761,6 +2761,14 @@ msgstr "O carregamento das contas excedeu o tempo limite. Tente novamente."
 
 #: contents/ui/controllers/CliUpdateController.qml
 msgid ""
+"Managed by this widget. Choose “Use managed CLI” in General to enable "
+"updates and rollback."
+msgstr ""
+"Este widget gerencia esta CLI. Selecione “Usar a CLI gerenciada” em Geral "
+"para habilitar as atualizações e a restauração da versão anterior."
+
+#: contents/ui/controllers/CliUpdateController.qml
+msgid ""
 "Managed by this widget. Install updates or restore the previous version in "
 "Managed CLI below."
 msgstr ""

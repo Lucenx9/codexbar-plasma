@@ -2763,6 +2763,15 @@ msgstr "Zeitüberschreitung beim Laden der Konten. Erneut versuchen."
 
 #: contents/ui/controllers/CliUpdateController.qml
 msgid ""
+"Managed by this widget. Choose “Use managed CLI” in General to enable "
+"updates and rollback."
+msgstr ""
+"Diese CLI wird vom Miniprogramm verwaltet. Wählen Sie unter „Allgemein“ die "
+"Option „Verwaltete CLI verwenden“, um Updates und die Wiederherstellung der "
+"vorherigen Version zu ermöglichen."
+
+#: contents/ui/controllers/CliUpdateController.qml
+msgid ""
 "Managed by this widget. Install updates or restore the previous version in "
 "Managed CLI below."
 msgstr "Von diesem Miniprogramm verwaltet. Unter Verwaltete CLI weiter unten können Sie Aktualisierungen installieren oder die vorherige Version wiederherstellen."
