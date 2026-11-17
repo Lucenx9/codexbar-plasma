@@ -12,6 +12,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Make quick setup wait for an in-progress widget installation and upgrade
+  an older release that another installer finishes installing during the download.
+
 - Keep account discovery retryable after reopening the popup for a provider
   without token-account support.
 
