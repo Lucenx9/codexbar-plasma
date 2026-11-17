@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import "../CostPresentation.mjs" as CostPresentation
 import "../CostAmounts.mjs" as CostAmounts
+import "../AnalysisAmounts.mjs" as AnalysisAmounts
 
 ColumnLayout {
     id: section
@@ -21,7 +22,7 @@ ColumnLayout {
         if (!CostAmounts.hasMetricValue(row, applet.costHistoryShowsTokens)) {
             return applet.costHistoryShowsTokens ? i18n("Tokens unavailable") : i18n("Cost unavailable");
         }
-        return applet.costHistoryShowsTokens ? applet.usageCountText(row.tokens, "tokens") : applet.qualifiedCostValue(applet.amountString(row.cost, row.currency), row.valueMode);
+        return applet.costHistoryShowsTokens ? applet.usageCountText(row.tokens, "tokens") : applet.qualifiedCostValue(AnalysisAmounts.amountText(applet.costNumberFormat, row.cost, row.currency), row.valueMode);
     }
 
     PlainPlasmaLabel {

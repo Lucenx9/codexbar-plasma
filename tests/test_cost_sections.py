@@ -52,6 +52,7 @@ TestCase {
         projects: { rows: [
             { label: "Cost heavy", cost: 8, tokens: 100, currency: "USD" },
             { label: "Token heavy", cost: 1, tokens: 9000, currency: "USD" },
+            { label: "Tiny project", cost: 0.002, tokens: 2, currency: "USD" },
             { label: "Unpriced", cost: null, tokens: 50, currency: "USD" }
         ], truncated: false }
     }]
@@ -130,7 +131,7 @@ TestCase {
         function privateErrorText(text) { return text; }
         property double panelClockMs: 0
         function usageCountText(value) { return String(value) + " tokens"; }
-        function amountString(value, currency) { return (currency || "USD") + " " + String(value); }
+        function amountString(value, currency) { return CostAmounts.amountString(costNumberFormat, value, currency); }
         function qualifiedCostValue(value, mode) { return costText.qualifiedCostValue(value, mode); }
         function providerDisplayTitle(provider) { return provider; }
         function providerReadableColor(provider) { return "#3aa655"; }
@@ -487,7 +488,8 @@ class CostSectionTests(unittest.TestCase):
         verify(subject !== null);
         var texts = textsUnder(subject);
         verify(texts.indexOf("Cost heavy") < texts.indexOf("Token heavy"));
-        verify(texts.indexOf("USD 8") >= 0);
+        verify(texts.indexOf("$8.00") >= 0);
+        verify(texts.indexOf("< $0.01") >= 0);
         verify(texts.indexOf("Cost unavailable") >= 0);
         fakeApplet.costHistoryShowsTokens = true;
         tryVerify(function() {
@@ -630,8 +632,8 @@ class CostSectionTests(unittest.TestCase):
         verify(texts.indexOf(stamp(reset - 7 * 86400000) + " - " + stamp(reset)) >= 0, texts.join(" | "));
         verify(texts.indexOf(stamp(reset - 14 * 86400000) + " - " + stamp(reset - 7 * 86400000)) >= 0);
         // A 12:22 reset splits days, so both totals are marked as estimated.
-        verify(texts.indexOf("≈ USD 60 · 6000 tokens") >= 0, texts.join(" | "));
-        verify(texts.indexOf("≈ USD 42 · 4200 tokens") >= 0);
+        verify(texts.indexOf("≈ $60.00 · 6000 tokens") >= 0, texts.join(" | "));
+        verify(texts.indexOf("≈ $42.00 · 4200 tokens") >= 0);
         verify(texts.some(function(text) { return text.indexOf("≈ The history is kept per day") === 0; }));
 
         // Finite daily rows are still incomplete when the CLI says its local
@@ -641,8 +643,8 @@ class CostSectionTests(unittest.TestCase):
             rows: [{ lane: "secondary", windowMinutes: 10080, resetsAt: new Date(reset).toISOString() }] };
         tryVerify(function() {
             var updated = textsUnder(subject);
-            return updated.indexOf("≈ at least USD 60 · at least 6000 tokens") >= 0
-                && updated.indexOf("≈ at least USD 42 · at least 4200 tokens") >= 0;
+            return updated.indexOf("≈ at least $60.00 · at least 6000 tokens") >= 0
+                && updated.indexOf("≈ at least $42.00 · at least 4200 tokens") >= 0;
         });
 
         // Without a weekly row there is nothing honest to split.
@@ -686,8 +688,9 @@ class CostSectionTests(unittest.TestCase):
         self.run_fixture('''
     function test_privateQuotaCurrency_data() {
         return [
-            { tag: "euro", currency: "EUR", expected: "EUR 2" },
-            { tag: "dollar", currency: "USD", expected: "USD 2" }
+            { tag: "euro", currency: "EUR", cost: 2, expected: "EUR 2.00" },
+            { tag: "dollar", currency: "USD", cost: 2, expected: "$2.00" },
+            { tag: "subcent", currency: "USD", cost: 0.002, expected: "< $0.01" }
         ];
     }
     function test_privateQuotaCurrency(data) {
@@ -696,8 +699,8 @@ class CostSectionTests(unittest.TestCase):
         var parsed = CostResponse.response(JSON.stringify([{
             provider: "codex", currencyCode: data.currency, historyDays: 1,
             updatedAt: new Date(scan).toISOString(),
-            totals: { totalCost: 2, totalTokens: 100 },
-            daily: [{ date: "2026-09-17", totalCost: 2, totalTokens: 100 }]
+            totals: { totalCost: data.cost, totalTokens: 100 },
+            daily: [{ date: "2026-09-17", totalCost: data.cost, totalTokens: 100 }]
         }]), "", 1, 0);
         compare(parsed.outcome, "success");
         fakeApplet.panelClockMs = scan;
@@ -716,8 +719,7 @@ class CostSectionTests(unittest.TestCase):
             testCase.providerData = { provider: "codex", tokenCost: cost,
                 rows: [{ lane: "secondary", windowMinutes: 10080, resetsAt: reset }] };
             compare(section.windows.length, 1);
-            compare(section.windows[0].cost, 2);
-            // The fixture formatter exposes the currency passed by the view.
+            compare(section.windows[0].cost, data.cost);
             compare(section.amountText(section.windows[0]).split(" · ")[0], data.expected);
         }
     }
