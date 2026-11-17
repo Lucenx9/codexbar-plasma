@@ -76,4 +76,20 @@ TestCase {
         verify(!result.statusKnown)
         verify(!result.hasIncident)
     }
+
+    function test_incidentRequiresKnownSeverity_data() {
+        return [
+            {tag: "unknown", indicator: "unknown", hasIncident: false},
+            {tag: "operational", indicator: "none", hasIncident: false},
+            {tag: "outage", indicator: "major", hasIncident: true},
+            {tag: "maintenance", indicator: "maintenance", hasIncident: true}
+        ]
+    }
+
+    function test_incidentRequiresKnownSeverity(data) {
+        var snapshot = Snapshot.normalize({provider: "codex", status: {indicator: data.indicator}}, 1000)
+        var result = View.presented(snapshot, {rows: [], title: "Codex", planText: "", status: "Service status"})
+        compare(result.hasIncident, data.hasIncident)
+        compare(result.statusSeverity, snapshot.statusSeverity)
+    }
 }

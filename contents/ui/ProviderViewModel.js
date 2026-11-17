@@ -37,7 +37,7 @@ function presented(snapshot, display) {
         statusKnown: snapshot.statusRecord !== null,
         statusSeverity: snapshot.statusSeverity,
         statusIncidentKey: snapshot.statusIncidentKey,
-        hasIncident: snapshot.statusSeverity.length > 0,
+        hasIncident: snapshot.statusSeverity.length > 0 && snapshot.statusSeverity !== "unknown",
         error: display.error,
         placeholder: display.placeholder,
         usageReceivedAtMs: snapshot.usageReceivedAtMs,
