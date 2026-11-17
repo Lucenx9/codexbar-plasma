@@ -17,6 +17,9 @@ Item {
     readonly property real tabRadius: Math.max(0, surfaceRadius - providerTabsFlickable.anchors.margins)
     readonly property real tabPageStep: Math.max(Kirigami.Units.gridUnit * 4, providerTabsFlickable.width * 0.6)
     readonly property real tabWheelStep: Kirigami.Units.gridUnit * 5
+    readonly property bool canScrollLeft: providerTabsFlickable.contentX > 0
+    readonly property bool canScrollRight: providerTabsFlickable.contentX
+        < providerTabsFlickable.contentWidth - providerTabsFlickable.width - 1
     property Item selectedTab: null
     readonly property Item navigationTab: {
         var window = strip.Window.window;
@@ -230,12 +233,12 @@ Item {
         width: height
         height: parent.height - Kirigami.Units.smallSpacing
         visible: strip.tabsOverflow
-        enabled: providerTabsFlickable.contentX > 0
-        icon.name: "go-previous-symbolic"
+        enabled: providerTabs.LayoutMirroring.enabled ? strip.canScrollRight : strip.canScrollLeft
+        icon.name: providerTabs.LayoutMirroring.enabled ? "go-next-symbolic" : "go-previous-symbolic"
         text: i18n("Show previous tabs")
         display: PlasmaComponents.AbstractButton.IconOnly
         Accessible.name: text
-        onClicked: strip.scrollBy(-strip.tabPageStep, visualFocus)
+        onClicked: strip.scrollBy((providerTabs.LayoutMirroring.enabled ? 1 : -1) * strip.tabPageStep, visualFocus)
 
         PlainToolTip {
             plainText: previousTabsButton.text
@@ -254,12 +257,12 @@ Item {
         width: height
         height: parent.height - Kirigami.Units.smallSpacing
         visible: strip.tabsOverflow
-        enabled: providerTabsFlickable.contentX < providerTabsFlickable.contentWidth - providerTabsFlickable.width - 1
-        icon.name: "go-next-symbolic"
+        enabled: providerTabs.LayoutMirroring.enabled ? strip.canScrollLeft : strip.canScrollRight
+        icon.name: providerTabs.LayoutMirroring.enabled ? "go-previous-symbolic" : "go-next-symbolic"
         text: i18n("Show more tabs")
         display: PlasmaComponents.AbstractButton.IconOnly
         Accessible.name: text
-        onClicked: strip.scrollBy(strip.tabPageStep, visualFocus)
+        onClicked: strip.scrollBy((providerTabs.LayoutMirroring.enabled ? -1 : 1) * strip.tabPageStep, visualFocus)
 
         PlainToolTip {
             plainText: nextTabsButton.text
