@@ -173,9 +173,10 @@ function cliRecord(value) {
 }
 
 function cliLines(title, value) {
+    var resolved = ["local", "unknown"].indexOf(value.status) >= 0
     return ["### " + title, "- Version: " + (value.version || "unknown"),
         "- Probe status: " + (value.status || "not checked"),
-        "- Installation: " + (value.path ? value.manager : "unknown")]
+        "- Installation: " + (resolved ? value.manager : "unknown")]
 }
 
 function markdown(input) {

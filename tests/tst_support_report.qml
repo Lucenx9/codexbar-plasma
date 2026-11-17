@@ -279,6 +279,18 @@ TestCase {
         verify(JSON.stringify(result).indexOf("PRIVATE_MARKER") === -1)
     }
 
+    function test_omittedPathsPreserveKnownInstallationOrigins() {
+        var value = payload()
+        value.selected.path = ""
+        value.system.path = ""
+        value.system.status = "unknown"
+        value.system.version = ""
+        var report = SupportReport.markdown({facts: SupportReport.response(JSON.stringify(value))})
+        verify(report.indexOf("Installation: managed") >= 0)
+        verify(report.indexOf("Installation: dpkg") >= 0)
+        verify(report.indexOf("Same resolved path as selected: unknown") >= 0)
+    }
+
     function test_uncheckedCliManagersAndProviderIdentities() {
         var text = SupportReport.markdown({facts: SupportReport.response(""), commandPath: "private-command"})
         verify(text.indexOf("Probe status: not checked") >= 0)

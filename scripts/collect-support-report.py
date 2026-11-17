@@ -9,9 +9,9 @@ import subprocess
 from lib.cli_release import bounded_command, local_record
 
 
-def output(argv, seconds=3):
+def output(argv, **probe_options):
     try:
-        code, text = bounded_command(argv, seconds=seconds)
+        code, text = bounded_command(argv, **probe_options)
         return text if code == 0 else ""
     except (OSError, ValueError, subprocess.SubprocessError):
         return ""
@@ -54,22 +54,24 @@ def environment_record():
 
 
 def provider_record(command):
-    # This released CLI interface lists enablement only. No config dump,
-    # descriptors, account discovery, authentication or quota requests.
-    raw = output([command, "config", "providers", "--format", "json", "--json-only"], seconds=5)
+    # Project enablement from the offline roster, ignoring authentication
+    # metadata and other fields.
+    unavailable = {"status": "unavailable", "enabled": []}
+    raw = output([command, "config", "providers", "--format", "json", "--json-only"],
+                 seconds=5, max_output_bytes=256 * 1024)
     try:
         payload = json.loads(raw)
-    except (ValueError, TypeError):
-        return {"status": "unavailable", "enabled": []}
+    except (ValueError, TypeError, RecursionError):
+        return unavailable
     if not isinstance(payload, list) or len(payload) > 256:
-        return {"status": "unavailable", "enabled": []}
+        return unavailable
     enabled = []
     for item in payload:
         if not isinstance(item, dict) or not isinstance(item.get("enabled"), bool) \
                 or not isinstance(item.get("provider"), str) \
                 or not re.fullmatch(r"[a-z][a-z0-9_-]{0,127}", item["provider"]) \
                 or item["provider"] in ("prototype", "constructor"):
-            return {"status": "unavailable", "enabled": []}
+            return unavailable
         if item["enabled"] and item["provider"] not in enabled:
             enabled.append(item["provider"])
     return {"status": "checked", "enabled": enabled}
@@ -78,11 +80,19 @@ def provider_record(command):
 def collect(command):
     selected = local_record(command)
     system = selected if command == "codexbar" else local_record("codexbar")
-    return {"environment": environment_record(), "selected": selected, "system": system,
-            "providers": provider_record(selected["path"]) if selected["path"] else {
-                "status": "unavailable", "enabled": []},
-            "tools": {tool: bool(shutil.which(tool)) for tool in (
-                "python3", "timeout", "kpackagetool6", "notify-send", "curl", "jq", "sha256sum", "flock")}}
+    providers = provider_record(selected["path"]) if selected["path"] else {
+        "status": "unavailable", "enabled": []}
+    report = {"environment": environment_record(), "selected": selected, "system": system,
+              "providers": providers,
+              "tools": {tool: bool(shutil.which(tool)) for tool in (
+                  "python3", "timeout", "kpackagetool6", "notify-send", "curl", "jq", "sha256sum", "flock")}}
+    # Bound the roster in Markdown. Omit paths when JSON escaping would push
+    # the report over the SupportReport.js limit, including the final newline.
+    if len(json.dumps(providers["enabled"])) > 16 * 1024:
+        report["providers"] = {"status": "unavailable", "enabled": []}
+    if len(json.dumps(report)) + 1 > 32768:
+        report.update(selected={**selected, "path": ""}, system={**system, "path": ""})
+    return report
 
 
 def main():

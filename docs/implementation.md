@@ -532,10 +532,14 @@ applies to a plain credit balance.
 
 Diagnostics collection remains offline: `collect-support-report.py` may run only
 `--version` and `config providers --format json --json-only` (verified on official
-Linux CLI 0.67.0/0.73.0), projecting only enabled provider IDs. No raw config,
-account lists, provider fetches, `diagnose`, hostname/hardware fields or network
-requests enter the report. `SupportReport.js` accepts explicit facts; QML owns
-probes, clipboard and localized feedback. Local version facts may retain paths;
+Linux CLI 0.67.0/0.73.0/0.83.0/0.84.0), projecting only enabled provider IDs. The roster
+probe has a 256 KiB stdout limit to accommodate the
+[authentication metadata added in 0.83.0](research/2026-11-01-macos-parity-0.83.0.md#linux-cli-contract-changes).
+An oversized enabled-ID list is unavailable. If long escaped paths make the
+JSON report too large, omit the paths and preserve the remaining facts.
+The report excludes raw config, account lists, provider fetches, `diagnose`,
+hostname/hardware fields and network requests. `SupportReport.js` accepts explicit
+facts; QML owns probes, clipboard and localized feedback. Local version facts may retain paths;
 the shared report retains only the selected/PATH location comparison.
 
 Shared diagnostics omit whole lines with path separators, including relative,

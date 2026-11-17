@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 import subprocess
 import sys
+import tempfile
 import unittest
 from unittest.mock import patch
 
@@ -14,6 +15,20 @@ SPEC.loader.exec_module(support)
 
 
 class SupportReportTests(unittest.TestCase):
+    def test_provider_roster_accepts_large_metadata_but_stays_bounded(self):
+        with tempfile.TemporaryDirectory() as directory:
+            command = Path(directory) / "codexbar"
+            for hint_length, expected in ((240, {"status": "checked", "enabled": ["codex"]}),
+                                          (2500, {"status": "unavailable", "enabled": []})):
+                with self.subTest(hint_length=hint_length):
+                    providers = [{"provider": "codex", "enabled": True}]
+                    providers.extend({"provider": f"provider-{index}", "enabled": False,
+                                      "authentication": {"tokenAccounts": {"setupHint": "x" * hint_length}}}
+                                     for index in range(110))
+                    command.write_text(f"#!{sys.executable}\nprint({json.dumps(providers)!r})\n")
+                    command.chmod(0o700)
+                    self.assertEqual(support.provider_record(str(command)), expected)
+
     def test_provider_ids_only_and_no_truthy_enablement(self):
         payload = [{"provider": "future-provider", "enabled": True, "displayName": "secret-label",
                     "apiKey": "secret-key"}, {"provider": "codex", "enabled": False}]
@@ -35,6 +50,42 @@ class SupportReportTests(unittest.TestCase):
                 self.assertEqual(support.provider_record("codexbar")["status"], "unavailable")
         with patch.object(support, "output", return_value="[]"):
             self.assertEqual(support.provider_record("codexbar"), {"status": "checked", "enabled": []})
+
+    def test_roster_decode_failure_preserves_rest_of_report(self):
+        local = {"status": "local", "path": "/usr/bin/codexbar", "version": "0.83.0"}
+        with patch.object(support, "local_record", return_value=local), \
+                patch.object(support, "environment_record", return_value={}), \
+                patch.object(support, "output", return_value="[]"), \
+                patch.object(support.json, "loads", side_effect=RecursionError):
+            result = support.collect("codexbar")
+        self.assertEqual(result["selected"], local)
+        self.assertEqual(result["providers"], {"status": "unavailable", "enabled": []})
+
+    def test_report_leaves_room_for_other_facts_when_enabled_ids_are_long(self):
+        providers = [{"provider": "a" * 125 + str(index).zfill(3), "enabled": True} for index in range(256)]
+        local = {"status": "local", "path": "/usr/bin/codexbar", "version": "0.83.0"}
+        with patch.object(support, "local_record", return_value=local), \
+                patch.object(support, "environment_record", return_value={}), \
+                patch.object(support, "output", return_value=json.dumps(providers)):
+            result = support.collect("codexbar")
+        self.assertEqual(result["selected"], local)
+        self.assertEqual(result["providers"], {"status": "unavailable", "enabled": []})
+
+    def test_report_omits_long_paths_to_preserve_versions_and_providers(self):
+        for depth, extra_providers in ((15, 124), (30, 0)):
+            with self.subTest(depth=depth, extra_providers=extra_providers):
+                enabled = ["codex"] + ["a" * 125 + str(index).zfill(3) for index in range(extra_providers)]
+                providers = [{"provider": provider, "enabled": True} for provider in enabled]
+                selected = {"status": "local", "path": ("/" + "é" * 100) * depth + "/codexbar", "version": "0.84.0"}
+                system = {"status": "local", "path": ("/" + "ñ" * 100) * depth + "/codexbar", "version": "0.83.0"}
+                with patch.object(support, "local_record", side_effect=[selected, system]), \
+                        patch.object(support, "environment_record", return_value={}), \
+                        patch.object(support, "output", return_value=json.dumps(providers)):
+                    result = support.collect("selected-cli")
+                self.assertLessEqual(len(json.dumps(result)) + 1, 32768)
+                self.assertEqual(result["selected"], {**selected, "path": ""})
+                self.assertEqual(result["system"], {**system, "path": ""})
+                self.assertEqual(result["providers"], {"status": "checked", "enabled": enabled})
 
     def test_kinfo_keeps_only_versions(self):
         banner = "KDE Plasma Version: 6.5.0\nKDE Frameworks Version: 6.19.0\nQt Version: 6.9.2\nHostname: private-machine\n"
