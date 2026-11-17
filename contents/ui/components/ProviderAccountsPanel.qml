@@ -35,7 +35,8 @@ ColumnLayout {
             || accountOptions.length > 0
             || availabilityExplained
             || applet.accountErrorForProvider(providerID).length > 0
-            || applet.selectedAccountForProvider(providerID).length > 0)
+            || applet.selectedAccountForProvider(providerID).length > 0
+            || applet.accountAvailabilityForProvider(providerID) === "unsupported")
     Layout.fillWidth: true
     spacing: Kirigami.Units.smallSpacing
 

@@ -108,10 +108,11 @@ previous request contexts.
 Account discovery retains a successful list on failure; a confirmed empty list
 clears only that provider. Availability distinguishes named accounts, no accounts,
 and the CLI's unsupported-token-account error. Closing the popup dismisses armed
-notices, including late results; a new discovery arms them again. Unsupported
-providers disable their menu entry but reload can retry. Reset discovery on usage
-identity, config, managed-CLI or empty-roster changes. In-place package upgrades
-need a reload or Plasma restart.
+notices, including late results; a new discovery arms them again. Persistent
+unsupported availability disables the menu entry and keeps the panel's reload
+action reachable after the notice is dismissed. Reset discovery on usage identity,
+config, managed-CLI or empty-roster changes. In-place package upgrades need a
+reload or Plasma restart.
 
 `ProviderConfigWatcher` polls checksums once a minute. Its first accepted
 observation restores cache; later changes invalidate usage and schedule refresh.
