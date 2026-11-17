@@ -508,7 +508,9 @@ Privacy removes titles before restoration UI. Popup restores current groups;
 settings can clear absent saved groups. General defaults clear preferences.
 
 Privacy projects presentation without mutating cached snapshots or account command
-keys. Preserve config keys and pending defaults. General synchronizes history days
+keys. The compact renderer projects its selected provider before using display
+fields, including accessible names; navigation still uses the canonical provider ID.
+Preserve config keys and pending defaults. General synchronizes history days
 and calendar mode as one pending range; an external update releases that edit only
 when both fields match. Metric synchronization stays independent in
 `ConfigValueSync.js`. `PopupRefreshPolicy.js` handles freshness, failed-attempt

@@ -86,7 +86,7 @@ Item {
     // text, never assign undefined to the rendered width.
     readonly property string primaryText: compositionText(textCompositionIndex)
     readonly property int primaryTextWidth: compositionWidth(textCompositionIndex)
-    readonly property var selectedProvider: applet.selectedCompactProvider()
+    readonly property var selectedProvider: applet.providerPresentation(applet.selectedCompactProvider())
     readonly property bool selectedProviderHasMeter: selectedProvider !== null && selectedProvider !== undefined
         && meterProviders.some(function(provider) { return provider.provider === selectedProvider.provider })
     // Without rendered meters in a vertical panel the identity icon is the only

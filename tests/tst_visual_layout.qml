@@ -108,7 +108,12 @@ TestCase {
             return accountLabel(item);
         }
         function providerPresentation(item) {
-            return item;
+            return PrivacyPresentation.provider(item, privacyMode, {
+                title: item && item.provider === "codex" ? "Codex"
+                    : item && item.provider === "claude" ? "Claude" : "Provider",
+                account: "Account hidden", status: "Issue", error: "Details hidden",
+                placeholder: "No usage", usage: "Usage", rowLabels: []
+            });
         }
         function privateErrorText(text) {
             return text;
@@ -141,6 +146,7 @@ TestCase {
             return panelOrder;
         }
         property string providerNameText: "A long provider name"
+        property string codexTitle: "Codex"
         property string usageText: "57% remaining"
         property string usageUnlabelledText: ""
         property string usageCompactText: ""
@@ -166,7 +172,7 @@ TestCase {
             return [
                 {
                     provider: "codex",
-                    title: "Codex",
+                    title: codexTitle,
                     value: firstQuota,
                     usageStale: quotaStale,
                     dataConfidence: quotaConfidence,
@@ -343,6 +349,7 @@ TestCase {
         applet.loading = false;
         applet.panelOrder = ["identity", "status", "text", "meters"];
         applet.providerNameText = "A long provider name";
+        applet.codexTitle = "Codex";
         applet.usageText = "57% remaining";
         applet.usageUnlabelledText = "";
         applet.usageCompactText = "";
@@ -746,6 +753,40 @@ TestCase {
             }
         }
         return cases;
+    }
+
+    function test_standaloneIdentityPrivacyKeepsProviderNavigation_data() {
+        return [{tag: "horizontal", vertical: false}, {tag: "vertical", vertical: true}];
+    }
+
+    function test_standaloneIdentityPrivacyKeepsProviderNavigation(data) {
+        applet.metersHidden = true;
+        applet.providerNameText = "";
+        applet.usageText = "";
+        applet.codexTitle = "Synthetic private alias";
+        applet.verticalFormFactor = data.vertical;
+        var panel = createControl("CompactRepresentation", {applet: applet,
+            width: data.vertical ? 44 : 160, height: data.vertical ? 160 : 44});
+        if (!panel) return;
+        waitForRendering(panel);
+        var identity = findItem(panel, item => item.Accessible.role === Accessible.Button
+            && item.Accessible.name === "Open Synthetic private alias");
+        verify(identity !== null);
+
+        applet.privacyMode = true;
+        tryCompare(identity.Accessible, "name", "Open Codex");
+        identity.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Return);
+        compare(applet.openedProvider, "codex");
+        compare(applet.selectedCompactProvider().title, "Synthetic private alias");
+
+        applet.privacyMode = false;
+        tryCompare(identity.Accessible, "name", "Open Synthetic private alias");
+        applet.privacyMode = true;
+        applet.selectedProviderID = "claude";
+        tryCompare(identity.Accessible, "name", "Open Claude");
+        applet.selectedProviderID = "missing";
+        tryCompare(identity.Accessible, "name", "CodexBar");
     }
 
     function test_standaloneIdentityActivation(data) {
