@@ -12,6 +12,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep popup tab scroll buttons, directional icons, and action labels consistent
+  with tab order in right-to-left layouts.
+
 - Show positive local-history costs below one cent as less than one cent across
   provider summaries, daily/model rows, and chart readouts instead of rounding
   them to zero.

@@ -131,20 +131,50 @@ TestCase {
         tryCompare(tab, "color", appearance.withAlpha(Kirigami.Theme.focusColor, 0.18));
     }
 
-    function test_overflowControlsAndWheelKeepScrollBounded() {
+    function test_overflowControlsAndWheelKeepScrollBounded_data() {
+        return [
+            { tag: "ltr-pointer", mirrored: false, keyboard: false },
+            { tag: "rtl-pointer", mirrored: true, keyboard: false },
+            { tag: "ltr-keyboard", mirrored: false, keyboard: true },
+            { tag: "rtl-keyboard", mirrored: true, keyboard: true }
+        ];
+    }
+
+    function test_overflowControlsAndWheelKeepScrollBounded(data) {
         var host = createStrip();
+        host.mirrored = data.mirrored;
+        waitForPolish(findChild(host, "tab0").parent);
+        wait(0);
+        focusFor(host, 0).forceActiveFocus(Qt.TabFocusReason);
         var viewport = findChild(host, "providerTabsFlickable");
         var previous = findChild(host, "previousTabsButton");
         var next = findChild(host, "nextTabsButton");
         verify(host.tabsOverflow);
         verify(previous.visible && next.visible);
-        verify(previous.x + previous.width <= viewport.x);
-        verify(next.x >= viewport.x + viewport.width);
+        var leftButton = data.mirrored ? next : previous;
+        var rightButton = data.mirrored ? previous : next;
+        verify(leftButton.x + leftButton.width <= viewport.x);
+        verify(rightButton.x >= viewport.x + viewport.width);
+        compare(leftButton.icon.name, "go-previous-symbolic");
+        compare(rightButton.icon.name, "go-next-symbolic");
         verify(!previous.enabled && next.enabled);
-        mouseClick(next);
+        var start = viewport.contentX;
+        if (data.keyboard) {
+            next.forceActiveFocus(Qt.TabFocusReason);
+            keyClick(Qt.Key_Space);
+        } else {
+            mouseClick(next);
+        }
         tryVerify(function () {
-            return viewport.contentX > 0;
+            return data.mirrored ? viewport.contentX < start : viewport.contentX > start;
         });
+        if (data.keyboard) {
+            previous.forceActiveFocus(Qt.TabFocusReason);
+            keyClick(Qt.Key_Space);
+        } else {
+            mouseClick(previous);
+        }
+        tryCompare(viewport, "contentX", start);
         host.scrollTo(0, true);
         mouseWheel(viewport, viewport.width / 2, viewport.height / 2, 0, -120);
         tryVerify(function () {
@@ -152,10 +182,12 @@ TestCase {
         });
         host.scrollBy(100000, true);
         compare(viewport.contentX, viewport.contentWidth - viewport.width);
-        verify(previous.enabled && !next.enabled);
+        compare(previous.enabled, !data.mirrored);
+        compare(next.enabled, data.mirrored);
         host.scrollBy(-100000, true);
         compare(viewport.contentX, 0);
-        verify(!previous.enabled && next.enabled);
+        compare(previous.enabled, data.mirrored);
+        compare(next.enabled, !data.mirrored);
     }
 
     function test_selectionAndResizeRevealTheCurrentTab() {
