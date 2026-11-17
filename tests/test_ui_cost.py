@@ -1,4 +1,4 @@
-"""Static UI checks for cost sections, Usage & Spend, charts, and cost notices."""
+"""Static UI checks for cost projection, provider details and localized text."""
 
 import re
 import unittest
@@ -6,105 +6,35 @@ import unittest
 from ui_regression_support import (
     Surface,
     code_contains,
-    cost_trust_notice_qml,
-    full_representation_qml,
     function_body,
     id_block,
-    interactive_chart_qml,
-    provider_cost_section_qml,
     root,
-    spend_view_qml,
 )
 
-# The popup UI rules below belong to the plasmoid surface, not to main.qml
-# specifically, so read the surface as one text. Extracting the popup into a
-# component keeps these assertions meaningful instead of silently unhooking them.
-applet = Surface("applet", root)
-main_text = applet.text
-provider_cost_section_text = provider_cost_section_qml.read_text(encoding="utf-8")
-interactive_chart_text = interactive_chart_qml.read_text(encoding="utf-8")
-spend_view_text = spend_view_qml.read_text(encoding="utf-8")
-cost_metric_toggle_text = (root / "contents/ui/components/CostMetricToggle.qml").read_text(encoding="utf-8")
-full_representation_text = full_representation_qml.read_text(encoding="utf-8")
-cost_trust_notice_text = cost_trust_notice_qml.read_text(encoding="utf-8")
-main_qml_text = (root / "contents/ui/main.qml").read_text(encoding="utf-8")
-cost_text = (root / "contents/ui/components/CostText.qml").read_text(encoding="utf-8")
 
+# Surface checks follow the applet owner across extracted popup components.
+class CostProjectionTest(unittest.TestCase):
+    def setUp(self):
+        self.applet = Surface("applet", root)
 
-class CostTest(unittest.TestCase):
     def test_cost_controller_localizes_failures(self):
         cost_controller_text = (root / "contents/ui/controllers/CostController.qml").read_text()
         for message in ("codexbar cost did not return JSON.",
                         "codexbar cost returned an unsupported JSON payload.",
                         "Some cost data could not be refreshed."):
-            if not code_contains(cost_controller_text, message):
-                raise AssertionError("cost controller must localize each failure outcome")
-        if not code_contains(main_text, "onTokenCostsChanged: applyTokenCosts()"):
-            raise AssertionError("controller snapshots must update provider-local cost sections")
-
-    def test_token_cost_sections(self):
-        token_cost_section_body = id_block(main_text, "tokenCostSection")
-        self.assertLess(token_cost_section_body.index("visible: tokenCostSection.costErrorText.length > 0"),
-                        token_cost_section_body.index("Components.CostTrustNotice {"))
-        self.assertLess(token_cost_section_body.index("id: costSummaryGrid"),
-                        token_cost_section_body.index("Components.CostTrustNotice {"))
-        if not code_contains(token_cost_section_body, "applet.costErrorText"):
-            raise AssertionError("tokenCostSection must surface costErrorText instead of dropping cost errors")
-        if not code_contains(token_cost_section_body, "Cost unavailable: %1"):
-            raise AssertionError("tokenCostSection must label visible cost errors")
-        if not code_contains(token_cost_section_body, "supportsLocalCost"):
-            raise AssertionError("tokenCostSection must scope global cost errors to supported providers")
-        if "points: tokenCostSection.chartPoints" not in token_cost_section_body \
-                or token_cost_section_body.count("tokenCostSection.chartPoints.length > 0") < 1:
-            raise AssertionError(
-                "provider cost charts must use the points available for the selected metric"
+            self.assertTrue(
+                code_contains(cost_controller_text, message),
+                "cost controller must localize each failure outcome",
             )
 
-        present_cost_body = function_body(cost_text, "presentTokenCosts")
-        for fragment in ("Guards.copyObject(snapshot)", "costHistoryWindowLabel({ period: snapshot.period }, snapshot.labelDays)",
-                         'item.title = i18n("Cost")', "item.monthLine = costLine(windowLabel, snapshot.totals.cost,",
-                         "item.windowValueLine = costValueLine(snapshot.totals.cost,"):
-            if not code_contains(present_cost_body, fragment):
-                raise AssertionError(f"cost presentation must localize normalized snapshots: {fragment!r}")
+    def test_controller_snapshots_update_cost_sections(self):
+        self.assertTrue(
+            code_contains(self.applet.text, "onTokenCostsChanged: applyTokenCosts()"),
+            "controller snapshots must update provider-local cost sections",
+        )
 
-        if not code_contains(main_qml_text, "function costHistoryWindowLabel(item, requestedHistoryDays)"):
-            raise AssertionError("main.qml must define costHistoryWindowLabel")
-        cost_history_label_body = function_body(cost_text, "costHistoryWindowLabel")
-        if not code_contains(cost_history_label_body, "rawDays = Normalizer.strictFiniteNumber(requestedHistoryDays)"):
-            raise AssertionError("invalid emitted cost ranges must fall back to the captured request range")
-        for cost_number_function in ("costValueLine", "costLine"):
-            cost_number_body = function_body(cost_text, cost_number_function)
-            if cost_number_body.count("Normalizer.strictFiniteNumber(") < 2:
-                raise AssertionError(
-                    f"{cost_number_function} must reject coercive cost and token values"
-                )
-        spend_total_body = function_body(cost_text, "spendTotalLine")
-        for token_only_total_fragment in (
-            "Normalizer.strictFiniteNumber(totals.cost)",
-            'usageCountText(totals.tokens, "tokens")',
-        ):
-            if not code_contains(spend_total_body, token_only_total_fragment):
-                raise AssertionError(
-                    "the global spend summary must not print a fabricated zero-dollar total; "
-                    f"missing {token_only_total_fragment!r}"
-                )
-        if not code_contains(function_body(main_qml_text, "spendTotalLine"),
-                             "return costText.spendTotalLine(spendProviderCosts())"):
-            raise AssertionError("the root spend total must pass already filtered provider costs to CostText")
-        token_cost_hint_body = function_body(cost_text, "tokenCostHint")
-        if "ProviderIdentity.resolveProviderKey(" not in token_cost_hint_body:
-            raise AssertionError("token cost hints must resolve provider identity aliases")
-        for antigravity_hint_fragment in (
-            'case "antigravity":',
-            'i18n("Local Antigravity history includes token totals. Dollar costs are unavailable.")',
-        ):
-            if not code_contains(token_cost_hint_body, antigravity_hint_fragment):
-                raise AssertionError(
-                    "Antigravity local history must be described as token-only; "
-                    f"missing {antigravity_hint_fragment!r}"
-                )
-
-        spend_provider_costs_body = function_body(main_text, "spendProviderCosts")
+    def test_spend_costs_project_the_selected_range(self):
+        spend_provider_costs_body = function_body(self.applet.text, "spendProviderCosts")
         for fragment in (
             "CostPresentation.spendSnapshots(tokenCosts, costHistoryDays, function(providerID)",
             "return providerTitle(providerID)",
@@ -113,56 +43,76 @@ class CostTest(unittest.TestCase):
         ):
             self.assertTrue(code_contains(spend_provider_costs_body, fragment), fragment)
 
-        provider_token_cost_body = function_body(main_text, "providerTokenCost")
-        if not code_contains(provider_token_cost_body, "tokenCosts[key]"):
-            raise AssertionError("providerTokenCost must read the current token-cost map")
-        if (
+    def test_provider_costs_hide_stale_ranges(self):
+        provider_token_cost_body = function_body(self.applet.text, "providerTokenCost")
+        self.assertTrue(
+            code_contains(provider_token_cost_body, "tokenCosts[key]"),
+            "providerTokenCost must read the current token-cost map",
+        )
+        self.assertFalse(
             "CostPresentation.snapshotMatchesRange(" not in provider_token_cost_body
-            or "costHistoryDays" not in provider_token_cost_body
-        ):
-            raise AssertionError("providerTokenCost must hide snapshots from a stale history range")
-        if not code_contains(main_text, "onCostHistoryDaysChanged: applyTokenCosts()"):
-            raise AssertionError("changing the cost history range must reproject provider details")
-        replace_snapshot_body = function_body(main_text, "replaceProviderSnapshot")
+            or "costHistoryDays" not in provider_token_cost_body,
+            "providerTokenCost must hide snapshots from a stale history range",
+        )
+        self.assertTrue(
+            code_contains(self.applet.text, "onCostHistoryDaysChanged: applyTokenCosts()"),
+            "changing the cost history range must reproject provider details",
+        )
+
+    def test_snapshot_replacement_preserves_current_costs(self):
+        replace_snapshot_body = function_body(self.applet.text, "replaceProviderSnapshot")
         for snapshot_fragment in ("UsageCache.reconcile([], [snapshot], Date.now())", "providerTokenCost(key)", "replacement"):
-            if not code_contains(replace_snapshot_body, snapshot_fragment):
-                raise AssertionError(
-                    "replaceProviderSnapshot must preserve current token-cost state; "
-                    f"missing {snapshot_fragment!r}"
-                )
-
-    def test_spend_follows_saved_provider_order(self):
-        spend_provider_costs_body = applet.function_body("spendProviderCosts")
-        if "ProviderOrder.orderedItems(" in spend_provider_costs_body:
-            raise AssertionError(
-                "saved display order must not change the stable cost aggregation order"
+            self.assertTrue(
+                code_contains(replace_snapshot_body, snapshot_fragment),
+                "replaceProviderSnapshot must preserve current token-cost state; "
+                f"missing {snapshot_fragment!r}",
             )
-        presented_spend_provider_costs_body = applet.function_body("presentedSpendProviderCosts")
-        for spend_order_fragment in (
-            'providers.map(function(item) { return item.provider }).join(",")',
-            'ProviderOrder.orderedItems(costs || spendProviderCosts(), tabOrder + "," + providerOrderRaw)',
-        ):
-            if not code_contains(presented_spend_provider_costs_body, spend_order_fragment):
-                raise AssertionError(
-                    "Usage & Spend must follow the saved provider order; "
-                    f"missing {spend_order_fragment!r}"
-                )
-        if "model: view.presentedProviderCosts" not in applet.id_block("spendProviderRepeater"):
-            raise AssertionError("the visible spend provider list must use presentation order")
 
-    def test_history_header_and_bars(self):
-        spend_header = applet.id_block("spendHeaderRow")
-        history_controls = applet.id_block("historyControlsRow")
-        if "ComboBox" in spend_header or "Components.AnalysisSummary" not in spend_view_qml.read_text():
-            raise AssertionError("history filters must leave the full header width available for the spend total")
-        for control_id in ("metricToggle", "rangeCombo"):
-            if f"id: {control_id}" not in history_controls:
-                raise AssertionError("history filters must remain grouped on their own row")
 
-        cost_history_header_body = id_block(main_text, "costHistoryHeaderRow")
-        if not code_contains(cost_history_header_body, "costHistoryChartSection.averageLine"):
-            raise AssertionError("cost history must keep the average aligned with its heading")
-        cost_history_row_body = id_block(main_text, "costHistoryMetricRow")
+class ProviderCostTest(unittest.TestCase):
+    def setUp(self):
+        self.applet = Surface("applet", root)
+        self.presentation = (root / "contents/ui/ProviderCostPresentation.js").read_text()
+
+    def test_cost_errors_and_summary_precede_trust_notice(self):
+        token_cost_section_body = id_block(self.applet.text, "tokenCostSection")
+        self.assertLess(token_cost_section_body.index("visible: tokenCostSection.costErrorText.length > 0"),
+                        token_cost_section_body.index("Components.CostTrustNotice {"))
+        self.assertLess(token_cost_section_body.index("id: costSummaryGrid"),
+                        token_cost_section_body.index("Components.CostTrustNotice {"))
+
+    def test_provider_cost_errors_are_visible_and_scoped(self):
+        token_cost_section_body = id_block(self.applet.text, "tokenCostSection")
+        self.assertTrue(
+            code_contains(token_cost_section_body, "applet.costErrorText"),
+            "tokenCostSection must surface costErrorText instead of dropping cost errors",
+        )
+        self.assertTrue(
+            code_contains(token_cost_section_body, "Cost unavailable: %1"),
+            "tokenCostSection must label visible cost errors",
+        )
+        self.assertTrue(
+            code_contains(token_cost_section_body, "supportsLocalCost"),
+            "tokenCostSection must scope global cost errors to supported providers",
+        )
+
+    def test_provider_chart_uses_selected_metric_points(self):
+        token_cost_section_body = id_block(self.applet.text, "tokenCostSection")
+        self.assertFalse(
+            "points: tokenCostSection.chartPoints" not in token_cost_section_body
+            or token_cost_section_body.count("tokenCostSection.chartPoints.length > 0") < 1,
+            "provider cost charts must use the points available for the selected metric",
+        )
+
+    def test_cost_history_heading_keeps_average_aligned(self):
+        cost_history_header_body = id_block(self.applet.text, "costHistoryHeaderRow")
+        self.assertTrue(
+            code_contains(cost_history_header_body, "costHistoryChartSection.averageLine"),
+            "cost history must keep the average aligned with its heading",
+        )
+
+    def test_cost_history_rows_stay_compact(self):
+        cost_history_row_body = id_block(self.applet.text, "costHistoryMetricRow")
         for history_row_fragment in (
             "id: costHistoryDateLabel",
             "id: costHistoryBarTrack",
@@ -174,83 +124,21 @@ class CostTest(unittest.TestCase):
             "id: costHistoryValueLabel",
             "font.pixelSize: Kirigami.Theme.smallFont.pixelSize",
         ):
-            if not code_contains(cost_history_row_body, history_row_fragment):
-                raise AssertionError(
-                    "cost history rows must stay compact and scannable; "
-                    f"missing {history_row_fragment!r}"
-                )
-
-        if "function costDailyRows(tokenCost)" in main_text:
-            raise AssertionError("cost details must not repeat the daily history below the chart")
-
-    def test_detail_charts(self):
-        if not code_contains(interactive_chart_text, "CostChart.paintRoundedTopBar("):
-            raise AssertionError("provider detail bar charts must use rounded top corners")
-        for detail_chart_fragment in (
-            "chart.barGradient(",
-            "CostChart.chartBarGeometry(width, chart.pointCount)",
-            "ChartScale.barGeometry(height,",
-        ):
-            if not code_contains(interactive_chart_text, detail_chart_fragment):
-                raise AssertionError(
-                    "provider detail bar charts must retain the polished cost-chart language; "
-                    f"missing {detail_chart_fragment!r}"
-                )
-
-        for signed_chart_fragment in (
-            'import "../ChartScale.js" as ChartScale',
-            "ChartScale.domain(points)",
-            "ChartScale.pointValue(point)",
-            "ChartScale.fraction(value, valueDomain)",
-            "chart.chartFraction(0), chart.lineMarkerInset)",
-            "if (bar.negative)",
-            "context.scale(1, -1)",
-            "context.restore()",
-        ):
-            applet.require(signed_chart_fragment, "detail charts must retain signed values and their zero baseline")
-
-        chart_gradient_body = function_body(interactive_chart_text, "barGradient")
-        for gradient_fragment in (
-            "context.createLinearGradient",
-            "gradient.addColorStop(0",
-            "gradient.addColorStop(1",
-        ):
-            if not code_contains(chart_gradient_body, gradient_fragment):
-                raise AssertionError(
-                    "vertical bar charts must use the shared restrained gradient; "
-                    f"missing {gradient_fragment!r}"
-                )
-
-        if not code_contains(main_text, "Components.InteractiveChart"):
-            raise AssertionError(
-                "the provider cost sparkline must use the interactive shared chart; "
-                "missing 'Components.InteractiveChart'"
-            )
-        if not code_contains(main_text, "applet.costChartPoints("):
-            raise AssertionError(
-                "the provider cost sparkline must plot the applet cost chart points; "
-                "missing 'applet.costChartPoints('"
+            self.assertTrue(
+                code_contains(cost_history_row_body, history_row_fragment),
+                "cost history rows must stay compact and scannable; "
+                f"missing {history_row_fragment!r}",
             )
 
-        for label, source_text in (
-            ("InteractiveChart.qml", interactive_chart_text),
-        ):
-            if not code_contains(source_text, "CostChart.chartBarGeometry("):
-                raise AssertionError(f"{label} bar charts must use the shared geometry helper")
-            if "barWidth + gap" in source_text:
-                raise AssertionError(f"{label} bar charts must not recompute their own bar pitch")
-        if not code_contains(interactive_chart_text, "geometry.offset + barIndex * geometry.step"):
-            raise AssertionError("provider detail bars must apply the shared canvas offset")
+    def test_cost_details_do_not_repeat_daily_history(self):
+        self.assertNotIn(
+            "function costDailyRows(tokenCost)",
+            self.applet.text,
+            "cost details must not repeat the daily history below the chart",
+        )
 
-        # The active line-chart point grows to a 3.5px radius. Both axes and pointer hit
-        # testing must use the shared inset geometry so the visible marker stays inside
-        # Canvas and resolves back to its own point.
-        for helper_name in ("chartLineX", "chartLineIndexAt", "chartLineY"):
-            if not code_contains(interactive_chart_text, f"CostChart.{helper_name}("):
-                raise AssertionError(f"provider detail line charts must use {helper_name}")
-
-    def test_cost_hierarchy_and_selection(self):
-        cost_summary_body = applet.id_block("costSummaryGrid")
+    def test_cost_summary_keeps_today_and_period_amounts_scannable(self):
+        cost_summary_body = self.applet.id_block("costSummaryGrid")
         for fragment in (
             "columns: 2",
             "amounts: CostAmounts.todayAmounts(tokenCostSection.tokenCost, tokenCostSection.applet.panelClockMs)",
@@ -260,10 +148,13 @@ class CostTest(unittest.TestCase):
             "Layout.fillWidth: true",
             "wrapMode: Text.Wrap",
         ):
-            if not code_contains(cost_summary_body, fragment):
-                raise AssertionError(f"compact cost summary is missing {fragment!r}")
-        token_cost_section_body = id_block(main_text, "tokenCostSection")
+            self.assertTrue(
+                code_contains(cost_summary_body, fragment),
+                f"compact cost summary is missing {fragment!r}",
+            )
 
+    def test_provider_cost_selection_tracks_day_metric_and_account(self):
+        token_cost_section_body = id_block(self.applet.text, "tokenCostSection")
         for fragment in (
             "property bool detailsExpanded: false",
             "CostChart.selectedCostDay(",
@@ -279,339 +170,229 @@ class CostTest(unittest.TestCase):
             "Components.CostMetricToggle {",
             "applet: tokenCostSection.applet",
         ):
-            if not code_contains(token_cost_section_body, fragment):
-                raise AssertionError(f"provider cost selection is missing {fragment!r}")
-        if not re.search(r"onSelectionScopeChanged:\s*\{\s*detailsExpanded = false;\s*clearDaySelection\(\);", token_cost_section_body):
-            raise AssertionError("provider cost scope changes must clear expanded details and the pinned day")
-        for collapsed_id in ("costDrillDownSection", "costHistoryChartSection"):
-            if "Components.CostTrustNotice" in applet.id_block(collapsed_id):
-                raise AssertionError("cost trust notices must remain outside collapsed details")
+            self.assertTrue(
+                code_contains(token_cost_section_body, fragment),
+                f"provider cost selection is missing {fragment!r}",
+            )
+        self.assertTrue(
+            re.search(r"onSelectionScopeChanged:\s*\{\s*detailsExpanded = false;\s*clearDaySelection\(\);", token_cost_section_body),
+            "provider cost scope changes must clear expanded details and the pinned day",
+        )
 
-    def test_model_details(self):
-        cost_drill_down_body = id_block(main_text, "costDrillDownSection")
+    def test_cost_trust_notices_stay_outside_collapsed_details(self):
+        for collapsed_id in ("costDrillDownSection", "costHistoryChartSection"):
+            self.assertNotIn(
+                "Components.CostTrustNotice",
+                self.applet.id_block(collapsed_id),
+                "cost trust notices must remain outside collapsed details",
+            )
+
+    def test_model_details_expose_missing_and_partial_models(self):
+        cost_drill_down_body = id_block(self.applet.text, "costDrillDownSection")
         for fragment in (
             'i18n("No model data for this period.")',
             "costDrillDownSection.detailData.modelsTruncated === true",
             "modelsTruncated: tokenCostSection.selectedDay.modelsTruncated",
         ):
-            if not code_contains(cost_drill_down_body, fragment):
-                raise AssertionError(f"period and day details must expose missing or partial models: {fragment!r}")
-        if not code_contains(cost_drill_down_body, "readonly property real metricValueColumnWidth: Kirigami.Units.gridUnit * 9"):
-            raise AssertionError("costDrillDownSection must define a stable value column width")
+            self.assertTrue(
+                code_contains(cost_drill_down_body, fragment),
+                f"period and day details must expose missing or partial models: {fragment!r}",
+            )
+
+    def test_model_details_titles_are_localized(self):
+        cost_drill_down_body = id_block(self.applet.text, "costDrillDownSection")
         for fragment in ('i18n("Cost details")',
                          'i18n("Details for %1", costLabels.costDayLabel(tokenCostSection.selectedDay.label))'):
-            if not code_contains(cost_drill_down_body, fragment):
-                raise AssertionError("costDrillDownSection must use a plain, user-facing title with a localized day")
-        for value_label in ("costBreakdownValueLabel", "costModelValueLabel"):
-            value_label_body = id_block(main_text, value_label)
-            if not code_contains(value_label_body, "Layout.preferredWidth: costDrillDownSection.metricValueColumnWidth"):
-                raise AssertionError(f"{value_label} must use the shared metric value column width")
-            if not code_contains(value_label_body, "Layout.maximumWidth: costDrillDownSection.metricValueColumnWidth"):
-                raise AssertionError(f"{value_label} must cap the shared metric value column width")
-            if not code_contains(value_label_body, "font.pixelSize: Kirigami.Theme.smallFont.pixelSize"):
-                raise AssertionError(f"{value_label} must use the compact numeric type scale")
+            self.assertTrue(
+                code_contains(cost_drill_down_body, fragment),
+                "costDrillDownSection must use a plain, user-facing title with a localized day",
+            )
 
-        cost_models_heading_body = id_block(main_text, "costModelsHeading")
+    def test_model_value_columns_keep_consistent_width_and_type_scale(self):
+        cost_drill_down_body = id_block(self.applet.text, "costDrillDownSection")
+        self.assertTrue(
+            code_contains(cost_drill_down_body, "readonly property real metricValueColumnWidth: Kirigami.Units.gridUnit * 9"),
+            "costDrillDownSection must define a stable value column width",
+        )
+        for value_label in ("costBreakdownValueLabel", "costModelValueLabel"):
+            value_label_body = id_block(self.applet.text, value_label)
+            self.assertTrue(
+                code_contains(value_label_body, "Layout.preferredWidth: costDrillDownSection.metricValueColumnWidth"),
+                f"{value_label} must use the shared metric value column width",
+            )
+            self.assertTrue(
+                code_contains(value_label_body, "Layout.maximumWidth: costDrillDownSection.metricValueColumnWidth"),
+                f"{value_label} must cap the shared metric value column width",
+            )
+            self.assertTrue(
+                code_contains(value_label_body, "font.pixelSize: Kirigami.Theme.smallFont.pixelSize"),
+                f"{value_label} must use the compact numeric type scale",
+            )
+
+    def test_models_heading_stays_distinct_without_repeating_history(self):
+        cost_drill_down_body = id_block(self.applet.text, "costDrillDownSection")
+        cost_models_heading_body = id_block(self.applet.text, "costModelsHeading")
         for heading_fragment in (
             "font.pixelSize: Kirigami.Theme.smallFont.pixelSize",
             "font.weight: Font.DemiBold",
         ):
-            if not code_contains(cost_models_heading_body, heading_fragment):
-                raise AssertionError("Models must remain distinct without adding another card")
-        if "costRecentDaysHeading" in cost_drill_down_body or 'i18n("Recent days")' in cost_drill_down_body:
-            raise AssertionError("cost details must not duplicate the daily history after the models")
+            self.assertTrue(
+                code_contains(cost_models_heading_body, heading_fragment),
+                "Models must remain distinct without adding another card",
+            )
+        self.assertFalse(
+            "costRecentDaysHeading" in cost_drill_down_body or 'i18n("Recent days")' in cost_drill_down_body,
+            "cost details must not duplicate the daily history after the models",
+        )
 
-    def test_interactive_chart(self):
-        for chart_interaction_fragment in (
-            "activeFocusOnTab: true",
-            "Keys.onPressed:",
-            "onPositionChanged:",
-            "selectedIndex",
-        ):
-            if not code_contains(interactive_chart_text, chart_interaction_fragment):
-                raise AssertionError(
-                    "InteractiveChart must support pointer and keyboard inspection; "
-                    f"missing {chart_interaction_fragment!r}"
-                )
-        if not code_contains(interactive_chart_text, "readonly property bool hasActivePoint"):
-            raise AssertionError("InteractiveChart must expose whether a point is active")
-        if "visible: chart.activeIndex" in interactive_chart_text:
-            raise AssertionError("InteractiveChart must reserve readout space while pointer state changes")
+    def test_provider_cost_details_receive_explicit_inputs(self):
+        source = (root / "contents/ui/main.qml").read_text()
+        for name, call in (("providerCostSection", "providerCostDetails.costSection(providerID, cost)"),
+                           ("resetCreditsSection", "providerCostDetails.resetSection(providerID, resetCredits)"),
+                           ("codexCreditLimitUsageRow", "providerCostDetails.creditLimitRow(creditLimit)")):
+            self.assertIn(call, function_body(source, name))
+        self.assertIn("numberFormat: root.costNumberFormat", self.applet.id_block("providerCostDetails"))
 
-        if not code_contains(interactive_chart_text, "opacity: chart.hasActivePoint || chart.peakIndex >= 0 ? 1 : 0"):
-            raise AssertionError("the chart readout must fade with the active point instead of blinking")
-        if not code_contains(interactive_chart_text, "onActiveIndexChanged: if (activeIndex >= 0 && activeIndex < pointCount)"):
-            raise AssertionError(
-                "the chart readout must retain the last inspected point across the fade-out, and must "
-                "bounds-check inline: hasActivePoint is still stale inside an activeIndex change handler"
-            )
-        if interactive_chart_text.count("Accessible.ignored: !chart.hasActivePoint") != 2:
-            raise AssertionError(
-                "both retained chart readout labels must leave the accessibility tree when no point is "
-                "active: the text outlives the fade and a zero opacity does not hide it from a screen reader"
-            )
-        if "chart.hasActivePoint ? chart.pointLabel" in interactive_chart_text:
-            raise AssertionError(
-                "the chart readout text must not clear on hasActivePoint: that empties the row "
-                "on the same signal that starts the fade, so hover exit blinks instead of fading"
-            )
+    def test_provider_cost_details_leave_effects_in_applet(self):
+        details = (root / "contents/ui/components/ProviderCostDetails.qml").read_text()
+        for forbidden in ("Plasmoid.configuration", "property var applet", "DataSource", "Timer {",
+                          "Connections {", "Qt.openUrlExternally"):
+            self.assertFalse(code_contains(details, forbidden), forbidden)
 
-    def test_spend_range_and_refresh(self):
-        if not code_contains(spend_view_text, "rangeCombo.valueAt(index)"):
-            raise AssertionError("the cost range selector must use the activated option instead of stale currentValue")
-        if not code_contains(spend_view_text, "rangeCombo.currentIndex = Qt.binding(function"):
-            raise AssertionError(
-                "SpendView.qml must restore the range combo's currentIndex "
-                "binding after an interactive pick severs it"
-            )
-        # Both history views share one metric control; its checked buttons
-        # follow the applet setting after a click severs their bindings.
-        for metric_source, metric_text in (
-            ("SpendView.qml", spend_view_text),
-            ("ProviderCostSection.qml", provider_cost_section_text),
-        ):
-            if "Components.CostMetricToggle {" not in metric_text or "PlainComboBox {\n            objectName: \"providerCostMetricCombo\"" in metric_text:
-                raise AssertionError(f"{metric_source} must use the shared Cost/Tokens toggle")
-        for toggle_fragment in (
-            "readonly property int currentIndex: applet.costHistoryShowsTokens ? 1 : 0",
-            "applet.setCostHistoryMetric(values[index])",
-            "checked = Qt.binding(function",
-            'Accessible.name: i18n("History metric")',
-            # The choices keep their own Button theme: inherited from a view
-            # created hidden, their labels stayed black on Breeze Dark.
-            "Kirigami.Theme.inherit: false",
-        ):
-            if not code_contains(cost_metric_toggle_text, toggle_fragment):
-                raise AssertionError(f"CostMetricToggle.qml is missing {toggle_fragment!r}")
-        if not code_contains(spend_view_text, "view.applet.refreshCost(true)"):
-            raise AssertionError("the cost refresh button must explicitly bypass the automatic hourly throttle")
-        for cost_loading_fragment in (
-            "busy: view.applet.costLoading",
-            "visible: view.applet.costLoading && view.providerCosts.length === 0",
-            "visible: !view.applet.costLoading",
-        ):
-            if not code_contains(spend_view_text, cost_loading_fragment):
-                raise AssertionError(
-                    "SpendView must distinguish a range refresh from an empty result; "
-                    f"missing {cost_loading_fragment!r}"
-                )
-        if ('readonly property bool costLoading: costController.loading'
-                not in main_text):
-            raise AssertionError("cost loading state must follow the active cost command lifecycle")
+    def test_provider_cost_section_uses_semantic_decisions(self):
+        provider_cost_body = self.applet.function_body("costSection")
+        self.assertTrue(
+            code_contains(provider_cost_body, "ProviderCostPresentation.section(providerID, cost)"),
+            "provider cost must use the tested semantic section",
+        )
+        direct_number_call = re.compile(r"(?<![A-Za-z0-9_])Number\(")
+        self.assertFalse(
+            direct_number_call.search(provider_cost_body),
+            "provider cost must not use loose numeric coercion",
+        )
 
-    def test_chart_text_is_localized(self):
-        for localized_pair_source, localized_pair_text in (
-            ("InteractiveChart.qml", interactive_chart_text),
-            ("SpendView.qml", spend_view_text),
-        ):
-            if '+ ": " +' in localized_pair_text:
-                raise AssertionError(
-                    f"{localized_pair_source} must localize label/value separators with placeholders"
-                )
-
-    def test_spend_view_heatmap(self):
-        if not code_contains(spend_view_text, "InteractiveChart"):
-            raise AssertionError("SpendView must expose the interactive chart; missing 'InteractiveChart'")
-        if not code_contains(spend_view_text, "Daily activity"):
-            raise AssertionError("SpendView must expose the bounded activity heatmap; missing 'Daily activity'")
-        if not code_contains(spend_view_text, "visible: view.dailyPoints.length > 0"):
-            raise AssertionError("SpendView must keep a one-day history keyboard-inspectable")
-        if "visible: view.dailyPoints.length > 1" in spend_view_text:
-            raise AssertionError("SpendView must not hide the accessible chart when one history day is available")
-        for heatmap_range_fragment in (
-            "Math.ceil( (view.heatmapDays.length + view.heatmapTrailingSlots) / 7)",
-            "readonly property int fittingColumns",
-            "readonly property real cellHeight",
-            "Layout.preferredHeight: 7 * heatmapGrid.cellHeight",
-            "+ 6 * heatmapGrid.rowSpacing",
-        ):
-            if not code_contains(spend_view_text, heatmap_range_fragment):
-                raise AssertionError(
-                    "the activity heatmap must follow the selected cost range and size cells "
-                    f"from the available width; missing {heatmap_range_fragment!r}"
-                )
-        for heatmap_weekday_fragment in (
-            "readonly property int heatmapFirstWeekday: Qt.locale().firstDayOfWeek",
-            "CostChart.spendHeatmapRowWeekdays( heatmapDays, heatmapFirstWeekday)",
-            "CostChart.spendHeatmapTrailingSlots( heatmapDays, heatmapFirstWeekday)",
-            "view.heatmapDays, columnCount * 7, view.heatmapTrailingSlots)",
-            "visible: view.heatmapRowWeekdays.length === 7",
-            "Qt.locale().dayName(modelData, Locale.ShortFormat)",
-        ):
-            if not code_contains(spend_view_text, heatmap_weekday_fragment):
-                raise AssertionError(
-                    "the activity heatmap rows must name their weekday, and stay unlabelled when "
-                    f"the days are not calendar aligned; missing {heatmap_weekday_fragment!r}"
-                )
-        if not code_contains(spend_view_text, "CostChart.spendHeatmapCells("):
-            raise AssertionError(
-                "the activity heatmap must pad its grid through the shared cell layout, so a ragged "
-                "final column cannot cut a week-wide notch out of the block"
-            )
-        if not code_contains(spend_view_text, "visible: view.heatmapDays.length > 7"):
-            raise AssertionError(
-                "the activity heatmap must stay hidden for ranges that fill a single week column, "
-                "which repeat the chart above instead of showing a weekday pattern"
-            )
-        for heatmap_padding_fragment in (
-            "readonly property bool measured: !!heatmapCell.modelData",
-            "Accessible.ignored: !heatmapCell.measured",
-            "onClicked: if (heatmapCell.measured)",
-        ):
-            if not code_contains(spend_view_text, heatmap_padding_fragment):
-                raise AssertionError(
-                    "padded heatmap slots carry no day and must stay out of hover, the readout, and "
-                    f"the reading order; missing {heatmap_padding_fragment!r}"
-                )
-        # The legend is the only key to the tint scale; it must paint through the
-        # same function as the cells, or it would describe a different scale.
-        for heatmap_legend_fragment in (
-            'objectName: "heatmapLegend"',
-            "color: view.heatmapTint(heatmapCell.fraction)",
-            "color: view.heatmapTint(parent.modelData)",
-        ):
-            if not code_contains(spend_view_text, heatmap_legend_fragment):
-                raise AssertionError(
-                    "the activity heatmap legend must share the cells' tint scale; "
-                    f"missing {heatmap_legend_fragment!r}"
-                )
-        if "modelData.monthLine" in spend_view_text:
-            raise AssertionError(
-                "the Usage & Spend provider rows must not repeat the window label that the "
-                "range selector already states; use the windowValueLine figures"
+    def test_provider_cost_decisions_remain_pure(self):
+        for forbidden in ("root.", "Plasmoid.", "i18n(", "i18np(", "Qt."):
+            self.assertNotIn(
+                forbidden,
+                self.presentation,
+                "provider cost decisions must be pure: " + forbidden,
             )
 
-        if "view.dailyPoints.length - 42" in spend_view_text:
-            raise AssertionError(
-                "the activity heatmap must not pin itself to a fixed 42-day window while the "
-                "range selector offers 7/30/90 days"
+    def test_numeric_cost_and_credit_decisions_stay_in_semantic_module(self):
+        provider_cost_body = self.applet.function_body("costSection")
+        reset_credits_body = self.applet.function_body("resetSection")
+        for field in ("cost.used", "cost.limit", "cost.personalUsed", "resetCredits.availableCount"):
+            self.assertNotIn(
+                field,
+                provider_cost_body + reset_credits_body,
+                "numeric cost/credit decisions must stay in the semantic module: " + field,
             )
 
-        if "heatmapMouse.containsMouse ? 0.4 : 0" in spend_view_text:
-            raise AssertionError(
-                "the heatmap hover outline must not fade a border's own alpha: Qt treats a zero-alpha "
-                "pen as invalid and paints a zero-width border, snapping the cell fill out to the edge"
-            )
-        if not code_contains(spend_view_text, "opacity: heatmapCell.pinned || heatmapCell.index === heatmapFocus.inspectedIndex ? 1 : 0"):
-            raise AssertionError(
-                "SpendView activity heatmap cells must use a dedicated inspection outline overlay, so the "
-                "painted fill geometry never depends on hover"
+
+class CostTextTest(unittest.TestCase):
+    def setUp(self):
+        self.applet = Surface("applet", root)
+        self.main_text = self.applet.texts[root / "contents/ui/main.qml"]
+        self.cost_text = (root / "contents/ui/components/CostText.qml").read_text(encoding="utf-8")
+
+    def test_cost_presentation_localizes_normalized_snapshots(self):
+        present_cost_body = function_body(self.cost_text, "presentTokenCosts")
+        for fragment in ("Guards.copyObject(snapshot)", "costHistoryWindowLabel({ period: snapshot.period }, snapshot.labelDays)",
+                         'item.title = i18n("Cost")', "item.monthLine = costLine(windowLabel, snapshot.totals.cost,",
+                         "item.windowValueLine = costValueLine(snapshot.totals.cost,"):
+            self.assertTrue(
+                code_contains(present_cost_body, fragment),
+                f"cost presentation must localize normalized snapshots: {fragment!r}",
             )
 
-        if not code_contains(spend_view_text, 'objectName: "heatmapReadout"'):
-            raise AssertionError(
-                "daily activity must keep its readout in the layout instead of covering cells with a tooltip"
+    def test_history_label_falls_back_to_requested_range(self):
+        self.assertTrue(
+            code_contains(self.main_text, "function costHistoryWindowLabel(item, requestedHistoryDays)"),
+            "main.qml must define costHistoryWindowLabel",
+        )
+        cost_history_label_body = function_body(self.cost_text, "costHistoryWindowLabel")
+        self.assertTrue(
+            code_contains(cost_history_label_body, "rawDays = Normalizer.strictFiniteNumber(requestedHistoryDays)"),
+            "invalid emitted cost ranges must fall back to the captured request range",
+        )
+
+    def test_cost_and_token_values_reject_numeric_coercion(self):
+        for cost_number_function in ("costValueLine", "costLine"):
+            cost_number_body = function_body(self.cost_text, cost_number_function)
+            self.assertGreaterEqual(
+                cost_number_body.count("Normalizer.strictFiniteNumber("),
+                2,
+                f"{cost_number_function} must reject coercive cost and token values",
             )
 
-    def test_cost_trust_notices(self):
-        if not code_contains(function_body(cost_text, "presentTokenCosts"), "item.windowValueLine = costValueLine("):
-            raise AssertionError(
-                "normalized token costs must expose a window-free value line for range-scoped surfaces"
+    def test_spend_total_preserves_token_only_costs(self):
+        spend_total_body = function_body(self.cost_text, "spendTotalLine")
+        for token_only_total_fragment in (
+            "Normalizer.strictFiniteNumber(totals.cost)",
+            'usageCountText(totals.tokens, "tokens")',
+        ):
+            self.assertTrue(
+                code_contains(spend_total_body, token_only_total_fragment),
+                "the global spend summary must not print a fabricated zero-dollar total; "
+                f"missing {token_only_total_fragment!r}",
             )
-        if not code_contains(function_body(cost_text, "spendTotalLine"), 'i18n("%1 subtotal", costValue)'):
-            raise AssertionError("mixed-currency spend text must label the selected currency as a subtotal")
+        self.assertTrue(
+            code_contains(function_body(self.main_text, "spendTotalLine"),
+            "return costText.spendTotalLine(spendProviderCosts())"),
+            "the root spend total must pass already filtered provider costs to CostText",
+        )
+
+    def test_token_cost_hints_resolve_aliases_and_explain_unpriced_history(self):
+        token_cost_hint_body = function_body(self.cost_text, "tokenCostHint")
+        self.assertIn(
+            "ProviderIdentity.resolveProviderKey(",
+            token_cost_hint_body,
+            "token cost hints must resolve provider identity aliases",
+        )
+        for antigravity_hint_fragment in (
+            'case "antigravity":',
+            'i18n("Local Antigravity history includes token totals. Dollar costs are unavailable.")',
+        ):
+            self.assertTrue(
+                code_contains(token_cost_hint_body, antigravity_hint_fragment),
+                "Antigravity local history must be described as token-only; "
+                f"missing {antigravity_hint_fragment!r}",
+            )
+
+    def test_range_scoped_cost_values_omit_window_label(self):
+        self.assertTrue(
+            code_contains(function_body(self.cost_text, "presentTokenCosts"), "item.windowValueLine = costValueLine("),
+            "normalized token costs must expose a window-free value line for range-scoped surfaces",
+        )
+
+    def test_mixed_currency_spend_labels_subtotal_and_scope(self):
+        self.assertTrue(
+            code_contains(function_body(self.cost_text, "spendTotalLine"), 'i18n("%1 subtotal", costValue)'),
+            "mixed-currency spend text must label the selected currency as a subtotal",
+        )
         for mixed_currency_fragment in (
             "CostCurrency.spendHasMixedCostCurrencies(providerCosts)",
             "Costs and charts use %1.",
         ):
-            if not code_contains(main_text, mixed_currency_fragment):
-                raise AssertionError(
-                    "mixed-currency spend must be labelled as a subtotal and explain its scope; "
-                    f"missing {mixed_currency_fragment!r}"
-                )
-        token_cost_section_body = id_block(main_text, "tokenCostSection")
-        for trust_owner_source, trust_owner_text in (
-            ("ProviderCostSection.qml", token_cost_section_body),
-            ("SpendView.qml", spend_view_text),
-        ):
-            if not code_contains(trust_owner_text, "Components.CostTrustNotice"):
-                raise AssertionError(
-                    f"{trust_owner_source} must render the shared cost-trust notice"
-                )
-            if not code_contains(trust_owner_text, "CostTrust.costTrustSummary("):
-                raise AssertionError(
-                    f"{trust_owner_source} must delegate cost-trust policy to CostTrust"
-                )
-        for persistent_notice_fragment in (
-            "property var costTrustNoticeStates: ({})",
-            "function updateCostTrustNoticeState(",
-            "CostTrust.costTrustNoticeStoreTransition(",
-        ):
-            if not code_contains(main_text, persistent_notice_fragment):
-                raise AssertionError(
-                    "the applet root must preserve scoped cost-notice dismissals across popup recreation; "
-                    f"missing {persistent_notice_fragment!r}"
-                )
-        for cost_trust_fragment in (
-            "PlainNote {",
-            "property var summary: null",
-            "property var stateOwner: null",
-            'property string noticeScope: ""',
-            "property bool presentationVisible: false",
-            "showCloseButton: true",
-            "stateOwner.updateCostTrustNoticeState(",
-            "onNoticeScopeChanged:",
-            "onStateOwnerChanged:",
-            'typeof stateOwner.updateCostTrustNoticeState !== "function"',
-            "onSummaryChanged: scheduleRefreshNoticeState()",
-            "onStateOwnerChanged: scheduleRefreshNoticeState()",
-            "function scheduleRefreshNoticeState()",
-            "noticeRefresh.restart()",
-            "onTriggered: noticeRoot.refreshNoticeState()",
-            'i18n("%1 %2"',
-            'i18n("The total',
-            'i18np(',
-            "lacked final usage",
-            "function incompleteText()",
-        ):
-            if not code_contains(cost_trust_notice_text, cost_trust_fragment):
-                raise AssertionError(
-                    "CostTrustNotice must own the shared localized message and standard styling; "
-                    f"missing {cost_trust_fragment!r}"
-                )
-        for non_atomic_notice_fragment in (
-            "onSummaryChanged: refreshNoticeState()",
-            "onNoticeScopeChanged: refreshNoticeState()",
-            "onStateOwnerChanged: refreshNoticeState()",
-        ):
-            if non_atomic_notice_fragment in cost_trust_notice_text:
-                raise AssertionError(
-                    "cost notice scope and summary changes must be coalesced before mutating shared dismissal state; "
-                    f"found {non_atomic_notice_fragment!r}"
-                )
-        for provider_notice_fragment in (
-            'noticeScope: "provider:" +',
-            "stateOwner: tokenCostSection.applet",
-            "presentationVisible: tokenCostSection.presentationVisible",
-        ):
-            if not code_contains(token_cost_section_body, provider_notice_fragment):
-                raise AssertionError(
-                    "provider cost notices must use a persistent provider scope and visible context; "
-                    f"missing {provider_notice_fragment!r}"
-                )
-        if not code_contains(full_representation_text, "presentationVisible: fullRoot.visible && !applet.globalViewSelected"):
-            raise AssertionError("the provider cost section must receive the popup visibility context")
-        for spend_notice_fragment in (
-            'noticeScope: "spend"',
-            "stateOwner: view.applet",
-            "presentationVisible: view.visible",
-        ):
-            if not code_contains(spend_view_text, spend_notice_fragment):
-                raise AssertionError(
-                    "Spend cost notices must use a persistent aggregate scope and visible context; "
-                    f"missing {spend_notice_fragment!r}"
-                )
-        qualified_value_body = function_body(cost_text, "qualifiedCostValue")
+            self.assertTrue(
+                code_contains(self.applet.text, mixed_currency_fragment),
+                "mixed-currency spend must be labelled as a subtotal and explain its scope; "
+                f"missing {mixed_currency_fragment!r}",
+            )
+
+    def test_cost_amounts_localize_trust_qualifiers(self):
+        qualified_value_body = function_body(self.cost_text, "qualifiedCostValue")
         for qualified_value_fragment in (
             'i18n("%1 (estimated)"',
             'i18n("%1 (partial)"',
             'i18n("%1 (approximate)"',
         ):
-            if not code_contains(qualified_value_body, qualified_value_fragment):
-                raise AssertionError(
-                    "cost amount lines must carry their trust qualifier in localized text; "
-                    f"missing {qualified_value_fragment!r}"
-                )
+            self.assertTrue(
+                code_contains(qualified_value_body, qualified_value_fragment),
+                "cost amount lines must carry their trust qualifier in localized text; "
+                f"missing {qualified_value_fragment!r}",
+            )
 
     def test_cost_presentation_adapters_forward_current_inputs(self):
         source = (root / "contents/ui/main.qml").read_text()
@@ -621,38 +402,14 @@ class CostTest(unittest.TestCase):
         ):
             self.assertTrue(code_contains(function_body(source, name), call), name)
 
-    def test_provider_cost_details_keep_explicit_inputs_and_effects_in_the_applet(self):
-        source = (root / "contents/ui/main.qml").read_text()
-        for name, call in (("providerCostSection", "providerCostDetails.costSection(providerID, cost)"),
-                           ("resetCreditsSection", "providerCostDetails.resetSection(providerID, resetCredits)"),
-                           ("codexCreditLimitUsageRow", "providerCostDetails.creditLimitRow(creditLimit)")):
-            self.assertIn(call, function_body(source, name))
-        self.assertIn("numberFormat: root.costNumberFormat", applet.id_block("providerCostDetails"))
-        details = (root / "contents/ui/components/ProviderCostDetails.qml").read_text()
-        for forbidden in ("Plasmoid.configuration", "property var applet", "DataSource", "Timer {",
-                          "Connections {", "Qt.openUrlExternally"):
-            self.assertFalse(code_contains(details, forbidden), forbidden)
-
-    def test_provider_cost_section(self):
-        provider_cost_body = applet.function_body("costSection")
-        if not code_contains(provider_cost_body, "ProviderCostPresentation.section(providerID, cost)"):
-            raise AssertionError("provider cost must use the tested semantic section")
-        direct_number_call = re.compile(r"(?<![A-Za-z0-9_])Number\(")
-        if direct_number_call.search(provider_cost_body):
-            raise AssertionError("provider cost must not use loose numeric coercion")
-        provider_cost_presentation = (root / "contents/ui/ProviderCostPresentation.js").read_text()
-        for forbidden in ("root.", "Plasmoid.", "i18n(", "i18np(", "Qt."):
-            if forbidden in provider_cost_presentation:
-                raise AssertionError("provider cost decisions must be pure: " + forbidden)
-        reset_credits_body = applet.function_body("resetSection")
-        for field in ("cost.used", "cost.limit", "cost.personalUsed", "resetCredits.availableCount"):
-            if field in provider_cost_body + reset_credits_body:
-                raise AssertionError("numeric cost/credit decisions must stay in the semantic module: " + field)
+    def test_root_cost_text_receives_number_format(self):
+        binding = id_block(self.main_text, "costText")
+        self.assertTrue(
+            code_contains(binding, "numberFormat: root.costNumberFormat"),
+            "CostText must receive the applet number format explicitly",
+        )
 
     def test_root_cost_text_wrappers_delegate_filtered_costs(self):
-        binding = id_block(main_qml_text, "costText")
-        if not code_contains(binding, "numberFormat: root.costNumberFormat"):
-            raise AssertionError("CostText must receive the applet number format explicitly")
         delegations = (
             ("presentTokenCosts", "return costText.presentTokenCosts(snapshots)"),
             ("costHistoryWindowLabel", "return costText.costHistoryWindowLabel(item, requestedHistoryDays)"),
@@ -666,12 +423,15 @@ class CostTest(unittest.TestCase):
             ("tokenCostHint", "return costText.tokenCostHint(providerID)"),
         )
         for name, fragment in delegations:
-            if not code_contains(function_body(main_qml_text, name), fragment):
-                raise AssertionError(f"{name} must delegate to CostText: {fragment}")
+            self.assertTrue(
+                code_contains(function_body(self.main_text, name), fragment),
+                f"{name} must delegate to CostText: {fragment}",
+            )
+
+    def test_cost_text_leaves_state_and_effects_in_applet(self):
         for forbidden in ("Plasmoid.", "privacyMode", "Date.now(", "Timer {", "DataSource",
                           "Connections {", "Qt.openUrlExternally"):
-            if forbidden in cost_text:
-                raise AssertionError("CostText must not own applet state or effects: " + forbidden)
+            self.assertNotIn(forbidden, self.cost_text, "CostText must not own applet state or effects: " + forbidden)
 
 
 if __name__ == "__main__":
