@@ -12,6 +12,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Include enabled provider IDs in support reports when recent CLI releases
+  return a larger provider list with authentication metadata.
+
 - Make quick setup wait for an in-progress widget installation and upgrade
   an older release that another installer finishes installing during the download.
 

@@ -21,7 +21,7 @@ RELEASE_PREFIX = "https://github.com/steipete/CodexBar/releases/tag/"
 VERSION = r"(0|[1-9][0-9]{0,5})\.(0|[1-9][0-9]{0,5})\.(0|[1-9][0-9]{0,5})"
 
 
-def bounded_command(argv, seconds=3, environment=None):
+def bounded_command(argv, seconds=3, environment=None, *, max_output_bytes=16384):
     """Drain a bounded pipe with a deadline, including children holding it open."""
     with subprocess.Popen(argv, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
                           start_new_session=True, env=environment if environment is not None else {**os.environ, "LC_ALL": "C"}) as process:
@@ -38,7 +38,7 @@ def bounded_command(argv, seconds=3, environment=None):
                     if not chunk:
                         break
                     output.extend(chunk)
-                    if len(output) > 16384:
+                    if len(output) > max_output_bytes:
                         raise ValueError("command_output")
             code = process.wait(timeout=max(0.01, deadline - time.monotonic()))
             return code, output.decode("utf-8", errors="replace").strip()
