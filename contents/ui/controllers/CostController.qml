@@ -18,7 +18,7 @@ Item {
 
     readonly property var costs: lifecycle.snapshotContext === lifecycle.commandSource ? lifecycle.snapshot : ({})
     readonly property alias loading: lifecycle.running
-    readonly property string errorText: lifecycle.errorText
+    readonly property string errorText: lifecycle.scanWarnings[lifecycle.commandSource] || ""
 
     function refresh(force) {
         return lifecycle.initialized && lifecycle.requestRefresh(force === true);
@@ -45,7 +45,7 @@ Item {
         property bool initialized: false
         property var snapshot: ({})
         property string snapshotContext: ""
-        property string errorText: ""
+        property var scanWarnings: ({})
         property double lastAttemptAtMs: -1
         property int serial: 0
         property var currentRun: null
@@ -105,6 +105,16 @@ Item {
                 && run.commandSource === commandSource;
         }
 
+        function setScanWarning(text) {
+            var next = {};
+            // A failing range can differ from the range of the retained data.
+            if (snapshotContext !== commandSource && scanWarnings[snapshotContext])
+                next[snapshotContext] = scanWarnings[snapshotContext];
+            if (text.length > 0)
+                next[commandSource] = text;
+            scanWarnings = next;
+        }
+
         function requestRefresh(force) {
             var nowMs = Date.now();
             var action = CostRefreshPolicy.refreshAction(commandSource.length > 0, controller.loading, force === true, lastAttemptAtMs, nowMs);
@@ -113,9 +123,9 @@ Item {
             }
             var nextSerial = cancel();
             if (serial !== nextSerial) return false;
-            errorText = "";
-            if (serial !== nextSerial) return false;
             if (action === CostRefreshPolicy.clearAction) {
+                scanWarnings = ({});
+                if (serial !== nextSerial) return false;
                 snapshot = ({});
                 snapshotContext = "";
                 return false;
@@ -168,7 +178,7 @@ Item {
         function expire() {
             var expiredSerial = cancel();
             if (serial === expiredSerial)
-                errorText = i18n("Loading cost data timed out. Try again.");
+                setScanWarning(i18n("Loading cost data timed out. Try again."));
         }
 
         function applyResult(run, result) {
@@ -180,26 +190,26 @@ Item {
                 if (!isCurrent(run)) return;
                 snapshotContext = run.commandSource;
                 if (!isCurrent(run)) return;
-                errorText = result.outcome === "success" ? "" : (result.message.length > 0 ? result.message : i18n("Some cost data could not be refreshed."));
+                setScanWarning(result.outcome === "success" ? "" : (result.message.length > 0 ? result.message : i18n("Some cost data could not be refreshed.")));
                 break;
             case "commandFailed":
                 var commandError = result.message || i18n("codexbar command failed.");
                 if (result.argumentsRejected && run.historyPeriod.length > 0) {
                     commandError = i18n("Month to date and All history need codexbar 0.67.0 or later.");
                 }
-                errorText = commandError;
+                setScanWarning(commandError);
                 break;
             case "tooLarge":
-                errorText = i18n("codexbar response exceeded the supported size.");
+                setScanWarning(i18n("codexbar response exceeded the supported size."));
                 break;
             case "empty":
-                errorText = result.message.length > 0 ? result.message : i18n("codexbar cost did not return JSON.");
+                setScanWarning(result.message.length > 0 ? result.message : i18n("codexbar cost did not return JSON."));
                 break;
             case "invalidJson":
-                errorText = i18n("Could not parse codexbar cost JSON: %1", result.message);
+                setScanWarning(i18n("Could not parse codexbar cost JSON: %1", result.message));
                 break;
             case "unsupported":
-                errorText = i18n("codexbar cost returned an unsupported JSON payload.");
+                setScanWarning(i18n("codexbar cost returned an unsupported JSON payload."));
                 break;
             }
         }
