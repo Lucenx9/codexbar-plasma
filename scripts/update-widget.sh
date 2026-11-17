@@ -390,9 +390,6 @@ if [[ "$SETUP" == true ]]; then
   INSTALLED_ROOT="$data_home/plasma/plasmoids/$PLUGIN_ID"
   METADATA_PATH="$INSTALLED_ROOT/metadata.json"
   setup_changed=false
-  if [[ ! -e "$INSTALLED_ROOT" ]]; then
-    INSTALL_OPTION="-i"
-  fi
 elif [[ "$NO_INPUT" == true || "$WITH_CLI" == true ]]; then
   usage >&2
   exit 2
@@ -432,15 +429,15 @@ if [[ "$MODE" == "install" ]]; then
   install_data_home="${XDG_DATA_HOME:-}"
   [[ "$install_data_home" == /* ]] || install_data_home="${HOME:-}/.local/share"
   installed_widget_root="$install_data_home/plasma/plasmoids/$PLUGIN_ID"
-  # A checkout's version says nothing about the per-user package being updated.
-  if [[ "$SETUP" == false ]]; then
-    acquire_install_lock \
-      || fail "package_install_failed" "another widget installation did not finish in time"
-    if [[ -e "$installed_widget_root" || -L "$installed_widget_root" ]]; then
-      installed_widget_matches "$installed_widget_root" \
-        || fail "local_metadata_invalid" "installed widget cannot be safely updated"
-      METADATA_PATH="$installed_widget_root/metadata.json"
-    fi
+  acquire_install_lock \
+    || fail "package_install_failed" "another widget installation did not finish in time"
+  if [[ "$SETUP" == true && ! -e "$installed_widget_root" ]]; then
+    INSTALL_OPTION="-i"
+  elif [[ "$SETUP" == false && ( -e "$installed_widget_root" || -L "$installed_widget_root" ) ]]; then
+    # A checkout's version says nothing about the per-user package being updated.
+    installed_widget_matches "$installed_widget_root" \
+      || fail "local_metadata_invalid" "installed widget cannot be safely updated"
+    METADATA_PATH="$installed_widget_root/metadata.json"
   fi
 fi
 
@@ -468,7 +465,7 @@ local_version="$(jq -r '.KPlugin.Version' "$METADATA_PATH")"
 if [[ ! "$local_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   fail "local_metadata_invalid" "local widget version must use X.Y.Z"
 fi
-if [[ "$MODE" == install && "$SETUP" == false ]]; then
+if [[ "$MODE" == install ]]; then
   exec 9>&-
 fi
 
@@ -619,11 +616,14 @@ validate_package_manifest "$package_path" "$package_version" \
 setup_progress 'Waiting for the widget installation lock...'
 acquire_install_lock \
   || fail "package_install_failed" "another widget installation did not finish in time"
-# Another instance may have installed this release while this one downloaded it.
-# Always recheck the installation target, including checkout and fresh setup runs.
+# Another instance may have installed a release while this one downloaded it.
+# Decide the setup operation from the installation target under the lock.
 if [[ -e "$installed_widget_root" || -L "$installed_widget_root" ]]; then
   installed_widget_matches "$installed_widget_root" \
     || fail "local_metadata_invalid" "installed widget cannot be safely backed up"
+  INSTALL_OPTION="-u"
+elif [[ "$SETUP" == true ]]; then
+  INSTALL_OPTION="-i"
 fi
 installed_metadata="$METADATA_PATH"
 if [[ -f "$installed_widget_root/metadata.json" ]]; then

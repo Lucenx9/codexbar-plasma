@@ -69,10 +69,12 @@ INNER
         self.fake("kpackagetool6", '''
 echo "$*" >> "$FIXTURE/calls"
 [[ "${FAIL_INSTALL:-}" != 1 ]] || exit 1
-python3 - "$4" <<'INNER'
+python3 - "$3" "$4" <<'INNER'
 import os, pathlib, sys, zipfile
 root = pathlib.Path(os.environ["XDG_DATA_HOME"]) / "plasma/plasmoids/app.codexbar.plasma"
-with zipfile.ZipFile(sys.argv[1]) as archive:
+if sys.argv[1] == "-i" and root.exists():
+    sys.exit("package already exists")
+with zipfile.ZipFile(sys.argv[2]) as archive:
     archive.extractall(root)
 INNER
 ''')
@@ -479,9 +481,7 @@ exit 22
                 if expected == "current":
                     self.assertEqual(self.calls(), "")
 
-    def test_checkout_update_waits_for_an_install_before_reading_metadata(self):
-        metadata = self.root / "checkout.json"
-        metadata.write_text(json.dumps({"KPlugin": {"Version": "0.1.0"}}))
+    def run_install_while_metadata_is_being_written(self, *args):
         self.installed.mkdir(parents=True)
         installed_metadata = self.installed / "metadata.json"
         installed_metadata.write_text("partial installation")
@@ -502,8 +502,7 @@ INNER
 ''')
         with (lock_dir / "widget-update.lock").open("w") as lock:
             fcntl.flock(lock, fcntl.LOCK_EX)
-            process = subprocess.Popen([str(self.bin / "bash"), str(SCRIPT), "--install",
-                                        "--metadata", str(metadata)], env=self.env,
+            process = subprocess.Popen([str(self.bin / "bash"), str(SCRIPT), *args], env=self.env,
                                        text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             try:
                 deadline = time.monotonic() + 5
@@ -520,8 +519,18 @@ INNER
                     process.communicate()
         self.assertTrue(waited, stderr)
         self.assertEqual(process.returncode, 0, stderr)
-        self.assertEqual(json.loads(stdout)["status"], "current")
         self.assertEqual(self.calls(), "")
+        return stdout, stderr
+
+    def test_checkout_update_waits_for_an_install_before_reading_metadata(self):
+        metadata = self.root / "checkout.json"
+        metadata.write_text(json.dumps({"KPlugin": {"Version": "0.1.0"}}))
+        stdout, _ = self.run_install_while_metadata_is_being_written("--install", "--metadata", str(metadata))
+        self.assertEqual(json.loads(stdout)["status"], "current")
+
+    def test_setup_waits_for_an_install_before_reading_metadata(self):
+        _, stderr = self.run_install_while_metadata_is_being_written("--setup", "--no-input")
+        self.assertIn("widget is current", stderr)
 
     def test_checkout_update_rechecks_the_installed_package_after_download(self):
         metadata = self.root / "checkout.json"
@@ -716,45 +725,40 @@ exit 1
                 self.assertNotIn("unbound variable", result.stderr)
                 self.assertEqual(self.calls(), "")
 
-    def test_concurrent_fresh_install_reports_current_after_lock(self):
-        # Another setup run installs the release after this run chose
-        # fresh-install mode but before it reaches the post-lock recheck.
-        # The recheck must read the installed metadata, not this run's
-        # synthetic 0.0.0 stub, or the second install runs redundantly.
-        self.fake("curl", '''
-output=""
-for arg in "$@"; do
-  [[ "$arg" == https://* ]] && url="$arg"
-done
-while [[ $# -gt 0 ]]; do
-  if [[ "$1" == --output ]]; then output="$2"; shift; fi
-  shift
-done
-case "$url" in
-  */latest) file=release.json ;;
-  */main/scripts/update-widget.sh) file=update-widget.sh ;;
-  *.sha256) file=codexbar-plasma.plasmoid.sha256 ;;
-  *.plasmoid) file=codexbar-plasma.plasmoid ;;
-  *) exit 1 ;;
-esac
-if [[ "$file" == codexbar-plasma.plasmoid ]]; then
-  winner="$XDG_DATA_HOME/plasma/plasmoids/app.codexbar.plasma"
-  mkdir -p "$winner"
-  printf '%s' '{"KPackageStructure":"Plasma/Applet","KPlugin":{"Id":"app.codexbar.plasma","Version":"9.9.9"}}' > "$winner/metadata.json"
-fi
-python3 - "$FIXTURE/$file" "$output" <<'INNER'
-import pathlib, sys
-raw = pathlib.Path(sys.argv[1]).read_bytes()
-if sys.argv[2]:
-    pathlib.Path(sys.argv[2]).write_bytes(raw)
-else:
-    sys.stdout.buffer.write(raw)
+    def test_concurrent_fresh_setup_rechecks_version_and_install_mode(self):
+        # Simulate a concurrent install completing while setup downloads its package.
+        curl = self.bin / "curl"
+        curl.write_text(curl.read_text() + '''
+if [[ "$url" == *.plasmoid ]]; then
+  python3 - <<'INNER'
+import fcntl, json, os, pathlib
+data_home = pathlib.Path(os.environ["XDG_DATA_HOME"])
+lock_dir = data_home / "codexbar-plasma"
+lock_dir.mkdir(parents=True, exist_ok=True)
+with (lock_dir / "widget-update.lock").open("a") as lock:
+    fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    root = data_home / "plasma/plasmoids/app.codexbar.plasma"
+    root.mkdir(parents=True)
+    (root / "metadata.json").write_text(json.dumps({"KPackageStructure": "Plasma/Applet",
+        "KPlugin": {"Id": "app.codexbar.plasma", "Version": os.environ["CONCURRENT_VERSION"]}}))
 INNER
+fi
 ''')
-        result = self.run_setup("--no-input")
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("widget is current", result.stderr)
-        self.assertEqual(self.calls(), "")
+        for version, expected in (("9.9.9", "current"), ("1.0.0", "upgraded")):
+            with self.subTest(version=version):
+                result = self.run_setup("--no-input", CONCURRENT_VERSION=version)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(json.loads((self.installed / "metadata.json").read_text())
+                                 ["KPlugin"]["Version"], "9.9.9")
+                if expected == "current":
+                    self.assertIn("widget is current", result.stderr)
+                    self.assertEqual(self.calls(), "")
+                else:
+                    calls = self.calls().splitlines()
+                    self.assertEqual(len(calls), 1)
+                    self.assertIn(" -u ", calls[0])
+                    self.assertIn("Log out and back in", result.stdout)
+                shutil.rmtree(self.installed)
 
     def test_untrusted_packages_never_install(self):
         for fault in ("mutable", "digest", "id", "version", "tag"):

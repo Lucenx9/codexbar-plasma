@@ -31,9 +31,9 @@ For an existing checkout, `./install.sh` builds, installs, and restarts Plasma.
 From this checkout, `make update` installs the latest immutable GitHub release
 using the bundled helper. It does not pull Git changes or install local edits.
 Install comparisons use the existing per-user package version, not the checkout's
-metadata. Update-mode installs hold the installation lock for the initial metadata
-read, release it before network requests, and reacquire it for the final recheck
-and installation. The applet's install deadline covers both bounded lock waits.
+metadata. Installs hold the installation lock for the initial metadata read,
+release it before network requests, and reacquire it for the final recheck and
+installation. The applet's install deadline covers both bounded lock waits.
 For those, use `make install` or `./install.sh`. Release-package users can use
 [the widget's update settings](../README.md#update) without a checkout.
 
@@ -57,16 +57,18 @@ or open `/dev/tty` for prompts; use `/dev/null` without a terminal or with
 `manage-cli.py --action install`. CLI setup failure is reported separately from
 successful widget installation. Setup never edits provider or widget config.
 
-Validate existing user-package metadata before running helpers. A missing package
-uses version `0.0.0`; choose `kpackagetool6 -i` for a fresh install and `-u` for an
-upgrade. An installation failure must not trigger a retry with the other mode.
+Validate existing user-package metadata under the installation lock before
+running helpers. A missing package initially uses version `0.0.0`. Choose
+`kpackagetool6 -i` if the setup target is absent at the final locked recheck
+and `-u` if it needs an upgrade. An installation failure must not trigger a
+retry with the other mode.
 The updater's `--check` and `--install` JSON interfaces stay update-only.
 
-All install paths share a `flock` under the absolute `XDG_DATA_HOME` (default
-`~/.local/share`), covering metadata recheck, backup, installation, validation,
-and recovery. Update-mode network requests run outside the lock; the applet's
-deadline covers both bounded lock waits. Recheck after reacquiring the lock so
-another successful installer produces `current` instead of a second upgrade.
+Quick setup and release updates share a `flock` under the absolute
+`XDG_DATA_HOME` (default `~/.local/share`), covering metadata recheck, backup,
+installation, validation, and recovery. Network requests run outside the lock.
+Report `current` if the recheck shows that another installer already installed
+the requested version or a newer one.
 
 Before upgrading, save a valid package in a sibling `.codexbar-update-*` directory.
 Restore it, including helpers and permissions, on installation failure, timeout,
