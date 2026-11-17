@@ -95,6 +95,14 @@ def installed(root, target=None):
         return None
 
 
+def managed_command(root):
+    return str(root / "current/codexbar")
+
+
+def selected_installation(root, command):
+    return command == managed_command(root) and installed(root) is not None
+
+
 def owns_command(command):
     root = root_path()
     # Probes report canonical paths, so symlinked directory prefixes (the
@@ -104,7 +112,7 @@ def owns_command(command):
     if not isinstance(command, str) or not command:
         return False
     return os.path.basename(command) == "codexbar" \
-        and os.path.realpath(command) == os.path.realpath(root / "current/codexbar") \
+        and os.path.realpath(command) == os.path.realpath(managed_command(root)) \
         and installed(root) is not None
 
 
@@ -157,7 +165,7 @@ def status(root):
     state = state_record(root) if root.exists() else {}
     previous = installed(root, state.get("previous", ""))
     return dict(status="ready" if current else "absent", version=current["version"] if current else "",
-                path=str(root / "current/codexbar"), previous=previous["version"] if previous else "")
+                path=managed_command(root), previous=previous["version"] if previous else "")
 
 
 def write_state(root, state):
@@ -510,7 +518,7 @@ def run(action, command="", expected_previous=""):
         reused = _reuse_installation(root)
         if reused is not None:
             return reused
-    if action in ("update", "automatic", "rollback") and not owns_command(command):
+    if action in ("update", "automatic", "rollback") and not selected_installation(root, command):
         return {"status": "external"}
     private_directory(root)
     private_directory(root / "releases")

@@ -2773,6 +2773,14 @@ msgstr "Tempo scaduto per il caricamento degli account. Riprova."
 
 #: contents/ui/controllers/CliUpdateController.qml
 msgid ""
+"Managed by this widget. Choose “Use managed CLI” in General to enable "
+"updates and rollback."
+msgstr ""
+"Questa CLI è gestita dal widget. Seleziona «Usa la CLI gestita» in Generali "
+"per attivare gli aggiornamenti e il ripristino della versione precedente."
+
+#: contents/ui/controllers/CliUpdateController.qml
+msgid ""
 "Managed by this widget. Install updates or restore the previous version in "
 "Managed CLI below."
 msgstr ""

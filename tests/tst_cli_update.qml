@@ -16,6 +16,15 @@ TestCase {
         compare(CliUpdate.response('{"status":"unknown","manager":"<b>pacman</b>","path":"/tmp/\\nsecret"}').path, "")
         compare(CliUpdate.response('{"status":"unknown","manager":"<b>pacman</b>"}').manager, "external")
     }
+    function test_managedSelectionRequiresExplicitEvidence() {
+        var record = {status: "local", version: "0.62.0", manager: "managed"}
+        for (var selected of [undefined, false, "true", true]) {
+            record.managedSelected = selected
+            compare(CliUpdate.response(JSON.stringify(record)).managedSelected, selected === true)
+        }
+        record.manager = "external"
+        compare(CliUpdate.response(JSON.stringify(record)).managedSelected, false)
+    }
     function test_pathsRemainBoundedAndRedacted() {
         var secret = "sk-abcdefghijklmnop"
         var value = {status: "local", version: "0.61.0", path: "/opt/token=" + secret + "/codexbar"}

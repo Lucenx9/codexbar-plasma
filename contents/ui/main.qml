@@ -2174,8 +2174,8 @@ PlasmoidItem {
         onCheckedRelease: function(timestamp) {
             Plasmoid.configuration.cliUpdateLastCheck = timestamp
         }
-        onUpdateAvailable: function(version, releaseUrl, manager) {
-            updateNotifications.notifyAvailableCliUpdate(version, releaseUrl, manager)
+        onUpdateAvailable: function(version, releaseUrl, managedSelected) {
+            updateNotifications.notifyAvailableCliUpdate(version, releaseUrl, managedSelected)
         }
     }
 

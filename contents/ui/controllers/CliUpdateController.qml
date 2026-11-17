@@ -23,12 +23,14 @@ Item {
     property bool initialized: false
     property bool forceNextCheck: false
     signal checkedRelease(string timestamp)
-    signal updateAvailable(string version, string releaseUrl, string manager)
+    signal updateAvailable(string version, string releaseUrl, bool managedSelected)
 
     // General hosts the managed CLI controls itself, so its guidance points to
     // that section instead of naming the page the reader is already on.
     property bool managedControlsOnPage: false
     readonly property string guidanceText: {
+        if (result.manager === "managed" && !result.managedSelected)
+            return i18n("Managed by this widget. Choose “Use managed CLI” in General to enable updates and rollback.")
         if (result.manager === "managed")
             return managedControlsOnPage
                 ? i18n("Managed by this widget. Install updates or restore the previous version in Managed CLI below.")
@@ -114,7 +116,7 @@ Item {
         if (successfulReleaseCheck) {
             completedCheck = new Date().toISOString()
             checkedRelease(completedCheck)
-            if (result.status === "available") updateAvailable(result.latest, result.releaseUrl, result.manager)
+            if (result.status === "available") updateAvailable(result.latest, result.releaseUrl, result.managedSelected)
         }
     }
     Plasma5Support.DataSource {

@@ -90,8 +90,9 @@ def installation_manager(path):
 
 
 def local_record(command):
+    from lib.managed_cli import root_path, selected_installation
     record = {"status": "missing", "version": "", "path": "", "manager": "external",
-              "latest": "", "tag": ""}
+              "managedSelected": False, "latest": "", "tag": ""}
     if not command or len(command) > 4096 or any(ord(c) < 32 for c in command):
         return record
     path = shutil.which(command)
@@ -108,6 +109,7 @@ def local_record(command):
         return record
     record["path"] = path
     record["manager"] = installation_manager(path)
+    record["managedSelected"] = selected_installation(root_path(), command)
     try:
         code, banner = bounded_command([path, "--version"], seconds=5)
         match = re.fullmatch(r"CodexBar (" + VERSION + r"(?:[-+][0-9A-Za-z.-]{1,64})?)", banner)

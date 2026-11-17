@@ -62,12 +62,12 @@ Item {
         send(title, body, "normal")
     }
 
-    function notifyAvailableCliUpdate(version, releaseUrl, manager) {
+    function notifyAvailableCliUpdate(version, releaseUrl, managedSelected) {
         if (!enableNotifications || configuration.cliUpdateNotificationsEnabled === false
                 || configuration.cliUpdateLastNotifiedVersion === version) return
         // A self-updating managed copy needs no action; the version stays unannounced
         // so turning automatic updates off later still notifies.
-        if (manager === "managed" && configuration.cliAutomaticUpdates === true) return
+        if (managedSelected === true && configuration.cliAutomaticUpdates === true) return
         var releasePageUrl = UpdateNotificationState.safeReleaseUrl(releaseUrl)
         var actionLabel = releasePageUrl.length > 0 ? i18n("Open release page") : ""
         var sourceName = send(i18n("CodexBar CLI release available"),
