@@ -173,7 +173,8 @@ again. Privacy mode also hides this restore list.
 affects that row; **Hidden detail sections → Restore all** restores all saved
 sections for a provider, including sections no longer returned. Settings-page
 restores take effect on **Apply**; **Cancel** discards them. Popup changes remain
-immediate even while settings are open.
+immediate even while settings are open. A keyboard restore returns focus to the
+Hidden items summary and keeps the list open.
 
 ### Inspect usage and spend
 
