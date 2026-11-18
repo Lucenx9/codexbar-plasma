@@ -211,7 +211,7 @@ Item {
                 if (delta === 0) {
                     return;
                 }
-                strip.scrollBy(-delta / 120 * strip.tabWheelStep);
+                strip.scrollBy(-delta / 120 * strip.tabWheelStep, true);
             }
         }
 
