@@ -84,6 +84,7 @@ TestCase {
         compare(subject.errorText, "Month to date and All history need codexbar 0.67.0 or later.");
         subject.historyPeriod = "";
         compare(subject.costs, previous);
+        compare(subject.errorText, "");
         completed(subject, "rejected-period 3");
     }
     function test_disabledOrMissingCommandDoesNotStart_data() {
@@ -169,6 +170,33 @@ TestCase {
         verify(!subject.loading);
         compare(subject.costs, old);
     }
+    function test_retryKeepsTheWarningUntilRecovery() {
+        var subject = create("recover");
+        completed(subject, "recover 1");
+        verify(subject.refresh(true));
+        tryCompare(subject, "loading", false);
+        compare(subject.errorText, "synthetic cost failure");
+        verify(subject.refresh(true));
+        verify(subject.loading);
+        compare(subject.costs.codex.historyLabel, "recover 1");
+        compare(subject.errorText, "synthetic cost failure");
+        completed(subject, "recover 3");
+        compare(subject.errorText, "");
+    }
+    function test_returnToRetainedSnapshotRestoresItsWarning() {
+        var subject = create("recover");
+        completed(subject, "recover 1");
+        verify(subject.refresh(true));
+        tryVerify(function() { return !subject.loading && subject.errorText.length > 0; });
+        subject.historyPeriod = "all";
+        tryCompare(subject, "errorText", "Month to date and All history need codexbar 0.67.0 or later.");
+        compare(subject.costs, {});
+        subject.historyPeriod = "";
+        compare(subject.costs.codex.historyLabel, "recover 1");
+        compare(subject.errorText, "synthetic cost failure");
+        completed(subject, "recover 4");
+        compare(subject.errorText, "");
+    }
     function test_confirmedEmptyResultReplacesData() {
         var subject = create("empty");
         completed(subject, "empty 1");
@@ -243,7 +271,7 @@ import time
 args = sys.argv[1:]
 name = Path(sys.argv[0]).name
 expected_provider = ["--provider", "example'; quoted provider"] if name == "batched" else ["--provider", "codex"]
-if name in ("period", "oldperiod") or (name == "rejected-period" and "--period" in args):
+if name in ("period", "oldperiod") or (name in ("rejected-period", "recover") and "--period" in args):
     valid = (args[:5] == ["cost", "--format", "json", "--json-only", "--period"]
              and args[5] in ("month-to-date", "all") and args[6:] in ([], expected_provider))
 else:
@@ -270,14 +298,14 @@ if name == "late" and run == 2:
 if name == "late" and run == 3:
     time.sleep(3)
 if run > 1:
-    if name == "rejected-same" or (name == "rejected-period" and "--period" in args):
+    if name == "rejected-same" or (name in ("rejected-period", "recover") and "--period" in args):
         print(json.dumps([{"provider": "cli", "source": "cli",
                            "error": {"kind": "args", "code": 1, "message": "Unknown option --period"}}]))
         sys.exit(1)
     if name in ("failed-valid", "failed-timeout", "failed-empty"):
         print(json.dumps([] if name == "failed-empty" else [{"provider": "codex", "account": "Wrong", "totals": {"totalCost": 99}}]))
         sys.exit(124 if name == "failed-timeout" else 1)
-    if name == "failure":
+    if name == "failure" or (name == "recover" and run == 2):
         print("synthetic cost failure", file=sys.stderr)
         sys.exit(1)
     if name in ("malformed", "unsupported", "empty"):
@@ -311,7 +339,7 @@ class CostContextTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="codexbar cost 'test-") as temporary:
             directory = Path(temporary)
             for name in ("rejected-same", "rejected-period", "failed-valid", "failed-timeout", "failed-empty", "normal", "batched", "partial", "slow", "late", "failure",
-                         "malformed", "unsupported", "missing", "empty", "period", "oldperiod"):
+                         "malformed", "unsupported", "missing", "empty", "period", "oldperiod", "recover"):
                 script = directory / name
                 script.write_text(CLI)
                 script.chmod(0o700)

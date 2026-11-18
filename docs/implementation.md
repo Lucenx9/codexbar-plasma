@@ -168,6 +168,8 @@ diagnostic inspection and credential-redaction lookahead after whitespace.
 Loading spans process execution and normalization under one 120-second deadline.
 Serials invalidate worker replies after context changes, forced refresh, disable
 or timeout. One normalization and one replaceable pending reply bound the queue.
+Scan warnings follow the active command and the retained snapshot's context.
+Same-context retries keep the warning visible until success or a replacement.
 
 QML and WorkerScript share `.mjs` dependencies. `Guards.js` remains the QML entry
 point to `Guards.mjs`; validation has one implementation. Export declarations

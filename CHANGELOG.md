@@ -32,6 +32,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   provider summaries, daily/model rows, and chart readouts instead of rounding
   them to zero.
 
+- Keep the warning beside retained cost history while a retry is running.
+
 - Hide private provider aliases from the panel identity's accessible name when
   personal information is hidden, while preserving provider navigation.
 
