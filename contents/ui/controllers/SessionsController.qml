@@ -91,7 +91,9 @@ Item {
                 return false;
             }
             refreshTimer.stop();
-            errorText = "";
+            if (snapshot.length === 0) {
+                errorText = "";
+            }
             return request.start(commandSource, null, sessionsCommandTimeoutMs);
         }
 

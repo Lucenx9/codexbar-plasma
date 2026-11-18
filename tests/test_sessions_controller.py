@@ -160,6 +160,23 @@ TestCase {
         completed(subject, "retry 2");
         subject.active = false;
     }
+    function test_retryKeepsWarningWithRetainedSessionsUntilSuccess() {
+        var subject = create("retry-retained");
+        verify(subject.refresh());
+        completed(subject, "retry-retained 1");
+        var updatedAt = subject.lastUpdatedAtMs;
+        verify(subject.refresh());
+        tryCompare(subject, "loading", false);
+        var failure = subject.errorText;
+        verify(failure.length > 0);
+
+        verify(subject.refresh());
+        verify(subject.loading);
+        compare(subject.sessions[0].projectName, "retry-retained 1");
+        compare(subject.lastUpdatedAtMs, updatedAt);
+        compare(subject.errorText, failure);
+        completed(subject, "retry-retained 3");
+    }
     function test_commandChangeInvalidatesDataAndRetiresTheRunningSource() {
         var subject = create("normal", {active: true});
         completed(subject, "normal 1");
@@ -255,7 +272,7 @@ if run > 1:
                          [{"provider": "codex", "projectName": "failed scan", "state": "active"}]))
         print("synthetic scan failure", file=sys.stderr)
         sys.exit(1)
-    if name == "failure":
+    if name == "failure" or (name == "retry-retained" and run == 2):
         print("synthetic scan failure", file=sys.stderr)
         sys.exit(1)
     if name == "malformed":
@@ -282,7 +299,7 @@ class SessionsControllerTests(unittest.TestCase):
     def test_production_lifecycle_with_synthetic_cli(self):
         with tempfile.TemporaryDirectory(prefix="codexbar sessions 'test-") as temporary:
             directory = Path(temporary)
-            for name in ("normal", "slow", "late", "retry", "slow-failure", "failure",
+            for name in ("normal", "slow", "late", "retry", "retry-retained", "slow-failure", "failure",
                          "unreadable-array", "unreadable-envelope",
                          "malformed", "unsupported", "missing", "empty", "failed-empty-json", "failed-valid-json"):
                 script = directory / name

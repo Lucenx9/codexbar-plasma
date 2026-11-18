@@ -34,6 +34,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 - Keep the warning beside retained cost history while a retry is running.
 
+- Keep the scan error visible beside retained sessions until a retry succeeds.
+
 - Hide private provider aliases from the panel identity's accessible name when
   personal information is hidden, while preserving provider navigation.
 
