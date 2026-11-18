@@ -217,6 +217,7 @@ TestCase {
         verify(viewport.contentWidth - viewport.width > 2 * step);
 
         mouseWheel(viewport, x, y, 0, -120);
+        compare(viewport.contentX, step);
         mouseWheel(viewport, x, y, 0, -120);
         compare(viewport.contentX, 2 * step);
 
