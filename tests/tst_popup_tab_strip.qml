@@ -208,6 +208,23 @@ TestCase {
         verifyRevealed(host, 0);
     }
 
+    function test_rapidWheelStepsScrollImmediatelyAndAccumulate() {
+        var host = createStrip();
+        var viewport = findChild(host, "providerTabsFlickable");
+        var x = viewport.width / 2;
+        var y = viewport.height / 2;
+        var step = Kirigami.Units.gridUnit * 5;
+        verify(viewport.contentWidth - viewport.width > 2 * step);
+
+        mouseWheel(viewport, x, y, 0, -120);
+        mouseWheel(viewport, x, y, 0, -120);
+        compare(viewport.contentX, 2 * step);
+
+        mouseWheel(viewport, x, y, 0, 120);
+        compare(viewport.contentX, step);
+        compare(host.selectedIndex, 0);
+    }
+
     function test_aFittingIconStripHidesControlsAndRejectsForeignFocus() {
         var host = createStrip();
         host.width = 600;

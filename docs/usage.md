@@ -102,8 +102,9 @@ back inside before release restores its pressed feedback.
 - Left and Right move focus between tabs and wrap at either end. Home and End
   select the first and last focus position. Enter or Space opens the focused tab.
   Arrow direction follows visual order in right-to-left layouts.
-- Scroll buttons reveal overflowing tabs. Full labels and values appear in
-  tooltips when abbreviated; icon actions also show their labels on keyboard focus.
+- Use the scroll buttons or roll the mouse wheel over the tab strip to reveal
+  overflowing tabs. Full labels and values appear in tooltips when abbreviated;
+  icon actions also show their labels on keyboard focus.
 - **Provider actions** expands accounts, provider links, and widget commands.
   It starts collapsed and closes when the provider or account changes.
 - **Popup → Overview providers** chooses automatic selection of the first three
