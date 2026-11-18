@@ -131,6 +131,34 @@ KCM.SimpleKCM {
             PopupHiddenRows.restored(hiddenUsageRows, entry.provider, entry.row))
     }
 
+    function focusHiddenItems() {
+        hiddenItemsDisclosure.forceActiveFocus(Qt.TabFocusReason)
+        var position = page.flickable.contentItem.mapFromItem(hiddenItemsDisclosure, 0, 0)
+        page.ensureVisible(hiddenItemsDisclosure, position.x - hiddenItemsDisclosure.x,
+            position.y - hiddenItemsDisclosure.y)
+    }
+
+    component HiddenItemRestoreButton: Components.PlainButton {
+        property bool keyboardRelease: false
+        signal restoreRequested()
+
+        flat: true
+        icon.name: "view-visible"
+
+        onPressed: keyboardRelease = false
+        Keys.onReleased: function(event) {
+            // Observe the activation key and let the native button emit clicked.
+            keyboardRelease = pressed && (event.key === Qt.Key_Space || event.key === Qt.Key_Select)
+            event.accepted = false
+        }
+        onClicked: {
+            if (keyboardRelease) {
+                page.focusHiddenItems()
+            }
+            restoreRequested()
+        }
+    }
+
     Controllers.ProviderRosterController {
         id: providerRosterController
         objectName: "providerRosterController"
@@ -594,13 +622,11 @@ KCM.SimpleKCM {
                                 elide: Text.ElideRight
                             }
 
-                            Components.PlainButton {
+                            HiddenItemRestoreButton {
                                 objectName: "restoreProviderDetailSectionsButton"
-                                flat: true
                                 plainText: i18n("Restore all")
-                                icon.name: "view-visible"
                                 Accessible.name: i18n("Restore all sections for %1", page.hiddenRowProviderTitle(modelData))
-                                onClicked: page.restoreProviderDetailSections(modelData)
+                                onRestoreRequested: page.restoreProviderDetailSections(modelData)
                             }
                         }
                     }
@@ -662,13 +688,11 @@ KCM.SimpleKCM {
                                 elide: Text.ElideRight
                             }
 
-                            Components.PlainButton {
+                            HiddenItemRestoreButton {
                                 objectName: "restoreHiddenUsageRowButton"
-                                flat: true
                                 plainText: i18n("Restore")
-                                icon.name: "view-visible"
                                 Accessible.name: i18n("Restore %1", rowText)
-                                onClicked: page.restoreHiddenUsageRow(modelData)
+                                onRestoreRequested: page.restoreHiddenUsageRow(modelData)
                             }
                         }
                     }

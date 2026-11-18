@@ -351,7 +351,7 @@ TestCase {
         var pending = page.cfg_popupHiddenUsageRows;
         compare(JSON.parse(pending).length, 1);
         compare(disclosure.plainText, "0 sections, 1 usage row");
-        disclosure.forceActiveFocus(Qt.TabFocusReason);
+        verify(disclosure.visualFocus);
         keyClick(Qt.Key_Space);
         verify(!disclosure.expanded);
         verify(disclosure.activeFocus);
@@ -360,6 +360,47 @@ TestCase {
         verify(disclosure.expanded);
         compare(page.cfg_popupHiddenUsageRows, pending);
         verify(findChild(page, "restoreHiddenUsageRowButton").visible);
+    }
+
+    function test_restoringLastHiddenSectionRevealsKeyboardFocus_data() {
+        return [{tag: "keyboard-after-canceled-click", keyboard: true},
+                {tag: "click-after-tab-focus", keyboard: false}];
+    }
+
+    function test_restoringLastHiddenSectionRevealsKeyboardFocus(data) {
+        var page = createPage({height: 130, cfg_popupHiddenDetailSections: JSON.stringify([
+            {provider: "codex", section: "v1:" + Qt.md5("Generic details")}
+        ])});
+        if (!page) return;
+        waitForRosterSettled(page);
+        var disclosure = findChild(page, "hiddenItemsDisclosure");
+        disclosure.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Space);
+        var restore = findChild(page, "restoreProviderDetailSectionsButton");
+        waitForRendering(restore);
+        var viewport = page.flickable;
+        viewport.contentY = restore.mapToItem(viewport.contentItem, 0, 0).y;
+        verify(disclosure.mapToItem(viewport, 0, disclosure.height).y < 0);
+        if (!data.keyboard) {
+            restore.forceActiveFocus(Qt.TabFocusReason);
+            mouseClick(restore);
+            compare(page.cfg_popupHiddenDetailSections, "");
+            verify(!disclosure.activeFocus);
+            return;
+        }
+        mousePress(restore);
+        mouseMove(restore, -12, restore.height / 2);
+        mouseRelease(restore, -12, restore.height / 2);
+        compare(page.hiddenDetailSections.length, 1);
+        verify(restore.activeFocus);
+        keyClick(Qt.Key_Space);
+        compare(page.cfg_popupHiddenDetailSections, "");
+        verify(disclosure.visualFocus);
+        verify(disclosure.expanded);
+        tryVerify(function() {
+            var top = disclosure.mapToItem(viewport, 0, 0).y;
+            return top >= 0 && top + disclosure.height <= viewport.height;
+        });
     }
 
 }

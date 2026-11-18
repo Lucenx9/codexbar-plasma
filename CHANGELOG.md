@@ -31,6 +31,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Apply every mouse wheel step immediately when scrolling overflowing popup
   tabs, including steps in quick succession.
 
+- Return keyboard focus to the Hidden items summary after restoring a row or a
+  provider's detail sections in Popup settings.
+
 - Show positive local-history costs below one cent as less than one cent across
   provider summaries, daily/model rows, and chart readouts instead of rounding
   them to zero.
