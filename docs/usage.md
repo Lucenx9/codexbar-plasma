@@ -222,7 +222,8 @@ its copy action; privacy mode disables copying and hides personal names.
 The tab rescans while visible every 30 seconds, or at the usage refresh interval
 when shorter, even if periodic usage refresh is off. A failed scan keeps the
 previous list and timestamp and waits for the same retry interval. Its refresh
-button retries immediately. A successful empty scan clears the list.
+button retries immediately. The error stays visible beside retained sessions
+until a scan succeeds. A successful empty scan clears the list.
 
 The header's total and active count describe the loaded, bounded snapshot,
 rather than a census of every session on the machine. Active includes running
