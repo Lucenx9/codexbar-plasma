@@ -37,8 +37,14 @@ other changes, update affected entries or explain why TODO is unaffected. -->
 ## Verification
 
 <!--
-List each command or manual check and its result. Run `make check` before opening
-the pull request. If a check failed, was skipped, or was unavailable, say why.
+List each command or manual check and its result. For bug fixes, describe how to
+reproduce the issue and what you observed before and after the fix. Use evidence
+that fits the bug, such as a focused regression test, a visual capture, or a
+check in the installed widget. When behavior is shared, name the affected entry
+points you verified.
+
+Run `make check` before opening the pull request. If a check failed, was skipped,
+or was unavailable, say why.
 Summarize the dependent updates checked under docs/development.md#repository-maintenance
 and identify any unresolved inconsistency and its TODO entry or tracking issue.
 After the latest push, record its commit and final CI results with run links.
