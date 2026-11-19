@@ -25,6 +25,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   Selecting a fixed release path or finding the CLI through PATH keeps new-release
   notifications available.
 
+- Report unreadable compressed release archives as failed verification during
+  managed CLI installation and updates.
+
 - Keep popup tab scroll buttons, directional icons, and action labels consistent
   with tab order in right-to-left layouts.
 

@@ -19,6 +19,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import uuid
+import zlib
 
 from . import cli_release
 
@@ -284,7 +285,10 @@ class ExpandedArchive:
     def read(self, size):
         if size < 0 or size > MAX_EXPANDED + 1024 * 1024 - self.total:
             raise ValueError("archive_size")
-        raw = self.stream.read(size)
+        try:
+            raw = self.stream.read(size)
+        except (gzip.BadGzipFile, EOFError, zlib.error) as error:
+            raise tarfile.ReadError("invalid gzip stream") from error
         self.total += len(raw)
         return raw
 
