@@ -230,6 +230,35 @@ TestCase {
         compare(latest(o)[0].rows, []);
         compare(o.subject.lastCompletedAtMs, -1);
     }
+    function test_unrunnableCliUsesGlobalFailure_data() {
+        return [
+            {tag: "roster", script: "missing", options: {}},
+            {tag: "direct", script: "missing", options: {provider: "codex", sourceMode: "api"}},
+            {tag: "single provider", script: "missing", options: {provider: "codex"}},
+            {tag: "both providers", script: "missing", options: {provider: "both"}},
+            {tag: "non-executable", script: "non-executable", options: {provider: "codex"}}
+        ];
+    }
+    function test_unrunnableCliUsesGlobalFailure(data) {
+        var o = create(data.script, data.options);
+        tryVerify(function() { return o.failures.length + o.snapshots.length + o.emptyRosters > 0; });
+        verify(!o.subject.loading);
+        verify(o.subject.commandPathFailed);
+        compare(o.snapshots, []);
+        compare(o.emptyRosters, 0);
+        compare(o.failures.length, 1);
+        verify(o.subject.errorText.length > 0);
+        compare(o.subject.lastCompletedAtMs, -1);
+    }
+    function test_scopedLaunchErrorKeepsOtherProviderResults() {
+        var o = create("partial-launch-error", {provider: "both"});
+        completed(o, 1);
+        compare(latest(o).map(function(item) { return item.provider; }), ["codex", "claude"]);
+        compare(latest(o)[0].rows[0].usedPercent, 0);
+        verify(latest(o)[1].commandFailed);
+        verify(!o.subject.commandPathFailed);
+        compare(o.failures, []);
+    }
     function test_emptyRosterIsDistinctFromBrokenDiscovery() {
         var empty = create("empty-roster");
         var broken = create("broken-roster");
@@ -463,6 +492,10 @@ if args[0] == "config":
          "enabled": key != "gemini"} for key in ids]))
     sys.exit(1 if name == "failed-roster" and run == 1 else 0)
 provider = args[args.index("--provider") + 1] if "--provider" in args else "codex"
+if name == "partial-launch-error" and provider == "claude":
+    time.sleep(0.3)
+    print("Synthetic scoped launch failure", file=sys.stderr)
+    sys.exit(127)
 if name == "initial-empty-aggregate" or (name == "empty-aggregate" and run == 2):
     assert "--provider" not in args and args[args.index("--source") + 1] == "api"
     print("[]")
@@ -523,11 +556,12 @@ class UsageControllerTests(unittest.TestCase):
             directory = Path(temporary)
             for name in ("foreign-provider", "mixed-providers", "missing-provider", "failed-valid", "failed-timeout", "failed-roster", "ancient", "normal", "slow-roster", "flags", "mapped", "slow-first", "queue", "malformed", "empty",
                          "aggregate-selectors", "empty-aggregate", "initial-empty-aggregate",
-                         "no-records", "too-large", "empty-roster", "broken-roster", "timeout-aggregate",
+                         "no-records", "too-large", "empty-roster", "broken-roster", "partial-launch-error", "timeout-aggregate",
                          "timeout-roster", "timeout-scoped"):
                 script = directory / name
                 script.write_text(CLI)
                 script.chmod(0o700)
+            (directory / "non-executable").write_text(CLI)
             fixture = directory / "tst_usage.qml"
             fixture.write_text(QML.replace("CONTROLLER_URL", (ROOT / "contents/ui/controllers/UsageController.qml").as_uri())
                                .replace("FIXTURE_PATH", str(directory)))

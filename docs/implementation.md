@@ -99,6 +99,10 @@ The `both`/`all` identities were separately verified with isolated CLI 0.83.0,
 These probes establish identities and empty-result semantics, not authenticated
 provider support.
 
+When every scoped usage command fails to launch, the controller reports a global
+command-path failure so an empty popup offers CLI setup. Mixed batches still
+publish their per-provider results regardless of reply order.
+
 Selected Codex usage uses `--all-accounts` and matches the exact selected key
 before provider deduplication. A missing or failed selection cannot borrow healthy
 sibling quotas. Other providers use `--account`; clearing selection restores the
