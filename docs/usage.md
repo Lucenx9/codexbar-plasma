@@ -184,9 +184,10 @@ Hidden items summary and keeps the list open.
 provider totals side by side; **Compact analysis** restores the stacked view.
 
 Hover or use arrow keys on a chart to inspect a day. Click or use keyboard
-selection to pin that day for provider/model details. Headline totals still
-cover the whole period. **All days** or Escape clears selection. Inspection
-reuses loaded data and starts no scan.
+selection on a measured day, including zero, to pin it for provider/model
+details; unavailable days remain inspectable without pinning. Headline totals
+still cover the whole period. **All days** or Escape clears selection.
+Inspection reuses loaded data and starts no scan.
 
 Click a provider row to expand its models without changing the provider filter
 or leaving the tab. Models are ranked by the selected metric. The first three

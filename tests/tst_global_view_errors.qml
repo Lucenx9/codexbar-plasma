@@ -592,6 +592,105 @@ TestCase {
         compare(chart.selectedIndex, -1);
     }
 
+    function test_unavailableChartDaysInspectWithoutPinning_data() {
+        return [
+            {
+                tag: "missing-gap",
+                costs: [{
+                    provider: "codex",
+                    currency: "USD",
+                    totals: {cost: 2, tokens: 20, currency: "USD"},
+                    daily: [
+                        {label: "2026-11-11", cost: 2, tokens: 20, currency: "USD"},
+                        {label: "2026-11-13", cost: 0, tokens: 0, currency: "USD"}
+                    ]
+                }],
+                expectedPeriodCost: 2
+            },
+            {
+                tag: "duplicate-date",
+                costs: [
+                    {
+                        provider: "codex",
+                        currency: "USD",
+                        totals: {cost: 5, tokens: 50, currency: "USD"},
+                        daily: [
+                            {label: "2026-11-11", cost: 2, tokens: 20, currency: "USD"},
+                            {label: "2026-11-12", cost: 3, tokens: 30, currency: "USD"},
+                            {label: "2026-11-13", cost: 0, tokens: 0, currency: "USD"}
+                        ]
+                    },
+                    {
+                        provider: "claude",
+                        currency: "USD",
+                        totals: {cost: 4, tokens: 40, currency: "USD"},
+                        daily: [
+                            {label: "2026-11-11", cost: 1, tokens: 10, currency: "USD"},
+                            {label: "2026-11-12", cost: 1, tokens: 10, currency: "USD"},
+                            {label: "2026-11-12", cost: 2, tokens: 20, currency: "USD"},
+                            {label: "2026-11-13", cost: 0, tokens: 0, currency: "USD"}
+                        ]
+                    }
+                ],
+                expectedPeriodCost: 5
+            }
+        ];
+    }
+
+    function test_unavailableChartDaysInspectWithoutPinning(data) {
+        applet.costs = data.costs;
+        var view = createView("SpendView");
+        if (!view) return;
+        compare(view.dailyPoints.length, 3);
+        compare(view.dailyPoints[1].label, "2026-11-12");
+        compare(view.dailyPoints[1].value, null);
+        var chart = findChild(view, "analysisHistoryChart");
+        var allDays = findChild(view, "analysisAllDaysButton");
+        var readout = findChild(chart, "chartPointValue");
+        var plot = chart.nextItemInFocusChain(true).parent;
+
+        // Keyboard inspection crosses the unavailable day without pinning it.
+        chart.focusPlot(Qt.TabFocusReason);
+        keyClick(Qt.Key_Home);
+        compare(chart.selectedIndex, 0);
+        compare(view.selectedDay, "2026-11-11");
+        verify(allDays.visible);
+
+        keyClick(Qt.Key_Right);
+        compare(chart.selectedIndex, 1);
+        compare(readout.text, "Unavailable");
+        compare(view.selectedDay, "");
+        verify(!allDays.visible);
+        compare(view.presentedProviderCosts[0].totals.cost, data.expectedPeriodCost);
+
+        // Measured zero days remain pinnable.
+        keyClick(Qt.Key_Right);
+        compare(chart.selectedIndex, 2);
+        compare(view.selectedDay, "2026-11-13");
+        verify(allDays.visible);
+
+        // Clicking an unavailable day inspects it without pinning or carrying
+        // a latent pin across a refresh that later populates that date.
+        mouseClick(plot, plot.width / 2, plot.height / 2);
+        compare(chart.selectedIndex, 1);
+        compare(readout.text, "Unavailable");
+        compare(view.selectedDay, "");
+        verify(!allDays.visible);
+
+        applet.costs = [{
+            provider: "codex",
+            currency: "USD",
+            totals: {cost: 7, tokens: 70, currency: "USD"},
+            daily: [
+                {label: "2026-11-11", cost: 2, tokens: 20, currency: "USD"},
+                {label: "2026-11-12", cost: 5, tokens: 50, currency: "USD"},
+                {label: "2026-11-13", cost: 0, tokens: 0, currency: "USD"}
+            ]
+        }];
+        compare(chart.selectedIndex, -1);
+        compare(view.selectedDay, "");
+    }
+
     function test_assistantAndKeyboardUseOneScrollViewport() {
         applet.dailyPoints = [day("2026-10-16", 2), day("2026-10-17", 3)];
         var view = createView("SpendView");

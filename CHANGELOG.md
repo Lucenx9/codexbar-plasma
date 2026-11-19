@@ -12,6 +12,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Avoid pinning unavailable or duplicate dates from the Usage & Spend history
+  chart while keeping them inspectable in the chart readout.
+
 - Include enabled provider IDs in support reports when recent CLI releases
   return a larger provider list with authentication metadata.
 

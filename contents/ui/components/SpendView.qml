@@ -34,7 +34,9 @@ ColumnLayout {
     readonly property var dailyPoints: Analysis.dailyPoints(
         applet.costNumberFormat, providerCosts, applet.costHistoryShowsTokens)
     readonly property string selectedDay: historyChart.selectedIndex >= 0
-        && historyChart.selectedIndex < dailyPoints.length ? dailyPoints[historyChart.selectedIndex].label : ""
+        && historyChart.selectedIndex < dailyPoints.length
+        && dailyPoints[historyChart.selectedIndex].value !== null
+        ? dailyPoints[historyChart.selectedIndex].label : ""
     readonly property var providerOptions: [{value: "", text: i18n("All providers")}].concat(
         applet.presentedSpendProviderCosts(filterProviderCosts).map(function(item) {
             return {value: item.provider, text: view.applet.providerDisplayTitle(item.provider)}
@@ -596,8 +598,11 @@ ColumnLayout {
                 }
                 onSelectedIndexChanged: {
                     // Ignore the chart's index clamp until new points are reconciled.
-                    if (view.daySelectionMemo.points === points)
-                        view.daySelectionMemo = { points: points, index: selectedIndex }
+                    if (view.daySelectionMemo.points === points) {
+                        var index = selectedIndex >= 0 && selectedIndex < points.length
+                            && points[selectedIndex].value !== null ? selectedIndex : -1
+                        view.daySelectionMemo = { points: points, index: index }
+                    }
                 }
                 visible: view.dailyPoints.length > 0
                 applet: view.applet
