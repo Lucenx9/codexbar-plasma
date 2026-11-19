@@ -17,8 +17,10 @@ Item {
     readonly property real tabRadius: Math.max(0, surfaceRadius - providerTabsFlickable.anchors.margins)
     readonly property real tabPageStep: Math.max(Kirigami.Units.gridUnit * 4, providerTabsFlickable.width * 0.6)
     readonly property real tabWheelStep: Kirigami.Units.gridUnit * 5
-    readonly property bool canScrollLeft: providerTabsFlickable.contentX > 0
-    readonly property bool canScrollRight: providerTabsFlickable.contentX
+    readonly property real pageScrollPosition: providerTabsScroll.running
+        ? providerTabsScroll.to : providerTabsFlickable.contentX
+    readonly property bool canScrollLeft: pageScrollPosition > 0
+    readonly property bool canScrollRight: pageScrollPosition
         < providerTabsFlickable.contentWidth - providerTabsFlickable.width - 1
     property Item selectedTab: null
     readonly property Item navigationTab: {
@@ -50,8 +52,7 @@ Item {
     }
 
     function scrollBy(delta, immediate) {
-        var position = !immediate && providerTabsScroll.running
-            ? providerTabsScroll.to : providerTabsFlickable.contentX;
+        var position = immediate ? providerTabsFlickable.contentX : pageScrollPosition;
         scrollTo(position + delta, immediate);
     }
 

@@ -241,15 +241,27 @@ TestCase {
         focusFor(host, 0).forceActiveFocus(Qt.TabFocusReason);
         var viewport = findChild(host, "providerTabsFlickable");
         var next = findChild(host, "nextTabsButton");
+        var previous = findChild(host, "previousTabsButton");
         var start = viewport.contentX;
         var distance = 2 * data.direction * host.tabPageStep;
-        verify(viewport.contentWidth - viewport.width > Math.abs(distance));
+        var end = data.mirrored ? 0 : viewport.contentWidth - viewport.width;
+        verify(Math.abs(end - start) > Math.abs(distance));
         verify(next.enabled);
+        verify(!previous.enabled);
+
+        mouseClick(next);
+        verify(previous.enabled);
+        mouseClick(previous);
+        verify(!previous.enabled);
+        tryCompare(viewport, "contentX", start);
 
         mouseClick(next);
         mouseClick(next);
-
         tryCompare(viewport, "contentX", start + distance);
+
+        mouseClick(previous);
+        mouseClick(previous);
+        tryCompare(viewport, "contentX", start);
         compare(host.selectedIndex, 0);
     }
 
