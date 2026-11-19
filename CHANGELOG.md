@@ -12,6 +12,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Resume automatic managed CLI update checks after the system clock moves back
+  instead of waiting for the earlier clock time.
+
 - Offer CLI installation in an empty popup when the configured command cannot
   run, including when Diagnostics limits usage to specific providers.
 

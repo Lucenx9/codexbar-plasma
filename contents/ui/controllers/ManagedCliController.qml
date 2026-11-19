@@ -74,8 +74,11 @@ Item {
         if (["installed", "restored"].indexOf(result.status) >= 0) changed()
     }
     function checkIfDue() {
-        if (!automaticUpdates || busy || Date.now() < nextAttempt) return
-        nextAttempt = Date.now() + 60 * 60 * 1000
+        var now = Date.now()
+        var cooldownMs = 60 * 60 * 1000
+        // A deadline beyond one cooldown was set before the clock moved back.
+        if (!automaticUpdates || busy || (now < nextAttempt && nextAttempt - now <= cooldownMs)) return
+        nextAttempt = now + cooldownMs
         // The helper checks exact managed ownership before any network or filesystem mutation.
         run("automatic")
     }
