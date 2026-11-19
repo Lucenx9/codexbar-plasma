@@ -50,7 +50,9 @@ Item {
     }
 
     function scrollBy(delta, immediate) {
-        scrollTo(providerTabsFlickable.contentX + delta, immediate);
+        var position = !immediate && providerTabsScroll.running
+            ? providerTabsScroll.to : providerTabsFlickable.contentX;
+        scrollTo(position + delta, immediate);
     }
 
     // Tabs come from three different delegates, so walk the parent

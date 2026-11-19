@@ -226,6 +226,33 @@ TestCase {
         compare(host.selectedIndex, 0);
     }
 
+    function test_rapidPageClicksAccumulate_data() {
+        return [
+            { tag: "ltr", mirrored: false, direction: 1 },
+            { tag: "rtl", mirrored: true, direction: -1 }
+        ];
+    }
+
+    function test_rapidPageClicksAccumulate(data) {
+        var host = createStrip();
+        host.mirrored = data.mirrored;
+        waitForPolish(findChild(host, "tab0").parent);
+        wait(0);
+        focusFor(host, 0).forceActiveFocus(Qt.TabFocusReason);
+        var viewport = findChild(host, "providerTabsFlickable");
+        var next = findChild(host, "nextTabsButton");
+        var start = viewport.contentX;
+        var distance = 2 * data.direction * host.tabPageStep;
+        verify(viewport.contentWidth - viewport.width > Math.abs(distance));
+        verify(next.enabled);
+
+        mouseClick(next);
+        mouseClick(next);
+
+        tryCompare(viewport, "contentX", start + distance);
+        compare(host.selectedIndex, 0);
+    }
+
     function test_aFittingIconStripHidesControlsAndRejectsForeignFocus() {
         var host = createStrip();
         host.width = 600;
