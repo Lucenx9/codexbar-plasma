@@ -34,6 +34,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Apply every mouse wheel step immediately when scrolling overflowing popup
   tabs, including steps in quick succession.
 
+- Count each rapid click on the popup tab scroll buttons while the strip is
+  still moving.
+
 - Return keyboard focus to the Hidden items summary after restoring a row or a
   provider's detail sections in Popup settings.
 

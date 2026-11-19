@@ -226,6 +226,45 @@ TestCase {
         compare(host.selectedIndex, 0);
     }
 
+    function test_rapidPageClicksAccumulate_data() {
+        return [
+            { tag: "ltr", mirrored: false, direction: 1 },
+            { tag: "rtl", mirrored: true, direction: -1 }
+        ];
+    }
+
+    function test_rapidPageClicksAccumulate(data) {
+        var host = createStrip();
+        host.mirrored = data.mirrored;
+        waitForPolish(findChild(host, "tab0").parent);
+        wait(0);
+        focusFor(host, 0).forceActiveFocus(Qt.TabFocusReason);
+        var viewport = findChild(host, "providerTabsFlickable");
+        var next = findChild(host, "nextTabsButton");
+        var previous = findChild(host, "previousTabsButton");
+        var start = viewport.contentX;
+        var distance = 2 * data.direction * host.tabPageStep;
+        var end = data.mirrored ? 0 : viewport.contentWidth - viewport.width;
+        verify(Math.abs(end - start) > Math.abs(distance));
+        verify(next.enabled);
+        verify(!previous.enabled);
+
+        mouseClick(next);
+        verify(previous.enabled);
+        mouseClick(previous);
+        verify(!previous.enabled);
+        tryCompare(viewport, "contentX", start);
+
+        mouseClick(next);
+        mouseClick(next);
+        tryCompare(viewport, "contentX", start + distance);
+
+        mouseClick(previous);
+        mouseClick(previous);
+        tryCompare(viewport, "contentX", start);
+        compare(host.selectedIndex, 0);
+    }
+
     function test_aFittingIconStripHidesControlsAndRejectsForeignFocus() {
         var host = createStrip();
         host.width = 600;
