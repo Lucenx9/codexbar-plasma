@@ -88,6 +88,15 @@ TestCase {
         compare(selected.count, 0);
         updater.checkIfDue(); verify(!updater.busy);
     }
+    function test_clockRollbackDoesNotPostponeAutomaticCheck() {
+        var updater = create();
+        // Scheduled while the wall clock ran a day ahead, then corrected.
+        updater.nextAttempt = Date.now() + 24 * 60 * 60 * 1000;
+        updater.automaticUpdates = true;
+        tryCompare(updater, "busy", true); tryCompare(updater, "busy", false);
+        verify(updater.nextAttempt <= Date.now() + 60 * 60 * 1000);
+        updater.checkIfDue(); verify(!updater.busy);
+    }
     function test_rollbackUsesTheDisplayedVersion() {
         var updater = create();
         updater.run("status"); tryCompare(updater, "busy", false);
