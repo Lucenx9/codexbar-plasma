@@ -12,6 +12,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Offer CLI installation in an empty popup when the configured command cannot
+  run, including when Diagnostics limits usage to specific providers.
+
 - Avoid pinning unavailable or duplicate dates from the Usage & Spend history
   chart while keeping them inspectable in the chart readout.
 

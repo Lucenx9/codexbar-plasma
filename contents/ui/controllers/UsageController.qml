@@ -33,8 +33,8 @@ Item {
 
     readonly property bool loading: lifecycle.loading
     readonly property string errorText: lifecycle.errorText
-    // True when the last finished usage command could not run the configured
-    // executable at all, which needs a command-path answer rather than a retry.
+    // True when the command, or every command in a scoped usage batch, could
+    // not run the configured executable.
     readonly property bool commandPathFailed: lifecycle.commandPathFailed
     readonly property var providerDisplayNames: lifecycle.providerDisplayNames
     readonly property string commandSource: lifecycle.commandSource
@@ -92,6 +92,7 @@ Item {
         readonly property int maximumProviderSnapshots: Normalizer.maximumProviderSnapshots
         readonly property int maximumConcurrentProviderFallbackCommands: 8
         property var providerFallbackState: null
+        property bool fallbackOnlyPathFailures: false
         readonly property string requestContext: JSON.stringify([controller.commandPath, controller.provider, controller.sourceMode, controller.includeStatus, controller.selectedAccounts, controller.providerConfigRevision])
         // Enabled-only and explicit all-provider rosters cannot share a cache.
         readonly property string rosterContext: JSON.stringify([providerRosterContext(), controller.provider])
@@ -328,6 +329,7 @@ Item {
                 finishEmptyRoster();
                 return;
             }
+            fallbackOnlyPathFailures = true;
             applyProviderFallbackTransition(transition);
         }
 
@@ -349,6 +351,12 @@ Item {
                 connectUsageCommand(request.sourceName, buildCommandDescriptor("providerFallback", request.providerID));
             }
             if (transition.finished) {
+                commandPathFailed = fallbackOnlyPathFailures;
+                if (commandPathFailed) {
+                    providerFallbackState = null;
+                    failUsageRefresh(transition.orderedItems[0].error);
+                    return;
+                }
                 finishProviderFallback(transition.orderedItems);
             }
         }
@@ -500,6 +508,7 @@ Item {
 
         function parseProviderFallbackOutput(sourceName, providerID, stdoutText, stderrText, exitCode) {
             finishUsageCommandSource(sourceName);
+            fallbackOnlyPathFailures = fallbackOnlyPathFailures && Guards.isCommandPathFailure(exitCode);
             var result = UsageResponse.response(stdoutText, stderrText, providerID, Date.now(), exitCode,
                 selectedAccountForProvider(providerID));
             var item = result.outcome === "success" ? result.items[0] : ProviderSnapshot.normalize({
@@ -545,10 +554,11 @@ Item {
             var exitCode = data ? data["exit code"] : null;
             var stdoutText = data ? data["stdout"] : "";
             var stderrText = data ? data["stderr"] : "";
-            // A shell that cannot run the configured executable reports it the
-            // same way for every command kind, so classify before dispatching.
-            // One reachable command clears the classification for all of them.
-            lifecycle.commandPathFailed = Guards.isCommandPathFailure(exitCode);
+            // Scoped replies settle command availability together at the end
+            // of their batch so the last reply cannot hide a healthy sibling.
+            if (descriptor.kind !== "providerFallback") {
+                lifecycle.commandPathFailed = Guards.isCommandPathFailure(exitCode);
+            }
             switch (descriptor.kind) {
             case "providerConfig":
                 lifecycle.finishUsageCommandSource(sourceName);
