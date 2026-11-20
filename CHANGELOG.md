@@ -22,6 +22,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Offer CLI installation in an empty popup when the configured command cannot
   run, including when Diagnostics limits usage to specific providers.
 
+- Reject partial service status responses when curl is unavailable.
+
 - Avoid pinning unavailable or duplicate dates from the Usage & Spend history
   chart while keeping them inspectable in the chart readout.
 
