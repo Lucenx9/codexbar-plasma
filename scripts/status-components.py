@@ -213,6 +213,8 @@ def fetch(url):
         return fetch_curl(curl, url)
     request = urllib.request.Request(url, headers={"Accept": "application/json", "User-Agent": "codexbar-plasma"})
     with urllib.request.build_opener(NoRedirect).open(request, timeout=10) as response:
+        if response.status != 200:
+            raise ValueError("http")
         raw = response.read(MAXIMUM_BYTES + 1)
     if len(raw) > MAXIMUM_BYTES:
         raise ValueError("size")

@@ -9,6 +9,7 @@ import sys
 import tempfile
 import time
 import unittest
+from urllib.response import addinfourl
 from unittest.mock import patch
 
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts/status-components.py"
@@ -90,11 +91,19 @@ class StatusFetchTests(unittest.TestCase):
 
     def test_missing_curl_preserves_bounded_urllib_fallback(self):
         with patch.object(status.urllib.request, "build_opener") as build:
-            build.return_value.open.return_value = io.BytesIO(b"{}")
+            build.return_value.open.return_value = addinfourl(io.BytesIO(b"{}"), {}, URL, 200)
             self.assertEqual(status.fetch(URL), b"{}")
             self.assertIs(build.call_args.args[0], status.NoRedirect)
             self.assertEqual(build.return_value.open.call_args.kwargs, {"timeout": 10})
-            build.return_value.open.return_value = io.BytesIO(b"x" * (status.MAXIMUM_BYTES + 1))
+            build.return_value.open.return_value = addinfourl(
+                io.BytesIO(b"x" * (status.MAXIMUM_BYTES + 1)), {}, URL, 200)
+            self.assertEqual(self.helper_record(), {"status": "error"})
+
+
+    def test_urllib_partial_content_cannot_supply_components(self):
+        payload = b'{"components":[{"id":"web","name":"Grok Web","status":"available"}]}'
+        with patch.object(status.urllib.request, "build_opener") as build:
+            build.return_value.open.return_value = addinfourl(io.BytesIO(payload), {}, URL, 206)
             self.assertEqual(self.helper_record(), {"status": "error"})
 
 
