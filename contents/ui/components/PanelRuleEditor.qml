@@ -74,7 +74,9 @@ RowLayout {
             } catch (error) {
                 // Invalid locale text still needs the compatibility fallback.
             }
-            var match = text.match(/\d{1,3}(?:[\s.,'  ]\d{3})+(?!\d)|\d+/)
+            // Five-digit minutes above the maximum keep a grouping the style
+            // cannot regroup ("1,2000"); read the whole run so it clamps.
+            var match = text.match(/\d(?:[\s.,'\u00a0\u202f]?\d)*/)
             return match ? parseInt(match[0].replace(/\D/g, ""), 10) : value
         }
         onValueModified: {

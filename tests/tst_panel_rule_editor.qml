@@ -71,8 +71,10 @@ TestCase {
         return [
             {tag: "cleared-minutes", rules: '{"text":{"condition":"resetWithin","resetMinutes":60}}', field: "resetMinutes", value: 60, keys: [Qt.Key_Backspace]},
             {tag: "cleared-percent", rules: '{"text":{"condition":"usageAtLeast","usedPercent":80}}', field: "usedPercent", value: 80, keys: [Qt.Key_Backspace]},
-            {tag: "letters", rules: '{"text":{"condition":"resetWithin","resetMinutes":60}}', field: "resetMinutes", value: 60, keys: [Qt.Key_A]},
-            {tag: "retyped", rules: '{"text":{"condition":"resetWithin","resetMinutes":60}}', field: "resetMinutes", value: 90, keys: [Qt.Key_9, Qt.Key_0]}
+            {tag: "retyped", rules: '{"text":{"condition":"resetWithin","resetMinutes":60}}', field: "resetMinutes", value: 90, keys: [Qt.Key_9, Qt.Key_0]},
+            // A grouping locale cannot regroup five digits above the maximum.
+            {tag: "above-maximum", rules: '{"text":{"condition":"resetWithin","resetMinutes":60}}', field: "resetMinutes", value: 10080, keys: [Qt.Key_1, Qt.Key_2, Qt.Key_0, Qt.Key_0, Qt.Key_0], locale: "en_US"},
+            {tag: "above-maximum-de", rules: '{"text":{"condition":"resetWithin","resetMinutes":60}}', field: "resetMinutes", value: 10080, keys: [Qt.Key_9, Qt.Key_9, Qt.Key_9, Qt.Key_9, Qt.Key_9], locale: "de_DE"}
         ];
     }
 
@@ -98,6 +100,8 @@ TestCase {
         });
         var threshold = findChild(editor, "textVisibilityThreshold");
         tryCompare(threshold, "visible", true);
+        if (data.locale)
+            threshold.locale = Qt.locale(data.locale);
         threshold.contentItem.forceActiveFocus(Qt.TabFocusReason);
         threshold.contentItem.selectAll();
         for (var i = 0; i < data.keys.length; i++)
@@ -106,6 +110,7 @@ TestCase {
         compare(configPage.panelVisibilityRules.text[data.field], data.value);
         compare(threshold.value, data.value);
         compare(threshold.valueFromText("", threshold.locale), data.value);
+        compare(threshold.valueFromText("invalid", threshold.locale), data.value);
     }
 
     function test_interactiveEditsFollowExternalRuleChanges() {
