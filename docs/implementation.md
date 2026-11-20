@@ -263,6 +263,8 @@ rollback. Only the configured launcher path is eligible. The release probe repor
 selection separately from ownership of the resolved executable so a PATH lookup
 or version-specific path still receives release announcements. Mutations, cleanup and
 rollback share the lock; healthy offline reuse bypasses it and release requests.
+First-time install rechecks for a newly activated copy under the lock before
+contacting GitHub.
 Rollback compares the displayed stable `--expected-previous` target after locking
 and before probing/pruning/activation. Stale targets return `stale` unchanged.
 Probe the rollback executable before activation; failure returns `no_previous`.
