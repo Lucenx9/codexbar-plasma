@@ -63,6 +63,20 @@ RowLayout {
         to: editor.usesPercent ? 100 : PanelRules.maximumResetMinutes
         value: editor.usesPercent ? editor.rule.usedPercent : editor.rule.resetMinutes
         editable: true
+        // Like the Settings number editors: unreadable or cleared text keeps
+        // the current threshold instead of saving the minimum.
+        valueFromText: function(text, locale) {
+            try {
+                var localized = Number.fromLocaleString(locale, text)
+                if (isFinite(localized)) {
+                    return localized
+                }
+            } catch (error) {
+                // Invalid locale text still needs the compatibility fallback.
+            }
+            var match = text.match(/\d{1,3}(?:[\s.,'  ]\d{3})+(?!\d)|\d+/)
+            return match ? parseInt(match[0].replace(/\D/g, ""), 10) : value
+        }
         onValueModified: {
             editor.configPage.setPanelVisibilityRule(editor.elementID, editor.usesPercent ? {
                 usedPercent: value

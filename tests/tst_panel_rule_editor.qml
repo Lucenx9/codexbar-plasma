@@ -67,6 +67,47 @@ TestCase {
         compare(configPage.panelVisibilityRules.meters.condition, "always");
     }
 
+    function test_unreadableThresholdTextKeepsTheRule_data() {
+        return [
+            {tag: "cleared-minutes", rules: '{"text":{"condition":"resetWithin","resetMinutes":60}}', field: "resetMinutes", value: 60, keys: [Qt.Key_Backspace]},
+            {tag: "cleared-percent", rules: '{"text":{"condition":"usageAtLeast","usedPercent":80}}', field: "usedPercent", value: 80, keys: [Qt.Key_Backspace]},
+            {tag: "letters", rules: '{"text":{"condition":"resetWithin","resetMinutes":60}}', field: "resetMinutes", value: 60, keys: [Qt.Key_A]},
+            {tag: "retyped", rules: '{"text":{"condition":"resetWithin","resetMinutes":60}}', field: "resetMinutes", value: 90, keys: [Qt.Key_9, Qt.Key_0]}
+        ];
+    }
+
+    // Clearing or mistyping the threshold must not save the minimum, which
+    // turns "Usage at least" into always and "Reset within" into one minute.
+    function test_unreadableThresholdTextKeepsTheRule(data) {
+        if (!holder) {
+            try {
+                holder = Qt.createQmlObject('import QtQuick; import "../contents/ui/components" as Components; QtObject { property Component editor: Component { Components.PanelRuleEditor { function i18n(text) { return text } } } }', testCase, Qt.resolvedUrl("PanelRuleEditorTest.qml"));
+            } catch (error) {
+                if (/module "org\.kde\.kirigami" is not installed/.test(String(error))) {
+                    skip("Panel rule editor checks need the optional KDE QML modules");
+                    return;
+                }
+                throw error;
+            }
+        }
+        configPage.storedRules = data.rules;
+        var editor = createTemporaryObject(holder.editor, testCase, {
+            configPage: configPage,
+            elementID: "text",
+            width: 480
+        });
+        var threshold = findChild(editor, "textVisibilityThreshold");
+        tryCompare(threshold, "visible", true);
+        threshold.contentItem.forceActiveFocus(Qt.TabFocusReason);
+        threshold.contentItem.selectAll();
+        for (var i = 0; i < data.keys.length; i++)
+            keyClick(data.keys[i]);
+        keyClick(Qt.Key_Return);
+        compare(configPage.panelVisibilityRules.text[data.field], data.value);
+        compare(threshold.value, data.value);
+        compare(threshold.valueFromText("", threshold.locale), data.value);
+    }
+
     function test_interactiveEditsFollowExternalRuleChanges() {
         if (!holder) {
             try {
