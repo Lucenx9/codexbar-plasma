@@ -33,6 +33,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Make quick setup wait for an in-progress widget installation and upgrade
   an older release that another installer finishes installing during the download.
 
+- Reuse a managed CLI installed by another widget instance while preparing
+  the same installation, even if GitHub is unavailable.
+
 - Keep account discovery retryable after reopening the popup for a provider
   without token-account support.
 

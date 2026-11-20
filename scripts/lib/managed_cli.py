@@ -508,6 +508,11 @@ def _run_locked(root, action, expected_previous):
     """Execute a mutating action while the shared installation lock is held."""
     if action == "rollback":
         return _rollback(root, expected_previous)
+    if action == "install":
+        # Another installer may have activated a copy before we took the lock.
+        reused = _reuse_installation(root)
+        if reused is not None:
+            return reused
     _prune_if_possible(root)
     result = install(root, automatic=action == "automatic")
     _prune_if_possible(root)
