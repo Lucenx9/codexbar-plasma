@@ -16,11 +16,13 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   or mistyped, and clamp a typed reset window above one week instead of saving
   its first digit.
 
-- Resume automatic managed CLI update checks after the system clock moves back
-  instead of waiting for the earlier clock time.
+- Resume automatic CLI release checks and managed CLI update checks after the
+  system clock moves back instead of waiting for the earlier clock time.
 
 - Offer CLI installation in an empty popup when the configured command cannot
   run, including when Diagnostics limits usage to specific providers.
+
+- Reject partial service status responses when curl is unavailable.
 
 - Avoid pinning unavailable or duplicate dates from the Usage & Spend history
   chart while keeping them inspectable in the chart readout.

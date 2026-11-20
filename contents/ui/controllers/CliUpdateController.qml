@@ -20,6 +20,7 @@ Item {
     property string activeSource: ""
     property int serial: 0
     property double retryAfter: 0
+    readonly property int retryCooldownMs: 60 * 60 * 1000
     property bool initialized: false
     property bool forceNextCheck: false
     signal checkedRelease(string timestamp)
@@ -84,8 +85,10 @@ Item {
     Component.onDestruction: retire()
 
     function checkIfDue() {
-        if (automaticChecks && !localOnly && Date.now() >= retryAfter
-                && UpdateLogic.updateCheckDue(true, completedCheck || lastCheck, 24, Date.now(), forceNextCheck)) checkNow()
+        var now = Date.now()
+        // A deadline beyond one cooldown was set before the clock moved back.
+        if (automaticChecks && !localOnly && (now >= retryAfter || retryAfter - now > retryCooldownMs)
+                && UpdateLogic.updateCheckDue(true, completedCheck || lastCheck, 24, now, forceNextCheck)) checkNow()
     }
     function checkNow() {
         if (busy) return
@@ -95,7 +98,7 @@ Item {
             result = CliUpdate.response(commandPath.trim().length === 0
                 ? '{"status":"missing"}' : "")
             forceNextCheck = true
-            retryAfter = Date.now() + 60 * 60 * 1000
+            retryAfter = Date.now() + retryCooldownMs
             return
         }
         forceNextCheck = false
@@ -109,7 +112,7 @@ Item {
         retire()
         checked = true
         result = CliUpdate.response(data && Guards.exitCode(data["exit code"]) === 0 ? data["stdout"] : "")
-        retryAfter = Date.now() + 60 * 60 * 1000
+        retryAfter = Date.now() + retryCooldownMs
         var successfulReleaseCheck = ["available", "current", "uncomparable"].indexOf(result.status) >= 0
         // A failed early/retargeted check must retry even if the prior daily check is recent.
         forceNextCheck = !successfulReleaseCheck
@@ -134,7 +137,7 @@ Item {
             controller.checked = true
             controller.result = CliUpdate.response("")
             controller.forceNextCheck = true
-            controller.retryAfter = Date.now() + 60 * 60 * 1000
+            controller.retryAfter = Date.now() + controller.retryCooldownMs
         }
     }
     Timer {
