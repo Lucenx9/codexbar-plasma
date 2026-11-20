@@ -249,7 +249,8 @@ CLI release checks are read-only. General also runs a separate offline probe on
 open/command changes to confirm first-install eligibility; Diagnostics uses local
 mode only. Shared Python probes have output/deadline bounds and validate official
 release metadata. Failed retargeted checks can retry after one hour even if the
-prior command had a recent successful timestamp.
+prior command had a recent successful timestamp. Automatic release checks
+ignore a retry deadline more than one hour ahead after a wall-clock rollback.
 
 Managed installation selects only a helper-verified executable, never a path from
 metadata-only `status`. General waits for the offline probe and offers install
