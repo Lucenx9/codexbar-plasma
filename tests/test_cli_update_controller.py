@@ -87,6 +87,30 @@ TestCase {
         tryCompare(succeeded, "count", 1);
         updater.checkIfDue(); wait(50); verify(!updater.busy);
     }
+    function test_clockRollbackResumesChecks_data() {
+        return [{tag: "successful-check", command: "normal", status: "available"},
+                {tag: "failed-check", command: "network", status: "network_error"}];
+    }
+    function test_clockRollbackResumesChecks(data) {
+        var updater = create({automaticChecks: true, commandPath: data.command});
+        if (!updater) return;
+        tryCompare(updater, "checked", true);
+        compare(updater.result.status, data.status);
+        updater.checkIfDue();
+        verify(!updater.busy, "A recent check should respect its cooldown");
+
+        // Model a 24-hour correction by moving the recorded wall-clock times
+        // forward relative to the controller's current clock.
+        var dayMs = 24 * 60 * 60 * 1000;
+        updater.retryAfter += dayMs;
+        if (updater.completedCheck.length > 0)
+            updater.completedCheck = new Date(Date.parse(updater.completedCheck) + dayMs).toISOString();
+
+        updater.checkIfDue();
+        verify(updater.busy, "A wall-clock rollback should allow a new release check");
+        tryCompare(updater, "busy", false);
+        compare(updater.result.status, data.status);
+    }
     function test_disabledRetiresAndIgnoresLateReplies() {
         var updater = create({automaticChecks: true}); if (!updater) return;
         tryCompare(updater, "busy", true);
