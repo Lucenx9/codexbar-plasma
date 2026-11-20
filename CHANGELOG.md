@@ -12,6 +12,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep a panel visibility rule's threshold when its number field is cleared
+  or mistyped, and clamp a typed reset window above one week instead of saving
+  its first digit.
+
 - Resume automatic managed CLI update checks after the system clock moves back
   instead of waiting for the earlier clock time.
 
