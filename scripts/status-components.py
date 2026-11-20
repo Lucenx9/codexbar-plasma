@@ -216,8 +216,9 @@ def fetch(url):
         if response.status != 200:
             raise ValueError("http")
         raw = response.read(MAXIMUM_BYTES + 1)
-    if len(raw) > MAXIMUM_BYTES:
-        raise ValueError("size")
+        # A bounded HTTPResponse.read can return early without raising IncompleteRead.
+        if len(raw) > MAXIMUM_BYTES or response.length:
+            raise ValueError("body")
     return raw
 
 

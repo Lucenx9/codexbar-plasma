@@ -1,4 +1,5 @@
-"""Bounded status transport through a synthetic curl process; never uses the network."""
+"""Bounded status transport through synthetic curl and HTTP responses."""
+from http.client import HTTPResponse
 import importlib.util
 import io
 import json
@@ -9,8 +10,7 @@ import sys
 import tempfile
 import time
 import unittest
-from urllib.response import addinfourl
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts/status-components.py"
 SPEC = importlib.util.spec_from_file_location("status_transport", SCRIPT)
@@ -35,6 +35,14 @@ class StatusFetchTests(unittest.TestCase):
     def fake_curl(self, source):
         self.curl.write_text("#!" + sys.executable + "\nimport os, sys, time\n" + source)
         self.curl.chmod(0o700)
+
+    def http_response(self, headers, body, status_line="200 OK"):
+        connection = Mock()
+        connection.makefile.return_value = io.BytesIO(
+            f"HTTP/1.1 {status_line}\r\n{headers}\r\n".encode() + body)
+        response = HTTPResponse(connection)
+        response.begin()
+        return response
 
     def helper_record(self):
         output = io.StringIO()
@@ -91,19 +99,32 @@ class StatusFetchTests(unittest.TestCase):
 
     def test_missing_curl_preserves_bounded_urllib_fallback(self):
         with patch.object(status.urllib.request, "build_opener") as build:
-            build.return_value.open.return_value = addinfourl(io.BytesIO(b"{}"), {}, URL, 200)
+            build.return_value.open.return_value = self.http_response("Content-Length: 2\r\n", b"{}")
             self.assertEqual(status.fetch(URL), b"{}")
             self.assertIs(build.call_args.args[0], status.NoRedirect)
             self.assertEqual(build.return_value.open.call_args.kwargs, {"timeout": 10})
-            build.return_value.open.return_value = addinfourl(
-                io.BytesIO(b"x" * (status.MAXIMUM_BYTES + 1)), {}, URL, 200)
+            build.return_value.open.return_value = self.http_response("", b"x" * (status.MAXIMUM_BYTES + 1))
             self.assertEqual(self.helper_record(), {"status": "error"})
 
+    def test_urllib_accepts_complete_bodies_without_content_length(self):
+        with patch.object(status.urllib.request, "build_opener") as build:
+            build.return_value.open.return_value = self.http_response("", b"{}")
+            self.assertEqual(status.fetch(URL), b"{}")
+            build.return_value.open.return_value = self.http_response(
+                "Transfer-Encoding: chunked\r\n", b"2\r\n{}\r\n0\r\n\r\n")
+            self.assertEqual(status.fetch(URL), b"{}")
 
     def test_urllib_partial_content_cannot_supply_components(self):
         payload = b'{"components":[{"id":"web","name":"Grok Web","status":"available"}]}'
         with patch.object(status.urllib.request, "build_opener") as build:
-            build.return_value.open.return_value = addinfourl(io.BytesIO(payload), {}, URL, 206)
+            build.return_value.open.return_value = self.http_response("", payload, "206 Partial Content")
+            self.assertEqual(self.helper_record(), {"status": "error"})
+
+    def test_urllib_truncated_200_cannot_supply_components(self):
+        payload = b'{"components":[{"id":"web","name":"Grok Web","status":"available"}]}'
+        with patch.object(status.urllib.request, "build_opener") as build:
+            build.return_value.open.return_value = self.http_response(
+                f"Content-Length: {len(payload) + 1}\r\n", payload)
             self.assertEqual(self.helper_record(), {"status": "error"})
 
 

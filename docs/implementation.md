@@ -307,7 +307,8 @@ errors. Prefer installed curl for
 [Happy Eyeballs](https://curl.se/docs/manpage.html#--happy-eyeballs-timeout-ms),
 disabling curl config, redirects and non-HTTPS destinations. Require HTTP 200,
 5-second connect and 10-second transfer bounds; Python caps 1 MiB and enforces a
-12-second child deadline. The bounded, non-redirecting urllib fallback remains.
+12-second child deadline. The bounded, non-redirecting urllib fallback also
+rejects a body that ends before its declared Content-Length.
 
 Keep component expansion outside action-row identity and preserve group names
 across refreshes. Malformed affected-component collections keep healthy siblings
