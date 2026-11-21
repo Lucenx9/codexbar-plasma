@@ -12,6 +12,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Refresh usage after network reconnection even if the system clock moved back
+  since the previous refresh attempt.
+
 - Hide unread Codex credit balances while preserving confirmed zero balances
   and monthly credit limits.
 

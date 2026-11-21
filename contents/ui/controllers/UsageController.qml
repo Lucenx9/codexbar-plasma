@@ -85,7 +85,8 @@ Item {
         property var providerRosterCache: null
         property bool usageRefreshScheduled: false
         property int observedReachability: NetworkState.unknown
-        property double reconnectedAtMs: -1
+        property int refreshAttemptSerial: 0
+        property int reconnectedAtAttemptSerial: -1
         property int commandRunSerial: 0
         property var activeCommandDescriptors: ({})
         readonly property int defaultCommandTimeoutMs: 120000
@@ -246,6 +247,7 @@ Item {
                 return;
             }
 
+            refreshAttemptSerial += 1;
             usageLastRefreshAttemptAtMs = Date.now();
             // After a clock rollback, the new attempt starts the popup cooldown.
             if (usageLastCompletedAtMs > usageLastRefreshAttemptAtMs)
@@ -424,7 +426,7 @@ Item {
         // interval. Leaving the online state before it settles cancels it.
         function observeReachability(current) {
             if (NetworkState.reconnected(observedReachability, current)) {
-                reconnectedAtMs = Date.now();
+                reconnectedAtAttemptSerial = refreshAttemptSerial;
                 reconnectRefreshTimer.restart();
             }
             else if (current !== NetworkState.online)
@@ -603,7 +605,7 @@ Item {
         // requests that predate the reconnection are replaced.
         onTriggered: {
             if (lifecycle.initialized && lifecycle.commandSource.length > 0
-                    && lifecycle.usageLastRefreshAttemptAtMs < lifecycle.reconnectedAtMs)
+                    && lifecycle.refreshAttemptSerial === lifecycle.reconnectedAtAttemptSerial)
                 lifecycle.refreshNow(false);
         }
     }

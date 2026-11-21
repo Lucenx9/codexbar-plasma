@@ -383,6 +383,17 @@ TestCase {
         wait(3500);
         compare(unknown.snapshots.length, 1);
     }
+    function test_reconnectRefreshesAfterClockRollback() {
+        var o = create("normal", {sourceMode: "cli", reachability: 1});
+        completed(o, 1);
+        var lifecycle = o.subject.children.find(function(child) {
+            return child.usageLastRefreshAttemptAtMs !== undefined;
+        });
+        lifecycle.usageLastRefreshAttemptAtMs = Date.now() + 3600000;
+        o.subject.reachability = 4;
+        completed(o, 2);
+        compare(latest(o)[0].account, "run 2");
+    }
     function test_productionTimeoutsReleaseEveryKindAndRejectLateReplies() {
         var aggregate = create("timeout-aggregate", {sourceMode: "cli"});
         var roster = create("timeout-roster");
