@@ -69,6 +69,7 @@ Item {
 
     Item {
         id: lifecycle
+        objectName: "aiInsightsLifecycle"
 
         property string activeSource: ""
         property string activeContextKey: ""
@@ -92,8 +93,18 @@ Item {
         // The in-memory deadline, or the persisted one when this plasmashell
         // has not seen the rate limit itself.
         function rateLimitedUntil(nowMs) {
-            return Math.max(rateLimitedUntilMs,
+            return Math.max(
+                AiInsights.activeDeadlineMs(rateLimitedUntilMs, nowMs, AiInsights.maximumRetryAfterSeconds * 1000),
                 AiInsights.rateLimitUntilMs(controller.rateLimit, controller.contextKey, nowMs))
+        }
+
+        function activeRetryUntil(nowMs) {
+            var maxDelayMs = rateLimitedUntilMs > 0
+                ? AiInsights.maximumRetryAfterSeconds * 1000
+                : AiInsights.retryDelayMs("failure", 0, controller.intervalHours)
+            return Math.max(
+                AiInsights.activeDeadlineMs(retryAtMs, nowMs, maxDelayMs),
+                rateLimitedUntil(nowMs))
         }
 
         function retire() {
@@ -119,6 +130,7 @@ Item {
         }
 
         function checkIfDue() {
+            var nowMs = Date.now()
             var cache = AiInsights.parseCache(controller.cacheText)
             var due = AiInsights.automaticDue({
                 enabled: controller.insightsEnabled,
@@ -126,8 +138,8 @@ Item {
                 intervalHours: controller.intervalHours,
                 busy: controller.busy,
                 sufficient: controller.snapshotText.length > 0,
-                nowMs: Date.now(),
-                retryAtMs: Math.max(retryAtMs, rateLimitedUntil(Date.now())),
+                nowMs: nowMs,
+                retryAtMs: activeRetryUntil(nowMs),
                 lastAttemptMs: Date.parse(controller.lastAttempt),
                 lastSuccessMs: cache ? cache.generatedAtMs : NaN,
                 cacheMatchesContext: cache !== null && cache.contextKey === controller.contextKey,
@@ -155,7 +167,7 @@ Item {
                 }
                 return false
             }
-            if (!manual && nowMs < retryAtMs) {
+            if (!manual && nowMs < activeRetryUntil(nowMs)) {
                 return false
             }
             var options = {
