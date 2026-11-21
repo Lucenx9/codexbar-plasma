@@ -168,19 +168,12 @@ class ProviderDataTest(unittest.TestCase):
             raise AssertionError("changing reset formatting must not fan out new CLI requests")
 
         normalize_provider_body = function_body(snapshot_text, "normalize")
-        if not code_contains(normalize_provider_body, "Normalizer.strictFiniteNumber(credits.remaining)"):
-            raise AssertionError("remaining credits must reject coercive CLI numeric values")
         if not code_contains(normalize_provider_body, "Normalizer.normalizeCodexCreditLimit("):
             raise AssertionError("Codex monthly limits must cross the shared bounded normalizer")
         if not code_contains(normalize_provider_body, 'hasOwnKey(credits, "codexCreditLimit")'):
             raise AssertionError("Codex monthly limits must come from an own credits field")
-        if not code_contains(normalize_provider_body, "credits: isFinite(remaining)"):
-            raise AssertionError("the plain credits balance must remain independent of the monthly limit")
-        if "credits: codexCreditLimit" in normalize_provider_body:
-            raise AssertionError("the monthly-limit remainder must not replace the plain credits balance")
-        direct_number_call = re.compile(r"(?<![A-Za-z0-9_])Number\(")
-        if direct_number_call.search(normalize_provider_body):
-            raise AssertionError("remaining credits must not use loose numeric coercion")
+        if not code_contains(normalize_provider_body, "credits: creditBalance(credits)"):
+            raise AssertionError("displayed credits must use the balance covered by ProviderSnapshot QtTests")
 
     # Account response outcomes and empty-list semantics have direct QtTests in
     # tst_account_response.qml and real process coverage in test_accounts_controller.py.

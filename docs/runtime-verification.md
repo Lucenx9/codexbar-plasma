@@ -105,6 +105,35 @@ explain that distinction. Synthetic controller tests cover multiple returned
 account records; this probe does not establish authenticated multi-account
 availability or add a Linux login-switching action.
 
+On 2026-11-21 the checksum-verified official Linux x86-64 CLI
+[0.84.0](https://github.com/steipete/CodexBar/releases/tag/v0.84.0) processed
+synthetic OAuth responses through `usage --provider codex --all-accounts
+--source oauth --format json --json-only`. Each run used a single temporary
+native Codex home and a loopback server in an isolated `bwrap` namespace. The
+server supplied quota usage and, when requested, the workspace balance. No
+real account or credentials were used.
+
+| Synthetic input | Emitted `credits` | Plasma balance |
+| --- | --- | --- |
+| Personal measured zero | `remaining: 0`, `balanceReadSucceeded: true`, `creditsAvailable: false` | Zero |
+| Personal without balance or cap | Omitted | Hidden |
+| Monthly cap only | `remaining: 0`, `balanceReadSucceeded: false`, `codexCreditLimit` | Hidden, with the cap still shown |
+| Workspace measured balance | `balanceReadSucceeded: true`, `creditsAvailable: true`, `balanceIsWorkspace: true` with the measured amount, including zero | Reported amount |
+| Workspace balance endpoint returns HTTP 503 | `remaining: 0`, `balanceReadSucceeded: false`, `creditsAvailable: true` | Hidden |
+
+The same synthetic email was used for independent native homes. Each emitted a
+single email-labeled account and `usage.identity.accountEmail`, with no
+`usage.identity.accountID` or `openaiDashboard` object. This verifies the
+credit normalization contract. Same-email workspace disambiguation within one
+invocation and saved custom names remain unverified.
+[CLI credit assembly](https://github.com/steipete/CodexBar/blob/v0.84.0/Sources/CodexBarCore/Providers/Codex/CodexProviderDescriptor.swift)
+
+In the same isolation, `usage --provider codex --source web --format json
+--json-only` exits 1 with the macOS-only Web source error. The tagged CLI source
+can attach a fresh dashboard cache that passes account and authority checks.
+The probe had no eligible cache and did not verify emitted dashboard balances.
+[CLI cache loader](https://github.com/steipete/CodexBar/blob/v0.84.0/Sources/CodexBarCLI/CLIHelpers.swift)
+
 `config/ProviderSource.js` plans allowlisted source-mode writes and validates
 matching provider/source result records. `config/ProviderSavedSources.js` owns
 the saved-source map: it projects the normalized, redacted

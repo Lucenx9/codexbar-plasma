@@ -12,6 +12,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Hide unread Codex credit balances while preserving confirmed zero balances
+  and monthly credit limits.
+
 - Release memory held by dismissed or expired widget and CLI update
   notifications during long-running Plasma sessions.
 

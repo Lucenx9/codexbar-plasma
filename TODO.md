@@ -267,8 +267,10 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   macOS 0.57.0 uses provider-specific prose parsing for several cases. A generic
   official Linux amount, unit/currency, and availability contract is missing.
   At 0.60.4 the source-observed `balanceIsWorkspace`/`creditsAvailable` fields
-  cover Codex workspace balances only; Copilot seat-credit data travels in
-  `details` rows with stable IDs instead. Both await authenticated Linux output.
+  describe Codex credit availability and workspace scope. The [0.84.0 loopback
+  probe](docs/runtime-verification.md#cli-probes-and-packaging) verifies them in
+  Codex `credits`. They carry no unit/currency contract for other providers.
+  Copilot stable seat-credit detail IDs still await authenticated Linux output.
   The 0.65.0 Charm Hyper guide describes a balance-only `details` row with a
   bare `usageValue` and an HC display string, which is not a typed unit. The
   0.66.0 Atlas Cloud and Vercel AI Gateway plugins likewise report USD balances
@@ -312,15 +314,53 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 
 ## Verify before accepting implementation work
 
-These are unresolved Linux candidates, not confirmed missing features.
+These are unresolved Linux candidates, not confirmed missing features. Probe
+related release cases together when the required provider account is available.
+Prioritize the account identity and balance cases first.
 
-- [ ] Evaluate the 0.78.0 all-account Overview and optional bare-percent panel
-  text against Plasma's current provider/account navigation and accessibility.
-  Verify authenticated Linux multi-account identities before choosing an
-  account-row model. Done when each candidate has a bounded accept/reject
-  decision and any accepted work has a concrete contract. Account editing
-  remains in the generic-writer blocker above.
+- [ ] Verify account identity and stale-data behavior against the 0.56.3–0.57.0
+  changes: same-email workspaces, measurement timestamps, and transient
+  multi-account failures. Compare official Linux records with Plasma account
+  selection/cache tests before classifying a gap; credential matching and
+  recovery stay CLI-owned. Failed-refresh retention and redacted quota
+  restoration are implemented. At 0.60.4 Claude `usage.identity` held only
+  `providerID`; 0.76.0 says Claude OAuth accounts include email, which Plasma
+  reads from `usage.identity.accountEmail`, but no authenticated Linux record
+  was observed. Codex usage labels come from
+  `CodexVisibleAccount.menuDisplayName` (workspace labels, collision
+  discriminators), and since 0.83.0 a saved custom account name replaces that
+  label (#4782); whether Linux applies it, and so changes Plasma's selection
+  keys, is unobserved. The 0.84.0 loopback probe returned an email label and
+  no `usage.identity.accountID` with one synthetic native home per run.
+  Verify two authenticated same-email workspaces in one invocation, including
+  a saved custom name and a failed refresh, before changing selection keys.
+  [Linux probe](docs/runtime-verification.md#cli-probes-and-packaging).
+  [Projection source](https://github.com/steipete/CodexBar/blob/348e2fa8d36ae8e452739ca07a79e83ab9d25e98/Sources/CodexBarCore/Providers/Codex/CodexVisibleAccountProjection.swift);
+  [usage source](https://github.com/steipete/CodexBar/blob/2d8b1409a1649dce60f3610ebe4eab52b92545de/Sources/CodexBarCLI/CLIUsageCommand.swift).
+  [Release coverage](docs/research/2026-09-09-macos-parity-0.57.0.md#release-coverage).
+- [ ] Evaluate the 0.78.0 all-account Overview after verifying Linux account
+  identity above. Test whether expanding a provider with multiple accounts
+  makes its workspaces easier to compare with keyboard navigation and privacy
+  mode intact. Done when the decision is recorded and any accepted design
+  identifies each account's quota without changing the selected account.
   [Comparison](docs/research/2026-10-21-macos-parity-0.79.0.md#plasma-comparison).
+- [ ] Verify Codex `openaiDashboard` balance availability and workspace scope
+  (`accountID`, `creditsAvailable`, `balanceIsWorkspace`), including a hidden
+  workspace pool. Linux 0.84.0 rejects the live Web fetch. Its usage command
+  can attach an eligible dashboard cache, according to the tagged CLI source.
+  Verify emitted dashboard records once an eligible cache is available through
+  supported tooling or the CLI gains a Linux fetch. The top-level `credits`
+  read-result contract is already handled.
+  [Linux probe](docs/runtime-verification.md#cli-probes-and-packaging).
+- [ ] Verify authenticated Claude Platform output from an official Linux CLI
+  with a 0.82.0 `set-cookie` manual cookie. Confirm primary API credits,
+  purchased-credit and grant-expiry lanes, reset descriptions, billing details,
+  organization identity, and `providerCost` balance/current-spend semantics.
+  Plasma already consumes most generic fields, but it must not parse period
+  prose or treat a prepaid balance as an allowance. Done when emitted output
+  establishes whether the existing generic presentation is sufficient and any
+  remaining balance contract is explicit.
+  [Review](docs/research/2026-10-15-macos-parity-0.76.0.md).
 - [ ] Verify 0.78.0/0.79.0 authenticated changes for Claude Auto/adapter
   selection, Vercel personal budgets, Cursor unified-account additional spend,
   Grok billing, TypeSafe requests, and Antigravity ordinary/model quota buckets.
@@ -359,16 +399,6 @@ These are unresolved Linux candidates, not confirmed missing features.
   emitted Linux records establish whether generic details, quota and cost
   paths suffice and any label change has a bounded contract.
   [Limits](docs/research/2026-11-10-macos-parity-0.84.0.md#unverified-in-this-review).
-
-- [ ] Verify authenticated Claude Platform output from an official Linux CLI
-  with a 0.82.0 `set-cookie` manual cookie. Confirm primary API credits,
-  purchased-credit and grant-expiry lanes, reset descriptions, billing details,
-  organization identity, and `providerCost` balance/current-spend semantics.
-  Plasma already consumes most generic fields, but it must not parse period
-  prose or treat a prepaid balance as an allowance. Done when emitted output
-  establishes whether the existing generic presentation is sufficient and any
-  remaining balance contract is explicit.
-  [Review](docs/research/2026-10-15-macos-parity-0.76.0.md).
 
 - [ ] Verify 0.75.0 OpenAI `usage.throughput` output, minute/model buckets,
   delayed and pending minutes, and per-credential manual rate-limit contracts.
@@ -455,14 +485,6 @@ These are unresolved Linux candidates, not confirmed missing features.
   with a real login, offline and online, then classify the windows and
   whether the stall needs an upstream report or a Plasma message.
   [Evidence](docs/research/2026-10-11-macos-parity-0.74.0.md#linux-cli-contract-changes-since-0730).
-- [ ] Verify `credits.balanceReadSucceeded`, `creditsAvailable`, and
-  `balanceIsWorkspace` (also on `openaiDashboard` with `accountID`) in official
-  Linux output. 0.60.4 source widens the flag to cap-only/omitted balances and
-  the dashboard hides credits unless the read succeeded, while Plasma still
-  reads `remaining` without any flag. Reproduce failed reads, confirmed zero,
-  cap-only, hidden-workspace-pool, and workspace-balance data safely, then
-  classify and specify the normalization change.
-  [Source evidence](docs/research/2026-09-16-macos-parity-0.60.4.md#linux-cli-contract-changes-since-0580).
 - [ ] Verify stable `details` row `id` values in official Linux output
   (source-observed for Copilot seat-credit rows at 0.60.4). The numeric
   `progress`/`usageValue` fields are verified at 0.65.0, but the Bifrost rows
@@ -488,39 +510,21 @@ These are unresolved Linux candidates, not confirmed missing features.
   ties by incident severity. Accept a provider-ranking change only after a
   useful Linux reproduction using emitted CLI pace, with no local projection.
   [Display decisions and Linux 0.84.0 evidence](docs/panel-budget-and-monthly-allowance.md).
-- [ ] Verify account identity and stale-data behavior against the 0.56.3–0.57.0
-  changes: same-email workspaces, measurement timestamps, and transient
-  multi-account failures. Compare official Linux records with Plasma account
-  selection/cache tests before classifying a gap; credential matching and
-  recovery stay CLI-owned. Failed-refresh retention and redacted quota
-  restoration are implemented. At 0.60.4 Claude `usage.identity` held only
-  `providerID`; 0.76.0 says Claude OAuth accounts include email, which Plasma
-  reads from `usage.identity.accountEmail`, but no authenticated Linux record
-  was observed. Codex usage labels come from
-  `CodexVisibleAccount.menuDisplayName` (workspace labels, collision
-  discriminators), and since 0.83.0 a saved custom account name replaces that
-  label (#4782); whether Linux applies it, and so changes Plasma's selection
-  keys, is unobserved. A synthetic email-only record is not enough evidence to
-  change selection keys.
-  [Projection source](https://github.com/steipete/CodexBar/blob/348e2fa8d36ae8e452739ca07a79e83ab9d25e98/Sources/CodexBarCore/Providers/Codex/CodexVisibleAccountProjection.swift);
-  [usage source](https://github.com/steipete/CodexBar/blob/2d8b1409a1649dce60f3610ebe4eab52b92545de/Sources/CodexBarCLI/CLIUsageCommand.swift).
-  [Release coverage](docs/research/2026-09-09-macos-parity-0.57.0.md#release-coverage).
 - [ ] Verify the 0.77.0 claude-swap and tcr account pools, per-account Claude
   local cost directories, and Munito/Future AGI windows and spend rows in
   official Linux output. None was observable without accounts. Done when
   emitted output shows whether Plasma's generic account, details, and cost
   paths suffice. [Review](docs/research/2026-10-17-macos-parity-0.77.0.md#unverified-in-this-review).
-- [ ] Evaluate the weekly reserve indicator against a pinned macOS behavior and
-  an official Linux field. Record accept/reject and, if accepted, a concrete
-  display contract. Existing quota lanes and run-out forecasts are implemented.
-  [Prior discussion #175](https://github.com/Lucenx9/codexbar-plasma/issues/175).
-- [ ] Decide whether reset-imminent notices add value beyond current quota, pace,
-  and completed-reset notices. macOS 0.83.0 adds opt-in Codex reminders 24 h
-  and 1 h before a weekly reset with quota left (#4849); the CLI emits none. Accept only quiet, opt-in, transition-based
-  behavior backed by official timing data; otherwise remove the candidate.
-  [Prior discussion #176](https://github.com/Lucenx9/codexbar-plasma/issues/176).
 
 ## Scope and completed behavior
+
+Keep the used/left qualifier on panel percentages. The Automatic quota name
+is already optional. Weekly reserve needs a distinct Linux CLI field. Advance
+reset reminders are out of scope until a recurring use case warrants another
+opt-in notification.
+[Panel behavior](docs/usage.md#select-quotas-and-visibility),
+[reserve discussion](https://github.com/Lucenx9/codexbar-plasma/issues/175),
+and [reminder discussion](https://github.com/Lucenx9/codexbar-plasma/issues/176).
 
 The [usage guide](docs/usage.md) describes implemented Plasma behavior, including
 panel composition with automatic dual-quota capsules and vertical provider meters,

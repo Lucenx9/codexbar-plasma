@@ -80,6 +80,16 @@ function costFields(cost) {
     };
 }
 
+function creditBalance(credits) {
+    // Codex emits a placeholder zero when only a cap or credit availability is known.
+    var readStatus = Normalizer.ownField(credits, "balanceReadSucceeded");
+    if (readStatus !== undefined && readStatus !== true) {
+        return null;
+    }
+    var remaining = Normalizer.strictFiniteNumber(Normalizer.ownField(credits, "remaining"));
+    return isFinite(remaining) ? remaining : null;
+}
+
 // The current CLI projects usable inventory at observation time. Its raw
 // legacy aggregate can still include expired credits, so only field absence
 // permits the older fallback, never a reported zero or malformed summary.
@@ -171,7 +181,6 @@ function normalize(item, receivedAtMs) {
             }
         }
     }
-    var remaining = credits ? Normalizer.strictFiniteNumber(credits.remaining) : NaN;
     return {
         provider: providerID, displayName: displayName, dataConfidence: confidence,
         source: Normalizer.boundedDisplayText(item.source || "", 120),
@@ -186,7 +195,7 @@ function normalize(item, receivedAtMs) {
         providerCost: costFields(usage.providerCost),
         resetCredits: resetCreditSnapshot(providerID, item, usage),
         codexCreditLimit: codexCreditLimit,
-        credits: isFinite(remaining) ? remaining : null,
+        credits: creditBalance(credits),
         statusRecord: status ? {indicator: Normalizer.boundedDisplayText(Normalizer.safeScalarText(status.indicator), 500),
             description: Normalizer.boundedDisplayText(Normalizer.safeScalarText(status.description).trim(), 500)} : null,
         statusUrl: status ? Normalizer.boundedDisplayText(status.url || "", 4096) : "",

@@ -119,9 +119,11 @@ selection does not change Overview.
 
 **Popup** independently controls pace forecasts, credits/reset credits, and
 additional provider details. These display choices do not change fetching,
-panel metrics, or alerts. A plain credit balance has no allowance meter; a
-Codex monthly credit meter requires a CLI-reported allowance. Reset credits
-use the CLI's usable inventory so expired or redeemed credits are not counted.
+panel metrics, or alerts. A plain credit balance has no allowance meter. The
+panel and popup show a confirmed zero Codex credit balance and hide a balance
+the CLI could not read. The popup can still show a reported monthly credit
+limit. Reset credits use the CLI's usable inventory so expired or redeemed
+credits are excluded.
 
 **Show remaining monthly quota per day** divides the remaining percentage by
 local calendar days until reset. A 60%-used quota resetting in ten days shows

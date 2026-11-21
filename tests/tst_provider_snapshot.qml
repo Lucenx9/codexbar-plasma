@@ -8,6 +8,33 @@ import "../contents/ui/ResetPresentation.js" as ResetPresentation
 TestCase {
     name: "ProviderSnapshot"
 
+    function test_onlyMeasuredCreditBalancesAreShown_data() {
+        return [
+            {tag: "cap-only", credits: {remaining: 0, balanceReadSucceeded: false, creditsAvailable: false,
+                codexCreditLimit: {used: 15, limit: 100, remaining: 85, remainingPercent: 85}}, expected: null},
+            {tag: "workspace-read-failed", credits: {remaining: 0, balanceReadSucceeded: false,
+                creditsAvailable: true}, expected: null},
+            {tag: "personal-zero", credits: {remaining: 0, balanceReadSucceeded: true,
+                creditsAvailable: false}, expected: 0},
+            {tag: "workspace-positive", credits: {remaining: 27, balanceReadSucceeded: true,
+                balanceIsWorkspace: true}, expected: 27},
+            {tag: "legacy", credits: {remaining: 12}, expected: 12},
+            {tag: "non-numeric-balance", credits: {remaining: [12], balanceReadSucceeded: true}, expected: null},
+            {tag: "malformed-read-status", credits: {remaining: 0, balanceReadSucceeded: "true"}, expected: null}
+        ];
+    }
+
+    function test_onlyMeasuredCreditBalancesAreShown(data) {
+        var snapshot = ProviderSnapshot.normalize({provider: "codex", credits: data.credits,
+            usage: {primary: {usedPercent: 20}}}, 1000);
+        compare(snapshot.credits, data.expected);
+        compare(snapshot.rows[0].usedPercent, 20);
+        if (data.credits.codexCreditLimit) {
+            compare(snapshot.codexCreditLimit.limit, 100);
+            compare(snapshot.codexCreditLimit.remaining, 85);
+        }
+    }
+
     function test_resetCreditInventoryOverridesLegacyAggregate_data() {
         return [
             {tag: "usable", summary: {available: 2, nextExpiresAt: "2026-10-16T00:00:00Z"}, expected: {availableCount: 2}},
