@@ -12,8 +12,8 @@ Item {
     signal activated(string sourceName)
     signal actionDiscarded(string sourceName)
 
-    function send(title, body, urgency, actionLabel) {
-        return lifecycle.dispatch(title, body, urgency, actionLabel);
+    function send(title, body, urgency, actionLabel, onStarted) {
+        return lifecycle.dispatch(title, body, urgency, actionLabel, onStarted);
     }
 
     Component.onDestruction: lifecycle.retire()
@@ -30,7 +30,7 @@ Item {
         // send.
         readonly property int notificationActionCommandTimeoutMs: 120000
 
-        function dispatch(title, body, urgency, actionLabel) {
+        function dispatch(title, body, urgency, actionLabel, onStarted) {
             if (destroyed)
                 return "";
             var command = NotificationCommand.command(title, body, urgency, actionLabel);
@@ -44,21 +44,30 @@ Item {
             var sourceName = CommandLedger.withRunNonce(bounded, runSerial, Date.now() + "-" + Math.random());
             // Plasma may publish a cached result while connecting the source.
             commands = CommandLedger.opened(commands, sourceName, descriptor);
+            if (onStarted)
+                onStarted(sourceName);
             notificationSource.connectSource(sourceName);
             return sourceName;
         }
 
-        function finish(sourceName) {
+        function finish(sourceName, activated) {
+            var descriptor = CommandLedger.find(commands, sourceName);
+            if (!descriptor)
+                return;
             commands = CommandLedger.closed(commands, sourceName);
             notificationSource.disconnectSource(sourceName);
+            if (destroyed || descriptor.kind !== "notificationAction")
+                return;
+            if (activated)
+                controller.activated(sourceName);
+            else
+                controller.actionDiscarded(sourceName);
         }
 
         function expire(nowMs) {
             var expired = CommandLedger.expired(commands, nowMs);
             for (var i = 0; i < expired.length; i++) {
-                finish(expired[i].sourceName);
-                if (expired[i].descriptor.kind === "notificationAction")
-                    controller.actionDiscarded(expired[i].sourceName);
+                finish(expired[i].sourceName, false);
             }
         }
 
@@ -97,13 +106,7 @@ Item {
                 notificationSource.disconnectSource(sourceName);
                 return;
             }
-            var actionActivated = lifecycle.actionActivated(data);
-            lifecycle.finish(sourceName);
-            if (actionActivated) {
-                controller.activated(sourceName);
-            } else if (descriptor.kind === "notificationAction") {
-                controller.actionDiscarded(sourceName);
-            }
+            lifecycle.finish(sourceName, lifecycle.actionActivated(data));
         }
     }
 }

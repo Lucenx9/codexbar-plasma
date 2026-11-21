@@ -233,7 +233,8 @@ version deduplication and source-specific release actions. Save widget versions
 before send; save CLI versions only after a safe source starts, allowing retries.
 Managed copies with automatic updates do not announce redundant CLI releases.
 `UpdateNotificationState.js` validates release URLs and immutable action maps.
-Remove the source's URL when its command finishes or times out. Only activation
+Register the URL before connecting the executable source so even an immediate
+reply can consume it. Remove the URL when the command finishes or times out. Only activation
 requests that the applet open the URL, after removal.
 
 `WidgetUpdateController.checkNow()` respects disabled checks;

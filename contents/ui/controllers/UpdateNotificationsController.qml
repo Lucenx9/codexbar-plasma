@@ -15,10 +15,10 @@ Item {
 
     signal releasePageRequested(string url)
 
-    function send(title, body, urgency, actionLabel) {
+    function send(title, body, urgency, actionLabel, onStarted) {
         var cleanTitle = privacyMode ? "CodexBar" : String(title || "CodexBar").trim()
         var cleanBody = privacyMode ? i18n("Usage or status changed. Open CodexBar for details.") : String(body || "").trim()
-        return dispatcher.send(cleanTitle, cleanBody, urgency, actionLabel)
+        return dispatcher.send(cleanTitle, cleanBody, urgency, actionLabel, onStarted)
     }
 
     function notifyAvailableUpdate(version, url, releaseUrl) {
@@ -36,11 +36,16 @@ Item {
         var body = cleanVersion.length > 0
             ? i18n("Version %1 is available.", cleanVersion)
             : i18n("A new widget version is available.")
-        var releasePageUrl = UpdateNotificationState.safeReleaseUrl(releaseUrl)
-        var actionLabel = releasePageUrl.length > 0 ? i18n("Open release page") : ""
-        var sourceName = send(title, body, "normal", actionLabel)
-        pendingUpdateReleaseUrls = UpdateNotificationState.register(
-            pendingUpdateReleaseUrls, sourceName, releasePageUrl)
+        sendUpdate(title, body, releaseUrl)
+    }
+
+    function sendUpdate(title, body, releaseUrl) {
+        var url = UpdateNotificationState.safeReleaseUrl(releaseUrl)
+        var label = url.length > 0 ? i18n("Open release page") : ""
+        return send(title, body, "normal", label, function(sourceName) {
+            pendingUpdateReleaseUrls = UpdateNotificationState.register(
+                pendingUpdateReleaseUrls, sourceName, url)
+        })
     }
 
     function finishUpdateNotification(sourceName, activated) {
@@ -68,28 +73,20 @@ Item {
         // A self-updating managed copy needs no action; the version stays unannounced
         // so turning automatic updates off later still notifies.
         if (managedSelected === true && configuration.cliAutomaticUpdates === true) return
-        var releasePageUrl = UpdateNotificationState.safeReleaseUrl(releaseUrl)
-        var actionLabel = releasePageUrl.length > 0 ? i18n("Open release page") : ""
-        var sourceName = send(i18n("CodexBar CLI release available"),
-            i18n("Upstream CLI %1 is available. Update using your installation method.", version),
-            "normal", actionLabel)
+        var sourceName = sendUpdate(i18n("CodexBar CLI release available"),
+            i18n("Upstream CLI %1 is available. Update using your installation method.", version), releaseUrl)
         // CLI announcements remain retryable until a send has actually started.
-        if (UpdateNotificationState.usableSource(sourceName)) {
+        if (UpdateNotificationState.usableSource(sourceName))
             configuration.cliUpdateLastNotifiedVersion = version
-            pendingUpdateReleaseUrls = UpdateNotificationState.register(
-                pendingUpdateReleaseUrls, sourceName, releasePageUrl)
-        }
     }
 
     NotificationDispatcher {
         id: notificationDispatcher
-        // Plasma may answer inside send(), before its caller registers the URL.
-        // Queue a distinct callback per source so concurrent replies stay independent.
         onActivated: function(sourceName) {
-            Qt.callLater(() => controller.finishUpdateNotification(sourceName, true))
+            controller.finishUpdateNotification(sourceName, true)
         }
         onActionDiscarded: function(sourceName) {
-            Qt.callLater(() => controller.finishUpdateNotification(sourceName, false))
+            controller.finishUpdateNotification(sourceName, false)
         }
     }
 }

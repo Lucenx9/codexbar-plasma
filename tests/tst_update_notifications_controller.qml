@@ -32,7 +32,7 @@ TestCase {
             onReleasePageRequested: function(url) {
                 testCase.opened = testCase.opened.concat([url])
                 // Activation must retire its source before any external effect.
-                compare(Object.keys(pendingUpdateReleaseUrls).length, 0)
+                verify(Object.values(pendingUpdateReleaseUrls).indexOf(url) < 0)
             }
         }
     }
@@ -41,11 +41,12 @@ TestCase {
         config = createTemporaryObject(configurationComponent, this)
         subject = createTemporaryObject(controllerComponent, this, {
             configuration: config,
-            dispatcher: {send: function(title, body, urgency, actionLabel) {
+            dispatcher: {send: function(title, body, urgency, actionLabel, onStarted) {
                 sent = sent.concat([{title: title, body: body, urgency: urgency, actionLabel: actionLabel}])
                 memoAtSend = memoAtSend.concat([{
                     widget: config.lastNotifiedUpdateVersion, cli: config.cliUpdateLastNotifiedVersion
                 }])
+                if (onStarted && nextSource) onStarted(nextSource)
                 return nextSource
             }}
         })
@@ -140,15 +141,30 @@ TestCase {
     function test_completionInsideSend(data) {
         var controller = createTemporaryObject(controllerComponent, this, {configuration: config})
         var transport = controller.dispatcher
-        controller.dispatcher = {send: function() {
+        controller.dispatcher = {send: function(title, body, urgency, actionLabel, onStarted) {
+            onStarted("immediate")
+            compare(Object.keys(controller.pendingUpdateReleaseUrls), ["immediate"])
             if (data.activated) transport.activated("immediate")
             else transport.actionDiscarded("immediate")
             return "immediate"
         }}
         var url = "https://github.com/cli/v1"
         controller.notifyAvailableCliUpdate("v1", url)
-        tryCompare(controller, "pendingUpdateReleaseUrls", ({}))
+        compare(controller.pendingUpdateReleaseUrls, ({}))
         compare(opened, data.activated ? [url] : [])
+    }
+    function test_simultaneousActionReplies() {
+        var controller = createTemporaryObject(controllerComponent, this, {configuration: config})
+        var transport = controller.dispatcher
+        controller.dispatcher = subject.dispatcher
+        controller.notifyAvailableUpdate("v1", "", "https://github.com/widget/v1")
+        nextSource = "source-2"
+        controller.notifyAvailableCliUpdate("v2", "https://github.com/cli/v2")
+        compare(Object.keys(controller.pendingUpdateReleaseUrls).length, 2)
+        transport.actionDiscarded("source-1")
+        transport.activated("source-2")
+        compare(controller.pendingUpdateReleaseUrls, ({}))
+        compare(opened, ["https://github.com/cli/v2"])
     }
     function test_installedAndVersionlessWidgetMessages() {
         subject.notifyInstalledUpdate(" v1 ")

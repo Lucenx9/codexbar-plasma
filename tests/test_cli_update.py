@@ -41,7 +41,7 @@ TestCase {
             }
         }
 
-        function sendPlasmaNotification(title, body, urgency, actionLabel) {
+        function sendPlasmaNotification(title, body, urgency, actionLabel, onStarted) {
             sentSerial += 1
             var source = "source-" + sentSerial
             sentNotifications = sentNotifications.concat([{
@@ -51,6 +51,7 @@ TestCase {
                 urgency: urgency,
                 actionLabel: actionLabel
             }])
+            if (onStarted) onStarted(source)
             return source
         }
 

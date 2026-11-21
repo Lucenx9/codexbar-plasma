@@ -33,7 +33,7 @@ class SettingsWiringTests(unittest.TestCase):
         body = surface.function_body("send")
         self.assertIn('cleanTitle = privacyMode ? "CodexBar"', body)
         self.assertIn('cleanBody = privacyMode ? i18n(', body)
-        self.assertIn("dispatcher.send(cleanTitle, cleanBody, urgency, actionLabel)", body)
+        self.assertIn("dispatcher.send(cleanTitle, cleanBody, urgency, actionLabel, onStarted)", body)
         self.assertLess(body.index("cleanBody ="), body.index("dispatcher.send("))
         self.assertNotIn("notify-send", body)
 
