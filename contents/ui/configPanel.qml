@@ -713,6 +713,7 @@ KCM.SimpleKCM {
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            visible: !page.advancedExpanded
             text: page.advancedSummary
             leftPadding: page.mirrored ? 0 : Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing
             rightPadding: page.mirrored ? Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing : 0
