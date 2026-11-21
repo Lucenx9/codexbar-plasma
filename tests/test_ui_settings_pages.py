@@ -415,6 +415,13 @@ class SettingsPagesTest(unittest.TestCase):
         if not code_contains(popup_text, "required property int index"):
             raise AssertionError("the panel element editor delegate must explicitly receive its model index")
 
+    def test_panel_disclosure_summaries_hide_when_expanded(self):
+        require_block_fragment(
+            root / "contents/ui/configPanel.qml",
+            'objectName: "panelAdvancedSummary"',
+            "visible: !page.advancedExpanded",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

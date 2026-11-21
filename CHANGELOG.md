@@ -12,6 +12,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Hide the collapsed "Quota, order and visibility" summary label in Panel
+  settings when that disclosure section is expanded.
+
 - Report missing `kdialog` or GNU `timeout` tools as unavailable during cookie
   and session-import setup, and reject non-numeric exit codes when probing
   provider CLI capabilities.
