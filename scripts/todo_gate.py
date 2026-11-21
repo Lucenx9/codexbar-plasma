@@ -1,6 +1,7 @@
 """Ask a System One model whether a change completes a tracked TODO entry."""
 
 import argparse
+import http.client
 import json
 import os
 from pathlib import Path
@@ -168,7 +169,8 @@ def main(argv=None):
     try:
         answers, usage = ask(build_request(paths, diff, todo), key)
         probability = verdict(answers, paths, options.threshold)
-    except (urllib.error.URLError, OSError, ValueError, json.JSONDecodeError) as error:
+    except (http.client.HTTPException, urllib.error.URLError, OSError, ValueError,
+            json.JSONDecodeError) as error:
         print(f"TODO gate unavailable: {error}", file=sys.stderr)
         return 2
     print(usage_line(usage), file=sys.stderr)

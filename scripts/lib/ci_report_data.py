@@ -1,6 +1,7 @@
 """Bounded CI measurements, provenance checks, and baseline compatibility."""
 
 import hashlib
+import http.client
 import io
 import json
 import math
@@ -18,7 +19,8 @@ SHA = re.compile(r"[0-9a-f]{40}")
 DIGEST = re.compile(r"[0-9a-f]{64}")
 CASE = re.compile(r"[a-zA-Z0-9][a-zA-Z0-9_-]{0,100}")
 BRANCH = re.compile(r"[^\x00-\x20\x7f]{1,1024}")
-ARTIFACT_ERRORS = (ValueError, KeyError, zipfile.BadZipFile, RecursionError, zlib.error, OSError)
+ARTIFACT_ERRORS = (ValueError, KeyError, zipfile.BadZipFile, RecursionError, zlib.error,
+                   http.client.HTTPException, OSError)
 
 
 def require(condition, message):

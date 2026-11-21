@@ -487,7 +487,9 @@ class PublishTests(unittest.TestCase):
             self.assertFalse(api.writes)
 
     def test_failed_runs_and_invalid_artifacts_still_report_authoritative_jobs(self):
-        for measurements in (None, ValueError("invalid untrusted data"), zipfile.BadZipFile("invalid")):
+        import http.client
+        for measurements in (None, ValueError("invalid untrusted data"), zipfile.BadZipFile("invalid"),
+                             http.client.IncompleteRead(b"partial")):
             api = FakeGitHub()
             api.measurements = measurements
             api.run["conclusion"] = "failure"
@@ -533,13 +535,15 @@ class TransportTests(unittest.TestCase):
 
     def test_rejects_unexpected_artifact_redirects(self):
         api = GitHub(REPO, "read-test-token", "write-test-token")
-        for url in ("http://production.blob.core.windows.net/file", "https://evil.test/file",
-                    "https://githubusercontent.com.evil.test/file"):
+        for headers in ({"Location": "http://production.blob.core.windows.net/file"},
+                        {"Location": "https://evil.test/file"},
+                        {"Location": "https://githubusercontent.com.evil.test/file"},
+                        {}):
             with patch.object(api, "pages", return_value=[{"id": 1, "name": schema.ARTIFACT,
                                                            "expired": False, "size_in_bytes": 100}]), \
                     patch("lib.ci_report_github.urllib.request.build_opener") as opener:
                 opener.return_value.open.side_effect = urllib.error.HTTPError(
-                    "https://api.github.com", 302, "redirect", {"Location": url}, None)
+                    "https://api.github.com", 302, "redirect", headers, None)
                 with self.assertRaises(ValueError):
                     api.artifact(RUN)
                 self.assertEqual(opener.return_value.open.call_count, 1)

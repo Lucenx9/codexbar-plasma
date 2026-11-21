@@ -4,6 +4,7 @@
 import argparse
 from dataclasses import dataclass
 import hashlib
+import http.client
 import json
 import os
 from pathlib import Path
@@ -246,6 +247,6 @@ def main():
 if __name__ == "__main__":
     try:
         main()
-    except (ValueError, KeyError, OSError) as error:
+    except (ValueError, KeyError, http.client.HTTPException, OSError) as error:
         # Never log request headers, signed download URLs, or artifact contents.
         raise SystemExit(f"CI report failed: {type(error).__name__}") from None
