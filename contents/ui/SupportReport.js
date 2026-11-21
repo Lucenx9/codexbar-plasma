@@ -141,11 +141,8 @@ function response(text) {
     try { value = JSON.parse(text) } catch (error) { return empty }
     if (!record(value) || !record(value.environment) || !record(value.selected)
             || !record(value.system) || !record(value.providers) || !record(value.tools)) return empty
-    var environment = record(value.environment) ? value.environment : {}
-    empty.environment = {plasma: version(environment.plasma), frameworks: version(environment.frameworks), qt: version(environment.qt)}
-    empty.selected = cliRecord(value.selected)
-    empty.system = cliRecord(value.system)
-    if (record(value.providers) && value.providers.status === "checked" && Array.isArray(value.providers.enabled)
+    var providers = {status: "unavailable", enabled: []}
+    if (value.providers.status === "checked" && Array.isArray(value.providers.enabled)
             && value.providers.enabled.length <= 256) {
         var ids = []
         for (var i = 0; i < value.providers.enabled.length; i++) {
@@ -153,12 +150,15 @@ function response(text) {
             if (!providerID(id)) return empty
             if (ids.indexOf(id) < 0) ids.push(id)
         }
-        empty.providers = {status: "checked", enabled: ids}
+        providers = {status: "checked", enabled: ids}
     }
-    if (record(value.tools)) {
-        for (var t = 0; t < tools.length; t++) {
-            if (typeof value.tools[tools[t]] === "boolean") empty.tools[tools[t]] = value.tools[tools[t]]
-        }
+    var environment = value.environment
+    empty.environment = {plasma: version(environment.plasma), frameworks: version(environment.frameworks), qt: version(environment.qt)}
+    empty.selected = cliRecord(value.selected)
+    empty.system = cliRecord(value.system)
+    empty.providers = providers
+    for (var t = 0; t < tools.length; t++) {
+        if (typeof value.tools[tools[t]] === "boolean") empty.tools[tools[t]] = value.tools[tools[t]]
     }
     empty.valid = true
     return empty
