@@ -325,6 +325,25 @@ TestCase {
         compare(o.subject.lastAttemptAtMs, at);
         compare(o.snapshots.length, 1);
     }
+    function test_failedPopupRetryAfterClockRollbackHasCooldown() {
+        var o = create("fail-second", {sourceMode: "cli", refreshOnOpen: true});
+        completed(o, 1);
+        // Move the successful run's timestamps ahead to simulate a rollback.
+        var lifecycle = o.subject.children.find(function(child) {
+            return child.usageLastCompletedAtMs !== undefined;
+        });
+        var future = Date.now() + 3600000;
+        lifecycle.usageLastRefreshAttemptAtMs = future;
+        lifecycle.usageLastCompletedAtMs = future;
+        o.subject.popupVisible = true;
+        tryVerify(function() { return o.failures.length === 1 && !o.subject.loading; });
+        var retryAt = o.subject.lastAttemptAtMs;
+        o.subject.popupVisible = false;
+        o.subject.popupVisible = true;
+        wait(300);
+        compare(o.subject.lastAttemptAtMs, retryAt);
+        compare(o.snapshots.length, 1);
+    }
     function test_periodicRefreshWaitsForPendingWork() {
         var o = create("slow-first", {sourceMode: "cli", refreshIntervalSec: 1});
         completed(o, 1);
@@ -496,6 +515,7 @@ if name == "partial-launch-error" and provider == "claude":
     time.sleep(0.3)
     print("Synthetic scoped launch failure", file=sys.stderr)
     sys.exit(127)
+if name == "fail-second" and run == 2: raise SystemExit("Synthetic usage failure")
 if name == "initial-empty-aggregate" or (name == "empty-aggregate" and run == 2):
     assert "--provider" not in args and args[args.index("--source") + 1] == "api"
     print("[]")
@@ -554,7 +574,7 @@ class UsageControllerTests(unittest.TestCase):
     def test_production_lifecycle_with_synthetic_cli(self):
         with tempfile.TemporaryDirectory(prefix="codexbar usage 'test-") as temporary:
             directory = Path(temporary)
-            for name in ("foreign-provider", "mixed-providers", "missing-provider", "failed-valid", "failed-timeout", "failed-roster", "ancient", "normal", "slow-roster", "flags", "mapped", "slow-first", "queue", "malformed", "empty",
+            for name in ("fail-second", "foreign-provider", "mixed-providers", "missing-provider", "failed-valid", "failed-timeout", "failed-roster", "ancient", "normal", "slow-roster", "flags", "mapped", "slow-first", "queue", "malformed", "empty",
                          "aggregate-selectors", "empty-aggregate", "initial-empty-aggregate",
                          "no-records", "too-large", "empty-roster", "broken-roster", "partial-launch-error", "timeout-aggregate",
                          "timeout-roster", "timeout-scoped"):
