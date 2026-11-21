@@ -19,6 +19,8 @@ TestCase {
         verify(!Capabilities.versionCapabilities(data.before, 0)[data.key])
         verify(Capabilities.versionCapabilities(data.at, "0")[data.key])
         verify(!Capabilities.versionCapabilities(data.at, 1)[data.key])
+        for (var invalidCode of [null, undefined, "", "   ", false, [], NaN])
+            verify(!Capabilities.versionCapabilities(data.at, invalidCode)[data.key])
         verify(!Capabilities.versionCapabilities(data.at + "-rc.1", 0)[data.key])
         verify(!Capabilities.versionCapabilities("unknown", 0)[data.key])
         if (data.provider) {

@@ -12,6 +12,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Report missing `kdialog` or GNU `timeout` tools as unavailable during cookie
+  and session-import setup, and reject non-numeric exit codes when probing
+  provider CLI capabilities.
+
 - Discard all fields from a rejected Diagnostics support-report payload instead
   of keeping environment and CLI facts when provider validation fails.
 

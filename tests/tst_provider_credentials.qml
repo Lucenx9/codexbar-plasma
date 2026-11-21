@@ -83,6 +83,7 @@ TestCase {
         compare(Credentials.result(raw, 0, "claude", "set-cookie"), {status: "ok", enabled: true});
         compare(Credentials.result(raw, 1, "claude", "set-cookie").status, "failed");
         compare(Credentials.result("", 127, "copilot", "login").status, "unavailable");
+        compare(Credentials.result('{"error":{"message":"kdialog is required to prompt for secrets."}}', 127, "claude", "set-cookie").status, "unavailable");
         compare(Credentials.result(raw, 0, "cursor", "set-cookie").status, "failed");
         for (var bad of ["", "{", "[]", "null", "x".repeat(1025), '{"provider":"claude","status":"ok"}'])
             compare(Credentials.result(bad, 0, "claude", "set-cookie").status, "failed");
