@@ -250,23 +250,19 @@ require_all(notification.text, ("readonly property int notificationCommandTimeou
 require_ordered(notification.function_body("dispatch"),
                 ("CommandLedger.withRunNonce(",
                  "commands = CommandLedger.opened(commands, sourceName, descriptor)",
-                 "notificationSource.connectSource(sourceName)"),
+                 "onStarted(sourceName)", "notificationSource.connectSource(sourceName)"),
                 "notifications must be registered before synchronous cached replies")
 require_ordered(notification.function_body("finish"),
-                ("commands = CommandLedger.closed(commands, sourceName)",
-                 "notificationSource.disconnectSource(sourceName)"),
-                "notifications must retire before disconnecting")
+                ("CommandLedger.find(commands, sourceName)", "commands = CommandLedger.closed(commands, sourceName)",
+                 "notificationSource.disconnectSource(sourceName)", 'descriptor.kind !== "notificationAction"',
+                 "controller.activated(sourceName)", "controller.actionDiscarded(sourceName)"),
+                "only live notification actions may signal an outcome after retirement")
 require_ordered(notification.function_body("retire"),
                 ("destroyed = true", "commands = ({})", "notificationSource.disconnectSource(sources[i])"),
                 "destruction must retire all commands before disconnecting")
 require_ordered(notification.id_block("notificationSource"),
-                ("CommandLedger.find(lifecycle.commands, sourceName)", "lifecycle.finish(sourceName)"),
+                ("CommandLedger.find(lifecycle.commands, sourceName)", "lifecycle.finish(sourceName,"),
                 "notification replies must finish only their live entry")
-# Activation is delivered only after the reply's ledger entry is retired, so an
-# activation handler can never observe a still-connected source.
-require_ordered(notification.id_block("notificationSource"),
-                ("lifecycle.finish(sourceName)", "controller.activated(sourceName)"),
-                "notification activation must follow retirement")
 require_all(applet.function_body("sendPlasmaNotification"),
             ("updateNotifications.send(title, body, urgency, actionLabel)",),
             "the applet must delegate notification delivery")

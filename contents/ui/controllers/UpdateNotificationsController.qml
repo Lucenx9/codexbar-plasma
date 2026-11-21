@@ -9,16 +9,16 @@ Item {
     property bool privacyMode: false
     property var dispatcher: notificationDispatcher
     property string lastNotifiedUpdateVersion: configuration.lastNotifiedUpdateVersion || ""
-    // Each queued update retains its own release action until activation.
+    // Each queued update retains its release action while delivery is active.
     property var pendingUpdateReleaseUrls: ({})
     readonly property bool updateNotificationsEnabled: configuration.updateNotificationsEnabled !== false
 
     signal releasePageRequested(string url)
 
-    function send(title, body, urgency, actionLabel) {
+    function send(title, body, urgency, actionLabel, onStarted) {
         var cleanTitle = privacyMode ? "CodexBar" : String(title || "CodexBar").trim()
         var cleanBody = privacyMode ? i18n("Usage or status changed. Open CodexBar for details.") : String(body || "").trim()
-        return dispatcher.send(cleanTitle, cleanBody, urgency, actionLabel)
+        return dispatcher.send(cleanTitle, cleanBody, urgency, actionLabel, onStarted)
     }
 
     function notifyAvailableUpdate(version, url, releaseUrl) {
@@ -36,17 +36,22 @@ Item {
         var body = cleanVersion.length > 0
             ? i18n("Version %1 is available.", cleanVersion)
             : i18n("A new widget version is available.")
-        var releasePageUrl = UpdateNotificationState.safeReleaseUrl(releaseUrl)
-        var actionLabel = releasePageUrl.length > 0 ? i18n("Open release page") : ""
-        var sourceName = send(title, body, "normal", actionLabel)
-        pendingUpdateReleaseUrls = UpdateNotificationState.register(
-            pendingUpdateReleaseUrls, sourceName, releasePageUrl)
+        sendUpdate(title, body, releaseUrl)
     }
 
-    function handleUpdateNotificationActivated(sourceName) {
+    function sendUpdate(title, body, releaseUrl) {
+        var url = UpdateNotificationState.safeReleaseUrl(releaseUrl)
+        var label = url.length > 0 ? i18n("Open release page") : ""
+        return send(title, body, "normal", label, function(sourceName) {
+            pendingUpdateReleaseUrls = UpdateNotificationState.register(
+                pendingUpdateReleaseUrls, sourceName, url)
+        })
+    }
+
+    function finishUpdateNotification(sourceName, activated) {
         var result = UpdateNotificationState.consume(pendingUpdateReleaseUrls, sourceName)
         pendingUpdateReleaseUrls = result.nextPending
-        if (result.releaseUrl.length > 0) releasePageRequested(result.releaseUrl)
+        if (activated && result.releaseUrl.length > 0) releasePageRequested(result.releaseUrl)
     }
 
     function notifyInstalledUpdate(version) {
@@ -68,23 +73,20 @@ Item {
         // A self-updating managed copy needs no action; the version stays unannounced
         // so turning automatic updates off later still notifies.
         if (managedSelected === true && configuration.cliAutomaticUpdates === true) return
-        var releasePageUrl = UpdateNotificationState.safeReleaseUrl(releaseUrl)
-        var actionLabel = releasePageUrl.length > 0 ? i18n("Open release page") : ""
-        var sourceName = send(i18n("CodexBar CLI release available"),
-            i18n("Upstream CLI %1 is available. Update using your installation method.", version),
-            "normal", actionLabel)
+        var sourceName = sendUpdate(i18n("CodexBar CLI release available"),
+            i18n("Upstream CLI %1 is available. Update using your installation method.", version), releaseUrl)
         // CLI announcements remain retryable until a send has actually started.
-        if (UpdateNotificationState.usableSource(sourceName)) {
+        if (UpdateNotificationState.usableSource(sourceName))
             configuration.cliUpdateLastNotifiedVersion = version
-            pendingUpdateReleaseUrls = UpdateNotificationState.register(
-                pendingUpdateReleaseUrls, sourceName, releasePageUrl)
-        }
     }
 
     NotificationDispatcher {
         id: notificationDispatcher
         onActivated: function(sourceName) {
-            controller.handleUpdateNotificationActivated(sourceName)
+            controller.finishUpdateNotification(sourceName, true)
+        }
+        onActionDiscarded: function(sourceName) {
+            controller.finishUpdateNotification(sourceName, false)
         }
     }
 }

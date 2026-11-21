@@ -173,7 +173,7 @@ TRANSPORT_TESTS = '''
         verify(actionSource.length > 0);
         verify(plainSource.length > 0);
         verify(actionSource !== plainSource);
-        subject.testSource.newData(plainSource, {"exit code": 0, stdout: ""});
+        subject.testSource.newData(plainSource, {"exit code": 0, stdout: "default\n"});
         compare(activated, []);
         compare(subject.testSource.connected, [actionSource]);
         subject.testSource.newData(actionSource, {"exit code": 0, stdout: "default\n"});
@@ -185,21 +185,33 @@ TRANSPORT_TESTS = '''
         compare(activated, [actionSource]);
     }
 
-    function test_closedActionNotificationsNeverActivate() {
+    function test_unsuccessfulActionsAreDiscardedOnce() {
         var subject = create();
         var activated = [];
+        var discarded = [];
         subject.activated.connect(function(source) { activated.push(source); });
-        var dismissedSource = subject.send("update", "body", "normal", "Open release page");
-        subject.testSource.newData(dismissedSource, {"exit code": 1, stdout: ""});
+        subject.actionDiscarded.connect(function(source) { discarded.push(source); });
+        for (var data of [null, {"exit code": 0, stdout: ""}, {"exit code": 1, stdout: "default\n"},
+                {"exit code": 0, stdout: "x".repeat(4096) + "default"}]) {
+            var source = subject.send("update", "body", "normal", "Open release page");
+            subject.testSource.newData(source, data);
+            subject.testSource.newData(source, {"exit code": 0, stdout: "default\n"});
+            compare(discarded, [source]);
+            discarded = [];
+        }
         compare(activated, []);
         compare(subject.sending, false);
-        var failedSource = subject.send("update", "body", "normal", "Open release page");
-        subject.testSource.newData(failedSource, {"exit code": 1, stdout: "default\n"});
-        compare(activated, []);
-        compare(subject.sending, false);
-        var noisySource = subject.send("update", "body", "normal", "Open release page");
-        subject.testSource.newData(noisySource, {"exit code": 0, stdout: "x".repeat(4096) + "default"});
-        compare(activated, []);
+    }
+
+    function test_immediateActionReplyFollowsRegistration() {
+        var subject = create();
+        subject.testSource.immediate = true;
+        var events = [];
+        subject.actionDiscarded.connect(function(source) { events.push("closed " + source); });
+        var source = subject.send("update", "body", "normal", "Open", function(name) {
+            events.push("started " + name);
+        });
+        compare(events, ["started " + source, "closed " + source]);
         compare(subject.sending, false);
     }
 

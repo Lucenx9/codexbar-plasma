@@ -96,7 +96,10 @@ TestCase {
         var notificationTimeout = create("NotificationDispatcher.qml");
         verify(notificationTimeout.send("notification-timeout", "body", "normal"));
         var notificationAction = create("NotificationDispatcher.qml");
-        verify(notificationAction.send("notification-action", "body", "normal", "Open"));
+        var discardedActions = [];
+        notificationAction.actionDiscarded.connect(function(source) { discardedActions.push(source); });
+        var actionSource = notificationAction.send("notification-action", "body", "normal", "Open");
+        verify(actionSource);
         var notificationDestroyed = create("NotificationDispatcher.qml");
         verify(notificationDestroyed.send("notification-destroyed", "body", "normal"));
         notificationDestroyed.destroy();
@@ -105,6 +108,7 @@ TestCase {
             && accountsTimeout.errorForProvider("codex").length > 0
             && rosterTimeout.providerRosterError.length > 0 && !rosterTimeout.providerRosterLoading
             && !notificationTimeout.sending && !notificationAction.sending; }, 3000);
+        compare(discardedActions, [actionSource]);
         // Keep the runner alive past the hard bound; the harness watches /proc.
         wait(HOLD_MS);
     }

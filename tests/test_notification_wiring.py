@@ -339,11 +339,12 @@ TestCase {
     property int sentSerial: 0
     property var openedReleaseUrls: []
     property var notificationDispatcher: ({
-        send: function(title, body, urgency, actionLabel) {
+        send: function(title, body, urgency, actionLabel, onStarted) {
             sentSerial += 1;
             sentNotifications = sentNotifications.concat([{
                 title: title, body: body, urgency: urgency, actionLabel: actionLabel
             }]);
+            if (onStarted) onStarted("source-" + sentSerial);
             return "source-" + sentSerial;
         }
     })
@@ -369,7 +370,7 @@ TestCase {
     }
     function notifyInstalledUpdate(version) { updateNotifications.notifyInstalledUpdate(version); }
     function handleUpdateNotificationActivated(sourceName) {
-        updateNotifications.handleUpdateNotificationActivated(sourceName);
+        updateNotifications.finishUpdateNotification(sourceName, true);
     }
 
 

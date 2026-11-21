@@ -10,9 +10,10 @@ Item {
     readonly property bool sending: CommandLedger.hasDeadlines(lifecycle.commands)
 
     signal activated(string sourceName)
+    signal actionDiscarded(string sourceName)
 
-    function send(title, body, urgency, actionLabel) {
-        return lifecycle.dispatch(title, body, urgency, actionLabel);
+    function send(title, body, urgency, actionLabel, onStarted) {
+        return lifecycle.dispatch(title, body, urgency, actionLabel, onStarted);
     }
 
     Component.onDestruction: lifecycle.retire()
@@ -29,34 +30,44 @@ Item {
         // send.
         readonly property int notificationActionCommandTimeoutMs: 120000
 
-        function dispatch(title, body, urgency, actionLabel) {
+        function dispatch(title, body, urgency, actionLabel, onStarted) {
             if (destroyed)
                 return "";
             var command = NotificationCommand.command(title, body, urgency, actionLabel);
             if (command.length === 0)
                 return "";
             runSerial += 1;
-            var timeout = NotificationCommand.wantsAction(actionLabel)
-                ? notificationActionCommandTimeoutMs
-                : notificationCommandTimeoutMs;
-            var descriptor = CommandLedger.descriptor("notification", "", Date.now(), timeout);
+            var actionable = NotificationCommand.wantsAction(actionLabel);
+            var timeout = actionable ? notificationActionCommandTimeoutMs : notificationCommandTimeoutMs;
+            var descriptor = CommandLedger.descriptor(actionable ? "notificationAction" : "notification", "", Date.now(), timeout);
             var bounded = Guards.boundedShellCommand("sh -c " + Guards.shellQuote(command), timeout / 1000 + 2, 1, true);
             var sourceName = CommandLedger.withRunNonce(bounded, runSerial, Date.now() + "-" + Math.random());
             // Plasma may publish a cached result while connecting the source.
             commands = CommandLedger.opened(commands, sourceName, descriptor);
+            if (onStarted)
+                onStarted(sourceName);
             notificationSource.connectSource(sourceName);
             return sourceName;
         }
 
-        function finish(sourceName) {
+        function finish(sourceName, activated) {
+            var descriptor = CommandLedger.find(commands, sourceName);
+            if (!descriptor)
+                return;
             commands = CommandLedger.closed(commands, sourceName);
             notificationSource.disconnectSource(sourceName);
+            if (destroyed || descriptor.kind !== "notificationAction")
+                return;
+            if (activated)
+                controller.activated(sourceName);
+            else
+                controller.actionDiscarded(sourceName);
         }
 
         function expire(nowMs) {
             var expired = CommandLedger.expired(commands, nowMs);
             for (var i = 0; i < expired.length; i++) {
-                finish(expired[i].sourceName);
+                finish(expired[i].sourceName, false);
             }
         }
 
@@ -90,15 +101,12 @@ Item {
 
         engine: "executable"
         onNewData: function (sourceName, data) {
-            if (!CommandLedger.find(lifecycle.commands, sourceName)) {
+            var descriptor = CommandLedger.find(lifecycle.commands, sourceName);
+            if (!descriptor) {
                 notificationSource.disconnectSource(sourceName);
                 return;
             }
-            var actionActivated = lifecycle.actionActivated(data);
-            lifecycle.finish(sourceName);
-            if (actionActivated) {
-                controller.activated(sourceName);
-            }
+            lifecycle.finish(sourceName, lifecycle.actionActivated(data));
         }
     }
 }

@@ -224,7 +224,7 @@ preformatted labels, returning title/body/urgency. The shared
 `UpdateNotificationsController.send()` applies privacy. `NotificationDispatcher`
 accepts localized, filtered text, assigns per-send nonces, and owns ledger and
 10-second deadlines, or two minutes for clickable notifications. It retires a
-source before emitting `activated(sourceName)`. Failed commands and missing
+source before reporting the action outcome. Failed commands and missing
 `notify-send` are quiet; `NotificationCommand.js` bounds text, quotes arguments,
 escapes body markup, restricts urgency and probes action support for older builds.
 
@@ -232,8 +232,10 @@ Update notification policy owns independent switches, localization, persisted
 version deduplication and source-specific release actions. Save widget versions
 before send; save CLI versions only after a safe source starts, allowing retries.
 Managed copies with automatic updates do not announce redundant CLI releases.
-`UpdateNotificationState.js` validates release URLs and immutable action maps;
-consume an activation before requesting the applet to open its URL.
+`UpdateNotificationState.js` validates release URLs and immutable action maps.
+Register the URL before connecting the executable source so even an immediate
+reply can consume it. Remove the URL when the command finishes or times out. Only activation
+requests that the applet open the URL, after removal.
 
 `WidgetUpdateController.checkNow()` respects disabled checks;
 `runNow(install)` permits manual checks/install while automatic settings are off.
