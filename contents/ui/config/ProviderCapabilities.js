@@ -4,7 +4,7 @@
 
 // Released Linux writer policy. QML owns probes and publishes these flags.
 function versionCapabilities(version, exitCode) {
-    var success = Number(exitCode) === 0
+    var success = Guards.exitCode(exitCode) === 0
     return {
         fireworks: success && Protocol.cliVersionAtLeast(version, 0, 54, 0),
         soniox: success && Protocol.cliVersionAtLeast(version, 0, 80, 0),
