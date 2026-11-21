@@ -191,6 +191,15 @@ class ReadChangeTests(unittest.TestCase):
                 patch.dict("os.environ", {"OPENROUTER_API_KEY": "key"}):
             self.assertEqual(main(["--base", "main"]), 0)
 
+    def test_http_exception_reports_unavailable_exit_code(self):
+        import http.client
+        with patch.object(todo_gate, "read_change",
+                          return_value=(["contents/ui/main.qml"], "diff", "- [ ] item")), \
+                patch.object(todo_gate, "ask",
+                             side_effect=http.client.IncompleteRead(b"partial")), \
+                patch.dict("os.environ", {"OPENROUTER_API_KEY": "key"}):
+            self.assertEqual(main(["--base", "main"]), 2)
+
 
 if __name__ == "__main__":
     unittest.main()
