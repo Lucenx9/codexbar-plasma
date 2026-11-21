@@ -247,6 +247,9 @@ Item {
             }
 
             usageLastRefreshAttemptAtMs = Date.now();
+            // After a clock rollback, the new attempt starts the popup cooldown.
+            if (usageLastCompletedAtMs > usageLastRefreshAttemptAtMs)
+                usageLastCompletedAtMs = -1;
             loading = true;
             errorText = "";
             commandPathFailed = false;

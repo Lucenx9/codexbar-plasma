@@ -1,4 +1,5 @@
 .pragma library
+.import "Guards.js" as Guards
 
 var keepAction = "keep"
 var startAction = "start"
@@ -21,19 +22,21 @@ function staleAfterMs(refreshIntervalSeconds) {
 // A failed attempt delays automatic retries without making its snapshot fresh.
 // QML records attempt completion and clears it whenever the command source changes.
 function lastActivityAtMs(current) {
-    var source = current && typeof current === "object"
-        && !Array.isArray(current) ? current : ({})
+    var source = Guards.isRecord(current) ? current : ({})
     var finished = source.lastFinishedAtMs
-    var baseline = typeof finished === "number" && isFinite(finished) && finished >= 0
-        ? finished : -1
+    // The most recent scan may finish before a retained snapshot's wall-clock
+    // timestamp after a clock rollback. Its cooldown still starts at finish.
+    if (Guards.isFiniteNumber(finished) && finished >= 0) {
+        return finished
+    }
     var completed = source.lastCompletedAtMs
     if (typeof source.loadedCommandSource === "string"
             && typeof source.commandSource === "string"
             && source.loadedCommandSource.trim() === source.commandSource.trim()
-            && typeof completed === "number" && isFinite(completed) && completed >= 0) {
-        baseline = Math.max(baseline, completed)
+            && Guards.isFiniteNumber(completed) && completed >= 0) {
+        return completed
     }
-    return baseline
+    return -1
 }
 
 function maximumAgeMs(current) {

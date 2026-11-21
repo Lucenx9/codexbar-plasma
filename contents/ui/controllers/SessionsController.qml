@@ -112,13 +112,13 @@ Item {
         }
 
         function acceptReply(stdoutText, stderrText, exitCode) {
-            lastFinishedAtMs = Date.now();
             var result = SessionResponse.response(stdoutText, stderrText, exitCode);
+            lastFinishedAtMs = Date.now();
             switch (result.outcome) {
             case "success":
                 snapshot = result.sessions;
                 errorText = "";
-                lastCompletedAtMs = Date.now();
+                lastCompletedAtMs = lastFinishedAtMs;
                 loadedCommandSource = commandSource;
                 break;
             case "commandFailed":
