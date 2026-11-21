@@ -66,6 +66,31 @@ TestCase {
         }
     }
 
+    function test_resolvedPathComparisonUsesCompleteIdentity_data() {
+        var prefix = "/usr/local/" + "synthetic-nested/".repeat(64)
+        return [
+            {tag: "same-truncated-display", selected: prefix + "selected/codexbar", system: prefix + "system/codexbar"},
+            {tag: "same-redacted-display", selected: "/opt/token=fixture-selected/codexbar",
+                system: "/opt/token=fixture-system/codexbar"},
+            {tag: "distinct-filesystem-byte-escapes", selected: "/opt/\udcfe/codexbar", system: "/opt/\udcff/codexbar"},
+            {tag: "literal-percent-escape", selected: "/opt/\udcfe/codexbar", system: "/opt/%dcfe%/codexbar"}
+        ]
+    }
+
+    function test_resolvedPathComparisonUsesCompleteIdentity(data) {
+        var value = payload()
+        value.selected.path = data.selected
+        value.system.path = data.system
+        var report = SupportReport.markdown({facts: SupportReport.response(JSON.stringify(value))})
+        verify(report.indexOf("Same resolved path as selected: no") >= 0)
+        verify(report.indexOf(data.selected) < 0)
+        verify(report.indexOf(data.system) < 0)
+
+        value.system.path = data.selected
+        report = SupportReport.markdown({facts: SupportReport.response(JSON.stringify(value))})
+        verify(report.indexOf("Same resolved path as selected: yes") >= 0)
+    }
+
     function test_diagnosticPathsWithSpacesQuotesAndFileUrlsAreOmitted() {
         for (var text of ['Could not open "/srv/private alice/tool" after failure',
                           "Could not open '/data/private alice/tool' after failure",

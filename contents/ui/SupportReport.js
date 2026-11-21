@@ -193,8 +193,8 @@ function markdown(input) {
         : typeof input.commandPath === "string" && input.commandPath.charAt(0) === "/" ? "absolute path" : "custom command name (omitted)"))
     lines.push("", "### System CLI (PATH)")
     lines = lines.concat(cliLines("PATH resolution", facts.system).slice(1))
-    lines.push("- Same resolved path as selected: " + (facts.selected.path && facts.system.path
-        ? (facts.selected.path === facts.system.path ? "yes" : "no") : "unknown"))
+    lines.push("- Same resolved path as selected: " + (facts.selected.pathIdentity && facts.system.pathIdentity
+        ? (facts.selected.pathIdentity === facts.system.pathIdentity ? "yes" : "no") : "unknown"))
     lines.push("", "### Providers", "- Enabled IDs: " + (facts.providers.status !== "checked" ? "unavailable"
         : facts.providers.enabled.length ? facts.providers.enabled.join(", ") : "none"))
     lines.push("- Provider override (Diagnostics form): " + (providerID(providerOverride) ? providerOverride : providerOverride ? "invalid/omitted" : "none"),

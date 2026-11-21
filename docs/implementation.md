@@ -254,6 +254,10 @@ release metadata. Failed retargeted checks can retry after one hour even if the
 prior command had a recent successful timestamp. Automatic release checks
 ignore a retry deadline more than one hour ahead after a wall-clock rollback.
 
+Diagnostics compares transient identifiers derived from validated resolved paths
+before display redaction and truncation. The support report shares the comparison
+result without including the paths or their identifiers.
+
 Managed installation selects only a helper-verified executable, never a path from
 metadata-only `status`. General waits for the offline probe and offers install
 only for a confirmed missing command or identified CLI; failed probes offer Retry.
