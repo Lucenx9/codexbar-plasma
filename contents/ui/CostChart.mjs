@@ -280,13 +280,14 @@ function extendMonthColumn(months, column, date) {
     months[key] = span
 }
 
-export function spendHeatmapMonths(cells) {
+export function spendHeatmapMonths(cells, leadingSlots) {
     var newest = heatmapCalendarEnd(cells)
     if (newest === null) return []
-    var first = cells.findIndex(function(cell) { return cell !== null })
+    if (!Guards.isArrayIndex(cells, leadingSlots) || leadingSlots >= 7) return []
     var months = ({})
     for (var column = 0; column < cells.length / 7; column++) {
-        var slot = Math.max(first, column * 7)
+        // Ignore first-week padding, but retain unmeasured dates in the range.
+        var slot = Math.max(leadingSlots, column * 7)
         var date = new Date(newest - (cells.length - 1 - slot) * 86400000)
         extendMonthColumn(months, column, date)
     }

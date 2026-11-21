@@ -1194,16 +1194,29 @@ TestCase {
         cells[2] = {label: "2026-12-23"}
         cells[40] = {label: "2027-01-30"}
         var before = JSON.stringify(cells)
-        compare(CostChart.spendHeatmapMonths(cells), [
+        compare(CostChart.spendHeatmapMonths(cells, 2), [
             {column: 0, columns: 2, month: 11, year: 2026},
             {column: 2, columns: 4, month: 0, year: 2027}
         ])
         compare(JSON.stringify(cells), before)
         cells[40].label = "2027-02-30"
-        compare(CostChart.spendHeatmapMonths(cells), [])
+        compare(CostChart.spendHeatmapMonths(cells, 2), [])
         for (var value of [null, {}, [], new Array(379), [{label: "legacy"}], new Array(14).fill(null)])
-            compare(CostChart.spendHeatmapMonths(value), [])
-        compare(CostChart.spendHeatmapMonths([{label: "day-0"}, null, null, null, null, null, null]), [])
+            compare(CostChart.spendHeatmapMonths(value, 0), [])
+        compare(CostChart.spendHeatmapMonths([{label: "day-0"}, null, null, null, null, null, null], 0), [])
+    }
+
+    function test_spendHeatmapMonthsIncludeWeeksBeforeFirstMeasurement() {
+        var february = {label: "2026-02-02", value: 10}
+        var days = CostChart.spendHeatmapDays([february], [
+            {daily: [{label: "2026-01-05", cost: null}, february]}
+        ])
+        var trailing = CostChart.spendHeatmapTrailingSlots(days, 1)
+        var cells = CostChart.spendHeatmapCells(days, 35, trailing)
+        compare(CostChart.spendHeatmapMonths(cells, 0), [
+            {column: 0, columns: 4, month: 0, year: 2026},
+            {column: 4, columns: 1, month: 1, year: 2026}
+        ])
     }
 
     function test_spendHeatmapRowWeekdaysStartOnTheLocaleWeek() {

@@ -27,6 +27,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 - Reject partial and truncated service status responses when curl is unavailable.
 
+- Place month labels over the correct weeks in Daily activity when the first
+  days in the visible range have no measurement for the selected metric.
+
 - Avoid pinning unavailable or duplicate dates from the Usage & Spend history
   chart while keeping them inspectable in the chart readout.
 

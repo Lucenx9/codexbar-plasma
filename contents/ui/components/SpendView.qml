@@ -928,7 +928,8 @@ ColumnLayout {
                             readonly property var cells: heatmapGrid.cells
                             readonly property int visibleDayCount: Math.min(view.heatmapDays.length,
                                 Math.max(0, cells.length - view.heatmapTrailingSlots))
-                            readonly property var months: CostChart.spendHeatmapMonths(cells)
+                            readonly property var months: CostChart.spendHeatmapMonths(cells,
+                                cells.length - visibleDayCount - view.heatmapTrailingSlots)
                             readonly property real monthHeaderHeight: months.length > 0
                                 ? heatmapFontMetrics.height + Kirigami.Units.smallSpacing : 0
                             readonly property int inspectedIndex: HeatmapNavigation.indexForDay(cells,
