@@ -12,6 +12,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Resume AI Insights automatic retries and manual requests after a rate limit
+  when the system clock moves back instead of waiting for the earlier clock time.
+
 - Keep a panel visibility rule's threshold when its number field is cleared
   or mistyped, and clamp a typed reset window above one week instead of saving
   its first digit.

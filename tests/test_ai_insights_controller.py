@@ -424,6 +424,38 @@ TestCase {
         compare(AiInsightsProtocol.modelsReply(reply.stdout, Number(reply["exit code"]), Number(reply["exit status"])).reason, "timeout");
         source.destroy();
     }
+    function test_16_clockRollbackResumesRateLimitedAndAutomaticGeneration() {
+        var dayMs = 24 * 60 * 60 * 1000;
+        var rateLimited = create({model: "rate-model"});
+        verify(rateLimited.generate());
+        tryCompare(rateLimited, "errorReason", "rate_limited", 10000);
+        compare(calls().length, 1);
+        verify(!rateLimited.generate(), "an active rate limit blocks manual retries");
+        var rateLifecycle = findChild(rateLimited, "aiInsightsLifecycle");
+        verify(rateLifecycle !== null);
+        // Model a 24-hour clock rollback by shifting recorded deadlines forward.
+        rateLifecycle.retryAtMs += dayMs;
+        rateLifecycle.rateLimitedUntilMs += dayMs;
+        rateLimited.rateLimit = AiInsights.rateLimitText(rateLifecycle.rateLimitedUntilMs, rateLimited.contextKey);
+        verify(rateLimited.generate(), "a clock rollback should lift stale rate limits for manual generation");
+        tryCompare(rateLimited, "busy", false, 10000);
+        compare(calls().length, 2);
+        rateLimited.destroy();
+
+        var autoFailed = create({model: "net-model", intervalHours: 6});
+        tryCompare(autoFailed, "errorReason", "network", 10000);
+        compare(calls().length, 3);
+        var autoLifecycle = findChild(autoFailed, "aiInsightsLifecycle");
+        verify(autoLifecycle !== null);
+        autoLifecycle.checkIfDue();
+        verify(!autoFailed.busy, "an active failure delay blocks automatic retries");
+        autoLifecycle.retryAtMs += dayMs;
+        autoFailed.lastAttempt = new Date(Date.parse(autoFailed.lastAttempt) + dayMs).toISOString();
+        autoLifecycle.checkIfDue();
+        verify(autoFailed.busy, "a clock rollback should resume automatic generation after a failure");
+        tryCompare(autoFailed, "busy", false, 10000);
+        compare(calls().length, 4);
+    }
     function test_9_unbuildableCommandSurfacesInvalidInput() {
         var controller = create({provider: "ollama", model: "llama3",
             endpoint: "http://" + new Array(2050).join("x"), intervalHours: 6});

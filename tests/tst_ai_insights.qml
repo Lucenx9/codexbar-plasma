@@ -147,6 +147,9 @@ TestCase {
         verify(AiInsights.automaticDue(observation({lastAttemptMs: now - 6 * hour})))
         verify(AiInsights.automaticDue(observation({intervalHours: 24, lastAttemptMs: now - 24 * hour})))
         verify(!AiInsights.automaticDue(observation({retryAtMs: now + 1})))
+        verify(!AiInsights.automaticDue(observation({retryAtMs: now + 24 * hour})))
+        verify(AiInsights.automaticDue(observation({retryAtMs: now + 24 * hour + 1})),
+            "a retry deadline beyond the longest delay came from a clock rollback")
         // A language change leaves the schedule anchored at the last success.
         verify(!AiInsights.automaticDue(observation({lastSuccessMs: now - hour, cacheMatchesContext: false})))
         // Identical data would only repeat the same paid answer.
@@ -186,6 +189,13 @@ TestCase {
         compare(AiInsights.rateLimitUntilMs(JSON.stringify({until: "soon", context: key}), key, now), 0)
         compare(AiInsights.rateLimitUntilMs(AiInsights.rateLimitText(now + 25 * hour, key), key, now), 0,
             "a deadline beyond the longest Retry-After cannot block generation")
+        compare(AiInsights.activeDeadlineMs(now + 2 * hour, now, 24 * hour), now + 2 * hour)
+        compare(AiInsights.activeDeadlineMs(now + 24 * hour, now, 24 * hour), now + 24 * hour)
+        compare(AiInsights.activeDeadlineMs(now + 24 * hour + 1, now, 24 * hour), 0)
+        compare(AiInsights.activeDeadlineMs(now, now, 24 * hour), 0)
+        compare(AiInsights.activeDeadlineMs(NaN, now, 24 * hour), 0)
+        compare(AiInsights.activeDeadlineMs(now + hour, NaN, 24 * hour), 0)
+        compare(AiInsights.activeDeadlineMs(now + hour, now, 0), 0)
     }
 
     function test_modelListedMatchesTheConfiguredModel() {

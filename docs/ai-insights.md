@@ -258,7 +258,9 @@ Every failure delays automatic generation by the interval, or 24 hours in
 manual mode. Rate limits also enforce `Retry-After` from five minutes through
 24 hours. Explicit retries obey only that rate-limit deadline. Persisted
 `aiInsightsRateLimit` is context-specific, survives restarts, rejects deadlines
-beyond 24 hours, and clears on success. Answers older than the interval, or
+beyond 24 hours, and clears on success. In-memory retry and rate-limit deadlines
+further ahead than their maximum delay are ignored after a wall-clock rollback
+so manual and automatic generation can resume. Answers older than the interval, or
 followed by a failed attempt, remain visible as out of date.
 
 ## Verification

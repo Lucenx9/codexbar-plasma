@@ -250,6 +250,14 @@ function rateLimitText(untilMs, contextKey) {
         ? JSON.stringify({until: new Date(untilMs).toISOString(), context: contextKey}) : ""
 }
 
+// A deadline further ahead than its longest possible delay was set before the
+// wall clock moved back and must not block future requests.
+function activeDeadlineMs(untilMs, nowMs, maxDelayMs) {
+    return isFinite(untilMs) && isFinite(nowMs) && isFinite(maxDelayMs) && maxDelayMs > 0
+        && untilMs > nowMs && untilMs <= nowMs + maxDelayMs
+        ? untilMs : 0
+}
+
 function rateLimitUntilMs(text, contextKey, nowMs) {
     if (typeof text !== "string" || text.length === 0 || text.length > 8192) {
         return 0
@@ -264,8 +272,7 @@ function rateLimitUntilMs(text, contextKey, nowMs) {
         return 0
     }
     var untilMs = timestampMs(value.until)
-    return isFinite(untilMs) && untilMs > nowMs && untilMs <= nowMs + maximumRetryAfterSeconds * 1000
-        ? untilMs : 0
+    return activeDeadlineMs(untilMs, nowMs, maximumRetryAfterSeconds * 1000)
 }
 
 // Automatic generation follows the configured interval only. Opening the
@@ -280,7 +287,7 @@ function automaticDue(observation) {
         return false
     }
     var intervalMs = o.intervalHours * hourMs
-    if (o.nowMs < o.retryAtMs) {
+    if (activeDeadlineMs(o.retryAtMs, o.nowMs, Math.max(intervalMs, maximumRetryAfterSeconds * 1000)) > 0) {
         return false
     }
     // Every attempt counts, including a failed or timed-out one: the provider
