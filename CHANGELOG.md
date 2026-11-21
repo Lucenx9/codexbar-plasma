@@ -12,6 +12,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Open partially visible popup tabs on the first click without shifting them
+  under the pointer before release.
+
 - Hide the collapsed "Quota, order and visibility" summary label in Panel
   settings when that disclosure section is expanded.
 

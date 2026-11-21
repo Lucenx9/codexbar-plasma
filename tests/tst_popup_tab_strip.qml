@@ -226,6 +226,51 @@ TestCase {
         compare(host.selectedIndex, 0);
     }
 
+    function test_clickPartiallyVisibleTab_data() {
+        return [
+            { tag: "inside", visibleWidth: 4, releaseOutside: false },
+            { tag: "edge", visibleWidth: 1.25, releaseOutside: false },
+            { tag: "outside", visibleWidth: 4, releaseOutside: true }
+        ];
+    }
+
+    function test_clickPartiallyVisibleTab(data) {
+        var host = createStrip();
+        var viewport = findChild(host, "providerTabsFlickable");
+        var tab = findChild(host, "tab3");
+        host.scrollTo(tab.x - viewport.width + data.visibleWidth, true);
+        compare(tab.mapToItem(viewport, 0, 0).x, viewport.width - data.visibleWidth);
+
+        var x = viewport.width - 1;
+        var y = viewport.height / 2;
+        var releaseX = data.releaseOutside ? viewport.width + 2 : x;
+        mousePress(viewport, x, y);
+        mouseMove(viewport, releaseX, y + 1);
+        mouseRelease(viewport, releaseX, y + 1);
+
+        compare(host.selectedIndex, data.releaseOutside ? 0 : 3);
+        if (!data.releaseOutside)
+            verifyRevealed(host, 3);
+    }
+
+    function test_clickInterruptsTabPageScroll() {
+        var host = createStrip();
+        var viewport = findChild(host, "providerTabsFlickable");
+        var tab = findChild(host, "tab2");
+        host.scrollTo(tab.x + 4, true);
+
+        var x = Math.floor(tab.width / 3);
+        var y = Math.floor(viewport.height / 2);
+        mouseClick(findChild(host, "nextTabsButton"));
+        mousePress(viewport, x, y);
+        wait(Kirigami.Units.shortDuration + 20);
+        mouseMove(viewport, x, y + 1);
+        mouseRelease(viewport, x, y + 1);
+
+        compare(host.selectedIndex, 2);
+        verifyRevealed(host, 2);
+    }
+
     function test_rapidPageClicksAccumulate_data() {
         return [
             { tag: "ltr", mirrored: false, direction: 1 },

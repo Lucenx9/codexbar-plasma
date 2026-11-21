@@ -1045,7 +1045,9 @@ TestCase {
                 if (selected)
                     strip.claimed = tabItem;
             },
-            ensureVisible: function(item) {}
+            ensureVisible: function(item) {},
+            stopPageScroll: function() {},
+            containsPointer: function() { return true; }
         };
         var tab = createControl("GlobalTab", {
             applet: applet,

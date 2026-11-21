@@ -116,8 +116,20 @@ Rectangle {
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
-        onPressed: tabFocus.forceActiveFocus(Qt.MouseFocusReason)
-        onClicked: tab.activated()
+        // Counter the visual press scale to retain the full hit area.
+        scale: 1 / tab.scale
+        onPressed: {
+            if (tab.tabStrip) {
+                tab.tabStrip.stopPageScroll()
+            }
+        }
+        onClicked: function(mouse) {
+            if (tab.tabStrip && !tab.tabStrip.containsPointer(tabMouse, mouse.x, mouse.y)) {
+                return
+            }
+            tabFocus.forceActiveFocus(Qt.MouseFocusReason)
+            tab.activated()
+        }
     }
 
     PlainToolTip {

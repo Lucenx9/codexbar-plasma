@@ -333,8 +333,16 @@ Item {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onPressed: providerFocus.forceActiveFocus(Qt.MouseFocusReason)
-                        onClicked: providerTab.activate()
+                        // Counter the visual press scale to retain the full hit area.
+                        scale: 1 / providerTab.scale
+                        onPressed: providerTabsBar.stopPageScroll()
+                        onClicked: function(mouse) {
+                            if (!providerTabsBar.containsPointer(providerTabMouse, mouse.x, mouse.y)) {
+                                return
+                            }
+                            providerFocus.forceActiveFocus(Qt.MouseFocusReason)
+                            providerTab.activate()
+                        }
                     }
 
                     // The compact gauge has no numeric readout. Hover and keyboard
