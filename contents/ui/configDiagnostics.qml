@@ -233,8 +233,8 @@ KCM.SimpleKCM {
     // Editing the command path resets only the selected probe, so the PATH
     // row waits for a fresh result instead of comparing against nothing.
     readonly property bool systemCliDiffers: versions.checked && systemVersions.checked
-        && systemVersions.result.path.length > 0
-        && systemVersions.result.path !== versions.result.path
+        && systemVersions.result.pathIdentity.length > 0
+        && systemVersions.result.pathIdentity !== versions.result.pathIdentity
 
     function runEnvironmentProbe() {
         if (commandPath.length === 0)

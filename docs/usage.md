@@ -626,7 +626,8 @@ It never fetches usage, checks releases, runs provider diagnostics, or includes
 diagnostic output, credentials, account labels, configuration dumps, or resolved
 filesystem paths. Path-bearing and credential-redacted error lines are omitted.
 Review the report before posting. **Check versions** is a separate offline probe
-and shows the full resolved path locally.
+and shows the resolved path locally, with recognized credentials hidden and
+long paths shortened.
 
 ### Update the widget
 

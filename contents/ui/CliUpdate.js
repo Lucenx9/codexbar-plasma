@@ -6,8 +6,18 @@ function managedSelection(value) {
     return value.manager === "managed" && value.managedSelected === true
 }
 
+function resolvedPathIdentity(path) {
+    if (!path) return ""
+    // Preserve filename byte escapes before Qt converts the string to UTF-8 for hashing.
+    var encoded = path.replace(/[%\uD800-\uDFFF]/g, function(character) {
+        return "%" + character.charCodeAt(0).toString(16) + "%"
+    })
+    return Qt.md5(encoded)
+}
+
 function response(text) {
-    var empty = {status: "error", version: "", path: "", manager: "external", managedSelected: false, latest: "", releaseUrl: ""}
+    var empty = {status: "error", version: "", path: "", pathIdentity: "", manager: "external",
+        managedSelected: false, latest: "", releaseUrl: ""}
     if (typeof text !== "string" || text.length > 16384) return empty
     var value
     try { value = JSON.parse(text) } catch (error) { return empty }
@@ -25,8 +35,8 @@ function response(text) {
             && (tag.length === 0 || value.latest !== tag.slice(1))) return empty
     if (["available", "current", "local"].indexOf(value.status) >= 0 && version.length === 0) return empty
     return {status: value.status, version: SafeText.cliMessage(version, 128),
-        path: SafeText.redactCredentialsWithinSourceLimit(path, 1024), manager: manager,
-        managedSelected: managedSelection(value),
+        path: SafeText.redactCredentialsWithinSourceLimit(path, 1024), pathIdentity: resolvedPathIdentity(path),
+        manager: manager, managedSelected: managedSelection(value),
         latest: tag.length > 0 ? tag.slice(1) : "",
         releaseUrl: tag.length > 0 ? "https://github.com/steipete/CodexBar/releases/tag/" + tag : ""}
 }

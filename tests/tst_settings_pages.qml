@@ -398,10 +398,19 @@ TestCase {
         verify(next.activeFocus);
     }
 
-    function test_diagnosticsShowsSystemCliWhenItDiffers() {
-        var page = createPage("../contents/ui/configDiagnostics.qml", {
-            cfg_commandPath: "/home/test/.local/share/codexbar-plasma/cli/current/codexbar"
-        });
+    function test_diagnosticsShowsSystemCliWhenItDiffers_data() {
+        return [
+            {tag: "separate-paths",
+                selected: "/home/test/.local/share/codexbar-plasma/cli/current/codexbar",
+                system: "/usr/bin/codexbar", displayedSystem: "/usr/bin/codexbar"},
+            {tag: "same-redacted-display",
+                selected: "/opt/token=fixture-selected/codexbar",
+                system: "/opt/token=fixture-system/codexbar", displayedSystem: "/opt/token=[redacted]"}
+        ];
+    }
+
+    function test_diagnosticsShowsSystemCliWhenItDiffers(data) {
+        var page = createPage("../contents/ui/configDiagnostics.qml", {cfg_commandPath: data.selected});
         if (!page)
             return;
 
@@ -410,7 +419,7 @@ TestCase {
         versions.accept("selected", {
             "exit code": 0,
             stdout: JSON.stringify({status: "local", version: "0.62.0",
-                path: "/home/test/.local/share/codexbar-plasma/cli/current/codexbar", manager: "managed"})
+                path: data.selected, manager: "managed"})
         });
         var systemVersions = findChild(page, "systemCliVersionsController");
         verify(systemVersions !== null);
@@ -419,13 +428,13 @@ TestCase {
         systemVersions.accept("system", {
             "exit code": 0,
             stdout: JSON.stringify({status: "local", version: "0.60.4",
-                path: "/usr/bin/codexbar", manager: "external"})
+                path: data.system, manager: "external"})
         });
 
         var label = findChild(page, "systemCliVersionLabel");
         verify(label.visible);
         verify(label.text.indexOf("0.60.4") >= 0);
-        verify(label.text.indexOf("/usr/bin/codexbar") >= 0);
+        verify(label.text.indexOf(data.displayedSystem) >= 0);
     }
 
     function test_diagnosticsHidesStaleSystemCliAfterCommandPathEdit() {
