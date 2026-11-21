@@ -369,7 +369,7 @@ TestCase {
     }
     function notifyInstalledUpdate(version) { updateNotifications.notifyInstalledUpdate(version); }
     function handleUpdateNotificationActivated(sourceName) {
-        updateNotifications.handleUpdateNotificationActivated(sourceName);
+        updateNotifications.finishUpdateNotification(sourceName, true);
     }
 
 

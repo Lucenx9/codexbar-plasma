@@ -10,6 +10,7 @@ Item {
     readonly property bool sending: CommandLedger.hasDeadlines(lifecycle.commands)
 
     signal activated(string sourceName)
+    signal actionDiscarded(string sourceName)
 
     function send(title, body, urgency, actionLabel) {
         return lifecycle.dispatch(title, body, urgency, actionLabel);
@@ -36,10 +37,9 @@ Item {
             if (command.length === 0)
                 return "";
             runSerial += 1;
-            var timeout = NotificationCommand.wantsAction(actionLabel)
-                ? notificationActionCommandTimeoutMs
-                : notificationCommandTimeoutMs;
-            var descriptor = CommandLedger.descriptor("notification", "", Date.now(), timeout);
+            var actionable = NotificationCommand.wantsAction(actionLabel);
+            var timeout = actionable ? notificationActionCommandTimeoutMs : notificationCommandTimeoutMs;
+            var descriptor = CommandLedger.descriptor(actionable ? "notificationAction" : "notification", "", Date.now(), timeout);
             var bounded = Guards.boundedShellCommand("sh -c " + Guards.shellQuote(command), timeout / 1000 + 2, 1, true);
             var sourceName = CommandLedger.withRunNonce(bounded, runSerial, Date.now() + "-" + Math.random());
             // Plasma may publish a cached result while connecting the source.
@@ -57,6 +57,8 @@ Item {
             var expired = CommandLedger.expired(commands, nowMs);
             for (var i = 0; i < expired.length; i++) {
                 finish(expired[i].sourceName);
+                if (expired[i].descriptor.kind === "notificationAction")
+                    controller.actionDiscarded(expired[i].sourceName);
             }
         }
 
@@ -90,7 +92,8 @@ Item {
 
         engine: "executable"
         onNewData: function (sourceName, data) {
-            if (!CommandLedger.find(lifecycle.commands, sourceName)) {
+            var descriptor = CommandLedger.find(lifecycle.commands, sourceName);
+            if (!descriptor) {
                 notificationSource.disconnectSource(sourceName);
                 return;
             }
@@ -98,6 +101,8 @@ Item {
             lifecycle.finish(sourceName);
             if (actionActivated) {
                 controller.activated(sourceName);
+            } else if (descriptor.kind === "notificationAction") {
+                controller.actionDiscarded(sourceName);
             }
         }
     }

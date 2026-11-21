@@ -9,7 +9,7 @@ Item {
     property bool privacyMode: false
     property var dispatcher: notificationDispatcher
     property string lastNotifiedUpdateVersion: configuration.lastNotifiedUpdateVersion || ""
-    // Each queued update retains its own release action until activation.
+    // Each queued update retains its release action while delivery is active.
     property var pendingUpdateReleaseUrls: ({})
     readonly property bool updateNotificationsEnabled: configuration.updateNotificationsEnabled !== false
 
@@ -43,10 +43,10 @@ Item {
             pendingUpdateReleaseUrls, sourceName, releasePageUrl)
     }
 
-    function handleUpdateNotificationActivated(sourceName) {
+    function finishUpdateNotification(sourceName, activated) {
         var result = UpdateNotificationState.consume(pendingUpdateReleaseUrls, sourceName)
         pendingUpdateReleaseUrls = result.nextPending
-        if (result.releaseUrl.length > 0) releasePageRequested(result.releaseUrl)
+        if (activated && result.releaseUrl.length > 0) releasePageRequested(result.releaseUrl)
     }
 
     function notifyInstalledUpdate(version) {
@@ -83,8 +83,13 @@ Item {
 
     NotificationDispatcher {
         id: notificationDispatcher
+        // Plasma may answer inside send(), before its caller registers the URL.
+        // Queue a distinct callback per source so concurrent replies stay independent.
         onActivated: function(sourceName) {
-            controller.handleUpdateNotificationActivated(sourceName)
+            Qt.callLater(() => controller.finishUpdateNotification(sourceName, true))
+        }
+        onActionDiscarded: function(sourceName) {
+            Qt.callLater(() => controller.finishUpdateNotification(sourceName, false))
         }
     }
 }

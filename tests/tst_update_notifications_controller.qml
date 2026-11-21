@@ -125,14 +125,30 @@ TestCase {
     }
     function test_sourcesRetireBeforeOpeningAndReplayIsIgnored() {
         subject.notifyAvailableCliUpdate("v1", "https://github.com/cli/v1")
-        subject.handleUpdateNotificationActivated("unrelated")
+        subject.finishUpdateNotification("unrelated", true)
         compare(opened, [])
         subject.enableNotifications = false
         subject.privacyMode = true
-        subject.handleUpdateNotificationActivated("source-1")
+        subject.finishUpdateNotification("source-1", true)
         compare(opened, ["https://github.com/cli/v1"])
-        subject.handleUpdateNotificationActivated("source-1")
+        subject.finishUpdateNotification("source-1", true)
         compare(opened.length, 1)
+    }
+    function test_completionInsideSend_data() {
+        return [{tag: "activated", activated: true}, {tag: "discarded", activated: false}]
+    }
+    function test_completionInsideSend(data) {
+        var controller = createTemporaryObject(controllerComponent, this, {configuration: config})
+        var transport = controller.dispatcher
+        controller.dispatcher = {send: function() {
+            if (data.activated) transport.activated("immediate")
+            else transport.actionDiscarded("immediate")
+            return "immediate"
+        }}
+        var url = "https://github.com/cli/v1"
+        controller.notifyAvailableCliUpdate("v1", url)
+        tryCompare(controller, "pendingUpdateReleaseUrls", ({}))
+        compare(opened, data.activated ? [url] : [])
     }
     function test_installedAndVersionlessWidgetMessages() {
         subject.notifyInstalledUpdate(" v1 ")

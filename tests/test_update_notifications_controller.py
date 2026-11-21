@@ -48,6 +48,16 @@ TestCase {
         wait(200);
         compare(opened.length, 2);
     }
+
+    function test_dismissedUpdateRetiresItsReleaseAction() {
+        subject.privacyMode = false;
+        var openedBefore = opened.slice();
+        subject.notifyAvailableUpdate("v3", "", "https://github.com/Lucenx9/codexbar-plasma/releases/tag/v3");
+        compare(Object.keys(subject.pendingUpdateReleaseUrls).length, 1);
+        tryCompare(subject.dispatcher, "sending", false);
+        tryCompare(subject, "pendingUpdateReleaseUrls", ({}), 1000);
+        compare(opened, openedBefore);
+    }
 }
 '''
 
@@ -64,6 +74,7 @@ if [ "$1" = --help ]; then
 fi
 printf '%s\\n' "$@" >> "$UPDATE_NOTIFICATION_TEST_LOG"
 sleep 0.2
+case "$*" in *"Version v3 is available."*) exit 0 ;; esac
 printf '%s\\n' default
 ''')
             executable.chmod(0o700)
@@ -85,4 +96,4 @@ printf '%s\\n' default
             self.assertIn("Version v1 is available.", arguments)
             self.assertIn("Usage or status changed. Open CodexBar for details.", arguments)
             self.assertNotIn("Upstream CLI v2", arguments)
-            self.assertEqual(arguments.count("default=Open release page"), 2)
+            self.assertEqual(arguments.count("default=Open release page"), 3)

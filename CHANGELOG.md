@@ -12,6 +12,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Release memory held by dismissed or expired widget and CLI update
+  notifications during long-running Plasma sessions.
+
 - Respect the quota and Sessions retry intervals when a refresh fails after
   the system clock moves back and the popup or tab is reopened.
 
