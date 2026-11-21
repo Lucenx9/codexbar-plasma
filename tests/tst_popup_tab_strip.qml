@@ -245,6 +245,12 @@ TestCase {
         var y = viewport.height / 2;
         var releaseX = data.releaseOutside ? viewport.width + 2 : x;
         mousePress(viewport, x, y);
+        if (data.releaseOutside) {
+            mouseMove(viewport, releaseX, y + 1);
+            tryCompare(tab, "scale", 1);
+            mouseMove(viewport, x, y + 1);
+            compare(tab.scale, 0.985);
+        }
         mouseMove(viewport, releaseX, y + 1);
         mouseRelease(viewport, releaseX, y + 1);
 
@@ -261,7 +267,12 @@ TestCase {
 
         var x = Math.floor(tab.width / 3);
         var y = Math.floor(viewport.height / 2);
+        var nextPage = viewport.contentX + host.tabPageStep;
         mouseClick(findChild(host, "nextTabsButton"));
+        if (Kirigami.Units.shortDuration <= 0) {
+            compare(viewport.contentX, nextPage);
+            return;
+        }
         mousePress(viewport, x, y);
         wait(Kirigami.Units.shortDuration + 20);
         mouseMove(viewport, x, y + 1);

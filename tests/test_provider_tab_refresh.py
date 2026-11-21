@@ -179,6 +179,8 @@ TestCase {
         var releaseX = data.releaseOutside ? viewport.width + 2 : x;
         mousePress(viewport, x, y);
         mouseMove(viewport, releaseX, y + 1);
+        if (data.releaseOutside)
+            tryCompare(tab, "scale", 1);
         mouseRelease(viewport, releaseX, y + 1);
 
         compare(applet.selectedProviderID, data.releaseOutside ? "codex" : "synthetic7");

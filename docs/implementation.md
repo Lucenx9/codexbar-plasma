@@ -497,9 +497,10 @@ the group without exceeding its bounds.
 
 `PopupTabStrip` owns scrolling, overflow and focus traversal without an applet
 reference; `FullRepresentation` retains selection effects. A tab press interrupts
-page scrolling and keeps its hit area fixed through the visual press scale. Tab
-clicks acquire mouse focus after release inside the viewport so focus-driven
-scrolling cannot move a partially visible target during the press. `ProviderUsageRow`
+page scrolling and keeps its hit area fixed through the visual press scale.
+Pressed feedback follows the visible part of the tab. Clicks acquire mouse focus
+after release inside the viewport so focus-driven scrolling cannot move a
+partially visible target during the press. `ProviderUsageRow`
 renders explicit normalized inputs and emits hide requests, while the popup
 binds clock/theme/settings and routes them. Sessions intentionally discard paths,
 IDs and PIDs: same-sized rescans rebind positional cards, preserving focus/hover
