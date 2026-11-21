@@ -12,6 +12,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Respect the quota and Sessions retry intervals when a refresh fails after
+  the system clock moves back and the popup or tab is reopened.
+
 - Resume AI Insights automatic retries and manual requests after a rate limit
   when the system clock moves back instead of waiting for the earlier clock time.
 

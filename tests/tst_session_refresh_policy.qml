@@ -168,6 +168,22 @@ TestCase {
         compare(SessionRefreshPolicy.refreshAction(current), SessionRefreshPolicy.keepAction)
     }
 
+    function test_failedScanAfterClockRollbackRestartsCooldown() {
+        var current = observation({
+            loadedCommandSource: "codexbar sessions --json-v2",
+            lastCompletedAtMs: 2000000,
+            lastFinishedAtMs: 2000000,
+            staleAfterMs: 30000
+        })
+        compare(SessionRefreshPolicy.refreshAction(current), SessionRefreshPolicy.startAction)
+        current.lastFinishedAtMs = current.nowMs
+        current.nowMs += 1000
+        compare(SessionRefreshPolicy.refreshAction(current), SessionRefreshPolicy.keepAction)
+        compare(SessionRefreshPolicy.nextCheckDelay(current), 29000)
+        current.nowMs += 29000
+        compare(SessionRefreshPolicy.refreshAction(current), SessionRefreshPolicy.startAction)
+    }
+
     function test_invalidAttemptDoesNotPreventRetry_data() {
         return [
             {tag: "missing", value: undefined},
