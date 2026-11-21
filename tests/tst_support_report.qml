@@ -300,7 +300,17 @@ TestCase {
         compare(SupportReport.response(JSON.stringify(value)).selected.manager, "external")
         for (var id of ["prototype", "constructor", "__proto__", "a".repeat(129)]) {
             value.providers.enabled = [id]
-            verify(!SupportReport.response(JSON.stringify(value)).valid)
+            var rejected = SupportReport.response(JSON.stringify(value))
+            verify(!rejected.valid)
+            compare(rejected.environment, ({}))
+            compare(rejected.selected.status, "")
+            compare(rejected.selected.version, "")
+            compare(rejected.system.status, "")
+            compare(rejected.system.version, "")
+            var rejectedReport = SupportReport.markdown({facts: rejected})
+            verify(rejectedReport.indexOf("6.5.0") === -1)
+            verify(rejectedReport.indexOf("0.73.0") === -1)
+            verify(rejectedReport.indexOf("Same resolved path as selected: unknown") >= 0)
             verify(!SupportReport.providerID(id))
         }
     }

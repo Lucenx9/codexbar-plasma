@@ -12,6 +12,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Discard all fields from a rejected Diagnostics support-report payload instead
+  of keeping environment and CLI facts when provider validation fails.
+
 - Refresh usage after network reconnection even if the system clock moved back
   since the previous refresh attempt.
 
