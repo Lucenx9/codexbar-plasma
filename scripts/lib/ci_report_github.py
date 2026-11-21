@@ -16,6 +16,7 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
 
 
 def storage_url(url):
+    require(isinstance(url, str) and url, "Missing artifact download redirect")
     target = urllib.parse.urlsplit(url)
     require(target.scheme == "https", "Artifact storage must use HTTPS")
     require(target.hostname, "Missing artifact download host")
@@ -74,7 +75,7 @@ class GitHub:
         except urllib.error.HTTPError as error:
             if error.code != 302:
                 raise
-            return storage_url(error.headers["Location"])
+            return storage_url(error.headers.get("Location") if error.headers else None)
         raise ValueError("Expected signed artifact download redirect")
 
     def artifact(self, run, expected_attempt=None):
