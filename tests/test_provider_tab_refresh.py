@@ -152,6 +152,41 @@ TestCase {
         compare(applet.selectedProviderID, "codex");
     }
 
+    function test_clickPartiallyVisibleProviderTab_data() {
+        return [
+            {tag: "inside", visibleWidth: 4, releaseOutside: false},
+            {tag: "edge", visibleWidth: 1.25, releaseOutside: false},
+            {tag: "outside", visibleWidth: 4, releaseOutside: true}
+        ];
+    }
+
+    function test_clickPartiallyVisibleProviderTab(data) {
+        var providers = [provider("codex", "Codex", 10)];
+        for (var index = 1; index <= 10; index++) {
+            providers.push(provider("synthetic" + index, "Synthetic provider " + index, 20));
+        }
+        applet.presentedProviders = providers;
+        verify(waitForPolish(fullRoot.Window.window));
+        wait(0);
+
+        var viewport = findChild(providerTabsBar, "providerTabsFlickable");
+        var tab = providerTabRepeater.itemAt(7);
+        providerTabsBar.scrollTo(tab.x - viewport.width + data.visibleWidth, true);
+        compare(tab.mapToItem(viewport, 0, 0).x, viewport.width - data.visibleWidth);
+
+        var x = viewport.width - 1;
+        var y = viewport.height / 2;
+        var releaseX = data.releaseOutside ? viewport.width + 2 : x;
+        mousePress(viewport, x, y);
+        mouseMove(viewport, releaseX, y + 1);
+        if (data.releaseOutside)
+            tryCompare(tab, "scale", 1);
+        mouseRelease(viewport, releaseX, y + 1);
+
+        compare(applet.selectedProviderID, data.releaseOutside ? "codex" : "synthetic7");
+        compare(tab.nextItemInFocusChain(true).activeFocus, !data.releaseOutside);
+    }
+
     function test_navigationFeedbackIsImmediate_data() {
         return [
             {tag: "provider-tab", overview: false, scale: 0.985, focusAlpha: 0.06, pressAlpha: 0.24},

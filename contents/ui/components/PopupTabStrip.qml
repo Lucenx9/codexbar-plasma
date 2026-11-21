@@ -56,6 +56,14 @@ Item {
         scrollTo(position + delta, immediate);
     }
 
+    function stopPageScroll() {
+        providerTabsScroll.stop();
+    }
+
+    function containsPointer(item, x, y) {
+        return providerTabsFlickable.contains(item.mapToItem(providerTabsFlickable, x, y));
+    }
+
     // Tabs come from three different delegates, so walk the parent
     // chain instead of keeping a registry of them in sync.
     function containsTab(item) {

@@ -16,6 +16,8 @@ Rectangle {
     // overflowing tab back into view. Null when the host cannot overflow.
     property var tabStrip: null
     readonly property bool keyboardFocusVisible: tabFocus.visualFocus
+    readonly property bool pressedInViewport: tabMouse.containsPress && (!tabStrip
+        || tabStrip.containsPointer(tabMouse, tabMouse.mouseX, tabMouse.mouseY))
     readonly property color accent: applet.readableAccentColor(
         Kirigami.Theme.highlightColor,
         Kirigami.Theme.backgroundColor)
@@ -43,7 +45,7 @@ Rectangle {
     implicitWidth: Layout.preferredWidth
     implicitHeight: tabHeight
     radius: tabStrip ? tabStrip.tabRadius : applet.roundedSurfaceRadius
-    color: tabMouse.containsPress
+    color: pressedInViewport
         ? applet.withAlpha(Kirigami.Theme.focusColor, 0.24)
         : (selected
         ? applet.withAlpha(Kirigami.Theme.focusColor, 0.18)
@@ -52,7 +54,7 @@ Rectangle {
         : (tabMouse.containsMouse ? applet.withAlpha(Kirigami.Theme.textColor, 0.05) : "transparent")))
     border.width: keyboardFocusVisible ? 1 : 0
     border.color: Kirigami.Theme.focusColor
-    scale: tabMouse.containsPress ? 0.985 : 1
+    scale: pressedInViewport ? 0.985 : 1
 
     function claimSelectedTab() {
         if (tab.tabStrip) {
@@ -116,8 +118,20 @@ Rectangle {
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
-        onPressed: tabFocus.forceActiveFocus(Qt.MouseFocusReason)
-        onClicked: tab.activated()
+        // Counter the visual press scale to retain the full hit area.
+        scale: 1 / tab.scale
+        onPressed: {
+            if (tab.tabStrip) {
+                tab.tabStrip.stopPageScroll()
+            }
+        }
+        onClicked: function(mouse) {
+            if (tab.tabStrip && !tab.tabStrip.containsPointer(tabMouse, mouse.x, mouse.y)) {
+                return
+            }
+            tabFocus.forceActiveFocus(Qt.MouseFocusReason)
+            tab.activated()
+        }
     }
 
     PlainToolTip {

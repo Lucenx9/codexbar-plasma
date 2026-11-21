@@ -223,6 +223,8 @@ Item {
                         || ({provider: "", title: "", error: ""})
                     readonly property bool selected: index === applet.selectedProviderIndex
                     readonly property bool keyboardFocusVisible: providerFocus.visualFocus
+                    readonly property bool pressedInViewport: providerTabMouse.containsPress
+                        && providerTabsBar.containsPointer(providerTabMouse, providerTabMouse.mouseX, providerTabMouse.mouseY)
                     readonly property real meter: applet.switcherPercent(modelData)
                     readonly property color accent: applet.providerReadableColor(
                         modelData.provider,
@@ -267,7 +269,7 @@ Item {
                         : providerTabsBar.tabHeight
                     Layout.preferredHeight: providerTabsBar.tabHeight
                     radius: providerTabsBar.tabRadius
-                    color: providerTabMouse.containsPress
+                    color: pressedInViewport
                         ? applet.withAlpha(Kirigami.Theme.focusColor, 0.24)
                         : (selected
                         ? applet.withAlpha(Kirigami.Theme.focusColor, 0.18)
@@ -279,7 +281,7 @@ Item {
                     border.color: Kirigami.Theme.focusColor
                     opacity: modelData.error.length > 0 && !selected && !keyboardFocusVisible
                         && !providerTabMouse.containsMouse ? 0.62 : 1
-                    scale: providerTabMouse.containsPress ? 0.985 : 1
+                    scale: pressedInViewport ? 0.985 : 1
                     onSelectedChanged: providerTab.claimSelectedTab()
                     Component.onCompleted: providerTab.claimSelectedTab()
 
@@ -333,8 +335,16 @@ Item {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onPressed: providerFocus.forceActiveFocus(Qt.MouseFocusReason)
-                        onClicked: providerTab.activate()
+                        // Counter the visual press scale to retain the full hit area.
+                        scale: 1 / providerTab.scale
+                        onPressed: providerTabsBar.stopPageScroll()
+                        onClicked: function(mouse) {
+                            if (!providerTabsBar.containsPointer(providerTabMouse, mouse.x, mouse.y)) {
+                                return
+                            }
+                            providerFocus.forceActiveFocus(Qt.MouseFocusReason)
+                            providerTab.activate()
+                        }
                     }
 
                     // The compact gauge has no numeric readout. Hover and keyboard
