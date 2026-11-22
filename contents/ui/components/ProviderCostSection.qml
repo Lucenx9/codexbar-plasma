@@ -191,6 +191,7 @@ ColumnLayout {
                     wrapMode: Text.Wrap
                 }
                 PlainPlasmaLabel {
+                    objectName: "costSummaryTokensLabel"
                     text: tokenCostSection.tokensText(modelData.amounts, modelData.incompleteRequests)
                     font: Qt.font(Object.assign({}, Kirigami.Theme.smallFont, { features: { "tnum": 1 } }))
                     opacity: tokenCostSection.applet.secondaryTextOpacity
@@ -353,11 +354,11 @@ ColumnLayout {
 
                     PlainPlasmaLabel {
                         id: costBreakdownValueLabel
+                        objectName: "costBreakdownValueLabel"
 
                         text: modelData.value
-                        font.pixelSize: Kirigami.Theme.smallFont.pixelSize
+                        font: Qt.font(Object.assign({}, Kirigami.Theme.smallFont, { weight: Font.Medium, features: { "tnum": 1 } }))
                         opacity: applet.valueTextOpacity
-                        font.weight: Font.Medium
                         horizontalAlignment: Text.AlignRight
                         Layout.preferredWidth: costDrillDownSection.metricValueColumnWidth
                         Layout.maximumWidth: costDrillDownSection.metricValueColumnWidth
@@ -412,11 +413,11 @@ ColumnLayout {
 
                         PlainPlasmaLabel {
                             id: costModelValueLabel
+                            objectName: "costModelValueLabel"
 
                             text: modelData.value
-                            font.pixelSize: Kirigami.Theme.smallFont.pixelSize
+                            font: Qt.font(Object.assign({}, Kirigami.Theme.smallFont, { weight: Font.Medium, features: { "tnum": 1 } }))
                             opacity: applet.valueTextOpacity
-                            font.weight: Font.Medium
                             horizontalAlignment: Text.AlignRight
                             Layout.preferredWidth: costDrillDownSection.metricValueColumnWidth
                             Layout.maximumWidth: costDrillDownSection.metricValueColumnWidth
@@ -516,8 +517,9 @@ ColumnLayout {
                 }
 
                 PlainPlasmaLabel {
+                    objectName: "quotaWindowAmountLabel"
                     text: quotaWindowSection.amountText(modelData)
-                    font.pixelSize: Kirigami.Theme.smallFont.pixelSize
+                    font: Qt.font(Object.assign({}, Kirigami.Theme.smallFont, { features: { "tnum": 1 } }))
                     horizontalAlignment: Text.AlignRight
                     elide: Text.ElideLeft
                 }
@@ -645,11 +647,14 @@ ColumnLayout {
 
                     PlainPlasmaLabel {
                         id: costHistoryValueLabel
+                        objectName: "costHistoryValueLabel"
 
                         text: modelData.value
-                        font.pixelSize: Kirigami.Theme.smallFont.pixelSize
+                        font: Qt.font(Object.assign({}, Kirigami.Theme.smallFont, {
+                            weight: modelData.isPeak ? Font.DemiBold : Font.Normal,
+                            features: { "tnum": 1 }
+                        }))
                         opacity: modelData.isPeak ? applet.valueTextOpacity : applet.secondaryTextOpacity
-                        font.weight: modelData.isPeak ? Font.DemiBold : Font.Normal
                         horizontalAlignment: Text.AlignRight
                         Layout.preferredWidth: Kirigami.Units.gridUnit * 8
                         elide: Text.ElideRight

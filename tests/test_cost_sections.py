@@ -265,6 +265,22 @@ TestCase {
 '''
 
 
+def run_cost_fixture(test_case, snippet, style=None):
+    qml = QML_TEMPLATE.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
+    qml = qml.replace("/*TESTS*/", snippet)
+    with tempfile.TemporaryDirectory(prefix="codexbar-cost-sections-") as temporary:
+        fixture = Path(temporary) / "tst_cost_sections.qml"
+        fixture.write_text(qml)
+        environment = {**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software"}
+        if style is not None:
+            environment["QT_QUICK_CONTROLS_STYLE"] = style
+        result = subprocess.run(
+            [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],
+            env=environment,
+            capture_output=True, text=True, timeout=60)
+        test_case.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+
 class CostSectionTests(unittest.TestCase):
     def test_provider_token_exclusions_remain_qualified_without_explanation(self):
         self.run_fixture('''
@@ -1086,37 +1102,6 @@ class CostSectionTests(unittest.TestCase):
     }
     ''')
 
-    def test_small_numeric_fonts_preserve_theme(self):
-        self.run_fixture('''
-    function test_smallNumericFonts() {
-        var themeFont = Kirigami.Theme.smallFont;
-        var featuresBefore = JSON.stringify(themeFont.features);
-        var spend = createTemporaryObject(spendFactory, testCase, {width: 580, height: 780});
-        var provider = createTemporaryObject(providerFactory, testCase, {width: 580});
-        verify(waitForPolish(spend));
-        verify(waitForPolish(provider));
-        var labels = [findChild(spend, "spendProviderSecondary"),
-            findChild(spend, "heatmapReadout")];
-        var all = [];
-        walkTree(provider, all);
-        var tokens = all.filter(function(item) {
-            return item.text !== undefined && String(item.text).indexOf("tokens") >= 0
-                && item.font !== undefined && item.font.features.tnum === 1;
-        });
-        verify(tokens.length > 0);
-        labels = labels.concat(tokens);
-        for (var label of labels) {
-            verify(label !== null);
-            for (var property of ["pixelSize", "pointSize", "family", "weight",
-                    "italic", "styleName", "letterSpacing", "wordSpacing", "capitalization"])
-                compare(label.font[property], themeFont[property], property);
-            compare(label.font.features.tnum, 1);
-        }
-        compare(JSON.stringify(Kirigami.Theme.smallFont.features), featuresBefore,
-            "Numeric labels must not mutate the theme font");
-    }
-    ''')
-
     def test_heatmap_discloses_width_limited_history(self):
         self.run_fixture('''
     function test_heatmapWindowNotice_data() {
@@ -1299,16 +1284,4 @@ class CostSectionTests(unittest.TestCase):
     ''')
 
     def run_fixture(self, snippet, style=None):
-        qml = QML_TEMPLATE.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
-        qml = qml.replace("/*TESTS*/", snippet)
-        with tempfile.TemporaryDirectory(prefix="codexbar-cost-sections-") as temporary:
-            fixture = Path(temporary) / "tst_cost_sections.qml"
-            fixture.write_text(qml)
-            environment = {**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software"}
-            if style is not None:
-                environment["QT_QUICK_CONTROLS_STYLE"] = style
-            result = subprocess.run(
-                [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],
-                env=environment,
-                capture_output=True, text=True, timeout=60)
-            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        run_cost_fixture(self, snippet, style=style)

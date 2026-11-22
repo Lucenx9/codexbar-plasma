@@ -167,7 +167,8 @@ ColumnLayout {
                 icon.name: "view-hidden"
                 icon.width: Kirigami.Units.iconSizes.small
                 icon.height: Kirigami.Units.iconSizes.small
-                opacity: usageRowHover.hovered || hovered || activeFocus ? 1 : 0
+                property real hoverOpacity: usageRowHover.hovered || hovered ? 1 : 0
+                opacity: activeFocus || visualFocus ? 1 : hoverOpacity
                 Layout.preferredWidth: usageRow.actionSize
                 Layout.preferredHeight: usageRow.actionSize
                 Accessible.name: i18n("Hide the %1 row", usageRow.rowData.label)
@@ -180,6 +181,12 @@ ColumnLayout {
                 }
 
                 onClicked: usageRow.hideRequested()
+
+                Behavior on hoverOpacity {
+                    NumberAnimation {
+                        duration: Kirigami.Units.shortDuration
+                    }
+                }
             }
         }
 

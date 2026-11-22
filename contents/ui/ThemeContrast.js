@@ -70,6 +70,34 @@ function readableAccentColor(accent, background, themeTextColor, minimumRatio) {
     return maximumContrastColor(background)
 }
 
+function opaqueColor(color) {
+    return Qt.rgba(color.r, color.g, color.b, 1)
+}
+
+// Keep perimeter borders >= 3:1 against both the enclosed fill and its backdrop.
+function readableBorderColor(accent, surface, surrounding, themeTextColor) {
+    var baseAccent = opaqueColor(accent)
+    var textTarget = opaqueColor(themeTextColor)
+    function fits(color) {
+        return contrastRatio(color, surface) >= minimumNonTextContrastRatio
+            && contrastRatio(color, surrounding) >= minimumNonTextContrastRatio
+    }
+    if (fits(baseAccent)) {
+        return baseAccent
+    }
+    for (var step = 1; step <= 10; step++) {
+        var candidate = interpolateColor(baseAccent, textTarget, step / 10)
+        if (fits(candidate)) {
+            return candidate
+        }
+    }
+    var white = Qt.rgba(1, 1, 1, 1)
+    var black = Qt.rgba(0, 0, 0, 1)
+    var whiteMin = Math.min(contrastRatio(white, surface), contrastRatio(white, surrounding))
+    var blackMin = Math.min(contrastRatio(black, surface), contrastRatio(black, surrounding))
+    return whiteMin >= blackMin ? white : black
+}
+
 // OKLab coordinates; see https://bottosson.github.io/posts/oklab/.
 function oklab(color) {
     var r = linearColorChannel(color.r)

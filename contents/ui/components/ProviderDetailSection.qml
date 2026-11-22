@@ -50,7 +50,8 @@ ColumnLayout {
             icon.name: "view-hidden"
             icon.width: Kirigami.Units.iconSizes.small
             icon.height: Kirigami.Units.iconSizes.small
-            opacity: sectionHover.hovered || hovered || activeFocus ? 1 : 0
+            property real hoverOpacity: sectionHover.hovered || hovered ? 1 : 0
+            opacity: activeFocus || visualFocus ? 1 : hoverOpacity
             Layout.preferredWidth: Kirigami.Units.iconSizes.smallMedium + Kirigami.Units.smallSpacing
             Layout.preferredHeight: Layout.preferredWidth
             Accessible.name: i18n("Hide the %1 section", detailSection.sectionData.title)
@@ -63,7 +64,7 @@ ColumnLayout {
                 plainText: hideSectionButton.Accessible.name
             }
 
-            Behavior on opacity {
+            Behavior on hoverOpacity {
                 NumberAnimation { duration: Kirigami.Units.shortDuration }
             }
         }
@@ -94,11 +95,13 @@ ColumnLayout {
             Item {
                 id: detailRow
 
+                readonly property real firstLineHeight: Math.max(detailLabel.implicitHeight,
+                    severityIcon.visible ? severityIcon.height : 0)
+
                 Layout.fillWidth: true
                 implicitWidth: detailLabel.implicitWidth + Kirigami.Units.smallSpacing + detailValues.implicitWidth
                     + (severityIcon.visible ? severityIcon.width + Kirigami.Units.smallSpacing : 0)
-                implicitHeight: Math.max(detailLabel.implicitHeight, detailValues.implicitHeight,
-                    severityIcon.visible ? severityIcon.height : 0)
+                implicitHeight: Math.max(firstLineHeight, detailValues.implicitHeight)
 
                 Canvas {
                     id: severityIcon
@@ -110,6 +113,7 @@ ColumnLayout {
                     height: width
                     anchors.left: parent.left
                     anchors.top: parent.top
+                    anchors.topMargin: Math.round((detailRow.firstLineHeight - height) / 2)
                     Accessible.ignored: true
 
                     onColorChanged: requestPaint()
@@ -165,6 +169,7 @@ ColumnLayout {
                     anchors.left: severityIcon.visible ? severityIcon.right : parent.left
                     anchors.leftMargin: severityIcon.visible ? Kirigami.Units.smallSpacing : 0
                     anchors.top: parent.top
+                    anchors.topMargin: Math.round((detailRow.firstLineHeight - implicitHeight) / 2)
                     width: Math.max(0, parent.width - detailValues.width - Kirigami.Units.smallSpacing
                         - (severityIcon.visible ? severityIcon.width + Kirigami.Units.smallSpacing : 0))
                     elide: Text.ElideRight
@@ -194,6 +199,7 @@ ColumnLayout {
                         color: detailEntry.hasSeverity ? detailEntry.severityColor : Kirigami.Theme.textColor
                         opacity: detailEntry.hasSeverity ? 1 : detailSection.applet.valueTextOpacity
                         font.weight: Font.Medium
+                        font.features: { "tnum": 1 }
                         horizontalAlignment: Text.AlignRight
                         Layout.fillWidth: true
                         Layout.minimumWidth: 0
@@ -213,7 +219,7 @@ ColumnLayout {
                         visible: detailEntry.modelData.secondaryValue.length > 0
                         text: detailEntry.modelData.secondaryValue
                         opacity: detailSection.applet.secondaryTextOpacity
-                        font.pixelSize: Kirigami.Theme.smallFont.pixelSize
+                        font: Qt.font(Object.assign({}, Kirigami.Theme.smallFont, { features: { "tnum": 1 } }))
                         horizontalAlignment: Text.AlignRight
                         Layout.fillWidth: true
                         Layout.minimumWidth: 0

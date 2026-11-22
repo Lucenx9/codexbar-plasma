@@ -411,7 +411,7 @@ ColumnLayout {
                                     width: Math.min(implicitWidth, parent.width * 0.5)
                                     text: sessionCard.activityText
                                     opacity: view.applet.secondaryTextOpacity
-                                    font: Kirigami.Theme.smallFont
+                                    font: Qt.font(Object.assign({}, Kirigami.Theme.smallFont, { features: { "tnum": 1 } }))
                                     horizontalAlignment: Text.AlignRight
                                     elide: Text.ElideRight
 
