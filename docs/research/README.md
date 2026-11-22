@@ -12,6 +12,7 @@ blockers, and probe limits. The dates below are review dates.
 
 | Official release | Reviewed | Main evidence |
 | --- | --- | --- |
+| [0.85.0](2026-11-22-macos-parity-0.85.0.md) | 2026-11-22 | Provider setup routes and Linux contract changes |
 | [0.84.0](2026-11-10-macos-parity-0.84.0.md) | 2026-11-10 | Provider setup, session validation, and history discovery |
 | [0.83.0](2026-11-01-macos-parity-0.83.0.md) | 2026-11-01 | Authentication inventory and identified schema 2 |
 | [0.82.0](2026-10-27-macos-parity-0.82.0.md) | 2026-10-27 | Cookie and credential-clear writers |

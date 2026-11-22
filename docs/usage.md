@@ -196,6 +196,7 @@ or leaving the tab. Models are ranked by the selected metric. The first three
 appear initially; **Show more models** reveals the rest of the available list,
 up to six. Missing or truncated breakdowns are identified. Expanded choices
 survive refreshes and day selections. Project breakdowns stay in provider tabs.
+CLI 0.85.0 can also supply project totals for local Claude and Pi history.
 
 **Daily activity** opens the calendar for ranges longer than seven days. It
 follows the same provider, metric, and period filters. Measured zero is a recorded,
@@ -365,7 +366,7 @@ This table calls out provider-specific requirements; other supported single-key
 actions appear directly in settings. Exa and Cosmic AI need additional key/project
 IDs; FLORA needs a workspace ID; Future AGI needs both `FI_API_KEY` and
 `FI_SECRET_KEY`. Their incomplete Linux writers provide no key setup action.
-Scoped checks through CLI 0.84.0 find no generic settings descriptors, so
+Scoped checks through CLI 0.85.0 find no generic settings descriptors, so
 additional base URL, workspace/project, region, and similar editors remain
 unavailable. The [descriptor proposal](cli-provider-settings-descriptor.md)
 describes an unshipped contract.
@@ -467,7 +468,7 @@ The saved SSH host remains editable in General, including in privacy mode.
 Loads time out after 120 seconds; without GNU `timeout`, collection refuses to run.
 Real SSH connectivity remains unverified; regression coverage uses synthetic transport.
 
-**Known CLI limitation:** Linux 0.83.0 and 0.84.0 return an empty identified ledger
+**Known CLI limitation:** Linux 0.83.0 through 0.85.0 return an empty identified ledger
 when the Codex `sessions` root is a symbolic link. The widget cannot detect the
 omission. The ordinary-history symlink fix in 0.84.0 does not cover this command.
 See the [verified case](research/2026-11-10-macos-parity-0.84.0.md#linux-cli-contract-changes)
