@@ -1209,11 +1209,16 @@ TestCase {
         verify(findItem(view, function(item) { return item.text === "Tokens (partial)"; }) !== null);
         var value = findItem(view, function(item) { return item.Accessible.description === "2 incomplete requests excluded"; });
         verify(value !== null);
+        var indicator = findChild(value, "summaryFocusIndicator");
+        verify(indicator !== null && !indicator.visible);
         value.forceActiveFocus(Qt.TabFocusReason);
         verify(value.activeFocus);
+        verify(indicator.visible && indicator.width > 0);
         var tip = findChild(value, "analysisSummaryValueToolTip");
         verify(tip !== null);
         tryVerify(function() { return tip.visible; });
+        keyClick(Qt.Key_Tab);
+        verify(!indicator.visible);
     }
 
     function spendChart(points) {

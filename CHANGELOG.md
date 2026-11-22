@@ -12,6 +12,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Open provider details when a click ends just inside the edge of an Overview card.
+
+- Show keyboard focus immediately on Usage & Spend summary values that offer
+  more information.
+
 - Align the Usage & Spend provider filter height with neighboring controls,
   make the selected-day `All days` reset flat, distinguish collapsed hover,
   expanded, and focused provider rows, vertically center detail severity

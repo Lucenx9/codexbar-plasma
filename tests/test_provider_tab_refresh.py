@@ -187,6 +187,18 @@ TestCase {
         compare(tab.nextItemInFocusChain(true).activeFocus, !data.releaseOutside);
     }
 
+    function test_releaseInsideOverviewRowEdgeOpensProvider() {
+        var row = overviewProviderRepeater.itemAt(1);
+        verify(waitForPolish(fullRoot.Window.window));
+        tryCompare(row, "scale", 1);
+        // Use the resting bounds throughout the gesture, even while the row scales.
+        var edge = row.mapToItem(fullRoot, 1, row.height / 2);
+        mousePress(fullRoot, edge.x + 5, edge.y);
+        mouseMove(fullRoot, edge.x, edge.y);
+        mouseRelease(fullRoot, edge.x, edge.y);
+        compare(applet.selectedProviderID, "claude");
+    }
+
     function test_navigationFeedbackIsImmediate_data() {
         return [
             {tag: "provider-tab", overview: false, scale: 0.985, focusAlpha: 0.06, pressAlpha: 0.24},
