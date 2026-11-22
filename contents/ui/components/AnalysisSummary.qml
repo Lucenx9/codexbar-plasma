@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
+import "../ThemeContrast.js" as ThemeContrast
 import "../UsageAnalysis.js" as Analysis
 import "../AnalysisAmounts.mjs" as AnalysisAmounts
 import "../CostPresentation.mjs" as Costs
@@ -84,6 +85,16 @@ GridLayout {
             Accessible.name: i18n("%1: %2", modelData.label, text)
             Accessible.description: modelData.help || ""
             activeFocusOnTab: (modelData.help || "").length > 0
+            Rectangle {
+                objectName: "summaryFocusIndicator"
+                anchors.bottom: parent.bottom
+                width: Math.min(summaryValue.width, Math.ceil(summaryValue.contentWidth))
+                x: summaryValue.effectiveHorizontalAlignment === Text.AlignRight ? parent.width - width : 0
+                height: Math.max(1, Math.round(Kirigami.Units.smallSpacing / 2))
+                visible: summaryValue.activeFocusOnTab && summaryValue.activeFocus
+                color: ThemeContrast.readableBorderColor(Kirigami.Theme.focusColor,
+                    Kirigami.Theme.backgroundColor, Kirigami.Theme.backgroundColor, Kirigami.Theme.textColor)
+            }
             HoverHandler { id: valueHover }
             PlainToolTip {
                 objectName: "analysisSummaryValueToolTip"

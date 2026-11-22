@@ -319,6 +319,8 @@ Rectangle {
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
+        // Keep the resting hit area while the card scales on press.
+        scale: 1 / overviewRow.scale
         onPressed: {
             // Re-enter focus so an already-focused row also gets a mouse reason.
             overviewRowFocus.focus = false
