@@ -14,12 +14,20 @@ ColumnLayout {
     required property var points
     property var lineSeries: null
     property var axisLabels: []
+    readonly property font smallTabularFont: Qt.font(Object.assign({}, Kirigami.Theme.smallFont, { features: { "tnum": 1 } }))
     readonly property bool hasLineSeries: kind === "line" && lineSeries !== null
-    readonly property real axisWidth: axisLabels.length === 3
-        ? Math.min(Kirigami.Units.gridUnit * 6, Math.max(
+    readonly property real axisWidth: {
+        // Bind explicitly to FontMetrics.font so QML re-evaluates after font updates.
+        var metricFont = chartReadoutFontMetrics.font
+        if (axisLabels.length !== 3 || metricFont === undefined) {
+            return 0
+        }
+        return Math.min(Kirigami.Units.gridUnit * 6, Math.max(
             Math.ceil(chartReadoutFontMetrics.advanceWidth(axisLabels[0])),
             Math.ceil(chartReadoutFontMetrics.advanceWidth(axisLabels[1])),
-            Math.ceil(chartReadoutFontMetrics.advanceWidth(axisLabels[2])))) + Kirigami.Units.smallSpacing * 2 : 0
+            Math.ceil(chartReadoutFontMetrics.advanceWidth(axisLabels[2]))))
+            + Kirigami.Units.smallSpacing * 2
+    }
     onLineSeriesChanged: plot.requestPaint()
     property var seriesColors: ({})
     onSeriesColorsChanged: plot.requestPaint()
@@ -190,8 +198,9 @@ ColumnLayout {
 
     FontMetrics {
         id: chartReadoutFontMetrics
+        objectName: "chartAxisFontMetrics"
 
-        font: Kirigami.Theme.smallFont
+        font: chart.smallTabularFont
     }
 
     RowLayout {
@@ -276,7 +285,7 @@ ColumnLayout {
                 y: Math.max(0, Math.min(plot.height - implicitHeight,
                     CostChart.chartLineY(plot.height, 1 - index / 2, chart.lineMarkerInset) - implicitHeight / 2))
                 horizontalAlignment: Text.AlignRight
-                font: Kirigami.Theme.smallFont
+                font: chart.smallTabularFont
                 opacity: chart.applet.secondaryTextOpacity
                 elide: Text.ElideRight
             }
@@ -560,7 +569,7 @@ ColumnLayout {
                         PlainPlasmaLabel {
                             text: chart.pointDisplayValue(previewProvider.modelData.points
                                 ? previewProvider.modelData.points[chart.hoveredIndex] : null)
-                            font: Kirigami.Theme.smallFont
+                            font: chart.smallTabularFont
                             Layout.maximumWidth: previewRows.width / 2
                             horizontalAlignment: Text.AlignRight
                             elide: Text.ElideRight
@@ -588,7 +597,7 @@ ColumnLayout {
                     PlainPlasmaLabel {
                         objectName: "chartPreviewTotal"
                         text: chart.pointDisplayValue(linePreview.inspectedPoint)
-                        font: Kirigami.Theme.smallFont
+                        font: chart.smallTabularFont
                         Layout.maximumWidth: previewRows.width / 2
                         horizontalAlignment: Text.AlignRight
                         elide: Text.ElideRight

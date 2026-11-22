@@ -225,8 +225,11 @@ class ProviderCostTest(unittest.TestCase):
                 f"{value_label} must cap the shared metric value column width",
             )
             self.assertTrue(
-                code_contains(value_label_body, "font.pixelSize: Kirigami.Theme.smallFont.pixelSize"),
-                f"{value_label} must use the compact numeric type scale",
+                code_contains(
+                    value_label_body,
+                    'font: Qt.font(Object.assign({}, Kirigami.Theme.smallFont, { weight: Font.Medium, features: { "tnum": 1 } }))',
+                ),
+                f"{value_label} must use the compact numeric type scale with tabular numerals",
             )
 
     def test_models_heading_stays_distinct_without_repeating_history(self):

@@ -64,7 +64,8 @@ RowLayout {
         icon.name: valueRow.copied ? "checkmark" : "edit-copy"
         icon.width: Kirigami.Units.iconSizes.small
         icon.height: Kirigami.Units.iconSizes.small
-        opacity: valueRow.copyRevealed || valueRow.copied || hovered || activeFocus ? 1 : 0
+        property real hoverOpacity: valueRow.copyRevealed || hovered ? 1 : 0
+        opacity: activeFocus || visualFocus || valueRow.copied ? 1 : hoverOpacity
         Layout.preferredWidth: valueRow.actionSize
         Layout.preferredHeight: valueRow.actionSize
         Accessible.name: valueRow.copyAccessibleName
@@ -90,8 +91,7 @@ RowLayout {
 
         onClicked: valueRow.copyRequested(valueRow.text)
 
-        Behavior on opacity {
-            enabled: !(valueRow.showTruncatedTextOnFocus && copyButton.visualFocus)
+        Behavior on hoverOpacity {
             NumberAnimation {
                 duration: Kirigami.Units.shortDuration
             }

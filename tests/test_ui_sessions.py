@@ -105,11 +105,6 @@ class SessionsTest(unittest.TestCase):
                     "CopyableValue delegates must not allocate clipboard controls or timers; "
                     f"found {per_delegate_copy_fragment!r}"
                 )
-        if not code_contains(copyable_value_text, "valueRow.copyRevealed || valueRow.copied || hovered || activeFocus"):
-            raise AssertionError(
-                "the copy action must stay reachable by keyboard and while confirming a copy, "
-                "not only while the owning row is hovered"
-            )
         if not code_contains(copyable_value_text, "PlainPlasmaLabel {"):
             raise AssertionError("CopyableValue must render untrusted CLI values as plain text")
         if sessions_view_text.count("PlainPlasmaLabel {") < 3:
@@ -136,6 +131,23 @@ class SessionsTest(unittest.TestCase):
 
         if not code_contains(sessions_view_text, "sessionCardHover.hovered ? 0.075 : 0.035"):
             raise AssertionError("session cards must confirm hover on the surface that reveals their copy actions")
+
+    def test_copyable_value_keyboard_and_hover_reveal(self):
+        self.assertTrue(
+            code_contains(
+                copyable_value_text,
+                "property real hoverOpacity: valueRow.copyRevealed || hovered ? 1 : 0",
+            ),
+            "CopyableValue must track hover reveal separately from keyboard focus",
+        )
+        self.assertTrue(
+            code_contains(
+                copyable_value_text,
+                "opacity: activeFocus || visualFocus || valueRow.copied ? 1 : hoverOpacity",
+            ),
+            "the copy action must stay reachable by keyboard and while confirming a copy, "
+            "not only while the owning row is hovered",
+        )
 
     def test_session_ages(self):
         session_activity_body = function_body(session_labels_text, "sessionActivityText")

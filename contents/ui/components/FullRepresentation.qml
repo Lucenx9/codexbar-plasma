@@ -1055,6 +1055,7 @@ Item {
 
                             PlainPlasmaLabel {
                                 text: i18n("Remaining: %1", applet.presentedProviderData ? applet.formatNumber(applet.presentedProviderData.credits) : "")
+                                font.features: { "tnum": 1 }
                                 Layout.fillWidth: true
                                 elide: Text.ElideRight
                             }
@@ -1082,6 +1083,7 @@ Item {
 
                             PlainPlasmaLabel {
                                 text: resetCreditsSection.resetCredits ? resetCreditsSection.resetCredits.line : ""
+                                font.features: { "tnum": 1 }
                                 opacity: applet.valueTextOpacity
                                 horizontalAlignment: Text.AlignRight
                                 elide: Text.ElideRight
@@ -1151,6 +1153,7 @@ Item {
 
                             PlainPlasmaLabel {
                                 text: providerCostSection.providerCost ? providerCostSection.providerCost.spendLine : ""
+                                font.features: { "tnum": 1 }
                                 Layout.fillWidth: true
                                 elide: Text.ElideRight
                             }
@@ -1158,6 +1161,7 @@ Item {
                             PlainPlasmaLabel {
                                 visible: providerCostSection.providerCost && providerCostSection.providerCost.percentLine.length > 0 ? true : false
                                 text: providerCostSection.providerCost ? providerCostSection.providerCost.percentLine : ""
+                                font.features: { "tnum": 1 }
                                 opacity: applet.secondaryTextOpacity
                                 horizontalAlignment: Text.AlignRight
                                 elide: Text.ElideRight
@@ -1167,6 +1171,7 @@ Item {
                         PlainPlasmaLabel {
                             visible: providerCostSection.providerCost && providerCostSection.providerCost.personalSpendLine.length > 0 ? true : false
                             text: providerCostSection.providerCost ? providerCostSection.providerCost.personalSpendLine : ""
+                            font.features: { "tnum": 1 }
                             opacity: applet.secondaryTextOpacity
                             Layout.fillWidth: true
                             elide: Text.ElideRight
@@ -1309,6 +1314,7 @@ Item {
 
                                         text: modelData.value
                                         font.weight: Font.DemiBold
+                                        font.features: { "tnum": 1 }
                                         Layout.fillWidth: true
                                         elide: Text.ElideRight
 
@@ -1352,6 +1358,7 @@ Item {
                                         id: dashboardRowValue
                                         objectName: "usageDashboardValue" + index
                                         text: modelData.value
+                                        font.features: { "tnum": 1 }
                                         opacity: applet.valueTextOpacity
                                         anchors.right: parent.right
                                         width: Math.min(implicitWidth, parent.width / 2)

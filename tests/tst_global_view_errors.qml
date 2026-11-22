@@ -2,6 +2,7 @@ import QtQuick
 import QtTest
 import "../contents/ui/ProviderOrder.js" as ProviderOrder
 import "../contents/ui/CostCurrency.mjs" as CostCurrency
+import "../contents/ui/ThemeContrast.js" as ThemeContrast
 
 TestCase {
     id: testCase
@@ -166,6 +167,160 @@ TestCase {
         }
         waitForRendering(view);
         return view;
+    }
+
+    function test_spendControlsPolishAndProviderRowStates() {
+        var models = Array.from({length: 2}, function(_, index) {
+            return {label: "Model " + index, cost: 2 - index, tokens: index + 1, currency: "USD"};
+        });
+        var daily = {label: "2026-10-16", cost: 2, tokens: 20, currency: "USD", models: models};
+        applet.costs = [
+            {provider: "codex", currency: "USD", totals: daily, daily: [daily], models: models},
+            {provider: "claude", currency: "USD", totals: daily, daily: [daily], models: models}
+        ];
+        var view = createView("SpendView");
+        if (!view)
+            return;
+        var themeProbe = createTemporaryQmlObject(
+            'import QtQuick; import org.kde.kirigami as Kirigami; QtObject { property font smallFont: Kirigami.Theme.smallFont; property color backgroundColor: Kirigami.Theme.backgroundColor }',
+            view);
+        verify(themeProbe !== null);
+        var smallWeightBefore = themeProbe.smallFont.weight;
+        var providerFilter = findChild(view, "analysisProviderFilter");
+        var metricToggle = findChild(view, "analysisMetricToggle");
+        var rangeCombo = findItem(view, function (item) {
+            return item.parent === providerFilter.parent
+                && item.currentText !== undefined
+                && item !== providerFilter;
+        });
+        verify(providerFilter !== null && metricToggle !== null && rangeCombo !== null);
+        verify(providerFilter.height >= metricToggle.implicitHeight);
+        fuzzyCompare(providerFilter.height, rangeCombo.height, 1);
+
+        var chart = findChild(view, "analysisHistoryChart");
+        chart.focusPlot(Qt.TabFocusReason);
+        keyClick(Qt.Key_Home);
+        var allDays = findChild(view, "analysisAllDaysButton");
+        verify(allDays !== null && allDays.visible);
+        verify(allDays.flat);
+        compare(allDays.icon.name, "view-calendar-symbolic");
+
+        var card = findChild(view, "analysisProviderToggle-codex");
+        verify(card !== null);
+        var scroll = findChild(view, "spendHistoryScroll");
+        verify(scroll !== null && scroll.contentItem !== null);
+        var flick = scroll.contentItem;
+        flick.contentY = Math.max(0, Math.round(card.mapToItem(flick.contentItem, 0, card.height / 2).y - flick.height / 2));
+        verify(waitForPolish(view));
+        mouseMove(testCase, testCase.width - 1, testCase.height - 1);
+        tryCompare(card, "hovered", false);
+        var restingColor = String(card.background.color);
+        compare(card.background.border.width, 0);
+
+        mouseMove(card, card.width / 2, card.height / 2);
+        tryCompare(card, "hovered", true);
+        var hoveredColor = String(card.background.color);
+        verify(hoveredColor !== restingColor, "Hovering a collapsed provider row must confirm hover");
+
+        mouseMove(testCase, testCase.width - 1, testCase.height - 1);
+        tryCompare(card, "hovered", false);
+        card.forceActiveFocus(Qt.TabFocusReason);
+        verify(card.visualFocus);
+        verify(card.background.border.width > 0);
+        verify(ThemeContrast.contrastRatio(card.background.border.color,
+            Qt.tint(themeProbe.backgroundColor, card.background.color)) >= 3);
+        verify(ThemeContrast.contrastRatio(card.background.border.color, themeProbe.backgroundColor) >= 3);
+        var focusedColor = String(card.background.color);
+        verify(focusedColor !== restingColor);
+
+        keyClick(Qt.Key_Space);
+        verify(card.checked);
+        verify(card.background.border.width > 0);
+        verify(ThemeContrast.contrastRatio(card.background.border.color,
+            Qt.tint(themeProbe.backgroundColor, card.background.color)) >= 3);
+        verify(ThemeContrast.contrastRatio(card.background.border.color, themeProbe.backgroundColor) >= 3);
+        var checkedFocusedColor = String(card.background.color);
+        testCase.forceActiveFocus(Qt.OtherFocusReason);
+        verify(!card.visualFocus);
+        var checkedRestingColor = String(card.background.color);
+        verify(checkedRestingColor !== restingColor && checkedRestingColor !== hoveredColor,
+            "Expanded provider row must stay visually distinct from collapsed hover");
+
+        mouseMove(card, card.width / 2, card.height / 2);
+        tryCompare(card, "hovered", true);
+        var checkedHoveredColor = String(card.background.color);
+        verify(checkedHoveredColor !== checkedRestingColor,
+            "Hovering an expanded provider row must still provide feedback");
+
+        mousePress(card, card.width / 2, card.height / 2);
+        var downColor = String(card.background.color);
+        verify(downColor !== checkedHoveredColor && downColor !== checkedFocusedColor);
+        mouseRelease(card, card.width / 2, card.height / 2);
+        mouseMove(testCase, testCase.width - 1, testCase.height - 1);
+
+        if (!card.checked)
+            card.clicked();
+        verify(card.checked);
+        var modelsSection = findChild(view, "analysisModels");
+        verify(modelsSection !== null && modelsSection.visible);
+        var modelsHeading = findItem(modelsSection, function (item) {
+            return item.text === "Models";
+        });
+        verify(modelsHeading !== null);
+        compare(modelsHeading.font.weight, Font.DemiBold);
+        compare(modelsHeading.font.pixelSize, themeProbe.smallFont.pixelSize);
+        compare(themeProbe.smallFont.weight, smallWeightBefore);
+
+        var contrastPalettes = [
+            { tag: "breeze-light", bg: "#eff0f1", text: "#232629", focus: "#3daee9" },
+            { tag: "mid-gray-desktop", bg: "#5c6057", text: "#ffffff", focus: "#191919" },
+            { tag: "round2-gray", bg: "#696e64", text: "#ffffff", focus: "#191919" }
+        ];
+        for (var i = 0; i < contrastPalettes.length; i++) {
+            var palette = contrastPalettes[i];
+            var bgColor = Qt.color(palette.bg);
+            var themedHolder = Qt.createQmlObject(
+                'import QtQuick; import org.kde.kirigami as Kirigami; ' +
+                'import "../contents/ui/components" as Components; ' +
+                'QtObject { property Component subject: Component { Components.SpendView { ' +
+                'Kirigami.Theme.inherit: false; ' +
+                'Kirigami.Theme.backgroundColor: "' + palette.bg + '"; ' +
+                'Kirigami.Theme.textColor: "' + palette.text + '"; ' +
+                'Kirigami.Theme.focusColor: "' + palette.focus + '" } } }',
+                testCase, Qt.resolvedUrl("SpendViewContrast_" + palette.tag + ".qml"));
+            holders.push(themedHolder);
+            var themedView = createTemporaryObject(themedHolder.subject, testCase, {
+                applet: applet,
+                width: width,
+                height: height
+            });
+            verify(themedView !== null);
+            waitForRendering(themedView);
+            var themedCard = findChild(themedView, "analysisProviderToggle-codex");
+            verify(themedCard !== null);
+            var themedScroll = findChild(themedView, "spendHistoryScroll");
+            verify(themedScroll !== null && themedScroll.contentItem !== null);
+            var themedFlick = themedScroll.contentItem;
+            themedFlick.contentY = Math.max(0, Math.round(themedCard.mapToItem(themedFlick.contentItem, 0, themedCard.height / 2).y - themedFlick.height / 2));
+            verify(waitForPolish(themedView));
+            themedCard.forceActiveFocus(Qt.TabFocusReason);
+            verify(themedCard.visualFocus);
+            verify(themedCard.background.border.width > 0);
+            verify(ThemeContrast.contrastRatio(themedCard.background.border.color,
+                Qt.tint(bgColor, themedCard.background.color)) >= 3,
+                "Collapsed focused card border must maintain 3:1 contrast against fill in " + palette.tag);
+            verify(ThemeContrast.contrastRatio(themedCard.background.border.color, bgColor) >= 3,
+                "Collapsed focused card border must maintain 3:1 contrast against surrounding background in " + palette.tag);
+            keyClick(Qt.Key_Space);
+            verify(themedCard.checked && themedCard.visualFocus);
+            verify(themedCard.background.border.width > 0);
+            verify(ThemeContrast.contrastRatio(themedCard.background.border.color,
+                Qt.tint(bgColor, themedCard.background.color)) >= 3,
+                "Expanded focused card border must maintain 3:1 contrast against fill in " + palette.tag);
+            verify(ThemeContrast.contrastRatio(themedCard.background.border.color, bgColor) >= 3,
+                "Expanded focused card border must maintain 3:1 contrast against surrounding background in " + palette.tag);
+        }
+        testCase.forceActiveFocus(Qt.OtherFocusReason);
     }
 
     function cleanup() {

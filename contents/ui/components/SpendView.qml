@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.components as PlasmaComponents
 import "." as Components
+import "../ThemeContrast.js" as ThemeContrast
 import "../UsageAnalysis.js" as Analysis
 import "../AnalysisAmounts.mjs" as AnalysisAmounts
 import "../CostAmounts.mjs" as CostAmounts
@@ -288,6 +289,7 @@ ColumnLayout {
             visible: view.applet.costUsageEnabled !== false
             Layout.fillWidth: true
             Layout.minimumWidth: 0
+            Layout.minimumHeight: metricToggle.implicitHeight
             Layout.maximumWidth: historyControlsRow.columns === 4 ? Kirigami.Units.gridUnit * 18 : Infinity
             textRole: "text"
             valueRole: "value"
@@ -656,6 +658,8 @@ ColumnLayout {
                         PlainButton {
                             id: allDaysButton
                             objectName: "analysisAllDaysButton"
+                            flat: true
+                            icon.name: "view-calendar-symbolic"
                             visible: view.selectedDay.length > 0
                             plainText: i18n("All days")
                             onClicked: {
@@ -699,18 +703,30 @@ ColumnLayout {
                                 readonly property string tokensText: CostAmounts.hasMetricValue(totals, true)
                                     ? view.applet.usageCountText(totals.tokens, "tokens")
                                     : i18n("Tokens unavailable")
+                                readonly property color surfaceColor: Qt.tint(
+                                    Kirigami.Theme.backgroundColor, spendProviderCardBackground.color)
 
                                 Layout.fillWidth: true
                                 implicitHeight: spendProviderRow.implicitHeight + Kirigami.Units.smallSpacing * 2
                                 padding: Kirigami.Units.smallSpacing
+                                hoverEnabled: true
                                 background: Rectangle {
+                                    id: spendProviderCardBackground
+
                                     radius: view.applet.roundedSurfaceRadius
                                     color: spendProviderCard.down
-                                        ? view.applet.withAlpha(Kirigami.Theme.highlightColor, 0.2)
-                                        : spendProviderCard.hovered || spendProviderCard.checked
-                                            ? view.applet.withAlpha(Kirigami.Theme.highlightColor, 0.12) : "transparent"
-                                    border.width: spendProviderCard.visualFocus ? 2 : 0
-                                    border.color: Kirigami.Theme.focusColor
+                                        ? view.applet.withAlpha(Kirigami.Theme.focusColor, 0.2)
+                                        : spendProviderCard.checked
+                                            ? view.applet.withAlpha(Kirigami.Theme.focusColor,
+                                                spendProviderCard.hovered ? 0.14 : 0.1)
+                                            : spendProviderCard.visualFocus
+                                                ? view.applet.withAlpha(Kirigami.Theme.focusColor, 0.06)
+                                                : spendProviderCard.hovered
+                                                    ? view.applet.withAlpha(Kirigami.Theme.textColor, 0.05) : "transparent"
+                                    border.width: spendProviderCard.visualFocus ? 1 : 0
+                                    border.color: ThemeContrast.readableBorderColor(Kirigami.Theme.focusColor,
+                                        spendProviderCard.surfaceColor, Kirigami.Theme.backgroundColor,
+                                        Kirigami.Theme.textColor)
                                 }
                                 checkable: true
                                 checked: view.expandedModelProviders.indexOf(modelData.provider) >= 0
@@ -844,6 +860,7 @@ ColumnLayout {
                                 visible: expanded
                                 Layout.leftMargin: Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing
                                 Layout.rightMargin: Kirigami.Units.smallSpacing
+                                Layout.bottomMargin: Kirigami.Units.smallSpacing
                                 onRestoreFocusRequested: spendProviderCard.forceActiveFocus(Qt.TabFocusReason)
                             }
                         }

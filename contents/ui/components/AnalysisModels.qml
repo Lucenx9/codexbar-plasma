@@ -33,6 +33,7 @@ ColumnLayout {
         Layout.fillWidth: true
         PlainPlasmaLabel {
             text: i18n("Models")
+            font: Qt.font(Object.assign({}, Kirigami.Theme.smallFont, { weight: Font.DemiBold }))
             opacity: section.applet.secondaryTextOpacity
             Layout.fillWidth: true
             Layout.minimumWidth: 0
@@ -50,6 +51,8 @@ ColumnLayout {
     PlainPlasmaLabel {
         text: i18n("Some models are not shown.")
         visible: section.models.truncated
+        font: Kirigami.Theme.smallFont
+        opacity: section.applet.secondaryTextOpacity
         wrapMode: Text.Wrap
         Layout.fillWidth: true
     }
@@ -102,6 +105,7 @@ ColumnLayout {
                 visible: modelRow.modelData.incompleteRequests > 0
                 text: i18np("%1 incomplete request excluded", "%1 incomplete requests excluded", modelRow.modelData.incompleteRequests || 0)
                 font: Kirigami.Theme.smallFont
+                opacity: section.applet.secondaryTextOpacity
                 wrapMode: Text.Wrap
                 Layout.fillWidth: true
             }

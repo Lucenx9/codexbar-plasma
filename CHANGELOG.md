@@ -12,6 +12,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Align the Usage & Spend provider filter height with neighboring controls,
+  make the selected-day `All days` reset flat, distinguish collapsed hover,
+  expanded, and focused provider rows, vertically center detail severity
+  icons, keep hover-revealed row actions immediately visible on keyboard focus,
+  and use tabular numerals across popup numeric tables and chart readouts.
+
 - Open partially visible popup tabs on the first click without shifting them
   under the pointer before release.
 

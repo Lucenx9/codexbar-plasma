@@ -2408,6 +2408,20 @@ TestCase {
             var label = findItem(view, function(item) { return item.text === "Metric"; });
             verify(label.x >= icon.x + icon.width);
             verify(label.width >= 0);
+            verify(icon.y >= 0);
+            verify(Math.abs((icon.y + icon.height / 2) - (label.y + label.height / 2)) <= 1,
+                "severityIcon must align vertically with its label");
+            var originalFont = label.font;
+            label.font = Qt.font({
+                family: originalFont.family,
+                pixelSize: Math.max(6, Math.floor(icon.height * 0.5))
+            });
+            verify(waitForPolish(view));
+            verify(label.height < icon.height);
+            verify(Math.abs((icon.y + icon.height / 2) - (label.y + label.height / 2)) <= 1,
+                "severityIcon and small labels must align vertically around the first-line center");
+            label.font = originalFont;
+            verify(waitForPolish(view));
         } else {
             compare(fill.color, view.accent);
         }
@@ -2935,6 +2949,65 @@ TestCase {
         compare(findItem(credit, function (item) {
             return item.objectName === "hideUsageRowButton";
         }).visible, false);
+    }
+
+    function test_hoverRevealActionsRespondImmediatelyToKeyboardFocus() {
+        var layout = createTemporaryQmlObject(
+            'import QtQuick; import QtQuick.Layouts; ColumnLayout { width: 540 }',
+            testCase, String(Qt.resolvedUrl("HoverRevealActionsTest.qml")));
+        var section = UsageDetails.normalizeSections([{
+            title: "API details",
+            rows: [{label: "Metric", value: "1"}]
+        }])[0];
+        var detailView = createControl("ProviderDetailSection", {
+            applet: applet,
+            providerData: {provider: "codex"},
+            modelData: section
+        }, layout);
+        if (!detailView)
+            return;
+        mouseMove(testCase, testCase.width - 1, testCase.height - 1);
+        var hideSectionBtn = findItem(detailView, function (item) {
+            return item.objectName === "hideDetailSectionButton";
+        });
+        verify(hideSectionBtn !== null && hideSectionBtn.visible);
+        tryCompare(hideSectionBtn, "opacity", 0);
+        hideSectionBtn.forceActiveFocus(Qt.TabFocusReason);
+        compare(hideSectionBtn.opacity, 1);
+
+        var copyRow = createControl("CopyableValue", {
+            text: "session text",
+            copyRevealed: false,
+            showTruncatedTextOnFocus: false
+        });
+        verify(copyRow !== null);
+        var copyButtons = [];
+        findAllItems(copyRow, function (item) {
+            return item.icon !== undefined && item.icon.name === "edit-copy";
+        }, copyButtons);
+        compare(copyButtons.length, 1);
+        var copyBtn = copyButtons[0];
+        compare(copyBtn.opacity, 0);
+        copyBtn.forceActiveFocus(Qt.TabFocusReason);
+        compare(copyBtn.opacity, 1);
+
+        var rowData = usageRowData();
+        rowData.lane = "primary";
+        var usageRow = createUsageRow(rowData, 540);
+        if (!usageRow)
+            return;
+        var hideUsageBtn = findItem(usageRow, function (item) {
+            return item.objectName === "hideUsageRowButton";
+        });
+        verify(hideUsageBtn !== null && hideUsageBtn.visible);
+        mouseMove(testCase, testCase.width - 1, testCase.height - 1);
+        tryCompare(hideUsageBtn, "opacity", 0);
+        mouseMove(usageRow, 12, 12);
+        wait(0);
+        hideUsageBtn.forceActiveFocus(Qt.TabFocusReason);
+        compare(hideUsageBtn.opacity, 1);
+        mouseMove(testCase, testCase.width - 1, testCase.height - 1);
+        testCase.forceActiveFocus();
     }
 
     function test_providerUsageRowDrawsQuotaWarningMarkers() {

@@ -233,5 +233,53 @@ TestCase {
         verify(ThemeContrast.contrastRatio(muted, background) >= 3)
         verify(ThemeContrast.oklch(muted).chroma < ThemeContrast.minimumHueChroma)
     }
+
+    function test_readableBorderColorKeepsContrastAgainstBothSurfaces() {
+        var palettes = [
+            {
+                tag: "breeze-dark",
+                surrounding: Qt.rgba(32 / 255, 35 / 255, 38 / 255, 1),
+                focus: Qt.rgba(61 / 255, 174 / 255, 233 / 255, 1),
+                text: Qt.rgba(252 / 255, 252 / 255, 252 / 255, 1)
+            },
+            {
+                tag: "breeze-light",
+                surrounding: Qt.rgba(239 / 255, 240 / 255, 241 / 255, 1),
+                focus: Qt.rgba(61 / 255, 174 / 255, 233 / 255, 1),
+                text: Qt.rgba(35 / 255, 38 / 255, 41 / 255, 1)
+            },
+            {
+                tag: "mid-gray-desktop",
+                surrounding: Qt.rgba(0x5c / 255, 0x60 / 255, 0x57 / 255, 1),
+                focus: Qt.rgba(0x19 / 255, 0x19 / 255, 0x19 / 255, 1),
+                text: Qt.rgba(1, 1, 1, 1),
+                rawMustFail: true
+            },
+            {
+                tag: "translucent-breeze-dark",
+                surrounding: Qt.rgba(32 / 255, 35 / 255, 38 / 255, 1),
+                focus: Qt.rgba(61 / 255, 174 / 255, 233 / 255, 32 / 255),
+                text: Qt.rgba(252 / 255, 252 / 255, 252 / 255, 1)
+            },
+            {
+                tag: "translucent-breeze-light",
+                surrounding: Qt.rgba(239 / 255, 240 / 255, 241 / 255, 1),
+                focus: Qt.rgba(61 / 255, 174 / 255, 233 / 255, 32 / 255),
+                text: Qt.rgba(35 / 255, 38 / 255, 41 / 255, 1)
+            }
+        ]
+        for (var i = 0; i < palettes.length; i++) {
+            var entry = palettes[i]
+            var surface = Qt.tint(entry.surrounding, Qt.rgba(entry.focus.r, entry.focus.g, entry.focus.b, 0.1))
+            if (entry.rawMustFail)
+                verify(ThemeContrast.contrastRatio(entry.focus, entry.surrounding) < 3)
+            var border = ThemeContrast.readableBorderColor(entry.focus, surface, entry.surrounding, entry.text)
+            compare(border.a, 1)
+            verify(ThemeContrast.contrastRatio(Qt.tint(surface, border), surface) >= 3,
+                entry.tag + " border contrast against card surface failed")
+            verify(ThemeContrast.contrastRatio(Qt.tint(entry.surrounding, border), entry.surrounding) >= 3,
+                entry.tag + " border contrast against surrounding popup failed")
+        }
+    }
 }
 

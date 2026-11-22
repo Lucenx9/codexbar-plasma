@@ -646,4 +646,66 @@ TestCase {
         tryCompare(chart, "hoveredIndex", -1)
         compare(chart.activeIndex, data.selected)
     }
+
+    function test_axisGutterMeasuresTabularTickFont() {
+        var chart = createChart({
+            applet: {
+                secondaryTextOpacity: 0.7,
+                canvasColor: function() { return "#000000" }
+            },
+            width: 320,
+            points: [
+                { label: "D1", value: 10, displayValue: "$10.00" },
+                { label: "D2", value: 120, displayValue: "$120.00" }
+            ],
+            axisLabels: ["$0.00", "$60.00", "$120.00"],
+            accent: "blue"
+        })
+        if (!chart)
+            return
+        verify(waitForPolish(chart))
+        var metrics = Qt.createQmlObject('import QtQuick; FontMetrics {}', chart)
+        verify(metrics !== null)
+        var axisMetrics = null
+        var ticks = []
+        var visited = []
+        function collectTicks(item) {
+            if (!item || visited.indexOf(item) >= 0) return
+            visited.push(item)
+            if (item.objectName === "chartAxisFontMetrics")
+                axisMetrics = item
+            if (item.elide !== undefined && chart.axisLabels.indexOf(item.text) >= 0)
+                ticks.push(item)
+            for (var group of [item.children, item.resources, item.data]) {
+                if (!group) continue
+                for (var idx = 0; idx < group.length; idx++)
+                    collectTicks(group[idx])
+            }
+        }
+        collectTicks(chart)
+        verify(axisMetrics !== null)
+        compare(axisMetrics.font.features.tnum, 1)
+        compare(ticks.length, 3)
+        for (var i = 0; i < ticks.length; i++) {
+            compare(ticks[i].font.features.tnum, 1)
+            compare(axisMetrics.font, ticks[i].font)
+            metrics.font = ticks[i].font
+            verify(!ticks[i].truncated, "Axis tick label truncated: " + ticks[i].text)
+            verify(ticks[i].width + 0.5 >= Math.ceil(metrics.advanceWidth(ticks[i].text)),
+                "Axis gutter must fit tabular tick width for " + ticks[i].text)
+        }
+        var themeProbe = Qt.createQmlObject(
+            'import QtQuick; import org.kde.kirigami as Kirigami; QtObject { property font smallFont: Kirigami.Theme.smallFont }',
+            this)
+        verify(themeProbe.smallFont.features.tnum !== 1)
+        var initialAxisWidth = chart.axisWidth
+        axisMetrics.font = Qt.font({
+            family: metrics.font.family,
+            pixelSize: Math.max(18, Math.round(metrics.height * 1.4)),
+            features: { "tnum": 1 }
+        })
+        verify(waitForPolish(chart))
+        verify(chart.axisWidth > initialAxisWidth,
+            "Axis gutter must react when FontMetrics.font changes")
+    }
 }
