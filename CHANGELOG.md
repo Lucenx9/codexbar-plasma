@@ -10,6 +10,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+## 0.2.58 - 2026-11-22
+
 ### Fixed
 
 - Open provider details when a click ends just inside the edge of an Overview card.
@@ -103,9 +105,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Return keyboard focus to the Hidden items summary after restoring a row or a
   provider's detail sections in Popup settings.
 
-- Show positive local-history costs below one cent as less than one cent across
-  provider summaries, daily/model rows, and chart readouts instead of rounding
-  them to zero.
+- Preserve positive local-history costs below one cent in provider, project,
+  daily, model, and chart readouts. Partial quota weeks retain the precise
+  known minimum.
 
 - Keep the warning beside retained cost history while a retry is running.
 
@@ -123,6 +125,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 - Simplify the README installation path, feature overview, and update instructions.
   Link provider requirements and detailed settings to the usage guide.
+
+[Full diff](https://github.com/Lucenx9/codexbar-plasma/compare/v0.2.57...v0.2.58)
 
 ## 0.2.57 - 2026-11-15
 

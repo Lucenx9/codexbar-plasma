@@ -8,15 +8,12 @@ Issues linked below preserve discussion; this file owns parity status.
 
 ## Review baseline
 
-- Last release reviewed: [CodexBar 0.84.0](https://github.com/steipete/CodexBar/releases/tag/v0.84.0),
-  commit `5bebf9a05e68059eae11d5031c7239f1aa1d49ef`, checked 2026-11-10.
-- Coverage: the [0.84.0 review](docs/research/2026-11-10-macos-parity-0.84.0.md)
-  against Plasma `ad1d246` verifies the 113-provider registry, SiliconFlow and
-  Tripo key writers, Claude Platform stdin-login validation/failure, Codex
-  ordinary symlinked-history accounting and the remaining identified-discovery
-  bug, schema 2 decoder compatibility, OpenCode Go's
-  unavailable-cost output, and scoped carried blockers. The new setup actions
-  are implemented; authenticated balances and successful Console login remain unverified.
+- Last release reviewed: [CodexBar 0.85.0](https://github.com/steipete/CodexBar/releases/tag/v0.85.0),
+  commit `5dd48cab770a326691b25a124d37ffee12c5f7ac`, checked 2026-11-22.
+- Coverage: the [0.85.0 review](docs/research/2026-11-22-macos-parity-0.85.0.md)
+  against Plasma `770c7c31` covers the 115-provider registry, declared setup
+  routes, new credential writers, Claude/Pi project totals, and rechecked
+  blockers. Authenticated output remains unverified.
 - Earlier reviews: each dated note in the
   [research index](docs/research/README.md) records its own
   release coverage, probes, and unverified cases. Shared payload structs retain
@@ -28,9 +25,18 @@ Issues linked below preserve discussion; this file owns parity status.
 
 ## Plasma-native and implementable now
 
-No confirmed frontend implementation gaps remain in this review. Completed
-0.84.0 provider setup is documented in the [usage guide](docs/usage.md#providers-and-accounts);
-authenticated verification and CLI blockers remain below.
+- [ ] Show CLI-declared setup guidance in **Settings and diagnostics**. Linux
+  0.85.0 exposes read-only `setup` routes for Copilot, OpenAI API, Azure OpenAI,
+  DeepInfra, and ElevenLabs. Done when Plasma validates and displays supported
+  Linux hints and prerequisites, preserves the existing authentication fallback,
+  and treats any command text as display data.
+  [0.85.0 evidence](docs/research/2026-11-22-macos-parity-0.85.0.md#linux-cli-contract-changes).
+
+- [ ] Compare models across providers in **Usage & Spend**, using the existing
+  model breakdowns. Done when one view honors the selected range and day,
+  keeps provider identities and currencies separate, and identifies partial
+  or missing price data before showing spend shares.
+  [Upstream Models view](https://github.com/steipete/CodexBar/releases/tag/v0.85.0).
 
 ## Blocked on official Linux CLI contracts
 
@@ -62,7 +68,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   [Future AGI](docs/research/2026-10-17-macos-parity-0.77.0.md#linux-cli-contract-changes).
 
 - [ ] Enable generic settings and token-account editing through official
-  descriptors and writes. Linux 0.84.0 still rejects `config providers
+  descriptors and writes. Linux 0.85.0 still rejects `config providers
   --descriptors`; its read-only `authentication` record (see the
   [provider settings guide](docs/usage.md#providers-and-accounts)) names source
   modes, key/cookie support, and environment variables,
@@ -108,7 +114,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Provider onboarding
 
 - [ ] Add CLI-described browser-cookie import, local-file setup, OAuth/device
-  flow, CLI-auth setup, and token-account actions. Linux 0.84.0 still has no
+  flow, CLI-auth setup, and token-account actions. Linux 0.85.0 still has no
   generic `config action` command (`set-api-key`, `set-source`, `set-cookie`,
   and `clear-credential` are field writers; the 0.84.0 inventory names only
   Copilot's `loginCommand`; the `usage_updated` hook event
@@ -139,6 +145,14 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 
 ### History and forecasts
 
+- [ ] Show Claude and Pi session spend when official Linux JSON exposes
+  bounded amounts and a private, stable session ID. In 0.85.0 the text
+  `cost --group-by session` output includes session costs. JSON still emits
+  project totals, which Plasma already displays. Done when emitted JSON can
+  attach spend to the correct session and respects privacy without reading
+  transcripts or parsing text output in Plasma.
+  [0.85.0 evidence](docs/research/2026-11-22-macos-parity-0.85.0.md#linux-cli-contract-changes).
+
 - [ ] Display credit history, plan-utilization history, hourly activity, and
   session-equivalent forecasts when official history/forecast fields supply units
   and missing-data semantics. Last verified at 0.56.2. Done when supported histories have bounded
@@ -162,13 +176,15 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   mislabelling but does not repair the CLI routing blocker.
   [Evidence](docs/research/2026-10-21-macos-parity-0.79.0.md#linux-cli-contract-changes);
   [0.81.0 recheck](docs/research/2026-10-25-macos-parity-0.81.0.md#carried-forward-blockers-rechecked).
-  Since 0.81.0, `plugins fetch` also emits optional window titles that the
-  usage path would carry.
+  In 0.85.0 the approved plugin still fetches through `plugins fetch`, which
+  emits its own window and detail rows. Scoped `usage` and `config enable`
+  now reject its ID as unknown.
+  [0.85.0 recheck](docs/research/2026-11-22-macos-parity-0.85.0.md#carried-blockers-rechecked).
 
 ### Cursor cost
 
 - [ ] Show Cursor cost history through the generic Linux `cost` path. Linux
-  0.84.0 still rejects Cursor and lists Antigravity, Claude, Codex, Muse
+  0.85.0 still rejects Cursor and lists Antigravity, Claude, Codex, Muse
   Code, OpenCode Go, and Pi as supported; the 0.74.0 `cursor-agent` login
   (#4397) changes usage authentication only;
   the descriptor gate keeps the new cookie-source availability errors unreachable.
@@ -193,22 +209,22 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Identified history discovery
 
 - [ ] Restore identified-token collection through symlinked Codex session
-  roots in the official CLI. In isolated Linux 0.83.0 and 0.84.0, the same
-  dated native file yields one identified request and 111 tokens in a normal
-  `sessions` directory, but an empty schema 2 ledger with `partial: false`
-  when that root is a symlink. The 0.84.0 ordinary-cost symlink fix does not
-  fix this separate command. Done when a released CLI produces the same
-  identified records through both roots and the widget's existing decoder is
-  verified against them. Do not scan native logs or infer missing tokens in QML.
-  [Evidence](docs/research/2026-11-10-macos-parity-0.84.0.md#linux-cli-contract-changes).
+  roots in the official CLI. Isolated Linux probes from 0.83.0 through 0.85.0
+  report the identified request in a normal `sessions` directory and an
+  empty schema 2 ledger with `partial: false` when that root is a symlink.
+  Ordinary cost discovery gained symlink support in 0.84.0. Done when a
+  released CLI produces the same identified records through both roots and
+  the widget's existing decoder is verified against them.
+  [0.85.0 recheck](docs/research/2026-11-22-macos-parity-0.85.0.md#carried-blockers-rechecked).
 
 ### Service-tier totals
 
 - [ ] Show Standard/Fast totals from explicit official tier fields. The scoped
   0.56.8 daily-model check established no service-tier contract. The 0.57.0 and
   0.60.4 empty cost probes do not establish one either, and 0.62.0 computes
-  quota windows in-process without emitting tier fields. The 0.65.0 Codex
-  Priority pricing fix leaves the cost key set unchanged. Done when official Linux output
+  quota windows in-process without emitting tier fields. The 0.85.0 synthetic
+  Standard and Ultrafast histories show different costs with no tier fields.
+  Done when official Linux output
   identifies tiers and bounded amounts with tested legacy fallback. Never infer
   tier from models, prices, or tokens. [Cost evidence](docs/cost-history.md#pinned-cli-evidence);
   [prior discussion #172](https://github.com/Lucenx9/codexbar-plasma/issues/172).
@@ -253,7 +269,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   contract. The 0.56.2 audit records no display-currency setter or descriptor;
   the scoped 0.57.0, 0.58.0, 0.60.4, 0.67.0, 0.69.0, 0.72.0, 0.73.0,
   0.74.0, 0.74.1, 0.75.0, 0.76.0, 0.77.0, 0.80.0, 0.81.0, 0.82.0,
-  0.83.0, and 0.84.0 config probes expose neither,
+  0.83.0, 0.84.0, and 0.85.0 config probes expose neither,
   although macOS 0.67.0 adds twelve spend-estimate currencies. Plasma currently
   displays the CLI-emitted currency. Done when released settings and converted
   amounts define currency, rate provenance, and unavailable-conversion behavior,
@@ -317,6 +333,15 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 These are unresolved Linux candidates, not confirmed missing features. Probe
 related release cases together when the required provider account is available.
 Prioritize the account identity and balance cases first.
+
+- [ ] Verify 0.85.0 provider setup and usage. TrustedRouter and MiMo save
+  synthetic API keys, and Google Developer Program and SiliconFlow save
+  synthetic cookies. The isolated usage probes terminated with exit 139.
+  Verify Linux dispatch before exposing additional widget prompts. Also check
+  emitted quotas, balances, and spend for these providers and for Grok,
+  OpenAI API, DeepSeek, Notion AI, Helmcode, Amp, Venice, and Claude
+  Platform against Plasma's generic quota, cost, and detail views.
+  [Evidence and limits](docs/research/2026-11-22-macos-parity-0.85.0.md).
 
 - [ ] Verify account identity and stale-data behavior against the 0.56.3–0.57.0
   changes: same-email workspaces, measurement timestamps, and transient
