@@ -126,8 +126,11 @@ ColumnLayout {
             Rectangle {
                 objectName: "usageResetSeparator"
                 visible: usageRow.resetInline
+                Layout.alignment: Qt.AlignBaseline
                 Layout.preferredWidth: 1
                 Layout.preferredHeight: Math.round(usageInlineResetLabel.implicitHeight * 0.75)
+                baselineOffset: Math.round(usageInlineResetLabel.baselineOffset
+                    - (usageInlineResetLabel.implicitHeight - height) / 2)
                 color: usageRow.withAlpha(Kirigami.Theme.textColor, 0.2)
                 Accessible.ignored: true
             }
@@ -138,7 +141,7 @@ ColumnLayout {
 
                 visible: usageRow.resetInline
                 text: usageRow.resetText
-                font: Kirigami.Theme.smallFont
+                font: Qt.font(Object.assign({}, Kirigami.Theme.smallFont, { features: { "tnum": 1 } }))
                 opacity: usageRow.secondaryTextOpacity
                 Layout.alignment: Qt.AlignBaseline
                 elide: Text.ElideRight

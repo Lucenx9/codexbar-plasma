@@ -117,7 +117,7 @@ ColumnLayout {
                     view.applet.sessionsLastUpdatedText]
                     .filter(function(part) { return part.length > 0 })
                     .join(" \u00b7 ")
-                font: Kirigami.Theme.smallFont
+                font: Qt.font(Object.assign({}, Kirigami.Theme.smallFont, { features: { "tnum": 1 } }))
                 opacity: view.applet.secondaryTextOpacity
                 Layout.fillWidth: true
                 elide: Text.ElideRight

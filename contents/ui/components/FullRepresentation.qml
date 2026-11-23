@@ -710,7 +710,7 @@ Item {
                         text: [applet.lastUpdatedText, countText]
                             .filter(function(part) { return part.length > 0 })
                             .join(" \u00b7 ")
-                        font: Kirigami.Theme.smallFont
+                        font: Qt.font(Object.assign({}, Kirigami.Theme.smallFont, { features: { "tnum": 1 } }))
                         opacity: applet.secondaryTextOpacity
                         Layout.fillWidth: true
                         elide: Text.ElideRight
@@ -1448,6 +1448,7 @@ Item {
                         Components.DisclosureButton {
                             id: providerActionsToggle
                             objectName: "providerActionsToggle"
+                            Layout.topMargin: Kirigami.Units.smallSpacing
                             plainText: i18n("Provider actions")
                             onClicked: expanded = !expanded
 

@@ -212,7 +212,7 @@ Rectangle {
                         visible: overviewMeterReset.text.length > 0 && overviewMeterReset.width > 0
                         anchors.left: overviewMeterCaption.right
                         anchors.leftMargin: Kirigami.Units.smallSpacing * 1.5
-                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.verticalCenter: overviewMeterReset.verticalCenter
                         width: 1
                         height: Math.round(overviewMeterReset.implicitHeight * 0.75)
                         color: overviewRow.applet.withAlpha(Kirigami.Theme.textColor, 0.2)
@@ -224,7 +224,7 @@ Rectangle {
 
                         text: overviewRow.applet.resetTextForRow(overviewMeter.modelData)
                         visible: text.length > 0
-                        font: Kirigami.Theme.smallFont
+                        font: Qt.font(Object.assign({}, Kirigami.Theme.smallFont, { features: { "tnum": 1 } }))
                         opacity: overviewRow.applet.secondaryTextOpacity
                         anchors.left: overviewResetSeparator.right
                         anchors.leftMargin: Kirigami.Units.smallSpacing * 1.5

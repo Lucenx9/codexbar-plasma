@@ -12,7 +12,6 @@ RowLayout {
         && providerData.account && providerData.account.length > 0
     readonly property bool hasPlan: providerData
         && providerData.planText && providerData.planText.length > 0
-    readonly property color brandAccent: applet.providerColor(providerData ? providerData.provider : "")
     readonly property color accent: applet.providerReadableColor(
         providerData ? providerData.provider : "",
         Kirigami.Theme.backgroundColor)
@@ -28,7 +27,7 @@ RowLayout {
         Layout.preferredWidth: Kirigami.Units.iconSizes.medium + Kirigami.Units.smallSpacing * 2
         Layout.preferredHeight: Layout.preferredWidth
         radius: providerHeaderRow.applet.nestedSurfaceRadius
-        color: providerHeaderRow.applet.withAlpha(providerHeaderRow.brandAccent, 0.12)
+        color: providerHeaderRow.applet.withAlpha(providerHeaderRow.accent, 0.12)
         border.width: 1
         border.color: providerHeaderRow.applet.withAlpha(Kirigami.Theme.textColor, 0.1)
 
@@ -209,7 +208,7 @@ RowLayout {
             text: providerHeaderRow.providerData
                 ? providerHeaderRow.applet.providerUsageTimestamp(providerHeaderRow.providerData)
                 : providerHeaderRow.applet.lastUpdatedText
-            font: Kirigami.Theme.smallFont
+            font: Qt.font(Object.assign({}, Kirigami.Theme.smallFont, { features: { "tnum": 1 } }))
             opacity: providerHeaderRow.applet.secondaryTextOpacity
             Layout.fillWidth: true
             elide: Text.ElideRight

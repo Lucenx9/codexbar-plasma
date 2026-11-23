@@ -300,6 +300,7 @@ ColumnLayout {
         PlainPlasmaLabel {
             visible: tokenCostSection.selectedDay !== null
             text: tokenCostSection.daySummaryText()
+            font.features: { "tnum": 1 }
             Layout.fillWidth: true
             wrapMode: Text.Wrap
         }
@@ -309,6 +310,7 @@ ColumnLayout {
             visible: costDrillDownSection.modelRows.length === 0
             text: tokenCostSection.selectedDay !== null ? i18n("No model data for this day.")
                 : i18n("No model data for this period.")
+            opacity: applet.secondaryTextOpacity
             Layout.fillWidth: true
             wrapMode: Text.Wrap
         }
@@ -317,6 +319,8 @@ ColumnLayout {
             objectName: "costModelsPartialNotice"
             visible: costDrillDownSection.detailData !== null && costDrillDownSection.detailData.modelsTruncated === true
             text: i18n("Some models are not shown.")
+            font: Kirigami.Theme.smallFont
+            opacity: applet.secondaryTextOpacity
             Layout.fillWidth: true
             wrapMode: Text.Wrap
         }
