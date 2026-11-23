@@ -31,6 +31,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Align inline reset separators with reset labels, tint the provider header
+  icon tile with the contrast-adjusted accent, give **Provider actions**
+  breathing room below its separator, style provider cost-detail model notices
+  consistently, and use tabular numerals on live popup timestamps, reset
+  countdowns, and selected-day cost summaries.
+
 - Show the weekly comparison requirements directly below the comparison in
   **Usage & Spend** when it is unavailable.
 
