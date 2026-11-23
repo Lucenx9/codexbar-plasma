@@ -18,12 +18,15 @@ KCM.SimpleKCM {
     id: page
 
     readonly property Controls.ScrollView scrollView: contentItem as Controls.ScrollView
+    readonly property real scrollbarWidth: scrollView.Controls.ScrollBar.vertical.implicitWidth
+    readonly property real formFieldWidth: Math.min(Kirigami.Units.gridUnit * 24,
+        Math.max(0, availableWidth - scrollbarWidth))
 
     // Reserve the themed scrollbar width even when initial overflow disappears.
     Binding {
         target: page.scrollView
         property: page.mirrored ? "leftPadding" : "rightPadding"
-        value: page.scrollView.Controls.ScrollBar.vertical.implicitWidth
+        value: page.scrollbarWidth
     }
 
     property string cfg_commandPath
@@ -227,442 +230,481 @@ KCM.SimpleKCM {
             : "view-statistics"
     }
 
-    Kirigami.FormLayout {
-        Kirigami.Separator {
-            Kirigami.FormData.label: i18n("Usage details")
-            Kirigami.FormData.isSection: true
-        }
+    component PopupSectionHeading: ColumnLayout {
+        property alias text: heading.text
 
-        Controls.CheckBox {
-            id: usageBarsShowUsedCheck
-            implicitWidth: 0
-            Layout.fillWidth: true
-            text: i18n("Show usage as percent used")
-        }
+        Layout.fillWidth: true
+        Layout.maximumWidth: providersForm.wideMode ? providersForm.implicitWidth : Infinity
+        Layout.alignment: Qt.AlignHCenter
+        spacing: Kirigami.Units.smallSpacing
 
-        Controls.CheckBox {
-            id: resetTimesShowAbsoluteCheck
-            implicitWidth: 0
-            Layout.fillWidth: true
-            text: i18n("Show reset times as clock time")
-        }
+        Components.PlainHeading {
+            id: heading
 
-        Controls.CheckBox {
-            id: showQuotaWarningMarkersCheck
-            implicitWidth: 0
             Layout.fillWidth: true
-            text: i18n("Show quota warnings on usage meters")
+            horizontalAlignment: providersForm.wideMode ? Text.AlignHCenter : Text.AlignLeft
+            wrapMode: Text.WordWrap
+            level: 3
+            type: Kirigami.Heading.Type.Primary
         }
 
         Kirigami.Separator {
-            Kirigami.FormData.label: i18n("Popup content")
-            Kirigami.FormData.isSection: true
-        }
-
-        Controls.CheckBox {
-            id: showPopupPaceCheck
-            objectName: "showPopupPaceCheck"
-            implicitWidth: 0
             Layout.fillWidth: true
-            text: i18n("Show pace forecasts")
+        }
+    }
+
+    component PopupFormGroup: Kirigami.FormLayout {
+        twinFormLayouts: [providersForm]
+        wideMode: providersForm.wideMode
+    }
+
+    ColumnLayout {
+        spacing: Kirigami.Units.smallSpacing
+
+        PopupSectionHeading {
+            text: i18n("Usage details")
         }
 
-        Controls.CheckBox {
-            id: monthlyDailyAllowanceCheck
-            objectName: "monthlyDailyAllowanceCheck"
-            implicitWidth: 0
-            Layout.fillWidth: true
-            text: i18n("Show remaining monthly quota per day")
-        }
-
-        Controls.CheckBox {
-            id: showPopupCreditsCheck
-            objectName: "showPopupCreditsCheck"
-            implicitWidth: 0
-            Layout.fillWidth: true
-            text: i18n("Show credits and reset credits")
-        }
-
-        Controls.CheckBox {
-            id: showPopupProviderDetailsCheck
-            objectName: "showPopupProviderDetailsCheck"
-            implicitWidth: 0
-            Layout.fillWidth: true
-            text: i18n("Show provider details and charts")
-        }
-
-        Controls.CheckBox {
-            id: showProviderChangelogsCheck
-            implicitWidth: 0
-            Layout.fillWidth: true
-            text: i18n("Show provider changelog links")
-        }
-
-        Kirigami.Separator {
-            Kirigami.FormData.label: i18n("Providers")
-            Kirigami.FormData.isSection: true
-        }
-
-        Controls.CheckBox {
-            id: showPopupTabLabelsCheck
-            implicitWidth: 0
-            Layout.fillWidth: true
-            text: i18n("Show text labels in the tab bar")
-        }
-
-        ColumnLayout {
-            id: providerOrderColumn
-            Kirigami.FormData.label: i18n("Provider order:")
-            Kirigami.FormData.labelAlignment: providerOrderRepeater.count > 0 ? 0 : Qt.AlignTop
-            Kirigami.FormData.buddyFor: providerOrderRepeater.count > 0
-                ? providerOrderRepeater.itemAt(0) : providerOrderColumn
-            Layout.fillWidth: true
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            spacing: Kirigami.Units.smallSpacing / 2
-
-            Components.PlainControlsLabel {
-                Layout.fillWidth: true
-                visible: page.providerRosterLoading
-                text: i18n("Loading providers…")
-                font: Kirigami.Theme.smallFont
-                opacity: 0.7
-            }
-
-            Components.PlainControlsLabel {
-                Layout.fillWidth: true
-                visible: !page.providerRosterLoading
-                    && page.orderedEnabledProviderRoster.length === 0
-                    && page.providerRosterError.length === 0
-                text: i18n("No enabled providers available.")
-                font: Kirigami.Theme.smallFont
-                opacity: 0.7
-                wrapMode: Text.WordWrap
-            }
-
-            Components.PlainInlineMessage {
-                Layout.fillWidth: true
-                type: Kirigami.MessageType.Error
-                plainText: page.providerRosterError
-                visible: page.providerRosterError.length > 0
-            }
-
-            Repeater {
-                id: providerOrderRepeater
-
-                model: page.orderedEnabledProviderRoster
-
-                delegate: RowLayout {
-                    required property var modelData
-                    required property int index
-                    readonly property string orderKey: modelData.provider
-                    readonly property Item upButton: providerMoveUp
-                    readonly property Item downButton: providerMoveDown
-                    // The layout may place a rebuilt row after focus is restored.
-                    onYChanged: page.revealFocusedOrderButton(upButton, downButton)
-
-                    Layout.fillWidth: true
-                    // Keep the move buttons near the name, on the restore rows' action edge.
-                    Layout.maximumWidth: Kirigami.Units.gridUnit * 18
-                    spacing: Kirigami.Units.smallSpacing
-
-                    Components.PlainControlsLabel {
-                        text: Number(index + 1).toLocaleString(Qt.locale(), 'f', 0)
-                        font: Kirigami.Theme.smallFont
-                        opacity: 0.7
-                        Layout.preferredWidth: Kirigami.Units.gridUnit
-                        Accessible.ignored: true
-                    }
-
-                    Kirigami.Icon {
-                        source: page.providerIconSource(modelData.provider)
-                        fallback: "view-statistics"
-                        isMask: true
-                        color: Kirigami.Theme.textColor
-                        Layout.preferredWidth: Kirigami.Units.iconSizes.small
-                        Layout.preferredHeight: Kirigami.Units.iconSizes.small
-                    }
-
-                    Components.PlainControlsLabel {
-                        text: modelData.displayName
-                        Layout.fillWidth: true
-                        elide: Text.ElideRight
-                    }
-
-                    Controls.ToolButton {
-                        id: providerMoveUp
-
-                        icon.name: "go-up"
-                        enabled: index > 0
-                        Accessible.name: i18n("Move %1 up", modelData.displayName)
-
-                        Components.PlainToolTip {
-                            plainText: providerMoveUp.Accessible.name
-                            visible: providerMoveUp.hovered || providerMoveUp.visualFocus
-                            delay: Kirigami.Units.toolTipDelay
-                        }
-
-                        onClicked: page.moveProvider(index, -1, visualFocus)
-                    }
-
-                    Controls.ToolButton {
-                        id: providerMoveDown
-
-                        icon.name: "go-down"
-                        enabled: index < page.orderedEnabledProviderRoster.length - 1
-                        Accessible.name: i18n("Move %1 down", modelData.displayName)
-
-                        Components.PlainToolTip {
-                            plainText: providerMoveDown.Accessible.name
-                            visible: providerMoveDown.hovered || providerMoveDown.visualFocus
-                            delay: Kirigami.Units.toolTipDelay
-                        }
-
-                        onClicked: page.moveProvider(index, 1, visualFocus)
-                    }
-                }
-            }
-        }
-
-        Item {
-            Kirigami.FormData.isSection: true
-        }
-
-        ColumnLayout {
-            id: overviewProviderSelection
-
-            Kirigami.FormData.label: i18n("Overview providers:")
-            // Center the label on the first option rather than the column top.
-            Kirigami.FormData.buddyFor: overviewAutomaticRadio
-            Layout.fillWidth: true
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            spacing: Kirigami.Units.smallSpacing
-
-            Components.PlainControlsLabel {
-                Layout.fillWidth: true
-                visible: page.providerRosterLoading
-                text: i18n("Loading providers…")
-                font: Kirigami.Theme.smallFont
-                opacity: 0.7
-            }
-
-            Components.PlainControlsLabel {
-                Layout.fillWidth: true
-                visible: !page.providerRosterLoading && page.enabledProviderRoster.length === 0 && page.providerRosterError.length === 0
-                text: i18n("No enabled providers available for Overview.")
-                font: Kirigami.Theme.smallFont
-                opacity: 0.7
-                wrapMode: Text.WordWrap
-            }
-
-            Controls.RadioButton {
-                id: overviewAutomaticRadio
-                objectName: "overviewAutomaticRadio"
+        PopupFormGroup {
+            Controls.CheckBox {
+                id: usageBarsShowUsedCheck
                 implicitWidth: 0
                 Layout.fillWidth: true
-                text: i18n("Automatic: first %1 providers", OverviewProviders.automaticProviderCount)
-                checked: !OverviewProviders.selectionActive(page.cfg_overviewProviderIDs)
-                onClicked: page.resetOverviewProvidersToAutomatic()
+                text: i18n("Show usage as percent used")
             }
 
-            Components.PlainControlsLabel {
-                objectName: "overviewAutomaticHint"
-                Layout.fillWidth: true
-                text: i18n("Follows the provider order above.")
-                font: Kirigami.Theme.smallFont
-                opacity: 0.7
-                leftPadding: page.mirrored ? 0 : overviewAutomaticRadio.indicator.width + overviewAutomaticRadio.spacing
-                rightPadding: page.mirrored ? overviewAutomaticRadio.indicator.width + overviewAutomaticRadio.spacing : 0
-                // Sit closer to its own option than to the next one.
-                Layout.bottomMargin: Kirigami.Units.smallSpacing
-                wrapMode: Text.WordWrap
-            }
-
-            Controls.RadioButton {
-                id: overviewCustomRadio
-                objectName: "overviewCustomRadio"
+            Controls.CheckBox {
+                id: resetTimesShowAbsoluteCheck
                 implicitWidth: 0
                 Layout.fillWidth: true
-                text: i18n("Choose providers")
-                checked: OverviewProviders.selectionActive(page.cfg_overviewProviderIDs)
-                onClicked: page.cfg_overviewProviderIDs = OverviewProviders.selectionText(page.resolvedOverviewProviderIDs)
+                text: i18n("Show reset times as clock time")
             }
 
-            Repeater {
-                model: page.orderedEnabledProviderRoster
-
-                delegate: Controls.CheckBox {
-                    implicitWidth: 0
-                    Layout.fillWidth: true
-                    required property var modelData
-
-                    visible: overviewCustomRadio.checked
-                    readonly property bool selected: OverviewProviders.isSelected(
-                        page.resolvedOverviewProviderIDs, modelData.provider)
-
-                    text: SafeText.plainTextAsRichText(modelData.displayName)
-                    Kirigami.MnemonicData.label: SafeText.plainTextAsMnemonicRichText(modelData.displayName)
-                    Accessible.name: modelData.displayName
-                    checked: selected
-                    enabled: overviewCustomRadio.checked
-                        && (selected || page.resolvedOverviewProviderIDs.length < ProviderOrder.maximumProviderItems)
-                    Layout.leftMargin: overviewCustomRadio.indicator.width + overviewCustomRadio.spacing
-                    onClicked: {
-                        page.toggleOverviewProvider(modelData.provider, checked)
-                        // Keep the checkbox bound to the stored selection after a click.
-                        checked = Qt.binding(function() { return selected })
-                    }
-                }
+            Controls.CheckBox {
+                id: showQuotaWarningMarkersCheck
+                implicitWidth: 0
+                Layout.fillWidth: true
+                text: i18n("Show quota warnings on usage meters")
             }
         }
 
-        Kirigami.Separator {
-            Kirigami.FormData.label: i18n("Hidden items")
-            Kirigami.FormData.isSection: true
+        PopupSectionHeading {
+            Layout.topMargin: Kirigami.Units.largeSpacing
+            text: i18n("Popup content")
         }
 
-        Components.DisclosureButton {
-            id: hiddenItemsDisclosure
-            alignWithForm: true
-            objectName: "hiddenItemsDisclosure"
-            Layout.alignment: page.mirrored ? Qt.AlignRight : Qt.AlignLeft
-            plainText: i18n("%1, %2",
-                i18np("%1 section", "%1 sections", page.hiddenDetailSections.length),
-                i18np("%1 usage row", "%1 usage rows", page.hiddenUsageRows.length))
-            Accessible.description: i18n("Hidden items")
-            onClicked: {
-                forceActiveFocus(visualFocus ? Qt.TabFocusReason : Qt.MouseFocusReason)
-                expanded = !expanded
+        PopupFormGroup {
+            Controls.CheckBox {
+                id: showPopupPaceCheck
+                objectName: "showPopupPaceCheck"
+                implicitWidth: 0
+                Layout.fillWidth: true
+                text: i18n("Show pace forecasts")
             }
+
+            Controls.CheckBox {
+                id: monthlyDailyAllowanceCheck
+                objectName: "monthlyDailyAllowanceCheck"
+                implicitWidth: 0
+                Layout.fillWidth: true
+                text: i18n("Show remaining monthly quota per day")
+            }
+
+            Controls.CheckBox {
+                id: showPopupCreditsCheck
+                objectName: "showPopupCreditsCheck"
+                implicitWidth: 0
+                Layout.fillWidth: true
+                text: i18n("Show credits and reset credits")
+            }
+
+            Controls.CheckBox {
+                id: showPopupProviderDetailsCheck
+                objectName: "showPopupProviderDetailsCheck"
+                implicitWidth: 0
+                Layout.fillWidth: true
+                text: i18n("Show provider details and charts")
+            }
+
+            Controls.CheckBox {
+                id: showProviderChangelogsCheck
+                implicitWidth: 0
+                Layout.fillWidth: true
+                text: i18n("Show provider changelog links")
+            }
+        }
+
+        PopupSectionHeading {
+            Layout.topMargin: Kirigami.Units.largeSpacing
+            text: i18n("Providers")
         }
 
         Kirigami.FormLayout {
-            visible: hiddenItemsDisclosure.expanded
-            wideMode: false
-            Layout.fillWidth: true
-            Layout.maximumWidth: visible ? Kirigami.Units.gridUnit * 24 : 0
+            id: providersForm
 
-            Item {
-                objectName: "hiddenDetailSectionsSettings"
-                Kirigami.FormData.label: i18n("Hidden detail sections:")
-                Kirigami.FormData.labelAlignment: Qt.AlignTop
+            Controls.CheckBox {
+                id: showPopupTabLabelsCheck
+                implicitWidth: 0
                 Layout.fillWidth: true
-                Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+                text: i18n("Show text labels in the tab bar")
+            }
+
+            ColumnLayout {
+                id: providerOrderColumn
+                Kirigami.FormData.label: i18n("Provider order:")
+                Kirigami.FormData.labelAlignment: providerOrderRepeater.count > 0 ? 0 : Qt.AlignTop
+                Kirigami.FormData.buddyFor: providerOrderRepeater.count > 0
+                    ? providerOrderRepeater.itemAt(0) : providerOrderColumn
+                Layout.fillWidth: true
+                Layout.preferredWidth: page.formFieldWidth
                 Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-                // Isolate FormLayout's size queries while restore delegates rebuild.
-                implicitWidth: hiddenDetailSectionsLayout.implicitWidth
-                implicitHeight: hiddenDetailSectionsLayout.implicitHeight
+                spacing: Kirigami.Units.smallSpacing / 2
 
-                ColumnLayout {
-                    id: hiddenDetailSectionsLayout
-                    width: parent.width
-                    spacing: Kirigami.Units.smallSpacing
+                Components.PlainControlsLabel {
+                    Layout.fillWidth: true
+                    visible: page.providerRosterLoading
+                    text: i18n("Loading providers…")
+                    font: Kirigami.Theme.smallFont
+                    opacity: 0.7
+                }
 
-                    Components.PlainControlsLabel {
+                Components.PlainControlsLabel {
+                    Layout.fillWidth: true
+                    visible: !page.providerRosterLoading
+                        && page.orderedEnabledProviderRoster.length === 0
+                        && page.providerRosterError.length === 0
+                    text: i18n("No enabled providers available.")
+                    font: Kirigami.Theme.smallFont
+                    opacity: 0.7
+                    wrapMode: Text.WordWrap
+                }
+
+                Components.PlainInlineMessage {
+                    Layout.fillWidth: true
+                    type: Kirigami.MessageType.Error
+                    plainText: page.providerRosterError
+                    visible: page.providerRosterError.length > 0
+                }
+
+                Repeater {
+                    id: providerOrderRepeater
+
+                    model: page.orderedEnabledProviderRoster
+
+                    delegate: RowLayout {
+                        required property var modelData
+                        required property int index
+                        readonly property string orderKey: modelData.provider
+                        readonly property Item upButton: providerMoveUp
+                        readonly property Item downButton: providerMoveDown
+                        // The layout may place a rebuilt row after focus is restored.
+                        onYChanged: page.revealFocusedOrderButton(upButton, downButton)
+
                         Layout.fillWidth: true
-                        text: page.hiddenDetailProviders.length === 0
-                            ? i18n("None. Use a section's hide button in the popup.")
-                            : i18n("Restore individual sections in the popup, or all sections for a provider here.")
-                        font: Kirigami.Theme.smallFont
-                        opacity: 0.7
-                        wrapMode: Text.WordWrap
-                    }
+                        // Keep the move buttons near the name, on the restore rows' action edge.
+                        Layout.maximumWidth: Kirigami.Units.gridUnit * 18
+                        spacing: Kirigami.Units.smallSpacing
 
-                    Repeater {
-                        model: page.hiddenDetailProviders
-                        delegate: RowLayout {
-                            required property var modelData
+                        Components.PlainControlsLabel {
+                            text: Number(index + 1).toLocaleString(Qt.locale(), 'f', 0)
+                            font: Kirigami.Theme.smallFont
+                            opacity: 0.7
+                            Layout.preferredWidth: Kirigami.Units.gridUnit
+                            Accessible.ignored: true
+                        }
+
+                        Kirigami.Icon {
+                            source: page.providerIconSource(modelData.provider)
+                            fallback: "view-statistics"
+                            isMask: true
+                            color: Kirigami.Theme.textColor
+                            Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                            Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                        }
+
+                        Components.PlainControlsLabel {
+                            text: modelData.displayName
                             Layout.fillWidth: true
-                            Layout.maximumWidth: Kirigami.Units.gridUnit * 18
-                            spacing: Kirigami.Units.smallSpacing
+                            elide: Text.ElideRight
+                        }
 
-                            Kirigami.Icon {
-                                source: page.providerIconSource(modelData)
-                                fallback: "view-statistics"
-                                isMask: true
-                                color: Kirigami.Theme.textColor
-                                Layout.preferredWidth: Kirigami.Units.iconSizes.small
-                                Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                        Controls.ToolButton {
+                            id: providerMoveUp
+
+                            icon.name: "go-up"
+                            enabled: index > 0
+                            Accessible.name: i18n("Move %1 up", modelData.displayName)
+
+                            Components.PlainToolTip {
+                                plainText: providerMoveUp.Accessible.name
+                                visible: providerMoveUp.hovered || providerMoveUp.visualFocus
+                                delay: Kirigami.Units.toolTipDelay
                             }
 
-                            Components.PlainControlsLabel {
-                                text: page.hiddenRowProviderTitle(modelData)
-                                Layout.fillWidth: true
-                                elide: Text.ElideRight
+                            onClicked: page.moveProvider(index, -1, visualFocus)
+                        }
+
+                        Controls.ToolButton {
+                            id: providerMoveDown
+
+                            icon.name: "go-down"
+                            enabled: index < page.orderedEnabledProviderRoster.length - 1
+                            Accessible.name: i18n("Move %1 down", modelData.displayName)
+
+                            Components.PlainToolTip {
+                                plainText: providerMoveDown.Accessible.name
+                                visible: providerMoveDown.hovered || providerMoveDown.visualFocus
+                                delay: Kirigami.Units.toolTipDelay
                             }
 
-                            HiddenItemRestoreButton {
-                                objectName: "restoreProviderDetailSectionsButton"
-                                plainText: i18n("Restore all")
-                                Accessible.name: i18n("Restore all sections for %1", page.hiddenRowProviderTitle(modelData))
-                                onRestoreRequested: page.restoreProviderDetailSections(modelData)
-                            }
+                            onClicked: page.moveProvider(index, 1, visualFocus)
+                        }
+                    }
+                }
+
+                Item {
+                    implicitHeight: Kirigami.Units.smallSpacing
+                }
+            }
+
+            ColumnLayout {
+                id: overviewProviderSelection
+
+                Kirigami.FormData.label: i18n("Overview providers:")
+                // Center the label on the first option rather than the column top.
+                Kirigami.FormData.buddyFor: overviewAutomaticRadio
+                Layout.fillWidth: true
+                Layout.preferredWidth: page.formFieldWidth
+                Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                spacing: Kirigami.Units.smallSpacing
+
+                Components.PlainControlsLabel {
+                    Layout.fillWidth: true
+                    visible: page.providerRosterLoading
+                    text: i18n("Loading providers…")
+                    font: Kirigami.Theme.smallFont
+                    opacity: 0.7
+                }
+
+                Components.PlainControlsLabel {
+                    Layout.fillWidth: true
+                    visible: !page.providerRosterLoading && page.enabledProviderRoster.length === 0 && page.providerRosterError.length === 0
+                    text: i18n("No enabled providers available for Overview.")
+                    font: Kirigami.Theme.smallFont
+                    opacity: 0.7
+                    wrapMode: Text.WordWrap
+                }
+
+                Controls.RadioButton {
+                    id: overviewAutomaticRadio
+                    objectName: "overviewAutomaticRadio"
+                    implicitWidth: 0
+                    Layout.fillWidth: true
+                    text: i18n("Automatic: first %1 providers", OverviewProviders.automaticProviderCount)
+                    checked: !OverviewProviders.selectionActive(page.cfg_overviewProviderIDs)
+                    onClicked: page.resetOverviewProvidersToAutomatic()
+                }
+
+                Components.PlainControlsLabel {
+                    objectName: "overviewAutomaticHint"
+                    Layout.fillWidth: true
+                    text: i18n("Follows the provider order above.")
+                    font: Kirigami.Theme.smallFont
+                    opacity: 0.7
+                    leftPadding: page.mirrored ? 0 : overviewAutomaticRadio.indicator.width + overviewAutomaticRadio.spacing
+                    rightPadding: page.mirrored ? overviewAutomaticRadio.indicator.width + overviewAutomaticRadio.spacing : 0
+                    // Sit closer to its own option than to the next one.
+                    Layout.bottomMargin: Kirigami.Units.smallSpacing
+                    wrapMode: Text.WordWrap
+                }
+
+                Controls.RadioButton {
+                    id: overviewCustomRadio
+                    objectName: "overviewCustomRadio"
+                    implicitWidth: 0
+                    Layout.fillWidth: true
+                    text: i18n("Choose providers")
+                    checked: OverviewProviders.selectionActive(page.cfg_overviewProviderIDs)
+                    onClicked: page.cfg_overviewProviderIDs = OverviewProviders.selectionText(page.resolvedOverviewProviderIDs)
+                }
+
+                Repeater {
+                    model: page.orderedEnabledProviderRoster
+
+                    delegate: Controls.CheckBox {
+                        implicitWidth: 0
+                        Layout.fillWidth: true
+                        required property var modelData
+
+                        visible: overviewCustomRadio.checked
+                        readonly property bool selected: OverviewProviders.isSelected(
+                            page.resolvedOverviewProviderIDs, modelData.provider)
+
+                        text: SafeText.plainTextAsRichText(modelData.displayName)
+                        Kirigami.MnemonicData.label: SafeText.plainTextAsMnemonicRichText(modelData.displayName)
+                        Accessible.name: modelData.displayName
+                        checked: selected
+                        enabled: overviewCustomRadio.checked
+                            && (selected || page.resolvedOverviewProviderIDs.length < ProviderOrder.maximumProviderItems)
+                        Layout.leftMargin: overviewCustomRadio.indicator.width + overviewCustomRadio.spacing
+                        onClicked: {
+                            page.toggleOverviewProvider(modelData.provider, checked)
+                            // Keep the checkbox bound to the stored selection after a click.
+                            checked = Qt.binding(function() { return selected })
                         }
                     }
                 }
             }
+        }
 
-            Item {
-                id: hiddenUsageRowsSection
-                objectName: "hiddenUsageRowsSection"
+        PopupSectionHeading {
+            Layout.topMargin: Kirigami.Units.largeSpacing
+            text: i18n("Hidden items")
+        }
 
-                Kirigami.FormData.label: i18n("Hidden usage rows:")
-                Kirigami.FormData.labelAlignment: Qt.AlignTop
+        PopupFormGroup {
+            Components.DisclosureButton {
+                id: hiddenItemsDisclosure
+                alignWithForm: true
+                objectName: "hiddenItemsDisclosure"
+                Layout.alignment: page.mirrored ? Qt.AlignRight : Qt.AlignLeft
+                plainText: i18n("%1, %2",
+                    i18np("%1 section", "%1 sections", page.hiddenDetailSections.length),
+                    i18np("%1 usage row", "%1 usage rows", page.hiddenUsageRows.length))
+                Accessible.description: i18n("Hidden items")
+                onClicked: {
+                    forceActiveFocus(visualFocus ? Qt.TabFocusReason : Qt.MouseFocusReason)
+                    expanded = !expanded
+                }
+            }
+
+            Kirigami.FormLayout {
+                visible: hiddenItemsDisclosure.expanded
+                wideMode: false
                 Layout.fillWidth: true
-                Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-                Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-                // Isolate FormLayout's size queries while restore delegates rebuild.
-                implicitWidth: hiddenUsageRowsLayout.implicitWidth
-                implicitHeight: hiddenUsageRowsLayout.implicitHeight
+                Layout.maximumWidth: visible ? page.formFieldWidth : 0
 
-                ColumnLayout {
-                    id: hiddenUsageRowsLayout
-                    width: parent.width
-                    spacing: Kirigami.Units.smallSpacing
+                Item {
+                    objectName: "hiddenDetailSectionsSettings"
+                    Kirigami.FormData.label: i18n("Hidden detail sections:")
+                    Kirigami.FormData.labelAlignment: Qt.AlignTop
+                    Layout.fillWidth: true
+                    Layout.preferredWidth: page.formFieldWidth
+                    Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                    // Isolate FormLayout's size queries while restore delegates rebuild.
+                    implicitWidth: hiddenDetailSectionsLayout.implicitWidth
+                    implicitHeight: hiddenDetailSectionsLayout.implicitHeight
 
-                    Components.PlainControlsLabel {
-                        Layout.fillWidth: true
-                        text: page.hiddenUsageRows.length === 0
-                            ? i18n("None. Use a row's hide button in the popup.")
-                            : i18n("Hidden rows stay out of the popup's provider tabs only.")
-                        font: Kirigami.Theme.smallFont
-                        opacity: 0.7
-                        wrapMode: Text.WordWrap
-                    }
+                    ColumnLayout {
+                        id: hiddenDetailSectionsLayout
+                        width: parent.width
+                        spacing: Kirigami.Units.smallSpacing
 
-                    Repeater {
-                        model: page.hiddenUsageRows
-
-                        delegate: RowLayout {
-                            required property var modelData
-                            readonly property string rowText: i18n("%1: %2",
-                                page.hiddenRowProviderTitle(modelData.provider), page.hiddenRowLabel(modelData))
-
+                        Components.PlainControlsLabel {
                             Layout.fillWidth: true
-                            Layout.maximumWidth: Kirigami.Units.gridUnit * 18
-                            spacing: Kirigami.Units.smallSpacing
+                            text: page.hiddenDetailProviders.length === 0
+                                ? i18n("None. Use a section's hide button in the popup.")
+                                : i18n("Restore individual sections in the popup, or all sections for a provider here.")
+                            font: Kirigami.Theme.smallFont
+                            opacity: 0.7
+                            wrapMode: Text.WordWrap
+                        }
 
-                            Kirigami.Icon {
-                                source: page.providerIconSource(modelData.provider)
-                                fallback: "view-statistics"
-                                isMask: true
-                                color: Kirigami.Theme.textColor
-                                Layout.preferredWidth: Kirigami.Units.iconSizes.small
-                                Layout.preferredHeight: Kirigami.Units.iconSizes.small
-                            }
-
-                            Components.PlainControlsLabel {
-                                text: rowText
+                        Repeater {
+                            model: page.hiddenDetailProviders
+                            delegate: RowLayout {
+                                required property var modelData
                                 Layout.fillWidth: true
-                                elide: Text.ElideRight
-                            }
+                                Layout.maximumWidth: Kirigami.Units.gridUnit * 18
+                                spacing: Kirigami.Units.smallSpacing
 
-                            HiddenItemRestoreButton {
-                                objectName: "restoreHiddenUsageRowButton"
-                                plainText: i18n("Restore")
-                                Accessible.name: i18n("Restore %1", rowText)
-                                onRestoreRequested: page.restoreHiddenUsageRow(modelData)
+                                Kirigami.Icon {
+                                    source: page.providerIconSource(modelData)
+                                    fallback: "view-statistics"
+                                    isMask: true
+                                    color: Kirigami.Theme.textColor
+                                    Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                                    Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                                }
+
+                                Components.PlainControlsLabel {
+                                    text: page.hiddenRowProviderTitle(modelData)
+                                    Layout.fillWidth: true
+                                    elide: Text.ElideRight
+                                }
+
+                                HiddenItemRestoreButton {
+                                    objectName: "restoreProviderDetailSectionsButton"
+                                    plainText: i18n("Restore all")
+                                    Accessible.name: i18n("Restore all sections for %1", page.hiddenRowProviderTitle(modelData))
+                                    onRestoreRequested: page.restoreProviderDetailSections(modelData)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Item {
+                    id: hiddenUsageRowsSection
+                    objectName: "hiddenUsageRowsSection"
+
+                    Kirigami.FormData.label: i18n("Hidden usage rows:")
+                    Kirigami.FormData.labelAlignment: Qt.AlignTop
+                    Layout.fillWidth: true
+                    Layout.preferredWidth: page.formFieldWidth
+                    Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                    // Isolate FormLayout's size queries while restore delegates rebuild.
+                    implicitWidth: hiddenUsageRowsLayout.implicitWidth
+                    implicitHeight: hiddenUsageRowsLayout.implicitHeight
+
+                    ColumnLayout {
+                        id: hiddenUsageRowsLayout
+                        width: parent.width
+                        spacing: Kirigami.Units.smallSpacing
+
+                        Components.PlainControlsLabel {
+                            Layout.fillWidth: true
+                            text: page.hiddenUsageRows.length === 0
+                                ? i18n("None. Use a row's hide button in the popup.")
+                                : i18n("Hidden rows stay out of the popup's provider tabs only.")
+                            font: Kirigami.Theme.smallFont
+                            opacity: 0.7
+                            wrapMode: Text.WordWrap
+                        }
+
+                        Repeater {
+                            model: page.hiddenUsageRows
+
+                            delegate: RowLayout {
+                                required property var modelData
+                                readonly property string rowText: i18n("%1: %2",
+                                    page.hiddenRowProviderTitle(modelData.provider), page.hiddenRowLabel(modelData))
+
+                                Layout.fillWidth: true
+                                Layout.maximumWidth: Kirigami.Units.gridUnit * 18
+                                spacing: Kirigami.Units.smallSpacing
+
+                                Kirigami.Icon {
+                                    source: page.providerIconSource(modelData.provider)
+                                    fallback: "view-statistics"
+                                    isMask: true
+                                    color: Kirigami.Theme.textColor
+                                    Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                                    Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                                }
+
+                                Components.PlainControlsLabel {
+                                    text: rowText
+                                    Layout.fillWidth: true
+                                    elide: Text.ElideRight
+                                }
+
+                                HiddenItemRestoreButton {
+                                    objectName: "restoreHiddenUsageRowButton"
+                                    plainText: i18n("Restore")
+                                    Accessible.name: i18n("Restore %1", rowText)
+                                    onRestoreRequested: page.restoreHiddenUsageRow(modelData)
+                                }
                             }
                         }
                     }

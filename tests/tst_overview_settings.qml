@@ -92,6 +92,49 @@ TestCase {
         return matches.length > 0 ? matches[0] : null;
     }
 
+    function test_compactSectionHeadings_data() {
+        return [{tag: "narrow", width: 340}, {tag: "compact", width: 420},
+            {tag: "intermediate", width: 586}, {tag: "wide", width: 840}];
+    }
+
+    function test_compactSectionHeadings(data) {
+        var page = createPage({width: data.width});
+        if (!page)
+            return;
+        waitForRosterSettled(page);
+        var previousOption = checkByText(page, "Show quota warnings on usage meters");
+        verify(previousOption !== null);
+        previousOption.text = "Afficher les avertissements de quota sur les jauges d'utilisation";
+        waitForRendering(page);
+        var items = [];
+        walkObjects(page, items);
+        var headings = items.filter(function(item) {
+            return item.visible && item.level === 3
+                && item.Accessible.role === Accessible.Heading;
+        });
+        compare(headings.map(function(heading) { return heading.text; }),
+            ["Usage details", "Popup content", "Providers", "Hidden items"]);
+
+        var left = previousOption.mapToItem(page, 0, 0).x;
+        var paceOption = findChild(page, "showPopupPaceCheck");
+        var tabsOption = checkByText(page, "Show text labels in the tab bar");
+        for (var option of [previousOption, paceOption, tabsOption]) {
+            verify(option !== null);
+            var bounds = option.mapToItem(page, 0, 0);
+            verify(Math.abs(bounds.x - left) <= 1, "Section options should share a leading edge");
+            verify(bounds.x >= 0 && bounds.x + option.width <= page.width,
+                "Section options should fit the settings page");
+        }
+
+        var optionBottom = previousOption.mapToItem(page, 0, previousOption.height).y;
+        var popupHeading = headings[1];
+        var headingTop = popupHeading.mapToItem(page, 0,
+            popupHeading.height - popupHeading.contentHeight).y;
+        var gap = headingTop - optionBottom;
+        verify(gap <= previousOption.height + popupHeading.contentHeight / 2,
+            "The next heading should stay close to the end of the previous section, gap: " + gap);
+    }
+
     function test_manualSelectionKeepsDisabledProvidersAndAllowsMoreThanThree() {
         var page = createPage({cfg_overviewProviderIDs: "claude,gemini,copilot"});
         if (!page)

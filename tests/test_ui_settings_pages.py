@@ -178,12 +178,6 @@ class SettingsPagesTest(unittest.TestCase):
             "configGeneral.qml",
             ("Refresh", "Privacy", "Usage history", "Updates", "Defaults"),
         )
-        assert_form_sections(
-            popup_text,
-            "configPopup.qml",
-            ("Usage details", "Popup content", "Providers", "Hidden items"),
-        )
-
         assert_form_sections(panel_surface.text, "configPanel.qml", ("Appearance", "Contents", "Panel visibility"))
         assert_form_sections(notifications_surface.text, "configNotifications.qml", ("Quota warnings", "Notifications"))
         assert_form_sections(diagnostics_text, "configDiagnostics.qml",

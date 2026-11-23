@@ -31,6 +31,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Tighten the spacing between sections in Popup settings so the provider and
+  hidden-item controls take less scrolling, especially at larger text sizes.
+
 - Align inline reset separators with reset labels, tint the provider header
   icon tile with the contrast-adjusted accent, give **Provider actions**
   breathing room below its separator, style provider cost-detail model notices
