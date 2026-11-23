@@ -427,7 +427,9 @@ the CLI's redacted report. **Fetch error** explains a failed provider fetch;
 
 With CLI 0.85.0, providers can list Linux setup routes here. Each route gives
 the CLI's instructions and any required inputs, such as Azure OpenAI's key,
-endpoint, and deployment name. Command examples are plain text. Use the
+endpoint, and deployment name. When there are several options, choose one.
+Any additional authentication environment variables appear below the options.
+Command examples are plain text. Use the
 provider's setup buttons for actions supported by the widget. Providers and
 older CLIs without declared routes still show their available authentication
 information.

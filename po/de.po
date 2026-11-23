@@ -4586,3 +4586,11 @@ msgstr "Erforderliche Angabe: %1 (%2)"
 #: contents/ui/configProviders.qml
 msgid "Required input: %1"
 msgstr "Erforderliche Angabe: %1"
+
+#: contents/ui/configProviders.qml
+msgid "Setup option %1 of %2"
+msgstr "Einrichtungsoption %1 von %2"
+
+#: contents/ui/configProviders.qml
+msgid "Other environment variables"
+msgstr "Weitere Umgebungsvariablen"

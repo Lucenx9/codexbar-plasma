@@ -3631,7 +3631,15 @@ msgid "Linux setup"
 msgstr ""
 
 #: contents/ui/configProviders.qml
+msgid "Setup option %1 of %2"
+msgstr ""
+
+#: contents/ui/configProviders.qml
 msgid "Environment variables"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Other environment variables"
 msgstr ""
 
 #: contents/ui/configProviders.qml

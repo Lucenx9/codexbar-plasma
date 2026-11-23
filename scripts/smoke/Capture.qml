@@ -2029,8 +2029,10 @@ Item {
                     return false;
                 }
                 verifyScenario(hasVisibleText(guidancePage, "potentially billable validation request")
+                    && hasVisibleText(guidancePage, i18n("Required input: %1 (%2)", "api-key", "AZURE_OPENAI_API_KEY"))
+                    && hasVisibleText(guidancePage, i18n("Required input: %1 (%2)", "endpoint", "AZURE_OPENAI_ENDPOINT"))
                     && hasVisibleText(guidancePage, i18n("Required input: %1 (%2)", "deployment", "AZURE_OPENAI_DEPLOYMENT_NAME")),
-                    "Azure OpenAI setup must explain the request and deployment prerequisite");
+                    "Azure OpenAI setup must explain the request and all three prerequisites");
                 return true;
             }
             if (scenario.indexOf("settings-providers-0840") === 0) {

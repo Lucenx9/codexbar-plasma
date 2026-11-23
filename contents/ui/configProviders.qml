@@ -1099,11 +1099,17 @@ KCM.SimpleKCM {
             appendSettingsRow(rows, i18n("Key guidance"), apiKeyPrompt(item.provider))
         }
         var setupRoutes = item.setupRoutes || []
-        for (var route of setupRoutes)
-            appendSettingsRow(rows, i18n("Linux setup"), setupRouteText(route))
+        for (var i = 0; i < setupRoutes.length; i++) {
+            var label = setupRoutes.length === 1 ? i18n("Linux setup")
+                : i18n("Setup option %1 of %2", i + 1, setupRoutes.length)
+            appendSettingsRow(rows, label, setupRouteText(setupRoutes[i]))
+        }
         var authentication = item.authentication
         if (authentication) {
-            appendSettingsRow(rows, i18n("Environment variables"), authentication.environmentVariables.join(", "))
+            var variables = authentication.environmentVariables.filter(name => !setupRoutes.some(
+                route => route.inputs.some(input => input.environmentVariables.indexOf(name) >= 0)))
+            appendSettingsRow(rows, variables.length < authentication.environmentVariables.length
+                ? i18n("Other environment variables") : i18n("Environment variables"), variables.join(", "))
             if (authentication.tokenAccounts) {
                 appendSettingsRow(rows, i18n("Token accounts"), authentication.tokenAccounts.title)
                 appendSettingsRow(rows, i18n("Account setup"), authentication.tokenAccounts.setupHint)
@@ -1963,13 +1969,21 @@ KCM.SimpleKCM {
                             model: page.selectedProviderCommandRows
 
                             delegate: Controls.Button {
+                                id: commandButton
                                 required property var modelData
 
+                                width: Math.min(implicitWidth, providerCommandActions.width)
                                 text: SafeText.plainButtonText(modelData.title, contentItem !== null)
                                 Accessible.name: modelData.title
                                 icon.name: modelData.icon
                                 enabled: modelData.enabled
                                 onClicked: page.performProviderAction(modelData)
+                                Components.PlainToolTip {
+                                    parent: commandButton
+                                    plainText: commandButton.Accessible.name
+                                    visible: (commandButton.hovered || commandButton.visualFocus)
+                                        && commandButton.width < commandButton.implicitWidth
+                                }
                             }
                         }
                     }
@@ -2083,7 +2097,16 @@ KCM.SimpleKCM {
                         visible: providerSettingsToggle.expanded
 
                         Controls.Button {
+                            id: inspectSettingsButton
+                            Layout.maximumWidth: selectedProviderContent.width
                             text: i18n("Inspect redacted settings")
+                            Accessible.name: text
+                            Components.PlainToolTip {
+                                parent: inspectSettingsButton
+                                plainText: inspectSettingsButton.text
+                                visible: (inspectSettingsButton.hovered || inspectSettingsButton.visualFocus)
+                                    && inspectSettingsButton.width < inspectSettingsButton.implicitWidth
+                            }
                             icon.name: "view-refresh"
                             enabled: page.selectedProvider
                                 && !page.isPending(page.selectedProvider.provider)

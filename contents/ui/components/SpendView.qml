@@ -874,10 +874,18 @@ ColumnLayout {
                 plainText: view.selectedDay ? i18n("Compare models on %1",
                     historyChart.pointLabel({label: view.selectedDay})) : i18n("Compare models")
                 visible: view.providerCosts.length > 0
-                onClicked: expanded = !expanded
+                onVisibleChanged: if (view.visible && !visible && activeFocus)
+                    providerFilter.forceActiveFocus(Qt.TabFocusReason)
+                onClicked: {
+                    expanded = !expanded
+                    if (expanded) Qt.callLater(function() {
+                        if (compareModelsToggle.expanded) view.revealHistoryItem(compareModelsToggle, comparisonList)
+                    })
+                }
             }
 
             Components.AnalysisModels {
+                id: comparisonList
                 objectName: "analysisModelComparison"
                 applet: view.applet
                 costs: view.providerCosts
@@ -886,7 +894,10 @@ ColumnLayout {
                 expanded: compareModelsToggle.expanded && compareModelsToggle.visible
                 visible: expanded
                 onShowAllRequested: function(value) { showAll = value }
-                onRestoreFocusRequested: compareModelsToggle.forceActiveFocus(Qt.TabFocusReason)
+                onRestoreFocusRequested: {
+                    if (view.providerCosts.length > 0) compareModelsToggle.forceActiveFocus(Qt.TabFocusReason)
+                    else if (view.visible) providerFilter.forceActiveFocus(Qt.TabFocusReason)
+                }
             }
 
             Components.DisclosureButton {

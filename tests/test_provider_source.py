@@ -344,14 +344,31 @@ TestCase {
                 {id: "deployment", environmentVariables: ["AZURE_OPENAI_DEPLOYMENT_NAME"]}]};
         page.providers = ProviderConfigProtocol.normalizeProviderList([{provider: "azureopenai",
             setup: {status: "declared", routes: [route]}, authentication: {supportsConfigAPIKey: false,
-                environmentVariables: ["AZURE_OPENAI_API_KEY"]}}]);
+                environmentVariables: ["AZURE_OPENAI_API_KEY", "AZURE_OPENAI_ENDPOINT", "AZURE_OPENAI_DEPLOYMENT_NAME"]}}]);
         var rows = page.providerSettingsRows(page.providers[0]);
         var guidance = rows.filter(function(row) { return row.label === "Linux setup"; });
         compare(guidance.length, 1);
         compare(guidance[0].value, "Supply an endpoint and deployment.\nRequired input: endpoint (AZURE_OPENAI_ENDPOINT)\nRequired input: deployment (AZURE_OPENAI_DEPLOYMENT_NAME)");
-        verify(rows.some(function(row) { return row.value === "AZURE_OPENAI_API_KEY"; }));
+        verify(rows.some(row => row.label === "Other environment variables" && row.value === "AZURE_OPENAI_API_KEY"));
         verify(!page.supportsApiKeySetup("azureopenai"));
         compare(Object.keys(page.commands).length, 0);
+    }
+    function test_alternativeRoutesAndTheirSharedInventory() {
+        var page = createTemporaryObject(harness, this);
+        var command = "codexbar config login --provider copilot";
+        var routes = [
+            {id: "device-login", platforms: ["linux"], method: "deviceCode",
+                hint: "Sign in with a device code.", command: command, requiredInputs: []},
+            {id: "github-token", platforms: ["linux"], method: "token",
+                hint: "Supply a GitHub token.", requiredInputs: [{id: "github-token", environmentVariables: ["COPILOT_API_TOKEN"]}]}
+        ];
+        var item = ProviderConfigProtocol.normalizeProviderList([{provider: "copilot",
+            setup: {status: "declared", routes: routes}, authentication: {
+                environmentVariables: ["COPILOT_API_TOKEN"], loginCommand: command}}])[0];
+        var rows = page.providerSettingsRows(item);
+        verify(rows.some(row => row.label === "Setup option 1 of 2" && row.value.indexOf(command) >= 0));
+        verify(rows.some(row => row.label === "Setup option 2 of 2" && row.value.indexOf("COPILOT_API_TOKEN") >= 0));
+        verify(!rows.some(row => row.value === "COPILOT_API_TOKEN" || row.value === command));
     }
     function test_gateAndUnknownProvider() {
         var page = createTemporaryObject(harness, this);

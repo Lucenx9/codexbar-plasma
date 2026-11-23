@@ -89,6 +89,7 @@ ColumnLayout {
                 Layout.fillWidth: true
                 spacing: Kirigami.Units.largeSpacing
                 PlainPlasmaLabel {
+                    id: modelTitle
                     text: section.compareProviders ? i18n("%1: %2",
                         section.applet.providerDisplayTitle(modelRow.modelData.provider), modelRow.modelData.label)
                         : modelRow.modelData.label
@@ -98,34 +99,43 @@ ColumnLayout {
                     Layout.alignment: Qt.AlignTop
                     wrapMode: Text.Wrap
                 }
-                PlainPlasmaLabel {
-                    id: modelAmount
-                    text: Amounts.hasMetricValue(modelRow.modelData, section.applet.costHistoryShowsTokens)
-                        ? section.applet.costHistoryShowsTokens ? section.applet.usageCountText(modelRow.modelData.tokens, "tokens")
-                            : section.applet.qualifiedCostValue(AnalysisAmounts.metricText(section.applet.costNumberFormat,
-                                modelRow.modelData.cost, modelRow.modelData.currency, false), modelRow.modelData.valueMode)
-                        : i18n("Unavailable")
-                    font.features: { "tnum": 1 }
+                ColumnLayout {
                     Layout.alignment: Qt.AlignTop
                     Layout.fillWidth: true
                     Layout.minimumWidth: 0
                     Layout.preferredWidth: 2
-                    horizontalAlignment: Text.AlignRight
-                    elide: Text.ElideRight
-                    Accessible.name: i18n("%1: %2", modelRow.modelData.label, text)
-                    HoverHandler { id: amountHover }
-                    PlainToolTip { visible: modelAmount.truncated && amountHover.hovered; plainText: modelAmount.text }
+                    spacing: Kirigami.Units.smallSpacing / 2
+                    PlainPlasmaLabel {
+                        id: modelAmount
+                        text: Amounts.hasMetricValue(modelRow.modelData, section.applet.costHistoryShowsTokens)
+                            ? section.applet.costHistoryShowsTokens ? section.applet.usageCountText(modelRow.modelData.tokens, "tokens")
+                                : section.applet.qualifiedCostValue(AnalysisAmounts.metricText(section.applet.costNumberFormat,
+                                    modelRow.modelData.cost, modelRow.modelData.currency, false), modelRow.modelData.valueMode)
+                            : i18n("Unavailable")
+                        font.features: { "tnum": 1 }
+                        Layout.fillWidth: true
+                        Layout.minimumWidth: 0
+                        horizontalAlignment: Text.AlignRight
+                        wrapMode: section.compareProviders ? Text.Wrap : Text.NoWrap
+                        elide: section.compareProviders ? Text.ElideNone : Text.ElideRight
+                        Accessible.name: i18n("%1: %2", modelTitle.text, text)
+                        Accessible.description: modelShare.visible ? modelShare.text : ""
+                        HoverHandler { id: amountHover }
+                        PlainToolTip { visible: modelAmount.truncated && amountHover.hovered; plainText: modelAmount.text }
+                    }
+                    PlainPlasmaLabel {
+                        id: modelShare
+                        readonly property string shareLabel: ShareUsage.percentLabel(modelRow.modelData.spendShare)
+                        visible: section.compareProviders && shareLabel.length > 0
+                        text: i18n("%1% of %2 spend", shareLabel, modelRow.modelData.currency)
+                        font: Qt.font(Object.assign({}, Kirigami.Theme.smallFont, {features: {"tnum": 1}}))
+                        horizontalAlignment: Text.AlignRight
+                        wrapMode: Text.Wrap
+                        Layout.fillWidth: true
+                        Layout.minimumWidth: 0
+                        Accessible.ignored: true
+                    }
                 }
-            }
-            PlainPlasmaLabel {
-                readonly property string shareLabel: ShareUsage.percentLabel(modelRow.modelData.spendShare)
-                visible: section.compareProviders && shareLabel.length > 0
-                text: i18n("%1% of %2 spend", shareLabel, modelRow.modelData.currency)
-                font: Kirigami.Theme.smallFont
-                opacity: section.applet.secondaryTextOpacity
-                horizontalAlignment: Text.AlignRight
-                wrapMode: Text.Wrap
-                Layout.fillWidth: true
             }
             PlainPlasmaLabel {
                 visible: modelRow.modelData.incompleteRequests > 0

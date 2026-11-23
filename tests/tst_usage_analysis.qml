@@ -338,6 +338,10 @@ TestCase {
         compare(comparison.incompleteCurrencies, [])
         other.daily[0].models = [{label: "daily", cost: 5, tokens: 10, currency: "USD"}]
         usd.daily[0].models = [{label: "daily", cost: 2, tokens: 30, currency: "USD"}]
+        var dailyCost = ModelComparison.comparison([usd, other], "2026-11-13", false, false)
+        compare(dailyCost.rows.map(row => row.provider), ["claude", "codex"])
+        compare(dailyCost.rows.map(row => row.spendShare), [5 / 7, 2 / 7])
+        compare(dailyCost.incompleteCurrencies, [])
         var day = ModelComparison.comparison([usd, other], "2026-11-13", true, false)
         compare(day.rows.map(row => row.provider), ["codex", "claude"])
         compare(day.rows.map(row => row.label), ["daily", "daily"])
