@@ -136,6 +136,17 @@ TestCase {
                 "gemini,copilot,codex,groq,cursor");
     }
 
+    function test_fullSelectionPreservesAbsentProviderAndAllowsReplacement() {
+        var roster = Array.from({length: 256}, function(_, index) { return "provider-" + index; });
+        var saved = roster.slice(0, 255).concat(["disabled-provider"]);
+        compare(OverviewProviders.toggledSelection(roster, saved, roster[255], true), saved);
+
+        var remaining = OverviewProviders.toggledSelection(roster, saved, roster[0], false);
+        var replacement = OverviewProviders.toggledSelection(roster, remaining, roster[255], true);
+        var restored = OverviewProviders.configuredProviderIDs(OverviewProviders.selectionText(replacement));
+        compare(restored, roster.slice(1).concat(["disabled-provider"]));
+    }
+
     function healthy(providerID, usedPercent) {
         return {
             provider: providerID,

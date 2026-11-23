@@ -279,6 +279,28 @@ TestCase {
         compare(applet.selectedProviderID, "claude");
     }
 
+    function test_shiftTabRevealsEarlierOverviewRows() {
+        applet.presentedOverviewProviders = Array.from({length: 6}, function(_, index) {
+            return provider("example-" + index, "Example " + index, index);
+        });
+        verify(waitForRendering(overviewScroll));
+        var viewport = overviewScroll.contentItem;
+        viewport.contentY = viewport.originY;
+        var lastRow = overviewProviderRepeater.itemAt(5);
+        lastRow.nextItemInFocusChain(true).forceActiveFocus(Qt.TabFocusReason);
+        tryVerify(function() { return viewport.contentY > viewport.originY; });
+
+        for (var index = 4; index >= 0; index--) {
+            var row = overviewProviderRepeater.itemAt(index);
+            keyClick(Qt.Key_Tab, Qt.ShiftModifier);
+            tryVerify(function() {
+                var top = row.mapToItem(viewport, 0, 0).y;
+                return row.keyboardFocusVisible && top >= -1 && top + row.height <= viewport.height + 1;
+            }, 1000, "Overview provider " + index + " must be visible after Shift+Tab");
+        }
+        compare(viewport.contentY, viewport.originY);
+    }
+
     function test_changedActionRowsPreserveKeyboardFocusDuringAccountRefresh() {
         var actionRow = providerActionRows.itemAt(0);
         var delegate = actionRow.nextItemInFocusChain(true);

@@ -108,8 +108,9 @@ back inside before release restores its pressed feedback.
 - **Provider actions** expands accounts, provider links, and widget commands.
   It starts collapsed and closes when the provider or account changes.
 - **Popup → Overview providers** shows the first three eligible providers in
-  automatic mode. Choose **Choose providers** to select the providers you want
-  to see. Disabled providers stay selected for when you enable them again.
+  automatic mode. Select **Choose providers** to pick the providers you want
+  to see. The saved selection holds up to 256 providers, including disabled
+  providers that you previously selected.
   Set the provider order on the same page. The Overview header identifies a
   subset, such as **3 of 20 providers**, and the list scrolls to reveal the
   provider card you reach with Tab or Shift+Tab.

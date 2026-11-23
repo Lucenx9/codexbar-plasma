@@ -132,6 +132,31 @@ TestCase {
         compare(page.cfg_overviewProviderIDs, "groq,cursor,openai,claude,gemini,copilot");
     }
 
+    function test_fullSelectionKeepsExistingCheckboxesEditable() {
+        var absent = Array.from({length: 255}, function(_, index) { return "absent-" + index; });
+        var saved = ["codex"].concat(absent).join(",");
+        var page = createPage({cfg_overviewProviderIDs: saved});
+        if (!page)
+            return;
+        var controller = waitForRosterSettled(page);
+        controller.enabledProviderRoster = [
+            {provider: "codex", displayName: "Codex"},
+            {provider: "claude", displayName: "Claude"}
+        ];
+        var codex = providerCheck(page, "Codex");
+        var claude = providerCheck(page, "Claude");
+        verify(codex.checked && codex.enabled);
+        verify(!claude.checked && !claude.enabled);
+        compare(page.cfg_overviewProviderIDs, saved);
+
+        codex.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Space);
+        verify(claude.enabled);
+        claude.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Space);
+        compare(page.cfg_overviewProviderIDs, ["claude"].concat(absent).join(","));
+    }
+
     // Rows hidden from the popup are listed by provider and row name, from
     // the stored IDs alone, and Restore removes only its own entry.
     function test_hiddenUsageRowsListAndRestore() {

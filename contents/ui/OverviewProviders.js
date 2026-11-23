@@ -61,7 +61,9 @@ function toggledSelection(orderedProviderIDs, selectedProviderIDs, providerID, c
     if (key.length === 0) {
         return selected.slice(0);
     }
-    return ProviderOrder.toggledSelection(orderedProviderIDs, selected, key, checked);
+    var next = ProviderOrder.toggledSelection(orderedProviderIDs, selected, key, checked);
+    // The stored selection parser would drop trailing IDs from an oversized result.
+    return next.length <= ProviderOrder.maximumProviderItems ? next : selected.slice(0);
 }
 
 function selectionText(providerIDs) {

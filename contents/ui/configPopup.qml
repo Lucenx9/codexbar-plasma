@@ -506,6 +506,7 @@ KCM.SimpleKCM {
                     Accessible.name: modelData.displayName
                     checked: selected
                     enabled: overviewCustomRadio.checked
+                        && (selected || page.resolvedOverviewProviderIDs.length < ProviderOrder.maximumProviderItems)
                     Layout.leftMargin: overviewCustomRadio.indicator.width + overviewCustomRadio.spacing
                     onClicked: {
                         page.toggleOverviewProvider(modelData.provider, checked)

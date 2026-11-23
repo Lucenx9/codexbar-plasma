@@ -477,7 +477,9 @@ order; absent IDs consume no slots. An empty manual roster suppresses panel text
 automatic mode retains its loading/no-data fallback. `OverviewProviders.js` shares
 canonical selection transitions through `ProviderOrder.toggledSelection`.
 Automatic mode shows the first three eligible providers. Manual mode filters
-the bounded roster by the saved selection and keeps roster order.
+the bounded roster by the saved selection and keeps roster order. Selection
+edits preserve the existing IDs when an addition would exceed the parser's
+capacity, including IDs absent from the current roster.
 
 Overview excludes error-only snapshots, retaining any usable quota, credit,
 subscription date, cost, detail, dashboard or placeholder. Empty detail-chart
