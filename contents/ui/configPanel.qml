@@ -65,6 +65,12 @@ KCM.SimpleKCM {
     readonly property var orderedPanelProviderRoster: ProviderOrder.orderedItems(
         panelProviderRosterController.enabledProviderRoster,
         presentationConfig.providerOrder || "")
+    readonly property var orderedPanelProviderIDs: orderedPanelProviderRoster.map(function(item) {
+        return ProviderOrder.itemProviderID(item)
+    })
+    readonly property var resolvedPanelProviderIDs: PanelProviders.selectionActive(cfg_panelProviderIDs)
+        ? PanelProviders.configuredProviderIDs(cfg_panelProviderIDs)
+        : orderedPanelProviderIDs.slice(0, PanelProviders.automaticMeterLimit)
     readonly property alias panelProviderRosterLoading: panelProviderRosterController.providerRosterLoading
     readonly property alias panelProviderRosterError: panelProviderRosterController.providerRosterError
 
@@ -81,7 +87,7 @@ KCM.SimpleKCM {
         if (!PanelProviders.selectionActive(cfg_panelProviderIDs)) {
             return i18n("All enabled providers")
         }
-        var count = PanelProviders.configuredProviderIDs(cfg_panelProviderIDs).length
+        var count = resolvedPanelProviderIDs.length
         return count === 0 ? i18n("No providers selected")
             : i18np("%1 provider selected", "%1 providers selected", count)
     }
@@ -155,33 +161,13 @@ KCM.SimpleKCM {
         cfg_panelVisibilityRules = PanelRules.updatedRules(cfg_panelVisibilityRules, elementID, patch)
     }
 
-    function resolvedPanelProviderIDs() {
-        if (PanelProviders.selectionActive(cfg_panelProviderIDs)) {
-            return PanelProviders.configuredProviderIDs(cfg_panelProviderIDs)
-        }
-        var automatic = []
-        for (var i = 0; i < orderedPanelProviderRoster.length
-                && automatic.length < PanelProviders.maximumSelectableProviders; i++) {
-            automatic.push(ProviderOrder.normalizedProviderID(orderedPanelProviderRoster[i].provider))
-        }
-        return automatic
-    }
-
     function panelProviderSelected(providerID) {
-        return resolvedPanelProviderIDs().indexOf(ProviderOrder.normalizedProviderID(providerID)) !== -1
-    }
-
-    function selectedPanelProviderCount() {
-        return PanelProviders.filteredItems(orderedPanelProviderRoster, cfg_panelProviderIDs).length
+        return resolvedPanelProviderIDs.indexOf(ProviderOrder.normalizedProviderID(providerID)) !== -1
     }
 
     function togglePanelProvider(providerID, checked) {
-        var ordered = []
-        for (var i = 0; i < orderedPanelProviderRoster.length; i++) {
-            ordered.push(orderedPanelProviderRoster[i].provider)
-        }
-        cfg_panelProviderIDs = PanelProviders.selectionText(ProviderOrder.toggledSelection(
-            ordered, resolvedPanelProviderIDs(), providerID, checked))
+        cfg_panelProviderIDs = PanelProviders.selectionText(PanelProviders.toggledSelection(
+            orderedPanelProviderIDs, resolvedPanelProviderIDs, providerID, checked))
     }
 
     function applyMinimalPanelPreset() {
@@ -634,7 +620,7 @@ KCM.SimpleKCM {
                 Layout.fillWidth: true
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 24
                 Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-                text: i18n("Choose the providers shown in the panel. The popup keeps every enabled provider.")
+                text: i18n("The panel keeps your selection and shows the meters that fit. The popup lists all enabled providers.")
                 font: Kirigami.Theme.smallFont
                 opacity: 0.7
                 wrapMode: Text.WordWrap
@@ -678,7 +664,7 @@ KCM.SimpleKCM {
                     Kirigami.MnemonicData.label: SafeText.plainTextAsMnemonicRichText(modelData.displayName)
                     Accessible.name: modelData.displayName
                     checked: selected
-                    enabled: selected || page.selectedPanelProviderCount() < PanelProviders.maximumSelectableProviders
+                    enabled: selected || page.resolvedPanelProviderIDs.length < ProviderOrder.maximumProviderItems
                     onClicked: {
                         page.togglePanelProvider(modelData.provider, checked)
                         // Clicking severs the binding on `checked`; restore it so

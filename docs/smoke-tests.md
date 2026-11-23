@@ -202,9 +202,10 @@ responses; the provider capture also requires an enabled Reload placeholder. `pa
 selection of the second provider. QtTests exercise style selection, disclosure,
 retained hidden values, defaults, custom order and filtered-meter fallbacks,
 long-text bounds, exhausted grouped-text width, reordering after disclosure,
-and activation through both text and meters. The live adapter limits meters to
-four; a renderer stress test exceeds that limit to verify the zero-width guard
-independently of theme dimensions. Early preview exits report the process exit
+and activation through both text and meters. The extended panel tests shrink
+and restore the assigned length for capsules and rings in both orientations.
+They check complete meter bounds, stable preferred size, and keyboard focus
+on a meter that stays visible. Early preview exits report the process exit
 code in addition to the log path.
 The staged smoke package exposes a temporary handle to the usage lifecycle for
 synthetic clock and deadline probes; the installed production API stays read-only.
@@ -301,8 +302,8 @@ QtTest input events; it does not simulate interaction by changing visual colors.
 Unavailable credits are tested with the four-provider fixture. Missing and
 exhausted quotas are synthetic normalized snapshots within the isolated applet.
 
-Four providers is the meter row the compact renderer caps at, so that batch is
-where panel content competes for width and items are surrendered.
+The four-provider batch exercises the automatic meter limit and how meters and
+text share the available width.
 
 The runner rejects missing PNGs, clipped measured elements, missing or duplicated
 provider logos in ring cases, incorrect ring counts, incorrect base

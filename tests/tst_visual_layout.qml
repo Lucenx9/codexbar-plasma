@@ -846,27 +846,102 @@ TestCase {
         verify(!applet.expanded);
     }
 
-    function test_crowdedMeterRowsRetainStandaloneText() {
-        var panel = createControl("CompactRepresentation", {applet: applet, height: 44});
+    function test_extendedProviderMetersFitAllocatedPanel_data() {
+        return [
+            {tag: "horizontal-capsules", vertical: false, shape: "capsules"},
+            {tag: "horizontal-rings", vertical: false, shape: "rings"},
+            {tag: "vertical-capsules", vertical: true, shape: "capsules"},
+            {tag: "vertical-rings", vertical: true, shape: "rings"}
+        ];
+    }
+
+    function test_extendedProviderMetersFitAllocatedPanel(data) {
+        applet.verticalFormFactor = data.vertical;
+        applet.panelMeterShape = data.shape;
+        applet.meterCount = 8;
+        applet.providerNameText = "";
+        applet.usageText = "";
+        var axis = data.vertical ? "height" : "width";
+        var preferred = data.vertical ? "implicitHeight" : "implicitWidth";
+        var panel = createControl("CompactRepresentation", {applet: applet, fitPanelMeters: true, width: 32, height: 32});
+        if (!panel) return;
+        wait(0);
+        var requested = panel[preferred];
+        panel[axis] = requested;
+        tryCompare(panel, "meterProviders", applet.usageProviders());
+        var wide = panel.meterProviders.map(item => item.provider);
+        var firstMeter = findItem(panel, item => item.objectName === "panelProviderMeter"
+            && item.visible && item.modelData.provider === wide[0]);
+        verify(firstMeter !== null);
+        firstMeter.forceActiveFocus(Qt.TabFocusReason);
+
+        panel[axis] = Math.floor(requested / 2);
+        tryVerify(() => panel.meterProviders.length > 0 && panel.meterProviders.length < wide.length);
+        var narrow = panel.meterProviders.map(item => item.provider);
+        compare(narrow, wide.slice(0, narrow.length));
+        compare(panel[preferred], requested);
+        verify(firstMeter.activeFocus);
+        for (var provider of narrow) {
+            var meter = findItem(panel, item => item.objectName === "panelProviderMeter"
+                && item.visible && item.modelData.provider === provider);
+            verify(meter !== null);
+            var start = meter.mapToItem(panel, 0, 0);
+            var end = meter.mapToItem(panel, meter.width, meter.height);
+            verify(data.vertical ? start.y >= 0 && end.y <= panel.height : start.x >= 0 && end.x <= panel.width);
+        }
+
+        panel[axis] = requested;
+        tryCompare(panel, "meterProviders", applet.usageProviders().slice(0, wide.length));
+        compare(panel[preferred], requested);
+        var lastMeter = findItem(panel, item => item.objectName === "panelProviderMeter"
+            && item.visible && item.modelData.provider === wide[wide.length - 1]);
+        verify(lastMeter !== null);
+        lastMeter.forceActiveFocus(Qt.TabFocusReason);
+        verify(lastMeter.activeFocus);
+        panel[axis] = Math.floor(requested / 2);
+        tryVerify(() => !lastMeter.visible && !lastMeter.activeFocus);
+        keyClick(Qt.Key_Space);
+        compare(applet.openedProvider, "");
+
+        // The saved selection is still extended when visibility rules remove candidates.
+        applet.meterCount = 4;
+        tryCompare(panel, "meterProviders", applet.usageProviders().slice(0, narrow.length));
+    }
+
+    function test_extendedRingMetersKeepFullTextAtPreferredWidth() {
+        applet.panelMeterShape = "rings";
+        applet.meterCount = 5;
+        applet.providerNameText = "Codex";
+        var panel = createControl("CompactRepresentation", {applet: applet, fitPanelMeters: true, width: 32, height: 24});
+        if (!panel) return;
+        panel.width = panel.implicitWidth;
+        tryCompare(panel, "meterProviders", applet.usageProviders());
+        var label = findItem(panel, item => item.objectName === "panelProviderText" && item.visible);
+        tryCompare(label, "text", applet.compactText());
+        tryCompare(label, "truncated", false);
+        verify(label.mapToItem(panel, label.width, 0).x <= panel.width);
+    }
+
+    function test_providerOutsideVisibleMetersKeepsItsStandaloneText() {
+        var panel = createControl("CompactRepresentation", {applet: applet, fitPanelMeters: true, height: 44});
         if (!panel) return;
         verify(panel.inlinePrimaryText);
-        // The live adapter caps meters at four. Stress the renderer's zero-width
-        // boundary independently of that cap and the active theme's dimensions.
-        applet.meterCount = Math.ceil(panel.maximumCompactWidth / panel.meterWidth) + 1;
+        applet.meterCount = 8;
+        applet.selectedProviderID = applet.usageProviders()[7].provider;
+        panel.width = 3 * panel.meterWidth + 2 * panel.providerSpacing + panel.panelPadding - 1;
         tryCompare(panel, "inlinePrimaryText", false);
-        compare(panel.inlineTextWidth, 0);
+        compare(panel.meterProviders.length, 2);
         verify(panel.showPrimaryIdentity);
         var label = findItem(panel, item => item.objectName === "panelStandaloneText");
         tryVerify(() => label.visible && label.width > 0);
-        // Nothing fits at this boundary, so the renderer keeps its last resort:
-        // the most important single segment, elided, never an empty label.
         compare(label.text, panel.primaryText);
-        compare(label.text, applet.usageText);
-        // The surrendered segments stay available to assistive technology.
+        verify(label.text.indexOf(applet.usageText) >= 0);
         compare(label.Accessible.name, applet.compactText());
         verify(label.mapToItem(panel, 0, 0).x >= 0);
         verify(label.mapToItem(panel, label.width, 0).x <= panel.width);
         applet.meterCount = 2;
+        applet.selectedProviderID = "codex";
+        panel.width = panel.implicitWidth;
         tryCompare(panel, "inlinePrimaryText", true);
         verify(!panel.showPrimaryIdentity);
         tryVerify(() => !label.visible);
@@ -889,7 +964,7 @@ TestCase {
         var panel = createControl("CompactRepresentation", {applet: applet, height: 44});
         if (!panel) return;
 
-        // Four meters is the cap the live adapter renders.
+        // Automatic mode shows up to four meters.
         for (var count = 1; count <= 4; count++) {
             applet.meterCount = count;
             wait(0);

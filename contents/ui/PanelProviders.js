@@ -8,12 +8,14 @@
 // selection so "no providers in the panel" survives a settings round trip.
 var noneValue = "__none__";
 
-// The compact renderer draws at most four provider meters, so a selection
-// larger than that could never add visible rows.
-var maximumSelectableProviders = 4;
+var automaticMeterLimit = 4;
 
 function selectionActive(value) {
     return String(value || "").trim().length > 0;
+}
+
+function meterCandidateLimit(value) {
+    return selectionActive(value) ? ProviderOrder.maximumProviderItems : automaticMeterLimit;
 }
 
 function configuredProviderIDs(value) {
@@ -27,10 +29,14 @@ function configuredProviderIDs(value) {
     return ProviderOrder.configuredProviderIDs(raw);
 }
 
+function usesExtendedSelection(value) {
+    return configuredProviderIDs(value).length > automaticMeterLimit;
+}
+
 // Filters roster items to the configured panel selection. The popup and every
 // other surface keep the unfiltered roster; only panel surfaces call this.
 function filteredItems(items, value) {
-    var source = Array.isArray(items) ? items : [];
+    var source = Array.isArray(items) ? items.slice(0, ProviderOrder.maximumProviderItems) : [];
     if (!selectionActive(value)) {
         return source;
     }
@@ -47,12 +53,16 @@ function filteredItems(items, value) {
         var providerID = ProviderOrder.itemProviderID(source[j]);
         if (providerID.length > 0 && Guards.hasOwnKey(wanted, providerID)) {
             result.push(source[j]);
-            if (result.length >= maximumSelectableProviders) {
-                break;
-            }
         }
     }
     return result;
+}
+
+function toggledSelection(orderedProviderIDs, selectedProviderIDs, providerID, checked) {
+    var selected = Array.isArray(selectedProviderIDs) ? selectedProviderIDs : [];
+    var next = ProviderOrder.toggledSelection(orderedProviderIDs, selected, providerID, checked);
+    // Reject an oversized write before the parser can drop trailing saved IDs.
+    return next.length <= ProviderOrder.maximumProviderItems ? next : selected.slice(0);
 }
 
 function selectionText(providerIDs) {

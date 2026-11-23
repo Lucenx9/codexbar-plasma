@@ -73,8 +73,8 @@ class PanelTest(unittest.TestCase):
                 )
         if not code_contains(compact_representation_text, "property bool interactive: true"):
             raise AssertionError("the live panel must keep interaction enabled by default")
-        if "if (!compactRoot.interactive)" not in function_body(compact_meter_body, "activate"):
-            raise AssertionError("preview meters must not dispatch provider selection")
+        if "if (!compactRoot.interactive || !visible)" not in function_body(compact_meter_body, "activate"):
+            raise AssertionError("preview and hidden meters must not dispatch provider selection")
         for mouse_id in ("compactMeterMouse", "compactStatusMouse"):
             if "enabled: compactRoot.interactive" not in id_block(compact_representation_text, mouse_id):
                 raise AssertionError("preview meter and status pointer input must be disabled")
@@ -133,7 +133,7 @@ class PanelTest(unittest.TestCase):
         compact_providers_body = applet.function_body("compactProviders")
         for panel_filter_fragment in (
             "panelProviderItems()",
-            "PanelProviders.maximumSelectableProviders",
+            "PanelProviders.meterCandidateLimit(panelProviderIDsRaw)",
         ):
             if not code_contains(compact_providers_body, panel_filter_fragment):
                 raise AssertionError(
@@ -152,7 +152,7 @@ class PanelTest(unittest.TestCase):
                     "panel meter selection must stay in the applet state owner; "
                     f"missing {panel_selection_fragment!r}"
                 )
-        if not code_contains(compact_representation_text, "compactRoot.meterProviders.length * compactRoot.meterWidth"):
+        if not code_contains(compact_representation_text, "compactRoot.meterRowWidth"):
             raise AssertionError("the meters element must reserve panel width from the shared meter width")
 
     def test_incident_badges(self):
@@ -281,7 +281,7 @@ class PanelTest(unittest.TestCase):
                     f"missing {hover_helper!r}"
                 )
         hovered_provider_body = function_body(main_text, "hoveredPanelProvider")
-        if not code_contains(hovered_provider_body, "compactProviders()"):
+        if not code_contains(hovered_provider_body, "compact.meterProviders.some("):
             raise AssertionError(
                 "the hovered provider lookup must stay limited to rendered meters, "
                 "since visibility rules can filter a meter out while its provider "

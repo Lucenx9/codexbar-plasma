@@ -1823,7 +1823,8 @@ PlasmoidItem {
 
         var result = []
         var panelItems = panelProviderItems()
-        for (var i = 0; i < panelItems.length && result.length < PanelProviders.maximumSelectableProviders; i++) {
+        var limit = PanelProviders.meterCandidateLimit(panelProviderIDsRaw)
+        for (var i = 0; i < panelItems.length && result.length < limit; i++) {
             var rows = panelMeterRows(panelItems[i])
             if (PanelRules.matchesAny(panelVisibilityRules.meters, rows, panelClockMs)) {
                 result.push(providerPresentation(panelItems[i]))
@@ -1868,11 +1869,9 @@ PlasmoidItem {
         if (id.length === 0 || !providers) {
             return null
         }
-        // Visibility rules can filter a hovered meter out of the rendered
-        // compactProviders() while its provider stays in providers, and its
-        // destroyed MouseArea delivers no reliable hover-exit for cleanup.
-        // Narrow the tooltip only while the meter is actually rendered.
-        var rendered = compactProviders().some(function(meter) {
+        // A rule or resize can hide the meter while its provider stays enabled.
+        var compact = compactRepresentationItem as Components.CompactRepresentation
+        var rendered = compact && compact.meterProviders.some(function(meter) {
             return meter && meter.provider === id
         })
         if (!rendered) {
@@ -2208,6 +2207,7 @@ PlasmoidItem {
 
     compactRepresentation: Components.CompactRepresentation {
         applet: root
+        fitPanelMeters: PanelProviders.usesExtendedSelection(root.panelProviderIDsRaw)
     }
 
     fullRepresentation: Components.FullRepresentation {

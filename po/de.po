@@ -2255,11 +2255,11 @@ msgstr "Anbieter in der Leiste"
 
 #: contents/ui/configPanel.qml
 msgid ""
-"Choose the providers shown in the panel. The popup keeps every enabled "
-"provider."
+"The panel keeps your selection and shows the meters that fit. The popup "
+"lists all enabled providers."
 msgstr ""
-"Wählen Sie die in der Leiste angezeigten Anbieter. Das Aufklappfenster zeigt "
-"weiterhin alle aktivierten Anbieter."
+"Die Leiste behält Ihre Auswahl bei und zeigt Anzeigen je nach verfügbarem "
+"Platz. Das Aufklappfenster listet alle aktivierten Anbieter auf."
 
 #: contents/ui/configPanel.qml contents/ui/configPopup.qml
 msgid "Loading providers…"

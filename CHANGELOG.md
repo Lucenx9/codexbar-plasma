@@ -16,6 +16,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   Automatic mode still shows the first three eligible providers, and the
   Overview scrolls to keep keyboard-focused provider cards in view.
 
+- Select more than four providers for the panel. A larger manual selection
+  shows complete indicators that fit the widget's space and retains all saved
+  choices when the panel shrinks.
+
 ## 0.2.58 - 2026-11-22
 
 ### Fixed
