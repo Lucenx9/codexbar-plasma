@@ -9,9 +9,7 @@
 // survives a settings round trip.
 var noneValue = "__none__";
 
-// The Overview tab shows at most three providers, so a selection larger than
-// that could never add visible rows.
-var maximumOverviewProviders = 3;
+var automaticProviderCount = 3;
 
 function selectionActive(value) {
     return String(value || "").trim().length > 0;
@@ -41,7 +39,7 @@ function resolvedProviderIDs(orderedProviderIDs, value) {
             continue;
         }
         result.push(providerID);
-        if (result.length >= maximumOverviewProviders) {
+        if (result.length >= automaticProviderCount) {
             break;
         }
     }
@@ -53,42 +51,14 @@ function isSelected(resolvedProviderIDs, providerID) {
     return selected.indexOf(ProviderOrder.normalizedProviderID(providerID)) !== -1;
 }
 
-// Disabled providers keep their saved selection but cannot occupy a visible
-// slot. Count canonical roster IDs once, including after providers return.
-function selectedProviderCount(orderedProviderIDs, selectedProviderIDs) {
-    var selected = Array.isArray(selectedProviderIDs) ? selectedProviderIDs : [];
-    var selectedSet = ({});
-    for (var i = 0; i < Math.min(selected.length, ProviderOrder.maximumProviderItems); i++) {
-        var providerID = ProviderOrder.normalizedProviderID(selected[i]);
-        if (providerID.length > 0) {
-            selectedSet[providerID] = true;
-        }
-    }
-    var roster = Array.isArray(orderedProviderIDs) ? orderedProviderIDs : [];
-    var count = 0;
-    for (var j = 0; j < Math.min(roster.length, ProviderOrder.maximumProviderItems); j++) {
-        var key = ProviderOrder.normalizedProviderID(roster[j]);
-        if (Guards.hasOwnKey(selectedSet, key)) {
-            count++;
-            delete selectedSet[key];
-        }
-    }
-    return count;
-}
-
 // Returns the next selection after one toggle. Roster order wins so the
 // stored value follows the saved provider order; selected providers missing
 // from the current roster survive, so disabling a provider elsewhere does not
-// silently drop it from the Overview selection on the next toggle. Adding
-// beyond the visible limit keeps the current selection.
+// silently drop it from the Overview selection on the next toggle.
 function toggledSelection(orderedProviderIDs, selectedProviderIDs, providerID, checked) {
     var selected = Array.isArray(selectedProviderIDs) ? selectedProviderIDs : [];
     var key = ProviderOrder.normalizedProviderID(providerID);
     if (key.length === 0) {
-        return selected.slice(0);
-    }
-    if (checked && selectedProviderCount(orderedProviderIDs, selected) >= maximumOverviewProviders
-            && !selected.some(function(item) { return ProviderOrder.normalizedProviderID(item) === key; })) {
         return selected.slice(0);
     }
     return ProviderOrder.toggledSelection(orderedProviderIDs, selected, key, checked);
@@ -173,11 +143,8 @@ function isErrorOnly(item) {
         && !item.tokenCost);
 }
 
-// The Overview rows: eligible providers in roster order, capped at the visible
-// limit. An empty stored value keeps the automatic first-N behavior, an active
-// selection keeps only its providers, and noneValue keeps none. Stored IDs are
-// canonical, so a roster entry using a raw CLI spelling is normalized here as
-// it is for the settings checkboxes.
+// An empty stored value shows the first eligible providers in roster order.
+// An explicit selection shows its eligible providers in that same order.
 function visibleItems(items, value) {
     var roster = Array.isArray(items) ? items : [];
     var eligible = [];
@@ -189,7 +156,7 @@ function visibleItems(items, value) {
     }
 
     if (!selectionActive(value)) {
-        return eligible.slice(0, maximumOverviewProviders);
+        return eligible.slice(0, automaticProviderCount);
     }
     var configured = configuredProviderIDs(value);
     if (configured.length === 0) {
@@ -201,7 +168,7 @@ function visibleItems(items, value) {
         selected[configured[j]] = true;
     }
     var result = [];
-    for (var k = 0; k < eligible.length && result.length < maximumOverviewProviders; k++) {
+    for (var k = 0; k < eligible.length; k++) {
         if (Guards.hasOwnKey(selected, ProviderOrder.normalizedProviderID(eligible[k].provider))) {
             result.push(eligible[k]);
         }

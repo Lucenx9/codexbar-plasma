@@ -475,8 +475,9 @@ stored text means automatic/all enabled, `__none__` means none, and unknown save
 IDs stay saved. Manual selections display at most four enabled providers in roster
 order; absent IDs consume no slots. An empty manual roster suppresses panel text;
 automatic mode retains its loading/no-data fallback. `OverviewProviders.js` shares
-canonical selection transitions through `ProviderOrder.toggledSelection` but has
-a three-provider limit and defaults to the first three eligible providers.
+canonical selection transitions through `ProviderOrder.toggledSelection`.
+Automatic mode shows the first three eligible providers. Manual mode filters
+the bounded roster by the saved selection and keeps roster order.
 
 Overview excludes error-only snapshots, retaining any usable quota, credit,
 subscription date, cost, detail, dashboard or placeholder. Empty detail-chart

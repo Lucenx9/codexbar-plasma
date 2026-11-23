@@ -739,6 +739,24 @@ Item {
                 id: overviewScroll
                 objectName: "overviewScroll"
 
+                function revealFocusedRow(row) {
+                    var flickable = contentItem as Flickable
+                    if (!flickable || !visible || !row || !row.keyboardFocusVisible) {
+                        return
+                    }
+                    var top = row.mapToItem(flickable.contentItem, 0, 0).y
+                    var bottom = top + row.height
+                    var target = flickable.contentY
+                    if (top < target) {
+                        target = top
+                    } else if (bottom > target + flickable.height) {
+                        target = Math.min(top, bottom - flickable.height)
+                    }
+                    var origin = flickable.originY
+                    var end = origin + Math.max(0, flickable.contentHeight - flickable.height)
+                    flickable.contentY = Math.max(origin, Math.min(target, end))
+                }
+
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 contentWidth: availableWidth
@@ -765,11 +783,18 @@ Item {
                         model: applet.presentedOverviewProviders.map(function(item) { return item.provider })
 
                         delegate: Components.OverviewProviderRow {
+                            id: providerRow
+
                             required property int index
 
                             applet: fullRoot.applet
                             modelData: fullRoot.applet.presentedOverviewProviders[index]
                                 || ({provider: "", title: "", error: "", rows: []})
+                            onKeyboardFocusVisibleChanged: {
+                                if (keyboardFocusVisible) {
+                                    Qt.callLater(overviewScroll.revealFocusedRow, providerRow)
+                                }
+                            }
                             onSelected: function(providerData) {
                                 var nextProviderIndex = applet.providerIndex(providerData)
                                 if (nextProviderIndex >= 0) {

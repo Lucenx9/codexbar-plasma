@@ -21,6 +21,8 @@ Item {
     property bool navigationTooltipVerified: false
     property var providerTabWidths: []
     property int providerTabSelectionStep: 0
+    property var manualOverviewFocusTargets: []
+    property int manualOverviewFocusStep: 0
     property bool detailBeforeCaptured: false
     property bool hiddenRowsCaptured: false
     property bool cacheRestart: false
@@ -473,6 +475,57 @@ Item {
             providerTabSelectionStep++;
             return false;
         }
+        return true;
+    }
+
+    function verifyManualOverview() {
+        var popup = applet.fullRepresentationItem;
+        var viewport = findItem(popup, "overviewScroll").contentItem;
+        var countLabel = findItem(popup, "overviewProviderCountLabel");
+        verifyScenario(countLabel.providerCount === applet.providers.length,
+            "manual Overview did not show every selected provider");
+
+        if (manualOverviewFocusTargets.length === 0) {
+            var start = findItem(popup, "popupTabStrip").selectedTab;
+            var visited = [start];
+            var targets = [];
+            var item = start.nextItemInFocusChain(true);
+            while (item && visited.indexOf(item) < 0) {
+                visited.push(item);
+                var owner = item.parent;
+                if (owner && owner.providerData && typeof owner.activate === "function")
+                    targets.push(item);
+                item = item.nextItemInFocusChain(true);
+            }
+            verifyScenario(targets.length === applet.providers.length,
+                "the extended Overview did not expose every provider in its keyboard focus chain");
+            var last = targets[targets.length - 1].parent;
+            verifyScenario(last.mapToItem(viewport, 0, last.height).y > viewport.height + 1,
+                "the extended Overview did not test a row outside the viewport");
+            manualOverviewFocusTargets = targets;
+            targets[0].forceActiveFocus(Qt.TabFocusReason);
+            return false;
+        }
+
+        var focus = manualOverviewFocusTargets[manualOverviewFocusStep];
+        if (!focus)
+            return true;
+        var row = focus.parent;
+        var top = row.mapToItem(viewport, 0, 0).y;
+        verifyScenario(focus.activeFocus && top >= -1 && top + row.height <= viewport.height + 1,
+            "keyboard focus did not reveal Overview provider " + row.providerData.provider);
+        manualOverviewFocusStep++;
+        var next = manualOverviewFocusTargets[manualOverviewFocusStep];
+        if (next) {
+            next.forceActiveFocus(Qt.TabFocusReason);
+            return false;
+        }
+        row.activate();
+        verifyScenario(!applet.overviewSelected && applet.selectedProviderID === row.providerData.provider,
+            "the focused Overview row did not open its provider tab");
+        applet.selectGlobalView("overview");
+        popup.forceActiveFocus(Qt.OtherFocusReason);
+        viewport.contentY = viewport.originY;
         return true;
     }
 
@@ -2380,7 +2433,14 @@ Item {
                 navigationTooltipVerified = true;
                 applet.fullRepresentationItem.forceActiveFocus(Qt.OtherFocusReason);
             }
-            return verifyProviderTabSelectionWidths();
+            if (!verifyProviderTabSelectionWidths())
+                return false;
+            if (applet.overviewProviderIDsRaw.length === 0) {
+                applet.Plasmoid.configuration.overviewProviderIDs = applet.providers
+                    .map(function(provider) { return provider.provider; }).join(",");
+                return false;
+            }
+            return verifyManualOverview();
         }
         if (scenario === "loading")
             return applet.loading && applet.providers.length === 0;

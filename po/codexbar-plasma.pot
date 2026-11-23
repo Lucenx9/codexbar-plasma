@@ -3338,12 +3338,6 @@ msgid "Choose providers"
 msgstr ""
 
 #: contents/ui/configPopup.qml
-msgid "Choose up to %1 provider"
-msgid_plural "Choose up to %1 providers"
-msgstr[0] ""
-msgstr[1] ""
-
-#: contents/ui/configPopup.qml
 msgid "Hidden items"
 msgstr ""
 

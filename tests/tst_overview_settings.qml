@@ -92,7 +92,7 @@ TestCase {
         return matches.length > 0 ? matches[0] : null;
     }
 
-    function test_disabledSelectionsLeaveRoomForEnabledProviders() {
+    function test_manualSelectionKeepsDisabledProvidersAndAllowsMoreThanThree() {
         var page = createPage({cfg_overviewProviderIDs: "claude,gemini,copilot"});
         if (!page)
             return;
@@ -116,8 +116,7 @@ TestCase {
                 displayName: "OpenAI"
             }
         ];
-        compare(page.selectedOverviewProviderCount(), 0);
-        for (var label of ["Codex", "Groq", "Cursor"]) {
+        for (var label of ["Codex", "Groq", "Cursor", "OpenAI"]) {
             var check = providerCheck(page, label);
             verify(check !== null, label);
             verify(check.enabled, label + " must remain selectable");
@@ -125,16 +124,12 @@ TestCase {
             keyClick(Qt.Key_Space);
             verify(check.checked, label);
         }
-        compare(page.selectedOverviewProviderCount(), 3);
-        verify(!providerCheck(page, "OpenAI").enabled);
-        compare(OverviewProviders.configuredProviderIDs(page.cfg_overviewProviderIDs).join(","), "codex,groq,cursor,claude,gemini,copilot");
+        compare(page.cfg_overviewProviderIDs, "codex,groq,cursor,openai,claude,gemini,copilot");
 
         var codex = providerCheck(page, "Codex");
         codex.forceActiveFocus(Qt.TabFocusReason);
         keyClick(Qt.Key_Space);
-        compare(page.selectedOverviewProviderCount(), 2);
-        verify(providerCheck(page, "OpenAI").enabled);
-        compare(OverviewProviders.configuredProviderIDs(page.cfg_overviewProviderIDs).join(","), "groq,cursor,claude,gemini,copilot");
+        compare(page.cfg_overviewProviderIDs, "groq,cursor,openai,claude,gemini,copilot");
     }
 
     // Rows hidden from the popup are listed by provider and row name, from
@@ -284,7 +279,9 @@ TestCase {
         controller.providerRosterError = "";
         controller.enabledProviderRoster = [
             {provider: "codex", displayName: "Codex"},
-            {provider: "claude", displayName: "Claude"}
+            {provider: "claude", displayName: "Claude"},
+            {provider: "gemini", displayName: "Gemini"},
+            {provider: "cursor", displayName: "Cursor"}
         ];
         wait(0);
         var automatic = findChild(page, "overviewAutomaticRadio");
@@ -297,7 +294,7 @@ TestCase {
         var customPosition = custom.mapToItem(page, 0, 0);
         custom.forceActiveFocus(Qt.TabFocusReason);
         keyClick(Qt.Key_Space);
-        compare(page.cfg_overviewProviderIDs, "codex,claude");
+        compare(page.cfg_overviewProviderIDs, "codex,claude,gemini");
         verify(custom.checked && !automatic.checked);
         var codex = providerCheck(page, "Codex");
         verify(codex.visible);
@@ -306,18 +303,17 @@ TestCase {
         compare(custom.mapToItem(page, 0, 0), customPosition,
             "The manual choice must stay still when its checklist appears");
         var inset = custom.indicator.width + custom.spacing;
-        for (var child of [codex, findChild(page, "overviewCustomHint")]) {
-            var childPosition = child.mapToItem(page, 0, 0);
-            var leadingInset = data.rtl
-                ? customPosition.x + custom.width - childPosition.x - child.width
-                : childPosition.x - customPosition.x;
-            verify(Math.abs(leadingInset - inset) < 1,
-                "Manual content must align with the radio text in " + data.tag);
-        }
+        var childPosition = codex.mapToItem(page, 0, 0);
+        var leadingInset = data.rtl
+            ? customPosition.x + custom.width - childPosition.x - codex.width
+            : childPosition.x - customPosition.x;
+        verify(Math.abs(leadingInset - inset) < 1,
+            "Manual content must align with the radio text in " + data.tag);
+        verify(!providerCheck(page, "Cursor").checked);
         verify(codex.enabled);
         codex.forceActiveFocus(Qt.TabFocusReason);
         keyClick(Qt.Key_Space);
-        compare(page.cfg_overviewProviderIDs, "claude");
+        compare(page.cfg_overviewProviderIDs, "claude,gemini");
         automatic.forceActiveFocus(Qt.TabFocusReason);
         keyClick(Qt.Key_Space);
         compare(page.cfg_overviewProviderIDs, "");
