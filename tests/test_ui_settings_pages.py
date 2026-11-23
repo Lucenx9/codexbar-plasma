@@ -384,30 +384,13 @@ class SettingsPagesTest(unittest.TestCase):
             raise AssertionError(
                 "Popup must show the saved provider order in the Overview selection"
             )
-        if "orderedEnabledProviderRoster" not in popup_surface.function_body("overviewRosterProviderIDs"):
-            raise AssertionError(
-                "overviewRosterProviderIDs must use the saved provider order"
-            )
-        for overview_order_function in (
-            "resolvedOverviewProviderIDs",
-            "toggleOverviewProvider",
-        ):
-            overview_order_body = popup_surface.function_body(overview_order_function)
-            if "orderedEnabledProviderRoster" not in overview_order_body \
-                    and "overviewRosterProviderIDs()" not in overview_order_body:
-                raise AssertionError(
-                    f"{overview_order_function} must use the saved provider order"
-                )
-        for overview_delegate_function in (
-            "resolvedOverviewProviderIDs",
-            "overviewProviderSelected",
-            "toggleOverviewProvider",
-        ):
-            if "OverviewProviders." not in popup_surface.function_body(overview_delegate_function):
-                raise AssertionError(
-                    f"{overview_delegate_function} must delegate to OverviewProviders so "
-                    "the checkboxes cannot drift from the runtime selection"
-                )
+        popup_surface.require("overviewRosterProviderIDs: orderedEnabledProviderRoster.map(",
+            "Overview selection must use the saved provider order")
+        popup_surface.require("resolvedOverviewProviderIDs: OverviewProviders.resolvedProviderIDs(",
+            "Overview settings must share selection parsing with the runtime")
+        if not code_contains(overview_provider_selection_body,
+                "OverviewProviders.isSelected(page.resolvedOverviewProviderIDs, modelData.provider)"):
+            raise AssertionError("Overview checkboxes must reflect the resolved selection")
 
         popup_surface.reject('source: "handle-sort"',
             "Arrow-based ordering must not advertise unsupported dragging")

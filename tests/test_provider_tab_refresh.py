@@ -17,6 +17,7 @@ import QtQuick.Templates as Templates
 import QtQuick.Layouts
 import QtTest
 import org.kde.kirigami as Kirigami
+import org.kde.plasma.components as PlasmaComponents
 import "COMPONENTS_URL"
 import "COMPONENTS_URL" as Components
 
@@ -28,12 +29,17 @@ TestCase {
     height: 360
     visible: true
     property alias applet: applet
+    readonly property bool globalErrorActive: false
 
     function i18n(text) { return text; }
 
     QtObject {
         id: providerScroll
         PRODUCTION_SELECTION_KEY
+    }
+
+    Item {
+        id: globalErrorMessage
     }
 
     QtObject {
@@ -94,9 +100,9 @@ TestCase {
             Repeater { PRODUCTION_REPEATER }
         }
 
-        ColumnLayout {
-            Layout.fillWidth: true
-            Repeater { PRODUCTION_OVERVIEW_REPEATER }
+        PlasmaComponents.ScrollView {
+            Layout.preferredHeight: 160
+            PRODUCTION_OVERVIEW_SCROLL
         }
 
         ColumnLayout {
@@ -271,6 +277,28 @@ TestCase {
         compare(row.providerData.title, "Claude updated");
         keyClick(Qt.Key_Space);
         compare(applet.selectedProviderID, "claude");
+    }
+
+    function test_shiftTabRevealsEarlierOverviewRows() {
+        applet.presentedOverviewProviders = Array.from({length: 6}, function(_, index) {
+            return provider("example-" + index, "Example " + index, index);
+        });
+        verify(waitForRendering(overviewScroll));
+        var viewport = overviewScroll.contentItem;
+        viewport.contentY = viewport.originY;
+        var lastRow = overviewProviderRepeater.itemAt(5);
+        lastRow.nextItemInFocusChain(true).forceActiveFocus(Qt.TabFocusReason);
+        tryVerify(function() { return viewport.contentY > viewport.originY; });
+
+        for (var index = 4; index >= 0; index--) {
+            var row = overviewProviderRepeater.itemAt(index);
+            keyClick(Qt.Key_Tab, Qt.ShiftModifier);
+            tryVerify(function() {
+                var top = row.mapToItem(viewport, 0, 0).y;
+                return row.keyboardFocusVisible && top >= -1 && top + row.height <= viewport.height + 1;
+            }, 1000, "Overview provider " + index + " must be visible after Shift+Tab");
+        }
+        compare(viewport.contentY, viewport.originY);
     }
 
     function test_changedActionRowsPreserveKeyboardFocusDuringAccountRefresh() {
@@ -478,7 +506,7 @@ class ProviderTabRefreshTests(unittest.TestCase):
         applet = Surface("applet", root)
         qml = QML.replace("COMPONENTS_URL", (root / "contents/ui/components").as_uri())
         qml = qml.replace("PRODUCTION_REPEATER", applet.id_block("providerTabRepeater"))
-        qml = qml.replace("PRODUCTION_OVERVIEW_REPEATER", applet.id_block("overviewProviderRepeater"))
+        qml = qml.replace("PRODUCTION_OVERVIEW_SCROLL", applet.id_block("overviewScroll"))
         qml = qml.replace("PRODUCTION_ACTION_SECTION", applet.id_block("providerActionsSection"))
         selection_key = re.search(r"readonly property string selectionKey: JSON\.stringify\(\[[\s\S]*?\]\)",
                                   applet.id_block("providerScroll"))

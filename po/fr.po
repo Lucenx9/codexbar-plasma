@@ -2453,12 +2453,6 @@ msgid "Overview providers:"
 msgstr "Fournisseurs de la vue d'ensemble :"
 
 #: contents/ui/configPopup.qml
-msgid "Choose up to %1 provider"
-msgid_plural "Choose up to %1 providers"
-msgstr[0] "Choisissez jusqu'à %1 fournisseur"
-msgstr[1] "Choisissez jusqu'à %1 fournisseurs"
-
-#: contents/ui/configPopup.qml
 msgid "No enabled providers available for Overview."
 msgstr "Aucun fournisseur activé disponible pour la vue d'ensemble."
 

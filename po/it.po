@@ -2442,12 +2442,6 @@ msgid "Overview providers:"
 msgstr "Provider nella panoramica:"
 
 #: contents/ui/configPopup.qml
-msgid "Choose up to %1 provider"
-msgid_plural "Choose up to %1 providers"
-msgstr[0] "Scegli fino a %1 provider"
-msgstr[1] "Scegli fino a %1 provider"
-
-#: contents/ui/configPopup.qml
 msgid "No enabled providers available for Overview."
 msgstr "Nessun provider abilitato disponibile per la panoramica."
 

@@ -10,6 +10,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Changed
+
+- Choose more than three providers for the popup Overview in manual mode.
+  Automatic mode still shows the first three eligible providers, and the
+  Overview scrolls to keep keyboard-focused provider cards in view.
+
 ## 0.2.58 - 2026-11-22
 
 ### Fixed

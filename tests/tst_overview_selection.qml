@@ -72,7 +72,7 @@ TestCase {
         compare(next.join(","), "opencode");
     }
 
-    function test_toggleNormalizesAliasesAndEnforcesTheVisibleLimit() {
+    function test_toggleNormalizesAliasesAndValidatesProviderIDs() {
         var next = OverviewProviders.toggledSelection(["groqcloud"], [], "groqcloud", true);
         compare(next.join(","), "groq");
         next = OverviewProviders.toggledSelection(["groq"], ["groq"], "GROQCLOUD", false);
@@ -82,9 +82,6 @@ TestCase {
         compare(next.join(","), "");
         next = OverviewProviders.toggledSelection(["groqcloud", "codex"], ["groqcloud"], "codex", true);
         compare(next.join(","), "groq,codex");
-
-        next = OverviewProviders.toggledSelection(["codex", "claude", "gemini", "cursor"], ["codex", "claude", "gemini"], "cursor", true);
-        compare(next.join(","), "codex,claude,gemini");
 
         next = OverviewProviders.toggledSelection(["codex"], ["codex"], "", true);
         compare(next.join(","), "codex");
@@ -103,16 +100,17 @@ TestCase {
         compare(OverviewProviders.selectionText("codex"), OverviewProviders.noneValue);
     }
 
-    function test_recheckingAnAliasAtTheLimitKeepsTheSelection() {
+    function test_recheckingAnAliasDoesNotDuplicateTheProvider() {
         var roster = ["codex", "groqcloud", "cursor", "openai"];
         var selected = ["cursor", "GROQCLOUD", "codex", "missing"];
         compare(OverviewProviders.toggledSelection(roster, selected, "groq", true),
             ["codex", "groq", "cursor", "missing"]);
         compare(selected, ["cursor", "GROQCLOUD", "codex", "missing"]);
-        compare(OverviewProviders.toggledSelection(roster, selected, "openai", true), selected);
+        compare(OverviewProviders.toggledSelection(roster, selected, "openai", true),
+            ["codex", "groq", "cursor", "openai", "missing"]);
     }
 
-    function test_absentSelectionsDoNotOccupyVisibleSlots() {
+    function test_absentSelectionsSurviveNewSelectionsAndRoundTrip() {
         var saved = ["claude", "gemini", "copilot"];
         var roster = ["codex", "groqcloud", "cursor", "openai"];
         var next = OverviewProviders.toggledSelection(roster, saved, "codex", true);
@@ -120,33 +118,33 @@ TestCase {
         next = OverviewProviders.toggledSelection(roster, next, "groq", true);
         next = OverviewProviders.toggledSelection(roster, next, "cursor", true);
         compare(next.join(","), "codex,groq,cursor,claude,gemini,copilot");
-        compare(OverviewProviders.toggledSelection(roster, next, "openai", true), next);
+        next = OverviewProviders.toggledSelection(roster, next, "openai", true);
+        compare(next.join(","), "codex,groq,cursor,openai,claude,gemini,copilot");
 
         var restored = OverviewProviders.configuredProviderIDs(OverviewProviders.selectionText(next));
         compare(restored, next);
         compare(OverviewProviders.toggledSelection(roster, restored, "codex", false).join(","),
-                "groq,cursor,claude,gemini,copilot");
-    }
-
-    function test_selectedCountUsesUniqueCanonicalRosterIDs() {
-        compare(OverviewProviders.selectedProviderCount(["codex"], ["claude", "gemini", "copilot"]), 0);
-        compare(OverviewProviders.selectedProviderCount(["groqcloud", "GROQ", "codex"], ["groq", "CODEX", "missing"]), 2);
-        compare(OverviewProviders.selectedProviderCount([null, "constructor", "codex"], ["codex"]), 1);
-        compare(OverviewProviders.selectedProviderCount(null, ["codex"]), 0);
-        compare(OverviewProviders.selectedProviderCount(["codex"], null), 0);
+                "groq,cursor,openai,claude,gemini,copilot");
     }
 
     function test_returningProvidersKeepTheirSavedSelection() {
         var saved = ["codex", "groq", "cursor", "claude", "gemini", "copilot"];
         var roster = ["claude", "gemini", "copilot", "codex", "groq", "cursor", "openai"];
-        compare(OverviewProviders.selectedProviderCount(roster, saved), 6);
-        compare(OverviewProviders.toggledSelection(roster, saved, "openai", true), saved);
+        compare(OverviewProviders.toggledSelection(roster, saved, "openai", true).join(","),
+                "claude,gemini,copilot,codex,groq,cursor,openai");
         compare(OverviewProviders.toggledSelection(roster, saved, "claude", false).join(","),
                 "gemini,copilot,codex,groq,cursor");
     }
 
-    function test_maximumMatchesTheOverviewLimit() {
-        compare(OverviewProviders.maximumOverviewProviders, 3);
+    function test_fullSelectionPreservesAbsentProviderAndAllowsReplacement() {
+        var roster = Array.from({length: 256}, function(_, index) { return "provider-" + index; });
+        var saved = roster.slice(0, 255).concat(["disabled-provider"]);
+        compare(OverviewProviders.toggledSelection(roster, saved, roster[255], true), saved);
+
+        var remaining = OverviewProviders.toggledSelection(roster, saved, roster[0], false);
+        var replacement = OverviewProviders.toggledSelection(roster, remaining, roster[255], true);
+        var restored = OverviewProviders.configuredProviderIDs(OverviewProviders.selectionText(replacement));
+        compare(restored, roster.slice(1).concat(["disabled-provider"]));
     }
 
     function healthy(providerID, usedPercent) {
@@ -257,14 +255,12 @@ TestCase {
         compare(JSON.stringify(item), before);
     }
 
-    function test_storedSelectionKeepsRosterOrderAndTheVisibleLimit() {
+    function test_storedSelectionKeepsAllEligibleProvidersInRosterOrder() {
         var roster = [healthy("codex", 10), healthy("claude", 20), healthy("gemini", 30),
-            healthy("cursor", 40), healthy("groq", 50)];
+            errorOnly("cursor"), healthy("groq", 50), healthy("copilot", 60)];
         compare(providerIDs(OverviewProviders.visibleItems(roster, "gemini,codex")), "codex,gemini");
-        // A selection wider than the visible limit is truncated in roster order.
-        compare(providerIDs(OverviewProviders.visibleItems(roster, "groq,cursor,gemini,claude,codex")),
-                "codex,claude,gemini");
-        // Providers absent from the roster take no slot.
+        compare(providerIDs(OverviewProviders.visibleItems(roster, "copilot,groq,cursor,gemini,claude,codex")),
+                "codex,claude,gemini,groq,copilot");
         compare(providerIDs(OverviewProviders.visibleItems(roster, "openai,groq")), "groq");
         compare(OverviewProviders.visibleItems(roster, OverviewProviders.noneValue).length, 0);
     }

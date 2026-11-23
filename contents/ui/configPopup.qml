@@ -55,13 +55,17 @@ KCM.SimpleKCM {
     property string cfg_popupHiddenUsageRows: ""
     property string cfg_popupHiddenUsageRowsDefault: ""
 
-    readonly property int maxOverviewProviders: OverviewProviders.maximumOverviewProviders
     readonly property string commandPath: (cfg_commandPath || "codexbar").trim()
     readonly property alias enabledProviderRoster: providerRosterController.enabledProviderRoster
     readonly property alias providerRosterLoading: providerRosterController.providerRosterLoading
     readonly property alias providerRosterError: providerRosterController.providerRosterError
     readonly property var orderedEnabledProviderRoster: ProviderOrder.orderedItems(
         enabledProviderRoster, cfg_providerOrder)
+    readonly property var overviewRosterProviderIDs: orderedEnabledProviderRoster.map(function(item) {
+        return item.provider
+    })
+    readonly property var resolvedOverviewProviderIDs: OverviewProviders.resolvedProviderIDs(
+        overviewRosterProviderIDs, cfg_overviewProviderIDs)
     readonly property var hiddenDetailSections: PopupHiddenSections.parse(cfg_popupHiddenDetailSections)
     readonly property var hiddenDetailProviders: PopupHiddenSections.providers(hiddenDetailSections)
     readonly property var hiddenUsageRows: PopupHiddenRows.parse(cfg_popupHiddenUsageRows)
@@ -207,35 +211,13 @@ KCM.SimpleKCM {
         }
     }
 
-    // Pure selection transitions live in OverviewProviders.js; these thin
-    // wrappers only adapt the roster and commit configuration writes.
-    function overviewRosterProviderIDs() {
-        var ordered = []
-        for (var i = 0; i < orderedEnabledProviderRoster.length; i++) {
-            ordered.push(orderedEnabledProviderRoster[i].provider)
-        }
-        return ordered
-    }
-
-    function resolvedOverviewProviderIDs() {
-        return OverviewProviders.resolvedProviderIDs(overviewRosterProviderIDs(), cfg_overviewProviderIDs)
-    }
-
-    function overviewProviderSelected(providerID) {
-        return OverviewProviders.isSelected(resolvedOverviewProviderIDs(), providerID)
-    }
-
     function toggleOverviewProvider(providerID, checked) {
         cfg_overviewProviderIDs = OverviewProviders.selectionText(OverviewProviders.toggledSelection(
-            overviewRosterProviderIDs(), resolvedOverviewProviderIDs(), providerID, checked))
+            overviewRosterProviderIDs, resolvedOverviewProviderIDs, providerID, checked))
     }
 
     function resetOverviewProvidersToAutomatic() {
         cfg_overviewProviderIDs = ""
-    }
-
-    function selectedOverviewProviderCount() {
-        return OverviewProviders.selectedProviderCount(overviewRosterProviderIDs(), resolvedOverviewProviderIDs())
     }
 
     function providerIconSource(providerID) {
@@ -479,7 +461,7 @@ KCM.SimpleKCM {
                 objectName: "overviewAutomaticRadio"
                 implicitWidth: 0
                 Layout.fillWidth: true
-                text: i18n("Automatic: first %1 providers", page.maxOverviewProviders)
+                text: i18n("Automatic: first %1 providers", OverviewProviders.automaticProviderCount)
                 checked: !OverviewProviders.selectionActive(page.cfg_overviewProviderIDs)
                 onClicked: page.resetOverviewProvidersToAutomatic()
             }
@@ -504,19 +486,7 @@ KCM.SimpleKCM {
                 Layout.fillWidth: true
                 text: i18n("Choose providers")
                 checked: OverviewProviders.selectionActive(page.cfg_overviewProviderIDs)
-                onClicked: page.cfg_overviewProviderIDs = OverviewProviders.selectionText(page.resolvedOverviewProviderIDs())
-            }
-
-            // The cap applies to the custom list, so it introduces those boxes.
-            Components.PlainControlsLabel {
-                objectName: "overviewCustomHint"
-                Layout.fillWidth: true
-                Layout.leftMargin: overviewCustomRadio.indicator.width + overviewCustomRadio.spacing
-                visible: OverviewProviders.selectionActive(page.cfg_overviewProviderIDs)
-                text: i18np("Choose up to %1 provider", "Choose up to %1 providers", page.maxOverviewProviders)
-                font: Kirigami.Theme.smallFont
-                opacity: 0.7
-                wrapMode: Text.WordWrap
+                onClicked: page.cfg_overviewProviderIDs = OverviewProviders.selectionText(page.resolvedOverviewProviderIDs)
             }
 
             Repeater {
@@ -527,20 +497,20 @@ KCM.SimpleKCM {
                     Layout.fillWidth: true
                     required property var modelData
 
-                    visible: OverviewProviders.selectionActive(page.cfg_overviewProviderIDs)
-                    readonly property bool selected: page.overviewProviderSelected(modelData.provider)
+                    visible: overviewCustomRadio.checked
+                    readonly property bool selected: OverviewProviders.isSelected(
+                        page.resolvedOverviewProviderIDs, modelData.provider)
 
                     text: SafeText.plainTextAsRichText(modelData.displayName)
                     Kirigami.MnemonicData.label: SafeText.plainTextAsMnemonicRichText(modelData.displayName)
                     Accessible.name: modelData.displayName
                     checked: selected
-                    enabled: OverviewProviders.selectionActive(page.cfg_overviewProviderIDs)
-                        && (selected || page.selectedOverviewProviderCount() < page.maxOverviewProviders)
+                    enabled: overviewCustomRadio.checked
+                        && (selected || page.resolvedOverviewProviderIDs.length < ProviderOrder.maximumProviderItems)
                     Layout.leftMargin: overviewCustomRadio.indicator.width + overviewCustomRadio.spacing
                     onClicked: {
                         page.toggleOverviewProvider(modelData.provider, checked)
-                        // Clicking severs the binding on `checked`; restore it so the box reflects the
-                        // actual selection (e.g. when a click is rejected by the max-providers cap).
+                        // Keep the checkbox bound to the stored selection after a click.
                         checked = Qt.binding(function() { return selected })
                     }
                 }

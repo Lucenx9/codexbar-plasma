@@ -107,10 +107,13 @@ back inside before release restores its pressed feedback.
   icon actions also show their labels on keyboard focus.
 - **Provider actions** expands accounts, provider links, and widget commands.
   It starts collapsed and closes when the provider or account changes.
-- **Popup → Overview providers** chooses automatic selection of the first three
-  eligible providers or a manual set of up to three. Disabled providers keep
-  their choices without occupying a slot. The Overview header identifies a
-  subset, such as **3 of 20 providers**. Provider order is set on the same page.
+- **Popup → Overview providers** shows the first three eligible providers in
+  automatic mode. Select **Choose providers** to pick the providers you want
+  to see. The saved selection holds up to 256 providers, including disabled
+  providers that you previously selected.
+  Set the provider order on the same page. The Overview header identifies a
+  subset, such as **3 of 20 providers**, and the list scrolls to reveal the
+  provider card you reach with Tab or Shift+Tab.
 
 Overview shows each provider's primary and secondary quotas separately, so a
 low session reading cannot hide an exhausted weekly window. Cursor can also
