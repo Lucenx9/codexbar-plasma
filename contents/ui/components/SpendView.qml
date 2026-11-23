@@ -1301,10 +1301,18 @@ ColumnLayout {
             }
             Components.AnalysisAssistant {
                 id: analysisAssistant
+                property bool revealPending: false
                 answerExpanded: !view.historyAvailable
                 applet: view.applet
-                onAnswerExpandedChanged: if (answerExpanded)
-                    Qt.callLater(function() { view.revealHistoryItem(analysisAssistant) })
+                onAnswerExpandedChanged: revealPending = answerExpanded
+
+                Connections {
+                    target: analysisAssistant.revealPending ? view.Window.window : null
+                    function onFrameSwapped() {
+                        analysisAssistant.revealPending = false
+                        view.revealHistoryItem(analysisAssistant)
+                    }
+                }
             }
         }
     }

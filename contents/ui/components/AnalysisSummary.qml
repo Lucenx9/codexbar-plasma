@@ -107,10 +107,10 @@ GridLayout {
     PlainPlasmaLabel {
         visible: summary.comparison === null
         Layout.row: summary.columns === 3 ? 2 : 6
-        Layout.column: 0
-        Layout.columnSpan: summary.columns
+        Layout.column: summary.columns - 1
         Layout.fillWidth: true
-        Layout.topMargin: Kirigami.Units.smallSpacing
+        Layout.minimumWidth: 0
+        Layout.preferredWidth: 1
         text: summary.comparisonHelp
         font: Kirigami.Theme.smallFont
         opacity: applet.secondaryTextOpacity

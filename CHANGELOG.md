@@ -29,6 +29,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   shows complete indicators that fit the widget's space and retains all saved
   choices when the panel shrinks.
 
+### Fixed
+
+- Show the weekly comparison requirements directly below the comparison in
+  **Usage & Spend** when it is unavailable.
+
 ## 0.2.58 - 2026-11-22
 
 ### Fixed
