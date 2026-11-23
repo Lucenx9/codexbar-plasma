@@ -202,6 +202,16 @@ up to six. Missing or truncated breakdowns are identified. Expanded choices
 survive refreshes and day selections. Project breakdowns stay in provider tabs.
 CLI 0.85.0 can also supply project totals for local Claude and Pi history.
 
+Open **Compare models** below the provider list to rank models across the
+selected providers. Choose **All providers** for the full comparison or pin a
+day to inspect that day's models. Each row names its provider. In **Cost** mode,
+models are ranked within each currency. A percentage shows the model's share
+of the selected providers' spend in that currency. If pricing or model data is
+incomplete, the view names the affected currency and omits its percentages.
+**Tokens** ranks by token count even when prices are missing.
+
+![Two providers' models and their shares of USD spend on a pinned day](codexbar-plasma-models.png)
+
 **Daily activity** opens the calendar for ranges longer than seven days. It
 follows the same provider, metric, and period filters. Measured zero is a recorded,
 selectable day; an unavailable day is empty. Its key shows the intensity scale.
@@ -414,6 +424,15 @@ The selected provider offers docs, dashboard/login links, setup actions, source
 selection, and **Settings and diagnostics**. **Inspect redacted settings** reads
 the CLI's redacted report. **Fetch error** explains a failed provider fetch;
 **Fetch attempts** lists attempted methods and outcomes.
+
+With CLI 0.85.0, providers can list Linux setup routes here. Each route gives
+the CLI's instructions and any required inputs, such as Azure OpenAI's key,
+endpoint, and deployment name. When there are several options, choose one.
+Any additional authentication environment variables appear below the options.
+Command examples are plain text. Use the
+provider's setup buttons for actions supported by the widget. Providers and
+older CLIs without declared routes still show their available authentication
+information.
 
 A failed inspection keeps its previous successful result with an error. Saving
 provider configuration clears that result; inspect again to see the new state.

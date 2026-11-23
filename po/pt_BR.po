@@ -4536,3 +4536,40 @@ msgstr "As cotas automáticas usam um anel externo para a cota principal e um in
 #: contents/ui/configPanel.qml
 msgid "Quota indicators keep their warning colors in both styles."
 msgstr "Os indicadores de cota mantêm as cores de aviso nos dois estilos."
+
+#: contents/ui/components/AnalysisModels.qml
+msgid ""
+"Spend shares unavailable for %1 because pricing or model data is incomplete."
+msgstr "Os percentuais de gastos em %1 estão indisponíveis porque faltam dados de preços ou de modelos."
+
+#: contents/ui/components/AnalysisModels.qml
+msgid "%1% of %2 spend"
+msgstr "%1% dos gastos em %2"
+
+#: contents/ui/components/SpendView.qml
+msgid "Compare models on %1"
+msgstr "Comparar modelos em %1"
+
+#: contents/ui/components/SpendView.qml
+msgid "Compare models"
+msgstr "Comparar modelos"
+
+#: contents/ui/configProviders.qml
+msgid "Linux setup"
+msgstr "Configuração no Linux"
+
+#: contents/ui/configProviders.qml scripts/smoke/Capture.qml
+msgid "Required input: %1 (%2)"
+msgstr "Dado obrigatório: %1 (%2)"
+
+#: contents/ui/configProviders.qml
+msgid "Required input: %1"
+msgstr "Dado obrigatório: %1"
+
+#: contents/ui/configProviders.qml
+msgid "Setup option %1 of %2"
+msgstr "Opção %1 de %2"
+
+#: contents/ui/configProviders.qml
+msgid "Other environment variables"
+msgstr "Outras variáveis de ambiente"

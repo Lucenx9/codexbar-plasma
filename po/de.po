@@ -4557,3 +4557,40 @@ msgstr "Automatische Kontingente verwenden einen äußeren Ring für das primär
 #: contents/ui/configPanel.qml
 msgid "Quota indicators keep their warning colors in both styles."
 msgstr "Die Kontingentanzeigen behalten in beiden Stilen ihre Warnfarben."
+
+#: contents/ui/components/AnalysisModels.qml
+msgid ""
+"Spend shares unavailable for %1 because pricing or model data is incomplete."
+msgstr "Für %1 fehlen Preis- oder Modelldaten. Die Ausgabenanteile sind daher nicht verfügbar."
+
+#: contents/ui/components/AnalysisModels.qml
+msgid "%1% of %2 spend"
+msgstr "%1 % der Ausgaben in %2"
+
+#: contents/ui/components/SpendView.qml
+msgid "Compare models on %1"
+msgstr "Modelle für den %1 vergleichen"
+
+#: contents/ui/components/SpendView.qml
+msgid "Compare models"
+msgstr "Modelle vergleichen"
+
+#: contents/ui/configProviders.qml
+msgid "Linux setup"
+msgstr "Einrichtung unter Linux"
+
+#: contents/ui/configProviders.qml scripts/smoke/Capture.qml
+msgid "Required input: %1 (%2)"
+msgstr "Erforderliche Angabe: %1 (%2)"
+
+#: contents/ui/configProviders.qml
+msgid "Required input: %1"
+msgstr "Erforderliche Angabe: %1"
+
+#: contents/ui/configProviders.qml
+msgid "Setup option %1 of %2"
+msgstr "Einrichtungsoption %1 von %2"
+
+#: contents/ui/configProviders.qml
+msgid "Other environment variables"
+msgstr "Weitere Umgebungsvariablen"

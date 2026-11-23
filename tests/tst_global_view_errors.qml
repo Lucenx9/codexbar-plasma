@@ -134,7 +134,7 @@ TestCase {
         }
     }
 
-    function createView(type) {
+    function createView(type, initialWidth = width, initialHeight = height) {
         var holder;
         try {
             holder = Qt.createQmlObject('import QtQuick; import org.kde.kirigami as Kirigami; ' + 'import "../contents/ui/components" as Components; ' + 'QtObject { property Component subject: Component { Components.' + type + ' { } } }', testCase, Qt.resolvedUrl("GlobalViewErrorsTest.qml"));
@@ -149,8 +149,8 @@ TestCase {
         failOnWarning(/.*/);
         var view = createTemporaryObject(holders[holders.length - 1].subject, testCase, {
             applet: applet,
-            width: width,
-            height: height
+            width: initialWidth,
+            height: initialHeight
         });
         verify(view !== null);
         var message = findItem(view, function (item) {
@@ -173,7 +173,7 @@ TestCase {
         var models = Array.from({length: 2}, function(_, index) {
             return {label: "Model " + index, cost: 2 - index, tokens: index + 1, currency: "USD"};
         });
-        var daily = {label: "2026-10-16", cost: 2, tokens: 20, currency: "USD", models: models};
+        var daily = {label: "2026-10-16", cost: 3, tokens: 20, currency: "USD", models: models};
         applet.costs = [
             {provider: "codex", currency: "USD", totals: daily, daily: [daily], models: models},
             {provider: "claude", currency: "USD", totals: daily, daily: [daily], models: models}
@@ -273,6 +273,7 @@ TestCase {
 
         var contrastPalettes = [
             { tag: "breeze-light", bg: "#eff0f1", text: "#232629", focus: "#3daee9" },
+            { tag: "breeze-dark", bg: "#1b1e20", text: "#fcfcfc", focus: "#3daee9" },
             { tag: "mid-gray-desktop", bg: "#5c6057", text: "#ffffff", focus: "#191919" },
             { tag: "round2-gray", bg: "#696e64", text: "#ffffff", focus: "#191919" }
         ];
@@ -319,6 +320,13 @@ TestCase {
                 "Expanded focused card border must maintain 3:1 contrast against fill in " + palette.tag);
             verify(ThemeContrast.contrastRatio(themedCard.background.border.color, bgColor) >= 3,
                 "Expanded focused card border must maintain 3:1 contrast against surrounding background in " + palette.tag);
+            findChild(themedView, "analysisCompareModelsToggle").clicked();
+            var comparison = findChild(themedView, "analysisModelComparison");
+            var share = findItem(comparison, item => item.visible && item.text === "33% of USD spend");
+            verify(share !== null);
+            var foreground = Qt.tint(bgColor, Qt.rgba(share.color.r, share.color.g, share.color.b, share.opacity));
+            verify(ThemeContrast.contrastRatio(foreground, bgColor) >= 4.5, palette.tag + " model spend share contrast");
+            compare(share.font.features.tnum, 1);
         }
         testCase.forceActiveFocus(Qt.OtherFocusReason);
     }
@@ -507,6 +515,79 @@ TestCase {
         findChild(view, "analysisProviderToggle-codex").clicked();
         var models = findChild(view, "analysisModels");
         verify(findItem(models, function(item) { return item.text === data.text; }) !== null);
+    }
+
+    function test_compareModelsFollowsProviderDayAndPriceCoverage() {
+        var model = {label: "Period model", cost: 5, currency: "USD"}
+        var day = {label: "2026-11-13", cost: 2, currency: "USD",
+            models: [{label: "Day model", cost: 2, currency: "USD"}]}
+        var cost = {provider: "codex", totals: model, daily: [day], models: [model]}
+        applet.costs = [cost, Object.assign({}, cost, {provider: "pi"})]
+        var view = createView("SpendView")
+        if (!view) return
+        var toggle = findChild(view, "analysisCompareModelsToggle")
+        verify(toggle !== null)
+        toggle.forceActiveFocus(Qt.TabFocusReason)
+        keyClick(Qt.Key_Space)
+        var list = findChild(view, "analysisModelComparison")
+        verify(list.visible)
+        compare(list.models.rows.length, 2)
+        verify(findItem(list, item => item.visible && item.text === "50% of USD spend") !== null)
+        findChild(view, "analysisHistoryChart").selectedIndex = 0
+        compare(list.models.rows[0].label, "Day model")
+        compare(toggle.plainText.indexOf("Compare models on "), 0)
+        view.selectedProvider = "pi"
+        compare(list.models.rows.length, 1)
+        compare(list.models.rows[0].provider, "pi")
+        compare(list.models.rows[0].label, "Period model")
+        applet.costErrorText = "Synthetic scan failure"
+        compare(list.models.rows[0].spendShare, null)
+        verify(findItem(list, item => item.visible && item.text ===
+            "Spend shares unavailable for USD because pricing or model data is incomplete.") !== null)
+    }
+
+    function test_compactComparisonRevealsRowsAndKeepsAmountsReadable() {
+        var longLabel = Array(5).join("Long synthetic model name ")
+        applet.providerTitle = "Synthetic provider"
+        var models = Array.from({length: 4}, (_, i) => ({
+            label: longLabel + i, cost: 123456789012, currency: "EUR"
+        }))
+        applet.costs = [{provider: "pi", totals: {cost: 493827156048, currency: "EUR"},
+            models: models}]
+        var view = createView("SpendView", 360, 350)
+        if (!view) return
+        var toggle = findChild(view, "analysisCompareModelsToggle")
+        var flick = findChild(view, "spendHistoryScroll").contentItem
+        toggle.forceActiveFocus(Qt.TabFocusReason)
+        tryVerify(() => toggle.mapToItem(flick, 0, toggle.height).y <= flick.height + 1)
+        keyClick(Qt.Key_Space)
+        var comparison = findChild(view, "analysisModelComparison")
+        var more = findChild(comparison, "analysisModelsShowMore")
+        verify(toggle.activeFocus && toggle.Accessible.checked)
+        tryVerify(() => more.visible && more.height > 0 && more.mapToItem(flick, 0, 0).y >= -1
+            && more.mapToItem(flick, 0, more.height).y <= flick.height + 1,
+            1000, "Opening the comparison must reveal its contents in a compact popup")
+        var title = "Synthetic provider: " + longLabel + "0"
+        var amount = findItem(comparison, item => item.Accessible.name === title + ": EUR 123,456,789,012.00")
+        verify(amount !== null)
+        amount.font.pointSize = 18
+        verify(waitForPolish(view))
+        verify(!amount.truncated && amount.contentWidth <= amount.width + 1)
+        compare(amount.Accessible.name, title + ": " + amount.text)
+        compare(amount.Accessible.description, "25% of EUR spend")
+        keyClick(Qt.Key_Tab)
+        verify(more.activeFocus)
+        keyClick(Qt.Key_Space)
+        verify(comparison.showAll && more.activeFocus)
+        keyClick(Qt.Key_Space)
+        verify(!comparison.showAll && more.activeFocus)
+        applet.costs = [{provider: "pi", totals: {cost: 0, currency: "EUR"}, models: []}]
+        tryVerify(() => toggle.visualFocus)
+        verify(findItem(comparison, item => item.visible && item.text === "No model data for this period.") !== null)
+        keyClick(Qt.Key_Space)
+        verify(!comparison.visible && toggle.activeFocus)
+        applet.costs = []
+        tryCompare(findChild(view, "analysisProviderFilter"), "activeFocus", true)
     }
 
     function test_openProviderModelsFollowDayAndRefresh() {

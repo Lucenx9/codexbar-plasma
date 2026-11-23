@@ -9,9 +9,9 @@ provider filter through a history-range refresh, switching to Tokens, returning
 to all providers, expanding the layout, and avoiding AI generation during
 navigation. It then opens Daily activity over 90 days and verifies month labels,
 the fixed readout, and selection shared with the chart and provider details.
-The `usage-analysis-models` and `usage-analysis-narrow` variants
-inspect provider rows expanded to inline model details without changing the
-chart filter, and larger text in a compact window.
+The `usage-analysis-models` variant opens the model comparison on a pinned
+day and checks provider identities and spend shares. `usage-analysis-narrow`
+exercises larger text in a compact window.
 `ai-insights-no-history` verifies that the assistant opens directly with both
 history sources disabled, without history controls or a cost scan.
 The `ai-insights` scenarios exercise the integrated assistant with a synthetic helper. `readme-spend` captures its compact
@@ -99,6 +99,9 @@ python3 scripts/smoke_popup.py --scenario panel-minimal --renderer opengl
 python3 scripts/smoke_popup.py --scenario readme-overview --renderer opengl --output /tmp/codexbar-readme
 python3 scripts/smoke_popup.py --scenario settings-providers --renderer opengl --theme dark --language it
 ```
+
+`settings-providers-linux-setup` opens Azure OpenAI diagnostics with a synthetic
+0.85.0 inventory and checks the key, endpoint, and deployment prerequisites.
 
 `settings-providers-0840`, `settings-providers-0840-keys` and
 `settings-providers-0840-cookie` capture validated Console import, SiliconFlow key

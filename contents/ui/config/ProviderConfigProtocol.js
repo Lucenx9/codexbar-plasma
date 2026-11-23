@@ -4,6 +4,7 @@
 .import "../SafeText.mjs" as SafeText
 .import "ProviderDescriptor.js" as ProviderDescriptor
 .import "ProviderAuthentication.js" as ProviderAuthentication
+.import "ProviderSetup.js" as ProviderSetup
 
 // Reads bounded CLI replies and applies the selected provider command contract.
 // QML retains localization, process state, selection, retries, and effects.
@@ -134,6 +135,7 @@ function normalizeProviderList(payload, fallbackTitleResolver) {
             enabled: item.enabled === true,
             defaultEnabled: item.defaultEnabled === true,
             descriptor: ProviderDescriptor.normalize(item.descriptor, fallbackTitleResolver),
+            setupRoutes: ProviderSetup.linuxRoutes(item.setup, providerID),
             authentication: ProviderAuthentication.normalize(
                 Guards.hasOwnKey(item, "authentication") ? item.authentication : undefined, providerID)
         })

@@ -807,7 +807,14 @@ TestCase {
             var values = all.filter(function(item) { return item.objectName === "providerSettingValue"; });
             verify(values.length >= 3);
             var firstX = values[0].mapToItem(page, 0, 0).x;
+            if (width === 420) {
+                var button = all.find(item => item instanceof Controls.Button && item.text === "Inspect redacted settings");
+                button.text = "Consulter les réglages aux données sensibles masquées";
+                button.font.pointSize = 16;
+                wait(50);
+            }
             for (var value of values) {
+                verify(value.mapToItem(page, value.width, 0).x <= page.width + 1);
                 fuzzyCompare(value.mapToItem(page, 0, 0).x, firstX, 1);
                 var label = findChild(value.parent, "providerSettingLabel");
                 verify(label !== null);

@@ -31,7 +31,7 @@ function dayCosts(costs, day) {
 function selectedDayCost(snapshot, day) {
     var row = uniqueDay(snapshot, day)
     return Object.assign({}, snapshot, {
-        totals: row || {cost: null, tokens: null, currency: snapshot.currency},
+        totals: row || {cost: null, tokens: null, currency: Currency.fallbackSnapshotCurrency(snapshot) || snapshot.currency},
         models: row && Array.isArray(row.models) ? row.models : [],
         modelsTruncated: row ? row.modelsTruncated === true : false,
         tokenRanking: row ? row.tokenRanking : null,

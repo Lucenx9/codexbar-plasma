@@ -50,6 +50,12 @@ API-key version gates and legacy provider allowlist. The page still owns the
 probe lifecycle and publishes its results; inventory authentication metadata
 can restrict an action but cannot add an unverified writer.
 
+The [0.85.0 inventory](research/2026-11-22-macos-parity-0.85.0.md#linux-cli-contract-changes)
+also supplies read-only setup routes. Plasma displays declared Linux routes
+with supported methods, required input identifiers, environment-variable names
+and bounded hints. Recognized command examples appear as plain text. Action
+availability still comes from the widget's existing capability checks.
+
 ## Linux cookie allowlist
 
 CLI 0.82.0 or later: Claude, Claude Platform, Command Code, Cursor, Mistral,

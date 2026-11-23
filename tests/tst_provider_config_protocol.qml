@@ -128,6 +128,54 @@ TestCase {
         compare(ProviderConfigProtocol.maximumDiagnosticListItems, 64)
     }
 
+    function test_inventoryKeepsOnlySupportedLinuxSetupGuidance() {
+        var input = {id: "api-key", environmentVariables: ["DEEPINFRA_API_KEY", "DEEPINFRA_TOKEN"],
+            configFields: ["apiKey"], value: "private"}
+        var route = {id: "api-key", platforms: ["macOS", "linux"], method: "apiKey",
+            hint: "Use a standalone key.", command: "codexbar config set-api-key --provider deepinfra --stdin",
+            requiredInputs: [input]}
+        var setup = {status: "declared", routes: [route, Object.assign({}, route, {platforms: ["macOS"]})],
+            optionalCapabilities: [{hint: "private"}]}
+        var result = ProviderConfigProtocol.response(JSON.stringify([{provider: "deepinfra", setup: setup}]), "", 0, "list")
+        compare(result.outcome, "success")
+        compare(result.value[0].setupRoutes, [{hint: route.hint, command: route.command,
+            inputs: [{id: "api-key", environmentVariables: ["DEEPINFRA_API_KEY", "DEEPINFRA_TOKEN"]}]}])
+    }
+
+    function test_invalidSetupDoesNotHideProvidersOrAuthorizeCommands() {
+        var auth = {sourceModes: ["auto"], environmentVariables: ["LEGACY_VAR"]}
+        var raw = {provider: "deepinfra", enabled: true, authentication: auth}
+        var route = {id: "api-key", platforms: ["linux"], method: "apiKey", hint: "API key=private",
+            requiredInputs: [{id: "api-key", environmentVariables: ["VALID_VAR", "BAD=private", "VALID_VAR"]}],
+            command: "codexbar config set-api-key --provider elevenlabs --stdin"}
+        function project(setup) {
+            raw.setup = setup
+            var record = ProviderConfigProtocol.normalizeProviderList([raw])[0]
+            verify(record.enabled)
+            compare(record.authentication.environmentVariables, ["LEGACY_VAR"])
+            verify(!record.authentication.supportsConfigAPIKey)
+            return record.setupRoutes
+        }
+        for (var setup of [undefined, null, [], {status: "unknown", routes: [route]},
+                           {status: "declared", routes: "linux"}])
+            compare(project(setup), [])
+        for (var overrides of [{platforms: ["macOS"]}, {platforms: "linux"}, {method: "browserSession"},
+                               {hint: {}}, {requiredInputs: [null]}, {id: "api key"},
+                               {requiredInputs: repeated(route.requiredInputs[0], 9)}]) {
+            var bad = Object.assign({}, route, overrides)
+            compare(project({status: "declared", routes: [bad]}), [])
+        }
+        var declared = {status: "declared", routes: repeated(route, 40)}
+        var routes = project(declared)
+        compare(routes.length, 8)
+        compare(routes[0], {hint: "API key=[redacted]", command: "",
+            inputs: [{id: "api-key", environmentVariables: ["VALID_VAR"]}]})
+        route.hint = "x".repeat(1000)
+        route.command = "codexbar config set-api-key --provider deepinfra --stdin; extra"
+        compare(project(declared)[0].command, "")
+        compare(project(declared)[0].hint.length, 512)
+    }
+
     function test_inventoryPreservesAuthenticationWithoutCredentials() {
         var payload = [{provider: "copilot", enabled: true, authentication: {
             sourceModes: ["api", "auto"], supportsConfigAPIKey: true,

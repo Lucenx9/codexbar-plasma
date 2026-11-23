@@ -20,6 +20,7 @@ SCENARIOS += ("settings-providers", "settings-providers-narrow", "settings-provi
               "settings-general-narrow", "settings-popup-narrow", "settings-notifications-narrow",
               "settings-diagnostics-narrow", "settings-diagnostics-error")
 SCENARIOS += ("settings-providers-0840", "settings-providers-0840-keys", "settings-providers-0840-cookie")
+SCENARIOS += ("settings-providers-linux-setup",)
 SCENARIOS += ("settings-providers-auth", "settings-providers-auth-legacy")
 SCENARIOS += ("settings-providers-keys-soniox", "settings-providers-keys-chatbox")
 SCENARIOS += ("usage-analysis", "usage-analysis-narrow", "usage-analysis-models")
@@ -241,6 +242,19 @@ SETUP_SCENARIOS = {name: ("0.84.0", SETUP_0840_ROWS) for name in (
     "settings-providers-0840", "settings-providers-0840-keys", "settings-providers-0840-cookie")}
 SETUP_SCENARIOS.update({name: ("0.83.0", KEY_SETUP_ROWS) for name in (
     "settings-providers-keys-soniox", "settings-providers-keys-chatbox")})
+
+SETUP_SCENARIOS["settings-providers-linux-setup"] = ("0.85.0", [
+    {"provider": "azureopenai", "enabled": False, "displayName": "Azure OpenAI",
+     "authentication": {"sourceModes": ["api", "auto"], "supportsConfigAPIKey": True,
+                        "environmentVariables": ["AZURE_OPENAI_API_KEY", "AZURE_OPENAI_API_VERSION",
+                                                 "AZURE_OPENAI_DEPLOYMENT_NAME", "AZURE_OPENAI_ENDPOINT"]},
+     "setup": {"status": "declared", "routes": [
+         {"id": "deployment-api-key", "method": "apiKey", "platforms": ["macOS", "linux"],
+          "hint": "Supply a key, HTTPS resource endpoint, and deployment name. API version is optional. "
+                  "A usage refresh sends a potentially billable validation request, not a usage-history query.",
+          "requiredInputs": [{"id": name, "environmentVariables": [variable]} for name, variable in (
+              ("api-key", "AZURE_OPENAI_API_KEY"), ("endpoint", "AZURE_OPENAI_ENDPOINT"),
+              ("deployment", "AZURE_OPENAI_DEPLOYMENT_NAME"))]}]}}])
 
 
 def authentication_provider_rows(scenario):

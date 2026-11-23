@@ -2,8 +2,10 @@ import QtQuick
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import "../UsageAnalysis.js" as Analysis
+import "../ModelComparison.js" as ModelComparison
 import "../CostAmounts.mjs" as Amounts
 import "../AnalysisAmounts.mjs" as AnalysisAmounts
+import "../ShareUsage.js" as ShareUsage
 
 ColumnLayout {
     id: section
@@ -13,8 +15,10 @@ ColumnLayout {
     property string selectedDay: ""
     property bool expanded: false
     property bool showAll: false
-    readonly property var models: expanded ? Analysis.modelRows(costs, selectedDay, applet.costHistoryShowsTokens)
-        : ({rows: [], truncated: false})
+    property bool compareProviders: false
+    readonly property var models: !expanded ? ({rows: [], truncated: false, incompleteCurrencies: []})
+        : compareProviders ? ModelComparison.comparison(costs, selectedDay, applet.costHistoryShowsTokens,
+            applet.costErrorText.length > 0) : Analysis.modelRows(costs, selectedDay, applet.costHistoryShowsTokens)
     readonly property bool hasMore: models.rows.length > 3
     readonly property bool actionFocused: showMore.activeFocus
     signal restoreFocusRequested()
@@ -30,8 +34,10 @@ ColumnLayout {
     }
 
     RowLayout {
+        visible: !section.compareProviders || section.hasMore
         Layout.fillWidth: true
         PlainPlasmaLabel {
+            visible: !section.compareProviders
             text: i18n("Models")
             font: Qt.font(Object.assign({}, Kirigami.Theme.smallFont, { weight: Font.DemiBold }))
             opacity: section.applet.secondaryTextOpacity
@@ -47,6 +53,14 @@ ColumnLayout {
             plainText: section.showAll ? i18n("Show fewer models") : i18n("Show more models")
             onClicked: section.showAllRequested(!section.showAll)
         }
+    }
+    PlainPlasmaLabel {
+        readonly property var currencies: section.models.incompleteCurrencies || []
+        visible: currencies.length > 0
+        text: i18n("Spend shares unavailable for %1 because pricing or model data is incomplete.", currencies.join(", "))
+        font: Kirigami.Theme.smallFont
+        wrapMode: Text.Wrap
+        Layout.fillWidth: true
     }
     PlainPlasmaLabel {
         text: i18n("Some models are not shown.")
@@ -75,30 +89,52 @@ ColumnLayout {
                 Layout.fillWidth: true
                 spacing: Kirigami.Units.largeSpacing
                 PlainPlasmaLabel {
-                    text: modelRow.modelData.label
+                    id: modelTitle
+                    text: section.compareProviders ? i18n("%1: %2",
+                        section.applet.providerDisplayTitle(modelRow.modelData.provider), modelRow.modelData.label)
+                        : modelRow.modelData.label
                     Layout.fillWidth: true
                     Layout.minimumWidth: 0
                     Layout.preferredWidth: 3
                     Layout.alignment: Qt.AlignTop
                     wrapMode: Text.Wrap
                 }
-                PlainPlasmaLabel {
-                    id: modelAmount
-                    text: Amounts.hasMetricValue(modelRow.modelData, section.applet.costHistoryShowsTokens)
-                        ? section.applet.costHistoryShowsTokens ? section.applet.usageCountText(modelRow.modelData.tokens, "tokens")
-                            : section.applet.qualifiedCostValue(AnalysisAmounts.metricText(section.applet.costNumberFormat,
-                                modelRow.modelData.cost, modelRow.modelData.currency, false), modelRow.modelData.valueMode)
-                        : i18n("Unavailable")
-                    font.features: { "tnum": 1 }
+                ColumnLayout {
                     Layout.alignment: Qt.AlignTop
                     Layout.fillWidth: true
                     Layout.minimumWidth: 0
                     Layout.preferredWidth: 2
-                    horizontalAlignment: Text.AlignRight
-                    elide: Text.ElideRight
-                    Accessible.name: i18n("%1: %2", modelRow.modelData.label, text)
-                    HoverHandler { id: amountHover }
-                    PlainToolTip { visible: modelAmount.truncated && amountHover.hovered; plainText: modelAmount.text }
+                    spacing: Kirigami.Units.smallSpacing / 2
+                    PlainPlasmaLabel {
+                        id: modelAmount
+                        text: Amounts.hasMetricValue(modelRow.modelData, section.applet.costHistoryShowsTokens)
+                            ? section.applet.costHistoryShowsTokens ? section.applet.usageCountText(modelRow.modelData.tokens, "tokens")
+                                : section.applet.qualifiedCostValue(AnalysisAmounts.metricText(section.applet.costNumberFormat,
+                                    modelRow.modelData.cost, modelRow.modelData.currency, false), modelRow.modelData.valueMode)
+                            : i18n("Unavailable")
+                        font.features: { "tnum": 1 }
+                        Layout.fillWidth: true
+                        Layout.minimumWidth: 0
+                        horizontalAlignment: Text.AlignRight
+                        wrapMode: section.compareProviders ? Text.Wrap : Text.NoWrap
+                        elide: section.compareProviders ? Text.ElideNone : Text.ElideRight
+                        Accessible.name: i18n("%1: %2", modelTitle.text, text)
+                        Accessible.description: modelShare.visible ? modelShare.text : ""
+                        HoverHandler { id: amountHover }
+                        PlainToolTip { visible: modelAmount.truncated && amountHover.hovered; plainText: modelAmount.text }
+                    }
+                    PlainPlasmaLabel {
+                        id: modelShare
+                        readonly property string shareLabel: ShareUsage.percentLabel(modelRow.modelData.spendShare)
+                        visible: section.compareProviders && shareLabel.length > 0
+                        text: i18n("%1% of %2 spend", shareLabel, modelRow.modelData.currency)
+                        font: Qt.font(Object.assign({}, Kirigami.Theme.smallFont, {features: {"tnum": 1}}))
+                        horizontalAlignment: Text.AlignRight
+                        wrapMode: Text.Wrap
+                        Layout.fillWidth: true
+                        Layout.minimumWidth: 0
+                        Accessible.ignored: true
+                    }
                 }
             }
             PlainPlasmaLabel {

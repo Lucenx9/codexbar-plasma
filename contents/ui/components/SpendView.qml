@@ -869,6 +869,46 @@ ColumnLayout {
             }
 
             Components.DisclosureButton {
+                id: compareModelsToggle
+                objectName: "analysisCompareModelsToggle"
+                property bool revealPending: false
+                plainText: view.selectedDay ? i18n("Compare models on %1",
+                    historyChart.pointLabel({label: view.selectedDay})) : i18n("Compare models")
+                visible: view.providerCosts.length > 0
+                onVisibleChanged: if (view.visible && !visible && activeFocus)
+                    providerFilter.forceActiveFocus(Qt.TabFocusReason)
+                onClicked: {
+                    expanded = !expanded
+                    revealPending = expanded
+                }
+
+                Connections {
+                    // Wrapped model rows can move the disclosure during layout of the opening frame.
+                    target: compareModelsToggle.revealPending ? view.Window.window : null
+                    function onFrameSwapped() {
+                        compareModelsToggle.revealPending = false
+                        if (comparisonList.visible) view.revealHistoryItem(compareModelsToggle, comparisonList)
+                    }
+                }
+            }
+
+            Components.AnalysisModels {
+                id: comparisonList
+                objectName: "analysisModelComparison"
+                applet: view.applet
+                costs: view.providerCosts
+                selectedDay: view.selectedDay
+                compareProviders: true
+                expanded: compareModelsToggle.expanded && compareModelsToggle.visible
+                visible: expanded
+                onShowAllRequested: function(value) { showAll = value }
+                onRestoreFocusRequested: {
+                    if (view.providerCosts.length > 0) compareModelsToggle.forceActiveFocus(Qt.TabFocusReason)
+                    else if (view.visible) providerFilter.forceActiveFocus(Qt.TabFocusReason)
+                }
+            }
+
+            Components.DisclosureButton {
                 id: activityToggle
                 objectName: "analysisActivityToggle"
                 plainText: i18n("Daily activity")
