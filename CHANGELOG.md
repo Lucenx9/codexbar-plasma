@@ -10,6 +10,15 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Added
+
+- Read Linux setup hints and required inputs in **Providers → Settings and
+  diagnostics** when the CLI declares them.
+
+- Compare models across providers in **Usage & Spend** for a period or a
+  selected day. Spend shares use separate currencies and require complete
+  pricing data.
+
 ### Changed
 
 - Choose more than three providers for the popup Overview in manual mode.

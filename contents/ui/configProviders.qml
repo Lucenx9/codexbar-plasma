@@ -1098,6 +1098,9 @@ KCM.SimpleKCM {
         if (providerKey(item.provider) === "soniox" || providerKey(item.provider) === "chatbox") {
             appendSettingsRow(rows, i18n("Key guidance"), apiKeyPrompt(item.provider))
         }
+        var setupRoutes = item.setupRoutes || []
+        for (var route of setupRoutes)
+            appendSettingsRow(rows, i18n("Linux setup"), setupRouteText(route))
         var authentication = item.authentication
         if (authentication) {
             appendSettingsRow(rows, i18n("Environment variables"), authentication.environmentVariables.join(", "))
@@ -1105,7 +1108,8 @@ KCM.SimpleKCM {
                 appendSettingsRow(rows, i18n("Token accounts"), authentication.tokenAccounts.title)
                 appendSettingsRow(rows, i18n("Account setup"), authentication.tokenAccounts.setupHint)
             }
-            appendSettingsRow(rows, i18n("CLI sign-in"), authentication.loginCommand)
+            if (!setupRoutes.some(route => route.command === authentication.loginCommand))
+                appendSettingsRow(rows, i18n("CLI sign-in"), authentication.loginCommand)
         }
 
         if (diagnostic) {
@@ -1120,6 +1124,17 @@ KCM.SimpleKCM {
             rows.push({ label: i18n("Provider diagnostics"), value: i18n("Inspect redacted settings to view source and authentication details") })
         }
         return rows
+    }
+
+    function setupRouteText(route) {
+        var lines = [route.hint]
+        for (var input of route.inputs) {
+            lines.push(input.environmentVariables.length
+                ? i18n("Required input: %1 (%2)", input.id, input.environmentVariables.join(", "))
+                : i18n("Required input: %1", input.id))
+        }
+        if (route.command) lines.push(route.command)
+        return lines.join("\n")
     }
 
     function descriptorFieldRows(item) {

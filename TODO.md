@@ -25,18 +25,7 @@ Issues linked below preserve discussion; this file owns parity status.
 
 ## Plasma-native and implementable now
 
-- [ ] Show CLI-declared setup guidance in **Settings and diagnostics**. Linux
-  0.85.0 exposes read-only `setup` routes for Copilot, OpenAI API, Azure OpenAI,
-  DeepInfra, and ElevenLabs. Done when Plasma validates and displays supported
-  Linux hints and prerequisites, preserves the existing authentication fallback,
-  and treats any command text as display data.
-  [0.85.0 evidence](docs/research/2026-11-22-macos-parity-0.85.0.md#linux-cli-contract-changes).
-
-- [ ] Compare models across providers in **Usage & Spend**, using the existing
-  model breakdowns. Done when one view honors the selected range and day,
-  keeps provider identities and currencies separate, and identifies partial
-  or missing price data before showing spend shares.
-  [Upstream Models view](https://github.com/steipete/CodexBar/releases/tag/v0.85.0).
+No open items at the 0.85.0 review baseline.
 
 ## Blocked on official Linux CLI contracts
 

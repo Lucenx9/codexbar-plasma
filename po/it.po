@@ -4549,3 +4549,32 @@ msgstr "Le quote automatiche usano un anello esterno per la quota primaria e uno
 #: contents/ui/configPanel.qml
 msgid "Quota indicators keep their warning colors in both styles."
 msgstr "Gli indicatori delle quote mantengono i colori di avviso in entrambi gli stili."
+
+#: contents/ui/components/AnalysisModels.qml
+msgid ""
+"Spend shares unavailable for %1 because pricing or model data is incomplete."
+msgstr "Percentuali di spesa non disponibili per %1: i dati sui prezzi o sui modelli sono incompleti."
+
+#: contents/ui/components/AnalysisModels.qml
+msgid "%1% of %2 spend"
+msgstr "%1% della spesa in %2"
+
+#: contents/ui/components/SpendView.qml
+msgid "Compare models on %1"
+msgstr "Confronta i modelli per il %1"
+
+#: contents/ui/components/SpendView.qml
+msgid "Compare models"
+msgstr "Confronta modelli"
+
+#: contents/ui/configProviders.qml
+msgid "Linux setup"
+msgstr "Configurazione su Linux"
+
+#: contents/ui/configProviders.qml scripts/smoke/Capture.qml
+msgid "Required input: %1 (%2)"
+msgstr "Dato richiesto: %1 (%2)"
+
+#: contents/ui/configProviders.qml
+msgid "Required input: %1"
+msgstr "Dato richiesto: %1"

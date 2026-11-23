@@ -869,6 +869,27 @@ ColumnLayout {
             }
 
             Components.DisclosureButton {
+                id: compareModelsToggle
+                objectName: "analysisCompareModelsToggle"
+                plainText: view.selectedDay ? i18n("Compare models on %1",
+                    historyChart.pointLabel({label: view.selectedDay})) : i18n("Compare models")
+                visible: view.providerCosts.length > 0
+                onClicked: expanded = !expanded
+            }
+
+            Components.AnalysisModels {
+                objectName: "analysisModelComparison"
+                applet: view.applet
+                costs: view.providerCosts
+                selectedDay: view.selectedDay
+                compareProviders: true
+                expanded: compareModelsToggle.expanded && compareModelsToggle.visible
+                visible: expanded
+                onShowAllRequested: function(value) { showAll = value }
+                onRestoreFocusRequested: compareModelsToggle.forceActiveFocus(Qt.TabFocusReason)
+            }
+
+            Components.DisclosureButton {
                 id: activityToggle
                 objectName: "analysisActivityToggle"
                 plainText: i18n("Daily activity")

@@ -336,6 +336,23 @@ TestCase {
         verify(page.providerCliCommandText(page.providers[0]).indexOf("'/tmp/custom cli' config login --provider copilot") >= 0);
         compare(Object.keys(page.commands).length, 0);
     }
+    function test_linuxSetupShowsPrerequisitesWithoutEnablingActions() {
+        var page = createTemporaryObject(harness, this);
+        var route = {id: "deployment-api-key", platforms: ["linux"], method: "apiKey",
+            hint: "Supply an endpoint and deployment.", requiredInputs: [
+                {id: "endpoint", environmentVariables: ["AZURE_OPENAI_ENDPOINT"]},
+                {id: "deployment", environmentVariables: ["AZURE_OPENAI_DEPLOYMENT_NAME"]}]};
+        page.providers = ProviderConfigProtocol.normalizeProviderList([{provider: "azureopenai",
+            setup: {status: "declared", routes: [route]}, authentication: {supportsConfigAPIKey: false,
+                environmentVariables: ["AZURE_OPENAI_API_KEY"]}}]);
+        var rows = page.providerSettingsRows(page.providers[0]);
+        var guidance = rows.filter(function(row) { return row.label === "Linux setup"; });
+        compare(guidance.length, 1);
+        compare(guidance[0].value, "Supply an endpoint and deployment.\nRequired input: endpoint (AZURE_OPENAI_ENDPOINT)\nRequired input: deployment (AZURE_OPENAI_DEPLOYMENT_NAME)");
+        verify(rows.some(function(row) { return row.value === "AZURE_OPENAI_API_KEY"; }));
+        verify(!page.supportsApiKeySetup("azureopenai"));
+        compare(Object.keys(page.commands).length, 0);
+    }
     function test_gateAndUnknownProvider() {
         var page = createTemporaryObject(harness, this);
         for (var version of ["CodexBar 0.72.0", "CodexBar 0.73.0-rc1", "unknown"]) {
@@ -690,7 +707,7 @@ class ProviderSourceTests(unittest.TestCase):
                  "markFieldPending", "hasPendingFields",
                  "handleListResult", "shouldRetryProviderListWithoutDescriptors",
                  "descriptorListUnsupportedMessage", "firstSelectableProvider", "supportsApiKeySetup",
-                 "providerSettingsRows", "appendSettingsRow", "providerCliCommandText")
+                 "providerSettingsRows", "setupRouteText", "appendSettingsRow", "providerCliCommandText")
         functions = []
         for name in names:
             signature = re.search(r"function " + name + r"\([^)]*\)", source).group(0)

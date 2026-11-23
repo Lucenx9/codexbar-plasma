@@ -1,6 +1,7 @@
 import QtQuick
 import QtTest
 import "../contents/ui/UsageAnalysis.js" as Analysis
+import "../contents/ui/ModelComparison.js" as ModelComparison
 import "../contents/ui/AnalysisAmounts.mjs" as Display
 import "../contents/ui/ChartLines.mjs" as Chart
 import "../contents/ui/CostResponse.mjs" as CostResponse
@@ -324,6 +325,74 @@ TestCase {
                     (run[2].c1.y - run[1].y) / (run[2].c1.x - run[1].x), 1e-8)
             }
         }
+    }
+
+    function test_modelComparisonRanksProvidersWithinEachCurrency() {
+        var usd = snapshot("codex", "USD", 2, 1)
+        var other = snapshot("claude", "USD", 5, 1)
+        other.models[0].cost = other.totals.cost = 150
+        var eur = snapshot("pi", "EUR", 3, 1)
+        var comparison = ModelComparison.comparison([usd, other, eur], "", false, false)
+        compare(comparison.rows.map(row => row.provider), ["pi", "claude", "codex"])
+        compare(comparison.rows.map(row => row.spendShare), [1, 0.75, 0.25])
+        compare(comparison.incompleteCurrencies, [])
+        other.daily[0].models = [{label: "daily", cost: 5, tokens: 10, currency: "USD"}]
+        usd.daily[0].models = [{label: "daily", cost: 2, tokens: 30, currency: "USD"}]
+        var day = ModelComparison.comparison([usd, other], "2026-11-13", true, false)
+        compare(day.rows.map(row => row.provider), ["codex", "claude"])
+        compare(day.rows.map(row => row.label), ["daily", "daily"])
+        compare(day.rows.map(row => row.spendShare), [null, null])
+    }
+
+    function test_modelSharesRequireCompleteComparablePrices_data() {
+        return ["unpriced", "truncated", "sourceTruncated", "mixedPricing", "partial",
+            "missingTotal", "excluded", "historyCoverage", "unattributed", "currencyMismatch", "overflow", "zero", "error"].map(kind => ({tag: kind, kind: kind}))
+    }
+
+    function test_modelSharesRequireCompleteComparablePrices(data) {
+        var codex = snapshot("codex", "USD", 2, 1)
+        var pi = snapshot("pi", "USD", 1, 1)
+        var claude = snapshot("claude", "EUR", 3, 1)
+        switch (data.kind) {
+        case "unpriced": pi.models[0].cost = null; break
+        case "truncated": pi.modelsTruncated = true; break
+        case "sourceTruncated": pi.tokenRanking = {sourceTruncated: true}; break
+        case "mixedPricing": pi.tokenRanking = {hasUnknownCost: true}; break
+        case "partial": pi.valueMode = "partial"; break
+        case "missingTotal": pi.totals.cost = null; break
+        case "excluded": pi.models[0].incompleteRequests = 1; break
+        case "historyCoverage": pi.historyCoverageEstablished = false; break
+        case "unattributed": pi.totals.cost += 0.01; break
+        case "currencyMismatch": pi.models[0].currency = "EUR"; break
+        case "overflow":
+            codex.totals.cost = codex.models[0].cost = Number.MAX_VALUE
+            pi.totals.cost = pi.models[0].cost = Number.MAX_VALUE
+            break
+        case "zero":
+            codex.totals.cost = codex.models[0].cost = 0
+            pi.totals.cost = pi.models[0].cost = 0
+        }
+        var comparison = ModelComparison.comparison([pi, claude, codex], "", false, data.kind === "error")
+        compare(comparison.incompleteCurrencies,
+            data.kind === "error" ? ["EUR", "USD"] : data.kind === "zero" ? [] : ["USD"])
+        compare(comparison.rows.filter(row => row.provider === "codex")[0].spendShare, null)
+        compare(comparison.rows.filter(row => row.provider === "pi")[0].spendShare, null)
+        compare(comparison.rows.filter(row => row.provider === "claude")[0].spendShare, data.kind === "error" ? null : 1)
+    }
+
+    function test_missingPricesRetainProviderCurrencyAndPrivacyOnPin() {
+        var valid = snapshot("claude", "EUR", 2, 1)
+        var missing = {provider: "pi", currency: "EUR", totals: {}, models: [], daily: []}
+        var period = ModelComparison.comparison([missing, valid], "", false, false)
+        compare(period.incompleteCurrencies, ["EUR"])
+        compare(period.rows[0].spendShare, null)
+        valid.daily[0].models = [{label: "Private model", cost: 2, currency: "EUR"}]
+        var privateCost = Privacy.cost(valid, true)
+        privateCost.valueMode = "partial"
+        var day = ModelComparison.comparison([privateCost], "2026-11-13", false, false)
+        compare(day.incompleteCurrencies, ["EUR"])
+        compare(day.rows[0].spendShare, null)
+        verify(JSON.stringify(day).indexOf("Private model") === -1)
     }
 
     function test_modelsStayScopedAndBounded() {

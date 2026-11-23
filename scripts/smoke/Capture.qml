@@ -1419,8 +1419,22 @@ Item {
                 "calendar months or fixed readout missing");
         }
         if (scenario === "usage-analysis-models") {
-            view.expandedModelProviders = ["codex", "claude"];
-            verifyScenario(view.selectedProvider === "", "model disclosure changed the chart filter");
+            if (analysisStep === 2) {
+                view.expandedModelProviders = ["codex", "claude"];
+                verifyScenario(view.selectedProvider === "", "model disclosure changed the chart filter");
+                view.expandedModelProviders = [];
+                findItem(view, "analysisMetricToggle").activated(0);
+                chart.selectedIndex = chart.points.length - 1;
+                findItem(view, "analysisCompareModelsToggle").clicked();
+                analysisStep = 3;
+                return false;
+            }
+            var comparison = findItem(view, "analysisModelComparison");
+            if (!comparison || !comparison.visible || comparison.models.rows.length !== 2) return false;
+            verifyScenario(comparison.models.rows.every(function(row) { return row.spendShare > 0; })
+                && comparison.models.rows[0].provider !== comparison.models.rows[1].provider,
+                "daily model spend shares or provider identities missing");
+            view.revealHistoryItem(findItem(view, "analysisCompareModelsToggle"), comparison);
         }
         return true;
     }
@@ -2004,6 +2018,20 @@ Item {
                         pendingLabels.push(generalChildren[childIndex]);
                 }
 
+            }
+            if (scenario === "settings-providers-linux-setup") {
+                var guidancePage = preview.page;
+                if (!guidancePage.providerByID("azureopenai") || guidancePage.providerSourcesLoading) return false;
+                if (!navigationVerified) {
+                    guidancePage.selectedProviderID = "azureopenai";
+                    findItem(guidancePage, "providerSettingsToggle").expanded = true;
+                    navigationVerified = true;
+                    return false;
+                }
+                verifyScenario(hasVisibleText(guidancePage, "potentially billable validation request")
+                    && hasVisibleText(guidancePage, i18n("Required input: %1 (%2)", "deployment", "AZURE_OPENAI_DEPLOYMENT_NAME")),
+                    "Azure OpenAI setup must explain the request and deployment prerequisite");
+                return true;
             }
             if (scenario.indexOf("settings-providers-0840") === 0) {
                 var setupPage = preview.page;

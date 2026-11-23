@@ -23,15 +23,7 @@ function normalize(value, providerID) {
     }
     result.supportsConfigAPIKey = own(value, "supportsConfigAPIKey") === true
     result.supportsConfigCookieHeader = own(value, "supportsConfigCookieHeader") === true
-    var variables = own(value, "environmentVariables")
-    if (Array.isArray(variables)) {
-        for (var j = 0; j < Math.min(variables.length, maximumListItems); j++) {
-            var name = variables[j]
-            if (typeof name === "string" && name.length <= 128 && /^[A-Z_][A-Z0-9_]*$/.test(name)
-                    && result.environmentVariables.indexOf(name) < 0)
-                result.environmentVariables.push(name)
-        }
-    }
+    result.environmentVariables = environmentNames(own(value, "environmentVariables"), maximumListItems)
     var accounts = own(value, "tokenAccounts")
     if (record(accounts)) {
         var title = text(own(accounts, "title"), 120)
@@ -55,4 +47,16 @@ function own(value, key) {
 
 function text(value, limit) {
     return typeof value === "string" ? SafeText.cliMessage(value, limit) : ""
+}
+
+function environmentNames(variables, limit) {
+    var names = []
+    if (!Array.isArray(variables)) return names
+    for (var i = 0; i < Math.min(variables.length, limit); i++) {
+        var name = variables[i]
+        if (typeof name === "string" && name.length <= 128 && /^[A-Z_][A-Z0-9_]*$/.test(name)
+                && names.indexOf(name) < 0)
+            names.push(name)
+    }
+    return names
 }

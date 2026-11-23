@@ -4558,3 +4558,32 @@ msgstr "Las cuotas automáticas usan un anillo exterior para la cuota principal 
 #: contents/ui/configPanel.qml
 msgid "Quota indicators keep their warning colors in both styles."
 msgstr "Los indicadores de cuota conservan sus colores de advertencia en ambos estilos."
+
+#: contents/ui/components/AnalysisModels.qml
+msgid ""
+"Spend shares unavailable for %1 because pricing or model data is incomplete."
+msgstr "Los porcentajes de gasto en %1 no están disponibles porque faltan datos de precios o de modelos."
+
+#: contents/ui/components/AnalysisModels.qml
+msgid "%1% of %2 spend"
+msgstr "%1 % del gasto en %2"
+
+#: contents/ui/components/SpendView.qml
+msgid "Compare models on %1"
+msgstr "Comparar modelos del %1"
+
+#: contents/ui/components/SpendView.qml
+msgid "Compare models"
+msgstr "Comparar modelos"
+
+#: contents/ui/configProviders.qml
+msgid "Linux setup"
+msgstr "Configuración en Linux"
+
+#: contents/ui/configProviders.qml scripts/smoke/Capture.qml
+msgid "Required input: %1 (%2)"
+msgstr "Dato obligatorio: %1 (%2)"
+
+#: contents/ui/configProviders.qml
+msgid "Required input: %1"
+msgstr "Dato obligatorio: %1"

@@ -24,6 +24,13 @@ provider ordering. Model rankings are computed separately for cost and tokens
 before the six-model cap; privacy removes names while retaining both rankings.
 Expanded rows survive refreshes and day selection without fetching data.
 
+Cross-provider model comparisons retain the provider identity on each row.
+For costs, the denominator is the sum of the selected providers' reported
+totals in the same currency. Model amounts must account for those totals
+before a share can be displayed. Missing prices, incomplete breakdowns, or
+failed scans suppress the affected shares while keeping available amounts
+visible. Token rankings use the separate token breakdown.
+
 Weekly comparisons require fourteen complete days before today, a scan reaching
 today, unambiguous dates, and finite amounts. Money also requires complete
 pricing; unpriced history can still support a token comparison. Excluded

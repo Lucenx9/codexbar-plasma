@@ -509,6 +509,35 @@ TestCase {
         verify(findItem(models, function(item) { return item.text === data.text; }) !== null);
     }
 
+    function test_compareModelsFollowsProviderDayAndPriceCoverage() {
+        var model = {label: "Period model", cost: 5, currency: "USD"}
+        var day = {label: "2026-11-13", cost: 2, currency: "USD",
+            models: [{label: "Day model", cost: 2, currency: "USD"}]}
+        var cost = {provider: "codex", totals: model, daily: [day], models: [model]}
+        applet.costs = [cost, Object.assign({}, cost, {provider: "pi"})]
+        var view = createView("SpendView")
+        if (!view) return
+        var toggle = findChild(view, "analysisCompareModelsToggle")
+        verify(toggle !== null)
+        toggle.forceActiveFocus(Qt.TabFocusReason)
+        keyClick(Qt.Key_Space)
+        var list = findChild(view, "analysisModelComparison")
+        verify(list.visible)
+        compare(list.models.rows.length, 2)
+        verify(findItem(list, item => item.visible && item.text === "50% of USD spend") !== null)
+        findChild(view, "analysisHistoryChart").selectedIndex = 0
+        compare(list.models.rows[0].label, "Day model")
+        compare(toggle.plainText.indexOf("Compare models on "), 0)
+        view.selectedProvider = "pi"
+        compare(list.models.rows.length, 1)
+        compare(list.models.rows[0].provider, "pi")
+        compare(list.models.rows[0].label, "Period model")
+        applet.costErrorText = "Synthetic scan failure"
+        compare(list.models.rows[0].spendShare, null)
+        verify(findItem(list, item => item.visible && item.text ===
+            "Spend shares unavailable for USD because pricing or model data is incomplete.") !== null)
+    }
+
     function test_openProviderModelsFollowDayAndRefresh() {
         var daily = {label: "2026-11-13", cost: 2, tokens: 20, currency: "USD",
             models: [{label: "Day model", cost: 2, tokens: 20, currency: "USD"}]};

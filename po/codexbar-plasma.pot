@@ -192,6 +192,11 @@ msgid "Show more models"
 msgstr ""
 
 #: contents/ui/components/AnalysisModels.qml
+msgid ""
+"Spend shares unavailable for %1 because pricing or model data is incomplete."
+msgstr ""
+
+#: contents/ui/components/AnalysisModels.qml
 #: contents/ui/components/ProviderCostSection.qml
 msgid "Some models are not shown."
 msgstr ""
@@ -208,13 +213,6 @@ msgstr ""
 
 #: contents/ui/components/AnalysisModels.qml
 #: contents/ui/components/AnalysisSummary.qml
-#: contents/ui/components/InteractiveChart.qml
-#: contents/ui/components/ShareUsageWindow.qml
-msgid "Unavailable"
-msgstr ""
-
-#: contents/ui/components/AnalysisModels.qml
-#: contents/ui/components/AnalysisSummary.qml
 #: contents/ui/components/CompactRepresentation.qml
 #: contents/ui/components/CostText.qml
 #: contents/ui/components/InteractiveChart.qml
@@ -224,6 +222,17 @@ msgstr ""
 #: contents/ui/configProviders.qml contents/ui/main.qml
 #: scripts/smoke/Capture.qml
 msgid "%1: %2"
+msgstr ""
+
+#: contents/ui/components/AnalysisModels.qml
+#: contents/ui/components/AnalysisSummary.qml
+#: contents/ui/components/InteractiveChart.qml
+#: contents/ui/components/ShareUsageWindow.qml
+msgid "Unavailable"
+msgstr ""
+
+#: contents/ui/components/AnalysisModels.qml
+msgid "%1% of %2 spend"
 msgstr ""
 
 #: contents/ui/components/AnalysisModels.qml
@@ -2110,6 +2119,14 @@ msgid "Providers on %1"
 msgstr ""
 
 #: contents/ui/components/SpendView.qml
+msgid "Compare models on %1"
+msgstr ""
+
+#: contents/ui/components/SpendView.qml
+msgid "Compare models"
+msgstr ""
+
+#: contents/ui/components/SpendView.qml
 msgid "Daily activity"
 msgstr ""
 
@@ -3610,6 +3627,10 @@ msgid "Key guidance"
 msgstr ""
 
 #: contents/ui/configProviders.qml
+msgid "Linux setup"
+msgstr ""
+
+#: contents/ui/configProviders.qml
 msgid "Environment variables"
 msgstr ""
 
@@ -3663,6 +3684,14 @@ msgstr ""
 
 #: contents/ui/configProviders.qml
 msgid "Inspect redacted settings to view source and authentication details"
+msgstr ""
+
+#: contents/ui/configProviders.qml scripts/smoke/Capture.qml
+msgid "Required input: %1 (%2)"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Required input: %1"
 msgstr ""
 
 #: contents/ui/configProviders.qml

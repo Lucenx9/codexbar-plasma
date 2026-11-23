@@ -4572,3 +4572,32 @@ msgstr "Les quotas automatiques utilisent un anneau extérieur pour le quota pri
 #: contents/ui/configPanel.qml
 msgid "Quota indicators keep their warning colors in both styles."
 msgstr "Les indicateurs de quota conservent leurs couleurs d’avertissement dans les deux styles."
+
+#: contents/ui/components/AnalysisModels.qml
+msgid ""
+"Spend shares unavailable for %1 because pricing or model data is incomplete."
+msgstr "Parts des dépenses indisponibles pour %1 car les données sur les prix ou les modèles sont incomplètes."
+
+#: contents/ui/components/AnalysisModels.qml
+msgid "%1% of %2 spend"
+msgstr "%1 % des dépenses en %2"
+
+#: contents/ui/components/SpendView.qml
+msgid "Compare models on %1"
+msgstr "Comparer les modèles pour le %1"
+
+#: contents/ui/components/SpendView.qml
+msgid "Compare models"
+msgstr "Comparer les modèles"
+
+#: contents/ui/configProviders.qml
+msgid "Linux setup"
+msgstr "Configuration sous Linux"
+
+#: contents/ui/configProviders.qml scripts/smoke/Capture.qml
+msgid "Required input: %1 (%2)"
+msgstr "Donnée requise : %1 (%2)"
+
+#: contents/ui/configProviders.qml
+msgid "Required input: %1"
+msgstr "Donnée requise : %1"
