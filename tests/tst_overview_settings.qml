@@ -92,6 +92,36 @@ TestCase {
         return matches.length > 0 ? matches[0] : null;
     }
 
+    function test_compactSectionHeadings_data() {
+        return [{tag: "narrow", width: 420}, {tag: "wide", width: 840}];
+    }
+
+    function test_compactSectionHeadings(data) {
+        var page = createPage({width: data.width});
+        if (!page)
+            return;
+        waitForRosterSettled(page);
+        waitForRendering(page);
+        var items = [];
+        walkObjects(page, items);
+        var headings = items.filter(function(item) {
+            return item.visible && item.level === 3
+                && item.Accessible.role === Accessible.Heading;
+        });
+        compare(headings.map(function(heading) { return heading.text; }),
+            ["Usage details", "Popup content", "Providers", "Hidden items"]);
+
+        var previousOption = checkByText(page, "Show quota warnings on usage meters");
+        verify(previousOption !== null);
+        var optionBottom = previousOption.mapToItem(page, 0, previousOption.height).y;
+        var popupHeading = headings[1];
+        var headingTop = popupHeading.mapToItem(page, 0,
+            popupHeading.height - popupHeading.contentHeight).y;
+        var gap = headingTop - optionBottom;
+        verify(gap <= previousOption.height + popupHeading.contentHeight / 2,
+            "The next heading should stay close to the end of the previous section, gap: " + gap);
+    }
+
     function test_manualSelectionKeepsDisabledProvidersAndAllowsMoreThanThree() {
         var page = createPage({cfg_overviewProviderIDs: "claude,gemini,copilot"});
         if (!page)
