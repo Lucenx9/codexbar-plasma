@@ -93,7 +93,8 @@ TestCase {
     }
 
     function test_compactSectionHeadings_data() {
-        return [{tag: "narrow", width: 420}, {tag: "wide", width: 840}];
+        return [{tag: "narrow", width: 340}, {tag: "compact", width: 420},
+            {tag: "intermediate", width: 586}, {tag: "wide", width: 840}];
     }
 
     function test_compactSectionHeadings(data) {
@@ -101,6 +102,9 @@ TestCase {
         if (!page)
             return;
         waitForRosterSettled(page);
+        var previousOption = checkByText(page, "Show quota warnings on usage meters");
+        verify(previousOption !== null);
+        previousOption.text = "Afficher les avertissements de quota sur les jauges d'utilisation";
         waitForRendering(page);
         var items = [];
         walkObjects(page, items);
@@ -111,8 +115,17 @@ TestCase {
         compare(headings.map(function(heading) { return heading.text; }),
             ["Usage details", "Popup content", "Providers", "Hidden items"]);
 
-        var previousOption = checkByText(page, "Show quota warnings on usage meters");
-        verify(previousOption !== null);
+        var left = previousOption.mapToItem(page, 0, 0).x;
+        var paceOption = findChild(page, "showPopupPaceCheck");
+        var tabsOption = checkByText(page, "Show text labels in the tab bar");
+        for (var option of [previousOption, paceOption, tabsOption]) {
+            verify(option !== null);
+            var bounds = option.mapToItem(page, 0, 0);
+            verify(Math.abs(bounds.x - left) <= 1, "Section options should share a leading edge");
+            verify(bounds.x >= 0 && bounds.x + option.width <= page.width,
+                "Section options should fit the settings page");
+        }
+
         var optionBottom = previousOption.mapToItem(page, 0, previousOption.height).y;
         var popupHeading = headings[1];
         var headingTop = popupHeading.mapToItem(page, 0,

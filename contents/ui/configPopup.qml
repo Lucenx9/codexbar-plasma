@@ -18,12 +18,15 @@ KCM.SimpleKCM {
     id: page
 
     readonly property Controls.ScrollView scrollView: contentItem as Controls.ScrollView
+    readonly property real scrollbarWidth: scrollView.Controls.ScrollBar.vertical.implicitWidth
+    readonly property real formFieldWidth: Math.min(Kirigami.Units.gridUnit * 24,
+        Math.max(0, availableWidth - scrollbarWidth))
 
     // Reserve the themed scrollbar width even when initial overflow disappears.
     Binding {
         target: page.scrollView
         property: page.mirrored ? "leftPadding" : "rightPadding"
-        value: page.scrollView.Controls.ScrollBar.vertical.implicitWidth
+        value: page.scrollbarWidth
     }
 
     property string cfg_commandPath
@@ -250,6 +253,11 @@ KCM.SimpleKCM {
         }
     }
 
+    component PopupFormGroup: Kirigami.FormLayout {
+        twinFormLayouts: [providersForm]
+        wideMode: providersForm.wideMode
+    }
+
     ColumnLayout {
         spacing: Kirigami.Units.smallSpacing
 
@@ -257,9 +265,7 @@ KCM.SimpleKCM {
             text: i18n("Usage details")
         }
 
-        Kirigami.FormLayout {
-            twinFormLayouts: [providersForm]
-
+        PopupFormGroup {
             Controls.CheckBox {
                 id: usageBarsShowUsedCheck
                 implicitWidth: 0
@@ -287,9 +293,7 @@ KCM.SimpleKCM {
             text: i18n("Popup content")
         }
 
-        Kirigami.FormLayout {
-            twinFormLayouts: [providersForm]
-
+        PopupFormGroup {
             Controls.CheckBox {
                 id: showPopupPaceCheck
                 objectName: "showPopupPaceCheck"
@@ -352,7 +356,7 @@ KCM.SimpleKCM {
                 Kirigami.FormData.buddyFor: providerOrderRepeater.count > 0
                     ? providerOrderRepeater.itemAt(0) : providerOrderColumn
                 Layout.fillWidth: true
-                Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+                Layout.preferredWidth: page.formFieldWidth
                 Layout.maximumWidth: Kirigami.Units.gridUnit * 24
                 spacing: Kirigami.Units.smallSpacing / 2
 
@@ -470,7 +474,7 @@ KCM.SimpleKCM {
                 // Center the label on the first option rather than the column top.
                 Kirigami.FormData.buddyFor: overviewAutomaticRadio
                 Layout.fillWidth: true
-                Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+                Layout.preferredWidth: page.formFieldWidth
                 Layout.maximumWidth: Kirigami.Units.gridUnit * 24
                 spacing: Kirigami.Units.smallSpacing
 
@@ -558,9 +562,7 @@ KCM.SimpleKCM {
             text: i18n("Hidden items")
         }
 
-        Kirigami.FormLayout {
-            twinFormLayouts: [providersForm]
-
+        PopupFormGroup {
             Components.DisclosureButton {
                 id: hiddenItemsDisclosure
                 alignWithForm: true
@@ -580,14 +582,14 @@ KCM.SimpleKCM {
                 visible: hiddenItemsDisclosure.expanded
                 wideMode: false
                 Layout.fillWidth: true
-                Layout.maximumWidth: visible ? Kirigami.Units.gridUnit * 24 : 0
+                Layout.maximumWidth: visible ? page.formFieldWidth : 0
 
                 Item {
                     objectName: "hiddenDetailSectionsSettings"
                     Kirigami.FormData.label: i18n("Hidden detail sections:")
                     Kirigami.FormData.labelAlignment: Qt.AlignTop
                     Layout.fillWidth: true
-                    Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+                    Layout.preferredWidth: page.formFieldWidth
                     Layout.maximumWidth: Kirigami.Units.gridUnit * 24
                     // Isolate FormLayout's size queries while restore delegates rebuild.
                     implicitWidth: hiddenDetailSectionsLayout.implicitWidth
@@ -649,7 +651,7 @@ KCM.SimpleKCM {
                     Kirigami.FormData.label: i18n("Hidden usage rows:")
                     Kirigami.FormData.labelAlignment: Qt.AlignTop
                     Layout.fillWidth: true
-                    Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+                    Layout.preferredWidth: page.formFieldWidth
                     Layout.maximumWidth: Kirigami.Units.gridUnit * 24
                     // Isolate FormLayout's size queries while restore delegates rebuild.
                     implicitWidth: hiddenUsageRowsLayout.implicitWidth
