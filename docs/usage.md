@@ -225,7 +225,7 @@ it. The readout below the grid shows the inspected date and amount.
 
 **Last 7 days vs previous 7** excludes today and requires fourteen complete days
 plus a scan from today. Missing, partial, stale, or ambiguous history shows
-unavailable, with its requirements below the totals. An incomplete price list
+unavailable, with its requirements below the comparison. An incomplete price list
 can still allow a complete token comparison. No currencies are converted.
 
 Current quotas stay in Overview and provider tabs. If both history sources are

@@ -1271,6 +1271,31 @@ TestCase {
         compare(applet.refreshes, 0);
     }
 
+    function test_weeklyComparisonHelpStaysUnderItsValue() {
+        applet.costs = [{provider: "codex", daily: [], totals: {cost: 2, tokens: 10, currency: "USD"}}];
+        var view = createView("SpendView", 960);
+        if (!view) return;
+        var comparison = findItem(view, function(item) { return item.text === "Unavailable" && item.activeFocusOnTab; });
+        verify(comparison !== null);
+        var help = findItem(view, function(item) { return item.text === comparison.Accessible.description; });
+        verify(help !== null && help.visible);
+        var cost = findItem(view, function(item) { return item.text === "Cost" && item.parent === comparison.parent; });
+        verify(cost !== null);
+
+        verify(waitForPolish(view));
+        verify(comparison.x > 0);
+        verify(Math.abs(comparison.width - cost.width) <= 1);
+        compare(help.x, comparison.x);
+        compare(help.width, comparison.width);
+        verify(help.y >= comparison.y + comparison.height);
+
+        view.width = 320;
+        tryCompare(comparison, "x", 0);
+        compare(help.x, comparison.x);
+        compare(help.width, comparison.width);
+        verify(help.y >= comparison.y + comparison.height);
+    }
+
     function test_tokenExclusionsKeepTheSummaryQualified_data() {
         return [
             {tag: "token-only", costs: [{provider: "codex", daily: [], totals: {cost: null, tokens: 20},
