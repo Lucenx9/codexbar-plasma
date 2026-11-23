@@ -871,6 +871,7 @@ ColumnLayout {
             Components.DisclosureButton {
                 id: compareModelsToggle
                 objectName: "analysisCompareModelsToggle"
+                property bool revealPending: false
                 plainText: view.selectedDay ? i18n("Compare models on %1",
                     historyChart.pointLabel({label: view.selectedDay})) : i18n("Compare models")
                 visible: view.providerCosts.length > 0
@@ -878,9 +879,16 @@ ColumnLayout {
                     providerFilter.forceActiveFocus(Qt.TabFocusReason)
                 onClicked: {
                     expanded = !expanded
-                    if (expanded) Qt.callLater(function() {
-                        if (compareModelsToggle.expanded) view.revealHistoryItem(compareModelsToggle, comparisonList)
-                    })
+                    revealPending = expanded
+                }
+
+                Connections {
+                    // Wrapped model rows can move the disclosure during layout of the opening frame.
+                    target: compareModelsToggle.revealPending ? view.Window.window : null
+                    function onFrameSwapped() {
+                        compareModelsToggle.revealPending = false
+                        if (comparisonList.visible) view.revealHistoryItem(compareModelsToggle, comparisonList)
+                    }
                 }
             }
 

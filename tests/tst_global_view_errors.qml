@@ -134,7 +134,7 @@ TestCase {
         }
     }
 
-    function createView(type) {
+    function createView(type, initialWidth = width, initialHeight = height) {
         var holder;
         try {
             holder = Qt.createQmlObject('import QtQuick; import org.kde.kirigami as Kirigami; ' + 'import "../contents/ui/components" as Components; ' + 'QtObject { property Component subject: Component { Components.' + type + ' { } } }', testCase, Qt.resolvedUrl("GlobalViewErrorsTest.qml"));
@@ -149,8 +149,8 @@ TestCase {
         failOnWarning(/.*/);
         var view = createTemporaryObject(holders[holders.length - 1].subject, testCase, {
             applet: applet,
-            width: width,
-            height: height
+            width: initialWidth,
+            height: initialHeight
         });
         verify(view !== null);
         var message = findItem(view, function (item) {
@@ -554,10 +554,8 @@ TestCase {
         }))
         applet.costs = [{provider: "pi", totals: {cost: 493827156048, currency: "EUR"},
             models: models}]
-        var view = createView("SpendView")
+        var view = createView("SpendView", 360, 350)
         if (!view) return
-        view.width = 360
-        view.height = 350
         var toggle = findChild(view, "analysisCompareModelsToggle")
         var flick = findChild(view, "spendHistoryScroll").contentItem
         toggle.forceActiveFocus(Qt.TabFocusReason)
@@ -566,7 +564,8 @@ TestCase {
         var comparison = findChild(view, "analysisModelComparison")
         var more = findChild(comparison, "analysisModelsShowMore")
         verify(toggle.activeFocus && toggle.Accessible.checked)
-        tryVerify(() => more.mapToItem(flick, 0, more.height).y <= flick.height + 1,
+        tryVerify(() => more.visible && more.height > 0 && more.mapToItem(flick, 0, 0).y >= -1
+            && more.mapToItem(flick, 0, more.height).y <= flick.height + 1,
             1000, "Opening the comparison must reveal its contents in a compact popup")
         var title = "Synthetic provider: " + longLabel + "0"
         var amount = findItem(comparison, item => item.Accessible.name === title + ": EUR 123,456,789,012.00")
