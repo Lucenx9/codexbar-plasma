@@ -46,6 +46,14 @@ TestCase {
         }
     }
 
+    function providerCheck(page, name) {
+        var items = [];
+        walkObjects(page, items);
+        return items.find(function (item) {
+            return item instanceof Controls.CheckBox && item.Accessible.name === name;
+        });
+    }
+
     function storedValues(page) {
         var values = {};
         for (var key in page) {
@@ -244,7 +252,7 @@ TestCase {
             {provider: "claude", displayName: "Claude"}
         ];
         compare(page.orderedPanelProviderRoster.length, 2);
-        compare(page.resolvedPanelProviderIDs().join(","), "codex,claude");
+        compare(page.resolvedPanelProviderIDs.join(","), "codex,claude");
 
         // Toggling from the automatic set keeps the other automatic providers,
         // matching the Overview selection behavior.
@@ -273,11 +281,9 @@ TestCase {
         var controller = findChild(page, "panelProviderRosterController");
         controller.enabledProviderRoster = [{provider: "copilot", displayName: "Copilot"}];
         page.cfg_panelProviderIDs = "codex,claude,gemini,cursor";
-        compare(page.selectedPanelProviderCount(), 0);
         page.togglePanelProvider("copilot", true);
         verify(page.panelProviderSelected("copilot"));
-        compare(page.selectedPanelProviderCount(), 1);
-        verify(page.panelProviderSelected("codex"));
+        compare(page.cfg_panelProviderIDs, "copilot,codex,claude,gemini,cursor");
     }
 
     function test_automaticSelectionsNormalizeProviderIDs() {
@@ -289,18 +295,46 @@ TestCase {
             {provider: "GROQCLOUD", displayName: "Groq"},
             {provider: "Codex", displayName: "Codex"},
             {provider: "Future-AI", displayName: "Future AI"},
-            {provider: "claude", displayName: "Claude"}
+            {provider: "claude", displayName: "Claude"},
+            {provider: "copilot", displayName: "Copilot"}
         ];
-        compare(page.selectedPanelProviderCount(), 4);
-        compare(page.resolvedPanelProviderIDs().join(","), "groq,codex,future-ai,claude");
+        compare(page.resolvedPanelProviderIDs.join(","), "groq,codex,future-ai,claude");
         verify(page.panelProviderSelected("GROQCLOUD"));
         verify(page.panelProviderSelected("Codex"));
         verify(page.panelProviderSelected("Future-AI"));
+        verify(!page.panelProviderSelected("copilot"));
         compare(page.cfg_panelProviderIDs, "");
+        page.togglePanelProvider("copilot", true);
+        compare(page.cfg_panelProviderIDs, "groq,codex,future-ai,claude,copilot");
         page.togglePanelProvider("GROQCLOUD", false);
-        compare(page.cfg_panelProviderIDs, "codex,future-ai,claude");
+        compare(page.cfg_panelProviderIDs, "codex,future-ai,claude,copilot");
         verify(!page.panelProviderSelected("groq"));
-        compare(page.selectedPanelProviderCount(), 3);
+    }
+
+    function test_fullManualSelectionKeepsExistingCheckboxesEditable() {
+        var absent = Array.from({length: 255}, function (unused, index) { return "absent-" + index; });
+        var saved = ["codex"].concat(absent).join(",");
+        var page = createPage({cfg_panelProviderIDs: saved});
+        if (!page) return;
+        var controller = findChild(page, "panelProviderRosterController");
+        controller.active = false;
+        page.providersExpanded = true;
+        controller.enabledProviderRoster = [
+            {provider: "codex", displayName: "Codex"},
+            {provider: "claude", displayName: "Claude"}
+        ];
+        var codex = providerCheck(page, "Codex");
+        var claude = providerCheck(page, "Claude");
+        verify(codex && codex.checked && codex.enabled);
+        verify(claude && !claude.checked && !claude.enabled);
+        compare(page.cfg_panelProviderIDs, saved);
+
+        codex.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Space);
+        verify(claude.enabled);
+        claude.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Space);
+        compare(page.cfg_panelProviderIDs, ["claude"].concat(absent).join(","));
     }
 
     // The Usage-text checkbox owns the text-format combo: hiding the option

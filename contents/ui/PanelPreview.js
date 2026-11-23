@@ -116,10 +116,11 @@ function model(options, scenarioValue, nowMs) {
         selectedProvider: selected,
         textRow: textRow,
         textVisible: PanelRules.matches(rules.text, textRow, clockMs),
+        fitPanelMeters: PanelProviders.usesExtendedSelection(settings.panelProviderFilter),
         meterProviders: settings.showMeters === false ? [] : panelProviders.filter(function (provider) {
             var rows = PanelDisplay.meterRows(provider.rows, lane);
             return PanelRules.matchesAny(rules.meters, rows, clockMs);
-        }).slice(0, PanelProviders.maximumSelectableProviders),
+        }).slice(0, PanelProviders.meterCandidateLimit(settings.panelProviderFilter)),
         incidentProvider: scenario === "incident" ? providers.filter(function (provider) {
             return provider.hasIncident;
         })[0] : null

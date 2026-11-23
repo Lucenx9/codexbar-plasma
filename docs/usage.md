@@ -37,12 +37,13 @@ usage, an incident, or missing data. **Apply** saves your changes.
   credit balance, or spend budget. These work in horizontal panels; meters
   also work in vertical panels. Text format appears when usage text is enabled.
   Hiding an option keeps its saved value.
-- **Panel providers** limits panel content to a chosen set of up to four
-  enabled providers. **Use all enabled providers automatically** follows the
-  enabled roster. Clearing every checkbox leaves only the widget icon.
-  Disabled providers keep their saved selection without occupying a slot.
-  When more than four selected providers become enabled, their saved order
-  determines which four appear. Popup providers and notifications are unaffected.
+- **Panel providers** limits panel content to the providers you choose.
+  **Use all enabled providers automatically** shows up to four eligible
+  indicators in provider order. Manual selections can include more providers.
+  With more than four providers selected, the panel shows the first indicators
+  that fit completely and keeps the full selection saved. Disabled providers
+  retain their saved selection. Clearing every checkbox leaves the widget
+  icon. The popup and notifications still cover the full enabled roster.
 
 Click a provider's icon, meter, or grouped text, or activate it with the
 keyboard, to open that provider. Hover its icon for a provider-specific tooltip;

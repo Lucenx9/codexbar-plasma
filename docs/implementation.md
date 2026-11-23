@@ -471,10 +471,19 @@ authoritative quota and a CLI forecast. Presentation settings must not fetch dat
 change notification state or break the minute clock/icon fallback.
 
 `PanelProviders.js` filters only panel meters, text and tooltip roster. Empty
-stored text means automatic/all enabled, `__none__` means none, and unknown saved
-IDs stay saved. Manual selections display at most four enabled providers in roster
-order; absent IDs consume no slots. An empty manual roster suppresses panel text;
-automatic mode retains its loading/no-data fallback. `OverviewProviders.js` shares
+stored text means automatic/all enabled, `__none__` means none, and absent IDs
+stay saved. Automatic mode offers up to four eligible meters. Manual mode
+offers eligible meters in roster order and preserves saved IDs at the parser's
+capacity. An empty manual roster suppresses panel text. Automatic mode retains
+its loading/no-data fallback.
+
+With more than four saved providers, the compact renderer requests a preferred
+length based on its eligible candidates and panel thickness. It shows the prefix
+that fits the assigned length and keeps the surviving delegates alive during
+resize. The assigned length and rendered count stay out of the preferred-size
+calculation. [Plasma panel size negotiation](https://github.com/KDE/plasma-desktop/blob/v6.3.6/containments/panel/contents/ui/main.qml#L220-L239)
+
+`OverviewProviders.js` shares
 canonical selection transitions through `ProviderOrder.toggledSelection`.
 Automatic mode shows the first three eligible providers. Manual mode filters
 the bounded roster by the saved selection and keeps roster order. Selection

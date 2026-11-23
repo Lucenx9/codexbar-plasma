@@ -177,7 +177,7 @@ TestCase {
         compare(available.meterProviders.length, 0);
     }
 
-    function test_metadataIsBoundedOrderedAndCapsVisibleMeters() {
+    function test_metadataIsBoundedAndManualMetersCanExceedFour() {
         var roster = [null, [], {provider: "constructor"}, {provider: "gemini", displayName: "x".repeat(200)},
             {provider: "GEMINI"}, {provider: "codex", displayName: "Codex"}, {provider: "claude", displayName: "Claude"},
             {provider: "cursor"}, {provider: "opencode"}];
@@ -186,8 +186,14 @@ TestCase {
         compare(preview.providers.length, 5);
         compare(preview.selectedProvider.provider, "opencode");
         verify(preview.providers[4].title.length <= 120);
+        verify(!preview.fitPanelMeters);
         compare(preview.meterProviders.map(function (provider) { return provider.provider; }),
             ["opencode", "cursor", "claude", "codex"]);
+        options.panelProviderFilter = "gemini,codex,claude,cursor,opencode,disabled-provider";
+        var manual = PanelPreview.model(options, "normal", nowMs);
+        verify(manual.fitPanelMeters);
+        compare(manual.meterProviders.map(function (provider) { return provider.provider; }),
+            ["opencode", "cursor", "claude", "codex", "gemini"]);
         options.autoSelectProvider = true;
         compare(PanelPreview.model(options, "normal", nowMs).selectedProvider.provider, "claude");
     }

@@ -54,12 +54,12 @@ TestCase {
         compare(PanelProviders.configuredProviderIDs(new Array(600).join("x")).length, 0);
     }
 
-    function test_manualSelectionCapsVisibleProvidersInRosterOrder() {
+    function test_manualSelectionPreservesAllChosenProvidersInRosterOrder() {
         var providers = ["codex", "claude", "gemini", "cursor", "copilot"].map(function (id) {
             return {provider: id};
         });
         compare(ids(PanelProviders.filteredItems(providers, "copilot,cursor,gemini,claude,codex")),
-            "codex,claude,gemini,cursor");
+            "codex,claude,gemini,cursor,copilot");
         compare(PanelProviders.filteredItems(providers, "").length, 5);
         compare(ids(PanelProviders.filteredItems(providers.slice(1), "codex,claude,gemini,cursor,copilot")),
             "claude,gemini,cursor,copilot");
@@ -79,7 +79,14 @@ TestCase {
         compare(PanelProviders.selectionText("codex"), PanelProviders.noneValue);
     }
 
-    function test_maximumMatchesTheCompactMeterLimit() {
-        verify(PanelProviders.maximumSelectableProviders >= 1);
+    function test_fullSelectionPreservesAbsentProviderAndAllowsReplacement() {
+        var roster = Array.from({length: 256}, function (unused, index) { return "provider-" + index; });
+        var saved = roster.slice(0, 255).concat(["disabled-provider"]);
+        compare(PanelProviders.toggledSelection(roster, saved, roster[255], true), saved);
+
+        var remaining = PanelProviders.toggledSelection(roster, saved, roster[0], false);
+        var replacement = PanelProviders.toggledSelection(roster, remaining, roster[255], true);
+        compare(PanelProviders.configuredProviderIDs(PanelProviders.selectionText(replacement)),
+            roster.slice(1).concat(["disabled-provider"]));
     }
 }

@@ -2269,11 +2269,11 @@ msgstr "Fournisseurs du panneau"
 
 #: contents/ui/configPanel.qml
 msgid ""
-"Choose the providers shown in the panel. The popup keeps every enabled "
-"provider."
+"The panel keeps your selection and shows the meters that fit. The popup "
+"lists all enabled providers."
 msgstr ""
-"Choisissez les fournisseurs affichés dans le panneau. La fenêtre "
-"contextuelle continue d'afficher tous les fournisseurs activés."
+"Le panneau conserve votre sélection et affiche les jauges selon la place "
+"disponible. La fenêtre contextuelle répertorie tous les fournisseurs activés."
 
 #: contents/ui/configPanel.qml contents/ui/configPopup.qml
 msgid "Loading providers…"

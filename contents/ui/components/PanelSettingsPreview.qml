@@ -91,8 +91,8 @@ ColumnLayout {
         if (text.length > 0) {
             parts.push(text);
         }
-        for (var i = 0; i < previewModel.meterProviders.length; i++) {
-            var provider = previewModel.meterProviders[i];
+        for (var i = 0; i < previewRenderer.meterProviders.length; i++) {
+            var provider = previewRenderer.meterProviders[i];
             parts.push(provider.title + ": " + previewApplet.panelMeterDescription(provider));
         }
         if (previewModel.incidentProvider) {
@@ -326,11 +326,13 @@ ColumnLayout {
         Accessible.description: preview.accessibleSummary()
 
         CompactRepresentation {
+            id: previewRenderer
             objectName: "panelPreviewRenderer"
             anchors.centerIn: parent
             width: Math.max(0, Math.min(implicitWidth, parent.width - Kirigami.Units.smallSpacing * 2))
             height: implicitHeight
             applet: previewApplet
+            fitPanelMeters: preview.previewModel.fitPanelMeters
             animationsEnabled: false
             interactive: false
             Accessible.ignored: true
