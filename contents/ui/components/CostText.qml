@@ -197,7 +197,7 @@ QtObject {
     function tokenCostHint(providerID) {
         switch (ProviderIdentity.resolveProviderKey(providerID)) {
         case "antigravity":
-            return i18n("Local Antigravity history includes token totals. Dollar costs are unavailable.")
+            return i18n("Antigravity cost estimates use public API prices for known models.")
         case "codex":
             return i18n("Estimated from local Codex logs, independently of the account selected in the widget.")
         case "claude":

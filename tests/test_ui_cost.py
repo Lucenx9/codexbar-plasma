@@ -346,7 +346,7 @@ class CostTextTest(unittest.TestCase):
             "the root spend total must pass already filtered provider costs to CostText",
         )
 
-    def test_token_cost_hints_resolve_aliases_and_explain_unpriced_history(self):
+    def test_token_cost_hints_resolve_aliases_and_explain_antigravity_estimates(self):
         token_cost_hint_body = function_body(self.cost_text, "tokenCostHint")
         self.assertIn(
             "ProviderIdentity.resolveProviderKey(",
@@ -355,11 +355,11 @@ class CostTextTest(unittest.TestCase):
         )
         for antigravity_hint_fragment in (
             'case "antigravity":',
-            'i18n("Local Antigravity history includes token totals. Dollar costs are unavailable.")',
+            'i18n("Antigravity cost estimates use public API prices for known models.")',
         ):
             self.assertTrue(
                 code_contains(token_cost_hint_body, antigravity_hint_fragment),
-                "Antigravity local history must be described as token-only; "
+                "Antigravity cost estimates must identify the source of prices; "
                 f"missing {antigravity_hint_fragment!r}",
             )
 

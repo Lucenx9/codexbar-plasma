@@ -182,10 +182,13 @@ records. It inspects at most 128 projects per provider and displays at most
 128 rows overall, marking truncation. Projects never contribute to provider or
 global totals, and provider currencies remain separate.
 
-Antigravity's established empty token-only snapshot uses zero dollar totals even
-when costs are unavailable. `normalizeProviderCostTotals` masks that sentinel
-until an official availability field exists. Muse Code also supplies token-only
-history with monetary fields absent. Keep absent costs unavailable and tokens
+The widget preserves positive Antigravity estimates from the CLI and leaves
+missing model costs unavailable. For provider summaries it still
+treats ambiguous zero amounts as unavailable because CLI 0.56.2 also returned
+zero for established empty token-only history. See the
+[upstream pricing contract](https://github.com/steipete/CodexBar/blob/v0.85.0/docs/antigravity.md#local-token-history).
+
+Muse Code supplies token-only history. Keep absent costs unavailable and tokens
 usable. No frontend provider fetching or source parsing is authorized by these
 shapes. Remaining blockers are [cost availability](../TODO.md#cost-availability),
 [Cursor cost](../TODO.md#cursor-cost), and
@@ -232,6 +235,11 @@ Plasma disconnects its source. Missing `timeout` fails closed.
 These scoped checks do not replace the
 [0.56.2 full audit](research/2026-09-01-macos-parity-0.56.2.md).
 
+- On 2026-11-24 the installed Linux CLI 0.84.0 and the official 0.85.0
+  Linux x86_64 binary returned positive provider and model amounts for
+  `codexbar cost --provider antigravity --period all --refresh --format json`.
+  Both identified the source as `listPriceEstimate`. Coverage included estimated
+  and unpriced requests. The unpriced model row contained tokens only.
 - [0.84.0 review](research/2026-11-10-macos-parity-0.84.0.md), 2026-11-10:
   official Linux 0.83.0 and 0.84.0 both emitted one schema 2 request with 111
   tokens. A symlinked `sessions` root instead emitted an empty ledger with

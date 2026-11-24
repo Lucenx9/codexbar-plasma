@@ -1971,7 +1971,7 @@ TestCase {
         compare(Normalizer.normalizeProviderCostTotals("codex").tokens, null)
     }
 
-    function test_providerCostTotalsHideAntigravityCostButKeepOtherZeroes() {
+    function test_providerCostTotalsHideAmbiguousAntigravityZeroButKeepOtherZeroes() {
         var antigravity = Normalizer.normalizeProviderCostTotals("antigravity", { totalCost: 0, totalTokens: 0 }, { cost: 0, tokens: 0, currency: "USD" })
         var codex = Normalizer.normalizeProviderCostTotals("codex", { totalCost: 0, totalTokens: 0 }, { cost: 0, tokens: 0, currency: "USD" })
 
@@ -1983,7 +1983,7 @@ TestCase {
     function test_providerCostAmountsPreserveUnavailableAntigravityPricing_data() {
         return [
             { tag: "antigravity-idle-today", provider: "antigravity", amount: 0, expected: null },
-            { tag: "antigravity-no-pricing", provider: "antigravity", amount: 1, expected: null },
+            { tag: "antigravity-estimate", provider: "antigravity", amount: 1, expected: 1 },
             { tag: "antigravity-missing", provider: "antigravity", amount: undefined, expected: null },
             { tag: "codex-zero", provider: "codex", amount: 0, expected: 0 },
             { tag: "claude-zero", provider: "claude", amount: 0, expected: 0 },

@@ -946,12 +946,12 @@ export function normalizeCostTotals(totals, fallbackCost, fallbackTokens, curren
     }
 }
 
-// CodexBar 0.56.2 reports zero cost for Antigravity when today has no usage
-// or the whole history is empty, even though the provider has no pricing.
+// Antigravity 0.56.2 used zero for unavailable totals. Positive estimates
+// from newer CLIs are unambiguous even when some models lack prices.
 export function normalizeProviderCostAmount(providerID, amount) {
     var cost = strictFiniteNumber(amount)
-    return normalizedProviderID(providerID) !== "antigravity" && isFinite(cost)
-        ? cost : null
+    if (cost <= 0 && normalizedProviderID(providerID) === "antigravity") return null
+    return isFinite(cost) ? cost : null
 }
 
 export function normalizeProviderCostTotals(providerID, totals, fallback) {

@@ -365,7 +365,7 @@ TestCase {
     }
 
     function test_tokenCostHintsResolveProviderIdentity() {
-        var antigravity = "Local Antigravity history includes token totals. Dollar costs are unavailable.";
+        var antigravity = "Antigravity cost estimates use public API prices for known models.";
         var codex = "Estimated from local Codex logs, independently of the account selected in the widget.";
         compare(subject.tokenCostHint("antigravity"), antigravity);
         compare(subject.tokenCostHint("agy"), antigravity);

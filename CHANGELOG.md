@@ -31,6 +31,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Show positive cost estimates from the CLI in Antigravity totals, including
+  periods with some unpriced models.
+
 - Allow quota selection for panel text visibility when **Spend budget** is the
   only enabled panel item.
 
