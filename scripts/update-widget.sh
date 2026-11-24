@@ -110,30 +110,32 @@ confirm_setup() {
 finish_setup() {
   [[ "$SETUP" == true ]] || return 0
   local cli_result cli_status
+  local setup_status=0
   if command -v codexbar >/dev/null 2>&1 && [[ "$WITH_CLI" == false ]]; then
     printf '%s\n' 'Found codexbar on PATH. If Plasma cannot find it, set this path in Diagnostics:'
     command -v codexbar
   elif [[ "$WITH_CLI" == true ]] || confirm_setup 'Install or reuse the private official CodexBar CLI?'; then
     printf '%s\n' 'Preparing the private CLI. This can take several minutes.' >&2
-    if ! cli_result="$(timeout --kill-after=10s 610s python3 "$INSTALLED_ROOT/scripts/manage-cli.py" --action install)"; then
-      printf '%s\n' 'Widget is installed, but CLI setup failed. Retry in General -> Managed CLI.' >&2
-      return 1
+    cli_status=error
+    if cli_result="$(timeout --kill-after=10s 610s python3 "$INSTALLED_ROOT/scripts/manage-cli.py" --action install)"; then
+      cli_status="$(jq -er '.status | select(type == "string")' <<< "$cli_result" 2>/dev/null)" || cli_status=error
     fi
-    cli_status="$(jq -er '.status | select(type == "string")' <<< "$cli_result" 2>/dev/null)" || cli_status=error
     case "$cli_status" in
       ready|installed)
         printf '%s\n' 'Private CLI is ready. Select it in widget settings: General -> Managed CLI -> Use managed CLI, then Apply.'
         ;;
       *)
         printf '%s\n' 'Widget is installed, but CLI setup failed. Retry in General -> Managed CLI.' >&2
-        return 1
+        setup_status=1
         ;;
     esac
   else
     printf '%s\n' 'Set up the CLI in General -> Managed CLI -> Install and select managed CLI, then Apply.'
   fi
-  printf '%s\n' 'If CodexBar is not on your panel, add it through Add Widgets -> CodexBar.'
-  printf '%s\n' 'Enable and configure your providers in widget settings -> Providers.'
+  if [[ "$setup_status" == 0 ]]; then
+    printf '%s\n' 'If CodexBar is not on your panel, add it through Add Widgets -> CodexBar.'
+    printf '%s\n' 'Enable and configure your providers in widget settings -> Providers.'
+  fi
   if [[ "$INSTALL_OPTION" == -u && "$setup_changed" == true ]]; then
     if command -v systemctl >/dev/null 2>&1 && confirm_setup 'Restart Plasma panels and desktop now to load the update?'; then
       timeout --kill-after=5s 30s systemctl --user restart plasma-plasmashell.service || {
@@ -144,6 +146,7 @@ finish_setup() {
       printf '%s\n' 'Log out and back in to load the update.'
     fi
   fi
+  return "$setup_status"
 }
 
 validate_asset_record() {

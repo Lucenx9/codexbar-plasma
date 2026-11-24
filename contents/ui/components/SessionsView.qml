@@ -317,7 +317,7 @@ ColumnLayout {
                                         - Kirigami.Units.smallSpacing)
                                     text: sessionCard.title
                                     fontWeight: Font.DemiBold
-                                    copyAccessibleName: i18n("Copy session name")
+                                    copyAccessibleName: i18n("Copy session title")
                                     copyEnabled: !view.applet.privacyMode
                                     copyRevealed: sessionCardHover.hovered
                                     showTruncatedTextOnFocus: true

@@ -1324,8 +1324,8 @@ msgstr ""
 "Sitzungen erscheinen, sobald eine unterstützte lokale CLI sie aufzeichnet."
 
 #: contents/ui/components/SessionsView.qml
-msgid "Copy session name"
-msgstr "Sitzungsnamen kopieren"
+msgid "Copy session title"
+msgstr "Sitzungstitel kopieren"
 
 #: contents/ui/components/CostText.qml
 #: contents/ui/components/ShareUsageWindow.qml

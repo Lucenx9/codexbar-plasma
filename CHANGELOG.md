@@ -31,6 +31,13 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Inspect and select the day under the pointer in dense daily history bar charts.
+
+- Label the Sessions copy action with the card title it copies.
+
+- Keep the Plasma reload prompt or logout guidance after a successful widget
+  upgrade when private CLI setup fails.
+
 - Show reported LiteLLM spend without a budget and display prepaid balances
   from providers such as Grok and Neuralwatt in provider details.
 

@@ -1950,7 +1950,7 @@ msgid "Sessions appear after a supported local CLI starts recording them."
 msgstr ""
 
 #: contents/ui/components/SessionsView.qml
-msgid "Copy session name"
+msgid "Copy session title"
 msgstr ""
 
 #: contents/ui/components/ShareUsageWindow.qml

@@ -179,8 +179,7 @@ ColumnLayout {
             return CostChart.chartLineIndexAt(
                 plot.width, pointCount, positionX, chart.lineMarkerInset)
         }
-        return Math.max(0, Math.min(pointCount - 1,
-            Math.floor(positionX * pointCount / plot.width)))
+        return CostChart.chartBarIndexAt(plot.width, pointCount, positionX)
     }
 
     function focusPlot(reason) {

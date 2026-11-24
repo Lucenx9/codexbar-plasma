@@ -1338,7 +1338,7 @@ TestCase {
         var originalSurface = String(card.surfaceColor);
         var tips = [];
         findAllItems(copyButton, function(item) { return item.plainText !== undefined; }, tips);
-        var tip = tips.filter(function(item) { return item.plainText === "Copy session name"; })[0];
+        var tip = tips.filter(function(item) { return item.plainText === "Copy session title"; })[0];
         verify(tip !== undefined);
         tip.delay = 0;
         copyButton.focus = false;
@@ -1346,7 +1346,8 @@ TestCase {
         copyButton.forceActiveFocus(Qt.TabFocusReason);
         tryCompare(copyButton, "visualFocus", true);
         tryCompare(tip, "visible", true);
-        compare(tip.plainText, "Copy session name\n" + title);
+        compare(tip.plainText, "Copy session title\n" + title);
+        compare(copyButton.Accessible.name, "Copy session title");
         compare(tip.text, SafeText.plainTextAsRichText(tip.plainText));
         verify(String(card.surfaceColor) !== originalSurface,
             "before=" + originalSurface + " after=" + card.surfaceColor + " card=" + card.title

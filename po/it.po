@@ -1321,8 +1321,8 @@ msgstr ""
 "Le sessioni appaiono quando una CLI locale supportata inizia a registrarle."
 
 #: contents/ui/components/SessionsView.qml
-msgid "Copy session name"
-msgstr "Copia il nome della sessione"
+msgid "Copy session title"
+msgstr "Copia il titolo della sessione"
 
 #: contents/ui/components/CostText.qml
 #: contents/ui/components/ShareUsageWindow.qml
