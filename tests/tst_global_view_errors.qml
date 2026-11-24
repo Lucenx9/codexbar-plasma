@@ -52,6 +52,7 @@ TestCase {
         property real valueTextOpacity: 0.8
         property real roundedSurfaceRadius: 8
         property real nestedSurfaceRadius: 4
+        property bool costUsageEnabled: true
         property bool costLoading: false
         property string costErrorText: ""
         property int costHistoryDays: 30
@@ -342,6 +343,7 @@ TestCase {
         applet.sessions = [];
         applet.costErrorText = "";
         applet.sessionsErrorText = "";
+        applet.costUsageEnabled = true;
         applet.costLoading = false;
         applet.sessionsLoading = false;
         applet.privacyMode = false;
@@ -1420,5 +1422,43 @@ TestCase {
         });
         verify(message !== null);
         tryCompare(message, "y", 0);
+    }
+
+    function test_disablingCostHistoryCollapsesExpandedView() {
+        var view = createView("SpendView");
+        if (!view)
+            return;
+        var expandButton = findChild(view, "analysisExpandButton");
+        verify(expandButton !== null && expandButton.visible);
+        verify(!view.expandedView);
+        expandButton.clicked();
+        verify(view.expandedView);
+        applet.costUsageEnabled = false;
+        verify(!expandButton.visible);
+        verify(!view.expandedView);
+        applet.costUsageEnabled = true;
+        verify(expandButton.visible);
+        verify(!view.expandedView);
+    }
+
+    function test_dailyActivitySummaryHidesOnShortRange() {
+        var longRange = Array.from({length: 10}, function(_, index) {
+            return day("2026-10-" + (10 + index), index + 1);
+        });
+        applet.dailyPoints = longRange;
+        var view = createView("SpendView");
+        if (!view)
+            return;
+        var toggle = findChild(view, "analysisActivityToggle");
+        var summary = findChild(view, "spendActivitySummary");
+        verify(toggle !== null && summary !== null);
+        verify(toggle.visible && !summary.visible);
+        toggle.clicked();
+        verify(view.activityExpanded && summary.visible);
+        applet.dailyPoints = longRange.slice(0, 7);
+        verify(!toggle.visible);
+        verify(!summary.visible);
+        applet.dailyPoints = longRange;
+        verify(toggle.visible && summary.visible);
     }
 }
