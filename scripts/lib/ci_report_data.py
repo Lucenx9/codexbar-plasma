@@ -177,7 +177,10 @@ def bind_result(result, run, expected_attempt):
 def read_archive(raw, run, expected_attempt=None):
     require(len(raw) <= MAX_RESULT, "Artifact archive exceeds its size limit")
     with zipfile.ZipFile(io.BytesIO(raw)) as archive:
-        result = validate(json.loads(archive.read(result_entry(archive)), object_pairs_hook=json_object))
+        with archive.open(result_entry(archive)) as stream:
+            payload = stream.read(MAX_RESULT + 1)
+        require(len(payload) <= MAX_RESULT, "Result exceeds its size limit")
+        result = validate(json.loads(payload, object_pairs_hook=json_object))
     return bind_result(result, run, expected_attempt)
 
 

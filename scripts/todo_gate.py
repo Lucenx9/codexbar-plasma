@@ -3,6 +3,7 @@
 import argparse
 import http.client
 import json
+import math
 import os
 from pathlib import Path
 import subprocess
@@ -137,8 +138,12 @@ def usage_line(usage):
     tokens = usage.get("input_tokens")
     cost = usage.get("cost")
     counted = tokens if isinstance(tokens, int) and not isinstance(tokens, bool) else "?"
-    priced = (f"${cost:.6f}" if isinstance(cost, (int, float))
-              and not isinstance(cost, bool) else "cost unknown")
+    try:
+        finite_cost = (isinstance(cost, (int, float))
+                       and not isinstance(cost, bool) and math.isfinite(cost))
+    except OverflowError:
+        finite_cost = False
+    priced = f"${cost:.6f}" if finite_cost else "cost unknown"
     return f"({counted} input tokens, {priced})"
 
 

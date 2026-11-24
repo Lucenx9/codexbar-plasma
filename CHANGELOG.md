@@ -47,6 +47,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   settings controls synchronized when presets or **Defaults** are applied after
   changing them.
 
+- Prevent **Usage dashboard** row labels and values from overlapping in
+  right-to-left layouts.
+
+- Preserve the restored **Quota critical** threshold in Notifications settings
+  when **Defaults** lowers it alongside a higher **Quota warning** threshold.
+
 - Preserve exact day-level model spend shares in **Usage & Spend** when pinning
   a clean day in a period that has excluded requests on another day.
 

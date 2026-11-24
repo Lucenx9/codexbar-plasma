@@ -751,6 +751,22 @@ TestCase {
         compare(criticalSpin.from, 96);
         compare(page.cfg_quotaCriticalPercent, 96);
 
+        // Restoring defaults in alphabetical key order lowers critical before
+        // warning; the spinbox floor must not clamp and lose the restored value.
+        page.cfg_quotaWarningPercent = 98;
+        compare(page.cfg_quotaCriticalPercent, 98);
+        page.cfg_quotaCriticalPercent = 95;
+        page.cfg_quotaWarningPercent = 80;
+        compare(page.cfg_quotaCriticalPercent, 95);
+        compare(criticalSpin.value, 95);
+
+        // A user edit to critical keeps following later config writes.
+        criticalSpin.value = 92;
+        criticalSpin.valueModified();
+        compare(page.cfg_quotaCriticalPercent, 92);
+        page.cfg_quotaCriticalPercent = 95;
+        compare(criticalSpin.value, 95);
+
         // Status incident notices stay unavailable while status fetching is off.
         verify(!statusCheck.enabled);
     }

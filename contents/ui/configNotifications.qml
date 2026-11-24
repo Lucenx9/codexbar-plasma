@@ -30,9 +30,15 @@ KCM.SimpleKCM {
     property bool cfg_notifyLimitResetsDefault: false
     property alias cfg_quotaWarningPercent: quotaWarningPercentSpin.value
     property int cfg_quotaWarningPercentDefault: 80
-    property alias cfg_quotaCriticalPercent: quotaCriticalPercentSpin.value
+    property int cfg_quotaCriticalPercent: 95
     property int cfg_quotaCriticalPercentDefault: 95
     readonly property bool includeStatus: Plasmoid.configuration ? Plasmoid.configuration.includeStatus === true : false
+
+    onCfg_quotaWarningPercentChanged: {
+        if (cfg_quotaCriticalPercent < cfg_quotaWarningPercent) {
+            cfg_quotaCriticalPercent = cfg_quotaWarningPercent
+        }
+    }
 
     Kirigami.FormLayout {
         Kirigami.Separator {
@@ -75,7 +81,14 @@ KCM.SimpleKCM {
             // runtime, where the widget would silently ignore the entered number.
             from: quotaWarningPercentSpin.value
             to: 100
+            value: Math.max(quotaWarningPercentSpin.value, page.cfg_quotaCriticalPercent)
             editable: true
+            onValueModified: {
+                page.cfg_quotaCriticalPercent = value
+                value = Qt.binding(function() {
+                    return Math.max(quotaWarningPercentSpin.value, page.cfg_quotaCriticalPercent)
+                })
+            }
             valueFromText: function(text, locale) {
                 try {
                     var localized = Number.fromLocaleString(locale, text)

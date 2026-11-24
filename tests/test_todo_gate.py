@@ -92,9 +92,13 @@ class UsageLineTests(unittest.TestCase):
         self.assertEqual(usage_line({"input_tokens": 12, "cost": 0.5}),
                          "(12 input tokens, $0.500000)")
         for usage in ({}, {"cost": "free"}, {"input_tokens": True, "cost": None},
-                      {"input_tokens": "many", "cost": [1]}):
+                      {"input_tokens": "many", "cost": [1]},
+                      {"cost": float("nan")}, {"cost": float("inf")},
+                      {"cost": float("-inf")}, {"cost": 10**400}):
             with self.subTest(usage=usage):
-                self.assertIn("input tokens", usage_line(usage))
+                line = usage_line(usage)
+                self.assertIn("input tokens", line)
+                self.assertIn("cost unknown", line)
 
 
 class GateHandler(http.server.BaseHTTPRequestHandler):
