@@ -200,6 +200,20 @@ class ArtifactTests(unittest.TestCase):
             with self.subTest(size=len(raw)), self.assertRaises(ValueError):
                 schema.read_archive(raw, RUN)
 
+    def test_rejects_deflated_entry_with_forged_file_size_header(self):
+        inflated = b'"' + b"a" * (schema.MAX_RESULT * 4) + b'"'
+        raw = io.BytesIO()
+        with zipfile.ZipFile(raw, "w", zipfile.ZIP_DEFLATED) as bundle:
+            bundle.writestr(schema.RESULT_FILE, inflated)
+        data = raw.getvalue()
+        self.assertLessEqual(len(data), schema.MAX_RESULT)
+        real_size = len(inflated).to_bytes(4, "little")
+        forged_size = (10).to_bytes(4, "little")
+        self.assertGreaterEqual(data.count(real_size), 2)
+        patched = data.replace(real_size, forged_size)
+        with self.assertRaises(schema.ARTIFACT_ERRORS):
+            schema.read_archive(patched, RUN)
+
     def test_rejects_duplicate_json_fields_and_unexpected_compression(self):
         for compression, text in ((zipfile.ZIP_STORED, json.dumps(result()).replace(
                 '"schemaVersion": 2', '"schemaVersion": 1, "schemaVersion": 2')),

@@ -751,8 +751,41 @@ TestCase {
         compare(criticalSpin.from, 96);
         compare(page.cfg_quotaCriticalPercent, 96);
 
+        // Restoring defaults in alphabetical key order lowers critical before
+        // warning; the spinbox floor must not clamp and lose the restored value.
+        page.cfg_quotaWarningPercent = 98;
+        compare(page.cfg_quotaCriticalPercent, 98);
+        page.cfg_quotaCriticalPercent = 95;
+        page.cfg_quotaWarningPercent = 80;
+        compare(page.cfg_quotaCriticalPercent, 95);
+        compare(criticalSpin.value, 95);
+
+        // A user edit to critical keeps following later config writes.
+        criticalSpin.value = 92;
+        criticalSpin.valueModified();
+        compare(page.cfg_quotaCriticalPercent, 92);
+        page.cfg_quotaCriticalPercent = 95;
+        compare(criticalSpin.value, 95);
+
         // Status incident notices stay unavailable while status fetching is off.
         verify(!statusCheck.enabled);
+    }
+
+    function test_quotaPreviewUsesEffectiveCriticalWhenConfigIsInverted() {
+        var page = createPage("../contents/ui/configNotifications.qml", {
+            cfg_quotaWarningPercent: 80,
+            cfg_quotaCriticalPercent: 70
+        });
+        if (!page)
+            return;
+        var criticalSpin = findChild(page, "quotaCriticalPercentSpin");
+        var scale = findChild(page, "quotaColorScale");
+        var legend = findChild(page, "quotaCriticalLegend");
+        verify(criticalSpin !== null && scale !== null && legend !== null);
+        compare(criticalSpin.value, 80);
+        compare(scale.firstBoundary, 0.8);
+        compare(scale.secondBoundary, 0.8);
+        verify(legend.text.indexOf((80).toLocaleString(Qt.locale(), "f", 0)) >= 0);
     }
 
     // A blank diagnostic provider explicitly requests "all" providers: the page

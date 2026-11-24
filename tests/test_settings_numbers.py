@@ -24,6 +24,7 @@ TestCase {
     visible: true
     when: windowShown
     property int cfg_costHistoryDays: 30
+    property int cfg_quotaCriticalPercent: 95
     function editCostHistoryDays(value) { cfg_costHistoryDays = value; }
     function i18n(text, value) { return value === undefined ? text : text.replace("%1", value); }
     function i18np(one, many, count) { return (count === 1 ? one : many).replace("%1", count); }

@@ -239,6 +239,30 @@ TestCase {
         details = found[0];
         tryVerify(function() { return !dashboard.visible && !details.visible; });
     }
+
+    // In RTL layouts, the leading label and trailing value must sit on opposite
+    // sides of the row instead of overlapping at x = 0.
+    function test_dashboardRowLabelsDoNotOverlapInRtl() {
+        var subject = createSubject();
+        subject.LayoutMirroring.enabled = true;
+        subject.LayoutMirroring.childrenInherit = true;
+        wait(0);
+        var all = [];
+        walkTree(subject, all);
+        var labels = all.filter(function (item) {
+            return item.text === testCase.hostileRowLabel;
+        });
+        var values = all.filter(function (item) {
+            return item.objectName === "usageDashboardValue0";
+        });
+        compare(labels.length, 1);
+        compare(values.length, 1);
+        var label = labels[0];
+        var value = values[0];
+        verify(label.width > 0 && value.width > 0);
+        verify(value.x + value.width <= label.x,
+            "RTL value (" + value.x + "+" + value.width + ") overlaps label (" + label.x + ")");
+    }
 }
 '''
 

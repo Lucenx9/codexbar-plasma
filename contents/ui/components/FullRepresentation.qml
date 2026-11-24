@@ -1374,6 +1374,7 @@ Item {
                                         id: dashboardRowLabel
                                         text: modelData.label
                                         opacity: applet.secondaryTextOpacity
+                                        anchors.left: parent.left
                                         width: Math.max(0, parent.width - dashboardRowValue.width
                                             - Kirigami.Units.smallSpacing)
                                         elide: Text.ElideRight

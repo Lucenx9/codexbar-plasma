@@ -415,6 +415,22 @@ class SettingsPagesTest(unittest.TestCase):
             "Managed CLI automatic updates checkbox must restore its checked binding after toggle",
         )
 
+    def test_notifications_critical_threshold_decoupled_from_spinbox_floor(self):
+        # Aliasing cfg_quotaCriticalPercent directly to quotaCriticalPercentSpin.value
+        # clamps defaults restored in alphabetical key order before warning drops.
+        notifications_surface.require(
+            "property int cfg_quotaCriticalPercent: 95",
+            "Notifications must store cfg_quotaCriticalPercent independently of the spinbox floor",
+        )
+        notifications_surface.require(
+            "return Math.max(quotaWarningPercentSpin.value, page.cfg_quotaCriticalPercent)",
+            "Notifications critical spinbox must restore its binding after user edits",
+        )
+        notifications_surface.require(
+            "readonly property int effectiveQuotaCriticalPercent: Math.max(cfg_quotaWarningPercent, cfg_quotaCriticalPercent)",
+            "Notifications preview and legend must use the effective critical threshold",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
