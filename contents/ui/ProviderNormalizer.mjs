@@ -876,6 +876,14 @@ export function canInferMissingCostDays(coverageEstablished, firstInspectedItem)
     return coverageEstablished !== false && firstInspectedItem === 0
 }
 
+function blockUnmeasuredDay(item, blockedDateKeys, excludedDates, window) {
+    var date = parsedCalendarDateKey(costDayLabel(item))
+    if (!date) return
+    blockedDateKeys[date.key] = true
+    if (!excludedDates || normalizedIncompleteRequestCount(item.incompleteRequestCount) === 0) return
+    if (!window || costDateWithinWindow(date, window)) excludedDates.add(date.key)
+}
+
 export function selectedCostDays(items, currency, options, modelSources) {
     var selection = costHistorySelection(items, options)
     var historyDays = selection.historyDays
@@ -896,8 +904,7 @@ export function selectedCostDays(items, currency, options, modelSources) {
             if (modelSources) modelSources.set(row, item)
             continue
         }
-        var blockedDate = parsedCalendarDateKey(costDayLabel(item))
-        if (blockedDate) blockedDateKeys[blockedDate.key] = true
+        blockUnmeasuredDay(item, blockedDateKeys, options.excludedDates, selection.window)
     }
     result = canFill ? fillMissingCostDays(result, currency, selection, blockedDateKeys)
         : costHistoryRowsWithinWindow(result, selection.window)

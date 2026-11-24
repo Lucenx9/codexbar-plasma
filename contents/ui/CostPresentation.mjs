@@ -138,7 +138,7 @@ export function spendDailyPoints(fmt, costs, showsTokens) {
     var byDate = ({})
     var currency = CostCurrency.spendCurrency(items)
     var incompleteScans = []
-    var context = { currency: currency, showsTokens: showsTokens }
+    var context = { currency: currency, showsTokens: showsTokens, excludedDates: new Set() }
     for (var i = 0; i < items.length; i++) {
         addDailySnapshot(byDate, items[i], context, incompleteScans)
     }
@@ -146,15 +146,30 @@ export function spendDailyPoints(fmt, costs, showsTokens) {
     rows.sort(function(a, b) { return a.label.localeCompare(b.label) })
     var visible = rows.slice(-CostChart.maximumCostHistoryPoints)
     for (var row of visible) {
-        if (incompleteScans.some(function(dates) { return !dates.has(row.label) })) row.partial = true
+        if (context.excludedDates.has(row.label)
+                || incompleteScans.some(function(dates) { return !dates.has(row.label) })) row.partial = true
     }
     return visible
 }
 
+function dailyCoverage(snapshot, context) {
+    if (!snapshot) return null
+    if (!context.showsTokens && !CostCurrency.costMatchesSpendCurrency(snapshot, context.currency)) return null
+    collectExcludedDates(snapshot, context)
+    return CostTrust.incompleteHistory(snapshot) ? new Set() : null
+}
+
+function collectExcludedDates(snapshot, context) {
+    if (!Array.isArray(snapshot.excludedDates)) return
+    // Privacy removes an invalid currency. That exclusion can still qualify tokens.
+    if (!context.showsTokens && CostAmounts.snapshotTotals(snapshot).currency !== context.currency) return
+    snapshot.excludedDates.slice(0, CostChart.maximumCostHistoryPoints).forEach(function(date) {
+        context.excludedDates.add(date)
+    })
+}
+
 function addDailySnapshot(byDate, snapshot, context, incompleteScans) {
-    var needsCoverage = CostTrust.incompleteHistory(snapshot)
-        && (context.showsTokens || CostCurrency.costMatchesSpendCurrency(snapshot, context.currency))
-    var measuredDates = needsCoverage ? new Set() : null
+    var measuredDates = dailyCoverage(snapshot, context)
     addSpendDays(byDate, CostAmounts.snapshotDaily(snapshot), context, measuredDates)
     if (!measuredDates) return
     var suppliedTotal = CostTrust.hasObservedAmount(snapshot.totals)

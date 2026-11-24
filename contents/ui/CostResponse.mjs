@@ -106,6 +106,9 @@ export function normalizeSnapshot(item, requestedHistoryDays) {
             days: aggregateDays, updatedAt: item.updatedAt, maximumDays: aggregateBound,
             includeModels: false, historyCoverageEstablished: historyCoverageEstablished
         }) : null;
+    var excludedDates = new Set();
+    var daily = Normalizer.normalizeCostDaily(item.daily, currency, { days: historyDays, updatedAt: item.updatedAt,
+        historyCoverageEstablished: historyCoverageEstablished, excludedDates: excludedDates });
     return {
         provider: provider,
         currency: currency,
@@ -141,8 +144,8 @@ export function normalizeSnapshot(item, requestedHistoryDays) {
             cost: CostAmounts.averageDailyValue(aggregateDaily, false),
             tokens: CostAmounts.averageDailyValue(aggregateDaily, true)
         } : null,
-        daily: Normalizer.normalizeCostDaily(item.daily, currency, { days: historyDays, updatedAt: item.updatedAt,
-            historyCoverageEstablished: historyCoverageEstablished })
+        daily: daily,
+        excludedDates: Array.from(excludedDates).sort().slice(-historyDays)
     };
 }
 

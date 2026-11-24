@@ -179,8 +179,9 @@ Official CLI 0.60.5 emits `incompleteRequestCount` on payloads, totals, days,
 and model breakdowns, omitting it when nothing was excluded. It counts requests
 without final usage, not an amount to add back. Aggregate counts within the
 coverage bound, including model breakdowns without amounts. A fully incomplete
-day omits `totalCost` and `totalTokens`, so it remains unknown. Counts survive
-privacy projection.
+day omits `totalCost` and `totalTokens`, so it remains unknown. Its date
+qualifies a combined daily subtotal when another provider supplies a measurement
+for that metric and currency. This also applies in privacy mode.
 
 `normalizeCostProjects` retains bounded names and optional amounts, preserving
 unknown values and duplicate names while discarding paths and nested source

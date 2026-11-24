@@ -102,6 +102,32 @@ TestCase {
         verify(CostTrust.incompleteHistory(cost))
     }
 
+    function test_excludedOnlyDayQualifiesAnotherProvidersMeasurement() {
+        var date = "2026-11-13"
+        var parsed = CostResponse.response(JSON.stringify([
+            {provider: "codex", currencyCode: "EUR", updatedAt: date,
+                historyCoverageIsEstablished: true, daily: [{date: date, incompleteRequestCount: 1}]},
+            {provider: "claude", currencyCode: "EUR", updatedAt: date,
+                daily: [{date: date, totalCost: 0, totalTokens: 7}]}
+        ]), "", 1, 0)
+        for (var privacy of [false, true]) {
+            var excluded = Privacy.cost(parsed.costs.codex, privacy)
+            var observed = Privacy.cost(parsed.costs.claude, privacy)
+            compare(excluded.daily.length, 0)
+            for (var tokens of [false, true]) {
+                compare(Analysis.dailyPoints(null, [excluded], tokens).length, 0)
+                var point = Analysis.dailyPoints(null, [observed, excluded], tokens)[0]
+                compare(point.value, tokens ? 7 : 0)
+                compare(point.partial, true)
+            }
+            var foreign = Object.assign({}, excluded, {totals: {currency: "USD"}})
+            verify(!Analysis.dailyPoints(null, [observed, foreign], false)[0].partial)
+            var malformed = Privacy.cost(Object.assign({}, parsed.costs.codex, {totals: {currency: "usd"}}), privacy)
+            verify(!Analysis.dailyPoints(null, [observed, malformed], false)[0].partial)
+            compare(Analysis.dailyPoints(null, [observed, malformed], true)[0].partial, true)
+        }
+    }
+
     function test_partialDayDependsOnTheSelectedMetric() {
         var first = snapshot("claude", "USD", 1, 0)
         var second = snapshot("codex", "USD", 0, 0)
