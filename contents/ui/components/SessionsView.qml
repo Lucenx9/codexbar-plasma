@@ -214,6 +214,7 @@ ColumnLayout {
                     // A count model's modelData is the card's index.
                     required property var modelData
                     readonly property var session: view.applet.presentedSessions[modelData]
+                        || ({ provider: "", sessionName: "", projectName: "", host: "", source: "", state: "", dialect: "", activityMs: 0 })
 
                     readonly property bool activeSession: sessionLabels.isActiveSession(session.state)
                     readonly property string title: sessionLabels.sessionTitle(session, index)

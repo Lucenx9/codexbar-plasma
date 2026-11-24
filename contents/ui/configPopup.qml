@@ -128,6 +128,15 @@ KCM.SimpleKCM {
             : rateWindowLabels.labelForLane(ProviderIdentity.resolveProviderKey(entry.provider), entry.row)
     }
 
+    function bindOverviewModeRadios() {
+        overviewAutomaticRadio.checked = Qt.binding(function() {
+            return !OverviewProviders.selectionActive(page.cfg_overviewProviderIDs)
+        })
+        overviewCustomRadio.checked = Qt.binding(function() {
+            return OverviewProviders.selectionActive(page.cfg_overviewProviderIDs)
+        })
+    }
+
     function restoreProviderDetailSections(providerID) {
         cfg_popupHiddenDetailSections = PopupHiddenSections.serialize(
             PopupHiddenSections.restoredProvider(hiddenDetailSections, providerID))
@@ -502,7 +511,10 @@ KCM.SimpleKCM {
                     Layout.fillWidth: true
                     text: i18n("Automatic: first %1 providers", OverviewProviders.automaticProviderCount)
                     checked: !OverviewProviders.selectionActive(page.cfg_overviewProviderIDs)
-                    onClicked: page.resetOverviewProvidersToAutomatic()
+                    onClicked: {
+                        page.resetOverviewProvidersToAutomatic()
+                        page.bindOverviewModeRadios()
+                    }
                 }
 
                 Components.PlainControlsLabel {
@@ -525,7 +537,10 @@ KCM.SimpleKCM {
                     Layout.fillWidth: true
                     text: i18n("Choose providers")
                     checked: OverviewProviders.selectionActive(page.cfg_overviewProviderIDs)
-                    onClicked: page.cfg_overviewProviderIDs = OverviewProviders.selectionText(page.resolvedOverviewProviderIDs)
+                    onClicked: {
+                        page.cfg_overviewProviderIDs = OverviewProviders.selectionText(page.resolvedOverviewProviderIDs)
+                        page.bindOverviewModeRadios()
+                    }
                 }
 
                 Repeater {

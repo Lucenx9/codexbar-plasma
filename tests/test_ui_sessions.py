@@ -175,6 +175,16 @@ class SessionsTest(unittest.TestCase):
                     f"missing {session_clock_fragment!r}"
                 )
 
+    def test_session_delegate_guards_shrinking_model(self):
+        self.assertTrue(
+            code_contains(
+                sessions_view_text,
+                'readonly property var session: view.applet.presentedSessions[modelData] '
+                '|| ({ provider: "", sessionName: "", projectName: "", host: "", source: "", state: "", dialect: "", activityMs: 0 })',
+            ),
+            "SessionsView count-model delegates must fall back to an empty session object when the list shrinks",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
