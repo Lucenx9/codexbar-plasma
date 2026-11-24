@@ -1326,8 +1326,8 @@ msgstr ""
 "compatible commence à les enregistrer."
 
 #: contents/ui/components/SessionsView.qml
-msgid "Copy session name"
-msgstr "Copier le nom de la session"
+msgid "Copy session title"
+msgstr "Copier le titre de la session"
 
 #: contents/ui/components/CostText.qml
 #: contents/ui/components/ShareUsageWindow.qml

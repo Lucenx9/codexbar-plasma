@@ -35,6 +35,20 @@ export function chartBarGeometry(width, count) {
     }
 }
 
+// Hit-test the same centers used for painting, including overlapping dense bars.
+export function chartBarIndexAt(width, count, positionX) {
+    var safeWidth = nonNegative(width)
+    var points = pointCount(count, 0)
+    if (safeWidth === 0 || points === 0) return -1
+
+    var geometry = chartBarGeometry(safeWidth, points)
+    if (geometry.step === 0) return 0
+
+    var firstCenter = geometry.offset + geometry.barWidth / 2
+    return Math.max(0, Math.min(points - 1,
+        Math.round((nonNegative(positionX) - firstCenter) / geometry.step)))
+}
+
 // Keep the largest interactive marker fully inside the canvas at both ends.
 export function chartLineX(width, count, index, inset) {
     var safeWidth = nonNegative(width)

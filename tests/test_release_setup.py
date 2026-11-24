@@ -410,6 +410,25 @@ exit 22
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertEqual("restart" in self.calls(), restart)
 
+    def test_upgrade_still_offers_to_reload_when_cli_setup_fails(self):
+        for options, answer, restart in ((["--no-input"], None, False), ([], "y\n", True)):
+            with self.subTest(restart=restart):
+                self.installed.mkdir(parents=True, exist_ok=True)
+                (self.installed / "metadata.json").write_text(json.dumps({
+                    "KPackageStructure": "Plasma/Applet",
+                    "KPlugin": {"Id": "app.codexbar.plasma", "Version": "1.0.0"}}))
+                (self.root / "calls").write_text("")
+                result = self.run_setup("--with-cli", *options, input_answers=answer,
+                                        CLI_STATUS="unverified")
+                self.assertEqual(result.returncode, 1)
+                self.assertIn("Widget is installed, but CLI setup failed", result.stderr)
+                self.assertIn("Installed widget version: 9.9.9", result.stderr)
+                self.assertEqual("restart" in self.calls(), restart)
+                if restart:
+                    self.assertIn("Restart Plasma panels and desktop now", result.stderr)
+                else:
+                    self.assertIn("Log out and back in", result.stdout)
+
     def test_cli_prompt_and_no_input(self):
         result = self.run_setup(input_answers="y\n")
         self.assertEqual(result.returncode, 0, result.stderr)

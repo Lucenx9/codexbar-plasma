@@ -511,6 +511,27 @@ TestCase {
 
     // A line chart strokes a line instead of filling bar gradients: usage
     // detail sections feed kind "line" from the CLI payload.
+    function test_denseBarsInspectAndSelectTheVisibleBar() {
+        var points = Array.from({length: 365}, function(_, index) {
+            return {label: "Day " + (index + 1), value: index === 5 ? 42 : 0}
+        })
+        var chart = createChart({
+            applet: {secondaryTextOpacity: 0.7, canvasColor: function() { return "#000000" }},
+            width: 300, points: points, accent: "blue"
+        })
+        if (!chart) return
+        var plot = chart.nextItemInFocusChain(true).parent
+        tryCompare(plot, "width", 300)
+        // The one-pixel bar for Day 6 covers x=5. The neighboring days are zero.
+        mouseMove(plot, 5, plot.height / 2)
+        compare(findChild(chart, "chartPointLabel").text, "Day 6")
+        mouseClick(plot, 5, plot.height / 2)
+        mouseMove(plot, 5, plot.height + 20)
+        compare(chart.selectedIndex, 5)
+        compare(findChild(chart, "chartPointLabel").text, "Day 6")
+        compare(findChild(chart, "chartPointValue").text, "42")
+    }
+
     function test_lineKindPlotsThroughLineGeometry() {
         var opacities = [];
         var chart = createChart({

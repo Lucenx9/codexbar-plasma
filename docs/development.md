@@ -55,7 +55,9 @@ or open `/dev/tty` for prompts; use `/dev/null` without a terminal or with
 `--no-input`. Only setup prompts for private CLI installation or a Plasma restart.
 `--with-cli` requests CLI installation even unattended, through the installed
 `manage-cli.py --action install`. CLI setup failure is reported separately from
-successful widget installation. Setup never edits provider or widget config.
+successful widget installation. After a successful upgrade, setup still offers
+to restart Plasma or gives logout guidance if CLI preparation fails. Setup never
+edits provider or widget config.
 
 Validate existing user-package metadata under the installation lock before
 running helpers. A missing package initially uses version `0.0.0`. Choose
