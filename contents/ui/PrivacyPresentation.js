@@ -181,6 +181,12 @@ function modelTokenRanking(snapshot) {
         omitted: Math.max(0, Math.min(1000000, Math.floor(numeric(ranking, "omitted", 0)))) }
 }
 
+function excludedCalendarDates(snapshot) {
+    var dates = field(snapshot, "excludedDates", [])
+    return Array.isArray(dates) ? dates.slice(0, Normalizer.maximumCostHistoryPoints)
+        .filter(function(date) { return Normalizer.parsedCalendarDateKey(date) !== null }) : []
+}
+
 function cost(snapshot, enabled) {
     if (!enabled) {
         return snapshot
@@ -195,6 +201,7 @@ function cost(snapshot, enabled) {
         historyDays: Math.max(1, Math.min(365, Math.floor(numeric(snapshot, "historyDays", 30)))),
         historyCoverageEstablished: field(snapshot, "historyCoverageEstablished", true) !== false,
         scanDay: calendarDay(field(snapshot, "scanDay", "")),
+        excludedDates: excludedCalendarDates(snapshot),
         trust: costTrust(field(snapshot, "trust", null)),
         totals: amounts(field(snapshot, "totals", null)),
         today: amounts(field(snapshot, "today", null)),

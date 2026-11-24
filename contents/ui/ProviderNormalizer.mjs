@@ -870,35 +870,45 @@ export function costHistorySelection(items, options) {
     }
 }
 
+// Missing dates can imply zero activity only when the CLI and the input scan
+// both cover the period. Legacy payloads omit the CLI coverage flag.
+export function canInferMissingCostDays(coverageEstablished, firstInspectedItem) {
+    return coverageEstablished !== false && firstInspectedItem === 0
+}
+
+function recordExcludedDate(item, label, excludedDates, window) {
+    if (!excludedDates || normalizedIncompleteRequestCount(item.incompleteRequestCount) === 0) return
+    var date = parsedCalendarDateKey(label)
+    if (date && (!window || costDateWithinWindow(date, window))) excludedDates.add(date.key)
+}
+
 export function selectedCostDays(items, currency, options, modelSources) {
     var selection = costHistorySelection(items, options)
     var historyDays = selection.historyDays
     var blockedDateKeys = ({})
-    var hasInvalidDate = false
     var firstInspectedItem = selection.firstInspectedItem
+    var canFill = canInferMissingCostDays(options.historyCoverageEstablished, firstInspectedItem)
     var result = []
     for (var i = items.length - 1; i >= firstInspectedItem; i--) {
         var item = items[i]
         if (!isCliRecord(item)) continue
-        if (!costHistoryLabelIsUsable(costDayLabel(item))) {
-            hasInvalidDate = true
+        var label = costDayLabel(item)
+        if (!costHistoryLabelIsUsable(label)) {
+            canFill = false
             continue
         }
+        recordExcludedDate(item, label, options.excludedDates, selection.window)
         if (costRecordHasAmounts(item)) {
             var row = normalizedCostDay(item, currency)
             result.unshift(row)
             if (modelSources) modelSources.set(row, item)
             continue
         }
-        var blockedDate = parsedCalendarDateKey(costDayLabel(item))
+        var blockedDate = parsedCalendarDateKey(label)
         if (blockedDate) blockedDateKeys[blockedDate.key] = true
     }
-    // An incomplete scan cannot establish safe zero-activity gaps.
-    if (firstInspectedItem > 0 || hasInvalidDate) {
-        result = costHistoryRowsWithinWindow(result, selection.window)
-    } else {
-        result = fillMissingCostDays(result, currency, selection, blockedDateKeys)
-    }
+    result = canFill ? fillMissingCostDays(result, currency, selection, blockedDateKeys)
+        : costHistoryRowsWithinWindow(result, selection.window)
     return result.slice(-historyDays)
 }
 

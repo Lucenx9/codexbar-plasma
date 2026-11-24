@@ -1697,8 +1697,8 @@ PlasmoidItem {
         return true
     }
 
-    function providerPlaceholderText(item) {
-        return OverviewProviders.placeholderText(item)
+    function providerPlaceholderText(item, costSectionVisible) {
+        return OverviewProviders.placeholderText(item, costSectionVisible)
     }
 
     function usagePercentText(row) {

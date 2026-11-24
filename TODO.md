@@ -272,8 +272,8 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Automatic balance text
 
 - [ ] Show a typed money/points balance when automatic panel text has no quota.
-  macOS 0.57.0 uses provider-specific prose parsing for several cases. A generic
-  official Linux amount, unit/currency, and availability contract is missing.
+  macOS 0.57.0 uses provider-specific prose parsing for several cases. Some
+  Linux providers expose balances only as formatted text.
   At 0.60.4 the source-observed `balanceIsWorkspace`/`creditsAvailable` fields
   describe Codex credit availability and workspace scope. The [0.84.0 loopback
   probe](docs/runtime-verification.md#cli-probes-and-packaging) verifies them in
@@ -285,15 +285,13 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   only as `details` row text, as do the 0.74.0 Linkup, Sail Research, Sofya,
   Exa, and Ollama API-key credit rows (source-observed).
   The 0.76.0 Claude Platform source adds a typed `providerCost` prepaid balance,
-  but authenticated Linux output is unverified and Plasma currently discards
-  its explicit `balance` field. Do not infer balance semantics from its period
-  text.
-  The 0.84.0 Neuralwatt plugin also adds a typed `providerCost.balance`, while
-  SiliconFlow and Tripo expose balance/credit detail text; none was observed
-  with authenticated Linux output in this review.
-  Done when the widget can display
-  that record without parsing provider text,
-  overriding a real quota, or treating a balance as an allowance.
+  but its authenticated Linux output is unverified. Provider details now consume
+  explicit monetary balances verified with Neuralwatt and Grok. Automatic panel
+  text still requires a fallback when no quota is available. SiliconFlow and
+  Tripo expose balance/credit detail text in the 0.84.0 source.
+  [Verified provider cost contracts](docs/cost-history.md#pinned-cli-evidence).
+  Done when automatic panel text can show an explicitly typed balance in the
+  absence of a quota.
   [Source comparison](docs/research/2026-09-09-macos-parity-0.57.0.md#automatic-balance-text-needs-a-generic-contract);
   [0.60.4 evidence](docs/research/2026-09-16-macos-parity-0.60.4.md#linux-cli-contract-changes-since-0580).
 
@@ -330,9 +328,10 @@ Prioritize the account identity and balance cases first.
   synthetic API keys, and Google Developer Program and SiliconFlow save
   synthetic cookies. The isolated usage probes terminated with exit 139.
   Verify Linux dispatch before exposing additional widget prompts. Also check
-  emitted quotas, balances, and spend for these providers and for Grok,
-  OpenAI API, DeepSeek, Notion AI, Helmcode, Amp, Venice, and Claude
-  Platform against Plasma's generic quota, cost, and detail views.
+  emitted quotas, balances, and spend for these providers and for OpenAI API,
+  DeepSeek, Notion AI, Helmcode, Amp, Venice, and Claude Platform against the
+  widget's generic views. Grok quota and spend still need verification beyond
+  the purchased balance verified through synthetic ACP.
   [Evidence and limits](docs/research/2026-11-22-macos-parity-0.85.0.md).
 
 - [ ] Verify account identity and stale-data behavior against the 0.56.3–0.57.0
@@ -408,9 +407,9 @@ Prioritize the account identity and balance cases first.
   [Limits](docs/research/2026-11-01-macos-parity-0.83.0.md#unverified-in-this-review).
 - [ ] Verify 0.84.0 authenticated output: SiliconFlow regional balances, Tripo
   available/reserved credits, successful Claude Platform session authorization,
-  Synthetic weekly credits and regeneration,
-  Neuralwatt's typed balance, TypeSafe billing, Kiro token recovery/Pro+,
-  Bedrock measured zero days, and Claude weekly-only/model-breakdown states.
+  Synthetic weekly credits and regeneration, TypeSafe billing, Kiro token
+  recovery/Pro+, Bedrock measured zero days, and Claude weekly-only/model-breakdown
+  states.
   Compare current window names, including Cursor's monthly Auto allowance,
   with Plasma's static lane-label table before changing labels. Done when
   emitted Linux records establish whether generic details, quota and cost
@@ -480,11 +479,10 @@ Prioritize the account identity and balance cases first.
   Plasma's generic quota rendering.
   [Unverified at 0.72.0](docs/research/2026-10-05-macos-parity-0.72.0.md#unverified-in-this-review).
 - [ ] Verify the new 0.72.0 credit balance fields in official Linux `usage`
-  output: Grok purchased Extra Usage Credits, the Claude promotional
-  cloud-session credit separation from prepaid credits, and the Claude saved
-  limit-reset credits in OAuth usage (#4239, #4243, #4194, #4214, #3895,
-  #4232), plus the 0.74.0 JetBrains top-up credits (#4372) and Ollama
-  purchased-credit and wallet rows (#4399, #4370). Empty-history output
+  output for the Claude promotional cloud-session credit separation from
+  prepaid credits and the Claude saved limit-reset credits in OAuth usage
+  (#4194, #4214, #3895, #4232), plus the 0.74.0 JetBrains top-up credits
+  (#4372) and Ollama purchased-credit and wallet rows (#4399, #4370). Empty-history output
   carries none of them. Reproduce each with a
   funded account safely, then classify whether the generic balance/details
   path renders them or a normalization change is needed.

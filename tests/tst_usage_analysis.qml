@@ -81,6 +81,81 @@ TestCase {
         compare(Analysis.modelRows([cost], "2026-11-12", false).rows.length, 0)
     }
 
+    function test_recordedDayKeepsItsPricingAndExclusions() {
+        var cost = snapshot("codex", "USD", 2, 1)
+        cost.historyCoverageEstablished = false
+        cost.valueMode = "partial"
+        cost.trust = {sourceKind: "listPrice", incompleteRequests: 3}
+        var observed = Analysis.dayCosts([cost], cost.daily[0].label)[0]
+        verify(!CostTrust.incompleteHistory(observed))
+        compare(observed.valueMode, "estimated")
+        compare(observed.totals.cost, 2)
+        cost.daily[0].incompleteRequests = 1
+        compare(Analysis.dayCosts([cost], cost.daily[0].label)[0].valueMode, "partial")
+        for (var tokens of [false, true]) {
+            var points = Analysis.dailyPoints(null, [cost], tokens)
+            compare(points.filter(point => point.partial).map(point => point.label), [cost.daily[0].label])
+        }
+        var missing = Analysis.dayCosts([cost], "2020-01-01")[0]
+        compare(missing.totals.cost, null)
+        verify(CostTrust.incompleteHistory(missing))
+        verify(CostTrust.incompleteHistory(cost))
+    }
+
+    function test_excludedDayQualifiesAnotherProvidersMeasurement_data() {
+        return [{tag: "excluded-only", tokens: null}, {tag: "tokens-recorded", tokens: 3}]
+    }
+
+    function test_excludedDayQualifiesAnotherProvidersMeasurement(data) {
+        var date = "2026-11-13"
+        var parsed = CostResponse.response(JSON.stringify([
+            {provider: "codex", currencyCode: "EUR", updatedAt: date,
+                historyCoverageIsEstablished: true, daily: [{date: date, totalTokens: data.tokens, incompleteRequestCount: 1}]},
+            {provider: "claude", currencyCode: "EUR", updatedAt: date,
+                daily: [{date: date, totalCost: 0, totalTokens: 7}]}
+        ]), "", 1, 0)
+        for (var privacy of [false, true]) {
+            var excluded = Privacy.cost(parsed.costs.codex, privacy)
+            var observed = Privacy.cost(parsed.costs.claude, privacy)
+            compare(excluded.daily.length, data.tokens === null ? 0 : 1)
+            for (var tokens of [false, true]) {
+                compare(Analysis.dailyPoints(null, [excluded], tokens).length, tokens && data.tokens !== null ? 1 : 0)
+                var point = Analysis.dailyPoints(null, [observed, excluded], tokens)[0]
+                compare(point.value, tokens ? 7 + (data.tokens || 0) : 0)
+                compare(point.partial, true)
+            }
+            var foreign = Object.assign({}, excluded, {totals: {currency: "USD"}})
+            verify(!Analysis.dailyPoints(null, [observed, foreign], false)[0].partial)
+            var malformed = Privacy.cost(Object.assign({}, parsed.costs.codex, {totals: {currency: "usd"}}), privacy)
+            verify(!Analysis.dailyPoints(null, [observed, malformed], false)[0].partial)
+            compare(Analysis.dailyPoints(null, [observed, malformed], true)[0].partial, true)
+        }
+    }
+
+    function test_partialDayDependsOnTheSelectedMetric() {
+        var first = snapshot("claude", "USD", 1, 0)
+        var second = snapshot("codex", "USD", 0, 0)
+        second.historyCoverageEstablished = false
+        second.daily[0].cost = null
+        second.daily[1].tokens = null
+        function partialDates(tokens) {
+            return Analysis.dailyPoints(null, [first, second], tokens)
+                .filter(point => point.partial).map(point => point.label)
+        }
+        compare(partialDates(false), [second.daily[0].label])
+        compare(partialDates(true), [second.daily[1].label])
+        second.totals.cost = null
+        second.daily.forEach(day => { day.cost = null })
+        compare(partialDates(false), [])
+        compare(partialDates(true), [second.daily[1].label])
+        second.totals.tokens = null
+        second.daily.forEach(day => { day.tokens = null })
+        compare(partialDates(true), [])
+        second.daily = []
+        second.totals.tokens = 0
+        compare(partialDates(true), [])
+    }
+
     function test_ambiguityBeyondRenderedProviders_data() {
         return [{tag: "129-cost", count: 129, tokens: false, foreign: false, expected: null},
             {tag: "256-tokens", count: 256, tokens: true, foreign: false, expected: null},

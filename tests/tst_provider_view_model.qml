@@ -15,6 +15,17 @@ TestCase {
         compare(result.panelBudget.limit, 10);
         compare(result.panelBudget.currency, "USD");
     }
+    function test_costOnlyPlaceholderReachesPopupVisibilityDecision() {
+        var snapshot = Snapshot.normalize({provider: "litellm", usage: {
+            providerCost: {used: 12.34, limit: 0, currencyCode: "USD"}
+        }}, 1000);
+        var display = {rows: [], title: "LiteLLM", planText: "", status: "", placeholder: "No usage yet"};
+        compare(View.presented(snapshot, display).placeholder, "No usage yet");
+        display.providerCost = {title: "API spend", percentUsed: -1};
+        var item = View.presented(snapshot, display);
+        compare(item.placeholder, "No usage yet");
+        compare(item.placeholderKind, "noUsage");
+    }
     function test_missingCurrencyCannotBecomePanelMoneyAfterNormalization() {
         for (var currency of [undefined, null, false, 123, "", {}, "Quota", "Credits"]) {
             var raw = {provider: "future", usage: {providerCost: {used: 2, limit: 10}}};

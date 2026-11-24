@@ -141,6 +141,9 @@ PlainNote {
 
     function summaryText() {
         var sentences = []
+        if (summary && summary.hasIncompleteHistory) {
+            sentences.push(i18n("The local history scan is incomplete."))
+        }
         var coverage = coverageText()
         if (coverage.length > 0) {
             sentences.push(coverage)

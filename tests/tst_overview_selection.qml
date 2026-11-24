@@ -172,6 +172,15 @@ TestCase {
         return result.join(",");
     }
 
+    function test_emptyUsagePlaceholderYieldsOnlyToVisibleCost() {
+        var item = {provider: "litellm", placeholderKind: "noUsage", placeholder: "No usage yet"};
+        compare(OverviewProviders.placeholderText(item, true), "");
+        compare(OverviewProviders.placeholderText(item, false), "No usage yet");
+        item.placeholderKind = "limitsUnavailable";
+        item.placeholder = "Limits not available";
+        compare(OverviewProviders.placeholderText(item, true), "Limits not available");
+    }
+
     function test_placeholderTextYieldsToTheCodexTokenCost() {
         compare(OverviewProviders.placeholderText({ provider: "gemini", placeholder: "No usage yet" }), "No usage yet");
         // Codex renders its token cost on the same line.

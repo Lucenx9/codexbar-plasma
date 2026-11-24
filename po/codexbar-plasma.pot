@@ -244,6 +244,11 @@ msgstr[0] ""
 msgstr[1] ""
 
 #: contents/ui/components/AnalysisSummary.qml
+#: contents/ui/components/CostTrustNotice.qml
+msgid "The local history scan is incomplete."
+msgstr ""
+
+#: contents/ui/components/AnalysisSummary.qml
 msgid "%1×"
 msgstr ""
 
@@ -283,7 +288,7 @@ msgid "Cost unavailable"
 msgstr ""
 
 #: contents/ui/components/AnalysisSummary.qml
-#: contents/ui/components/CostText.qml
+#: contents/ui/components/CostText.qml contents/ui/components/SpendView.qml
 msgid "%1 (partial)"
 msgstr ""
 

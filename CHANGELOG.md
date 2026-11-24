@@ -31,6 +31,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Show reported LiteLLM spend without a budget and display prepaid balances
+  from providers such as Grok and Neuralwatt in provider details.
+
+- Mark totals from incomplete local history as partial and leave unobserved
+  days out of charts and daily averages.
+
 - Show positive cost estimates from the CLI in Antigravity totals, including
   periods with some unpriced models.
 

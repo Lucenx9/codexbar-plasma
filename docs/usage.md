@@ -155,9 +155,12 @@ Estimated and unknown-confidence readings also omit pace and reset details.
 The [Claude detail contract](research/2026-10-15-claude-details-0.76.0.md)
 records the verified percentage-only behavior.
 
-Provider details can include spend, requests, tokens, models, labeled rows,
-and inspectable charts. A CLI-reported **warning** or **critical** row has a
-severity symbol and colors its value independently of the progress meter.
+Provider details can show spend even when no budget is set, as with LiteLLM.
+Grok and Neuralwatt can show a prepaid balance when no spend allowance
+applies. A spend meter requires a positive limit. Details can also include
+requests, tokens, models, labeled rows, and inspectable charts. A CLI-reported
+**warning** or **critical** row has a severity symbol and colors its value
+independently of the progress meter.
 A meter needs a reported used/total pair. Privacy mode hides free-form details;
 they are not restored from the quota cache.
 
@@ -555,8 +558,10 @@ supplies token-only history. The verified Linux CLI rejects Cursor cost queries.
   They do not change global totals, and project paths are excluded.
 
 A failed cost scan keeps the previous snapshot and reports the error while
-healthy providers update. Missing days stay missing; incomplete scans never
-invent zero activity. A retained warning remains until a successful scan.
+healthy providers update. When the CLI reports incomplete history, period
+totals are partial. Only recorded days contribute to daily averages. Missing
+days remain unavailable and an explicitly recorded zero remains visible.
+A retained warning remains until a successful scan.
 Selecting a day survives a refresh while that date remains available; changing
 metric or range clears it.
 

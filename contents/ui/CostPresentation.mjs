@@ -137,14 +137,46 @@ export function spendDailyPoints(fmt, costs, showsTokens) {
     var items = Array.isArray(costs) ? costs : []
     var byDate = ({})
     var currency = CostCurrency.spendCurrency(items)
+    var incompleteScans = []
+    var context = { currency: currency, showsTokens: showsTokens, excludedDates: new Set() }
     for (var i = 0; i < items.length; i++) {
-        var snapshot = items[i]
-        var daily = snapshot && Array.isArray(snapshot.daily) ? snapshot.daily : []
-        addSpendDays(byDate, daily, { currency: currency, showsTokens: showsTokens })
+        addDailySnapshot(byDate, items[i], context, incompleteScans)
     }
     var rows = spendPointRows(byDate, fmt, showsTokens)
     rows.sort(function(a, b) { return a.label.localeCompare(b.label) })
-    return rows.slice(Math.max(0, rows.length - CostChart.maximumCostHistoryPoints))
+    var visible = rows.slice(-CostChart.maximumCostHistoryPoints)
+    for (var row of visible) {
+        if (context.excludedDates.has(row.label)
+                || incompleteScans.some(function(dates) { return !dates.has(row.label) })) row.partial = true
+    }
+    return visible
+}
+
+function dailyCoverage(snapshot, context) {
+    if (!snapshot) return null
+    if (!context.showsTokens && !CostCurrency.costMatchesSpendCurrency(snapshot, context.currency)) return null
+    collectExcludedDates(snapshot, context)
+    return CostTrust.incompleteHistory(snapshot) ? new Set() : null
+}
+
+function collectExcludedDates(snapshot, context) {
+    if (!Array.isArray(snapshot.excludedDates)) return
+    // Privacy removes an invalid currency. That exclusion can still qualify tokens.
+    if (!context.showsTokens && CostAmounts.snapshotTotals(snapshot).currency !== context.currency) return
+    snapshot.excludedDates.slice(0, CostChart.maximumCostHistoryPoints).forEach(function(date) {
+        context.excludedDates.add(date)
+    })
+}
+
+function addDailySnapshot(byDate, snapshot, context, incompleteScans) {
+    var measuredDates = dailyCoverage(snapshot, context)
+    addSpendDays(byDate, CostAmounts.snapshotDaily(snapshot), context, measuredDates)
+    if (!measuredDates) return
+    var suppliedTotal = CostTrust.hasObservedAmount(snapshot.totals)
+        && CostAmounts.hasMetricValue(snapshot.totals, context.showsTokens)
+    if (measuredDates.size > 0 || suppliedTotal) {
+        incompleteScans.push(measuredDates)
+    }
 }
 
 // Money is summed only in the range currency. Tokens have no currency, so the
@@ -226,14 +258,16 @@ export function normalizedSpendDay(point, context) {
         currency: context.currency }
 }
 
-export function addSpendDays(byDate, daily, context) {
+export function addSpendDays(byDate, daily, context, measuredDates) {
     for (var i = 0; i < daily.length; i++) {
         var point = normalizedSpendDay(daily[i], context)
         if (!point) continue
+        if (measuredDates) measuredDates.add(point.label)
         if (!Guards.hasOwnKey(byDate, point.label)) {
             byDate[point.label] = { label: point.label, value: 0, currency: context.currency }
         }
         byDate[point.label].value += point.value
+        if (CostTrust.acceptedIncompleteRequests(daily[i]) > 0) byDate[point.label].partial = true
     }
 }
 

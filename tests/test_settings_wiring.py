@@ -61,6 +61,8 @@ class SettingsWiringTests(unittest.TestCase):
                              ("providerDetailsSection", "showPopupProviderDetails"),
                              ("usageDashboardSection", "showPopupProviderDetails")):
             self.assertIn("visible: applet." + option, applet.id_block(name))
+        self.assertIn("providerPlaceholderText(applet.presentedProviderData, providerCostSection.visible)",
+                      applet.id_block("providerPlaceholderMessage"))
         # The production usage delegate is exercised with pace toggled in
         # test_provider_cost_presentation.py; no private property spelling pin.
 

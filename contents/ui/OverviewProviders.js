@@ -74,10 +74,11 @@ function selectionText(providerIDs) {
 // The placeholder line a provider shows instead of quota rows. Codex spends
 // its placeholder slot on the token cost summary, which the popup already
 // renders, so an empty string keeps that line from being shown twice.
-function placeholderText(item) {
+function placeholderText(item, costSectionVisible) {
     if (!item || !item.placeholder || item.placeholder.length === 0) {
         return "";
     }
+    if (costSectionVisible && item.placeholderKind === "noUsage") return "";
     if (item.provider === "codex" && item.tokenCost) {
         return "";
     }
