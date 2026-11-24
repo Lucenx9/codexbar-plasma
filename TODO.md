@@ -221,8 +221,9 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Cost availability
 
 - [ ] Distinguish measured zero from unavailable in Antigravity provider summaries
-  through explicit CLI metadata. Positive CLI estimates are supported
-  ([verified contract](docs/cost-history.md#history-trust-and-project-totals)).
+  using verified CLI metadata. Test period coverage with zero-cost requests and
+  check today separately because coverage spans the selected period. Positive
+  estimates are [supported](docs/cost-history.md#pinned-cli-evidence).
   At 0.56.2, established-empty history used zero
   despite unavailable costs. The 0.57.0, 0.58.0, and 0.60.4 Antigravity fresh-history
   probes omit cost totals, and the Claude probes report measured zeros;
