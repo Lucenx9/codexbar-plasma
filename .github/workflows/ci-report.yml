@@ -37,6 +37,7 @@ jobs:
 
   publish:
     needs: source
+    if: needs.source.outputs.group != ''
     runs-on: ubuntu-latest
     timeout-minutes: 10
     # Only events for the same source PR share a pending slot. Manual dispatch

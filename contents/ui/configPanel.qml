@@ -732,7 +732,7 @@ KCM.SimpleKCM {
                 currentIndex: page.quotaLaneIndex(page.cfg_panelQuotaLane)
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 12
                 enabled: showProviderCheck.checked || showPercentCheck.checked
-                    || showCreditsCheck.checked || showMultiProviderCheck.checked
+                    || showCreditsCheck.checked || showSpendCheck.checked || showMultiProviderCheck.checked
                 onActivated: function(index) { page.cfg_panelQuotaLane = valueAt(index) }
             }
 

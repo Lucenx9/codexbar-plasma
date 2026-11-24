@@ -239,6 +239,16 @@ TestCase {
         compare(ShareUsage.snapshot([input, input], 30, "", false).tokens, null)
     }
 
+    function test_currencyOverflowPreservesAvailableTotals() {
+        var costs = [cost("codex", 1, Number.MAX_SAFE_INTEGER, "USD"), cost("claude", 2, 1, "USD")]
+        var snapshot = ShareUsage.snapshot(costs, 30, "", false)
+        verify(snapshot.partial)
+        compare(snapshot.tokens, 3)
+        compare(snapshot.currencies, [])
+        costs.push(cost("cursor", 3, 0, "EUR"))
+        compare(ShareUsage.snapshot(costs, 30, "", false).currencies, [{currency: "EUR", cost: 0}])
+    }
+
     function test_tokenRankingPrecedesCostCap() {
         var models = []
         for (var i = 0; i < 8; i++)

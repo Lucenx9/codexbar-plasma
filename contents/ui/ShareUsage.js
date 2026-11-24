@@ -92,11 +92,9 @@ function snapshot(costs, days, createdAt, refreshFailed, period) {
     }
     if (result.tokens !== null && amount(result.tokens) === null) result.partial = true
     result.tokens = amount(result.tokens)
-    result.currencies.sort(function(a, b) { return a.currency.localeCompare(b.currency) })
-    result.currencies.forEach(function(row) {
-        if (amount(row.cost) === null) result.partial = true
-        row.cost = amount(row.cost)
-    })
+    var currencies = result.currencies.filter(function(row) { return amount(row.cost) !== null })
+    if (currencies.length !== result.currencies.length) result.partial = true
+    result.currencies = currencies.sort(function(a, b) { return a.currency.localeCompare(b.currency) })
     result.providers.sort(rank)
     models.sort(rank)
     result.omittedProviders = Math.max(0, result.providers.length - 8)

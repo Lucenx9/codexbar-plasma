@@ -94,6 +94,7 @@ Item {
         readonly property int maximumConcurrentProviderFallbackCommands: 8
         property var providerFallbackState: null
         property bool fallbackOnlyPathFailures: false
+        readonly property string providerSelector: Normalizer.normalizedProviderID(controller.provider)
         readonly property string requestContext: JSON.stringify([controller.commandPath, controller.provider, controller.sourceMode, controller.includeStatus, controller.selectedAccounts, controller.providerConfigRevision])
         // Enabled-only and explicit all-provider rosters cannot share a cache.
         readonly property string rosterContext: JSON.stringify([providerRosterContext(), controller.provider])
@@ -255,6 +256,10 @@ Item {
             loading = true;
             errorText = "";
             commandPathFailed = false;
+            if (controller.provider.length > 0 && providerSelector.length === 0) {
+                failUsageRefresh(i18n("Invalid provider override in widget settings."));
+                return;
+            }
             if (canUseProviderFallback()) {
                 startProviderFallback(bypassProviderRosterCache === true);
                 return;
@@ -277,13 +282,12 @@ Item {
 
         function startProviderFallback(bypassProviderRosterCache) {
             retireUsageCommandKind("usage");
-            var selector = Normalizer.normalizedProviderID(controller.provider);
-            if (selector === "both") {
+            if (providerSelector === "both") {
                 startProviderFallbackForProviders(["codex", "claude"]);
                 return;
             }
-            if (controller.provider.length > 0 && selector !== "all") {
-                startProviderFallbackForProviders([selector]);
+            if (providerSelector.length > 0 && providerSelector !== "all") {
+                startProviderFallbackForProviders([providerSelector]);
                 return;
             }
 
@@ -477,8 +481,7 @@ Item {
         }
 
         function parseOutput(stdoutText, stderrText, exitCode) {
-            var providerID = Normalizer.normalizedProviderID(controller.provider);
-            var scope = providerID === "all" || providerID === "both" ? "" : controller.provider;
+            var scope = providerSelector === "all" || providerSelector === "both" ? "" : controller.provider;
             var result = UsageResponse.response(stdoutText, stderrText, scope, Date.now(), exitCode);
             if (result.outcome === "emptyRoster") {
                 finishEmptyRoster();
@@ -501,7 +504,7 @@ Item {
                 return;
             }
             var result = UsageResponse.roster(stdoutText, stderrText, exitCode,
-                Normalizer.normalizedProviderID(controller.provider) === "all");
+                providerSelector === "all");
             if (result.outcome !== "success") {
                 failUsageRefresh(responseMessage(result, true));
                 return;
