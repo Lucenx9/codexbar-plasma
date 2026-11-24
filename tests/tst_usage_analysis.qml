@@ -102,22 +102,26 @@ TestCase {
         verify(CostTrust.incompleteHistory(cost))
     }
 
-    function test_excludedOnlyDayQualifiesAnotherProvidersMeasurement() {
+    function test_excludedDayQualifiesAnotherProvidersMeasurement_data() {
+        return [{tag: "excluded-only", tokens: null}, {tag: "tokens-recorded", tokens: 3}]
+    }
+
+    function test_excludedDayQualifiesAnotherProvidersMeasurement(data) {
         var date = "2026-11-13"
         var parsed = CostResponse.response(JSON.stringify([
             {provider: "codex", currencyCode: "EUR", updatedAt: date,
-                historyCoverageIsEstablished: true, daily: [{date: date, incompleteRequestCount: 1}]},
+                historyCoverageIsEstablished: true, daily: [{date: date, totalTokens: data.tokens, incompleteRequestCount: 1}]},
             {provider: "claude", currencyCode: "EUR", updatedAt: date,
                 daily: [{date: date, totalCost: 0, totalTokens: 7}]}
         ]), "", 1, 0)
         for (var privacy of [false, true]) {
             var excluded = Privacy.cost(parsed.costs.codex, privacy)
             var observed = Privacy.cost(parsed.costs.claude, privacy)
-            compare(excluded.daily.length, 0)
+            compare(excluded.daily.length, data.tokens === null ? 0 : 1)
             for (var tokens of [false, true]) {
-                compare(Analysis.dailyPoints(null, [excluded], tokens).length, 0)
+                compare(Analysis.dailyPoints(null, [excluded], tokens).length, tokens && data.tokens !== null ? 1 : 0)
                 var point = Analysis.dailyPoints(null, [observed, excluded], tokens)[0]
-                compare(point.value, tokens ? 7 : 0)
+                compare(point.value, tokens ? 7 + (data.tokens || 0) : 0)
                 compare(point.partial, true)
             }
             var foreign = Object.assign({}, excluded, {totals: {currency: "USD"}})

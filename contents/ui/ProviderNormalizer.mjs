@@ -876,12 +876,10 @@ export function canInferMissingCostDays(coverageEstablished, firstInspectedItem)
     return coverageEstablished !== false && firstInspectedItem === 0
 }
 
-function blockUnmeasuredDay(item, blockedDateKeys, excludedDates, window) {
-    var date = parsedCalendarDateKey(costDayLabel(item))
-    if (!date) return
-    blockedDateKeys[date.key] = true
+function recordExcludedDate(item, label, excludedDates, window) {
     if (!excludedDates || normalizedIncompleteRequestCount(item.incompleteRequestCount) === 0) return
-    if (!window || costDateWithinWindow(date, window)) excludedDates.add(date.key)
+    var date = parsedCalendarDateKey(label)
+    if (date && (!window || costDateWithinWindow(date, window))) excludedDates.add(date.key)
 }
 
 export function selectedCostDays(items, currency, options, modelSources) {
@@ -894,17 +892,20 @@ export function selectedCostDays(items, currency, options, modelSources) {
     for (var i = items.length - 1; i >= firstInspectedItem; i--) {
         var item = items[i]
         if (!isCliRecord(item)) continue
-        if (!costHistoryLabelIsUsable(costDayLabel(item))) {
+        var label = costDayLabel(item)
+        if (!costHistoryLabelIsUsable(label)) {
             canFill = false
             continue
         }
+        recordExcludedDate(item, label, options.excludedDates, selection.window)
         if (costRecordHasAmounts(item)) {
             var row = normalizedCostDay(item, currency)
             result.unshift(row)
             if (modelSources) modelSources.set(row, item)
             continue
         }
-        blockUnmeasuredDay(item, blockedDateKeys, options.excludedDates, selection.window)
+        var blockedDate = parsedCalendarDateKey(label)
+        if (blockedDate) blockedDateKeys[blockedDate.key] = true
     }
     result = canFill ? fillMissingCostDays(result, currency, selection, blockedDateKeys)
         : costHistoryRowsWithinWindow(result, selection.window)
