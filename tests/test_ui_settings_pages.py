@@ -426,6 +426,10 @@ class SettingsPagesTest(unittest.TestCase):
             "return Math.max(quotaWarningPercentSpin.value, page.cfg_quotaCriticalPercent)",
             "Notifications critical spinbox must restore its binding after user edits",
         )
+        notifications_surface.require(
+            "readonly property int effectiveQuotaCriticalPercent: Math.max(cfg_quotaWarningPercent, cfg_quotaCriticalPercent)",
+            "Notifications preview and legend must use the effective critical threshold",
+        )
 
 
 if __name__ == "__main__":

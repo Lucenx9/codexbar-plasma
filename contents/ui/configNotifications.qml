@@ -32,6 +32,7 @@ KCM.SimpleKCM {
     property int cfg_quotaWarningPercentDefault: 80
     property int cfg_quotaCriticalPercent: 95
     property int cfg_quotaCriticalPercentDefault: 95
+    readonly property int effectiveQuotaCriticalPercent: Math.max(cfg_quotaWarningPercent, cfg_quotaCriticalPercent)
     readonly property bool includeStatus: Plasmoid.configuration ? Plasmoid.configuration.includeStatus === true : false
 
     onCfg_quotaWarningPercentChanged: {
@@ -130,16 +131,16 @@ KCM.SimpleKCM {
                 radius: height / 2
                 Accessible.ignored: true
                 readonly property real firstBoundary: page.mirrored
-                    ? 1 - page.cfg_quotaCriticalPercent / 100 : page.cfg_quotaWarningPercent / 100
+                    ? 1 - page.effectiveQuotaCriticalPercent / 100 : page.cfg_quotaWarningPercent / 100
                 readonly property real secondBoundary: page.mirrored
-                    ? 1 - page.cfg_quotaWarningPercent / 100 : page.cfg_quotaCriticalPercent / 100
+                    ? 1 - page.cfg_quotaWarningPercent / 100 : page.effectiveQuotaCriticalPercent / 100
                 readonly property color lowColor: page.mirrored
-                    ? (page.cfg_quotaCriticalPercent === 100 ? Kirigami.Theme.neutralTextColor : Kirigami.Theme.negativeTextColor)
+                    ? (page.effectiveQuotaCriticalPercent === 100 ? Kirigami.Theme.neutralTextColor : Kirigami.Theme.negativeTextColor)
                     : Kirigami.Theme.highlightColor
                 readonly property color highColor: page.mirrored
                     ? Kirigami.Theme.highlightColor
-                    : (page.cfg_quotaCriticalPercent === 100 ? Kirigami.Theme.neutralTextColor : Kirigami.Theme.negativeTextColor)
-                readonly property color middleColor: page.cfg_quotaWarningPercent === page.cfg_quotaCriticalPercent
+                    : (page.effectiveQuotaCriticalPercent === 100 ? Kirigami.Theme.neutralTextColor : Kirigami.Theme.negativeTextColor)
+                readonly property color middleColor: page.cfg_quotaWarningPercent === page.effectiveQuotaCriticalPercent
                     ? highColor : Kirigami.Theme.neutralTextColor
 
                 gradient: Gradient {
@@ -185,7 +186,7 @@ KCM.SimpleKCM {
                             implicitWidth: Kirigami.Units.smallSpacing * 2
                             implicitHeight: implicitWidth
                             radius: width / 2
-                            color: critical && page.cfg_quotaCriticalPercent !== 100
+                            color: critical && page.effectiveQuotaCriticalPercent !== 100
                                 ? Kirigami.Theme.negativeTextColor : Kirigami.Theme.neutralTextColor
                             Accessible.ignored: true
                         }
@@ -195,7 +196,7 @@ KCM.SimpleKCM {
                             Layout.fillWidth: true
                             text: !critical
                                 ? i18n("Warning from %1%", page.cfg_quotaWarningPercent.toLocaleString(Qt.locale(), 'f', 0))
-                                : i18n("Critical from %1%", page.cfg_quotaCriticalPercent.toLocaleString(Qt.locale(), 'f', 0))
+                                : i18n("Critical from %1%", page.effectiveQuotaCriticalPercent.toLocaleString(Qt.locale(), 'f', 0))
                             font: Kirigami.Theme.smallFont
                             wrapMode: Text.WordWrap
                         }

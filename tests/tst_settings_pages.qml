@@ -771,6 +771,23 @@ TestCase {
         verify(!statusCheck.enabled);
     }
 
+    function test_quotaPreviewUsesEffectiveCriticalWhenConfigIsInverted() {
+        var page = createPage("../contents/ui/configNotifications.qml", {
+            cfg_quotaWarningPercent: 80,
+            cfg_quotaCriticalPercent: 70
+        });
+        if (!page)
+            return;
+        var criticalSpin = findChild(page, "quotaCriticalPercentSpin");
+        var scale = findChild(page, "quotaColorScale");
+        var legend = findChild(page, "quotaCriticalLegend");
+        verify(criticalSpin !== null && scale !== null && legend !== null);
+        compare(criticalSpin.value, 80);
+        compare(scale.firstBoundary, 0.8);
+        compare(scale.secondBoundary, 0.8);
+        verify(legend.text.indexOf((80).toLocaleString(Qt.locale(), "f", 0)) >= 0);
+    }
+
     // A blank diagnostic provider explicitly requests "all" providers: the page
     // must send the redacted diagnose command with a run nonce behind it.
     // /bin/echo settles the DataSource immediately, so the test observes the
