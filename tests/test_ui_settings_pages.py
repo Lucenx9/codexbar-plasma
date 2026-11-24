@@ -399,6 +399,22 @@ class SettingsPagesTest(unittest.TestCase):
             "visible: !page.advancedExpanded",
         )
 
+    def test_settings_checked_bindings_survive_clicks(self):
+        # Clicking a RadioButton or unaliased CheckBox imperatively writes `checked`
+        # and severs declarative bindings, which breaks presets and KCM Defaults.
+        panel_surface.require("page.bindPanelMeterShapeRadios()",
+            "Panel meter shape radios must restore checked bindings after click")
+        panel_surface.require("page.bindPanelStyleRadios()",
+            "Panel style radios must restore checked bindings after click")
+        popup_surface.require("page.bindOverviewModeRadios()",
+            "Popup Overview mode radios must restore checked bindings after click")
+        insights_surface.require("providerRadioColumn.bindProviderRadios()",
+            "AI Insights provider radios must restore checked bindings after toggle")
+        general_surface.require(
+            "checked = Qt.binding(function() { return page.cfg_cliAutomaticUpdates })",
+            "Managed CLI automatic updates checkbox must restore its checked binding after toggle",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

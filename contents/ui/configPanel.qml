@@ -170,6 +170,16 @@ KCM.SimpleKCM {
             orderedPanelProviderIDs, resolvedPanelProviderIDs, providerID, checked))
     }
 
+    function bindPanelMeterShapeRadios() {
+        capsuleShapeButton.checked = Qt.binding(function() { return page.cfg_panelMeterShape !== "rings" })
+        ringShapeButton.checked = Qt.binding(function() { return page.cfg_panelMeterShape === "rings" })
+    }
+
+    function bindPanelStyleRadios() {
+        standardStyleButton.checked = Qt.binding(function() { return page.cfg_panelStyle !== "minimal" })
+        minimalStyleButton.checked = Qt.binding(function() { return page.cfg_panelStyle === "minimal" })
+    }
+
     function applyMinimalPanelPreset() {
         cfg_panelStyle = "minimal"
         cfg_showProviderInPanel = false
@@ -269,7 +279,10 @@ KCM.SimpleKCM {
                 objectName: "panelCapsuleShape"
                 text: i18n("Capsules")
                 checked: page.cfg_panelMeterShape !== "rings"
-                onClicked: page.cfg_panelMeterShape = "capsules"
+                onClicked: {
+                    page.cfg_panelMeterShape = "capsules"
+                    page.bindPanelMeterShapeRadios()
+                }
                 Keys.onRightPressed: {
                     page.cfg_panelMeterShape = "rings"
                     ringShapeButton.forceActiveFocus(Qt.TabFocusReason)
@@ -284,7 +297,10 @@ KCM.SimpleKCM {
                 objectName: "panelRingShape"
                 text: i18n("Rings")
                 checked: page.cfg_panelMeterShape === "rings"
-                onClicked: page.cfg_panelMeterShape = "rings"
+                onClicked: {
+                    page.cfg_panelMeterShape = "rings"
+                    page.bindPanelMeterShapeRadios()
+                }
                 Keys.onLeftPressed: {
                     page.cfg_panelMeterShape = "capsules"
                     capsuleShapeButton.forceActiveFocus(Qt.TabFocusReason)
@@ -330,7 +346,10 @@ KCM.SimpleKCM {
                     text: i18n("Provider colors")
                     checked: page.cfg_panelStyle !== "minimal"
                     Accessible.description: i18n("Colored provider icons")
-                    onClicked: page.cfg_panelStyle = "standard"
+                    onClicked: {
+                        page.cfg_panelStyle = "standard"
+                        page.bindPanelStyleRadios()
+                    }
                     Keys.onRightPressed: {
                         page.cfg_panelStyle = "minimal"
                         minimalStyleButton.forceActiveFocus(Qt.TabFocusReason)
@@ -360,7 +379,10 @@ KCM.SimpleKCM {
                     text: i18n("Monochrome")
                     checked: page.cfg_panelStyle === "minimal"
                     Accessible.description: i18n("Monochrome provider icons")
-                    onClicked: page.cfg_panelStyle = "minimal"
+                    onClicked: {
+                        page.cfg_panelStyle = "minimal"
+                        page.bindPanelStyleRadios()
+                    }
                     Keys.onLeftPressed: {
                         page.cfg_panelStyle = "standard"
                         standardStyleButton.forceActiveFocus(Qt.TabFocusReason)

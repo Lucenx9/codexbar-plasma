@@ -102,6 +102,36 @@ TestCase {
         verify(CostTrust.incompleteHistory(cost))
     }
 
+    function test_completeHistoryCleanDayClearsPeriodExcludedRequests() {
+        var cost = snapshot("codex", "USD", 10, 5)
+        cost.historyCoverageEstablished = true
+        cost.valueMode = "partial"
+        cost.trust = {
+            sourceKind: "vendor",
+            coverage: {priced: 2, unpriced: 0, unmetered: 0, estimated: 0},
+            incompleteRequests: 1
+        }
+        cost.daily[0].incompleteRequests = 0
+        cost.daily[0].models = [{label: "gpt-5", cost: 10, tokens: 100, currency: "USD", incompleteRequests: 0}]
+        cost.daily[1].incompleteRequests = 1
+        cost.daily[1].models = [{label: "gpt-5", cost: 5, tokens: 100, currency: "USD", incompleteRequests: 1}]
+
+        var cleanDay = Analysis.dayCosts([cost], cost.daily[0].label)[0]
+        compare(cleanDay.trust.incompleteRequests, 0)
+        compare(cleanDay.valueMode, "plain")
+        var cleanComparison = ModelComparison.comparison([cost], cost.daily[0].label, false, false)
+        compare(cleanComparison.incompleteCurrencies, [])
+        compare(cleanComparison.rows.length, 1)
+        compare(cleanComparison.rows[0].spendShare, 1)
+
+        var excludedDay = Analysis.dayCosts([cost], cost.daily[1].label)[0]
+        compare(excludedDay.trust.incompleteRequests, 1)
+        compare(excludedDay.valueMode, "partial")
+        var excludedComparison = ModelComparison.comparison([cost], cost.daily[1].label, false, false)
+        compare(excludedComparison.incompleteCurrencies, ["USD"])
+        compare(excludedComparison.rows[0].spendShare, null)
+    }
+
     function test_excludedDayQualifiesAnotherProvidersMeasurement_data() {
         return [{tag: "excluded-only", tokens: null}, {tag: "tokens-recorded", tokens: 3}]
     }

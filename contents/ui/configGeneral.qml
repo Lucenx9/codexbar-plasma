@@ -1143,7 +1143,12 @@ KCM.SimpleKCM {
                     // Stays reachable while enabled so selecting another command cannot
                     // strand the setting on, leaving the helper to run with no effect.
                     enabled: (managedCli.selected || page.cfg_cliAutomaticUpdates) && !managedCli.busy
-                    onToggled: page.cfg_cliAutomaticUpdates = checked
+                    onToggled: {
+                        page.cfg_cliAutomaticUpdates = checked
+                        // Toggling severs the binding on `checked`; restore it so
+                        // Restore all defaults and KCM Defaults stay in sync.
+                        checked = Qt.binding(function() { return page.cfg_cliAutomaticUpdates })
+                    }
                 }
 
                 Controls.Button {

@@ -43,9 +43,12 @@ function selectedDayCost(snapshot, day) {
 }
 
 function applyObservedDayTrust(selected, row) {
-    if (!row || !Trust.incompleteHistory(selected)) return
+    if (!row) return
+    var dayIncomplete = Trust.acceptedIncompleteRequests(row)
+    var periodIncomplete = Trust.acceptedIncompleteRequests(selected.trust)
+    if (!Trust.incompleteHistory(selected) && dayIncomplete === periodIncomplete) return
     selected.historyCoverageEstablished = true
-    selected.trust = Object.assign({}, selected.trust, {incompleteRequests: Trust.acceptedIncompleteRequests(row)})
+    selected.trust = Object.assign({}, selected.trust, {incompleteRequests: dayIncomplete})
     var summary = Trust.costTrustSummary([selected])
     selected.valueMode = summary ? summary.valueMode : "plain"
 }

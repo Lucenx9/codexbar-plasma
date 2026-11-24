@@ -43,6 +43,16 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Allow quota selection for panel text visibility when **Spend budget** is the
   only enabled panel item.
 
+- Keep Panel, Popup Overview, AI Insights provider, and managed CLI update
+  settings controls synchronized when presets or **Defaults** are applied after
+  changing them.
+
+- Preserve exact day-level model spend shares in **Usage & Spend** when pinning
+  a clean day in a period that has excluded requests on another day.
+
+- Avoid QML runtime errors in **Sessions** when a rescan returns fewer sessions
+  than before.
+
 - Report an invalid provider override in Diagnostics as a refresh error and
   allow usage to recover when the override is corrected.
 

@@ -303,31 +303,49 @@ KCM.SimpleKCM {
         }
 
         ColumnLayout {
+            id: providerRadioColumn
             Kirigami.FormData.label: i18n("AI provider:")
             Kirigami.FormData.buddyFor: ollamaRadio
             enabled: enabledCheck.checked
             spacing: 0
+
+            function bindProviderRadios() {
+                ollamaRadio.checked = Qt.binding(function() { return page.provider === "ollama" })
+                openRouterRadio.checked = Qt.binding(function() { return page.provider === "openrouter" })
+                openAiRadio.checked = Qt.binding(function() { return page.provider === "openai" })
+            }
 
             Controls.RadioButton {
                 id: ollamaRadio
                 objectName: "aiInsightsOllamaRadio"
                 text: i18n("Ollama (local)")
                 checked: page.provider === "ollama"
-                onToggled: if (checked) page.selectProvider("ollama")
+                onToggled: {
+                    if (checked) page.selectProvider("ollama")
+                    providerRadioColumn.bindProviderRadios()
+                }
             }
 
             Controls.RadioButton {
+                id: openRouterRadio
                 objectName: "aiInsightsOpenRouterRadio"
                 text: "OpenRouter"
                 checked: page.provider === "openrouter"
-                onToggled: if (checked) page.selectProvider("openrouter")
+                onToggled: {
+                    if (checked) page.selectProvider("openrouter")
+                    providerRadioColumn.bindProviderRadios()
+                }
             }
 
             Controls.RadioButton {
+                id: openAiRadio
                 objectName: "aiInsightsOpenAIRadio"
                 text: "OpenAI"
                 checked: page.provider === "openai"
-                onToggled: if (checked) page.selectProvider("openai")
+                onToggled: {
+                    if (checked) page.selectProvider("openai")
+                    providerRadioColumn.bindProviderRadios()
+                }
             }
         }
 
