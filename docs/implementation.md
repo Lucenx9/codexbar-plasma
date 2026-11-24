@@ -87,7 +87,9 @@ refresh from its completion handler. Manual refresh bypasses the roster cache;
 periodic refresh waits for pending usage. Aggregate overrides expand before
 scoped scheduling: `both` means Codex and Claude, `all` includes disabled valid
 inventory entries, and an empty override discovers enabled providers only.
-Changing the override invalidates the roster cache.
+Changing the override invalidates the roster cache. A nonempty override that
+fails provider ID validation reports a refresh error before dispatch in every
+source mode.
 
 A successful aggregate `[]` is a confirmed empty roster: it clears quotas and
 successful-refresh freshness. Scoped empty replies and nonempty replies without
@@ -406,7 +408,8 @@ for financial and model semantics.
 Redact whole model labels containing absolute paths, including embedded, quoted,
 Unicode and space-containing UNC shares; retain ordinary namespaced model IDs and
 aggregate amounts. `main.qml` freezes the projection when lazily opening
-`ShareUsageWindow.qml`. The window owns capture generations, native clipboard
+`ShareUsageWindow.qml` by URL, so optional export modules load on demand and
+a failed load can be retried. The window owns capture generations, native clipboard
 writes and save results/dialogs. Closing it or changing privacy retires captures;
 the panel popup may close independently.
 

@@ -62,7 +62,11 @@ def source_run(api, run_id):
 
 
 def source_key(run):
-    source = f"{positive(run['head_repository']['id'])}:{run['head_branch']}"
+    identity = run_source(run)
+    if identity is None:
+        return ""
+    repo_id, branch = identity
+    source = f"{repo_id}:{branch}"
     return hashlib.sha256(source.encode()).hexdigest()
 
 
@@ -117,7 +121,8 @@ def tested_target_matches(result, pr):
 
 
 def bot_author(comment, login):
-    return (comment["user"]["login"], comment["user"]["type"]) == (login, "Bot")
+    user = comment["user"]
+    return user is not None and (user["login"], user["type"]) == (login, "Bot")
 
 
 def report_comment(comment, login):

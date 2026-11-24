@@ -349,6 +349,8 @@ Listed source modes describe CLI configuration, not guaranteed Linux availabilit
 Under **Diagnostics**, an empty provider override requests enabled providers;
 `both` requests Codex and Claude; `all` requests every discovered provider,
 including disabled ones. A single provider ID limits the widget to that provider.
+If the widget reports an invalid provider override, correct the ID or clear
+**Advanced provider override** to use the enabled providers again.
 
 Gemini Automatic is broken on Linux CLI 0.77.0 through 0.80.0. Update to 0.81.0
 or later, or save **API** as a workaround. Switch back to Automatic after the

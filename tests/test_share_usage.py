@@ -56,6 +56,18 @@ TestCase {
         clipboard.content = "untouched";
         mockApplet.privacyMode = false;
     }
+    function test_unavailableShareWindowCanBeRetried() {
+        var factory = Qt.createComponent("ShareOwner.qml");
+        compare(factory.status, Component.Ready, factory.errorString());
+        var owner = createTemporaryObject(factory, testCase);
+        verify(owner !== null);
+        for (var attempt = 0; attempt < 2; attempt++) {
+            ignoreWarning(/.*module "Missing.ShareDependency" is not installed.*/);
+            owner.openShareUsage();
+            compare(owner.shareUsageWindow, null);
+            compare(owner.loader.active, false);
+        }
+    }
     function test_copyImageAndSavePng() {
         var window = createWindow();
         verify(window.statisticsText.indexOf("github.com/Lucenx9/codexbar-plasma") !== -1);
@@ -220,12 +232,37 @@ TestCase {
 '''
 
 
+def write_unavailable_share_owner(work):
+    ui = ROOT / "contents/ui"
+    source = (ui / "main.qml").read_text()
+    start = source.index("    readonly property var shareUsageWindow:")
+    end = source.index("    function spendProviderCosts()", start)
+    (work / "ShareOwner.qml").write_text(f'''import QtQuick
+import "./components" as Components
+import "{(ui / "ShareUsage.js").as_uri()}" as ShareUsage
+Item {{
+    id: root
+    property alias loader: shareUsageLoader
+    property int costHistoryDays: 30
+    property string costHistoryPeriod: ""
+    property string costErrorText: ""
+    property bool costLoading: false
+    function spendProviderCosts() {{ return [{{provider: "codex", historyDays: 30}}]; }}
+{source[start:end]}}}
+''')
+    components = work / "components"
+    components.mkdir()
+    (components / "ShareUsageWindow.qml").write_text(
+        'import QtQuick\nimport Missing.ShareDependency\nWindow { }\n')
+
+
 class ShareUsageWindowTests(unittest.TestCase):
     def test_native_export(self):
         runner = os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner")
         self.assertTrue(Path(runner).is_file(), f"Missing qmltestrunner: {runner}")
         with tempfile.TemporaryDirectory(prefix="codexbar-share-test-") as directory:
             work = Path(directory)
+            write_unavailable_share_owner(work)
             image = work / "shared image.png"
             source = QML.replace("COMPONENT_URL", (ROOT / "contents/ui/components").as_uri())
             source = source.replace("SHARE_URL", (ROOT / "contents/ui/ShareUsage.js").as_uri())

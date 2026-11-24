@@ -2932,6 +2932,10 @@ msgid "codexbar sessions returned an unsupported JSON payload."
 msgstr "codexbar sessions ha devuelto datos JSON no admitidos."
 
 #: contents/ui/controllers/UsageController.qml
+msgid "Invalid provider override in widget settings."
+msgstr "La selección avanzada de proveedor en la configuración del widget no es válida."
+
+#: contents/ui/controllers/UsageController.qml
 msgid "codexbar did not return JSON."
 msgstr "codexbar no ha devuelto JSON."
 

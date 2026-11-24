@@ -545,16 +545,24 @@ PlasmoidItem {
         return CostChart.memoizedChartPoints(memo, costNumberFormat, points, costHistoryShowsTokens)
     }
 
-    property var shareUsageSnapshot: null
     readonly property var shareUsageWindow: shareUsageLoader.item
 
     function openShareUsage() {
         var costs = spendProviderCosts()
         if (costs.length === 0 || costLoading) return
-        if (shareUsageWindow) shareUsageWindow.close()
-        shareUsageSnapshot = ShareUsage.snapshot(costs, costHistoryDays,
+        var snapshot = ShareUsage.snapshot(costs, costHistoryDays,
             new Date().toISOString(), costErrorText.length > 0, costHistoryPeriod)
-        shareUsageLoader.active = true
+        if (shareUsageWindow) {
+            shareUsageWindow.close()
+            shareUsageWindow.snapshot = snapshot
+        } else {
+            shareUsageLoader.setSource("components/ShareUsageWindow.qml", {applet: root, snapshot: snapshot})
+            shareUsageLoader.active = true
+            if (!shareUsageWindow) {
+                shareUsageLoader.active = false
+                return
+            }
+        }
         shareUsageWindow.show()
         shareUsageWindow.raise()
         shareUsageWindow.requestActivate()
@@ -563,10 +571,6 @@ PlasmoidItem {
     Loader {
         id: shareUsageLoader
         active: false
-        sourceComponent: Components.ShareUsageWindow {
-            snapshot: root.shareUsageSnapshot
-            applet: root
-        }
     }
 
     function spendProviderCosts() {

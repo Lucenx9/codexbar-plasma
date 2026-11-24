@@ -89,6 +89,21 @@ TestCase {
         completed(o, 1);
         compare(latest(o)[0].provider, "groq");
     }
+    function test_invalidProviderOverrideFailsBeforeDispatch_data() {
+        return [{tag: "scoped", sourceMode: ""}, {tag: "direct", sourceMode: "cli"}];
+    }
+    function test_invalidProviderOverrideFailsBeforeDispatch(data) {
+        var o = create("normal", {provider: "__proto__", sourceMode: data.sourceMode});
+        tryVerify(function() { return o.emptyRosters + o.failures.length + o.snapshots.length > 0; });
+        compare(o.emptyRosters, 0);
+        compare(o.snapshots.length, 0);
+        compare(o.failures, ["Invalid provider override in widget settings."]);
+        compare(o.subject.errorText, o.failures[0]);
+        verify(!o.subject.loading && !o.subject.commandPathFailed);
+        o.subject.provider = "codex";
+        completed(o, 1);
+        compare(latest(o)[0].account, "run 1");
+    }
     function test_directProviderScopeRejectsForeignRecords() {
         var o = create("foreign-provider", {provider: "codex", sourceMode: "cli"});
         tryVerify(function() { return o.failures.length === 1 && !o.subject.loading; });
