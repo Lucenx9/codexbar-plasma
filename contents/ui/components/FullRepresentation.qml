@@ -62,7 +62,7 @@ Item {
     readonly property bool standardHeightActive: applet.providers.length > 0
         || applet.spendSelected || applet.sessionsSelected
 
-    implicitWidth: Kirigami.Units.gridUnit * (applet.spendSelected && spendView.expandedView ? 50 : 34)
+    implicitWidth: Kirigami.Units.gridUnit * (applet.spendSelected && applet.costUsageEnabled !== false && spendView.expandedView ? 50 : 34)
     implicitHeight: standardHeightActive
         ? maximumPopupHeight
         : Math.max(minimumPopupHeight,

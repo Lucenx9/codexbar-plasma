@@ -31,6 +31,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Collapse the expanded **Usage & Spend** layout when local usage history is
+  disabled and hide the **Daily activity** container when switching to a
+  7-day range.
+
 - Tighten the spacing between sections in Popup settings so the provider and
   hidden-item controls take less scrolling, especially at larger text sizes.
 

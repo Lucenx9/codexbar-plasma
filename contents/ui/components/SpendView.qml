@@ -20,7 +20,9 @@ ColumnLayout {
     required property var applet
     property string selectedProvider: ""
     property bool expandedView: false
-    readonly property bool historyAvailable: applet.costUsageEnabled !== false || applet.identifiedTokensEnabled === true
+    readonly property bool costHistoryEnabled: applet.costUsageEnabled !== false
+    readonly property bool historyAvailable: costHistoryEnabled || applet.identifiedTokensEnabled === true
+    onCostHistoryEnabledChanged: if (!costHistoryEnabled) expandedView = false
     property bool activityExpanded: false
     property var expandedModelProviders: []
     property var providersShowingAllModels: []
@@ -922,7 +924,7 @@ ColumnLayout {
 
             GridLayout {
                 id: activitySummary
-                visible: view.activityExpanded
+                visible: view.activityExpanded && view.heatmapDays.length > 7
                 objectName: "spendActivitySummary"
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
