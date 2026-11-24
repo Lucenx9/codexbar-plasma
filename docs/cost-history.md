@@ -182,10 +182,15 @@ records. It inspects at most 128 projects per provider and displays at most
 128 rows overall, marking truncation. Projects never contribute to provider or
 global totals, and provider currencies remain separate.
 
-Antigravity's established empty token-only snapshot uses zero dollar totals even
-when costs are unavailable. `normalizeProviderCostTotals` masks that sentinel
-until an official availability field exists. Muse Code also supplies token-only
-history with monetary fields absent. Keep absent costs unavailable and tokens
+Linux CLI 0.84.0 and 0.85.0 returned positive Antigravity period totals and
+per-model amounts with `listPriceEstimate` provenance, including reports with
+both estimated and unpriced requests. The widget preserves the CLI estimates
+and leaves missing model costs unavailable. For provider summaries it still
+treats ambiguous zero amounts as unavailable because CLI 0.56.2 also returned
+zero for established empty token-only history. See the
+[upstream pricing contract](https://github.com/steipete/CodexBar/blob/v0.85.0/docs/antigravity.md#local-token-history).
+
+Muse Code supplies token-only history. Keep absent costs unavailable and tokens
 usable. No frontend provider fetching or source parsing is authorized by these
 shapes. Remaining blockers are [cost availability](../TODO.md#cost-availability),
 [Cursor cost](../TODO.md#cursor-cost), and

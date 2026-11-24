@@ -742,6 +742,27 @@ TestCase {
         compare(estimated.valueMode, "estimated");
         compare(estimated.sessionCost, 2);
     }
+    function test_antigravityEstimatesRetainPartialCoverage() {
+        var cost = parse({
+            provider: "antigravity",
+            updatedAt: "2026-11-20",
+            provenance: "listPriceEstimate",
+            coverage: {estimated: 2, unpriced: 1, priced: 0, unmetered: 0},
+            totals: {totalCost: 2.5, totalTokens: 90},
+            sessionCostUSD: 1.25,
+            daily: [{date: "2026-11-20", totalCost: 1.25, totalTokens: 50,
+                modelBreakdowns: [{modelName: "Priced", cost: 1.25, totalTokens: 40},
+                    {modelName: "Unpriced", totalTokens: 10}]}]
+        }).costs.antigravity;
+        compare(cost.totals.cost, 2.5);
+        compare(cost.sessionCost, 1.25);
+        compare(cost.today.cost, 1.25);
+        compare(cost.models[0].cost, 1.25);
+        compare(cost.models[1].cost, null);
+        compare(cost.models[1].tokens, 10);
+        compare(cost.trust.coverage.unpriced, 1);
+        compare(cost.valueMode, "partial");
+    }
     // Snapshot projects are normalized display rows, never raw CLI records.
     function test_snapshotExposesNormalizedProjects() {
         var cost = parse({

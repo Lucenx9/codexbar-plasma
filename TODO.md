@@ -220,8 +220,10 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 
 ### Cost availability
 
-- [ ] Replace the Antigravity-specific unknown-cost fallback with explicit
-  official availability metadata. At 0.56.2, established-empty history used zero
+- [ ] Distinguish measured zero from unavailable in Antigravity provider summaries
+  through explicit CLI metadata. Positive CLI estimates are supported
+  ([verified contract](docs/cost-history.md#history-trust-and-project-totals)).
+  At 0.56.2, established-empty history used zero
   despite unavailable costs. The 0.57.0, 0.58.0, and 0.60.4 Antigravity fresh-history
   probes omit cost totals, and the Claude probes report measured zeros;
   none verifies that established-empty case. The 0.60.4 OpenCodex

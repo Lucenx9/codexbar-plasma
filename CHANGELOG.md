@@ -31,6 +31,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Show positive cost estimates from the CLI in Antigravity totals, including
+  periods with some unpriced models.
+
 - Collapse the expanded **Usage & Spend** layout when local usage history is
   disabled and hide the **Daily activity** container when switching to a
   7-day range.

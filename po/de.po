@@ -3611,12 +3611,8 @@ msgid "%1 points"
 msgstr "%1 Punkte"
 
 #: contents/ui/components/CostText.qml
-msgid ""
-"Local Antigravity history includes token totals. Dollar costs are "
-"unavailable."
-msgstr ""
-"Der lokale Antigravity-Verlauf enthält Tokenzahlen. Dollarkosten sind nicht "
-"verfügbar."
+msgid "Antigravity cost estimates use public API prices for known models."
+msgstr "Antigravity-Kostenschätzungen verwenden öffentliche API-Preise für bekannte Modelle."
 
 #: contents/ui/components/CostText.qml
 msgid "Estimated from local Codex logs, independently of the account selected in the widget."

@@ -531,9 +531,9 @@ is uploaded. Files and clipboard contents remain after the window closes.
 
 Provider tabs offer local cost summaries and expandable model, daily-history,
 project, and quota-week details when the CLI supplies them. Account selection
-does not filter these local scans. Antigravity and Muse Code can supply
-token-only history; missing money is unavailable. Cursor cost remains rejected
-by the verified Linux CLI.
+does not filter these local scans. Antigravity shows cost estimates based on
+public API prices. Models without a price can still show tokens. Muse Code
+supplies token-only history. The verified Linux CLI rejects Cursor cost queries.
 
 - **Month to date** and **All history** require CLI 0.67.0 or later. Day ranges
   remain available on older versions. Choosing a day range or changing General's
