@@ -59,7 +59,7 @@ export function costTrustSummary(costs) {
     var state = {
         sources: { listPrice: false, vendor: false, mixed: false, unknown: false, unclassified: false },
         hasEstimated: false, hasUnpriced: false, hasUnmetered: false,
-        hasDisplayedCost: false, hasDisplayedTokens: false, incompleteRequests: 0
+        hasDisplayedCost: false, hasDisplayedTokens: false, hasIncompleteHistory: false, incompleteRequests: 0
     }
     for (var i = 0; i < items.length; i++) {
         if (!costTrustSnapshotHasEvidence(items[i])) continue
@@ -67,7 +67,7 @@ export function costTrustSummary(costs) {
                 && !CostCurrency.costMatchesSpendCurrency(items[i], currency)) continue
         accumulateTrust(state, items[i])
     }
-    return summarizeTrust(state)
+    return summarizeTrust(state, items.some(incompleteTokenHistory))
 }
 
 // Tokens include every currency. Their exclusions must not inherit the
@@ -101,13 +101,15 @@ export function costTrustNoticeKey(summary) {
     var sourceKind = acceptedCostSourceKind(ownText(summary, "sourceKind"))
     var flags = [ownFlag(summary, "hasEstimated"), ownFlag(summary, "hasUnpriced"),
         ownFlag(summary, "hasUnmetered"), acceptedIncompleteRequests(summary) > 0]
-    if (sourceKind.length === 0 && !flags.some(Boolean)) return ""
+    var incompleteScan = ownFlag(summary, "hasIncompleteHistory")
+    if (!incompleteScan && sourceKind.length === 0 && !flags.some(Boolean)) return ""
     var parts = [ownText(summary, "level") === "warning" ? "warning" : "information", sourceKind]
     var positive = ["estimated", "unpriced", "unmetered", "incomplete"]
     var negative = ["exact", "priced", "metered", "complete"]
     for (var i = 0; i < flags.length; i++) {
         parts.push(flags[i] ? positive[i] : negative[i])
     }
+    if (incompleteScan) parts.push("partial-history")
     return parts.join("|")
 }
 
@@ -177,8 +179,24 @@ export function hasObservedAmount(amounts) {
     return CostAmounts.hasMetricValue(amounts, false) || hasPositiveTokens(amounts)
 }
 
+export function incompleteHistory(item) {
+    return Guards.hasOwnKey(item, "historyCoverageEstablished") && item.historyCoverageEstablished === false
+}
+
+export function incompleteTokenHistory(item) {
+    if (!incompleteHistory(item)) return false
+    var totals = CostAmounts.snapshotTotals(item)
+    if (!CostAmounts.hasMetricValue(totals, true)) return false
+    // Older snapshots can carry a placeholder zero without any token data.
+    return hasObservedAmount(totals) || CostAmounts.snapshotDaily(item).some(function(day) {
+        return CostAmounts.hasMetricValue(day, true)
+    })
+}
+
 export function accumulateTrust(state, item) {
-    state.hasDisplayedCost = state.hasDisplayedCost || CostAmounts.hasMetricValue(item.totals, false)
+    var hasCost = CostAmounts.hasMetricValue(item.totals, false)
+    if (hasCost && incompleteHistory(item)) state.hasIncompleteHistory = true
+    state.hasDisplayedCost = state.hasDisplayedCost || hasCost
     state.hasDisplayedTokens = state.hasDisplayedTokens || hasPositiveTokens(item.totals)
     var trust = Guards.hasOwnKey(item, "trust") ? item.trust : null
     if (!Guards.isRecord(trust)) {
@@ -207,19 +225,22 @@ export function trustValueMode(partial, sourceKind, estimated) {
     return estimated ? "estimated" : "plain"
 }
 
-export function summarizeTrust(state) {
+export function summarizeTrust(state, partialTokens) {
     var sourceKind = summarySource(state.sources)
     var estimated = state.hasEstimated || state.sources.listPrice || state.sources.mixed
     var incomplete = qualifiedIncompleteRequests(state)
-    var partial = state.hasUnpriced || state.hasUnmetered || incomplete > 0
-    var mode = trustValueMode(partial, sourceKind, estimated)
-    if (!shouldQualifyAmount(state.hasDisplayedCost, incomplete, mode, sourceKind)) return null
+    var mode = trustValueMode(hasPartialCost(state, incomplete), sourceKind, estimated)
+    if (!partialTokens && !shouldQualifyAmount(state.hasDisplayedCost, incomplete, mode, sourceKind)) return null
     return {
-        level: partial || sourceKind === "unknown" ? "warning" : "information",
-        valueMode: mode, sourceKind: sourceKind,
+        level: partialTokens || ["partial", "approximate"].includes(mode) ? "warning" : "information",
+        valueMode: mode, sourceKind: sourceKind, hasIncompleteHistory: state.hasIncompleteHistory || partialTokens,
         hasEstimated: estimated, hasUnpriced: state.hasUnpriced, hasUnmetered: state.hasUnmetered,
         incompleteRequests: incomplete
     }
+}
+
+function hasPartialCost(state, excludedRequests) {
+    return state.hasIncompleteHistory || state.hasUnpriced || state.hasUnmetered || excludedRequests > 0
 }
 
 export function accumulateCoverage(state, coverage) {

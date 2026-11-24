@@ -221,6 +221,79 @@ TestCase {
         }).kind, "allowance");
     }
 
+    function test_litellmSpendWithoutBudget() {
+        for (var usd of [0, 12.34]) {
+            var raw = {used: usd, limit: 0, currencyCode: "USD", period: "Key spend only"};
+            var spend = Presentation.section("litellm", raw);
+            verify(spend !== null);
+            compare(spend.used, usd);
+            compare(spend.titleKey, "apiSpend");
+            compare(spend.percentUsed, -1);
+            compare(Presentation.panelBudget("litellm", raw), null);
+        }
+        compare(Presentation.section("litellm", {used: -1, limit: 0, currencyCode: "USD"}), null);
+    }
+
+    function test_typedWalletsKeepZeroAndCurrency() {
+        for (var provider of ["grok", "neuralwatt"]) {
+            for (var balance of [0, 14.46]) {
+                var raw = {used: provider === "grok" ? 0 : balance, limit: 0, balance: balance, currencyCode: "USD"};
+                var snapshot = ProviderSnapshot.normalize({provider: provider, usage: {providerCost: raw}}, 1000);
+                var wallet = Presentation.section(provider, snapshot.providerCost);
+                compare(wallet.kind, "balance");
+                compare(wallet.titleKey, "credits");
+                compare(wallet.used, balance);
+                compare(wallet.percentUsed, -1);
+                compare(Presentation.panelBudget(provider, snapshot.providerCost), null);
+            }
+        }
+        for (var missing of [undefined, null, false, -1, "1", {}, Infinity]) {
+            var record = {used: 0, limit: 0, currencyCode: "USD", balance: missing};
+            var invalid = ProviderSnapshot.normalize({provider: "grok", usage: {providerCost: record}}, 1000);
+            compare(Presentation.section("grok", invalid.providerCost), null);
+        }
+        compare(Presentation.section("grok", {used: 0, limit: 0, balance: 1}), null);
+    }
+
+    function test_typedBalanceLeavesSpendBudgetsIntact() {
+        var budget = {used: 2, limit: 10, currencyCode: "USD", balance: 50};
+        for (var provider of ["openai", "grok", "neuralwatt"]) {
+            compare(Presentation.panelBudget(provider, budget).used, 2);
+            compare(Presentation.section(provider, budget).kind, "allowance");
+        }
+    }
+
+    function test_optionalWalletLimits_data() {
+        return [
+            {tag: "omitted", fields: {}, kind: "balance"},
+            {tag: "null", fields: {limit: null}, kind: "balance"},
+            {tag: "malformed", fields: {limit: "broken"}, kind: null},
+            {tag: "false", fields: {limit: false}, kind: null},
+            {tag: "negative", fields: {limit: -3}, kind: null},
+            {tag: "allowance", fields: {limit: 40}, kind: "allowance"}
+        ];
+    }
+
+    function test_optionalWalletLimits(data) {
+        for (var provider of ["neuralwatt", "grok"]) {
+            var raw = Object.assign({used: provider === "grok" ? 0 : 17.25, balance: 17.25, currencyCode: "USD"}, data.fields);
+            var snapshot = ProviderSnapshot.normalize({provider: provider, usage: {providerCost: raw}}, 1000);
+            for (var cost of [raw, snapshot.providerCost]) {
+                var result = Presentation.section(provider, cost);
+                compare(result && result.kind, data.kind);
+                if (data.kind === "balance")
+                    compare(result.used, 17.25);
+                var budget = Presentation.panelBudget(provider, cost);
+                compare(budget && budget.limit, data.kind === "allowance" ? 40 : null);
+            }
+        }
+    }
+
+    function test_grokWithoutBalanceOrWithRealSpend() {
+        compare(Presentation.section("grok", {used: 0, currencyCode: "USD"}).kind, "spend");
+        compare(Presentation.section("grok", {used: 3, limit: 0, balance: 17.25, currencyCode: "USD"}).used, 3);
+    }
+
     function test_providerFallbacksAndMissingLimits() {
         for (var provider of ["manus", "synthetic"])
             compare(Presentation.section(provider, {

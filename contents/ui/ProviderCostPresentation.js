@@ -1,6 +1,28 @@
 .pragma library
 .import "ProviderNormalizer.mjs" as Normalizer
 
+// Grok uses neutral spend for its wallet and Neuralwatt mirrors the remaining
+// balance in used. Other providers can report spend alongside a balance.
+function isWalletRecord(key, cost, used, limit) {
+    if (limit > 0) return false
+    if (key === "grok") return used === 0 && (limit === 0 || Normalizer.hasOwnKey(cost, "balance"))
+    return key === "neuralwatt" && Normalizer.hasOwnKey(cost, "balance")
+}
+
+function isUsdAmount(cost, amount) {
+    return cost.currencyCode === "USD" && Number.isFinite(amount) && amount >= 0
+}
+
+function unbudgetedSpendTitle(key, cost, used, limit) {
+    if (key === "litellm") {
+        // The released key/user spend report explicitly uses a zero budget.
+        return limit === 0 && isUsdAmount(cost, used) ? "apiSpend" : null
+    }
+    // A Codex account without a credit cap emits an empty placeholder.
+    if (key === "codex" && cost.currencyCode === "Credits" && used === 0) return null
+    return ["openai", "claude"].indexOf(key) >= 0 ? "apiSpend" : "extraUsage"
+}
+
 // Semantic sections for the existing provider-cost contract. QML supplies all
 // translated labels and formats amounts; a balance never borrows a quota limit.
 function section(providerID, cost) {
@@ -22,7 +44,13 @@ function section(providerID, cost) {
 
     // Preserve the established CLI compatibility cases before considering a
     // limit. These records describe balances even when a limit is present.
-    if (key === "factory" && period === "Extra usage balance") {
+    if (isWalletRecord(key, cost, used, limit)) {
+        var balance = Normalizer.ownField(cost, "balance")
+        if ((cost.limit != null && limit !== 0) || !isUsdAmount(cost, balance)) return null
+        kind = "balance"
+        titleKey = "credits"
+        used = balance
+    } else if (key === "factory" && period === "Extra usage balance") {
         kind = "balance"
     } else if (key === "opencodego" && period === "Zen balance") {
         kind = "balance"
@@ -33,14 +61,9 @@ function section(providerID, cost) {
     } else if (isFinite(limit) && limit > 0) {
         kind = "allowance"
         titleKey = currency === "Quota" ? "quotaUsage" : "extraUsage"
-    } else if (key === "litellm") {
-        return null
-    } else if (key === "codex" && currency === "Credits" && used === 0) {
-        // A Codex account without a credit cap reports an empty placeholder;
-        // its purchased balance already appears in the Credits row.
-        return null
-    } else if (key === "openai" || key === "claude") {
-        titleKey = "apiSpend"
+    } else {
+        titleKey = unbudgetedSpendTitle(key, cost, used, limit)
+        if (titleKey === null) return null
     }
 
     return {

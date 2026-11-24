@@ -194,6 +194,10 @@ msgid "Copied"
 msgstr "Copiado"
 
 #: contents/ui/components/CostTrustNotice.qml
+msgid "The local history scan is incomplete."
+msgstr "A verificação do histórico local está incompleta."
+
+#: contents/ui/components/CostTrustNotice.qml
 msgid "The cost total is incomplete. Some usage has no price or metering."
 msgstr ""
 "O custo total está incompleto. Parte do uso não tem preço ou não é medida."

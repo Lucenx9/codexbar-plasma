@@ -29,11 +29,11 @@ export function recordedHistoryDays(daily, scanDay) {
 
 // Long sparse histories need a calendar denominator, not an array with one
 // entry per day. Inspect only the same bounded input tail as the normalizer.
-export function longHistoryAverage(items, currency, recordedDays, scanDay) {
-    var source = Array.isArray(items) ? items : [];
+export function longHistoryAverage(snapshot, currency, recordedDays, scanDay) {
+    var source = Array.isArray(snapshot.daily) ? snapshot.daily : [];
     var first = Math.max(0, source.length - Normalizer.maximumCostHistoryScanItems);
     var window = Normalizer.costHistoryCalendarWindow(recordedDays, scanDay, recordedDays);
-    var canFill = first === 0 && window !== null;
+    var canFill = Normalizer.canInferMissingCostDays(snapshot.historyCoverageIsEstablished, first) && window !== null;
     var seen = ({});
     var blocked = ({});
     var retained = [];
@@ -90,7 +90,9 @@ export function normalizeSnapshot(item, requestedHistoryDays) {
         cost: item.last30DaysCostUSD, tokens: item.last30DaysTokens, currency: currency
     });
     var trust = Normalizer.normalizeCostTrustMetadata(item);
-    var summary = CostTrust.costTrustSummary([{totals: totals, trust: trust}]);
+    var historyCoverageEstablished = item.historyCoverageIsEstablished !== false;
+    var summary = CostTrust.costTrustSummary([{totals: totals, trust: trust,
+        historyCoverageEstablished: historyCoverageEstablished}]);
     // All history charts at most the newest year, but its model totals and
     // daily average cover every recorded day within the scan budget.
     var aggregateBound = Normalizer.maximumCostHistoryScanItems;
@@ -102,14 +104,14 @@ export function normalizeSnapshot(item, requestedHistoryDays) {
     var aggregateDaily = aggregateDays > historyDays && aggregateDays <= aggregateBound
         ? Normalizer.normalizeCostDaily(item.daily, currency, {
             days: aggregateDays, updatedAt: item.updatedAt, maximumDays: aggregateBound,
-            includeModels: false
+            includeModels: false, historyCoverageEstablished: historyCoverageEstablished
         }) : null;
     return {
         provider: provider,
         currency: currency,
         period: period,
         historyDays: historyDays,
-        historyCoverageEstablished: item.historyCoverageIsEstablished !== false,
+        historyCoverageEstablished: historyCoverageEstablished,
         // The local date of the scan: "today" is that day's total. Empty when
         // the CLI omits a usable timestamp.
         scanDay: scanDay,
@@ -134,12 +136,13 @@ export function normalizeSnapshot(item, requestedHistoryDays) {
         modelsTruncated: modelSummary.truncated,
         // Null when the charted days already cover the whole range.
         averageDaily: aggregateDays > aggregateBound
-            ? longHistoryAverage(item.daily, currency, recordedDays, scanDay)
+            ? longHistoryAverage(item, currency, recordedDays, scanDay)
             : aggregateDaily ? {
             cost: CostAmounts.averageDailyValue(aggregateDaily, false),
             tokens: CostAmounts.averageDailyValue(aggregateDaily, true)
         } : null,
-        daily: Normalizer.normalizeCostDaily(item.daily, currency, { days: historyDays, updatedAt: item.updatedAt })
+        daily: Normalizer.normalizeCostDaily(item.daily, currency, { days: historyDays, updatedAt: item.updatedAt,
+            historyCoverageEstablished: historyCoverageEstablished })
     };
 }
 

@@ -940,8 +940,8 @@ Item {
                     PlainPlaceholderMessage {
                         id: providerPlaceholderMessage
 
-                        visible: applet.providerPlaceholderText(applet.presentedProviderData).length > 0
-                        plainText: applet.providerPlaceholderText(applet.presentedProviderData)
+                        visible: plainText.length > 0
+                        plainText: applet.providerPlaceholderText(applet.presentedProviderData, providerCostSection.visible)
                         icon.name: "view-statistics-symbolic"
                         type: Kirigami.PlaceholderMessage.Type.Informational
                         Layout.fillWidth: true

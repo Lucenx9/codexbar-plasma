@@ -35,7 +35,9 @@ ColumnLayout {
         && !allProviderCosts.some(function(item) { return item.provider === selectedProvider })
         ? allProviderCosts.concat([{provider: selectedProvider}]) : allProviderCosts
     readonly property var dailyPoints: Analysis.dailyPoints(
-        applet.costNumberFormat, providerCosts, applet.costHistoryShowsTokens)
+        applet.costNumberFormat, providerCosts, applet.costHistoryShowsTokens).map(function(point) {
+            return point.partial ? Object.assign({}, point, {displayValue: i18n("%1 (partial)", point.displayValue)}) : point
+        })
     readonly property string selectedDay: historyChart.selectedIndex >= 0
         && historyChart.selectedIndex < dailyPoints.length
         && dailyPoints[historyChart.selectedIndex].value !== null
@@ -142,6 +144,13 @@ ColumnLayout {
     // Shared by the grid and its legend, so the key matches the cells exactly.
     function heatmapTint(fraction) {
         return applet.withAlpha(Kirigami.Theme.highlightColor, 0.1 + fraction * 0.8)
+    }
+
+    function heatmapValue(point) {
+        if (!point) return ""
+        if (!applet.costHistoryShowsTokens) return point.displayValue
+        var tokens = applet.usageCountText(point.value, "tokens")
+        return point.partial ? i18n("%1 (partial)", tokens) : tokens
     }
 
     // Day counts are numbers; the calendar periods are the CLI's names.
@@ -703,7 +712,9 @@ ColumnLayout {
                                         totals.cost, totals.currency, false), modelData.valueMode)
                                     : i18n("Cost unavailable")
                                 readonly property string tokensText: CostAmounts.hasMetricValue(totals, true)
-                                    ? view.applet.usageCountText(totals.tokens, "tokens")
+                                    ? view.applet.qualifiedCostValue(view.applet.usageCountText(totals.tokens, "tokens"),
+                                        CostTrust.incompleteTokenHistory(modelData) || CostTrust.acceptedIncompleteRequests(totals) > 0
+                                            ? "partial" : "plain")
                                     : i18n("Tokens unavailable")
                                 readonly property color surfaceColor: Qt.tint(
                                     Kirigami.Theme.backgroundColor, spendProviderCardBackground.color)
@@ -994,9 +1005,7 @@ ColumnLayout {
                             readonly property int inspectedIndex: HeatmapNavigation.indexForDay(cells,
                                 hoveredDay.length > 0 ? hoveredDay : (activeFocus ? selectedDay : view.selectedDay))
                             readonly property var inspectedCell: inspectedIndex >= 0 ? cells[inspectedIndex] : null
-                            readonly property string inspectedValue: !inspectedCell ? ""
-                                : view.applet.costHistoryShowsTokens ? view.applet.usageCountText(inspectedCell.value, "tokens")
-                                : inspectedCell.displayValue
+                            readonly property string inspectedValue: view.heatmapValue(inspectedCell)
                             readonly property string readout: inspectedCell
                                 ? i18n("%1: %2", historyChart.pointLabel(inspectedCell), inspectedValue) : ""
 
@@ -1141,9 +1150,7 @@ ColumnLayout {
                                             ? historyChart.pointLabel(heatmapCell.modelData) : ""
 
                                         Accessible.name: heatmapCell.dayLabel
-                                        Accessible.description: !heatmapCell.measured ? ""
-                                            : view.applet.costHistoryShowsTokens ? view.applet.usageCountText(heatmapCell.modelData.value, "tokens")
-                                            : heatmapCell.modelData.displayValue
+                                        Accessible.description: view.heatmapValue(heatmapCell.modelData)
 
                                         width: heatmapGrid.cellWidth
                                         height: heatmapGrid.cellHeight

@@ -870,18 +870,24 @@ export function costHistorySelection(items, options) {
     }
 }
 
+// Missing dates can imply zero activity only when the CLI and the input scan
+// both cover the period. Legacy payloads omit the CLI coverage flag.
+export function canInferMissingCostDays(coverageEstablished, firstInspectedItem) {
+    return coverageEstablished !== false && firstInspectedItem === 0
+}
+
 export function selectedCostDays(items, currency, options, modelSources) {
     var selection = costHistorySelection(items, options)
     var historyDays = selection.historyDays
     var blockedDateKeys = ({})
-    var hasInvalidDate = false
     var firstInspectedItem = selection.firstInspectedItem
+    var canFill = canInferMissingCostDays(options.historyCoverageEstablished, firstInspectedItem)
     var result = []
     for (var i = items.length - 1; i >= firstInspectedItem; i--) {
         var item = items[i]
         if (!isCliRecord(item)) continue
         if (!costHistoryLabelIsUsable(costDayLabel(item))) {
-            hasInvalidDate = true
+            canFill = false
             continue
         }
         if (costRecordHasAmounts(item)) {
@@ -893,12 +899,8 @@ export function selectedCostDays(items, currency, options, modelSources) {
         var blockedDate = parsedCalendarDateKey(costDayLabel(item))
         if (blockedDate) blockedDateKeys[blockedDate.key] = true
     }
-    // An incomplete scan cannot establish safe zero-activity gaps.
-    if (firstInspectedItem > 0 || hasInvalidDate) {
-        result = costHistoryRowsWithinWindow(result, selection.window)
-    } else {
-        result = fillMissingCostDays(result, currency, selection, blockedDateKeys)
-    }
+    result = canFill ? fillMissingCostDays(result, currency, selection, blockedDateKeys)
+        : costHistoryRowsWithinWindow(result, selection.window)
     return result.slice(-historyDays)
 }
 

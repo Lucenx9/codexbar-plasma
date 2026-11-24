@@ -70,14 +70,19 @@ function costFields(cost) {
     if (!Normalizer.isCliRecord(cost)) {
         return null;
     }
-    return {
+    var limit = Normalizer.ownField(cost, "limit");
+    var result = {
         used: Normalizer.strictFiniteNumber(cost.used),
-        limit: Normalizer.strictFiniteNumber(cost.limit),
+        limit: limit == null ? null : Normalizer.strictFiniteNumber(limit),
         personalUsed: Normalizer.strictFiniteNumber(cost.personalUsed),
         currencyCode: typeof cost.currencyCode === "string"
             ? Normalizer.boundedDisplayText(cost.currencyCode, 12) : "",
         period: cost.period ? Normalizer.boundedDisplayText(cost.period, 120) : null
     };
+    if (Guards.hasOwnKey(cost, "balance")) {
+        result.balance = Number.isFinite(cost.balance) && cost.balance >= 0 ? cost.balance : null;
+    }
+    return result;
 }
 
 function creditBalance(credits) {

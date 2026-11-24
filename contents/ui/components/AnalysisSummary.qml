@@ -15,6 +15,12 @@ GridLayout {
     readonly property var totals: Costs.spendTotals(costs)
     readonly property var trust: Trust.costTrustSummary(costs)
     readonly property int excludedTokenRequests: Trust.incompleteTokenRequests(costs)
+    readonly property bool tokenHistoryIncomplete: costs.some(Trust.incompleteTokenHistory)
+    readonly property string tokenHelp: [
+        excludedTokenRequests > 0 ? i18np("%1 incomplete request excluded",
+            "%1 incomplete requests excluded", excludedTokenRequests) : "",
+        tokenHistoryIncomplete ? i18n("The local history scan is incomplete.") : ""
+    ].filter(Boolean).join(" ")
     readonly property var comparison: Analysis.comparison(costs, applet.costHistoryShowsTokens, applet.panelClockMs)
     readonly property string changeText: !comparison ? i18n("Unavailable")
         : comparison.changeMultiple !== undefined ? i18n("%1×", comparison.changeMultiple.toLocaleString(Qt.locale(), 'f', 1))
@@ -33,12 +39,11 @@ GridLayout {
             value: summary.totals && summary.totals.cost !== null
             ? applet.qualifiedCostValue(AnalysisAmounts.metricText(applet.costNumberFormat, summary.totals.cost, summary.totals.currency, false),
                 summary.trust ? summary.trust.valueMode : "plain") : i18n("Cost unavailable")},
-        {label: summary.excludedTokenRequests > 0
+        {label: summary.excludedTokenRequests > 0 || summary.tokenHistoryIncomplete
             ? i18n("%1 (partial)", i18n("Tokens")) : i18n("Tokens"),
             value: summary.totals && summary.totals.tokens !== null
             ? applet.usageCountText(summary.totals.tokens, "tokens") : i18n("Tokens unavailable"),
-            help: summary.excludedTokenRequests > 0 ? i18np("%1 incomplete request excluded",
-                "%1 incomplete requests excluded", summary.excludedTokenRequests) : ""},
+            help: summary.tokenHelp},
         {label: i18n("Last 7 days vs previous 7"), value: summary.comparison && summary.comparison.estimated
             ? applet.qualifiedCostValue(summary.changeText, "estimated") : summary.changeText,
             help: summary.comparisonHelp}

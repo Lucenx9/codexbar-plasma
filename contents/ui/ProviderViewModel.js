@@ -39,6 +39,7 @@ function presented(snapshot, display) {
         statusIncidentKey: snapshot.statusIncidentKey,
         hasIncident: snapshot.statusSeverity.length > 0 && snapshot.statusSeverity !== "unknown",
         error: display.error,
+        placeholderKind: snapshot.placeholder,
         placeholder: display.placeholder,
         usageReceivedAtMs: snapshot.usageReceivedAtMs,
         updatedAt: snapshot.updatedAt

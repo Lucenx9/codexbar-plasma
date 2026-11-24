@@ -1254,6 +1254,37 @@ TestCase {
         compare(chart.lineSeries.map(function(series) { return series.points[0].value; }), [200, 300, 100]);
     }
 
+    function test_incompleteProviderQualifiesDailyReadouts_data() {
+        return [
+            {tag: "missing-money", metric: "cost", currency: "USD", expected: "$0.00 (partial)"},
+            {tag: "foreign-money", metric: "cost", currency: "EUR", expected: "$0.00"},
+            {tag: "foreign-tokens", metric: "tokens", currency: "EUR", expected: "7 (partial)"}
+        ];
+    }
+
+    function test_incompleteProviderQualifiesDailyReadouts(data) {
+        var recorded = {label: "2026-11-03", cost: 0, tokens: 7, currency: "USD"};
+        var later = {label: "2026-11-13", cost: 2, tokens: 9, currency: data.currency};
+        applet.costHistoryMetric = data.metric;
+        applet.costs = [
+            {provider: "claude", totals: recorded, daily: [recorded]},
+            {provider: "codex", totals: later, daily: [later], historyCoverageEstablished: false}
+        ];
+        var view = createView("SpendView");
+        if (!view) return;
+        var chart = findChild(view, "analysisHistoryChart");
+        chart.selectedIndex = 0;
+        compare(view.selectedDay, recorded.label);
+        compare(chart.points[0].value, data.metric === "tokens" ? 7 : 0);
+        compare(findChild(chart, "chartPointValue").text, data.expected);
+        view.activityExpanded = true;
+        var heatmap = findChild(view, "spendHeatmap");
+        heatmap.hoveredDay = recorded.label;
+        compare(heatmap.inspectedValue, data.expected.replace("7 ", "7 tokens "));
+        compare(view.presentedProviderCosts[0].totals.cost, 0);
+        compare(view.presentedProviderCosts[1].totals.cost, null);
+    }
+
     function test_missingDailyHistoryOffersTokensAndKeepsFocus() {
         applet.costs = [{provider: "codex", currency: "USD", daily: [],
             totals: {cost: 2, tokens: 10, currency: "USD"}}];
@@ -1327,6 +1358,20 @@ TestCase {
         tryVerify(function() { return tip.visible; });
         keyClick(Qt.Key_Tab);
         verify(!indicator.visible);
+    }
+
+    function test_incompleteScanQualifiesTokensAcrossCurrencies() {
+        applet.costs = [
+            {provider: "claude", totals: {cost: 1, tokens: 10, currency: "USD"}, daily: []},
+            {provider: "codex", totals: {cost: 2, tokens: 20, currency: "EUR"}, daily: [],
+                historyCoverageEstablished: false}
+        ];
+        var view = createView("SpendView");
+        if (!view) return;
+        verify(findItem(view, function(item) { return item.text === "Tokens (partial)"; }) !== null);
+        verify(findItem(view, function(item) {
+            return item.Accessible.description === "The local history scan is incomplete.";
+        }) !== null);
     }
 
     function spendChart(points) {

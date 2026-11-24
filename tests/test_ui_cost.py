@@ -144,7 +144,7 @@ class ProviderCostTest(unittest.TestCase):
             "amounts: CostAmounts.todayAmounts(tokenCostSection.tokenCost, tokenCostSection.applet.panelClockMs)",
             "amounts: tokenCostSection.tokenCost.totals",
             "tokenCostSection.amountText(modelData.amounts, modelData.valueMode)",
-            "tokenCostSection.tokensText(modelData.amounts, modelData.incompleteRequests)",
+            "tokenCostSection.tokensText(modelData.amounts, modelData.partialTokens)",
             "Layout.fillWidth: true",
             "wrapMode: Text.Wrap",
         ):

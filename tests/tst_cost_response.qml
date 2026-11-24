@@ -564,6 +564,35 @@ TestCase {
         compare(rolling.averageDaily, null);
         compare(rolling.models[0].cost, 30);
     }
+    function test_incompleteHistoryUsesOnlyRecordedDays_data() {
+        return [
+            {tag: "rolling-token-only", provider: "muse", first: "2026-10-17", period: "rolling:7"},
+            {tag: "all-history-400-days", provider: "opencodego", first: "2025-09-17", period: "all"},
+            {tag: "all-history-over-scan-budget", provider: "antigravity", first: "2020-01-01", period: "all"}
+        ];
+    }
+    function test_incompleteHistoryUsesOnlyRecordedDays(data) {
+        var tokenOnly = data.provider === "muse";
+        var cost = parse({provider: data.provider, reportingPeriod: data.period, historyDays: 7,
+            updatedAt: "2026-10-21", historyCoverageIsEstablished: false, daily: [
+                {date: data.first, totalTokens: 20, totalCost: tokenOnly ? undefined : 2},
+                {date: "2026-10-19", totalTokens: 0, totalCost: tokenOnly ? undefined : 0},
+                {date: "2026-10-21", totalTokens: 40, totalCost: tokenOnly ? undefined : 4},
+                {date: "2026-10-22", totalTokens: 1000, totalCost: 100}
+            ]}).costs[data.provider];
+        var expectedDays = ["2026-10-19", "2026-10-21"];
+        if (data.period !== "all") expectedDays.unshift(data.first);
+        compare(cost.daily.map(function(day) { return day.label; }), expectedDays);
+        var zero = cost.daily[cost.daily.length - 2];
+        compare(zero.tokens, 0);
+        compare(zero.cost, tokenOnly ? null : 0);
+        var tokens = cost.averageDaily ? cost.averageDaily.tokens : CostAmounts.averageDailyValue(cost.daily, true);
+        var money = cost.averageDaily ? cost.averageDaily.cost : CostAmounts.averageDailyValue(cost.daily, false);
+        compare(tokens.value, 20);
+        if (tokenOnly) compare(money, null);
+        else compare(money.value, 2);
+    }
+
     function test_allHistoryAveragesDoNotRevisitOldModels_data() {
         return [
             {tag: "bounded-span", first: "2025-08-16", scan: "2026-09-19", days: 400},
@@ -712,7 +741,7 @@ TestCase {
         compare(cost.totals.cost, 4);
         compare(cost.models.length, 1);
         compare(cost.models[0].label, "Example");
-        compare(cost.daily.length, 7);
+        compare(cost.daily.length, 1);
         compare(cost.unknownSecret, undefined);
         verify(JSON.stringify(cost).indexOf("/private/path") < 0);
         compare(cost.title, undefined);

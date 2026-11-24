@@ -3,6 +3,7 @@
 .import "CostAmounts.mjs" as Amounts
 .import "AnalysisAmounts.mjs" as Display
 .import "CostCurrency.mjs" as Currency
+.import "CostTrust.mjs" as Trust
 .import "CostPresentation.mjs" as Costs
 .import "AiInsightsSnapshot.js" as Snapshot
 .import "ChartLines.mjs" as Lines
@@ -30,13 +31,23 @@ function dayCosts(costs, day) {
 
 function selectedDayCost(snapshot, day) {
     var row = uniqueDay(snapshot, day)
-    return Object.assign({}, snapshot, {
+    var selected = Object.assign({}, snapshot, {
         totals: row || {cost: null, tokens: null, currency: Currency.fallbackSnapshotCurrency(snapshot) || snapshot.currency},
         models: row && Array.isArray(row.models) ? row.models : [],
         modelsTruncated: row ? row.modelsTruncated === true : false,
         tokenRanking: row ? row.tokenRanking : null,
         projects: null
     })
+    applyObservedDayTrust(selected, row)
+    return selected
+}
+
+function applyObservedDayTrust(selected, row) {
+    if (!row || !Trust.incompleteHistory(selected)) return
+    selected.historyCoverageEstablished = true
+    selected.trust = Object.assign({}, selected.trust, {incompleteRequests: Trust.acceptedIncompleteRequests(row)})
+    var summary = Trust.costTrustSummary([selected])
+    selected.valueMode = summary ? summary.valueMode : "plain"
 }
 
 function dailyPoints(format, costs, showsTokens) {

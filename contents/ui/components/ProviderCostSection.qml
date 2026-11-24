@@ -50,10 +50,10 @@ ColumnLayout {
         return CostAmounts.hasMetricValue(amounts, false) ? applet.qualifiedCostValue(AnalysisAmounts.amountText(applet.costNumberFormat, amounts.cost, amounts.currency), mode) : i18n("Cost unavailable");
     }
 
-    function tokensText(amounts, incompleteRequests) {
+    function tokensText(amounts, partial) {
         if (!CostAmounts.hasMetricValue(amounts, true)) return i18n("Tokens unavailable");
         var text = applet.usageCountText(amounts.tokens, "tokens");
-        return incompleteRequests > 0 ? applet.qualifiedCostValue(text, "partial") : text;
+        return partial ? applet.qualifiedCostValue(text, "partial") : text;
     }
 
     function daySummaryText() {
@@ -158,14 +158,15 @@ ColumnLayout {
                     label: i18n("Today"),
                     amounts: CostAmounts.todayAmounts(tokenCostSection.tokenCost, tokenCostSection.applet.panelClockMs),
                     valueMode: "plain",
-                    incompleteRequests: CostTrust.todayIncompleteTokenRequests(
-                        tokenCostSection.tokenCost, tokenCostSection.applet.panelClockMs)
+                    partialTokens: CostTrust.todayIncompleteTokenRequests(
+                        tokenCostSection.tokenCost, tokenCostSection.applet.panelClockMs) > 0
                 },
                 {
                     label: tokenCostSection.tokenCost.windowLabel,
                     amounts: tokenCostSection.tokenCost.totals,
                     valueMode: tokenCostSection.tokenCost.valueMode,
-                    incompleteRequests: CostTrust.incompleteTokenRequests([tokenCostSection.tokenCost])
+                    partialTokens: CostTrust.incompleteTokenHistory(tokenCostSection.tokenCost)
+                        || CostTrust.incompleteTokenRequests([tokenCostSection.tokenCost]) > 0
                 }
             ] : []
 
@@ -192,7 +193,7 @@ ColumnLayout {
                 }
                 PlainPlasmaLabel {
                     objectName: "costSummaryTokensLabel"
-                    text: tokenCostSection.tokensText(modelData.amounts, modelData.incompleteRequests)
+                    text: tokenCostSection.tokensText(modelData.amounts, modelData.partialTokens)
                     font: Qt.font(Object.assign({}, Kirigami.Theme.smallFont, { features: { "tnum": 1 } }))
                     opacity: tokenCostSection.applet.secondaryTextOpacity
                     Layout.fillWidth: true

@@ -59,7 +59,7 @@ TestCase {
         item.totals.tokens = 4
         compare(CostTrust.costTrustSummary([item]), {
             level: "warning", valueMode: "partial", sourceKind: "vendor",
-            hasEstimated: false, hasUnpriced: false, hasUnmetered: false, incompleteRequests: 3
+            hasEstimated: false, hasUnpriced: false, hasUnmetered: false, hasIncompleteHistory: false, incompleteRequests: 3
         })
     }
 
@@ -68,7 +68,7 @@ TestCase {
             totals: { cost: 1, currency: "USD" }, trust: { sourceKind: "mixed" }
         }]), {
             level: "information", valueMode: "estimated", sourceKind: "mixed",
-            hasEstimated: true, hasUnpriced: false, hasUnmetered: false, incompleteRequests: 0
+            hasEstimated: true, hasUnpriced: false, hasUnmetered: false, hasIncompleteHistory: false, incompleteRequests: 0
         })
     }
 
@@ -1495,6 +1495,33 @@ TestCase {
             totals: { cost: null, tokens: 250, currency: "USD" },
             trust: { coverage: null, sourceKind: "unknown" }
         }]), null)
+    }
+
+    function test_incompleteScanQualifiesTotalsIndependentlyOfPricing() {
+        var snapshot = { totals: {cost: 1, tokens: 10, currency: "USD"},
+            historyCoverageEstablished: false, trust: {sourceKind: "listPrice"} }
+        var partial = CostTrust.costTrustSummary([snapshot])
+        compare(partial.valueMode, "partial")
+        verify(partial.hasIncompleteHistory)
+        verify(partial.hasEstimated)
+        snapshot.historyCoverageEstablished = true
+        verify(CostTrust.costTrustNoticeKey(partial)
+            !== CostTrust.costTrustNoticeKey(CostTrust.costTrustSummary([snapshot])))
+        snapshot.historyCoverageEstablished = false
+        snapshot.totals.cost = null
+        snapshot.trust = null
+        verify(CostTrust.costTrustSummary([snapshot]).hasIncompleteHistory)
+        verify(CostTrust.incompleteTokenHistory(snapshot))
+        snapshot.trust = {sourceKind: "vendor"}
+        var money = CostTrust.costTrustSummary([trustedCost("USD", null, "vendor"), snapshot])
+        compare(money.valueMode, "plain")
+        verify(money.hasIncompleteHistory)
+        snapshot.totals.tokens = 0
+        compare(CostTrust.costTrustSummary([snapshot]), null)
+        verify(!CostTrust.incompleteTokenHistory(snapshot))
+        snapshot.daily = [{tokens: 0}]
+        verify(CostTrust.incompleteTokenHistory(snapshot))
+        verify(CostTrust.costTrustSummary([snapshot]).hasIncompleteHistory)
     }
 
     function test_costTrustSummaryIgnoresEmptySnapshots_data() {

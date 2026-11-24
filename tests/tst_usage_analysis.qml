@@ -81,6 +81,51 @@ TestCase {
         compare(Analysis.modelRows([cost], "2026-11-12", false).rows.length, 0)
     }
 
+    function test_recordedDayKeepsItsPricingAndExclusions() {
+        var cost = snapshot("codex", "USD", 2, 1)
+        cost.historyCoverageEstablished = false
+        cost.valueMode = "partial"
+        cost.trust = {sourceKind: "listPrice", incompleteRequests: 3}
+        var observed = Analysis.dayCosts([cost], cost.daily[0].label)[0]
+        verify(!CostTrust.incompleteHistory(observed))
+        compare(observed.valueMode, "estimated")
+        compare(observed.totals.cost, 2)
+        cost.daily[0].incompleteRequests = 1
+        compare(Analysis.dayCosts([cost], cost.daily[0].label)[0].valueMode, "partial")
+        for (var tokens of [false, true]) {
+            var points = Analysis.dailyPoints(null, [cost], tokens)
+            compare(points.filter(point => point.partial).map(point => point.label), [cost.daily[0].label])
+        }
+        var missing = Analysis.dayCosts([cost], "2020-01-01")[0]
+        compare(missing.totals.cost, null)
+        verify(CostTrust.incompleteHistory(missing))
+        verify(CostTrust.incompleteHistory(cost))
+    }
+
+    function test_partialDayDependsOnTheSelectedMetric() {
+        var first = snapshot("claude", "USD", 1, 0)
+        var second = snapshot("codex", "USD", 0, 0)
+        second.historyCoverageEstablished = false
+        second.daily[0].cost = null
+        second.daily[1].tokens = null
+        function partialDates(tokens) {
+            return Analysis.dailyPoints(null, [first, second], tokens)
+                .filter(point => point.partial).map(point => point.label)
+        }
+        compare(partialDates(false), [second.daily[0].label])
+        compare(partialDates(true), [second.daily[1].label])
+        second.totals.cost = null
+        second.daily.forEach(day => { day.cost = null })
+        compare(partialDates(false), [])
+        compare(partialDates(true), [second.daily[1].label])
+        second.totals.tokens = null
+        second.daily.forEach(day => { day.tokens = null })
+        compare(partialDates(true), [])
+        second.daily = []
+        second.totals.tokens = 0
+        compare(partialDates(true), [])
+    }
+
     function test_ambiguityBeyondRenderedProviders_data() {
         return [{tag: "129-cost", count: 129, tokens: false, foreign: false, expected: null},
             {tag: "256-tokens", count: 256, tokens: true, foreign: false, expected: null},

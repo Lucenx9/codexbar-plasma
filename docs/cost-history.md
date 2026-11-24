@@ -61,8 +61,8 @@ The owning code is [ProviderNormalizer.mjs](../contents/ui/ProviderNormalizer.mj
   report errors without erasing successful amounts.
 - Missing amounts remain unknown; measured zero stays zero. Calendar gap filling
   applies only to metrics observed in the snapshot. Duplicate dates, malformed
-  rows, or a truncated scan prevent zero-day inference while preserving observed
-  rows inside the selected period.
+  rows, a truncated scan, or an explicit `historyCoverageIsEstablished: false`
+  prevent zero-day inference. Observed days remain available.
 - Calendar keys must be `YYYY-MM-DD` strings. Impossible calendar dates are
   excluded from daily amounts and model totals; they still prevent zero-day
   inference. Objects and arrays cannot extend a range. Bounded non-date legacy
@@ -138,7 +138,13 @@ stay inside the plot and scroll viewport, with full detail available by pinning.
 
 `costHistoryMetric` changes chart scaling and amount order from the same payload.
 `historyCoverageIsEstablished` qualifies history completeness independently of
-pricing coverage; legacy payloads without it remain supported.
+pricing coverage. An explicit false qualifies reported period totals as partial
+even when every recorded request has a price. Missing dates contribute neither
+amounts nor days to daily averages. A combined daily subtotal is partial when
+an eligible provider with incomplete history has no observation for that date
+and metric. Money uses the selected currency, while tokens span all currencies.
+Legacy records with the field absent retain the existing calendar and pricing
+rules.
 
 `normalizeCostTrustMetadata` bounds `coverage`, `provenance`, and
 `incompleteRequestCount`. `CostTrust.costTrustSummary` supplies semantic notices;
@@ -235,6 +241,15 @@ Plasma disconnects its source. Missing `timeout` fails closed.
 These scoped checks do not replace the
 [0.56.2 full audit](research/2026-09-01-macos-parity-0.56.2.md).
 
+- Linux 0.84.0 emitted LiteLLM spend without a positive budget and Neuralwatt
+  supplied its balance in both `usage.providerCost.balance` and `used`.
+  In Linux 0.85.0 a synthetic Grok ACP response produced a positive
+  `providerCost.balance` alongside zero `used` and `limit`. The 0.85.0
+  glibc plugin probes for LiteLLM and Neuralwatt exited 139 before confirming
+  either provider's usage contract on that version.
+- Linux 0.84.0 (Codex) and 0.85.0 (Muse Code and Antigravity) emitted
+  `historyCoverageIsEstablished: false` alongside recorded daily activity.
+  Muse Code returned tokens and Antigravity returned both tokens and money.
 - On 2026-11-24 the installed Linux CLI 0.84.0 and the official 0.85.0
   Linux x86_64 binary returned positive provider and model amounts for
   `codexbar cost --provider antigravity --period all --refresh --format json`.
