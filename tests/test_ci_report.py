@@ -116,12 +116,20 @@ class ArtifactTests(unittest.TestCase):
     def test_concurrency_is_scoped_to_source_for_automatic_and_manual_reports(self):
         workflow = (Path(__file__).resolve().parents[1] / ".github/workflows/ci-report.yml").read_text()
         self.assertIn("group: ci-report-${{ needs.source.outputs.group }}", workflow)
+        self.assertIn("if: needs.source.outputs.group != ''", workflow)
         self.assertIn("python3 scripts/ci_report.py source", workflow)
         source = report.source_key(RUN)
         self.assertEqual(source, report.source_key(dict(RUN, id=99, head_sha=BASE, run_attempt=3)))
         self.assertNotEqual(source, report.source_key(dict(RUN, head_branch="another-pr")))
         self.assertNotEqual(source, report.source_key(dict(RUN, head_repository={"id": 8})))
         self.assertRegex(source, r"^[0-9a-f]{64}$")
+
+    def test_deleted_source_repository_skips_publication(self):
+        api = FakeGitHub()
+        api.run["head_repository"] = None
+        self.assertEqual(report.source_key(api.run), "")
+        self.assertIsNone(report.publish(api, 42, BOT))
+        self.assertFalse(api.writes)
 
     def test_report_image_matches_both_runtime_containers(self):
         workflow = (Path(__file__).resolve().parents[1] / ".github/workflows/ci.yml").read_text()
@@ -307,7 +315,8 @@ class RenderTests(unittest.TestCase):
 class PublishTests(unittest.TestCase):
     def test_creates_one_bot_comment_and_ignores_spoofed_markers(self):
         api = FakeGitHub()
-        api.comments = [{"id": 1, "user": {"login": "contributor", "type": "User"}, "body": schema.MARKER},
+        api.comments = [{"id": 0, "user": None, "body": schema.MARKER},
+                        {"id": 1, "user": {"login": "contributor", "type": "User"}, "body": schema.MARKER},
                         {"id": 2, "user": {"login": "other[bot]", "type": "Bot"}, "body": schema.MARKER}]
         self.assertEqual(report.publish(api, 42, BOT), "https://example.test/comment")
         self.assertEqual(len(api.writes), 1)

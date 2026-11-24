@@ -188,6 +188,18 @@ TestCase {
         compare(quota.currentValue, "auto");
     }
 
+    function test_spendOnlyAllowsQuotaSelection() {
+        var page = createPage({advancedExpanded: true, cfg_showMultiProviderInPanel: false});
+        if (!page) return;
+        var quota = findChild(page, "panelQuotaCombo");
+        verify(!quota.enabled);
+        page.cfg_showSpendInPanel = true;
+        verify(quota.enabled);
+        quota.forceActiveFocus();
+        keyClick(Qt.Key_Down);
+        compare(page.cfg_panelQuotaLane, "primary");
+    }
+
     function test_reorderingKeepsLayoutAndKeyboardFocusAfterDisclosure() {
         var page = createPage();
         if (!page) return;

@@ -4092,6 +4092,10 @@ msgid "Upstream CLI %1 is available. Update using your installation method."
 msgstr ""
 
 #: contents/ui/controllers/UsageController.qml
+msgid "Invalid provider override in widget settings."
+msgstr ""
+
+#: contents/ui/controllers/UsageController.qml
 msgid "codexbar did not return JSON."
 msgstr ""
 

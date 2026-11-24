@@ -254,10 +254,11 @@ normalization calls.
 ### Sticky CI report
 
 [ci-report.yml](../.github/workflows/ci-report.yml) publishes one English comment
-as `codexbar-review-bot[bot]`. Later runs update the matching author and
-`<!-- codexbar-ci-report -->` marker; unchanged bodies cause no write. The report
-supplements Sonnet review. Required `check`, `smoke` and `pr-title` remain the
-merge gates.
+as `codexbar-review-bot[bot]`. Runs from deleted forks skip publication. Later
+runs update comments with the matching bot author and `<!-- codexbar-ci-report -->`
+marker. Comments without an author are ignored. Unchanged bodies cause no write.
+The report supplements Sonnet review. Required `check`, `smoke` and `pr-title`
+remain the merge gates.
 
 `scripts/ci_report.py` orchestrates validation/collection, credential-separated
 HTTP transport and Markdown rendering through `scripts/lib/ci_report_*` modules.

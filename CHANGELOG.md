@@ -31,6 +31,16 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Allow quota selection for panel text visibility when **Spend budget** is the
+  only enabled panel item.
+
+- Report an invalid provider override in Diagnostics as a refresh error and
+  allow usage to recover when the override is corrected.
+
+- Keep the applet usable when the optional sharing window cannot load. Shared
+  usage reports omit currency totals that exceed the supported range and show
+  **Cost unavailable** if no valid total remains.
+
 - Collapse the expanded **Usage & Spend** layout when local usage history is
   disabled and hide the **Daily activity** container when switching to a
   7-day range.
