@@ -210,6 +210,8 @@ TestCase {
 
         var card = findChild(view, "analysisProviderToggle-codex");
         verify(card !== null);
+        verify(card.leftPadding > card.rightPadding,
+            "Provider row chevrons must share the disclosures' leading inset");
         var scroll = findChild(view, "spendHistoryScroll");
         verify(scroll !== null && scroll.contentItem !== null);
         var flick = scroll.contentItem;

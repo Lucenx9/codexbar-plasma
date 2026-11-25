@@ -722,6 +722,11 @@ ColumnLayout {
                                 Layout.fillWidth: true
                                 implicitHeight: spendProviderRow.implicitHeight + Kirigami.Units.smallSpacing * 2
                                 padding: Kirigami.Units.smallSpacing
+                                // Match the leading inset Breeze draws inside the flat
+                                // disclosures below (style-painted, so not exposed as padding)
+                                // to line up every chevron; the trailing amounts keep their edge.
+                                leftPadding: mirrored ? padding : Kirigami.Units.largeSpacing
+                                rightPadding: mirrored ? Kirigami.Units.largeSpacing : padding
                                 hoverEnabled: true
                                 background: Rectangle {
                                     id: spendProviderCardBackground
