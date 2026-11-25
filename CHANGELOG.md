@@ -31,6 +31,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Close the open popup when you click the panel widget, its icon, or the meter
+  of the provider it shows, instead of reopening it immediately.
+
 - Align the expand arrows of **Usage & Spend** provider rows with the
   **Compare models**, **Daily activity**, and **AI Insights** disclosures.
 
