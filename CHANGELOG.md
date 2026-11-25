@@ -36,8 +36,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   title-to-detail spacing, add hairline framing to the segmented metric toggle
   and overflowing tab-strip edges, keep the provider **Cost details** header
   height stable when clearing a selected day, mirror the provider status pill
-  in right-to-left layouts, and use tabular digits on stacked reset/pace labels
-  and chart endpoints.
+  in right-to-left layouts, and use tabular digits on chart endpoints and
+  cost-history summary lines.
 
 - Inspect and select the day under the pointer in dense daily history bar charts.
 

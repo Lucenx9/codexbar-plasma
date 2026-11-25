@@ -99,11 +99,8 @@ class UsageRowsTest(unittest.TestCase):
         for usage_metadata_id in ("usagePaceLabel", "usageResetLabel"):
             usage_metadata_body = id_block(self.provider_usage_row_text, usage_metadata_id)
             self.assertTrue(
-                code_contains(
-                    usage_metadata_body,
-                    'font: Qt.font(Object.assign({}, Kirigami.Theme.smallFont, { features: { "tnum": 1 } }))',
-                ),
-                f"{usage_metadata_id} must retain the compact metadata type scale with tabular digits",
+                code_contains(usage_metadata_body, "font: Kirigami.Theme.smallFont"),
+                f"{usage_metadata_id} must retain the compact metadata type scale",
             )
 
 
