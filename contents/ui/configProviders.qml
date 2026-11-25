@@ -1457,7 +1457,9 @@ KCM.SimpleKCM {
         property string providerID: ""
         property string commandSignature: ""
         title: i18n("Clear stored credentials?")
-        width: Math.min(page.width - Kirigami.Units.largeSpacing * 2, Kirigami.Units.gridUnit * 26)
+        // Qt 6.8 reports an implicitHeight binding loop when a closed dialog
+        // with a title and wrapped text is resized, as the page is on load.
+        width: visible ? Math.min(page.width - Kirigami.Units.largeSpacing * 2, Kirigami.Units.gridUnit * 26) : 0
         modal: true
         standardButtons: Controls.Dialog.Ok | Controls.Dialog.Cancel
         onAccepted: {

@@ -240,7 +240,7 @@ PlasmoidItem {
         providers, providerOrderRaw)
     onCostHistoryDaysChanged: applyTokenCosts()
     // An account discovery result is explained once, while the popup stays open.
-    onExpandedChanged: {
+    onExpandedChanged: function(expanded) {
         if (!expanded) {
             accountsController.dismissNotices()
             collapseStatusComponents()
