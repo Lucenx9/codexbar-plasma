@@ -1260,14 +1260,19 @@ KCM.SimpleKCM {
             errorText = i18n("%1 returned an unsupported descriptor command.", displayNameForProvider(providerID))
             return
         }
-        errorText = ""
-        statusText = ""
         if (cookie || sessionImport) {
-            retireProviderDiagnostic(providerID)
-            markPending(providerID, true, providerByID(providerID).enabled)
             plan.commandLine = ProviderCredentials.helperCommand(credentialScriptUrl, commandPath,
                 sessionImport ? "import-session" : "set-cookie", providerCliArgument(providerID))
+            if (!plan.commandLine) {
+                return
+            }
+            errorText = ""
+            statusText = ""
+            retireProviderDiagnostic(providerID)
+            markPending(providerID, true, providerByID(providerID).enabled)
         } else {
+            errorText = ""
+            statusText = ""
             markFieldPending(providerID, field.id, true)
         }
         var prompt = i18n("%1 for %2", field.title, displayNameForProvider(providerID))

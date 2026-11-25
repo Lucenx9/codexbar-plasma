@@ -27,9 +27,13 @@ function optionalText(value) {
     if (redacted.length > maximumStringCodeUnitsForSafety) {
         return ""
     }
+    var sanitized = redacted.replace(/[\u0000-\u001f\u007f]+/g, " ").trim()
+    if (sanitized.length === 0) {
+        return ""
+    }
     return isAscii
-        ? redacted.slice(0, maximumStringLength)
-        : redacted
+        ? sanitized.slice(0, maximumStringLength)
+        : sanitized
 }
 
 function optionalNumber(value) {

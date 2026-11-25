@@ -305,6 +305,7 @@ TestCase {
     property bool commandCodeFalApiKeySetupSupported: false
     property bool providerSourceSetupSupported: false
     property string credentialCliVersion: ""
+    property url credentialScriptUrl: "file:///tmp/provider-auth.py"
     property var operationState: ProviderOperations.initialState()
     property var commands: ({})
     property var configSource
@@ -680,6 +681,33 @@ TestCase {
         compare(errorText, "stale");
         errorText = "";
     }
+    // Missing or rejected credential helper URLs must abort before marking pending or prompting.
+    function test_emptyHelperCommandAbortsSecretPrompt() {
+        configSource = freshSource();
+        operationState = ProviderOperations.initialState();
+        errorText = "stale";
+        var savedUrl = credentialScriptUrl;
+        var savedVersion = credentialCliVersion;
+        var savedProviders = providers;
+        credentialCliVersion = "0.84.0";
+        providers = [{provider: "claude", enabled: true, authentication: {supportsConfigCookieHeader: true}}];
+        credentialScriptUrl = "https://example.invalid/provider-auth.py";
+        promptDescriptorSecret("claude", {id: "cookieHeader", kind: "secret", title: "Cookie header",
+            writeCommand: ["codexbar", "config", "set-cookie", "--provider", "claude", "--stdin"]});
+        compare(configSource.connected.length, 0);
+        verify(!isPending("claude"));
+        compare(errorText, "stale");
+        // Verify the same fixture dispatches once the helper URL is valid.
+        credentialScriptUrl = savedUrl;
+        promptDescriptorSecret("claude", {id: "cookieHeader", kind: "secret", title: "Cookie header",
+            writeCommand: ["codexbar", "config", "set-cookie", "--provider", "claude", "--stdin"]});
+        compare(configSource.connected.length, 1);
+        verify(isPending("claude"));
+        credentialCliVersion = savedVersion;
+        providers = savedProviders;
+        operationState = ProviderOperations.initialState();
+        errorText = "";
+    }
     // Field writes register under the descriptorField kind so their results
     // unlock the field instead of landing on another handler.
     function test_fieldWriteRegistersDescriptorFieldKind() {
@@ -952,7 +980,7 @@ WIRING_FUNCTIONS = (
     "descriptorHasField", "descriptorHasAction", "appendSettingsRow", "providerSettingsRows",
     "providerActionRows", "descriptorActionIcon", "providerCliCommandText",
     "providerDocsUrl", "providerDashboardUrl", "providerLoginUrl", "providerCliArgument",
-    "supportsApiKeySetup", "apiKeyPrompt",
+    "supportsApiKeySetup", "apiKeyPrompt", "credentialWriteAllowed", "markPending",
 )
 
 

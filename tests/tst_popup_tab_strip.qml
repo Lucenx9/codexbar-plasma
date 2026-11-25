@@ -453,4 +453,59 @@ TestCase {
         host.width = 1600;
         tryVerify(function () { return !prevSep.visible && !nextSep.visible; });
     }
+
+    function test_stoppingOverflowAndWideningClampScrollPosition() {
+        var host = createStrip();
+        var viewport = findChild(host, "providerTabsFlickable");
+
+        host.selectedIndex = 7;
+        verifyRevealed(host, 7);
+        verify(viewport.contentX > 0);
+
+        // Widening while still overflowing must not leave blank space on the right.
+        host.width = 400;
+        waitForPolish(findChild(host, "tab0").parent);
+        wait(0);
+        verify(host.tabsOverflow);
+        verify(viewport.contentX <= viewport.contentWidth - viewport.width + 0.5);
+        verifyRevealed(host, 7);
+
+        // Stopping overflow by hiding labels must reset contentX to 0 so leftmost tabs stay reachable.
+        host.showLabels = false;
+        waitForPolish(findChild(host, "tab0").parent);
+        wait(0);
+        tryCompare(host, "tabsOverflow", false);
+        compare(viewport.contentX, 0);
+        verifyRevealed(host, 0);
+
+        // Stopping overflow by widening the strip while a scroll animation is
+        // active must stop the scroll and reset contentX to 0.
+        host.showLabels = true;
+        host.width = 280;
+        waitForPolish(findChild(host, "tab0").parent);
+        wait(0);
+        host.selectedIndex = 7;
+        verifyRevealed(host, 7);
+        verify(viewport.contentX > 0);
+        host.scrollTo(viewport.contentWidth - viewport.width, false);
+        host.width = 1600;
+        waitForPolish(findChild(host, "tab0").parent);
+        wait(0);
+        tryCompare(host, "tabsOverflow", false);
+        compare(viewport.contentX, 0);
+        verifyRevealed(host, 0);
+
+        // Widening during an active flick must still clamp contentX within the
+        // new upper bound rather than leaving blank space past the last tab.
+        host.width = 280;
+        waitForPolish(findChild(host, "tab0").parent);
+        wait(0);
+        host.selectedIndex = 7;
+        verifyRevealed(host, 7);
+        viewport.flick(-200, 0);
+        host.width = 420;
+        waitForPolish(findChild(host, "tab0").parent);
+        wait(0);
+        verify(viewport.contentX <= Math.max(0, viewport.contentWidth - viewport.width) + 0.5);
+    }
 }

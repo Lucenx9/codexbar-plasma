@@ -190,9 +190,9 @@ Item {
             connectedUpdateInstallMode = installMode;
             commandRunSerial += 1;
             connectedUpdateCommandSource = CommandLedger.withRunNonce(buildUpdateCommand(installMode), commandRunSerial, Date.now() + "-" + Math.random());
-            updateSource.connectSource(connectedUpdateCommandSource);
             updateCommandTimeoutTimer.interval = installMode ? widgetAutoUpdateTimeoutMs : widgetUpdateCheckTimeoutMs;
             updateCommandTimeoutTimer.restart();
+            updateSource.connectSource(connectedUpdateCommandSource);
         }
 
         function scheduleNextUpdateCheck(lastCheckOverride) {
@@ -292,7 +292,7 @@ Item {
             }
 
             var resultIntent = UpdateLogic.resultIntent(payload, installMode);
-            if (resultIntent.successful && exitCode !== 0) {
+            if (resultIntent.successful && Guards.exitCode(exitCode) !== 0) {
                 finishUpdateCommand(sourceName, false);
                 setWidgetUpdateState(i18n("Widget update failed."), boundedCliMessage(stderrText) || i18n("Widget update check failed."));
                 return;
