@@ -178,6 +178,9 @@ TestCase {
         return [
             {tag: "http", label: "model http://example.test/info", expected: "model [redacted]"},
             {tag: "https", label: "model https://example.test/info", expected: "model [redacted]"},
+            {tag: "upper-http", label: "model HTTP:internal-llm:8080", expected: "model [redacted]"},
+            {tag: "upper-https", label: "model HTTPS:internal-llm:8443", expected: "model [redacted]"},
+            {tag: "upper-file", label: "FILE:private-client-weights.gguf", expected: "[redacted]"},
             {tag: "url-and-path", label: "model https://example.test/info /a b", expected: "[redacted]"}
         ]
     }

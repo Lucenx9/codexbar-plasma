@@ -917,7 +917,7 @@ Item {
                             anchors.left: providerStatusDot.right
                             anchors.leftMargin: Kirigami.Units.smallSpacing * 1.5
                             y: providerStatusMessage.verticalPadding
-                            width: providerStatusMessage.width - providerStatusMessage.chromeWidth
+                            width: Math.max(0, providerStatusMessage.width - providerStatusMessage.chromeWidth)
                             text: applet.presentedProviderData ? applet.presentedProviderData.status : ""
                             font: Kirigami.Theme.smallFont
                             wrapMode: Text.Wrap

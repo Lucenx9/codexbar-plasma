@@ -201,6 +201,98 @@ TestCase {
 }
 '''
 
+GUARD_QML = '''import QtQuick
+import QtTest
+import "UPDATE_LOGIC_URL" as UpdateLogic
+import "COMMAND_LEDGER_URL" as CommandLedger
+import "GUARDS_URL" as Guards
+TestCase {
+    name: "WidgetUpdateControllerGuards"
+    property string connectedUpdateCommandSource: ""
+    property bool connectedUpdateInstallMode: false
+    property bool pendingAutomaticUpdateCheck: false
+    property int commandRunSerial: 0
+    property int widgetUpdateCheckTimeoutMs: 60000
+    property int widgetAutoUpdateTimeoutMs: 660000
+    property var controller: ({ updateChecksEnabled: true, autoUpdateEnabled: false })
+    property var appliedIntents: []
+    property var finishCalls: []
+    property var stateCalls: []
+    property var syncReply: null
+    property QtObject updateCheckTimer: QtObject { function stop() {} }
+    property QtObject updateCommandTimeoutTimer: QtObject {
+        property int interval: 0
+        property bool running: false
+        function restart() { running = true; }
+        function stop() { running = false; }
+    }
+    property QtObject updateSource: QtObject {
+        function connectSource(source) {
+            if (syncReply !== null) {
+                var reply = syncReply;
+                syncReply = null;
+                handleUpdateData(source, reply.stdout, reply.stderr, reply.exitCode);
+            }
+        }
+    }
+    function i18n(text, arg) { return String(text).replace("%1", arg === undefined ? "%1" : arg); }
+    function updateCheckDue() { return true; }
+    function scheduleNextUpdateCheck() {}
+    function buildUpdateCommand() { return "synthetic-updater"; }
+    function boundedCliMessage(value) { return String(value || "").trim(); }
+    function setWidgetUpdateState(status, error, persist) {
+        stateCalls.push({ status: status, error: error, persist: persist });
+    }
+    function applyUpdateResultIntent(intent) { appliedIntents.push(intent); }
+    function finishUpdateCommand(source, ok) {
+        updateCommandTimeoutTimer.stop();
+        connectedUpdateCommandSource = "";
+        connectedUpdateInstallMode = false;
+        finishCalls.push({ source: source, ok: ok });
+    }
+    function checkForWidgetUpdate(forceCheck, manualMode) {CHECK_BODY}
+    function handleUpdateData(sourceName, stdoutText, stderrText, exitCode) {HANDLE_BODY}
+
+    function init() {
+        appliedIntents = [];
+        finishCalls = [];
+        stateCalls = [];
+        syncReply = null;
+        updateCommandTimeoutTimer.running = false;
+    }
+
+    function test_stringZeroAndSyncReplyStopTimeout() {
+        syncReply = { stdout: '{"status":"current"}', stderr: "", exitCode: "0" };
+        checkForWidgetUpdate(true, "check");
+        compare(finishCalls.length, 1);
+        compare(finishCalls[0].ok, true);
+        compare(appliedIntents.length, 1);
+        compare(appliedIntents[0].kind, "current");
+        verify(!updateCommandTimeoutTimer.running);
+    }
+
+    function test_malformedExitCodesFail_data() {
+        return [
+            { tag: "null", code: null },
+            { tag: "false", code: false },
+            { tag: "blank", code: "" },
+            { tag: "text", code: "abc" },
+            { tag: "nonzero", code: "1" }
+        ];
+    }
+
+    function test_malformedExitCodesFail(data) {
+        syncReply = { stdout: '{"status":"current"}', stderr: "", exitCode: data.code };
+        checkForWidgetUpdate(true, "check");
+        compare(finishCalls.length, 1);
+        compare(finishCalls[0].ok, false);
+        compare(appliedIntents.length, 0);
+        verify(stateCalls[stateCalls.length - 1].error.length > 0);
+        verify(!updateCommandTimeoutTimer.running);
+    }
+}
+'''
+
 
 def balanced_body(text, start):
     """Return the text inside the braces whose opening brace is at `start`."""
@@ -264,6 +356,25 @@ class WidgetUpdateWiringTests(unittest.TestCase):
         logic = (ROOT / "contents/ui/UpdateNotificationState.js").read_text()
         for forbidden in ("i18n(", "Qt.", "configuration.", "dispatcher."):
             self.assertNotIn(forbidden, logic)
+
+    def test_updater_controller_guards_exit_code_and_starts_timeout_before_connect(self):
+        updater = Surface("applet", ROOT)
+        controller = ROOT / "contents/ui/controllers/WidgetUpdateController.qml"
+        updater.texts = {controller: updater.texts[controller]}
+        qml = (GUARD_QML
+               .replace("UPDATE_LOGIC_URL", (ROOT / "contents/ui/UpdateLogic.js").as_uri())
+               .replace("COMMAND_LEDGER_URL", (ROOT / "contents/ui/CommandLedger.js").as_uri())
+               .replace("GUARDS_URL", (ROOT / "contents/ui/Guards.js").as_uri())
+               .replace("CHECK_BODY", updater.function_body("checkForWidgetUpdate"))
+               .replace("HANDLE_BODY", updater.function_body("handleUpdateData")))
+        with tempfile.TemporaryDirectory(prefix="codexbar-update-guards-") as temporary:
+            fixture = Path(temporary) / "tst_widget_update_guards.qml"
+            fixture.write_text(qml)
+            result = subprocess.run(
+                [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],
+                env={**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software"},
+                capture_output=True, text=True, timeout=30)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_updater_results_reach_the_persisted_configuration(self):
         applet = Surface("applet", ROOT)

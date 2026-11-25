@@ -79,7 +79,13 @@ Item {
 
     function ensureVisible(item) {
         providerTabsScroll.stop();
-        if (!providerTabsFlickable.interactive || !item || item.width <= 0 || !containsTab(item)) {
+        if (!providerTabsFlickable.interactive) {
+            if (providerTabsFlickable.contentX !== 0) {
+                providerTabsFlickable.contentX = 0;
+            }
+            return;
+        }
+        if (!item || item.width <= 0 || !containsTab(item)) {
             return;
         }
         var target = TabStripGeometry.revealPosition(item.mapToItem(providerTabs, 0, 0).x, item.width, providerTabsFlickable.contentX, providerTabsFlickable.width, Kirigami.Units.gridUnit);
@@ -107,6 +113,11 @@ Item {
     }
 
     function revealFocusedOrSelectedTab() {
+        var bounded = TabStripGeometry.boundedPosition(providerTabsFlickable.contentX, providerTabsFlickable.contentWidth, providerTabsFlickable.width);
+        if (bounded !== providerTabsFlickable.contentX) {
+            providerTabsScroll.stop();
+            providerTabsFlickable.contentX = bounded;
+        }
         // Manual activation lets focus leave the selected tab. Layout changes
         // must keep that navigation target visible until the user activates it.
         ensureVisible(navigationTab);

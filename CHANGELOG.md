@@ -31,6 +31,13 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Clamp the popup tab strip's scroll position when resizing or hiding labels
+  reduces or removes overflow, accept integer-string exit codes and arm the
+  timeout before connecting in the widget updater, sanitize control characters
+  in provider detail text, redact uppercase `HTTP:`/`HTTPS:`/`FILE:` schemes in
+  shared usage labels, and abort descriptor secret prompts when the credential
+  helper command is unavailable.
+
 - Polish popup visual hierarchy and geometry: dim model spend-share sublabels
   and incomplete-currency notices in **Usage & Spend**, tighten Overview card
   title-to-detail spacing, add hairline framing to the segmented metric toggle

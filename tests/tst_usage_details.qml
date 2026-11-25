@@ -351,4 +351,41 @@ TestCase {
         compare(sections[1].chart.points[0].value, -3)
         compare(sections[1].chart.points[1].value, 0)
     }
+
+    function test_sanitizesControlCharactersInDisplayFields() {
+        var sections = UsageDetails.normalizeSections([
+            {
+                title: "Budget\n\nFake Section",
+                rows: [
+                    { label: "A\u0000\u001b[31mB", value: "1\r\n2", secondaryValue: "\t+5%\u007f" },
+                    { label: "Secret", value: "token=abc\u0000LEAKED_SUFFIX", secondaryValue: "Bearer top\u0000SECRET_PART" },
+                    { label: "\u0000\r\n\t", value: "ignored" }
+                ],
+                chart: {
+                    kind: "bars",
+                    title: "Daily\nchart",
+                    unit: "req\u0000/s",
+                    points: [
+                        { label: "Mon\r\nTue", value: 4 },
+                        { label: "\u001b\u007f", value: 9 }
+                    ]
+                }
+            }
+        ])
+
+        compare(sections.length, 1)
+        compare(sections[0].title, "Budget Fake Section")
+        compare(sections[0].rows.length, 2)
+        compare(sections[0].rows[0].label, "A [31mB")
+        compare(sections[0].rows[0].value, "1 2")
+        compare(sections[0].rows[0].secondaryValue, "+5%")
+        verify(sections[0].rows[1].value.indexOf("LEAKED_SUFFIX") === -1)
+        verify(sections[0].rows[1].value.indexOf("[redacted]") !== -1)
+        verify(sections[0].rows[1].secondaryValue.indexOf("SECRET_PART") === -1)
+        verify(sections[0].rows[1].secondaryValue.indexOf("[redacted]") !== -1)
+        compare(sections[0].chart.title, "Daily chart")
+        compare(sections[0].chart.unit, "req /s")
+        compare(sections[0].chart.points.length, 1)
+        compare(sections[0].chart.points[0].label, "Mon Tue")
+    }
 }
