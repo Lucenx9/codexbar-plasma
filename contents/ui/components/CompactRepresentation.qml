@@ -248,12 +248,17 @@ Item {
         return typeof width === "number" && isFinite(width) && width > 0 ? width : 0
     }
 
+    // Plasma hides an open popup when a press deactivates it, before the click
+    // arrives. Pointer handlers decide from the state seen at press, like the
+    // stock Plasma applets, so a click on the panel closes the popup.
     MouseArea {
         id: compactBackgroundMouse
+        property bool wasExpanded: false
         anchors.fill: parent
         enabled: compactRoot.interactive
         cursorShape: Qt.PointingHandCursor
-        onClicked: compactRoot.applet.expanded = !compactRoot.applet.expanded
+        onPressed: wasExpanded = compactRoot.applet.expanded
+        onClicked: compactRoot.applet.expanded = !wasExpanded
     }
 
     // Measure outside the Loader so its layout-assigned width cannot feed back
@@ -391,6 +396,14 @@ Item {
                 }
             }
 
+            function click(wasExpanded) {
+                if (wasExpanded && compactRoot.interactive) {
+                    compactRoot.applet.expanded = false
+                } else {
+                    activate()
+                }
+            }
+
             activeFocusOnTab: compactRoot.interactive && visible
             Accessible.role: compactRoot.interactive ? Accessible.Button : Accessible.Graphic
             Accessible.name: compactRoot.selectedProvider
@@ -411,10 +424,12 @@ Item {
             }
 
             MouseArea {
+                property bool wasExpanded: false
                 anchors.fill: parent
                 enabled: compactRoot.interactive
                 cursorShape: Qt.PointingHandCursor
-                onClicked: compactIdentity.activate()
+                onPressed: wasExpanded = compactRoot.applet.expanded
+                onClicked: compactIdentity.click(wasExpanded)
             }
 
             // Keyboard users get the same focus ring the provider meters draw,
@@ -581,6 +596,21 @@ Item {
                             return
                         }
                         compactRoot.applet.openProviderFromPanel(compactMeter.modelData.provider)
+                    }
+
+                    // The meter of the provider the open popup showed at press
+                    // closes it; any other meter switches the popup to its provider.
+                    function showsPopup() {
+                        return compactRoot.applet.expanded
+                            && compactRoot.applet.selectedProviderID === modelData.provider
+                    }
+
+                    function click(wasShown) {
+                        if (wasShown && compactRoot.interactive && visible) {
+                            compactRoot.applet.expanded = false
+                        } else {
+                            activate()
+                        }
                     }
 
                     Layout.preferredWidth: compactRoot.meterWidth
@@ -821,7 +851,9 @@ Item {
                         z: 1
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: compactMeter.activate()
+                        property bool wasShown: false
+                        onPressed: wasShown = compactMeter.showsPopup()
+                        onClicked: compactMeter.click(wasShown)
                         // The plasmoid tooltip narrows to the hovered meter, so
                         // each panel icon reports only its own provider. Clearing
                         // only the matching id keeps a fast move between two

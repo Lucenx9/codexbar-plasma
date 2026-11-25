@@ -63,7 +63,7 @@ class PanelTest(unittest.TestCase):
             "case Qt.Key_Space:",
             "case Qt.Key_Enter:",
             "compactRoot.applet.openProviderFromPanel(compactMeter.modelData.provider)",
-            "onClicked: compactMeter.activate()",
+            "onClicked: compactMeter.click(wasShown)",
         ):
             if not code_contains(compact_meter_body, provider_click_fragment):
                 raise AssertionError(

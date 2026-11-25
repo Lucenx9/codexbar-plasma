@@ -737,6 +737,7 @@ TestCase {
             verify(label.mapToItem(panel, 0, label.height).y <= panel.height);
             verify(meter.Accessible.description.indexOf(applet.compactText()) >= 0);
             applet.openedProvider = "";
+            applet.expanded = false;
             mouseClick(label, label.width / 2, label.height / 2);
             compare(applet.openedProvider, id);
         }
@@ -822,8 +823,10 @@ TestCase {
             verify(focusBorder.visible);
             keyClick(data.key);
         }
-        compare(applet.openedProvider, data.provider === "codex" ? "codex" : "claude");
-        compare(applet.expanded, data.provider === "codex" ? true : !data.open);
+        // Keyboard activation opens the provider; a click on an open popup closes it.
+        var opens = data.provider === "codex" && !(data.key === 0 && data.open);
+        compare(applet.openedProvider, opens ? "codex" : "claude");
+        compare(applet.expanded, opens ? true : !data.open);
     }
 
     function test_standaloneIdentityPreviewDoesNotActivate() {
@@ -844,6 +847,40 @@ TestCase {
         keyClick(Qt.Key_Space);
         compare(applet.openedProvider, "claude");
         verify(!applet.expanded);
+    }
+
+    // Plasma hides an open popup when the press deactivates its window, before
+    // the click reaches the panel. The click must not reopen what it dismissed.
+    function test_panelClickDismissesOpenPopup_data() {
+        return [
+            {tag: "background", target: "background", shown: "codex", expanded: false, opened: ""},
+            {tag: "identity", target: "identity", shown: "codex", expanded: false, opened: ""},
+            {tag: "shown-provider-meter", target: "codex", shown: "codex", expanded: false, opened: ""},
+            {tag: "other-provider-meter", target: "claude", shown: "codex", expanded: true, opened: "claude"},
+            {tag: "global-view-meter", target: "codex", shown: "", expanded: true, opened: "codex"}
+        ];
+    }
+
+    function test_panelClickDismissesOpenPopup(data) {
+        applet.metersHidden = data.target === "identity";
+        applet.selectedProviderID = data.shown;
+        applet.expanded = true;
+        var panel = createControl("CompactRepresentation", {applet: applet, height: 44, width: 400});
+        if (!panel) return;
+        wait(0);
+        var target = data.target === "background" ? panel
+            : data.target === "identity"
+            ? findItem(panel, item => item.objectName === "panelIdentityIcon")
+            : findItem(panel, item => item.activeFocusOnTab && typeof item.activate === "function"
+                && item.modelData && item.modelData.provider === data.target);
+        verify(target !== null && target.visible);
+        var x = data.target === "background" ? panel.width - 2 : target.width / 2;
+        var y = target.height / 2;
+        mousePress(target, x, y);
+        applet.expanded = false;
+        mouseRelease(target, x, y);
+        compare(applet.expanded, data.expanded);
+        compare(applet.openedProvider, data.opened);
     }
 
     function test_extendedProviderMetersFitAllocatedPanel_data() {
@@ -2029,6 +2066,7 @@ TestCase {
         keyClick(Qt.Key_Space);
         compare(applet.openedProvider, "codex");
         applet.openedProvider = "";
+        applet.expanded = false;
         mouseClick(meter, meter.width / 2, meter.height / 2);
         compare(applet.openedProvider, "codex");
         compare(applet.expanded, true);
