@@ -133,7 +133,7 @@ Item {
                 source: "configProviders.qml"
                 onLoaded: {
                     capture.providerSettingsPage = item;
-                    item.cfg_commandPath = capture.applet.commandPath;
+                    item.runtimeConfig = {commandPath: capture.applet.commandPath};
                     if (capture.scenario === "providers-0740")
                         item.selectedProviderID = "aerostack";
                 }

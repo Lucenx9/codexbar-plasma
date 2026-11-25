@@ -265,7 +265,7 @@ TestCase {
         var entries = Sections.hidden([], "codex", key);
         entries = Sections.hidden(entries, "claude", key);
         var page = createPage("../contents/ui/configPopup.qml", {
-            cfg_commandPath: "true",
+            runtimeConfig: {commandPath: "true"},
             cfg_popupHiddenDetailSections: Sections.serialize(entries)
         });
         if (!page)
@@ -315,7 +315,7 @@ TestCase {
         width = 600;
         height = 700;
         mirroredPage = data.rtl;
-        var page = createPage("../contents/ui/configPopup.qml", {cfg_commandPath: "true"});
+        var page = createPage("../contents/ui/configPopup.qml", {runtimeConfig: {commandPath: "true"}});
         if (!page) return;
         waitForRosterSettled(page);
         var disclosure = findChild(page, "hiddenItemsDisclosure");
@@ -341,7 +341,7 @@ TestCase {
         // roster load settles fast without touching the network. The roster
         // states below then mirror the provider list arriving after opening.
         var page = createPage("../contents/ui/configPopup.qml", {
-            cfg_commandPath: "true",
+            runtimeConfig: {commandPath: "true"},
             cfg_providerOrder: "",
             cfg_overviewProviderIDs: ""
         });
@@ -394,7 +394,7 @@ TestCase {
                 tag: "popup",
                 source: "../contents/ui/configPopup.qml",
                 properties: {
-                    cfg_commandPath: "true",
+                    runtimeConfig: {commandPath: "true"},
                     cfg_providerOrder: "",
                     cfg_overviewProviderIDs: ""
                 }

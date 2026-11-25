@@ -39,7 +39,7 @@ class ProviderSettingsTest(unittest.TestCase):
     def test_provider_groups_follow_saved_order(self):
         for provider_group_fragment in (
             'import "ProviderOrder.js" as ProviderOrder',
-            "property string cfg_providerOrder",
+            "runtimeConfig.providerOrder",
             "ProviderOrder.settingsGroups(",
             "model: page.visibleEnabledProviders",
             "model: page.visibleDisabledProviders",
@@ -200,7 +200,7 @@ class ProviderSettingsTest(unittest.TestCase):
                          "Provider selection must precede settings, with diagnostics last")
 
     def test_reload_and_invalidation(self):
-        if not code_contains(providers_text, "onCfg_commandPathChanged: handleCommandPathChanged()"):
+        if not code_contains(providers_text, "onConfiguredCommandPathChanged: handleCommandPathChanged()"):
             raise AssertionError("the Providers page must reload when the configured CLI path changes")
 
         descriptor_action_result_body = function_body(providers_text, "handleDescriptorActionResult")

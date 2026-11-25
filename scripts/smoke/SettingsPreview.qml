@@ -22,10 +22,11 @@ Rectangle {
         anchors.fill: parent
 
         Component.onCompleted: {
-            var properties = preview.pageSource === "configPopup.qml" || preview.pageSource === "configDiagnostics.qml"
-                || preview.pageSource === "configProviders.qml" ? {
+            var properties = preview.pageSource === "configDiagnostics.qml" ? {
                 cfg_commandPath: preview.applet.commandPath
-            } : {};
+            } : (preview.pageSource === "configPopup.qml" || preview.pageSource === "configProviders.qml" ? {
+                runtimeConfig: {commandPath: preview.applet.commandPath}
+            } : {});
             setSource(Qt.resolvedUrl(preview.pageSource), properties);
         }
         onLoaded: {

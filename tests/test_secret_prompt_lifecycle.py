@@ -307,7 +307,6 @@ TestCase {
     property string credentialCliVersion: ""
     property var operationState: ProviderOperations.initialState()
     property var commands: ({})
-    property int cfg_providerConfigRevision: 0
     property var configSource
     property var page
     // Host-provided Plasmoid singleton, stubbed under a writable name: the
