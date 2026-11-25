@@ -94,6 +94,7 @@ def read_change(base, root=ROOT):
     """Return the committed paths, diff, and TODO.md for this branch."""
     def git(*args):
         return subprocess.check_output(["git", *args], cwd=root, text=True,
+                                       encoding="utf-8", errors="replace",
                                        stderr=subprocess.DEVNULL,
                                        timeout=GIT_TIMEOUT)
 

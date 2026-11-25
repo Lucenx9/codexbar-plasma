@@ -29,8 +29,7 @@ KCM.SimpleKCM {
         value: page.scrollbarWidth
     }
 
-    property string cfg_commandPath
-    property string cfg_commandPathDefault: "codexbar"
+    property var runtimeConfig: Plasmoid.configuration || ({})
     property alias cfg_usageBarsShowUsed: usageBarsShowUsedCheck.checked
     property bool cfg_usageBarsShowUsedDefault: true
     property alias cfg_showQuotaWarningMarkers: showQuotaWarningMarkersCheck.checked
@@ -58,7 +57,7 @@ KCM.SimpleKCM {
     property string cfg_popupHiddenUsageRows: ""
     property string cfg_popupHiddenUsageRowsDefault: ""
 
-    readonly property string commandPath: (cfg_commandPath || "codexbar").trim()
+    readonly property string commandPath: String(runtimeConfig.commandPath || "codexbar").trim()
     readonly property alias enabledProviderRoster: providerRosterController.enabledProviderRoster
     readonly property alias providerRosterLoading: providerRosterController.providerRosterLoading
     readonly property alias providerRosterError: providerRosterController.providerRosterError

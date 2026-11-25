@@ -44,9 +44,9 @@ require_in_surface applet "property bool pendingAutomaticUpdateCheck: false"
 # magnitudes, leaving the production defaults with no failing-first pin.
 require_in_surface providers "readonly property int configSecretCommandTimeoutSeconds: 60"
 require_in_surface providers "readonly property int configSecretCommandKillAfterSeconds: 5"
-# Kept: page creation always coincides with the cfg_commandPath injection
-# reload, and Qt.callLater coalesces the two into one list+version pair, so
-# deleting the onCompleted line keeps every providers suite green with no
+# Kept: page creation can coincide with a runtime commandPath change reload,
+# and Qt.callLater coalesces the two into one list+version pair, so deleting
+# the onCompleted line keeps tests that override runtimeConfig green with no
 # observable difference in the issued commands.
 require_in_surface providers "Component.onCompleted: Qt.callLater(reload)"
 

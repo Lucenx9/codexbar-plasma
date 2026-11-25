@@ -53,7 +53,7 @@ TestCase {
         var page = createTemporaryObject(component, testCase, Object.assign({
             width: testCase.width,
             height: testCase.height,
-            cfg_commandPath: "true",
+            runtimeConfig: {commandPath: "true"},
             cfg_overviewProviderIDs: ""
         }, properties || {}));
         verify(page !== null);

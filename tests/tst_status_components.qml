@@ -34,7 +34,10 @@ TestCase {
 
     function test_informationalComponentIsNotAnOutage() {
         compare(StatusComponents.response(record([
-            {name: "Grok Web", indicator: "info", children: []}])),
+            {name: "Grok Web", indicator: "info", children: []}]), 0),
+            [{name: "Grok Web", indicator: "info", children: []}])
+        compare(StatusComponents.response(record([
+            {name: "Grok Web", indicator: "info", children: []}]), "0"),
             [{name: "Grok Web", indicator: "info", children: []}])
     }
 
@@ -43,20 +46,25 @@ TestCase {
             {name: "APIs", indicator: "major", children: [
                 {name: " Chat\nCompletions ", indicator: "major", children: []},
                 {name: "Batch", indicator: "none", children: [{name: "ignored", indicator: "none"}]}]},
-            {name: "Claude Code", indicator: "maintenance", children: []}]))
+            {name: "Claude Code", indicator: "maintenance", children: []}]), 0)
         compare(rows.length, 2)
         compare(rows[0].children[0].name, "Chat Completions")
         compare(rows[0].children[1].children, [])
         compare(rows[1], {name: "Claude Code", indicator: "maintenance", children: []})
-        compare(StatusComponents.response(record([{name: "x".repeat(500), indicator: "none", children: []}]))[0].name.length, 120)
+        compare(StatusComponents.response(record([{name: "x".repeat(500), indicator: "none", children: []}]), 0)[0].name.length, 120)
         // A surrogate pair at the bound is dropped whole, and trailing space trimmed.
-        compare(StatusComponents.response(record([{name: "x".repeat(119) + "\ud83d\ude00", indicator: "none", children: []}]))[0].name,
+        compare(StatusComponents.response(record([{name: "x".repeat(119) + "\ud83d\ude00", indicator: "none", children: []}]), 0)[0].name,
             "x".repeat(119))
-        compare(StatusComponents.response(record([{name: "x".repeat(119) + " y", indicator: "none", children: []}]))[0].name,
+        compare(StatusComponents.response(record([{name: "x".repeat(119) + " y", indicator: "none", children: []}]), 0)[0].name,
             "x".repeat(119))
     }
 
     function test_rejectsFailuresAndInvalidShapes() {
+        var valid = record([{name: "APIs", indicator: "none", children: []}])
+        var badExitCodes = [undefined, null, "", " ", "1", 1, -1, false, true, [], {}]
+        for (var c = 0; c < badExitCodes.length; c++)
+            compare(StatusComponents.response(valid, badExitCodes[c]), null, "exitCode " + c)
+
         var invalid = [
             undefined, "", "not json", "null", "[]", "x".repeat(262145),
             JSON.stringify({status: "error"}),
@@ -70,6 +78,6 @@ TestCase {
             record(new Array(65).fill({name: "A", indicator: "none", children: []}))
         ]
         for (var i = 0; i < invalid.length; i++)
-            compare(StatusComponents.response(invalid[i]), null, "case " + i)
+            compare(StatusComponents.response(invalid[i], 0), null, "case " + i)
     }
 }
