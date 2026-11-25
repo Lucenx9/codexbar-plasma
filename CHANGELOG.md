@@ -31,6 +31,14 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Polish popup visual hierarchy and geometry: dim model spend-share sublabels
+  and incomplete-currency notices in **Usage & Spend**, tighten Overview card
+  title-to-detail spacing, add hairline framing to the segmented metric toggle
+  and overflowing tab-strip edges, keep the provider **Cost details** header
+  height stable when clearing a selected day, mirror the provider status pill
+  in right-to-left layouts, and use tabular digits on chart endpoints and
+  cost-history summary lines.
+
 - Prevent **Defaults** in **Providers** and **Popup** settings from resetting
   other pages' settings or the configured CLI path, and keep immediate provider
   changes from marking **Apply** dirty.

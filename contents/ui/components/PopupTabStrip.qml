@@ -234,6 +234,34 @@ Item {
         }
     }
 
+    Rectangle {
+        id: previousTabsSeparator
+        objectName: "previousTabsSeparator"
+
+        visible: strip.tabsOverflow && previousTabsButton.enabled
+        anchors.left: previousTabsButton.right
+        anchors.leftMargin: Math.floor(Kirigami.Units.smallSpacing / 4)
+        anchors.verticalCenter: parent.verticalCenter
+        width: 1
+        height: strip.tabHeight - Kirigami.Units.smallSpacing * 2
+        color: strip.withAlpha(Kirigami.Theme.textColor, 0.12)
+        Accessible.ignored: true
+    }
+
+    Rectangle {
+        id: nextTabsSeparator
+        objectName: "nextTabsSeparator"
+
+        visible: strip.tabsOverflow && nextTabsButton.enabled
+        anchors.right: nextTabsButton.left
+        anchors.rightMargin: Math.floor(Kirigami.Units.smallSpacing / 4)
+        anchors.verticalCenter: parent.verticalCenter
+        width: 1
+        height: strip.tabHeight - Kirigami.Units.smallSpacing * 2
+        color: strip.withAlpha(Kirigami.Theme.textColor, 0.12)
+        Accessible.ignored: true
+    }
+
     PlasmaComponents.ToolButton {
         id: previousTabsButton
         objectName: "previousTabsButton"

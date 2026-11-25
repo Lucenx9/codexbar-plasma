@@ -273,19 +273,38 @@ ColumnLayout {
         spacing: Kirigami.Units.smallSpacing
 
         RowLayout {
+            id: costDetailsHeaderRow
+            objectName: "costDetailsHeaderRow"
             Layout.fillWidth: true
+            Layout.minimumHeight: costAllDaysButton.implicitHeight
 
             PlainPlasmaLabel {
+                id: costDetailsTitle
                 objectName: "costDetailsTitle"
                 text: tokenCostSection.selectedDay ? i18n("Details for %1", costLabels.costDayLabel(tokenCostSection.selectedDay.label)) : i18n("Cost details")
                 font.weight: Font.DemiBold
                 Layout.fillWidth: true
+                Layout.minimumWidth: 0
                 wrapMode: Text.Wrap
+                maximumLineCount: 1
+                elide: Text.ElideRight
+                Accessible.name: text
+
+                HoverHandler {
+                    id: costDetailsTitleHover
+                }
+
+                PlainToolTip {
+                    parent: costDetailsTitle
+                    plainText: costDetailsTitle.text
+                    visible: costDetailsTitle.truncated && costDetailsTitleHover.hovered
+                }
             }
 
             // A secondary reset beside the heading, flat like the popup's
             // other inline row actions so it does not outweigh the figures.
             Components.PlainButton {
+                id: costAllDaysButton
                 objectName: "costAllDaysButton"
                 flat: true
                 icon.name: "view-calendar-symbolic"
@@ -570,7 +589,7 @@ ColumnLayout {
             PlainPlasmaLabel {
                 visible: costHistoryChartSection.averageLine.length > 0
                 text: costHistoryChartSection.averageLine
-                font: Kirigami.Theme.smallFont
+                font: Qt.font(Object.assign({}, Kirigami.Theme.smallFont, { features: { "tnum": 1 } }))
                 opacity: applet.secondaryTextOpacity
                 horizontalAlignment: Text.AlignRight
                 Layout.alignment: Qt.AlignBaseline
@@ -581,7 +600,7 @@ ColumnLayout {
         PlainPlasmaLabel {
             visible: costHistoryChartSection.peakLine.length > 0
             text: costHistoryChartSection.peakLine
-            font: Kirigami.Theme.smallFont
+            font: Qt.font(Object.assign({}, Kirigami.Theme.smallFont, { features: { "tnum": 1 } }))
             opacity: applet.secondaryTextOpacity
             Layout.fillWidth: true
             elide: Text.ElideRight

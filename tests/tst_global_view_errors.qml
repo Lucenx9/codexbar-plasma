@@ -175,9 +175,11 @@ TestCase {
             return {label: "Model " + index, cost: 2 - index, tokens: index + 1, currency: "USD"};
         });
         var daily = {label: "2026-10-16", cost: 3, tokens: 20, currency: "USD", models: models};
+        var incompleteDay = {label: daily.label, cost: 4, tokens: 20, currency: "EUR", models: []};
         applet.costs = [
             {provider: "codex", currency: "USD", totals: daily, daily: [daily], models: models},
-            {provider: "claude", currency: "USD", totals: daily, daily: [daily], models: models}
+            {provider: "claude", currency: "USD", totals: daily, daily: [daily], models: models},
+            {provider: "gemini", currency: "EUR", totals: incompleteDay, daily: [incompleteDay], models: []}
         ];
         var view = createView("SpendView");
         if (!view)
@@ -328,6 +330,12 @@ TestCase {
             var foreground = Qt.tint(bgColor, Qt.rgba(share.color.r, share.color.g, share.color.b, share.opacity));
             verify(ThemeContrast.contrastRatio(foreground, bgColor) >= 4.5, palette.tag + " model spend share contrast");
             compare(share.font.features.tnum, 1);
+            var notice = findItem(comparison, item => item.visible
+                && item.text === "Spend shares unavailable for EUR because pricing or model data is incomplete.");
+            verify(notice !== null);
+            var noticeColor = Qt.tint(bgColor, Qt.rgba(notice.color.r, notice.color.g, notice.color.b,
+                notice.color.a * notice.opacity));
+            verify(ThemeContrast.contrastRatio(noticeColor, bgColor) >= 4.5, palette.tag + " incomplete spend share notice contrast");
         }
         testCase.forceActiveFocus(Qt.OtherFocusReason);
     }

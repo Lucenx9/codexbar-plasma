@@ -438,4 +438,19 @@ TestCase {
         keyClick(Qt.Key_Space);
         compare(host.selectedIndex, 0);
     }
+
+    function test_overflowSeparatorsTrackScrollEdges() {
+        var host = createStrip();
+        var prevSep = findChild(host, "previousTabsSeparator");
+        var nextSep = findChild(host, "nextTabsSeparator");
+        verify(prevSep !== null && nextSep !== null);
+        verify(!prevSep.visible, "start edge has no previous overflow");
+        verify(nextSep.visible, "overflowing end edge shows separator");
+
+        host.selectedIndex = 7;
+        tryVerify(function () { return prevSep.visible && !nextSep.visible; });
+
+        host.width = 1600;
+        tryVerify(function () { return !prevSep.visible && !nextSep.visible; });
+    }
 }

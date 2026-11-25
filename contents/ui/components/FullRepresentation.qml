@@ -895,7 +895,8 @@ Item {
                         Rectangle {
                             id: providerStatusDot
 
-                            x: providerStatusMessage.horizontalPadding
+                            anchors.left: parent.left
+                            anchors.leftMargin: providerStatusMessage.horizontalPadding
                             // Centered on the first line, sized to the text.
                             y: providerStatusLabel.y + (providerStatusMetrics.height - height) / 2
                             width: Math.round(providerStatusMetrics.height * 0.4)
@@ -913,7 +914,8 @@ Item {
                         PlainPlasmaLabel {
                             id: providerStatusLabel
 
-                            x: providerStatusDot.x + providerStatusDot.width + Kirigami.Units.smallSpacing * 1.5
+                            anchors.left: providerStatusDot.right
+                            anchors.leftMargin: Kirigami.Units.smallSpacing * 1.5
                             y: providerStatusMessage.verticalPadding
                             width: providerStatusMessage.width - providerStatusMessage.chromeWidth
                             text: applet.presentedProviderData ? applet.presentedProviderData.status : ""
