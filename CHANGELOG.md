@@ -31,6 +31,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Align the expand arrows of **Usage & Spend** provider rows with the
+  **Compare models**, **Daily activity**, and **AI Insights** disclosures.
+
 - Clamp the popup tab strip's scroll position when resizing or hiding labels
   reduces or removes overflow, accept integer-string exit codes and arm the
   timeout before connecting in the widget updater, sanitize control characters
