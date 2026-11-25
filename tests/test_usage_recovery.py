@@ -415,7 +415,7 @@ class UsageRecoveryTests(unittest.TestCase):
         main = ROOT / "contents/ui/main.qml"
         source = main.read_text()
         # Closing the popup dismisses account discovery explanations.
-        self.assertRegex(source, r"onExpandedChanged: \{\s*if \(!expanded\) \{\s*"
+        self.assertRegex(source, r"onExpandedChanged: function\(expanded\) \{\s*if \(!expanded\) \{\s*"
                                  r"accountsController\.dismissNotices\(\)\s*collapseStatusComponents\(\)")
         self.assertIn("onSelectedProviderIDChanged: collapseStatusComponents()", source)
         surface.texts = {main: source}

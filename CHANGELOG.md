@@ -31,6 +31,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Stop logging a deprecated signal-parameter warning whenever the widget
+  loads, and a Qt 6.8 binding-loop warning whenever **Providers** settings
+  open.
+
 - Close the open popup when you click the panel widget, its icon, or the meter
   of the provider it shows, instead of reopening it immediately.
 
