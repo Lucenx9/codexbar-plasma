@@ -44,7 +44,7 @@ TestCase {
         compare(component.status, Component.Ready, component.errorString());
         failOnWarning(/.*/);
         var page = createTemporaryObject(component, testCase, {
-            cfg_commandPath: " ",
+            runtimeConfig: {commandPath: " "},
             width: 620,
             height: 700
         });
@@ -66,7 +66,7 @@ TestCase {
         compare(component.status, Component.Ready, component.errorString());
         failOnWarning(/.*/);
         var page = createTemporaryObject(component, testCase, {
-            cfg_commandPath: " ",
+            runtimeConfig: {commandPath: " "},
             width: 620,
             height: 700
         });
@@ -563,7 +563,7 @@ TestCase {
         // Blank on purpose: the handler retires and clears before the
         // reloaded commands could run, and the follow-up reload then stays
         // on its early-return path (Plasmoid.configuration is absent here).
-        page.cfg_commandPath = "   ";
+        page.runtimeConfig = {commandPath: "   "};
         compare(Object.keys(page.commands).length, 0);
         compare(page.providers.length, 0);
         compare(page.selectedProviderID, "");

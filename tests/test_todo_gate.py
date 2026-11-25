@@ -188,6 +188,35 @@ class ReadChangeTests(unittest.TestCase):
         self.assertTrue(git.called)
         for call in git.call_args_list:
             self.assertEqual(call.kwargs.get("timeout"), 120)
+            self.assertEqual(call.kwargs.get("encoding"), "utf-8")
+            self.assertEqual(call.kwargs.get("errors"), "replace")
+
+    def test_non_utf8_diff_is_decoded_without_crashing(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            env = {
+                "GIT_AUTHOR_NAME": "Test",
+                "GIT_AUTHOR_EMAIL": "test@example.com",
+                "GIT_COMMITTER_NAME": "Test",
+                "GIT_COMMITTER_EMAIL": "test@example.com",
+            }
+            subprocess.run(["git", "init", "-b", "main"], cwd=repo, check=True,
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            (repo / "TODO.md").write_text("- [ ] item\n", encoding="utf-8")
+            subprocess.run(["git", "add", "TODO.md"], cwd=repo, check=True)
+            subprocess.run(["git", "commit", "-m", "init"], cwd=repo, check=True,
+                           env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            subprocess.run(["git", "checkout", "-b", "feature"], cwd=repo, check=True,
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            (repo / "latin1.txt").write_bytes(b"caf\xe9\n")
+            subprocess.run(["git", "add", "latin1.txt"], cwd=repo, check=True)
+            subprocess.run(["git", "commit", "-m", "latin1"], cwd=repo, check=True,
+                           env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            paths, diff, todo = read_change("main", root=repo)
+            self.assertEqual(paths, ["latin1.txt"])
+            self.assertIn("caf\ufffd", diff)
+            self.assertEqual(todo, "- [ ] item\n")
 
     def test_git_timeout_skips_the_gate(self):
         with patch.object(todo_gate, "read_change",

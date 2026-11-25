@@ -230,6 +230,14 @@ class SettingsPagesTest(unittest.TestCase):
                         f"{page_name} must stay process-free and not claim another page's "
                         f"configuration: unexpected {forbidden_page_fragment!r}"
                     )
+        if "cfg_commandPath" in popup_text:
+            raise AssertionError(
+                "configPopup.qml must read commandPath at runtime instead of claiming cfg_commandPath"
+            )
+        if "cfg_" in providers_text:
+            raise AssertionError(
+                "configProviders.qml saves immediately through the CLI and must not claim any cfg_* keys"
+            )
         for controller_fragment in (
             "Controllers.ProviderRosterController {",
             "active: page.providersExpanded",

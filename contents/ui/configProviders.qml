@@ -27,37 +27,13 @@ import "config/ProviderCapabilities.js" as ProviderCapabilities
 KCM.SimpleKCM {
     id: page
 
-    // Read the configured command path so this page can call the same CLI the
-    // widget uses. The provider list/toggles below persist immediately through
-    // `codexbar config enable/disable`, independent of the KCM Apply cycle.
-    property string cfg_commandPath
-    property string cfg_commandPathDefault: "codexbar"
-    property string cfg_provider
-    property string cfg_providerDefault: ""
-    property string cfg_providerOrder
-    property string cfg_providerOrderDefault: ""
-    property string cfg_source
-    property string cfg_sourceDefault: ""
-    property int cfg_refreshInterval
-    property int cfg_refreshIntervalDefault: 300
-    property bool cfg_includeStatus
-    property bool cfg_includeStatusDefault: false
-    property bool cfg_usageBarsShowUsed
-    property bool cfg_usageBarsShowUsedDefault: true
-    property bool cfg_showProviderChangelogs
-    property bool cfg_showProviderChangelogsDefault: false
-    property bool cfg_showProviderInPanel
-    property bool cfg_showProviderInPanelDefault: false
-    property bool cfg_showPercentInPanel
-    property bool cfg_showPercentInPanelDefault: false
-    property bool cfg_showMultiProviderInPanel
-    property bool cfg_showMultiProviderInPanelDefault: true
-    property bool cfg_showCreditsInPanel
-    property bool cfg_showCreditsInPanelDefault: false
-    property int cfg_providerConfigRevision
-    property int cfg_providerConfigRevisionDefault: 0
-
-    readonly property string commandPath: (cfg_commandPath || "codexbar").trim()
+    // Read the configured command path and provider order at runtime instead of
+    // claiming keys owned by Diagnostics or Popup. The provider toggles and
+    // credentials below persist immediately through `codexbar`, independent of
+    // the KCM Apply/Defaults cycle.
+    property var runtimeConfig: Plasmoid.configuration || ({})
+    readonly property string configuredCommandPath: String(runtimeConfig.commandPath || "codexbar")
+    readonly property string commandPath: configuredCommandPath.trim()
 
     property var providers: []
     property string filterText: ""
@@ -114,7 +90,7 @@ KCM.SimpleKCM {
 
     readonly property var visibleProviders: ProviderList.filteredProviders(providers, filterText, filterScope)
     readonly property var providerSettingsGroups: ProviderOrder.settingsGroups(
-        visibleProviders, cfg_providerOrder)
+        visibleProviders, runtimeConfig.providerOrder || "")
     readonly property var visibleEnabledProviders: providerSettingsGroups.enabled
     readonly property var visibleDisabledProviders: providerSettingsGroups.disabled
     readonly property int enabledCount: ProviderList.filteredProviders(providers, "", "enabled").length
@@ -128,11 +104,11 @@ KCM.SimpleKCM {
     readonly property var selectedProviderSourceModes: ProviderSource.availableModes(
         selectedProvider ? selectedProvider.authentication : null)
 
-    // Qt.callLater coalesces this with the reload the cfg_commandPathChanged
-    // handler queues when Plasma injects the stored command path during page
-    // creation, so opening the page spawns one CLI list command, not two.
+    // Qt.callLater coalesces this with the reload the configuredCommandPath
+    // handler queues when the runtime command path updates, so opening the
+    // page spawns one CLI list command, not two.
     Component.onCompleted: Qt.callLater(reload)
-    onCfg_commandPathChanged: handleCommandPathChanged()
+    onConfiguredCommandPathChanged: handleCommandPathChanged()
     onSelectedProviderIDChanged: {
         providerSourceDraft = ""
         syncProviderSourceSelection()
@@ -1404,15 +1380,16 @@ KCM.SimpleKCM {
     }
 
     function providerConfigRevisionValue() {
-        var current = Number(Plasmoid.configuration.providerConfigRevision || cfg_providerConfigRevision || 0)
+        var current = Number(Plasmoid.configuration ? Plasmoid.configuration.providerConfigRevision || 0 : 0)
         return isFinite(current) && current >= 0 ? Math.floor(current) : 0
     }
 
     function bumpProviderConfigRevision() {
         var current = providerConfigRevisionValue()
         var next = current >= 2147480000 ? 1 : current + 1
-        cfg_providerConfigRevision = next
-        Plasmoid.configuration.providerConfigRevision = next
+        if (Plasmoid.configuration) {
+            Plasmoid.configuration.providerConfigRevision = next
+        }
     }
 
     function shellQuote(value) {

@@ -2031,8 +2031,8 @@ PlasmoidItem {
     Controllers.CliProcess {
         id: statusComponentsProcess
 
-        onCompleted: function(context, stdoutText) {
-            root.finishStatusComponents(context, StatusComponents.response(stdoutText))
+        onCompleted: function(context, stdoutText, stderrText, exitCode) {
+            root.finishStatusComponents(context, StatusComponents.response(stdoutText, exitCode))
         }
         onTimedOut: function(context) {
             root.finishStatusComponents(context, null)

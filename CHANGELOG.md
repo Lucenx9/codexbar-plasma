@@ -31,6 +31,13 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Prevent **Defaults** in **Providers** and **Popup** settings from resetting
+  other pages' settings or the configured CLI path, and keep immediate provider
+  changes from marking **Apply** dirty.
+
+- Require a zero process exit code before publishing fetched status-page
+  components.
+
 - Inspect and select the day under the pointer in dense daily history bar charts.
 
 - Label the Sessions copy action with the card title it copies.

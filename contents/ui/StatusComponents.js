@@ -45,7 +45,8 @@ function rows(values, depth) {
 }
 
 // Returns the component rows, or null for any failure or invalid shape.
-function response(text) {
+function response(text, exitCode) {
+    if (Guards.exitCode(exitCode) !== 0) return null
     if (typeof text !== "string" || text.length > 262144) return null
     var value
     try { value = JSON.parse(text) } catch (error) { return null }
