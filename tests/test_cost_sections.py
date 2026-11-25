@@ -606,8 +606,17 @@ class CostSectionTests(unittest.TestCase):
 
     def test_provider_section_keeps_details_header_height_on_all_days_reset(self):
         self.run_fixture('''
-    function test_providerSectionKeepsDetailsHeaderHeightOnAllDaysReset() {
-        var subject = createTemporaryObject(providerFactory, testCase);
+    function test_providerSectionKeepsDetailsHeaderHeightOnAllDaysReset_data() {
+        return [
+            { tag: "calendar-day", label: "2026-09-01", truncated: false },
+            { tag: "long-label", label: "Synthetic provider history label ".repeat(3).trim(), truncated: true }
+        ];
+    }
+
+    function test_providerSectionKeepsDetailsHeaderHeightOnAllDaysReset(data) {
+        var daily = [Object.assign({}, providerTokenCost.daily[0], {label: data.label})];
+        providerTokenCost = Object.assign({}, providerTokenCost, {daily: daily});
+        var subject = createTemporaryObject(providerFactory, testCase, {width: 320});
         verify(subject !== null);
         var all = [];
         walkTree(subject, all);
@@ -617,18 +626,23 @@ class CostSectionTests(unittest.TestCase):
         var header = all.filter(function(item) {
             return item.objectName === "costDetailsHeaderRow";
         })[0];
+        var title = all.filter(function(item) {
+            return item.objectName === "costDetailsTitle";
+        })[0];
         var allDays = all.filter(function(item) {
             return item.objectName === "costAllDaysButton";
         })[0];
-        verify(chart && header && allDays);
+        verify(chart && header && title && allDays);
         chart.selectedIndex = 0;
         tryVerify(function() { return allDays.visible; });
         verify(waitForPolish(subject.Window.window));
         var pinnedHeaderHeight = header.height;
+        var titleTruncated = title.truncated;
         mouseClick(allDays);
         tryVerify(function() { return chart.selectedIndex === -1 && !allDays.visible; });
         verify(waitForPolish(subject.Window.window));
         compare(header.height, pinnedHeaderHeight);
+        compare(titleTruncated, data.truncated);
     }
     ''')
 

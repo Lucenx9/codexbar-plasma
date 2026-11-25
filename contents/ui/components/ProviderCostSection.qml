@@ -279,11 +279,26 @@ ColumnLayout {
             Layout.minimumHeight: costAllDaysButton.implicitHeight
 
             PlainPlasmaLabel {
+                id: costDetailsTitle
                 objectName: "costDetailsTitle"
                 text: tokenCostSection.selectedDay ? i18n("Details for %1", costLabels.costDayLabel(tokenCostSection.selectedDay.label)) : i18n("Cost details")
                 font.weight: Font.DemiBold
                 Layout.fillWidth: true
+                Layout.minimumWidth: 0
                 wrapMode: Text.Wrap
+                maximumLineCount: 1
+                elide: Text.ElideRight
+                Accessible.name: text
+
+                HoverHandler {
+                    id: costDetailsTitleHover
+                }
+
+                PlainToolTip {
+                    parent: costDetailsTitle
+                    plainText: costDetailsTitle.text
+                    visible: costDetailsTitle.truncated && costDetailsTitleHover.hovered
+                }
             }
 
             // A secondary reset beside the heading, flat like the popup's
