@@ -584,25 +584,16 @@ class CostSectionTests(unittest.TestCase):
         verify(charts[0].peakIndex >= 0);
         charts[0].selectedIndex = 0;
         compare(charts[0].selectedIndex, 0);
-        // The day reset is a flat inline action that clears the selection
-        // without shifting the details header height.
-        var headers = all.filter(function(item) {
-            return item.objectName === "costDetailsHeaderRow";
-        });
+        // The day reset is a flat inline action that clears the selection.
         var allDays = all.filter(function(item) {
             return item.objectName === "costAllDaysButton";
         });
-        compare(headers.length, 1);
         compare(allDays.length, 1);
         tryVerify(function() { return allDays[0].visible; });
         verify(allDays[0].flat);
-        verify(waitForPolish(subject.Window.window));
-        var pinnedHeaderHeight = headers[0].height;
         mouseClick(allDays[0]);
         tryVerify(function() { return charts[0].selectedIndex === -1; });
         verify(!allDays[0].visible);
-        verify(waitForPolish(subject.Window.window));
-        compare(headers[0].height, pinnedHeaderHeight);
         charts[0].selectedIndex = 0;
         fakeApplet.costHistoryShowsTokens = true;
         tryVerify(function() { return metricToggles[0].currentIndex === 1
@@ -610,6 +601,34 @@ class CostSectionTests(unittest.TestCase):
         compare(charts[0].accessibleTitle, "Daily token history");
         tryVerify(function() { return charts[0].selectedIndex === -1; });
         fakeApplet.costHistoryShowsTokens = false;
+    }
+    ''')
+
+    def test_provider_section_keeps_details_header_height_on_all_days_reset(self):
+        self.run_fixture('''
+    function test_providerSectionKeepsDetailsHeaderHeightOnAllDaysReset() {
+        var subject = createTemporaryObject(providerFactory, testCase);
+        verify(subject !== null);
+        var all = [];
+        walkTree(subject, all);
+        var chart = all.filter(function(item) {
+            return item.objectName === "providerCostChart";
+        })[0];
+        var header = all.filter(function(item) {
+            return item.objectName === "costDetailsHeaderRow";
+        })[0];
+        var allDays = all.filter(function(item) {
+            return item.objectName === "costAllDaysButton";
+        })[0];
+        verify(chart && header && allDays);
+        chart.selectedIndex = 0;
+        tryVerify(function() { return allDays.visible; });
+        verify(waitForPolish(subject.Window.window));
+        var pinnedHeaderHeight = header.height;
+        mouseClick(allDays);
+        tryVerify(function() { return chart.selectedIndex === -1 && !allDays.visible; });
+        verify(waitForPolish(subject.Window.window));
+        compare(header.height, pinnedHeaderHeight);
     }
     ''')
 
