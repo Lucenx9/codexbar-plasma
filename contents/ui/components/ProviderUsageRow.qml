@@ -318,7 +318,7 @@ ColumnLayout {
                 || (usageRow.showPace && usageRow.rowData.pace.length > 0)
             text: usageRow.summaryText.length > 0 ? usageRow.summaryText
                 : usageRow.paceText
-            font: Kirigami.Theme.smallFont
+            font: Qt.font(Object.assign({}, Kirigami.Theme.smallFont, { features: { "tnum": 1 } }))
             opacity: usageRow.secondaryTextOpacity
             Layout.alignment: Qt.AlignBaseline
             Layout.fillWidth: true
@@ -332,7 +332,7 @@ ColumnLayout {
 
             visible: !usageRow.resetInline && usageRow.resetText.length > 0
             text: usageRow.resetText
-            font: Kirigami.Theme.smallFont
+            font: Qt.font(Object.assign({}, Kirigami.Theme.smallFont, { features: { "tnum": 1 } }))
             opacity: usageRow.secondaryTextOpacity
             horizontalAlignment: usageMetadataLayout.stacked || !usagePaceLabel.visible
                 ? Text.AlignLeft : Text.AlignRight

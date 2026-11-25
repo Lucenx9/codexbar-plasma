@@ -618,7 +618,7 @@ ColumnLayout {
         PlainPlasmaLabel {
             text: chart.pointCount > 0 ? chart.pointLabel(chart.points[0]) : ""
             opacity: chart.applet.secondaryTextOpacity
-            font.pixelSize: Kirigami.Theme.smallFont.pixelSize
+            font: chart.smallTabularFont
             Layout.fillWidth: true
             elide: Text.ElideRight
         }
@@ -626,7 +626,7 @@ ColumnLayout {
         PlainPlasmaLabel {
             text: chart.pointCount > 1 ? chart.pointLabel(chart.points[chart.pointCount - 1]) : ""
             opacity: chart.applet.secondaryTextOpacity
-            font.pixelSize: Kirigami.Theme.smallFont.pixelSize
+            font: chart.smallTabularFont
             horizontalAlignment: Text.AlignRight
             Layout.fillWidth: true
             elide: Text.ElideRight

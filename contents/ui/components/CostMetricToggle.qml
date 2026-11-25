@@ -34,6 +34,8 @@ Controls.Control {
     background: Rectangle {
         radius: Kirigami.Units.cornerRadius + metricToggle.padding
         color: metricToggle.applet.withAlpha(Kirigami.Theme.textColor, 0.06)
+        border.width: 1
+        border.color: metricToggle.applet.withAlpha(Kirigami.Theme.textColor, 0.06)
     }
 
     contentItem: RowLayout {

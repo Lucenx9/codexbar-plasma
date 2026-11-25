@@ -6,6 +6,7 @@ import "../ModelComparison.js" as ModelComparison
 import "../CostAmounts.mjs" as Amounts
 import "../AnalysisAmounts.mjs" as AnalysisAmounts
 import "../ShareUsage.js" as ShareUsage
+import "../ThemeContrast.js" as ThemeContrast
 
 ColumnLayout {
     id: section
@@ -59,6 +60,7 @@ ColumnLayout {
         visible: currencies.length > 0
         text: i18n("Spend shares unavailable for %1 because pricing or model data is incomplete.", currencies.join(", "))
         font: Kirigami.Theme.smallFont
+        opacity: section.applet.secondaryTextOpacity
         wrapMode: Text.Wrap
         Layout.fillWidth: true
     }
@@ -125,10 +127,15 @@ ColumnLayout {
                     }
                     PlainPlasmaLabel {
                         id: modelShare
+                        objectName: "analysisModelShare"
                         readonly property string shareLabel: ShareUsage.percentLabel(modelRow.modelData.spendShare)
+                        readonly property color mutedColor: Qt.tint(Kirigami.Theme.backgroundColor,
+                            section.applet.withAlpha(Kirigami.Theme.textColor, section.applet.secondaryTextOpacity))
                         visible: section.compareProviders && shareLabel.length > 0
                         text: i18n("%1% of %2 spend", shareLabel, modelRow.modelData.currency)
                         font: Qt.font(Object.assign({}, Kirigami.Theme.smallFont, {features: {"tnum": 1}}))
+                        color: ThemeContrast.readableAccentColor(mutedColor,
+                            Kirigami.Theme.backgroundColor, Kirigami.Theme.textColor, 4.5)
                         horizontalAlignment: Text.AlignRight
                         wrapMode: Text.Wrap
                         Layout.fillWidth: true
