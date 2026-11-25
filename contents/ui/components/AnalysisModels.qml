@@ -22,6 +22,9 @@ ColumnLayout {
             applet.costErrorText.length > 0) : Analysis.modelRows(costs, selectedDay, applet.costHistoryShowsTokens)
     readonly property bool hasMore: models.rows.length > 3
     readonly property bool actionFocused: showMore.activeFocus
+    readonly property color spendShareTextColor: ThemeContrast.readableAccentColor(
+        Qt.tint(Kirigami.Theme.backgroundColor, applet.withAlpha(Kirigami.Theme.textColor, applet.secondaryTextOpacity)),
+        Kirigami.Theme.backgroundColor, Kirigami.Theme.textColor, 4.5)
     signal restoreFocusRequested()
     signal showAllRequested(bool value)
     onHasMoreChanged: if (!hasMore && showMore.activeFocus) restoreFocusRequested()
@@ -60,7 +63,7 @@ ColumnLayout {
         visible: currencies.length > 0
         text: i18n("Spend shares unavailable for %1 because pricing or model data is incomplete.", currencies.join(", "))
         font: Kirigami.Theme.smallFont
-        opacity: section.applet.secondaryTextOpacity
+        color: section.spendShareTextColor
         wrapMode: Text.Wrap
         Layout.fillWidth: true
     }
@@ -129,13 +132,10 @@ ColumnLayout {
                         id: modelShare
                         objectName: "analysisModelShare"
                         readonly property string shareLabel: ShareUsage.percentLabel(modelRow.modelData.spendShare)
-                        readonly property color mutedColor: Qt.tint(Kirigami.Theme.backgroundColor,
-                            section.applet.withAlpha(Kirigami.Theme.textColor, section.applet.secondaryTextOpacity))
                         visible: section.compareProviders && shareLabel.length > 0
                         text: i18n("%1% of %2 spend", shareLabel, modelRow.modelData.currency)
                         font: Qt.font(Object.assign({}, Kirigami.Theme.smallFont, {features: {"tnum": 1}}))
-                        color: ThemeContrast.readableAccentColor(mutedColor,
-                            Kirigami.Theme.backgroundColor, Kirigami.Theme.textColor, 4.5)
+                        color: section.spendShareTextColor
                         horizontalAlignment: Text.AlignRight
                         wrapMode: Text.Wrap
                         Layout.fillWidth: true
