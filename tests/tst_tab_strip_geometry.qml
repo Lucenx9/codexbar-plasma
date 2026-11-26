@@ -89,11 +89,12 @@ TestCase {
         compare(TabStripGeometry.revealPosition(400.25, 900, 382, viewport, margin), 382.25)
     }
 
-    function test_revealPositionPinsAMarginOnlyOverflowAtItsStart() {
+    function test_revealPositionReducesMarginsEquallyWhenOnlyTheTabFits() {
         var wide = viewport - 2 * margin + 1
-        compare(TabStripGeometry.revealPosition(40, wide, 40 - margin, viewport, margin), null)
-        compare(TabStripGeometry.revealPosition(40, wide, 300, viewport, margin), 40 - margin)
-        compare(TabStripGeometry.revealPosition(40, wide, 0, viewport, margin), 40 - margin)
+        var start = 40 - (viewport - wide) / 2
+        compare(TabStripGeometry.revealPosition(40, wide, start, viewport, margin), null)
+        compare(TabStripGeometry.revealPosition(40, wide, 300, viewport, margin), start)
+        compare(TabStripGeometry.revealPosition(40, wide, 0, viewport, margin), start)
     }
 
     function test_revealPositionKeepsAnExactFitUnderTheOrdinaryRules() {

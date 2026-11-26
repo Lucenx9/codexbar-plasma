@@ -47,9 +47,11 @@ function revealPosition(itemLeft, itemWidth, contentX, viewportWidth, margin) {
     }
 
     var right = left + width
-    if (width + 2 * gap > viewport) {
-        return left - gap === origin ? null : left - gap
+    if (width > viewport) {
+        var start = left - gap
+        return start === origin ? null : start
     }
+    gap = Math.min(gap, (viewport - width) / 2)
     if (left - gap < origin) {
         return left - gap
     }

@@ -208,6 +208,32 @@ TestCase {
         verifyRevealed(host, 0);
     }
 
+    function test_keyboardRevealsWideTabThatFitsWithoutBothMargins_data() {
+        return [
+            { tag: "ltr-tight-fit", mirrored: false, spareWidth: 4, key: Qt.Key_Right },
+            { tag: "rtl-exact-fit", mirrored: true, spareWidth: 0, key: Qt.Key_Left }
+        ];
+    }
+
+    function test_keyboardRevealsWideTabThatFitsWithoutBothMargins(data) {
+        var host = createStrip();
+        host.mirrored = data.mirrored;
+        var viewport = findChild(host, "providerTabsFlickable");
+        var tab = findChild(host, "tab3");
+        host.width -= viewport.width - tab.width - data.spareWidth;
+        waitForPolish(tab.parent);
+        wait(0);
+        fuzzyCompare(viewport.width, tab.width + data.spareWidth, 0.001);
+
+        focusFor(host, 2).forceActiveFocus(Qt.TabFocusReason);
+        keyClick(data.key);
+        verify(focusFor(host, 3).activeFocus);
+        compare(host.selectedIndex, 0);
+        var left = tab.mapToItem(viewport, 0, 0).x;
+        verify(left >= -0.001, "tab starts before viewport: " + left);
+        verify(left + tab.width <= viewport.width + 0.001, "tab ends after viewport");
+    }
+
     function test_rapidWheelStepsScrollImmediatelyAndAccumulate() {
         var host = createStrip();
         var viewport = findChild(host, "providerTabsFlickable");

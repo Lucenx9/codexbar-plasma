@@ -449,8 +449,9 @@ Malformed dates must not discard healthy percentages.
 `QuotaThresholds.js` supplies shared notification/bar thresholds;
 `limitResetArmThreshold` is a separate reset detector. The opaque planner memo
 preserves provider incident baselines when settings change or usage refreshes.
-Unknown status is missing evidence, including a returned status object: it neither
-notifies nor primes, while fresh quotas still run independently.
+Unknown status is missing evidence, including a returned status object with a
+missing or unrecognized indicator. It neither notifies nor primes, while fresh
+quotas still run independently.
 
 Initial authoritative windows require finite measured usage or a known forecast
 to establish an account scope silently. Empty or entirely nonauthoritative
@@ -517,6 +518,7 @@ the group without exceeding its bounds.
 `PopupTabStrip` owns scrolling, overflow and focus traversal without an applet
 reference; `FullRepresentation` retains selection effects. A tab press interrupts
 page scrolling and keeps its hit area fixed through the visual press scale.
+Focus reveal reduces the scroll margin when the tab fits only without it.
 Pressed feedback follows the visible part of the tab. Clicks acquire mouse focus
 after release inside the viewport so focus-driven scrolling cannot move a
 partially visible target during the press. `ProviderUsageRow`

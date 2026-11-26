@@ -31,6 +31,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep keyboard-focused popup tabs fully visible when they fit within the
+  scroll area with a smaller margin.
+
+- Suppress duplicate incident notifications when an intervening status update
+  lacks a recognized indicator.
+
 - Stop logging a deprecated signal-parameter warning whenever the widget
   loads, and a Qt 6.8 binding-loop warning whenever **Providers** settings
   open.

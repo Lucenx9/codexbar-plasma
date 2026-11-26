@@ -300,10 +300,11 @@ export function statusSeverity(status) {
     case "maintenance":
     case "major":
     case "critical":
-    case "unknown":
         return indicator
-    default:
+    case "none":
         return ""
+    default:
+        return "unknown"
     }
 }
 

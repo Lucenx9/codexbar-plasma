@@ -4,6 +4,7 @@ import "../contents/ui/NotificationObservations.js" as NotificationObservations
 import "../contents/ui/NotificationPlanner.js" as NotificationPlanner
 import "../contents/ui/UsageCache.js" as UsageCache
 import "../contents/ui/ProviderSnapshot.js" as ProviderSnapshot
+import "../contents/ui/ProviderViewModel.js" as ProviderViewModel
 
 TestCase {
     name: "NotificationObservations"
@@ -85,6 +86,38 @@ TestCase {
     function receive(items) {
         notificationRefreshPending = NotificationObservations.freshPending(items, selectedAccounts, notificationRefreshPending);
         providers = items;
+    }
+    function test_onlyOperationalStatusClearsAnIncident_data() {
+        return [
+            {tag: "absent", status: null, expected: 0},
+            {tag: "empty-object", status: {}, expected: 0},
+            {tag: "unrecognized", status: {indicator: "future"}, expected: 0},
+            {tag: "unknown", status: {indicator: "unknown"}, expected: 0},
+            {tag: "operational", status: {indicator: "none"}, expected: 1}
+        ];
+    }
+    function test_onlyOperationalStatusClearsAnIncident(data) {
+        var incident = {indicator: "major", incidentId: "incident-1"};
+        function present(status) {
+            var snapshot = ProviderSnapshot.normalize({
+                provider: "codex", usage: {primary: {usedPercent: 25}}, status: status
+            }, 1000);
+            return ProviderViewModel.presented(snapshot, {
+                rows: snapshot.rows, title: "Codex", status: "Synthetic service status", error: ""
+            });
+        }
+
+        providers = [present(incident)];
+        var initial = observe("prime");
+        providers = [present(data.status)];
+        var intervening = observe("observe", initial.nextMemo);
+        compare(intervening.intents.length, 0);
+
+        providers = [present(incident)];
+        var repeated = observe("observe", intervening.nextMemo);
+        compare(repeated.intents.length, data.expected);
+        if (data.expected > 0)
+            compare(repeated.intents[0].kind, "status");
     }
     function test_unmeasuredStartupDoesNotInventQuotaCrossing_data() {
         var cases = [];
