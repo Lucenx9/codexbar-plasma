@@ -31,6 +31,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep the focused popup tab visible when switching from a swipe to keyboard
+  navigation while the tab strip is still scrolling.
+
 - Keep keyboard-focused popup tabs fully visible when they fit within the
   scroll area with a smaller margin.
 

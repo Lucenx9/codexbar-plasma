@@ -114,6 +114,23 @@ TestCase {
         compare(host.selectedIndex, 0);
     }
 
+    function test_keyboardFocusRemainsVisibleAfterFlick() {
+        var host = createStrip();
+        host.width = 510;
+        wait(0);
+        var viewport = findChild(host, "providerTabsFlickable");
+        focusFor(host, 0).forceActiveFocus(Qt.TabFocusReason);
+        verifyRevealed(host, 1);
+
+        viewport.flick(-1300, 0);
+        verify(viewport.flicking);
+        keyClick(Qt.Key_Right);
+        tryCompare(viewport, "flicking", false);
+        verify(focusFor(host, 1).activeFocus);
+        verifyRevealed(host, 1);
+        compare(host.selectedIndex, 0);
+    }
+
     function test_pressAndKeyboardFeedbackIsImmediate() {
         var host = createStrip();
         var tab = findChild(host, "tab1");

@@ -88,6 +88,7 @@ Item {
         if (!item || item.width <= 0 || !containsTab(item)) {
             return;
         }
+        providerTabsFlickable.cancelFlick();
         var target = TabStripGeometry.revealPosition(item.mapToItem(providerTabs, 0, 0).x, item.width, providerTabsFlickable.contentX, providerTabsFlickable.width, Kirigami.Units.gridUnit);
         // Keep an already-visible tab in place instead of aligning
         // it again on every focus or selection report.
