@@ -94,6 +94,11 @@ TestCase {
             compare(JSON.stringify(usage), before);
         }
     }
+    function test_submillisecondExpiryKeepsItsCalendarDay() {
+        var dates = normalized({subscriptionExpiresAt: "2026-12-01T01:59:59.999999999+02:00"}).subscriptionDates;
+        compare(dates[0].timestampMs, Date.UTC(2026, 10, 30, 23, 59, 59, 999));
+    }
+
     function test_calendarDaySkippedByTimezone() {
         var dates = normalized({subscriptionExpiresAt: "2011-12-30T00:00:00Z",
             subscriptionExpiresAtIsDateOnly: true}).subscriptionDates;

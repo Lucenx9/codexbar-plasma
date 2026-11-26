@@ -30,7 +30,9 @@ export function date(value, dateOnly, kind) {
     } else if (!dateOnly) {
         return null;
     }
-    var timestampMs = Date.parse(value);
+    // Qt can round longer fractions into the next day. Keep the millisecond
+    // containing the instant before passing the validated timestamp to Date.
+    var timestampMs = Date.parse(value.replace(/(\.\d{3})\d+/, "$1"));
     if (!isFinite(timestampMs)) {
         return null;
     }
