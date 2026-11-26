@@ -9,6 +9,7 @@ import "controllers" as Controllers
 import "UpdateLogic.js" as UpdateLogic
 import "ManagedCli.js" as ManagedCli
 import "IdentifiedTokens.js" as IdentifiedTokens
+import "TelemetryEndpoint.js" as TelemetryEndpoint
 import "general/ConfigValueSync.js" as ConfigValueSync
 
 KCM.SimpleKCM {
@@ -36,6 +37,8 @@ KCM.SimpleKCM {
     property bool cfg_refreshOnOpenDefault: true
     property alias cfg_privacyMode: privacyModeCheck.checked
     property bool cfg_privacyModeDefault: false
+    property alias cfg_telemetryEnabled: telemetryEnabledCheck.checked
+    property bool cfg_telemetryEnabledDefault: false
     property bool cfg_showPopupPace
     property bool cfg_showPopupPaceDefault: true
     property bool cfg_showPopupCredits
@@ -352,6 +355,7 @@ KCM.SimpleKCM {
             [cfg_source, cfg_sourceDefault],
             [cfg_refreshOnOpen, cfg_refreshOnOpenDefault],
             [cfg_privacyMode, cfg_privacyModeDefault],
+            [cfg_telemetryEnabled, cfg_telemetryEnabledDefault],
             [cfg_showPopupPace, cfg_showPopupPaceDefault],
             [cfg_showPopupCredits, cfg_showPopupCreditsDefault],
             [cfg_showPopupProviderDetails, cfg_showPopupProviderDetailsDefault],
@@ -424,6 +428,7 @@ KCM.SimpleKCM {
         cfg_source = cfg_sourceDefault
         cfg_refreshOnOpen = cfg_refreshOnOpenDefault
         cfg_privacyMode = cfg_privacyModeDefault
+        cfg_telemetryEnabled = cfg_telemetryEnabledDefault
         cfg_showPopupPace = cfg_showPopupPaceDefault
         cfg_showPopupCredits = cfg_showPopupCreditsDefault
         cfg_showPopupProviderDetails = cfg_showPopupProviderDetailsDefault
@@ -613,6 +618,28 @@ KCM.SimpleKCM {
             leftPadding: LayoutMirroring.enabled ? 0 : page.hintIndent(privacyModeCheck)
             rightPadding: LayoutMirroring.enabled ? page.hintIndent(privacyModeCheck) : 0
             text: i18n("Hides account identities and project or session names in the panel, popup and tooltips. Saved data is unchanged.")
+            font: Kirigami.Theme.smallFont
+            opacity: 0.7
+            wrapMode: Text.WordWrap
+        }
+
+        Controls.CheckBox {
+            id: telemetryEnabledCheck
+            objectName: "telemetryEnabledCheck"
+            visible: TelemetryEndpoint.url.length > 0
+            implicitWidth: 0
+            Layout.fillWidth: true
+            text: i18n("Share optional quota refresh statistics")
+        }
+
+        Components.PlainControlsLabel {
+            visible: telemetryEnabledCheck.visible
+            Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: page.hintMaximumWidth
+            leftPadding: LayoutMirroring.enabled ? 0 : page.hintIndent(telemetryEnabledCheck)
+            rightPadding: LayoutMirroring.enabled ? page.hintIndent(telemetryEnabledCheck) : 0
+            text: i18n("Sends the widget version and first quota refresh result for each release to help diagnose release problems.")
             font: Kirigami.Theme.smallFont
             opacity: 0.7
             wrapMode: Text.WordWrap

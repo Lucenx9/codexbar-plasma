@@ -45,6 +45,8 @@ Item {
     signal snapshotReceived(var items)
     signal failed(string message)
     signal emptyRoster
+    signal refreshStarted(int attempt)
+    signal refreshOutcome(int attempt, string outcome)
 
     function refresh(bypassProviderRosterCache) {
         lifecycle.refreshNow(bypassProviderRosterCache);
@@ -94,6 +96,7 @@ Item {
         readonly property int maximumConcurrentProviderFallbackCommands: 8
         property var providerFallbackState: null
         property bool fallbackOnlyPathFailures: false
+        property string fallbackFailureOutcome: "other_error"
         readonly property string providerSelector: Normalizer.normalizedProviderID(controller.provider)
         readonly property string requestContext: JSON.stringify([controller.commandPath, controller.provider, controller.sourceMode, controller.includeStatus, controller.selectedAccounts, controller.providerConfigRevision])
         // Enabled-only and explicit all-provider rosters cannot share a cache.
@@ -242,13 +245,15 @@ Item {
         function refreshNow(bypassProviderRosterCache) {
             usageRefreshScheduled = false;
             retireUsageCommands();
+            refreshAttemptSerial += 1;
+            fallbackFailureOutcome = "other_error";
+            controller.refreshStarted(refreshAttemptSerial);
 
             if (commandSource.length === 0) {
-                failUsageRefresh(i18n("Set the codexbar command path in widget settings."));
+                failUsageRefresh(i18n("Set the codexbar command path in widget settings."), "cli_unavailable");
                 return;
             }
 
-            refreshAttemptSerial += 1;
             usageLastRefreshAttemptAtMs = Date.now();
             // After a clock rollback, the new attempt starts the popup cooldown.
             if (usageLastCompletedAtMs > usageLastRefreshAttemptAtMs)
@@ -363,7 +368,7 @@ Item {
                 commandPathFailed = fallbackOnlyPathFailures;
                 if (commandPathFailed) {
                     providerFallbackState = null;
-                    failUsageRefresh(transition.orderedItems[0].error);
+                    failUsageRefresh(transition.orderedItems[0].error, "cli_unavailable");
                     return;
                 }
                 finishProviderFallback(transition.orderedItems);
@@ -405,14 +410,14 @@ Item {
                     startProviderFallback();
                     return;
                 }
-                failUsageRefresh(i18n("Loading usage timed out. Try again."));
+                failUsageRefresh(i18n("Loading usage timed out. Try again."), "timeout");
                 return;
             case "providerConfig":
                 finishUsageCommandSource(sourceName);
-                failUsageRefresh(i18n("Loading provider configuration timed out. Try again."));
+                failUsageRefresh(i18n("Loading provider configuration timed out. Try again."), "timeout");
                 return;
             case "providerFallback":
-                parseProviderFallbackOutput(sourceName, descriptor.providerID, "", i18n("Loading usage timed out. Try again."), null);
+                parseProviderFallbackOutput(sourceName, descriptor.providerID, "", i18n("Loading usage timed out. Try again."), null, true);
                 return;
             default:
                 finishUsageCommandSource(sourceName);
@@ -459,10 +464,27 @@ Item {
             return Guards.hasOwnKey(controller.selectedAccounts, key) ? String(controller.selectedAccounts[key] || "") : "";
         }
 
-        function failUsageRefresh(message) {
+        function failUsageRefresh(message, outcome) {
             errorText = message;
             loading = false;
+            controller.refreshOutcome(refreshAttemptSerial, outcome || "other_error");
             controller.failed(message);
+        }
+
+        function responseFailureOutcome(outcome, exitCode) {
+            if (Guards.isCommandPathFailure(exitCode))
+                return "cli_unavailable";
+            if (exitCode === 124)
+                return "timeout";
+            switch (outcome) {
+            case "empty":
+            case "invalidJson":
+            case "noProviders":
+            case "tooLarge":
+                return "invalid_response";
+            default:
+                return "other_error";
+            }
         }
 
         function responseMessage(result, roster) {
@@ -492,7 +514,7 @@ Item {
                     startProviderFallback();
                     return;
                 }
-                failUsageRefresh(responseMessage(result, false));
+                failUsageRefresh(responseMessage(result, false), responseFailureOutcome(result.outcome, exitCode));
                 return;
             }
             finishProviderFallback(result.items);
@@ -506,7 +528,7 @@ Item {
             var result = UsageResponse.roster(stdoutText, stderrText, exitCode,
                 providerSelector === "all");
             if (result.outcome !== "success") {
-                failUsageRefresh(responseMessage(result, true));
+                failUsageRefresh(responseMessage(result, true), responseFailureOutcome(result.outcome, exitCode));
                 return;
             }
             providerDisplayNames = result.displayNames;
@@ -514,11 +536,16 @@ Item {
             startProviderFallbackForProviders(result.providerIDs);
         }
 
-        function parseProviderFallbackOutput(sourceName, providerID, stdoutText, stderrText, exitCode) {
+        function parseProviderFallbackOutput(sourceName, providerID, stdoutText, stderrText, exitCode, timedOut) {
             finishUsageCommandSource(sourceName);
             fallbackOnlyPathFailures = fallbackOnlyPathFailures && Guards.isCommandPathFailure(exitCode);
             var result = UsageResponse.response(stdoutText, stderrText, providerID, Date.now(), exitCode,
                 selectedAccountForProvider(providerID));
+            if (result.outcome !== "success") {
+                var outcome = timedOut ? "timeout" : responseFailureOutcome(result.outcome, exitCode);
+                if (outcome === "timeout" || (outcome === "invalid_response" && fallbackFailureOutcome !== "timeout"))
+                    fallbackFailureOutcome = outcome;
+            }
             var item = result.outcome === "success" ? result.items[0] : ProviderSnapshot.normalize({
                 provider: providerID,
                 source: controller.sourceMode || "auto",
@@ -533,13 +560,15 @@ Item {
             var items = ProviderOrder.orderedItems(orderedItems, controller.providerOrderRaw);
             // Match the applet cache policy: an expired CLI measurement cannot
             // postpone a refresh-on-open just because its command succeeded.
-            if (UsageCache.reconcile([], items, Date.now()).some(function (item) {
+            var freshItems = UsageCache.reconcile([], items, Date.now()).filter(function (item) {
                 return !item.commandFailed && !item.usageStale;
-            }))
+            });
+            if (freshItems.length > 0)
                 usageLastCompletedAtMs = Date.now();
             errorText = items.length === 0 ? i18n("codexbar did not return JSON.") : "";
             providerFallbackState = null;
             loading = false;
+            controller.refreshOutcome(refreshAttemptSerial, freshItems.some(UsageCache.hasQuota) ? "success" : fallbackFailureOutcome);
             controller.snapshotReceived(items);
         }
     }

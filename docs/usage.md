@@ -634,6 +634,15 @@ free-form provider details and disables session copying. Provider settings and
 Diagnostics remain administrative surfaces. Existing stored data, clipboard
 contents, and delivered notifications are unchanged.
 
+Quota refresh statistics are currently unavailable. When enabled in a release,
+**General → Privacy → Share optional quota refresh statistics** is off by
+default. Select the checkbox and apply to let the widget try sending its version
+and the outcome of its first eligible quota refresh for that release. Eligible
+refreshes start after enabling the setting. A confirmed empty provider list
+leaves the next refresh eligible. The report excludes account and provider
+details, quota values, and local paths. Clear the checkbox and apply to stop
+future reports.
+
 Usage refresh choices are off, 1, 2, 5, or 15 minutes, or a custom interval in
 seconds. **Refresh when opening the popup** is separate. **Restore all defaults**
 prepares the [defaults](#default-settings); Apply/OK saves them and Cancel keeps
@@ -840,6 +849,7 @@ and 95% critical thresholds. Reset notifications are off until enabled.
 | Usage refresh | Every 5 minutes |
 | Refresh on popup opening | On, only for quotas older than the refresh interval |
 | Privacy mode | Off |
+| Optional quota refresh statistics | Off, available in builds with a reporting endpoint |
 | Popup pace, credits and additional details | Shown |
 | Provider service status | Off; incident notifications become active when status fetching is enabled |
 | Local usage and spend history | On, 30 days, cost metric |

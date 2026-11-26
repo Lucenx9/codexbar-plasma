@@ -29,6 +29,14 @@
       <label>Hide personal information in the widget.</label>
       <default>false</default>
     </entry>
+    <entry name="telemetryEnabled" type="Bool">
+      <label>Share optional quota refresh statistics.</label>
+      <default>false</default>
+    </entry>
+    <entry name="telemetrySubmittedVersion" type="String">
+      <label>Most recent widget release for which a telemetry submission was attempted.</label>
+      <default></default>
+    </entry>
     <entry name="showPopupPace" type="Bool">
       <label>Show pace forecasts in the popup.</label>
       <default>true</default>

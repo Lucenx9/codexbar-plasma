@@ -21,6 +21,7 @@ with `cfg_*` bindings in settings and `Plasmoid.configuration` at runtime.
 | --- | --- | --- |
 | Usage publication, cache, selection and account coordination | `main.qml` | `UsageState.js`, `UsageCache.js`, `ProviderSnapshot.js`, `ProviderViewModel.js` |
 | Usage discovery, fallback requests and refresh scheduling | `controllers/UsageController.qml` | `UsageResponse.js`, `NetworkState.js` |
+| Optional quota refresh reporting | `controllers/TelemetryController.qml` | `TelemetryEndpoint.js` |
 | Account discovery | `controllers/AccountsController.qml` | `AccountResponse.js`, shared snapshot normalization |
 | Config checksum observation | `controllers/ProviderConfigWatcher.qml` | `ProviderConfigWatch.js` |
 | Cost requests and off-thread normalization | `controllers/CostController.qml`, `CostWorker.mjs` | `CostResponse.mjs`, `CostWorkerRequest.mjs`, `ProviderNormalizer.mjs` |
@@ -556,6 +557,21 @@ when both fields match. Metric synchronization stays independent in
 `ConfigValueSync.js`. `PopupRefreshPolicy.js` handles freshness, failed-attempt
 cooldown and queued/in-flight work; opening the popup cannot start cost scans.
 See the [settings decision](research/2026-09-08-settings-experience.md).
+
+`TelemetryEndpoint.js` supplies the build's reporting endpoint. The empty value
+keeps the opt-in hidden and prevents requests. Publish and verify the separate
+collector and its privacy notice before configuring a production endpoint.
+General saves consent as `telemetryEnabled`, which defaults to false. The
+sender considers only terminal outcomes from refreshes started with consent
+and discards eligibility if consent is withdrawn. A confirmed empty provider
+roster does not produce a report.
+
+The sender records `telemetrySubmittedVersion` locally before its single
+attempt per widget instance and release. The HTTPS `curl` request takes only
+`schema` (currently `1`), `widget_version` and `outcome`. It excludes raw errors,
+account or provider identities, plan data, usage values and filesystem paths.
+It discards the server reply and sends no retries. Refresh publication, timing
+and recovery are independent of the submission.
 
 `SubscriptionDates.mjs` admits only official renewal/expiration fields and true
 date-only flags, rejecting impossible calendar components before parsing.

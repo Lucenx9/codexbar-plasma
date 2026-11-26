@@ -2746,6 +2746,16 @@ msgid ""
 msgstr ""
 
 #: contents/ui/configGeneral.qml
+msgid "Share optional quota refresh statistics"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid ""
+"Sends the widget version and first quota refresh result for each release to "
+"help diagnose release problems."
+msgstr ""
+
+#: contents/ui/configGeneral.qml
 msgid "Usage history"
 msgstr ""
 

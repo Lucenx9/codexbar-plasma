@@ -1919,6 +1919,18 @@ msgstr ""
 "enregistrées restent inchangées."
 
 #: contents/ui/configGeneral.qml
+msgid "Share optional quota refresh statistics"
+msgstr "Partager des statistiques facultatives sur l'actualisation des quotas"
+
+#: contents/ui/configGeneral.qml
+msgid ""
+"Sends the widget version and first quota refresh result for each release to "
+"help diagnose release problems."
+msgstr ""
+"Pour chaque version du widget, envoie son numéro et le résultat de la première "
+"actualisation des quotas afin de faciliter le diagnostic des problèmes."
+
+#: contents/ui/configGeneral.qml
 msgid "Usage history"
 msgstr "Historique d'utilisation"
 

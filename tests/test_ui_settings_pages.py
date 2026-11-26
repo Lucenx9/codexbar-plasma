@@ -62,6 +62,7 @@ class SettingsPagesTest(unittest.TestCase):
     def test_restore_all_defaults_covers_schema(self):
         internal_config_keys = {
             "usageCache",
+            "telemetrySubmittedVersion",
             "autoUpdateLastCheck",
             "cliUpdateLastCheck",
             "cliUpdateLastNotifiedVersion",

@@ -37,6 +37,7 @@ import "UsageState.js" as UsageState
 import "ProviderViewModel.js" as ProviderViewModel
 import "QuotaThresholds.js" as QuotaThresholds
 import "StatusComponents.js" as StatusComponents
+import "TelemetryEndpoint.js" as TelemetryEndpoint
 import "ThemeContrast.js" as ThemeContrast
 import "UpdateLogic.js" as UpdateLogic
 
@@ -2065,6 +2066,15 @@ PlasmoidItem {
         source: Qt.resolvedUrl("controllers/NetworkReachability.qml")
     }
 
+    Controllers.TelemetryController {
+        id: telemetryController
+
+        configuration: Plasmoid.configuration
+        consented: Plasmoid.configuration.telemetryEnabled === true
+        endpoint: TelemetryEndpoint.url
+        widgetVersion: root.installedWidgetVersion
+    }
+
     Controllers.UsageController {
         id: usageController
 
@@ -2080,6 +2090,8 @@ PlasmoidItem {
         refreshOnOpen: root.refreshOnOpen
         popupVisible: root.expanded
         reachability: root.networkReachability
+        onRefreshStarted: function(attempt) { telemetryController.startAttempt(attempt) }
+        onRefreshOutcome: function(attempt, outcome) { telemetryController.finishAttempt(attempt, outcome) }
         onSnapshotReceived: function(items) {
             root.commitUsageSnapshot(items.map(function(item) { return root.presentProviderSnapshot(item) }))
             root.applyTokenCosts()

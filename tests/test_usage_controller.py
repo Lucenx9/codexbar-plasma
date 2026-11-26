@@ -21,6 +21,7 @@ TestCase {
             property var subject
             property var snapshots: []
             property var failures: []
+            property var outcomes: []
             property int emptyRosters: 0
         }
     }
@@ -39,6 +40,9 @@ TestCase {
         var observed = createTemporaryObject(observation, testCase, {subject: subject});
         subject.snapshotReceived.connect(function(items) { observed.snapshots = observed.snapshots.concat([items]); });
         subject.failed.connect(function(message) { observed.failures = observed.failures.concat(message); });
+        subject.refreshOutcome.connect(function(attempt, outcome) {
+            observed.outcomes = observed.outcomes.concat(outcome);
+        });
         subject.emptyRoster.connect(function() { observed.emptyRosters++; });
         return observed;
     }
@@ -208,6 +212,7 @@ TestCase {
         compare(latest(o)[1].commandFailed, true);
         compare(latest(o)[10].provider, "synthetic10");
         compare(latest(o)[10].rows[0].usedPercent, 0);
+        compare(o.outcomes, ["success"]);
         verify(latest(o).every(function(item) { return !item.version || Number(item.version) <= 8; }));
         compare(o.failures, []);
     }
@@ -219,6 +224,7 @@ TestCase {
         var o = create(data.script, {sourceMode: "cli"});
         tryVerify(function() { return o.failures.length === 1 && !o.subject.loading; });
         compare(o.snapshots.length, 0);
+        compare(o.outcomes, ["invalid_response"]);
         verify(o.subject.errorText.length > 0);
         o.subject.refresh(true);
         completed(o, 1);
@@ -233,6 +239,7 @@ TestCase {
         var o = create(data.script, data.options);
         tryVerify(function() { return o.failures.length === 1 && !o.subject.loading; });
         compare(o.snapshots, []);
+        compare(o.outcomes, [data.tag === "timeout" ? "timeout" : "other_error"]);
         compare(o.subject.lastCompletedAtMs, -1);
         verify(o.subject.errorText.length > 0);
         o.subject.refresh(false);
@@ -262,6 +269,7 @@ TestCase {
         compare(o.snapshots, []);
         compare(o.emptyRosters, 0);
         compare(o.failures.length, 1);
+        compare(o.outcomes, ["cli_unavailable"]);
         verify(o.subject.errorText.length > 0);
         compare(o.subject.lastCompletedAtMs, -1);
     }
@@ -280,6 +288,7 @@ TestCase {
         tryCompare(empty, "emptyRosters", 1);
         tryVerify(function() { return broken.failures.length === 1; });
         compare(empty.snapshots.length, 0);
+        compare(empty.outcomes, []);
         compare(empty.subject.errorText, "");
         compare(empty.subject.lastCompletedAtMs, -1);
         compare(broken.emptyRosters, 0);
@@ -311,6 +320,7 @@ TestCase {
     function test_expiredMeasurementsDoNotAdvanceFreshness() {
         var o = create("ancient", {sourceMode: "cli"});
         completed(o, 1);
+        compare(o.outcomes, ["other_error"]);
         verify(o.subject.lastAttemptAtMs > 0);
         compare(o.subject.lastCompletedAtMs, -1);
     }
@@ -416,6 +426,7 @@ TestCase {
         tryVerify(function() { return aggregate.failures.length === 1 && roster.failures.length === 1
             && scoped.snapshots.length === 1; }, 123000);
         verify(!aggregate.subject.loading && !roster.subject.loading && !scoped.subject.loading);
+        for (var o of [aggregate, roster, scoped]) compare(o.outcomes, ["timeout"]);
         compare(latest(scoped)[0].commandFailed, true);
         for (var o of [aggregate, roster, scoped]) o.subject.refresh(true);
         completed(aggregate, 1);

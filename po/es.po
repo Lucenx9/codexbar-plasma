@@ -1912,6 +1912,18 @@ msgstr ""
 "guardados no cambian."
 
 #: contents/ui/configGeneral.qml
+msgid "Share optional quota refresh statistics"
+msgstr "Compartir estadísticas opcionales sobre la actualización de cuotas"
+
+#: contents/ui/configGeneral.qml
+msgid ""
+"Sends the widget version and first quota refresh result for each release to "
+"help diagnose release problems."
+msgstr ""
+"Envía, en cada versión, el número de versión del widget y el resultado de "
+"la primera actualización de cuotas para ayudar a diagnosticar problemas."
+
+#: contents/ui/configGeneral.qml
 msgid "Usage history"
 msgstr "Historial de uso"
 
