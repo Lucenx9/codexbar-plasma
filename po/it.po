@@ -1909,6 +1909,18 @@ msgstr ""
 "restano invariati."
 
 #: contents/ui/configGeneral.qml
+msgid "Share optional quota refresh statistics"
+msgstr "Condividi statistiche facoltative sull'aggiornamento delle quote"
+
+#: contents/ui/configGeneral.qml
+msgid ""
+"Sends the widget version and first quota refresh result for each release to "
+"help diagnose release problems."
+msgstr ""
+"Per ogni release, invia la versione del widget e l'esito del primo "
+"aggiornamento delle quote per aiutare a diagnosticare eventuali problemi."
+
+#: contents/ui/configGeneral.qml
 msgid "Usage history"
 msgstr "Cronologia di utilizzo"
 

@@ -1906,6 +1906,18 @@ msgstr ""
 "painel, na janela pop-up e nas dicas. Os dados salvos não são alterados."
 
 #: contents/ui/configGeneral.qml
+msgid "Share optional quota refresh statistics"
+msgstr "Compartilhar estatísticas opcionais sobre a atualização de cotas"
+
+#: contents/ui/configGeneral.qml
+msgid ""
+"Sends the widget version and first quota refresh result for each release to "
+"help diagnose release problems."
+msgstr ""
+"Em cada versão, envia o número da versão do widget e o resultado da primeira "
+"atualização de cotas para ajudar a diagnosticar problemas."
+
+#: contents/ui/configGeneral.qml
 msgid "Usage history"
 msgstr "Histórico de uso"
 

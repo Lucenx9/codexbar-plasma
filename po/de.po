@@ -1912,6 +1912,18 @@ msgstr ""
 "Daten bleiben unverändert."
 
 #: contents/ui/configGeneral.qml
+msgid "Share optional quota refresh statistics"
+msgstr "Optionale Statistiken zur Kontingentaktualisierung teilen"
+
+#: contents/ui/configGeneral.qml
+msgid ""
+"Sends the widget version and first quota refresh result for each release to "
+"help diagnose release problems."
+msgstr ""
+"Sendet pro Veröffentlichung die Version des Miniprogramms und das Ergebnis "
+"der ersten Kontingentaktualisierung, um bei der Fehlersuche zu helfen."
+
+#: contents/ui/configGeneral.qml
 msgid "Usage history"
 msgstr "Nutzungsverlauf"
 

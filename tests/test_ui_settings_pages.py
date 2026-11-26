@@ -32,6 +32,23 @@ insights_surface = Surface("insights", root)
 providers_text = providers_qml.read_text(encoding="utf-8")
 diagnostics_text = diagnostics_qml.read_text(encoding="utf-8")
 config_text = config_xml.read_text(encoding="utf-8")
+RUNTIME_CONFIG_KEYS = {
+    "usageCache",
+    "telemetrySubmittedVersion",
+    "autoUpdateLastCheck",
+    "cliUpdateLastCheck",
+    "cliUpdateLastNotifiedVersion",
+    "widgetUpdateLastStatus",
+    "widgetUpdateLastError",
+    "widgetUpdateAvailableVersion",
+    "widgetUpdateRequest",
+    "lastNotifiedUpdateVersion",
+    "providerConfigRevision",
+    "managedCliRevision",
+    "aiInsightsCache",
+    "aiInsightsLastAttempt",
+    "aiInsightsRateLimit",
+}
 
 
 class SettingsPagesTest(unittest.TestCase):
@@ -60,24 +77,8 @@ class SettingsPagesTest(unittest.TestCase):
                     raise AssertionError("reorder focus must follow identity and use an enabled button")
 
     def test_restore_all_defaults_covers_schema(self):
-        internal_config_keys = {
-            "usageCache",
-            "autoUpdateLastCheck",
-            "cliUpdateLastCheck",
-            "cliUpdateLastNotifiedVersion",
-            "widgetUpdateLastStatus",
-            "widgetUpdateLastError",
-            "widgetUpdateAvailableVersion",
-            "widgetUpdateRequest",
-            "lastNotifiedUpdateVersion",
-            "providerConfigRevision",
-            "managedCliRevision",
-            "aiInsightsCache",
-            "aiInsightsLastAttempt",
-            "aiInsightsRateLimit",
-        }
         all_config_keys = set(re.findall(r'<entry name="([^"]+)"', config_text))
-        resettable_config_keys = all_config_keys - internal_config_keys
+        resettable_config_keys = all_config_keys - RUNTIME_CONFIG_KEYS
         restore_defaults_body = function_body(general_text, "restoreUserDefaults")
         defaults_check_body = function_body(general_text, "userSettingsAreDefault")
         # History-range defaults are exercised through the real page functions and
@@ -118,7 +119,7 @@ class SettingsPagesTest(unittest.TestCase):
                 "global defaults must initialize cfg_*Default from main.xml for: "
                 + ", ".join(uninitialized_general_defaults)
             )
-        for internal_key in sorted(internal_config_keys):
+        for internal_key in sorted(RUNTIME_CONFIG_KEYS):
             if f"cfg_{internal_key}" in restore_defaults_body:
                 raise AssertionError(f"global defaults must preserve internal state {internal_key}")
 
