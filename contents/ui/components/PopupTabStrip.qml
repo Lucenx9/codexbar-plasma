@@ -88,6 +88,7 @@ Item {
         if (!item || item.width <= 0 || !containsTab(item)) {
             return;
         }
+        providerTabsFlickable.cancelFlick();
         var target = TabStripGeometry.revealPosition(item.mapToItem(providerTabs, 0, 0).x, item.width, providerTabsFlickable.contentX, providerTabsFlickable.width, Kirigami.Units.gridUnit);
         // Keep an already-visible tab in place instead of aligning
         // it again on every focus or selection report.
@@ -178,6 +179,10 @@ Item {
         var target = TabStripGeometry.keyboardTargetIndex(action, tabs.indexOf(item), tabs.length);
         if (target < 0) {
             return false;
+        }
+        // Home or End can keep the current focus without firing its reveal handler.
+        if (tabs[target] === item) {
+            ensureVisible(item);
         }
         tabs[target].forceActiveFocus(action === "next" || action === "last" ? Qt.TabFocusReason : Qt.BacktabFocusReason);
         return true;
