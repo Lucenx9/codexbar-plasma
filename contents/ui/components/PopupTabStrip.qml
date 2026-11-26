@@ -180,6 +180,10 @@ Item {
         if (target < 0) {
             return false;
         }
+        // Home or End can keep the current focus without firing its reveal handler.
+        if (tabs[target] === item) {
+            ensureVisible(item);
+        }
         tabs[target].forceActiveFocus(action === "next" || action === "last" ? Qt.TabFocusReason : Qt.BacktabFocusReason);
         return true;
     }

@@ -114,20 +114,28 @@ TestCase {
         compare(host.selectedIndex, 0);
     }
 
-    function test_keyboardFocusRemainsVisibleAfterFlick() {
+    function test_keyboardFocusRemainsVisibleAfterFlick_data() {
+        return [
+            { tag: "next", from: 0, to: 1, key: Qt.Key_Right, velocity: -1300 },
+            { tag: "already-first", from: 0, to: 0, key: Qt.Key_Home, velocity: -1300 },
+            { tag: "already-last", from: 7, to: 7, key: Qt.Key_End, velocity: 1300 }
+        ];
+    }
+
+    function test_keyboardFocusRemainsVisibleAfterFlick(data) {
         var host = createStrip();
         host.width = 510;
         wait(0);
         var viewport = findChild(host, "providerTabsFlickable");
-        focusFor(host, 0).forceActiveFocus(Qt.TabFocusReason);
-        verifyRevealed(host, 1);
+        focusFor(host, data.from).forceActiveFocus(Qt.TabFocusReason);
+        verifyRevealed(host, data.to);
 
-        viewport.flick(-1300, 0);
+        viewport.flick(data.velocity, 0);
         verify(viewport.flicking);
-        keyClick(Qt.Key_Right);
+        keyClick(data.key);
         tryCompare(viewport, "flicking", false);
-        verify(focusFor(host, 1).activeFocus);
-        verifyRevealed(host, 1);
+        verify(focusFor(host, data.to).activeFocus);
+        verifyRevealed(host, data.to);
         compare(host.selectedIndex, 0);
     }
 
