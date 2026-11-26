@@ -31,6 +31,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Return keyboard focus to the provider cost chart after activating **All days**
+  so Home, End, and the arrow keys can select another day immediately.
+
+- Keep subscription expirations, renewals, and quota resets on the correct day
+  when a timestamp falls within the last millisecond before midnight.
+
 - Keep the focused popup tab visible when switching from a swipe to keyboard
   navigation while the tab strip is still scrolling.
 
