@@ -311,6 +311,7 @@ ColumnLayout {
                 plainText: i18n("All days")
                 visible: tokenCostSection.selectedDay !== null
                 onClicked: {
+                    costChart.focusPlot(Qt.TabFocusReason);
                     tokenCostSection.detailsExpanded = true;
                     tokenCostSection.clearDaySelection();
                 }

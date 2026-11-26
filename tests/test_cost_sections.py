@@ -585,16 +585,16 @@ class CostSectionTests(unittest.TestCase):
         charts[0].selectedIndex = 0;
         compare(charts[0].selectedIndex, 0);
         // The day reset is a flat inline action that clears the selection.
-        var allDays = all.filter(function(item) {
-            return item.objectName === "costAllDaysButton";
-        });
-        compare(allDays.length, 1);
-        tryVerify(function() { return allDays[0].visible; });
-        verify(allDays[0].flat);
-        mouseClick(allDays[0]);
+        var allDays = findChild(subject, "costAllDaysButton");
+        verify(allDays);
+        tryCompare(allDays, "visible", true);
+        verify(allDays.flat);
+        allDays.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Space);
         tryVerify(function() { return charts[0].selectedIndex === -1; });
-        verify(!allDays[0].visible);
-        charts[0].selectedIndex = 0;
+        verify(!allDays.visible);
+        keyClick(Qt.Key_Home);
+        compare(charts[0].selectedIndex, 0);
         fakeApplet.costHistoryShowsTokens = true;
         tryVerify(function() { return metricToggles[0].currentIndex === 1
                 && metricButtons[1].checked && !metricButtons[0].checked; });
