@@ -447,18 +447,18 @@ TestCase {
         compare(Normalizer.statusSeverity({ indicator: "MAJOR" }), "major")
         compare(Normalizer.statusSeverity({ indicator: "maintenance" }), "maintenance")
         compare(Normalizer.statusSeverity({ indicator: "none" }), "")
-        compare(Normalizer.statusSeverity({ indicator: "totally-made-up" }), "")
-        compare(Normalizer.statusSeverity({}), "")
+        compare(Normalizer.statusSeverity({ indicator: "totally-made-up" }), "unknown")
+        compare(Normalizer.statusSeverity({}), "unknown")
         compare(Normalizer.statusSeverity(null), "")
     }
 
     function test_statusSeverityRejectsStructuredIndicators() {
         // Coercing these values runs a missing or hostile toString, which used
         // to abort the whole usage refresh with a TypeError.
-        compare(Normalizer.statusSeverity({ indicator: { toString: null } }), "")
-        compare(Normalizer.statusSeverity({ indicator: ["major"] }), "")
-        compare(Normalizer.statusSeverity({ indicator: 42 }), "")
-        compare(Normalizer.statusSeverity({ indicator: null }), "")
+        compare(Normalizer.statusSeverity({ indicator: { toString: null } }), "unknown")
+        compare(Normalizer.statusSeverity({ indicator: ["major"] }), "unknown")
+        compare(Normalizer.statusSeverity({ indicator: 42 }), "unknown")
+        compare(Normalizer.statusSeverity({ indicator: null }), "unknown")
     }
 
     function test_readsTheIncidentKeyFromEveryContractSpelling() {
