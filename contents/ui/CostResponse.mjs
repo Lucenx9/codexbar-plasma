@@ -39,8 +39,7 @@ export function longHistoryAverage(snapshot, currency, recordedDays, scanDay) {
     var retained = [];
     for (var i = first; i < source.length; i++) {
         var item = source[i];
-        if (!Normalizer.isCliRecord(item)) continue;
-        if (!Normalizer.costHistoryLabelIsUsable(Normalizer.costDayLabel(item))) {
+        if (!Normalizer.isCliRecord(item) || !Normalizer.costHistoryLabelIsUsable(Normalizer.costDayLabel(item))) {
             canFill = false;
             continue;
         }

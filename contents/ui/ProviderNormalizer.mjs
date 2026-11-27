@@ -892,7 +892,10 @@ export function selectedCostDays(items, currency, options, modelSources) {
     var result = []
     for (var i = items.length - 1; i >= firstInspectedItem; i--) {
         var item = items[i]
-        if (!isCliRecord(item)) continue
+        if (!isCliRecord(item)) {
+            canFill = false
+            continue
+        }
         var label = costDayLabel(item)
         if (!costHistoryLabelIsUsable(label)) {
             canFill = false
