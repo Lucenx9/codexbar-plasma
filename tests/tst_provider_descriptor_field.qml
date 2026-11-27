@@ -158,7 +158,7 @@ TestCase {
         return [
             {tag: "secret", kind: "secret", names: {descriptorSecretButton: "Set Setting"}},
             {tag: "text", kind: "text", names: {descriptorTextField: "Setting", descriptorTextSaveButton: "Save Setting"}},
-            {tag: "enum", kind: "enum", names: {descriptorEnumBox: "Setting", descriptorEnumSaveButton: "Save Setting"}},
+            {tag: "enum", kind: "enum", names: {descriptorEnumBox: "Setting: Alpha", descriptorEnumSaveButton: "Save Setting"}},
             {tag: "boolean", kind: "boolean", names: {descriptorBooleanBox: "Setting"}}
         ];
     }

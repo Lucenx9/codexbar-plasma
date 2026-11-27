@@ -105,7 +105,8 @@ ColumnLayout {
             Layout.fillWidth: true
             model: fieldRoot.modelData.options
             textRole: "title"
-            Accessible.name: fieldRoot.modelData.title
+            Accessible.name: displayText.length > 0
+                ? i18n("%1: %2", fieldRoot.modelData.title, displayText) : fieldRoot.modelData.title
             valueRole: "id"
             currentIndex: fieldRoot.modelData.selectedOptionIndex
             enabled: fieldRoot.providerAvailable

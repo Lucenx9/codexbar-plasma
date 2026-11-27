@@ -253,6 +253,7 @@ TestCase {
         page.cfg_quotaWarningPercent = 1;
         page.cfg_quotaCriticalPercent = 100;
         verifyColorAt(50, Kirigami.Theme.neutralTextColor);
+        compare(findChild(page, "quotaCriticalLegendSwatch").color, Kirigami.Theme.negativeTextColor);
         verify(critical.text.indexOf("100") >= 0);
         for (var item of [scale, warning, critical]) {
             var position = item.mapToItem(page, 0, 0);

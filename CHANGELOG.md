@@ -31,6 +31,13 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep feedback when the current Providers or Diagnostics settings page is
+  temporarily hidden. Show the critical threshold color for 100% in the
+  Notifications legend.
+
+- Include the selected value in the screen reader labels for panel visibility,
+  provider options and source, and the AI Insights question.
+
 - Keep freshly received quotas visible when their measurement timestamp is
   invalid, and preserve the retention deadline for fractional timestamps.
 

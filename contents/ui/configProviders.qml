@@ -1633,12 +1633,11 @@ KCM.SimpleKCM {
             visible: page.errorText.length > 0
             showCloseButton: true
             onVisibleChanged: {
-                if (visible || page.errorText.length === 0) {
+                if (visible || !parent || !parent.visible || page.errorText.length === 0) {
                     return
                 }
-                // Kirigami's close button hid the banner imperatively, severing
-                // the visible binding; clear the text and reinstall the binding
-                // so later errors still show up.
+                // Only accept a dismissal while the container is visible.
+                // Closing the banner severs its visible binding.
                 page.errorText = ""
                 visible = Qt.binding(function() { return page.errorText.length > 0 })
             }
@@ -1655,7 +1654,7 @@ KCM.SimpleKCM {
             visible: page.statusText.length > 0
             showCloseButton: true
             onVisibleChanged: {
-                if (visible || page.statusText.length === 0) {
+                if (visible || !parent || !parent.visible || page.statusText.length === 0) {
                     return
                 }
                 page.statusText = ""
@@ -2008,7 +2007,7 @@ KCM.SimpleKCM {
                                 displayText: currentIndex < 0
                                     ? (page.providerSourcesLoading ? i18n("Loading saved source…") : i18n("Choose a source"))
                                     : currentText
-                                Accessible.name: i18n("Source mode")
+                                Accessible.name: i18n("%1: %2", i18n("Source mode"), displayText)
                                 enabled: page.selectedProvider !== null
                                     && !page.loading
                                     && !page.isPending(page.selectedProvider.provider)
@@ -2123,9 +2122,8 @@ KCM.SimpleKCM {
                                 // Kirigami's close button hides the banner imperatively,
                                 // severing the visible binding. Clear the stored error so
                                 // the dismissal sticks, then reinstall the binding so the
-                                // next diagnostic error still shows up. Collapsing the
-                                // parent details is not a dismissal of the error.
-                                if (!visible && providerSettingsToggle.expanded
+                                // next diagnostic error still shows up.
+                                if (!visible && parent && parent.visible
                                         && plainText.length > 0 && page.selectedProvider) {
                                     page.setProviderDiagnosticError(page.selectedProvider.provider, "")
                                     visible = Qt.binding(function() { return plainText.length > 0 })

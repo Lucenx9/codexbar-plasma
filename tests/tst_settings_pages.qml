@@ -848,6 +848,16 @@ TestCase {
         compare(page.diagnosticError, "Diagnostic command timed out. Try again.");
     }
 
+    function test_diagnosticErrorSurvivesPageVisibilityChanges() {
+        var page = createPage("../contents/ui/configDiagnostics.qml", {cfg_commandPath: "/bin/echo"});
+        if (!page) return;
+        page.diagnosticError = "Diagnostic command failed";
+        page.visible = false;
+        compare(page.diagnosticError, "Diagnostic command failed");
+        page.visible = true;
+        compare(page.diagnosticError, "Diagnostic command failed");
+    }
+
     // Switching the command path must retire the in-flight command so a late
     // reply from the old executable cannot replace the new page state.
     function test_commandPathChangeRetiresActiveCommand() {

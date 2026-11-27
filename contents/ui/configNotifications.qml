@@ -186,8 +186,7 @@ KCM.SimpleKCM {
                             implicitWidth: Kirigami.Units.smallSpacing * 2
                             implicitHeight: implicitWidth
                             radius: width / 2
-                            color: critical && page.effectiveQuotaCriticalPercent !== 100
-                                ? Kirigami.Theme.negativeTextColor : Kirigami.Theme.neutralTextColor
+                            color: critical ? Kirigami.Theme.negativeTextColor : Kirigami.Theme.neutralTextColor
                             Accessible.ignored: true
                         }
 

@@ -31,7 +31,7 @@ TestCase {
 
     function test_keyboardEditingAndDefaultsStaySynchronized() {
         try {
-            holder = Qt.createQmlObject('import QtQuick; import "../contents/ui/components" as Components; QtObject { property Component editor: Component { Components.PanelRuleEditor { function i18n(text) { return text } } } }', testCase, Qt.resolvedUrl("PanelRuleEditorTest.qml"));
+            holder = Qt.createQmlObject('import QtQuick; import "../contents/ui/components" as Components; QtObject { property Component editor: Component { Components.PanelRuleEditor { function i18n(text, first, second) { return first === undefined ? text : text.replace("%1", first).replace("%2", second) } } } }', testCase, Qt.resolvedUrl("PanelRuleEditorTest.qml"));
         } catch (error) {
             if (/module "org\.kde\.kirigami" is not installed/.test(String(error))) {
                 skip("Panel rule editor checks need the optional KDE QML modules");
@@ -48,9 +48,11 @@ TestCase {
         var condition = findChild(editor, "textVisibilityCondition");
         var threshold = findChild(editor, "textVisibilityThreshold");
         verify(condition !== null && threshold !== null);
+        compare(condition.Accessible.name, "Show panel text: Always");
         condition.forceActiveFocus();
         keyClick(Qt.Key_Down);
         compare(configPage.panelVisibilityRules.text.condition, "usageAtLeast");
+        compare(condition.Accessible.name, "Show panel text: Usage at least");
         tryCompare(threshold, "visible", true);
         compare(threshold.value, 80);
         threshold.forceActiveFocus();
