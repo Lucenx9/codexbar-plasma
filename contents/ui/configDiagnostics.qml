@@ -596,7 +596,7 @@ KCM.SimpleKCM {
             visible: page.diagnosticError.length > 0
             showCloseButton: true
             onVisibleChanged: {
-                if (visible || page.diagnosticError.length === 0) {
+                if (visible || !parent || !parent.visible || page.diagnosticError.length === 0) {
                     return
                 }
                 // Kirigami's close button hid the banner imperatively, severing

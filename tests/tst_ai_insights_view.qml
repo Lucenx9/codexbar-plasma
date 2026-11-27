@@ -112,7 +112,9 @@ TestCase {
         var subject = createTemporaryObject(assistantComponent, testCase, {answerExpanded: true})
         verify(subject !== null)
         var question = find(subject, "analysisQuestion")
+        compare(question.Accessible.name, "Analysis question: " + question.displayText)
         question.currentIndex = 2
+        compare(question.Accessible.name, "Analysis question: " + question.displayText)
         find(subject, "aiInsightsGenerateButton").requested()
         compare(mockApplet.generateCalls, 1)
         compare(mockApplet.lastQuestion, "headroom")

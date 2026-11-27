@@ -171,8 +171,6 @@ class ProviderSettingsTest(unittest.TestCase):
             raise AssertionError("Provider settings details must follow the disclosure state")
         if "delegate: Components.ProviderConfigRow" in settings_details:
             raise AssertionError("Collapsing provider settings must leave the provider list available")
-        if "!visible && providerSettingsToggle.expanded" not in settings_details:
-            raise AssertionError("Collapsing provider settings must not dismiss a diagnostic error")
 
     def test_provider_list_layout(self):
         provider_list_heading_body = id_block(providers_text, "providerListHeading")

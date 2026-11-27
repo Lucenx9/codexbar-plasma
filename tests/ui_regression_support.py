@@ -154,7 +154,7 @@ def assert_form_sections(text, filename, labels):
 def assert_dismissible_message_restores_visibility(surface, object_id, state_property):
     block = surface.id_block(object_id)
     for fragment in (
-        f"if (visible || {state_property}.length === 0)",
+        f"if (visible || !parent || !parent.visible || {state_property}.length === 0)",
         f'{state_property} = ""',
         f"visible = Qt.binding(function() {{ return {state_property}.length > 0 }})",
     ):

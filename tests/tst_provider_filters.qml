@@ -15,6 +15,8 @@ TestCase {
 
     function i18nc(context, text) { return text; }
     function i18n(text) {
+        for (var argument = 1; argument < arguments.length; argument++)
+            text = text.replace("%" + argument, String(arguments[argument]));
         return text;
     }
     function i18np(one, many, count) {
@@ -55,6 +57,50 @@ TestCase {
         page.loading = false;
         page.errorText = "";
         return page;
+    }
+
+    function test_providerFeedbackSurvivesPageAndDetailsVisibilityChanges() {
+        var page = createProvidersPage();
+        if (!page) return;
+        page.providers = [{provider: "codex", displayName: "Codex", enabled: true}];
+        page.selectedProviderID = "codex";
+        var disclosure = settingsToggle(page);
+        disclosure.expanded = true;
+        page.errorText = "Provider write failed";
+        page.statusText = "Provider write completed";
+        page.setProviderDiagnosticError("codex", "Provider inspection failed");
+
+        var items = [];
+        walkPageObjects(page, items);
+        var error = items.find(function(item) { return item.plainText === "Provider write failed"; });
+        var status = items.find(function(item) { return item.plainText === "Provider write completed"; });
+        var diagnostic = items.find(function(item) { return item.plainText === "Provider inspection failed"; });
+        verify(error && status && diagnostic);
+        verify(error.visible && status.visible && diagnostic.visible);
+
+        page.visible = false;
+        compare(page.errorText, "Provider write failed");
+        compare(page.statusText, "Provider write completed");
+        compare(page.providerDiagnosticErrorFor("codex"), "Provider inspection failed");
+        page.visible = true;
+        verify(error.visible && status.visible && diagnostic.visible);
+
+        disclosure.expanded = false;
+        compare(page.providerDiagnosticErrorFor("codex"), "Provider inspection failed");
+        disclosure.expanded = true;
+        verify(diagnostic.visible);
+
+        error.visible = false;
+        status.visible = false;
+        diagnostic.visible = false;
+        compare(page.errorText, "");
+        compare(page.statusText, "");
+        compare(page.providerDiagnosticErrorFor("codex"), "");
+
+        page.errorText = "Another provider error";
+        page.statusText = "Another provider status";
+        page.setProviderDiagnosticError("codex", "Another inspection error");
+        verify(error.visible && status.visible && diagnostic.visible);
     }
 
     function test_keyboardFiltersSearchAndClearKeepSelectionAndCommands() {
@@ -621,10 +667,12 @@ TestCase {
         verify(box.visible);
         compare(box.currentIndex, -1);
         compare(box.displayText, "Choose a source");
+        compare(box.Accessible.name, "Source mode: Choose a source");
         verify(!save.enabled);
         box.currentIndex = 1;
         box.activated(1);
         compare(box.displayText, "API");
+        compare(box.Accessible.name, "Source mode: API");
         verify(save.enabled);
         page.loading = true;
         verify(!box.enabled && !save.enabled);

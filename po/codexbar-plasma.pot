@@ -144,6 +144,22 @@ msgid ""
 msgstr ""
 
 #: contents/ui/components/AnalysisAssistant.qml
+#: contents/ui/components/AnalysisModels.qml
+#: contents/ui/components/AnalysisSummary.qml
+#: contents/ui/components/CompactRepresentation.qml
+#: contents/ui/components/CostText.qml
+#: contents/ui/components/InteractiveChart.qml
+#: contents/ui/components/PanelRuleEditor.qml
+#: contents/ui/components/PanelText.qml
+#: contents/ui/components/ProviderCostDetails.qml
+#: contents/ui/components/SpendView.qml
+#: contents/ui/config/ProviderDescriptorField.qml contents/ui/configPopup.qml
+#: contents/ui/configProviders.qml contents/ui/main.qml
+#: scripts/smoke/Capture.qml
+msgid "%1: %2"
+msgstr ""
+
+#: contents/ui/components/AnalysisAssistant.qml
 msgid "Analysis question"
 msgstr ""
 
@@ -209,19 +225,6 @@ msgstr ""
 #: contents/ui/components/AnalysisModels.qml
 #: contents/ui/components/ProviderCostSection.qml scripts/smoke/Capture.qml
 msgid "No model data for this period."
-msgstr ""
-
-#: contents/ui/components/AnalysisModels.qml
-#: contents/ui/components/AnalysisSummary.qml
-#: contents/ui/components/CompactRepresentation.qml
-#: contents/ui/components/CostText.qml
-#: contents/ui/components/InteractiveChart.qml
-#: contents/ui/components/PanelText.qml
-#: contents/ui/components/ProviderCostDetails.qml
-#: contents/ui/components/SpendView.qml contents/ui/configPopup.qml
-#: contents/ui/configProviders.qml contents/ui/main.qml
-#: scripts/smoke/Capture.qml
-msgid "%1: %2"
 msgstr ""
 
 #: contents/ui/components/AnalysisModels.qml

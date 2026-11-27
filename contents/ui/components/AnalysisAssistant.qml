@@ -64,7 +64,7 @@ ColumnLayout {
                 model: assistant.questions
                 textRole: "text"
                 valueRole: "value"
-                Accessible.name: i18n("Analysis question")
+                Accessible.name: i18n("%1: %2", i18n("Analysis question"), displayText)
                 enabled: !applet.aiInsightsBusy
             }
             RefreshButton {

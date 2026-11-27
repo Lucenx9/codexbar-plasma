@@ -19,7 +19,9 @@ RowLayout {
         objectName: editor.elementID + "VisibilityCondition"
         Layout.fillWidth: true
         Layout.minimumWidth: 0
-        Accessible.name: editor.elementID === "text" ? i18n("Show panel text") : i18n("Show each provider meter")
+        Accessible.name: i18n("%1: %2",
+            editor.elementID === "text" ? i18n("Show panel text") : i18n("Show each provider meter"),
+            displayText)
         textRole: "text"
         valueRole: "value"
         model: [
