@@ -56,6 +56,17 @@ Item {
         scrollTo(position + delta, immediate);
     }
 
+    function scrollFromButton(button, opposite, direction) {
+        var keyboard = !button.pointerPress;
+        var keepFocus = keyboard && button.activeFocus;
+        button.pointerPress = false;
+        var step = providerTabs.LayoutMirroring.enabled ? -tabPageStep : tabPageStep;
+        scrollBy(direction * step, keyboard);
+        if (keepFocus && !button.enabled) {
+            opposite.forceActiveFocus(direction > 0 ? Qt.BacktabFocusReason : Qt.TabFocusReason);
+        }
+    }
+
     function stopPageScroll() {
         providerTabsScroll.stop();
     }
@@ -278,7 +289,16 @@ Item {
         Accessible.ignored: true
     }
 
-    PlasmaComponents.ToolButton {
+    component PageButton: PlasmaComponents.ToolButton {
+        property bool pointerPress: false
+
+        // Observe the press without taking the button's pointer grab.
+        PointHandler { id: pointer; target: null }
+        onPressed: pointerPress = pointer.active
+        onCanceled: pointerPress = false
+    }
+
+    PageButton {
         id: previousTabsButton
         objectName: "previousTabsButton"
 
@@ -293,7 +313,7 @@ Item {
         text: i18n("Show previous tabs")
         display: PlasmaComponents.AbstractButton.IconOnly
         Accessible.name: text
-        onClicked: strip.scrollBy((providerTabs.LayoutMirroring.enabled ? 1 : -1) * strip.tabPageStep, visualFocus)
+        onClicked: strip.scrollFromButton(previousTabsButton, nextTabsButton, -1)
 
         PlainToolTip {
             plainText: previousTabsButton.text
@@ -302,7 +322,7 @@ Item {
         }
     }
 
-    PlasmaComponents.ToolButton {
+    PageButton {
         id: nextTabsButton
         objectName: "nextTabsButton"
 
@@ -317,7 +337,7 @@ Item {
         text: i18n("Show more tabs")
         display: PlasmaComponents.AbstractButton.IconOnly
         Accessible.name: text
-        onClicked: strip.scrollBy((providerTabs.LayoutMirroring.enabled ? -1 : 1) * strip.tabPageStep, visualFocus)
+        onClicked: strip.scrollFromButton(nextTabsButton, previousTabsButton, 1)
 
         PlainToolTip {
             plainText: nextTabsButton.text

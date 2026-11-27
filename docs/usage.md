@@ -104,7 +104,8 @@ back inside before release restores its pressed feedback.
   select the first and last focus position. Enter or Space opens the focused tab.
   Arrow direction follows visual order in right-to-left layouts.
 - Use the scroll buttons or roll the mouse wheel over the tab strip to reveal
-  overflowing tabs. Full labels and values appear in tooltips when abbreviated;
+  overflowing tabs. At either end, keyboard focus moves from the scroll button
+  to the button that scrolls back. Full labels and values appear in tooltips when abbreviated;
   icon actions also show their labels on keyboard focus.
 - **Provider actions** expands accounts, provider links, and widget commands.
   It starts collapsed and closes when the provider or account changes.
@@ -114,7 +115,8 @@ back inside before release restores its pressed feedback.
   providers that you previously selected.
   Set the provider order on the same page. The Overview header identifies a
   subset, such as **3 of 20 providers**, and the list scrolls to reveal the
-  provider card you reach with Tab or Shift+Tab.
+  provider card you reach with Tab or Shift+Tab. Opening a card focuses its
+  provider tab.
 
 Overview shows each provider's primary and secondary quotas separately, so a
 low session reading cannot hide an exhausted weekly window. Cursor can also
@@ -223,8 +225,9 @@ the chart still covers the full range.
 
 The calendar is one Tab stop. Left/Right moves between weeks on the same weekday,
 mirrored for right-to-left layouts; Up/Down moves within a week. Home/End selects
-the first/last visible measured day. Enter or Space pins a day and Escape clears
-it. The readout below the grid shows the inspected date and amount.
+the first/last visible measured day. Enter or Space pins the inspected day.
+Escape clears the pin and keeps the cursor on the inspected day, so Enter can
+pin it again. The readout below the grid shows its date and amount.
 
 **Last 7 days vs previous 7** excludes today and requires fourteen complete days
 plus a scan from today. Missing, partial, stale, or ambiguous history shows

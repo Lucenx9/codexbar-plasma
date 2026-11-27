@@ -115,16 +115,10 @@ class ProviderDataTest(unittest.TestCase):
         provider_index_body = function_body(main_text, "providerIndexForID")
         if "return -1" not in provider_index_body or "return 0" in provider_index_body:
             raise AssertionError("providerIndexForID must return -1 instead of falling back to provider 0")
-        if not code_contains(main_text, "var nextProviderIndex = applet.providerIndex(providerData)"):
-            raise AssertionError(
-                "Overview provider selection must resolve the provider through applet.providerIndex; "
-                "missing 'var nextProviderIndex = applet.providerIndex(providerData)'"
-            )
-        if not code_contains(main_text, "if (nextProviderIndex >= 0)"):
-            raise AssertionError(
-                "Overview provider selection must ignore missing providers instead of selecting index 0; "
-                "missing 'if (nextProviderIndex >= 0)'"
-            )
+        overview_row = id_block(main_text, "providerRow")
+        self.assertTrue(code_contains(overview_row, "providerTabRepeater.itemAt(applet.providerIndex(providerData))"))
+        self.assertTrue(code_contains(overview_row, "if (tab) { tab.focusControl.forceActiveFocus(reason) tab.activate() }"),
+                        "Overview must activate only a resolved provider tab")
 
         bounded_revision_body = function_body(main_text, "boundedConfigRevision")
         if "2147480000" not in bounded_revision_body or "1000000" in bounded_revision_body:

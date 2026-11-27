@@ -60,10 +60,10 @@ Rectangle {
             .join(" \u00b7 ")
     }
 
-    signal selected(var providerData)
+    signal selected(var providerData, int reason)
 
-    function activate() {
-        overviewRow.selected(overviewRow.providerData)
+    function activate(reason) {
+        overviewRow.selected(overviewRow.providerData, reason)
     }
 
     Layout.fillWidth: true
@@ -298,7 +298,7 @@ Rectangle {
         Accessible.role: Accessible.Button
         Accessible.name: overviewRow.providerData.title
         Accessible.description: overviewRow.accessibleDescription
-        Accessible.onPressAction: overviewRow.activate()
+        Accessible.onPressAction: overviewRow.activate(Qt.TabFocusReason)
 
         Keys.onPressed: function(event) {
             switch (event.key) {
@@ -306,7 +306,7 @@ Rectangle {
             case Qt.Key_Enter:
             case Qt.Key_Return:
             case Qt.Key_Select:
-                overviewRow.activate()
+                overviewRow.activate(Qt.TabFocusReason)
                 event.accepted = true
                 break
             }
@@ -326,7 +326,7 @@ Rectangle {
             overviewRowFocus.focus = false
             overviewRowFocus.forceActiveFocus(Qt.MouseFocusReason)
         }
-        onClicked: overviewRow.activate()
+        onClicked: overviewRow.activate(Qt.MouseFocusReason)
     }
 
     PlainToolTip {

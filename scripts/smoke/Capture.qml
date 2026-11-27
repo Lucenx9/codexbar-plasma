@@ -520,7 +520,7 @@ Item {
             next.forceActiveFocus(Qt.TabFocusReason);
             return false;
         }
-        row.activate();
+        row.activate(Qt.TabFocusReason);
         verifyScenario(!applet.overviewSelected && applet.selectedProviderID === row.providerData.provider,
             "the focused Overview row did not open its provider tab");
         applet.selectGlobalView("overview");
