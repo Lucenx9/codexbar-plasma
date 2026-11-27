@@ -192,10 +192,11 @@ def switch(root, target):
 
 def activate(root, target, state, previous, blocked_version=""):
     before = os.readlink(root / "current") if (root / "current").is_symlink() else ""
-    if before:
-        if not installed(root, before):
-            raise ValueError("activation_origin")
-        # Grace starts when a version stops being active, including after rollback.
+    if before and not RELEASE_DIRECTORY.fullmatch(before):
+        raise ValueError("activation_origin")
+    # Grace starts when a version stops being active, including after rollback.
+    # A damaged active copy has nothing to protect; installing replaces it.
+    if before and installed(root, before):
         os.utime(root / before, None)
     state["activation"] = dict(target=target, before=before, previous=state.get("previous", ""),
                                blockedVersion=state.get("blockedVersion", ""))
@@ -385,8 +386,10 @@ def _prepare_release(stage, version, assets):
 def _replace_release(root, target, extracted, current_target):
     retained = None
     if (root / target).exists():
-        # Replace a retained copy only with freshly verified content, never the active copy.
-        if not installed(root, target) or target == current_target:
+        # Replace a retained or damaged copy only with freshly verified content,
+        # never a valid active copy or anything that is not a real directory.
+        directory = root / target
+        if directory.is_symlink() or not directory.is_dir() or target == current_target:
             raise ValueError("existing_release")
         # Keep recovery outside staging: even a failed restore must survive
         # TemporaryDirectory cleanup for manual recovery.
