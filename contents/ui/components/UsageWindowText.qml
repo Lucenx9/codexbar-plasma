@@ -45,7 +45,18 @@ QtObject {
     }
 
     function resetText(window, nowMs, absolute) {
+        return root.resetPartsText(ResetPresentation.parts(window, nowMs, absolute), nowMs);
+    }
+
+    // Use the reset kind before translating the label. The legacy text
+    // formatter still handles descriptions and cached text.
+    function resetTextLabel(window, nowMs, absolute) {
         var parts = ResetPresentation.parts(window, nowMs, absolute);
+        var text = root.resetPartsText(parts, nowMs);
+        return parts.kind === "text" ? root.resetLabel(text) : i18n("Resets %1", text);
+    }
+
+    function resetPartsText(parts, nowMs) {
         switch (parts.kind) {
         case "absolute":
             return ResetPresentation.absoluteShowsDate(parts.timestampMs, nowMs) ? root.dateLabels.monthDayTime(parts.timestampMs) : root.dateLabels.weekdayTime(parts.timestampMs);

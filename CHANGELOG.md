@@ -31,6 +31,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Show the translated quota reset label consistently for countdowns and clock
+  times, including dates outside the next six days.
+
 - Reinstall the managed CLI when its active copy was deleted or lost its
   receipt, including when that release is still the latest. Installation
   previously downloaded the release and then failed on every retry.

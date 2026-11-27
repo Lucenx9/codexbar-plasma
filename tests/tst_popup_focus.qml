@@ -140,8 +140,7 @@ TestCase {
         function usagePercentText(row) { return Math.round(row.leftPercent) + "% left"; }
         function usagePaceText() { return ""; }
         function usageDailyAllowanceText() { return ""; }
-        function usageResetText(row) { return row.reset || ""; }
-        function resetLabel(value) { return value ? "Resets " + value : ""; }
+        function resetTextForRow(row) { return row.reset ? "Resets " + row.reset : ""; }
         function usageConfidenceText() { return ""; }
         function paceMarkerPercent() { return -1; }
         function usageErrorText(text) { return text; }

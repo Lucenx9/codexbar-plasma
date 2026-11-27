@@ -79,9 +79,6 @@ TestCase {
         function displayPercent(row) {
             return row.leftPercent;
         }
-        function usageResetText(row) {
-            return row.reset || "";
-        }
         function resetLabel(value) {
             return "Resets " + value;
         }

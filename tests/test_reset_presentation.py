@@ -26,7 +26,7 @@ class ResetPresentationTests(unittest.TestCase):
         main = ROOT / "contents/ui/main.qml"
         applet.texts = {main: main.read_text()}
         applet.files = [main]
-        signatures = {"resetText": "window, absolute", "resetLabel": "value", "usageResetText": "row"}
+        signatures = {"resetText": "window, absolute", "resetLabel": "value", "resetTextForRow": "row"}
         adapters = "\n".join(f"function {name}({args}) {{ {applet.function_body(name)} }}"
                              for name, args in signatures.items())
         with tempfile.TemporaryDirectory(prefix="codexbar-reset-labels-") as temporary:
@@ -70,7 +70,7 @@ class ResetPresentationTests(unittest.TestCase):
                                   {"offset": 90000000, "expected": text("%1d %2h", 1, 1)}],
                               "hour": plural("%1h", 1), "minutes": plural("%1 min", 59),
                               "unavailable": text("Reset unavailable"),
-                              "label": text("Resets %1", "2h 30m")})
+                              "resetTemplate": catalog.gettext("Resets %1")})
             qml = '''import QtQuick
 import QtTest
 import "SOURCE_URL/ResetPresentation.js" as ResetPresentation
@@ -86,7 +86,7 @@ TestCase {
     property bool resetTimesShowAbsolute: false
     property bool privacyMode: false
     property var row: null
-    readonly property string observedReset: usageResetText(row)
+    readonly property string observedReset: resetTextForRow(row)
     function i18n(source) {
         var result = messages[source] || source;
         for (var i = 1; i < arguments.length; i++)
@@ -124,36 +124,36 @@ TestCase {
             compare(resetText({resetsAt: panelClockMs + reset.offset}, false), reset.expected);
         for (var absolute of ABSOLUTE_CASES[data.tag])
             compare(resetText({resetsAt: absolute.timestamp}, true), absolute.expected, absolute.timestamp);
-        compare(resetLabel("Resets2h30m"), data.label);
+        compare(resetLabel("Resets2h30m"), data.resetTemplate.replace("%1", "2h 30m"));
         compare(resetLabel("Resets unknown future text"), "unknown future text");
 
         row = {resetsAt: "2026-09-13T13:00:00Z", resetDescription: "stale description"};
-        compare(observedReset, data.hour);
+        compare(observedReset, data.resetTemplate.replace("%1", data.hour));
         panelClockMs += 60000;
-        compare(observedReset, data.minutes);
+        compare(observedReset, data.resetTemplate.replace("%1", data.minutes));
         privacyMode = true;
-        compare(observedReset, data.minutes);
+        compare(observedReset, data.resetTemplate.replace("%1", data.minutes));
         resetTimesShowAbsolute = true;
-        compare(observedReset, ABSOLUTE_CASES[data.tag][0].expected);
+        compare(observedReset, data.resetTemplate.replace("%1", ABSOLUTE_CASES[data.tag][0].expected));
         compare(row.resetDescription, "stale description");
+        row = {resetsAt: ABSOLUTE_CASES[data.tag][3].timestamp};
+        compare(observedReset, data.resetTemplate.replace("%1", ABSOLUTE_CASES[data.tag][3].expected));
         row = {resetDescription: "Synthetic fallback"};
         compare(observedReset, "");
         privacyMode = false;
         compare(observedReset, "Synthetic fallback");
         panelClockMs = Date.UTC(2026, 8, 13, 12);
-        row = {dataConfidence: "percentOnly", resetsAt: "2026-09-13T13:00:00Z"};
         resetTimesShowAbsolute = false;
-        compare(observedReset, data.hour);
+        row = {dataConfidence: "percentOnly", resetsAt: "2026-09-13T13:00:00Z"};
+        compare(observedReset, data.resetTemplate.replace("%1", data.hour));
         panelClockMs += 60000;
-        compare(observedReset, data.minutes);
+        compare(observedReset, data.resetTemplate.replace("%1", data.minutes));
         privacyMode = true;
-        compare(observedReset, data.minutes);
+        compare(observedReset, data.resetTemplate.replace("%1", data.minutes));
         row = {dataConfidence: "percentOnly", hasPercent: true, usedPercent: 0, leftPercent: 100};
         compare(observedReset, data.unavailable);
-        compare(resetLabel(observedReset), data.unavailable);
         privacyMode = false;
         compare(observedReset, data.unavailable);
-        compare(resetLabel(observedReset), data.unavailable);
         row = {dataConfidence: "percentOnly", hasPercent: true, usedPercent: 0, leftPercent: 100, resetDescription: "Synthetic fallback"};
         compare(observedReset, "Synthetic fallback");
         row = {dataConfidence: "percentOnly", hasPercent: true, usedPercent: 0, leftPercent: 100, reset: "Legacy reset"};
