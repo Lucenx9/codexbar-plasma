@@ -179,6 +179,8 @@ choices can be saved; restore one to make room when the hide button disappears.
 Titled detail sections have the same hide action. **Hidden detail sections**
 restores a current section. Equal titles hide together; renamed sections appear
 again. Privacy mode also hides this restore list.
+Keyboard hide and restore actions keep focus on an available control in the
+provider view and scroll it into view.
 
 **Popup → Hidden items** lists both kinds of saved choices. A usage-row restore
 affects that row; **Hidden detail sections → Restore all** restores all saved

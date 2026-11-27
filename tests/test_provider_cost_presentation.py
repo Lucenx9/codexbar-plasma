@@ -147,6 +147,9 @@ TestCase {
     id: fullRoot
     property alias applet: applet
     function i18n(text) { return applet.i18n.apply(applet, arguments); }
+    function hideUsageRow(index, row, keyboardFocused) {
+        applet.hideRequests = applet.hideRequests.concat([{provider: applet.presentedProviderData.provider, label: row.label}]);
+    }
     name: "CreditUsageRow"
     Components.UsageWindowText {
         id: usageLabels
@@ -171,9 +174,6 @@ TestCase {
         property int quotaWarningPercent: 80
         property int quotaCriticalPercent: 95
         property color brandColor: "blue"
-        function hidePopupUsageRow(providerID, row) {
-            hideRequests = hideRequests.concat([{provider: providerID, label: row.label}]);
-        }
         property real secondaryTextOpacity: 0.7
         property int meterTrackHeight: 7
         function i18n(source) {
@@ -222,7 +222,7 @@ TestCase {
     function test_sharedDelegateTracksPresentationAndRoutesTheCurrentHideRequest() {
         var model = {lane: "primary", label: "Session", hasPercent: true,
             usedPercent: 15, leftPercent: 85, pace: "On pace", resetsAt: "in 7d"};
-        var row = createTemporaryObject(providerUsageDelegate, fullRoot, {modelData: model, width: 500});
+        var row = createTemporaryObject(providerUsageDelegate, fullRoot, {index: 0, modelData: model, width: 500});
         verify(row !== null);
         var fill = findItem(row, "usageBarFill");
         var percent = findItem(row, "usagePercentLabel");
@@ -272,7 +272,7 @@ TestCase {
         var limit = {title: "Monthly credit limit", used: 15, remaining: 85,
             limit: 100, usedPercent: 15, leftPercent: 85, resetsAt: "in 7d"};
         var row = createTemporaryObject(providerUsageDelegate, fullRoot,
-            {modelData: providerCostDetails.creditLimitRow(limit), width: 500});
+            {index: 0, modelData: providerCostDetails.creditLimitRow(limit), width: 500});
         verify(row !== null);
         wait(0);
         verify(hasVisibleText(row, "Used: 15, remaining: 85 of 100"));

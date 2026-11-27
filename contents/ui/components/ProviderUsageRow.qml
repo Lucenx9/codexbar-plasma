@@ -22,6 +22,8 @@ ColumnLayout {
     required property real meterTrackHeight
     required property real secondaryTextOpacity
 
+    readonly property alias visibilityAction: hideUsageRowButton
+
     signal hideRequested()
 
     readonly property string summaryText: typeof rowData.summaryText === "string"

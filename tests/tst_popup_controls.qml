@@ -943,6 +943,54 @@ TestCase {
         compare(choices.visible, false);
     }
 
+    function test_useDefaultAccountPreservesFocusAcrossListSizes_data() {
+        return [
+            {tag: "single", count: 1},
+            {tag: "three", count: 3},
+            {tag: "four", count: 4}
+        ];
+    }
+
+    function test_useDefaultAccountPreservesFocusAcrossListSizes(data) {
+        var options = [];
+        for (var index = 0; index < data.count; index++)
+            options.push({key: "account-" + index, label: "Account " + index, provider: "codex"});
+        applet.accountOptions = options;
+        applet.selectedAccountKey = "account-0";
+        var panel = createControl("ProviderAccountsPanel", {
+            applet: applet, providerData: {provider: "codex"}, width: 400
+        });
+        if (!panel)
+            return;
+        var toggle = findByObjectName(panel, "accountsDisclosureButton");
+        var useDefault = findByObjectName(panel, "clearAccountOverrideButton");
+        var reload = findByObjectName(panel, "reloadAccountsButton");
+        verify(toggle !== null && useDefault !== null && reload !== null);
+        tryCompare(useDefault, "visible", true);
+
+        // Keyboard activation moves focus to a visible control in the header.
+        useDefault.forceActiveFocus(Qt.TabFocusReason);
+        verify(useDefault.activeFocus && useDefault.visualFocus);
+        keyClick(Qt.Key_Space);
+        wait(0);
+        compare(applet.selectedAccountKey, "");
+        compare(useDefault.visible, false);
+        var expectedTarget = data.count > 3 ? toggle : reload;
+        verify(expectedTarget.visible && expectedTarget.enabled);
+        verify(expectedTarget.activeFocus, "Focus was lost after clearing account override");
+        verify(expectedTarget.visualFocus, "Keyboard focus indicator was lost after clearing account override");
+
+        // Pointer activation still clears the override without forcing keyboard focus visuals.
+        applet.selectedAccountKey = "account-0";
+        tryCompare(useDefault, "visible", true);
+        testCase.forceActiveFocus(Qt.OtherFocusReason);
+        mouseClick(useDefault, useDefault.width / 2, useDefault.height / 2);
+        wait(0);
+        compare(applet.selectedAccountKey, "");
+        compare(useDefault.visible, false);
+        verify(!toggle.visualFocus && !reload.visualFocus);
+    }
+
     // A finished discovery without named accounts explains the result instead
     // of leaving the requested panel hidden.
     function test_emptyAccountDiscoveryExplainsTheResult() {
