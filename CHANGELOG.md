@@ -31,6 +31,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Reinstall the managed CLI when its active copy was deleted or lost its
+  receipt, including when that release is still the latest. Installation
+  previously downloaded the release and then failed on every retry.
+
 - Show the `(partial)` qualifier on Usage & Spend provider token totals when
   excluded requests exist, switch provider model details and truncation notices
   with the **Cost** / **Tokens** toggle, format sub-cent local costs cleanly in
