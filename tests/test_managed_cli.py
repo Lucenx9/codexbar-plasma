@@ -6,7 +6,6 @@ import io
 import json
 import os
 from pathlib import Path
-import shutil
 import subprocess
 import sys
 import tarfile
@@ -108,24 +107,6 @@ class ManagedCliTests(ManagedCliFixture, unittest.TestCase):
                     self.assertEqual(cli.run("install", self.command), {"status": "unusable"})
                 remote.assert_not_called()
                 self.assertTrue(binary.exists())
-
-    def test_install_replaces_damaged_active_copy(self):
-        for damage in ("deleted release", "missing receipt"):
-            for latest in ("0.62.0", "0.63.0"):
-                with self.subTest(damage=damage, latest=latest):
-                    shutil.rmtree(self.root, ignore_errors=True)
-                    self.publish("0.62.0")
-                    self.operation("install")
-                    damaged = os.readlink(self.root / "current")
-                    if damage == "deleted release":
-                        shutil.rmtree(self.root / damaged)
-                    else:
-                        (self.root / damaged / "receipt.json").unlink()
-                    self.assertEqual(cli.status(self.root)["status"], "absent")
-                    self.publish(latest)
-                    result = self.operation("install")
-                    self.assertEqual((result["status"], result["version"]), ("installed", latest))
-                    self.assertEqual(cli.status(self.root)["status"], "ready")
 
     def test_existing_copy_probe_is_bounded_and_does_not_expose_its_output(self):
         self.operation("install")

@@ -388,8 +388,8 @@ def _replace_release(root, target, extracted, current_target):
     if (root / target).exists():
         # Replace a retained or damaged copy only with freshly verified content,
         # never a valid active copy or anything that is not a real directory.
-        directory = root / target
-        if directory.is_symlink() or not directory.is_dir() or target == current_target:
+        # lstat does not follow links, so a symlink is never a real directory.
+        if target == current_target or not stat.S_ISDIR((root / target).lstat().st_mode):
             raise ValueError("existing_release")
         # Keep recovery outside staging: even a failed restore must survive
         # TemporaryDirectory cleanup for manual recovery.
