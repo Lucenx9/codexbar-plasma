@@ -635,6 +635,8 @@ Follow [Design](../DESIGN.md) for visual roles, interaction and accessibility;
 hour cycle combine with catalog-defined ordering; literal `Qt.formatDateTime`
 patterns would force English names. `UsageWindowText.qml` localizes explicit
 reset/pace parts with a supplied clock and no timer, state write or dispatch.
+It uses the reset kind to decide whether to add the localized reset label. The
+legacy text formatter handles reset descriptions and cached text.
 See [Translations](translations.md) for catalog coverage and adapter checks.
 
 When changing provider identity, compare IDs, CLI aliases, title, color,

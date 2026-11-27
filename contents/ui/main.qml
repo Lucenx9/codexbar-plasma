@@ -1007,23 +1007,6 @@ PlasmoidItem {
         return usageWindowText.resetText(window, panelClockMs, absolute)
     }
 
-    function usageResetText(row) {
-        row = PrivacyPresentation.quota(row, privacyMode, "")
-        if (!Normalizer.canPresentQuotaDetails(row)) {
-            return ""
-        }
-        if (row.resetsAt || row.resetDescription) {
-            return resetText({
-                resetsAt: row.resetsAt || "",
-                resetDescription: row.resetDescription || ""
-            }, resetTimesShowAbsolute)
-        }
-        var fallback = String(row.reset || "")
-        return fallback.length === 0 && row.hasPercent
-            && Normalizer.usageConfidence(row.dataConfidence) === "percentOnly"
-            ? i18n("Reset unavailable") : fallback
-    }
-
     function statusText(status) {
         // Status fields are CLI-controlled: read them without coercing objects,
         // whose missing toString would throw inside String().
@@ -1202,7 +1185,7 @@ PlasmoidItem {
             if (!item) continue
             var rows = Array.isArray(item.rows) ? item.rows : []
             var row = rows[intent.rowIndex]
-            var resetLine = row && intent.kind === "quota" ? resetLabel(usageResetText(row)) : ""
+            var resetLine = row && intent.kind === "quota" ? resetTextForRow(row) : ""
             var paceEta = row && intent.kind === "pace" ? paceEtaText(row.paceEtaSeconds) : ""
             var message = providerNotificationText.message(intent, item, row, resetLine, paceEta)
             if (message) sendPlasmaNotification(message.title, message.body, message.urgency)
@@ -1949,11 +1932,20 @@ PlasmoidItem {
     }
 
     function resetTextForRow(row) {
-        var reset = usageResetText(row)
-        if (reset.length === 0) {
+        row = PrivacyPresentation.quota(row, privacyMode, "")
+        if (!Normalizer.canPresentQuotaDetails(row)) {
             return ""
         }
-        return resetLabel(reset)
+        if (row.resetsAt || row.resetDescription) {
+            return usageWindowText.resetTextLabel({
+                resetsAt: row.resetsAt || "",
+                resetDescription: row.resetDescription || ""
+            }, panelClockMs, resetTimesShowAbsolute)
+        }
+        var fallback = String(row.reset || "")
+        return fallback.length === 0 && row.hasPercent
+            && Normalizer.usageConfidence(row.dataConfidence) === "percentOnly"
+            ? i18n("Reset unavailable") : resetLabel(fallback)
     }
 
     // Credit balances are plain counts, so they share the popup's grouped,

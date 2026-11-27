@@ -185,8 +185,7 @@ TestCase {
         function providerReadableColor() { return brandColor; }
         function displayPercent(row) { return usageBarsShowUsed ? row.usedPercent : row.leftPercent; }
         function paceMarkerPercent() { return -1; }
-        function resetLabel(value) { return value; }
-        function usageResetText(row) { return row.resetsAt || ""; }
+        function resetTextForRow(row) { return row.resetsAt || ""; }
         function withAlpha(color, alpha) { return Qt.rgba(color.r, color.g, color.b, alpha); }
         function usagePercentText(row) { return usageLabels.percentText(row, usageBarsShowUsed); }
         function usageConfidenceText(row) { return usageLabels.confidenceText(row); }

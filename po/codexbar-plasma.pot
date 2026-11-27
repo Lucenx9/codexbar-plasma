@@ -4319,10 +4319,6 @@ msgstr ""
 msgid "Extra"
 msgstr ""
 
-#: contents/ui/main.qml scripts/smoke/Capture.qml
-msgid "Reset unavailable"
-msgstr ""
-
 #: contents/ui/main.qml
 msgid "Partial outage"
 msgstr ""
@@ -4411,3 +4407,7 @@ msgid "%1 provider"
 msgid_plural "%1 providers"
 msgstr[0] ""
 msgstr[1] ""
+
+#: contents/ui/main.qml scripts/smoke/Capture.qml
+msgid "Reset unavailable"
+msgstr ""

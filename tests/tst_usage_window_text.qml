@@ -82,6 +82,7 @@ TestCase {
         for (var reset of [row.resetValue, row.resetsAt]) {
             compare(subject.resetText({resetsAt: reset}, nowMs, false), timestamp);
             compare(subject.resetText({resetsAt: reset}, nowMs, true), timestamp);
+            compare(subject.resetTextLabel({resetsAt: reset}, nowMs, false), subject.resetLabel(timestamp));
         }
     }
 

@@ -23,7 +23,7 @@ class NotificationPipelineTests(unittest.TestCase):
         "providerMapKey", "primaryIncidentProvider", "copyObject",
         "processNotifications", "dispatchNotificationIntents",
         "sendPlasmaNotification",
-        "resetLabel", "usageResetText", "paceEtaText", "resetText",
+        "resetTextForRow", "resetLabel", "paceEtaText",
     )
 
     PIPELINE_QML = '''import QtQuick

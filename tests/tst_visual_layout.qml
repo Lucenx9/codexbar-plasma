@@ -252,11 +252,8 @@ TestCase {
         }
         property real meterTrackHeight: 8
         property real compactMeterTrackHeight: 5
-        function usageResetText(row) {
+        function resetTextForRow(row) {
             return row.reset || "";
-        }
-        function resetLabel(value) {
-            return value;
         }
         function popupDetailSectionHideable(section) { return section.title.length > 0; }
         function hidePopupDetailSection(providerID, section) {}

@@ -125,7 +125,7 @@ Item {
             paceText: fullRoot.applet.usagePaceText(rowData)
             dailyAllowanceText: fullRoot.applet.showMonthlyDailyAllowance === true
                 ? fullRoot.applet.usageDailyAllowanceText(rowData) : ""
-            resetText: fullRoot.applet.resetLabel(fullRoot.applet.usageResetText(rowData))
+            resetText: fullRoot.applet.resetTextForRow(rowData)
             confidenceText: fullRoot.applet.usageConfidenceText(rowData)
             shownPercent: fullRoot.applet.displayPercent(rowData)
             markerPercent: fullRoot.applet.paceMarkerPercent(rowData)

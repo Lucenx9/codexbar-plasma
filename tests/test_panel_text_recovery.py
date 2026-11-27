@@ -166,7 +166,7 @@ class PanelTextRecoveryTests(unittest.TestCase):
                      "clamp", "providerKey", "displayPercent",
                      "paceMarkerPercent",
                      "paceEtaText", "runOutTextForRow",
-                     "resetTextForRow", "usageResetText", "resetText", "resetLabel"):
+                     "resetTextForRow", "resetLabel"):
             signature = re.search(r"function " + name + r"\([^)]*\)", source).group(0)
             functions.append(signature + " {" + surface.function_body(name) + "}")
         # The supported modes are read from the production definitions, so a

@@ -2563,7 +2563,7 @@ Item {
             var claudeObservation = applet.notificationObservations().filter(function(item) { return item.providerID === "claude"; })[0];
             verifyScenario(claudeObservation.rows[0].dataConfidence === "percentOnly",
                 "notification adapter discarded limited confidence");
-            verifyScenario(applet.usageResetText(claude.rows[0]) === i18n("Reset unavailable") && applet.usageResetText(claude.rows[1]).length > 0,
+            verifyScenario(applet.resetTextForRow(claude.rows[0]) === i18n("Reset unavailable") && applet.resetTextForRow(claude.rows[1]).length > 0,
                 "reported weekly reset disappeared or missing session reset was not explained");
             if (scenario === "percent-only-pace") {
                 verifyScenario(applet.paceMarkerPercent(claude.rows[1]) === 43,
