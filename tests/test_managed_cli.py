@@ -511,9 +511,6 @@ class ManagedCliTests(ManagedCliFixture, unittest.TestCase):
         cli.private_directory(self.root)
         (self.root / "current").symlink_to("/usr/bin")
         self.assertFalse(cli.owns_command(self.command))
-        with self.assertRaisesRegex(ValueError, "activation_origin"):
-            self.operation("install")
-        self.assertEqual(os.readlink(self.root / "current"), "/usr/bin")
 
     def test_failures_are_named_without_leaking_detail(self):
         self.operation("install")

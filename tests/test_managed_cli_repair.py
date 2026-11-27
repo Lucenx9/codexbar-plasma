@@ -25,6 +25,13 @@ class ManagedCliRepairTests(ManagedCliFixture, unittest.TestCase):
                     self.assertEqual((result["status"], result["version"]), ("installed", latest))
                     self.assertEqual(cli.status(self.root)["status"], "ready")
 
+    def test_install_refuses_forged_active_pointer(self):
+        cli.private_directory(self.root)
+        (self.root / "current").symlink_to("/usr/bin")
+        with self.assertRaisesRegex(ValueError, "activation_origin"):
+            self.operation("install")
+        self.assertEqual(os.readlink(self.root / "current"), "/usr/bin")
+
 
 if __name__ == "__main__":
     unittest.main()
