@@ -154,8 +154,9 @@ A store listing can trail the GitHub release. The widget's updater follows GitHu
 - Quota meters, reset times, multiple accounts, provider status, and configurable notifications.
 - **Provider colors** or **Monochrome** panel styles, quota capsules or rings, optional text, and spend budgets.
   Preview changes in **Panel** settings.
-- **Usage & Spend** with cost and token history, provider filters, model breakdowns,
-  weekly comparisons, and an optional activity calendar.
+- **Usage & Spend** with cost and token history, provider filters, model
+  breakdowns and cross-provider rankings, weekly comparisons, and an optional
+  activity calendar.
 - Local agent **Sessions**, with no transcript paths or working directories displayed or opened.
 - Usage summaries to save as PNG images or copy as text, plus a privacy mode to hide personal information.
 - Optional beta

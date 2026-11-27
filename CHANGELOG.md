@@ -10,6 +10,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+## 0.2.59 - 2026-11-27
+
 ### Added
 
 - Read Linux setup hints and required inputs in **Providers → Settings and
@@ -17,7 +19,7 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 - Compare models across providers in **Usage & Spend** for a period or a
   selected day. Spend shares use separate currencies and require complete
-  pricing data.
+  pricing and model data.
 
 ### Changed
 
@@ -117,7 +119,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 - Inspect and select the day under the pointer in dense daily history bar charts.
 
-- Label the Sessions copy action with the card title it copies.
+- Identify the Sessions copy action as **Copy session title** and show the
+  title in its tooltip.
 
 - Keep the Plasma reload prompt or logout guidance after a successful widget
   upgrade when private CLI setup fails.
@@ -172,6 +175,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 - Show the weekly comparison requirements directly below the comparison in
   **Usage & Spend** when it is unavailable.
+
+[Full diff](https://github.com/Lucenx9/codexbar-plasma/compare/v0.2.58...v0.2.59)
 
 ## 0.2.58 - 2026-11-22
 

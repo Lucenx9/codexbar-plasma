@@ -46,10 +46,12 @@ usage, an incident, or missing data. **Apply** saves your changes.
   icon. The popup and notifications still cover the full enabled roster.
 
 Click a provider's icon, meter, or grouped text, or activate it with the
-keyboard, to open that provider. Hover its icon for a provider-specific tooltip;
+keyboard, to open that provider. Click the same provider again to close the
+popup. Click elsewhere in the widget to close an open popup or use another
+provider's indicator to switch to it. Hover a provider icon for its tooltip or
 hover elsewhere for the panel roster. If every meter is hidden, the identity
-icon remains available. With no panel provider selected, the widget icon toggles
-the popup without changing its tab.
+icon remains available. With no panel provider selected, the widget icon
+toggles the popup without changing its tab.
 
 Panel text stays with its provider's meters in the default order. When space
 runs out, less important text disappears first; usage and the identifying name
@@ -721,15 +723,16 @@ In **General → Updates → CodexBar CLI → Managed CLI**:
   binary into `$XDG_DATA_HOME/codexbar-plasma/cli`, falling back to
   `~/.local/share/codexbar-plasma/cli`. Installation happens immediately;
   **Apply** or **OK** saves its command path. **Cancel** leaves the downloaded
-  copy unused and preserves the saved command.
+  copy unused and preserves the saved command. If the active copy or its
+  installation receipt is missing, this action reinstalls the latest release
+  even when its version matches the previous copy.
 - A working external CLI requires confirmation before creating this second copy.
   Its original updater will no longer update the widget's selected copy. The
   initial offline probe must succeed; **Retry** repeats it. Selecting an already
   installed managed copy remains available independently of that initial probe.
 - **Use managed CLI** verifies an existing copy offline, without another download
   or GitHub check. A damaged, non-executable, incompatible, or receipt-mismatched
-  copy is not selected. Choose another path in Diagnostics if verification fails;
-  preparation does not silently repair a damaged copy.
+  copy is not selected. Choose another path in Diagnostics if verification fails.
 - **Update now** updates immediately. **Update daily**, on by default, runs only
   while that exact managed path is selected. Clear it and Apply to opt out.
   External copies are never updated. Failed automatic attempts wait until the
