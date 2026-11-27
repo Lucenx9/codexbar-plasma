@@ -442,13 +442,15 @@ TestCase {
 
     function test_receiptFallbackPreservesCachedMeasurementAge() {
         var receivedAtMs = nowMs - 60000;
-        for (var updatedAt of ["", "invalid", new Date(receivedAtMs + 1).toISOString()]) {
+        for (var updatedAt of ["", "invalid", "2026-02-30T11:00:00Z",
+                "2026-09-08T24:00:00Z", new Date(receivedAtMs + 1).toISOString()]) {
             var item = snapshot("codex", 0);
             item.updatedAt = updatedAt;
             item.usageReceivedAtMs = receivedAtMs;
             var before = JSON.stringify(item);
             var result = Cache.reconcile([], [item], nowMs);
-            compare(result[0].lastGoodAtMs, receivedAtMs);
+            verify(!result[0].usageStale, updatedAt);
+            compare(result[0].lastGoodAtMs, receivedAtMs, updatedAt);
             var deadline = receivedAtMs + Cache.maximumAgeMs;
             var expired = Cache.reconcile([], [item], deadline + 1);
             verify(expired[0].usageStale);
@@ -467,6 +469,19 @@ TestCase {
         var dated = snapshot("codex", 0);
         dated.usageReceivedAtMs = receivedAtMs;
         compare(Cache.reconcile([], [dated], nowMs)[0].lastGoodAtMs, Date.parse(dated.updatedAt));
+    }
+
+    function test_fractionalMeasurementKeepsTheOriginalRetentionDeadline() {
+        var item = snapshot("codex", 72);
+        item.updatedAt = "2026-09-08T13:59:59.999999999+02:00";
+        var lastGoodAtMs = nowMs - Cache.maximumAgeMs - 1;
+        var reconciled = Cache.reconcile([], [item], nowMs - 1);
+        compare(reconciled[0].lastGoodAtMs, lastGoodAtMs);
+        verify(!reconciled[0].usageStale);
+        var encoded = Cache.encode(reconciled, context, nowMs - 1);
+        compare(Cache.decode(encoded, context, nowMs - 1)[0].usage.primary.usedPercent, 72);
+        compare(Cache.decode(encoded, context, nowMs), []);
+        compare(Cache.reconcile(reconciled, [failed("codex")], nowMs)[0].rows.length, 0);
     }
 
     function test_redactedRoundTripAndContextIsolation() {

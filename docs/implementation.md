@@ -139,8 +139,10 @@ Quota retention is bounded to 24 hours in memory and on restore. Failed retries
 keep the original measurement time; the minute timer expires data even with
 refresh disabled. Snapshot receipt times survive account selection and privacy.
 They prevent a cached account from renewing retention or restarting another row's
-run-out countdown. Receipt fields stay in memory; persistence stores only resolved
-measurement time and rebuilds allowlisted records through normalization.
+run-out countdown. Measurement timestamps use the shared ISO timestamp validator.
+If the CLI timestamp is missing, invalid, or later than receipt, retention uses
+the original receipt time. Receipt fields stay in memory; persistence stores only
+resolved measurement time and rebuilds allowlisted records through normalization.
 
 The context fingerprint isolates CLI/config selections, not integrity or
 confidentiality. Memory-only account overrides stay outside it, so overridden

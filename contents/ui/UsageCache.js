@@ -9,8 +9,8 @@ var maximumBytes = 65536
 var lanes = ["primary", "secondary", "tertiary"]
 
 function timestamp(value) {
-    var parsed = typeof value === "string" ? Date.parse(value) : NaN
-    return isFinite(parsed) && parsed > 0 ? parsed : NaN
+    var date = SubscriptionDates.date(value, false, "measurement")
+    return date && date.timestampMs > 0 ? date.timestampMs : NaN
 }
 
 function hasQuota(item) {
