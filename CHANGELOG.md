@@ -31,6 +31,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep freshly received quotas visible when their measurement timestamp is
+  invalid, and preserve the retention deadline for fractional timestamps.
+
 - Keep the last measured day in cost history when a scan finishes just before
   local midnight. Show distinct, accurate token scale labels in Usage & Spend.
 
