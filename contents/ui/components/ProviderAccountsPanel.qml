@@ -10,6 +10,8 @@ ColumnLayout {
     required property var applet
     required property var providerData
 
+    signal focusFallbackRequested(int reason)
+
     readonly property string providerID: providerData ? providerData.provider : ""
     readonly property var accountOptions: providerID.length > 0
         ? applet.accountOptionsForProvider(providerID) : []
@@ -77,10 +79,18 @@ ColumnLayout {
             icon.height: Kirigami.Units.iconSizes.small
             Accessible.name: i18n("Use default account")
             onClicked: {
-                if (accountsPanel.largeAccountList && activeFocus)
-                    accountsDisclosure.forceActiveFocus(visualFocus ? Qt.TabFocusReason : Qt.OtherFocusReason)
+                var restoreFocus = activeFocus
+                var reason = visualFocus ? Qt.TabFocusReason : Qt.OtherFocusReason
                 accountsPanel.applet.selectAccount(accountsPanel.providerID, "")
                 accountsPanel.accountsExpanded = false
+                if (restoreFocus) {
+                    var target = accountsPanel.largeAccountList ? accountsDisclosure : reloadAccountsButton
+                    if (target.visible && target.enabled) {
+                        target.forceActiveFocus(reason)
+                    } else {
+                        accountsPanel.focusFallbackRequested(reason)
+                    }
+                }
             }
 
             PlainToolTip {

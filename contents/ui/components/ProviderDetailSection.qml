@@ -11,6 +11,10 @@ ColumnLayout {
     required property var providerData
     required property var modelData
 
+    readonly property alias visibilityAction: hideSectionButton
+
+    signal hideRequested()
+
     readonly property var sectionData: modelData
     readonly property var chartData: sectionData.chart || null
     readonly property var chartPoints: chartData ? chartData.points : []
@@ -55,8 +59,7 @@ ColumnLayout {
             Layout.preferredWidth: Kirigami.Units.iconSizes.smallMedium + Kirigami.Units.smallSpacing
             Layout.preferredHeight: Layout.preferredWidth
             Accessible.name: i18n("Hide the %1 section", detailSection.sectionData.title)
-            onClicked: detailSection.applet.hidePopupDetailSection(
-                detailSection.providerData ? detailSection.providerData.provider : "", detailSection.sectionData)
+            onClicked: detailSection.hideRequested()
 
             PlainToolTip {
                 parent: hideSectionButton

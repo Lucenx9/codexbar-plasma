@@ -31,6 +31,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep keyboard focus in the provider popup after using the default account or
+  hiding and restoring usage rows and detail sections.
+
 - Keep feedback when the current Providers or Diagnostics settings page is
   temporarily hidden. Show the critical threshold color for 100% in the
   Notifications legend.

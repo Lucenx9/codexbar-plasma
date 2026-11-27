@@ -6,19 +6,116 @@ import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.components as PlasmaComponents
 import "." as Components
+import "../PopupHiddenRows.js" as PopupHiddenRows
+import "../PopupHiddenSections.js" as PopupHiddenSections
 
 Item {
     id: fullRoot
 
     required property var applet
 
-    // Quota and monthly-credit rows share the same presentation bindings.
-    // The row renders explicit inputs; this owner resolves applet policy and
-    // routes hide requests to the current provider and row.
+    function revealInScrollView(scrollView, item) {
+        var flickable = scrollView.contentItem as Flickable
+        if (!flickable || !scrollView.visible || !item.visible) {
+            return
+        }
+        var top = item.mapToItem(flickable.contentItem, 0, 0).y
+        var bottom = top + item.height
+        var target = flickable.contentY
+        if (top < target) {
+            target = top
+        } else if (bottom > target + flickable.height) {
+            target = Math.min(top, bottom - flickable.height)
+        }
+        var origin = flickable.originY
+        var end = origin + Math.max(0, flickable.contentHeight - flickable.height)
+        flickable.contentY = Math.max(origin, Math.min(target, end))
+    }
+
+    function revealFocusedProviderAction(action) {
+        if (action && action.activeFocus && action.visualFocus) {
+            revealInScrollView(providerScroll, action)
+        }
+    }
+
+    function focusProviderAction(action, reason) {
+        if (action.visible && action.enabled) {
+            action.forceActiveFocus(reason)
+            if (reason === Qt.TabFocusReason) {
+                Qt.callLater(revealFocusedProviderAction, action)
+            }
+        }
+    }
+
+    // A Repeater can replace all its delegates when a hidden-items model
+    // changes. Locate the next control in the updated list.
+    function focusListAction(repeater, index, fallback, matches) {
+        var previous = null
+        for (var i = 0; i < repeater.count; i++) {
+            var item = repeater.itemAt(i)
+            var action = item ? item.visibilityAction : null
+            if (!action || !action.visible || !action.enabled) {
+                continue
+            }
+            if (matches ? matches(item) : i >= index) {
+                focusProviderAction(action, Qt.TabFocusReason)
+                return
+            }
+            if (!matches || previous === null) {
+                previous = action
+            }
+        }
+        focusProviderAction(previous || fallback, Qt.TabFocusReason)
+    }
+
+    function hideUsageRow(index, row, keyboardFocused) {
+        applet.hidePopupUsageRow(applet.presentedProviderData ? applet.presentedProviderData.provider : "", row)
+        if (keyboardFocused) {
+            focusListAction(providerUsageRowsRepeater, index, hiddenUsageRowsToggle)
+        }
+    }
+
+    function hideDetailSection(index, section, keyboardFocused) {
+        applet.hidePopupDetailSection(applet.presentedProviderData ? applet.presentedProviderData.provider : "", section)
+        if (keyboardFocused) {
+            focusListAction(providerDetailsRepeater, index, hiddenSectionsToggle)
+        }
+    }
+
+    function restoreHiddenUsageRow(index, row, keyboardFocused) {
+        var key = keyboardFocused ? PopupHiddenRows.rowKey(row) : ""
+        applet.restorePopupUsageRow(applet.presentedProviderData.provider, row)
+        if (!keyboardFocused) {
+            return
+        }
+        if (hiddenUsageRowsRepeater.count > 0) {
+            focusListAction(hiddenUsageRowsRepeater, index, hiddenUsageRowsToggle)
+        } else {
+            focusListAction(providerUsageRowsRepeater, 0, providerActionsToggle,
+                function(item) { return PopupHiddenRows.rowKey(item.rowData) === key })
+        }
+    }
+
+    function restoreHiddenDetailSection(index, section, keyboardFocused) {
+        var key = keyboardFocused ? PopupHiddenSections.sectionKey(section) : ""
+        applet.restorePopupDetailSection(applet.presentedProviderData.provider, section)
+        if (!keyboardFocused) {
+            return
+        }
+        if (hiddenDetailSectionsRepeater.count > 0) {
+            focusListAction(hiddenDetailSectionsRepeater, index, hiddenSectionsToggle)
+        } else {
+            focusListAction(providerDetailsRepeater, 0, providerActionsToggle,
+                function(item) { return PopupHiddenSections.sectionKey(item.sectionData) === key })
+        }
+    }
+
+    // Quota and monthly-credit rows share their presentation bindings.
     Component {
         id: providerUsageDelegate
 
         Components.ProviderUsageRow {
+            required property int index
             required property var modelData
 
             rowData: modelData
@@ -46,8 +143,7 @@ Item {
             meterTrackHeight: fullRoot.applet.meterTrackHeight
             secondaryTextOpacity: fullRoot.applet.secondaryTextOpacity
 
-            onHideRequested: fullRoot.applet.hidePopupUsageRow(
-                fullRoot.applet.presentedProviderData ? fullRoot.applet.presentedProviderData.provider : "", rowData)
+            onHideRequested: fullRoot.hideUsageRow(index, rowData, visibilityAction.visualFocus)
         }
     }
 
@@ -741,21 +837,9 @@ Item {
                 objectName: "overviewScroll"
 
                 function revealFocusedRow(row) {
-                    var flickable = contentItem as Flickable
-                    if (!flickable || !visible || !row || !row.keyboardFocusVisible) {
-                        return
+                    if (row && row.keyboardFocusVisible) {
+                        fullRoot.revealInScrollView(overviewScroll, row)
                     }
-                    var top = row.mapToItem(flickable.contentItem, 0, 0).y
-                    var bottom = top + row.height
-                    var target = flickable.contentY
-                    if (top < target) {
-                        target = top
-                    } else if (bottom > target + flickable.height) {
-                        target = Math.min(top, bottom - flickable.height)
-                    }
-                    var origin = flickable.originY
-                    var end = origin + Math.max(0, flickable.contentHeight - flickable.height)
-                    flickable.contentY = Math.max(origin, Math.min(target, end))
                 }
 
                 Layout.fillWidth: true
@@ -862,6 +946,9 @@ Item {
                     Components.ProviderAccountsPanel {
                         applet: fullRoot.applet
                         providerData: applet.selectedProviderData
+                        onFocusFallbackRequested: function(reason) {
+                            fullRoot.focusProviderAction(providerActionsToggle, reason)
+                        }
                     }
 
                     // A compact pill that hugs its text, tinted with the same
@@ -952,6 +1039,8 @@ Item {
                     }
 
                     Repeater {
+                        id: providerUsageRowsRepeater
+
                         model: applet.popupUsageRows(applet.presentedProviderData)
 
                         delegate: providerUsageDelegate
@@ -985,10 +1074,14 @@ Item {
                         }
 
                         Repeater {
+                            id: hiddenUsageRowsRepeater
+
                             model: hiddenUsageRowsToggle.expanded ? hiddenUsageRowsSection.hiddenRows : []
 
                             delegate: RowLayout {
+                                required property int index
                                 required property var modelData
+                                readonly property alias visibilityAction: restoreUsageRowButton
                                 Layout.fillWidth: true
 
                                 PlainPlasmaLabel {
@@ -998,13 +1091,13 @@ Item {
                                 }
 
                                 Components.PlainButton {
+                                    id: restoreUsageRowButton
                                     objectName: "restorePopupUsageRowButton"
                                     flat: true
                                     plainText: i18n("Restore")
                                     icon.name: "view-visible"
                                     Accessible.name: i18n("Restore %1", modelData.label)
-                                    onClicked: applet.restorePopupUsageRow(
-                                        applet.presentedProviderData.provider, modelData)
+                                    onClicked: fullRoot.restoreHiddenUsageRow(index, modelData, visualFocus)
                                 }
                             }
                         }
@@ -1223,11 +1316,15 @@ Item {
                         }
 
                         Repeater {
+                            id: providerDetailsRepeater
+
                             model: providerDetailsSection.details
 
                             delegate: Components.ProviderDetailSection {
+                                required property int index
                                 applet: fullRoot.applet
                                 providerData: applet.presentedProviderData
+                                onHideRequested: fullRoot.hideDetailSection(index, sectionData, visibilityAction.visualFocus)
                             }
                         }
 
@@ -1253,10 +1350,14 @@ Item {
                         }
 
                         Repeater {
+                            id: hiddenDetailSectionsRepeater
+
                             model: hiddenSectionsToggle.expanded ? providerDetailsSection.hiddenDetails : []
 
                             delegate: RowLayout {
+                                required property int index
                                 required property var modelData
+                                readonly property alias visibilityAction: restoreDetailSectionButton
                                 Layout.fillWidth: true
 
                                 PlainPlasmaLabel {
@@ -1266,13 +1367,13 @@ Item {
                                 }
 
                                 Components.PlainButton {
+                                    id: restoreDetailSectionButton
                                     objectName: "restoreDetailSectionButton"
                                     flat: true
                                     plainText: i18n("Restore")
                                     icon.name: "view-visible"
                                     Accessible.name: i18n("Restore %1", modelData.title)
-                                    onClicked: applet.restorePopupDetailSection(
-                                        applet.presentedProviderData.provider, modelData)
+                                    onClicked: fullRoot.restoreHiddenDetailSection(index, modelData, visualFocus)
                                 }
                             }
                         }

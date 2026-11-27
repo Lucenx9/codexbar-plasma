@@ -32,6 +32,7 @@ TestCase {
     readonly property bool globalErrorActive: false
 
     function i18n(text) { return text; }
+    function revealInScrollView(scrollView, item) { PRODUCTION_REVEAL_SCROLL }
 
     QtObject {
         id: providerScroll
@@ -509,6 +510,7 @@ class ProviderTabRefreshTests(unittest.TestCase):
     def test_production_tabs_keep_focus_during_usage_refresh(self):
         applet = Surface("applet", root)
         qml = QML.replace("COMPONENTS_URL", (root / "contents/ui/components").as_uri())
+        qml = qml.replace("PRODUCTION_REVEAL_SCROLL", applet.function_body("revealInScrollView"))
         qml = qml.replace("PRODUCTION_REPEATER", applet.id_block("providerTabRepeater"))
         qml = qml.replace("PRODUCTION_OVERVIEW_SCROLL", applet.id_block("overviewScroll"))
         qml = qml.replace("PRODUCTION_ACTION_SECTION", applet.id_block("providerActionsSection"))
