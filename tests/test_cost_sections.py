@@ -1298,10 +1298,14 @@ class CostSectionTests(unittest.TestCase):
         keyClick(Qt.Key_End);
         keyClick(Qt.Key_Space);
         compare(view.selectedDay, "2026-09-08");
+        keyClick(Qt.Key_Home);
+        var inspectedText = readout.text;
         keyClick(Qt.Key_Escape);
         compare(view.selectedDay, "");
         verify(grid.activeFocus);
-        compare(readout.text.trim(), "");
+        compare(readout.text, inspectedText);
+        keyClick(Qt.Key_Return);
+        compare(view.selectedDay, "2026-09-01");
         cell.Accessible.pressAction();
         compare(view.selectedDay, "2026-09-03");
         // Pinning in the chart also marks the matching calendar cell.

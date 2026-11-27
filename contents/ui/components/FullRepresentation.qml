@@ -222,6 +222,7 @@ Item {
                     modelData: fullRoot.applet.presentedProviders[index]
                         || ({provider: "", title: "", error: ""})
                     readonly property bool selected: index === applet.selectedProviderIndex
+                    readonly property alias focusControl: providerFocus
                     readonly property bool keyboardFocusVisible: providerFocus.visualFocus
                     readonly property bool pressedInViewport: providerTabMouse.containsPress
                         && providerTabsBar.containsPointer(providerTabMouse, providerTabMouse.mouseX, providerTabMouse.mouseY)
@@ -795,11 +796,11 @@ Item {
                                     Qt.callLater(overviewScroll.revealFocusedRow, providerRow)
                                 }
                             }
-                            onSelected: function(providerData) {
-                                var nextProviderIndex = applet.providerIndex(providerData)
-                                if (nextProviderIndex >= 0) {
-                                    applet.selectedProviderID = providerData.provider
-                                    applet.selectionInitialized = true
+                            onSelected: function(providerData, reason) {
+                                var tab = providerTabRepeater.itemAt(applet.providerIndex(providerData))
+                                if (tab) {
+                                    tab.focusControl.forceActiveFocus(reason)
+                                    tab.activate()
                                 }
                             }
                         }

@@ -46,6 +46,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Keep keyboard-focused popup tabs fully visible when they fit within the
   scroll area with a smaller margin.
 
+- Keep keyboard focus on a visible control when opening a provider from
+  Overview or reaching the end of the tab strip with a scroll button.
+  Clearing a pinned day in Daily activity also keeps the inspected day
+  ready to select again.
+
 - Suppress duplicate incident notifications when an intervening status update
   lacks a recognized indicator.
 

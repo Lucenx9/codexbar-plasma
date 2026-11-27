@@ -203,6 +203,8 @@ TestCase {
         mouseMove(fullRoot, edge.x, edge.y);
         mouseRelease(fullRoot, edge.x, edge.y);
         compare(applet.selectedProviderID, "claude");
+        var tabFocus = providerTabRepeater.itemAt(1).nextItemInFocusChain(true);
+        verify(tabFocus.activeFocus && !tabFocus.visualFocus);
     }
 
     function test_navigationFeedbackIsImmediate_data() {
@@ -233,11 +235,13 @@ TestCase {
         mouseRelease(item, item.width + 20, item.height / 2);
         compare(applet.selectedProviderID, "codex");
         tryCompare(item, "scale", 1);
-        fullRoot.forceActiveFocus(Qt.TabFocusReason);
-        focus.forceActiveFocus(Qt.TabFocusReason);
-        compare(item.color, applet.withAlpha(Kirigami.Theme.focusColor, data.focusAlpha));
+        // The cancelled Overview click leaves mouse focus on the row. The
+        // keyboard activation must still show focus on the destination tab.
+        if (data.overview)
+            verify(focus.activeFocus && !focus.visualFocus);
         keyClick(Qt.Key_Space);
         compare(applet.selectedProviderID, "claude");
+        verify(providerTabRepeater.itemAt(1).keyboardFocusVisible);
         if (!data.overview)
             compare(item.color, applet.withAlpha(Kirigami.Theme.focusColor, 0.18));
     }

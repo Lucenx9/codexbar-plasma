@@ -1054,7 +1054,6 @@ ColumnLayout {
                                         return
                                     }
                                     historyChart.selectedIndex = -1
-                                    selectedDay = ""
                                     hoveredDay = ""
                                     event.accepted = true
                                     return

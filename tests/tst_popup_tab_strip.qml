@@ -200,6 +200,15 @@ TestCase {
             mouseClick(previous);
         }
         tryCompare(viewport, "contentX", start);
+        compare(next.visualFocus, data.keyboard);
+        if (data.keyboard) {
+            // Keep paging from the recovered focus to the opposite edge.
+            for (var distance = 0; distance < viewport.contentWidth && next.enabled; distance += host.tabPageStep) {
+                keyClick(Qt.Key_Space);
+            }
+            verify(!next.enabled);
+            verify(previous.visualFocus);
+        }
         host.scrollTo(0, true);
         mouseWheel(viewport, viewport.width / 2, viewport.height / 2, 0, -120);
         tryVerify(function () {
@@ -213,6 +222,29 @@ TestCase {
         compare(viewport.contentX, 0);
         compare(previous.enabled, data.mirrored);
         compare(next.enabled, !data.mirrored);
+    }
+
+    function test_overflowActivationUsesCurrentInput_data() {
+        return [{tag: "keyboard-after-pointer", keyboard: true}, {tag: "pointer-after-keyboard", keyboard: false}];
+    }
+
+    function test_overflowActivationUsesCurrentInput(data) {
+        var host = createStrip();
+        var viewport = findChild(host, "providerTabsFlickable");
+        var next = findChild(host, "nextTabsButton");
+        var previous = findChild(host, "previousTabsButton");
+        if (data.keyboard) {
+            mouseClick(next);
+            verify(next.activeFocus);
+        } else {
+            next.forceActiveFocus(Qt.TabFocusReason);
+            verify(next.visualFocus);
+        }
+        host.scrollTo(viewport.contentWidth - viewport.width - 5, true);
+        if (data.keyboard) keyClick(Qt.Key_Space);
+        else mouseClick(next);
+        tryCompare(next, "enabled", false);
+        compare(previous.visualFocus, data.keyboard);
     }
 
     function test_selectionAndResizeRevealTheCurrentTab() {
