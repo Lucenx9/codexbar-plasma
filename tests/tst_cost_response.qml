@@ -11,6 +11,27 @@ TestCase {
     function parse(payload, days) {
         return CostResponse.response(JSON.stringify(payload), "", days === undefined ? 30 : days, 0);
     }
+    function test_scanJustBeforeLocalMidnightIncludesMeasuredDay_data() {
+        return [{tag: "iso", separator: "T", decimal: "."},
+            {tag: "space", separator: " ", decimal: "."},
+            {tag: "comma", separator: "T", decimal: ","}];
+    }
+    function test_scanJustBeforeLocalMidnightIncludesMeasuredDay(data) {
+        var lastMillisecond = new Date(2026, 10, 30, 23, 59, 59, 999).toISOString();
+        var scan = lastMillisecond.replace("T", data.separator).replace(".999Z", data.decimal + "999999Z");
+        var cost = parse({provider: "codex", updatedAt: scan,
+            daily: [{date: "2026-11-30", totalCost: 8}]}, 1).costs.codex;
+        compare(cost.scanDay, "2026-11-30");
+        compare(cost.daily.map(function(row) { return row.cost; }), [8]);
+    }
+
+    function test_invalidFractionalScanClockKeepsScanDayUnknown() {
+        var cost = parse({provider: "codex", updatedAt: "2026-11-30T24:01:00.123456Z",
+            daily: [{date: "2026-11-30", totalCost: 8}]}, 1).costs.codex;
+        compare(cost.scanDay, "");
+        compare(cost.daily[0].cost, 8);
+    }
+
     function test_unreadableDailyEntryLeavesChartGapsUnknown() {
         var cost = parse({provider: "codex", updatedAt: "2026-10-21", daily: [
             {date: "2026-10-19", totalCost: 0}, null, {date: "2026-10-21", totalCost: 8}

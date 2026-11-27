@@ -31,6 +31,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep the last measured day in cost history when a scan finishes just before
+  local midnight. Show distinct, accurate token scale labels in Usage & Spend.
+
 - Keep gaps in cost history unknown when a daily record is unreadable, so
   daily averages use only measured days.
 

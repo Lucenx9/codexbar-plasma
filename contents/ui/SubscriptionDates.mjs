@@ -1,5 +1,11 @@
 import * as Guards from "./Guards.mjs";
 
+// Qt can round fractional seconds into the next day. Keep the millisecond
+// containing the instant before converting an ISO timestamp to a Date.
+export function atMillisecondPrecision(value) {
+    return value.replace(/(\d{2}:\d{2}:\d{2}[.,]\d{3})\d+/, "$1");
+}
+
 // Official usage dates are ISO-8601 strings. Check calendar components before
 // Date.parse, which otherwise rolls impossible dates into the following month.
 export function date(value, dateOnly, kind) {
@@ -30,9 +36,7 @@ export function date(value, dateOnly, kind) {
     } else if (!dateOnly) {
         return null;
     }
-    // Qt can round longer fractions into the next day. Keep the millisecond
-    // containing the instant before passing the validated timestamp to Date.
-    var timestampMs = Date.parse(value.replace(/(\.\d{3})\d+/, "$1"));
+    var timestampMs = Date.parse(atMillisecondPrecision(value));
     if (!isFinite(timestampMs)) {
         return null;
     }
