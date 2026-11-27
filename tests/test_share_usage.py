@@ -25,6 +25,7 @@ TestCase {
     QtObject {
         id: mockApplet
         property bool privacyMode: false
+        property var costNumberFormat: ({ group: ",", decimal: "." })
         function providerTitle(value) { return value; }
         function providerDisplayTitle(value) {
             return privacyMode && value === "private_provider" ? "Provider" : providerTitle(value);
@@ -55,6 +56,7 @@ TestCase {
     function init() {
         clipboard.content = "untouched";
         mockApplet.privacyMode = false;
+        mockApplet.costNumberFormat = ({ group: ",", decimal: "." });
     }
     function test_unavailableShareWindowCanBeRetried() {
         var factory = Qt.createComponent("ShareOwner.qml");
@@ -227,6 +229,42 @@ TestCase {
         verify(card !== null);
         verify(JSON.stringify(card.presentation).indexOf("private_provider") === -1);
         window.close();
+    }
+    function test_subcentLocalHistoryAmountsStayDistinctFromZero() {
+        var subcentSnapshot = ShareUsage.snapshot([{provider: "codex", historyDays: 30,
+            totals: {tokens: 100, cost: 0.002, currency: "USD"},
+            models: [{label: "Synthetic model", tokens: 100, cost: 0.002, currency: "USD"}]}],
+            30, "2026-09-22T12:00:00Z", false);
+        var window = createTemporaryObject(windowComponent, testCase, {snapshot: subcentSnapshot});
+        verify(window !== null);
+        compare(window.costText, "< $0.01");
+        compare(window.providerRows[0].detail, "100 tokens · < $0.01");
+        verify(window.modelLines[0].indexOf("< $0.01") !== -1);
+        verify(window.statisticsText.indexOf("$0.00") === -1);
+        var card = findChild(window, "shareUsageCard");
+        verify(card !== null);
+        compare(card.presentation.cost, "< $0.01");
+        window.close();
+
+        mockApplet.costNumberFormat = ({ group: ".", decimal: "," });
+        var euroSnapshot = ShareUsage.snapshot([{provider: "codex", historyDays: 30,
+            totals: {tokens: 100, cost: 0.002, currency: "EUR"},
+            models: [{label: "Synthetic model", tokens: 100, cost: 0.002, currency: "EUR"}]}],
+            30, "2026-09-22T12:00:00Z", false);
+        var euroWindow = createTemporaryObject(windowComponent, testCase, {snapshot: euroSnapshot});
+        verify(euroWindow !== null);
+        compare(euroWindow.costText, "< EUR 0,01");
+        euroWindow.close();
+
+        mockApplet.costNumberFormat = ({ group: ",", decimal: "." });
+        var zeroSnapshot = ShareUsage.snapshot([{provider: "codex", historyDays: 30,
+            totals: {tokens: 100, cost: 0, currency: "USD"},
+            models: [{label: "Synthetic model", tokens: 100, cost: 0, currency: "USD"}]}],
+            30, "2026-09-22T12:00:00Z", false);
+        var zeroWindow = createTemporaryObject(windowComponent, testCase, {snapshot: zeroSnapshot});
+        verify(zeroWindow !== null);
+        compare(zeroWindow.costText, "$0.00");
+        zeroWindow.close();
     }
 }
 '''

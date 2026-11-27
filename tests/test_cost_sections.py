@@ -434,6 +434,32 @@ class CostSectionTests(unittest.TestCase):
         fakeApplet.costHistoryShowsTokens = false;
         compare(primary.text, "Cost unavailable");
         compare(secondary.text, "0 tokens");
+
+        // Period incomplete requests stored on trust qualify tokens on provider cards.
+        for (var sample of [{cost: 5, tokens: 100}, {cost: null, tokens: 100}, {cost: null, tokens: 0}]) {
+            var expectedTokens = sample.tokens + " tokens (partial)";
+            var expectedCost = sample.cost === null ? "Cost unavailable" : "EUR 5.00 (partial)";
+            testCase.presentedCosts = [{provider: "codex", totals: {
+                cost: sample.cost, tokens: sample.tokens, currency: "EUR"},
+                trust: {incompleteRequests: 2},
+                valueMode: sample.cost === null ? "plain" : "partial"}];
+            tryVerify(function() {
+                primary = findChild(subject, "spendProviderPrimary");
+                secondary = findChild(subject, "spendProviderSecondary");
+                return primary && secondary && primary.text === expectedCost && secondary.text === expectedTokens;
+            });
+            fakeApplet.costHistoryShowsTokens = true;
+            compare(primary.text, expectedTokens);
+            compare(secondary.text, expectedCost);
+            fakeApplet.costHistoryShowsTokens = false;
+        }
+        testCase.presentedCosts = [{provider: "codex", totals: {
+            cost: 5, tokens: 100, currency: "USD", incompleteRequests: 0},
+            trust: {incompleteRequests: 0}, valueMode: "plain"}];
+        tryVerify(function() {
+            secondary = findChild(subject, "spendProviderSecondary");
+            return secondary && secondary.text === "100 tokens";
+        });
     }
     ''')
 
@@ -601,6 +627,62 @@ class CostSectionTests(unittest.TestCase):
         compare(charts[0].accessibleTitle, "Daily token history");
         tryVerify(function() { return charts[0].selectedIndex === -1; });
         fakeApplet.costHistoryShowsTokens = false;
+    }
+    ''')
+
+    def test_provider_models_follow_selected_metric_and_truncation(self):
+        self.run_fixture('''
+    function test_providerModelsFollowSelectedMetricAndTruncation() {
+        providerTokenCost = Object.assign({}, providerTokenCost, {
+            totals: { tokens: 1000, cost: 10, currency: "USD" },
+            daily: [{
+                label: "2026-09-01",
+                cost: 10,
+                tokens: 1000,
+                currency: "USD",
+                models: [{ label: "DayExpensive", cost: 9, tokens: 10, currency: "USD" }],
+                modelsTruncated: false,
+                tokenRanking: {
+                    rows: [{ label: "DayTopTokens", cost: null, tokens: 900, currency: "USD" }],
+                    truncated: true
+                }
+            }],
+            models: [{ label: "PeriodExpensive", cost: 9, tokens: 10, currency: "USD" }],
+            modelsTruncated: true,
+            tokenRanking: {
+                rows: [{ label: "PeriodTopTokens", cost: null, tokens: 900, currency: "USD" }],
+                truncated: false
+            }
+        });
+        var subject = createTemporaryObject(providerFactory, testCase, {width: 540});
+        verify(subject !== null);
+        var section = findChild(subject, "providerLocalCostSection");
+        var chart = findChild(subject, "providerCostChart");
+        var partialNotice = findChild(subject, "costModelsPartialNotice");
+        verify(section && chart && partialNotice);
+        section.detailsExpanded = true;
+
+        tryVerify(function() { return textsUnder(subject).indexOf("PeriodExpensive") >= 0; });
+        verify(textsUnder(subject).indexOf("PeriodTopTokens") < 0);
+        verify(partialNotice.visible);
+
+        fakeApplet.costHistoryShowsTokens = true;
+        tryVerify(function() { return textsUnder(subject).indexOf("PeriodTopTokens") >= 0; });
+        verify(textsUnder(subject).indexOf("PeriodExpensive") < 0);
+        verify(!partialNotice.visible);
+
+        chart.selectedIndex = 0;
+        tryVerify(function() { return textsUnder(subject).indexOf("DayTopTokens") >= 0; });
+        verify(textsUnder(subject).indexOf("DayExpensive") < 0);
+        verify(partialNotice.visible);
+
+        fakeApplet.costHistoryShowsTokens = false;
+        // Switching metrics clears the pinned day; re-select it to verify cost-ranked daily models.
+        tryVerify(function() { return chart.selectedIndex === -1; });
+        chart.selectedIndex = 0;
+        tryVerify(function() { return textsUnder(subject).indexOf("DayExpensive") >= 0; });
+        verify(textsUnder(subject).indexOf("DayTopTokens") < 0);
+        verify(!partialNotice.visible);
     }
     ''')
 
@@ -787,24 +869,27 @@ class CostSectionTests(unittest.TestCase):
         self.run_fixture('''
     function test_partialQuotaBound_data() {
         return [
-            {tag: "history", reason: "history", cost: 0.002, currency: "USD", decimal: ".", expected: "$0.002"},
-            {tag: "missing", reason: "missing", cost: 0.00999, currency: "USD", decimal: ".", expected: "$0.00999"},
-            {tag: "excluded-euro", reason: "excluded", cost: 0.002, currency: "EUR", decimal: ",", expected: "EUR 0,002"},
-            {tag: "tiny", reason: "history", cost: 1e-7, currency: "USD", decimal: ".", expected: "$1e-7"},
-            {tag: "zero", reason: "history", cost: 0, currency: "USD", decimal: ".", expected: "$0.00"}
+            {tag: "history", reason: "history", cost: 0.002, secondCost: 0, currency: "USD", decimal: ".", expected: "$0.002"},
+            {tag: "missing", reason: "missing", cost: 0.00999, secondCost: 0, currency: "USD", decimal: ".", expected: "$0.00999"},
+            {tag: "excluded-euro", reason: "excluded", cost: 0.002, secondCost: 0, currency: "EUR", decimal: ",", expected: "EUR 0,002"},
+            {tag: "sum-usd", reason: "history", cost: 0.002, secondCost: 0.007, currency: "USD", decimal: ".", expected: "$0.009"},
+            {tag: "sum-euro", reason: "excluded", cost: 0.0001, secondCost: 0.0002, currency: "EUR", decimal: ",", expected: "EUR 0,0003"},
+            {tag: "tiny", reason: "history", cost: 1e-7, secondCost: 0, currency: "USD", decimal: ".", expected: "$1e-7"},
+            {tag: "zero", reason: "history", cost: 0, secondCost: 0, currency: "USD", decimal: ".", expected: "$0.00"}
         ];
     }
     function test_partialQuotaBound(data) {
         fakeApplet.costNumberFormat = CostAmounts.numberFormat(",", data.decimal);
         fakeApplet.panelClockMs = new Date(2026, 10, 17, 12).getTime();
+        var totalCost = data.cost + data.secondCost;
         var daily = [];
         for (var day = 11; day <= 17; day++) daily.push({label: "2026-11-" + day,
-            cost: day === 17 ? data.cost : data.reason === "missing" && day === 12 ? null : 0,
+            cost: day === 17 ? data.cost : day === 16 ? data.secondCost : data.reason === "missing" && day === 12 ? null : 0,
             tokens: day === 17 ? 100 : 0,
             currency: data.currency,
             incompleteRequests: data.reason === "excluded" && day === 17 ? 1 : 0});
         var cost = Object.assign({}, providerTokenCost, {daily: daily,
-            totals: {cost: data.cost, tokens: 100, currency: data.currency},
+            totals: {cost: totalCost, tokens: 100, currency: data.currency},
             historyCoverageEstablished: data.reason !== "history"});
         testCase.providerData = {provider: "codex", tokenCost: cost,
             rows: [{lane: "secondary", windowMinutes: 10080,
@@ -815,7 +900,7 @@ class CostSectionTests(unittest.TestCase):
         walkTree(subject, all);
         var section = all.filter(function(item) { return item.objectName === "quotaWindowSection"; })[0];
         compare(section.windows.length, 1);
-        compare(section.windows[0].cost, data.cost);
+        fuzzyCompare(section.windows[0].cost, totalCost, 1e-12);
         compare(section.windows[0].costPartial, data.reason !== "history");
         compare(section.amountText(section.windows[0]).split(" · ")[0], "at least " + data.expected);
     }

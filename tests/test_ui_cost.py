@@ -191,8 +191,9 @@ class ProviderCostTest(unittest.TestCase):
         cost_drill_down_body = id_block(self.applet.text, "costDrillDownSection")
         for fragment in (
             'i18n("No model data for this period.")',
-            "costDrillDownSection.detailData.modelsTruncated === true",
+            "CostPresentation.modelsTruncated(costDrillDownSection.detailData, tokenCostSection.costHistoryShowsTokens)",
             "modelsTruncated: tokenCostSection.selectedDay.modelsTruncated",
+            "tokenRanking: tokenCostSection.selectedDay.tokenRanking",
         ):
             self.assertTrue(
                 code_contains(cost_drill_down_body, fragment),

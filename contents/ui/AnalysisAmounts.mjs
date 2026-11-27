@@ -6,7 +6,7 @@ function subcentText(format, value, currency, lowerBound) {
         return "< " + Amounts.amountString(format, 0.01, currency)
     // Partial sums are lower bounds; an upper-bound label cannot describe them.
     var code = typeof currency === "string" ? currency.trim() : ""
-    var text = String(value).replace(".", Amounts.resolvedFormat(format).decimal)
+    var text = String(Number(value.toPrecision(15))).replace(".", Amounts.resolvedFormat(format).decimal)
     return Amounts.currencyPrefix(code) + text
 }
 

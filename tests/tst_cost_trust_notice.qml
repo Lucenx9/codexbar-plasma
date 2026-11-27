@@ -1,5 +1,6 @@
 import QtQuick
 import QtTest
+import org.kde.kirigami as Kirigami
 import "../contents/ui/components" as Components
 import "../contents/ui/CostTrust.mjs" as CostTrust
 
@@ -172,6 +173,43 @@ TestCase {
         verify(waitForPolish(notice))
         compare(findChild(notice, "plainNoteDetailsButton").plainText, "Partial data")
         verify(!findChild(notice, "plainNoteLabel").visible)
+    }
+
+    function test_incompleteTokenHistoryUsesPartialHeading() {
+        var tokenOnly = createTemporaryObject(noticeComponent, this, {
+            summary: CostTrust.costTrustSummary([{
+                totals: {cost: null, tokens: 50000},
+                historyCoverageEstablished: false
+            }])
+        })
+        tryVerify(function() { return tokenOnly.visible })
+        verify(waitForPolish(tokenOnly))
+        compare(tokenOnly.type, Kirigami.MessageType.Warning)
+        compare(findChild(tokenOnly, "plainNoteDetailsButton").plainText, "Partial data")
+        compare(findChild(tokenOnly, "plainNoteLabel").text, "The local history scan is incomplete.")
+
+        var mixedSummary = CostTrust.costTrustSummary([
+            {totals: {cost: 1, tokens: 10, currency: "USD"}, trust: {sourceKind: "vendor"}},
+            {totals: {cost: null, tokens: 50000}, historyCoverageEstablished: false}
+        ])
+        compare(mixedSummary.valueMode, "approximate")
+        verify(mixedSummary.hasIncompleteHistory)
+        var mixed = createTemporaryObject(noticeComponent, this, {
+            noticeScope: "spend-mixed-incomplete",
+            summary: mixedSummary
+        })
+        tryVerify(function() { return mixed.visible })
+        verify(waitForPolish(mixed))
+        compare(mixed.type, Kirigami.MessageType.Warning)
+        compare(findChild(mixed, "plainNoteDetailsButton").plainText, "Partial data")
+
+        var estimated = createTemporaryObject(noticeComponent, this, {
+            noticeScope: "spend-estimated",
+            summary: {sourceKind: "listPrice"}
+        })
+        tryVerify(function() { return estimated.visible })
+        verify(waitForPolish(estimated))
+        compare(findChild(estimated, "plainNoteDetailsButton").plainText, "About these costs")
     }
 
     function test_enlargedTranslatedDisclosureFitsNarrowWidth() {

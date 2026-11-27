@@ -12,7 +12,7 @@ PlainNote {
     property var noticeState: ({ key: "", dismissed: false, shouldShow: false })
 
     visible: false
-    heading: summary && summary.valueMode === "partial"
+    heading: summary && (summary.valueMode === "partial" || summary.hasIncompleteHistory)
         ? i18n("Partial data") : i18n("About these costs")
     plainText: summaryText()
     type: summary && summary.level === "warning"

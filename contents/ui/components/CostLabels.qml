@@ -30,7 +30,7 @@ QtObject {
     }
 
     function costModelRows(tokenCost) {
-        return CostPresentation.modelRows(root.numberFormat, tokenCost, root.tokenCountText)
+        return CostPresentation.modelRows(root.numberFormat, tokenCost, root.tokenCountText, root.showsTokens)
     }
 
     // Cost text dates a CLI calendar key like the chart does; other labels
