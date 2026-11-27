@@ -11,6 +11,14 @@ TestCase {
     function parse(payload, days) {
         return CostResponse.response(JSON.stringify(payload), "", days === undefined ? 30 : days, 0);
     }
+    function test_unreadableDailyEntryLeavesChartGapsUnknown() {
+        var cost = parse({provider: "codex", updatedAt: "2026-10-21", daily: [
+            {date: "2026-10-19", totalCost: 0}, null, {date: "2026-10-21", totalCost: 8}
+        ]}, 3).costs.codex;
+        compare(cost.daily.map(function(row) { return row.label; }), ["2026-10-19", "2026-10-21"]);
+        compare(cost.daily.map(function(row) { return row.cost; }), [0, 8]);
+    }
+
     function test_invalidCalendarDaysStayOutOfHistoryAndModels_data() {
         var cases = [];
         for (var date of ["2026-02-30", "2026-13-01", "2025-02-29"]) {
@@ -646,6 +654,7 @@ TestCase {
             {tag: "older-trimmed-date", extra: [{date: " 1970-01-01 ", totalCost: 999}], scan: "2026-10-21", expectedCost: 30 / 2486, expectedTokens: 300 / 2486},
             {tag: "unknown-row-with-measured-date", extra: [{date: "2020-01-01", incompleteRequestCount: 1}], scan: "2026-10-21", expectedCost: 30 / 2486, expectedTokens: 300 / 2486},
             {tag: "unknown-row-before-measured-date", extra: [{date: "2020-01-01", incompleteRequestCount: 1}], extraFirst: true, scan: "2026-10-21", expectedCost: 30 / 2486, expectedTokens: 300 / 2486},
+            {tag: "unreadable-entry", extra: [null], scan: "2026-10-21", expectedCost: 15, expectedTokens: 150},
             {tag: "unknown-day", extra: [{date: "2026-10-20", incompleteRequestCount: 1}], scan: "2026-10-21", expectedCost: 15, expectedTokens: 150},
             {tag: "duplicate", extra: [{date: "2020-01-01", totalCost: 6}], scan: "2026-10-21", expectedCost: 12, expectedTokens: 150},
             {tag: "no-clock", extra: [], scan: undefined, expectedCost: 15, expectedTokens: 150}

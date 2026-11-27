@@ -31,6 +31,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep gaps in cost history unknown when a daily record is unreadable, so
+  daily averages use only measured days.
+
 - Return keyboard focus to the provider cost chart after activating **All days**
   so Home, End, and the arrow keys can select another day immediately.
 
