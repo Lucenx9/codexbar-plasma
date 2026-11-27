@@ -261,7 +261,8 @@ ColumnLayout {
         readonly property var detailData: tokenCostSection.selectedDay ? {
             totals: tokenCostSection.selectedDay,
             models: tokenCostSection.selectedDay.models,
-            modelsTruncated: tokenCostSection.selectedDay.modelsTruncated
+            modelsTruncated: tokenCostSection.selectedDay.modelsTruncated,
+            tokenRanking: tokenCostSection.selectedDay.tokenRanking
         } : tokenCostSection.tokenCost
         readonly property var breakdownRows: costLabels.costBreakdownRows(detailData)
         readonly property var modelRows: costLabels.costModelRows(detailData)
@@ -338,7 +339,7 @@ ColumnLayout {
 
         PlainPlasmaLabel {
             objectName: "costModelsPartialNotice"
-            visible: costDrillDownSection.detailData !== null && costDrillDownSection.detailData.modelsTruncated === true
+            visible: CostPresentation.modelsTruncated(costDrillDownSection.detailData, tokenCostSection.costHistoryShowsTokens)
             text: i18n("Some models are not shown.")
             font: Kirigami.Theme.smallFont
             opacity: applet.secondaryTextOpacity

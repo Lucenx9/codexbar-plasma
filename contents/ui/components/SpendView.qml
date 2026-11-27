@@ -713,7 +713,9 @@ ColumnLayout {
                                     : i18n("Cost unavailable")
                                 readonly property string tokensText: CostAmounts.hasMetricValue(totals, true)
                                     ? view.applet.qualifiedCostValue(view.applet.usageCountText(totals.tokens, "tokens"),
-                                        CostTrust.incompleteTokenHistory(modelData) || CostTrust.acceptedIncompleteRequests(totals) > 0
+                                        CostTrust.incompleteTokenHistory(modelData)
+                                            || CostTrust.acceptedIncompleteRequests(modelData.trust) > 0
+                                            || CostTrust.acceptedIncompleteRequests(totals) > 0
                                             ? "partial" : "plain")
                                     : i18n("Tokens unavailable")
                                 readonly property color surfaceColor: Qt.tint(

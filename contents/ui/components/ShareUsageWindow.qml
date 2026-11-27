@@ -8,6 +8,7 @@ import org.kde.plasma.components as PlasmaComponents
 import org.kde.kquickcontrolsaddons as KQuickControlsAddons
 import "../ShareUsage.js" as ShareUsage
 import "../CostAmounts.mjs" as CostAmounts
+import "../AnalysisAmounts.mjs" as AnalysisAmounts
 
 Controls.ApplicationWindow {
     id: window
@@ -37,7 +38,7 @@ Controls.ApplicationWindow {
     })
     readonly property string tokensText: snapshot.tokens === null ? i18n("Tokens unavailable") : applet.usageCountText(snapshot.tokens, "tokens")
     readonly property string costText: snapshot.currencies.length === 0 ? i18n("Cost unavailable") : snapshot.currencies.map(function (row) {
-        return applet.amountString(row.cost, row.currency);
+        return AnalysisAmounts.amountText(applet.costNumberFormat, row.cost, row.currency);
     }).join(" · ")
     readonly property string createdText: i18n("Created %1", new Date(snapshot.createdAt).toLocaleString(Qt.locale(), Locale.ShortFormat))
     readonly property string statisticsText: ["CodexBar", periodText, tokensText,
@@ -73,7 +74,7 @@ Controls.ApplicationWindow {
         if (row.tokens !== null)
             parts.push(applet.usageCountText(row.tokens, "tokens"));
         if (row.cost !== null)
-            parts.push(applet.amountString(row.cost, row.currency));
+            parts.push(AnalysisAmounts.amountText(applet.costNumberFormat, row.cost, row.currency));
         return parts.length > 0 ? parts.join(" · ") : i18n("Unavailable");
     }
 

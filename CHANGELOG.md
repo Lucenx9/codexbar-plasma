@@ -31,6 +31,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Show the `(partial)` qualifier on Usage & Spend provider token totals when
+  excluded requests exist, switch provider model details and truncation notices
+  with the **Cost** / **Tokens** toggle, format sub-cent local costs cleanly in
+  usage exports and partial quota-week bounds, and title incomplete token-only
+  history notices **Partial data**.
+
 - Keep keyboard focus in the provider popup after using the default account or
   hiding and restoring usage rows and detail sections.
 

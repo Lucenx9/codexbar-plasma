@@ -34,14 +34,45 @@ export function breakdownRows(entries, fmt) {
     return rows
 }
 
-// `tokensTextFor(tokens)` lets the caller word the token half of each summary.
-export function modelRows(fmt, tokenCost, tokensTextFor) {
-    var rows = []
+function selectedModelRanking(tokenCost, showsTokens) {
+    if (showsTokens !== true || !tokenCost) {
+        return null
+    }
+    var ranking = tokenCost.tokenRanking
+    if (!Guards.isRecord(ranking) || !Array.isArray(ranking.rows)) {
+        return null
+    }
+    return ranking
+}
+
+function selectedModels(tokenCost, showsTokens) {
+    var ranking = selectedModelRanking(tokenCost, showsTokens)
+    if (ranking) {
+        return ranking.rows
+    }
     if (!tokenCost || !Array.isArray(tokenCost.models)) {
+        return null
+    }
+    return tokenCost.models
+}
+
+export function modelsTruncated(tokenCost, showsTokens) {
+    if (!tokenCost) {
+        return false
+    }
+    var ranking = selectedModelRanking(tokenCost, showsTokens)
+    return ranking ? ranking.truncated === true : tokenCost.modelsTruncated === true
+}
+
+// `tokensTextFor(tokens)` lets the caller word the token half of each summary.
+export function modelRows(fmt, tokenCost, tokensTextFor, showsTokens) {
+    var rows = []
+    var models = selectedModels(tokenCost, showsTokens)
+    if (!models) {
         return rows
     }
-    for (var i = 0; i < tokenCost.models.length; i++) {
-        var item = tokenCost.models[i]
+    for (var i = 0; i < models.length; i++) {
+        var item = models[i]
         if (!Guards.isRecord(item)) {
             continue
         }

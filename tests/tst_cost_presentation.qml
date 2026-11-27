@@ -946,6 +946,50 @@ TestCase {
         compare(rows[0].value, "$1.00 · 2K tokens")
     }
 
+    function test_modelRowsAndTruncationFollowSelectedMetric() {
+        var snapshot = {
+            models: [{ label: "Expensive", cost: 10, tokens: 100, currency: "USD" }],
+            modelsTruncated: true,
+            tokenRanking: {
+                rows: [{ label: "UnpricedHighTokens", cost: null, tokens: 50000, currency: "USD" }],
+                truncated: false
+            }
+        }
+        var costRows = CostPresentation.modelRows(fmt, snapshot, null, false)
+        compare(costRows.length, 1)
+        compare(costRows[0].label, "Expensive")
+        verify(CostPresentation.modelsTruncated(snapshot, false))
+
+        var tokenRows = CostPresentation.modelRows(fmt, snapshot, null, true)
+        compare(tokenRows.length, 1)
+        compare(tokenRows[0].label, "UnpricedHighTokens")
+        compare(tokenRows[0].value, "50K")
+        verify(!CostPresentation.modelsTruncated(snapshot, true))
+
+        var emptyTokenRanking = {
+            models: [{ label: "Fallback", cost: 1, tokens: 10, currency: "USD" }],
+            modelsTruncated: false,
+            tokenRanking: { rows: [], truncated: true }
+        }
+        compare(CostPresentation.modelRows(fmt, emptyTokenRanking, null, true).length, 0)
+        verify(CostPresentation.modelsTruncated(emptyTokenRanking, true))
+
+        var legacySnapshot = {
+            models: [{ label: "Legacy", cost: 2, tokens: 500, currency: "USD" }],
+            modelsTruncated: true
+        }
+        compare(CostPresentation.modelRows(fmt, legacySnapshot, null, true)[0].label, "Legacy")
+        verify(CostPresentation.modelsTruncated(legacySnapshot, true))
+        compare(CostPresentation.modelRows(fmt, { models: legacySnapshot.models, tokenRanking: { rows: "bad" } }, null, true)[0].label, "Legacy")
+        verify(!CostPresentation.modelsTruncated(null, true))
+    }
+
+    function test_subcentLowerBoundsStripBinaryArithmeticTails() {
+        compare(AnalysisAmounts.amountText(fmt, 0.002 + 0.007, "USD", true), "$0.009")
+        compare(AnalysisAmounts.amountText(CostAmounts.numberFormat(".", ","), 0.0001 + 0.0002, "EUR", true), "EUR 0,0003")
+        compare(AnalysisAmounts.amountText(fmt, 0.002, "USD", false), "< $0.01")
+    }
+
     // A snapshot answered for a different window must not be summed into the
     // range the user has since selected.
     function test_costPeriodKeepsOnlyCliCalendarPeriods() {
