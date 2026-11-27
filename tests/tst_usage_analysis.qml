@@ -29,6 +29,23 @@ TestCase {
         compare(Analysis.providerLines(format, [cost], points, false)[0].points[0].displayValue, "< $0,01")
     }
 
+    function test_tokenAxisLabelsMatchTickPositions_data() {
+        return [
+            {tag: "one-token", peak: 1, labels: ["1,2", "0,6", "0"]},
+            {tag: "thousands", peak: 22000, labels: ["25K", "12,5K", "0"]},
+            {tag: "millions", peak: 2000000, labels: ["2,5M", "1,25M", "0"]}
+        ]
+    }
+
+    function test_tokenAxisLabelsMatchTickPositions(data) {
+        var maximum = Chart.domain([{points: [{value: data.peak}]}]).maximum
+        var format = {group: ".", decimal: ","}
+        var labels = [maximum, maximum / 2, 0].map(function(value) {
+            return Display.axisText(format, value, {step: maximum / 2, showsTokens: true})
+        })
+        compare(labels, data.labels)
+    }
+
     function test_legacySequenceRemainsInspectable() {
         var cost = snapshot("codex", "USD", 1, 1)
         cost.daily = [{label: "Mon", cost: 2, tokens: 20, currency: "USD"},

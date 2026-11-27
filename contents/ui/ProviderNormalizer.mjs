@@ -599,7 +599,11 @@ export function localCalendarDateKey(value) {
     if (datePrefix && !parsedCalendarDateKey(datePrefix[1])) {
         return ""
     }
-    var date = new Date(value)
+    // Validate the original first: Qt may accept an invalid clock once its
+    // fractional seconds have been shortened.
+    var normalized = SubscriptionDates.atMillisecondPrecision(value)
+    if (normalized !== value && !isFinite(Date.parse(value))) return ""
+    var date = new Date(normalized)
     if (!isFinite(date.getTime())) {
         return ""
     }

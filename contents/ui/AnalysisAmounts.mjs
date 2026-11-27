@@ -47,10 +47,24 @@ function axisNumber(format, value, digits) {
     return Amounts.groupedDecimalString(format, value, Math.min(digits, 12))
 }
 
+function tokenAxisText(format, value) {
+    var units = ["", "K", "M", "B"]
+    var unit = 0
+    while (value >= 1000 && unit < units.length - 1) {
+        value /= 1000
+        unit++
+    }
+    // The nice scale and its midpoint use at most three significant digits.
+    var tick = Number(value.toPrecision(3))
+    return String(tick).replace(".", Amounts.resolvedFormat(format).decimal) + units[unit]
+}
+
 // Axis ticks describe exact scale positions, so small scales need more digits
 // than an amount readout. Extremely small values use bounded scientific text.
 export function axisText(format, value, options) {
-    if (options.showsTokens || options.currency === "Quota" || !Guards.isFiniteNumber(value))
+    if (options.showsTokens && Guards.isFiniteNumber(value))
+        return tokenAxisText(format, value)
+    if (options.currency === "Quota" || !Guards.isFiniteNumber(value))
         return Amounts.metricText(format, value, options.currency, options.showsTokens)
     return Amounts.currencyPrefix(options.currency || "USD")
         + axisNumber(format, value, axisDigits(options.step))
