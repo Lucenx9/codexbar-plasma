@@ -10,7 +10,7 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
-## 0.2.59 - 2026-11-27
+## 0.2.59 - 2026-11-28
 
 ### Added
 
